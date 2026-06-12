@@ -63,14 +63,16 @@ jobs:
       - name: Publish private core
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DIST_TAG: ${{ inputs['dist-tag'] }}
         working-directory: .ai-workspace/github-packages/@hourglass-financial__distilled-core
-        run: npm publish --registry=https://npm.pkg.github.com
+        run: npm publish --tag "$DIST_TAG" --registry=https://npm.pkg.github.com
 
       - name: Publish private Erebor
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DIST_TAG: ${{ inputs['dist-tag'] }}
         working-directory: .ai-workspace/github-packages/@hourglass-financial__erebor
-        run: npm publish --registry=https://npm.pkg.github.com
+        run: npm publish --tag "$DIST_TAG" --registry=https://npm.pkg.github.com
 
       - name: Update dist tags
         env:

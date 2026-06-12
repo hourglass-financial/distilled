@@ -230,7 +230,7 @@ const stagedManifest = (
     version,
     repository: {
       type: "git",
-      url: "https://github.com/hourglass-financial/distilled",
+      url: "git+https://github.com/hourglass-financial/distilled.git",
       directory: source.directory,
     },
     type: sourceManifest.type ?? "module",
