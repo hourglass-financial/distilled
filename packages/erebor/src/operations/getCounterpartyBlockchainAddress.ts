@@ -1,0 +1,90 @@
+import * as Schema from "effect/Schema";
+import { API } from "../client.ts";
+import * as T from "../traits.ts";
+import { BadRequest, NotFound } from "../errors.ts";
+
+// Input Schema
+export const GetCounterpartyBlockchainAddressInput =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
+    id: Schema.String.pipe(T.PathParam()),
+  }).pipe(
+    T.Http({ method: "GET", path: "/counterparty_blockchain_addresses/{id}" }),
+  );
+export type GetCounterpartyBlockchainAddressInput =
+  typeof GetCounterpartyBlockchainAddressInput.Type;
+
+// Output Schema
+export const GetCounterpartyBlockchainAddressOutput =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
+    id: Schema.String,
+    type: Schema.Literals(["COUNTERPARTY_BLOCKCHAIN_ADDRESS"]),
+    url: Schema.String,
+    created_at: Schema.String,
+    updated_at: Schema.String,
+    archived_at: Schema.optional(Schema.NullOr(Schema.String)),
+    customer_id: Schema.optional(Schema.NullOr(Schema.String)),
+    program_id: Schema.optional(Schema.NullOr(Schema.String)),
+    counterparty_id: Schema.optional(Schema.NullOr(Schema.String)),
+    description: Schema.String,
+    address: Schema.String,
+    network: Schema.Literals(["BASE", "ETHEREUM", "INK", "SOLANA", "SUI"]),
+    custodian: Schema.Literals([
+      "ANCHORAGE_SG",
+      "ANCHORAGE_US",
+      "AQUANOW_CA",
+      "B2C2_UK",
+      "B2C2_US",
+      "BITGO_SG",
+      "BITGO_US",
+      "BITSTAMP_US",
+      "BVNK_US",
+      "CIRCLE_FR",
+      "CIRCLE_US",
+      "CITIBANK_US",
+      "COINBASE_US",
+      "COINSMART_CA",
+      "COPPER_CH",
+      "COPPER_UK",
+      "CUMBERLAND_DRW_LLC_US",
+      "CUMBERLAND_SG",
+      "EREBOR_BANK_US",
+      "FALCONX_US",
+      "FIDELITY_UK",
+      "FIDELITY_US",
+      "FIREBLOCKS_APAC",
+      "FIREBLOCKS_US",
+      "GALAXY_KY",
+      "GEMINI_US",
+      "KRAKEN_BVI",
+      "KRAKEN_EU_IE",
+      "KRAKEN_UK",
+      "KRAKEN_US",
+      "NUBANK_BR",
+      "PAXOS_US",
+      "RAMP_NETWORK_US",
+      "ROBINHOOD_US",
+      "WINTERMUTE_GB",
+      "SELF_HOSTED",
+      "OTHER",
+    ]),
+    custodian_other: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_ref: Schema.optional(Schema.Unknown),
+    custom_fields: Schema.optional(Schema.Unknown),
+  });
+export type GetCounterpartyBlockchainAddressOutput =
+  typeof GetCounterpartyBlockchainAddressOutput.Type;
+
+// The operation
+/**
+ * Retrieve Counterparty Blockchain Address
+ *
+ * Retrieve a specific Counterparty Blockchain Address by ID
+ *
+ * @param id - Contact Blockchain Address ID
+ */
+export const getCounterpartyBlockchainAddress =
+  /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+    inputSchema: GetCounterpartyBlockchainAddressInput,
+    outputSchema: GetCounterpartyBlockchainAddressOutput,
+    errors: [BadRequest, NotFound] as const,
+  }));

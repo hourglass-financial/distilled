@@ -1,0 +1,512 @@
+{
+  "description": "Add observed error responses to operations whose spec only declared 200. Verified via real API requests against api.erebor.bank: every GET-by-id returns 404 NOT_FOUND for valid-format unknown IDs and 400 INVALID_REQUEST for malformed IDs; every PATCH-by-id also returns 400/404; create endpoints return 400 for validation failures and 404 when a referenced resource (counterparty, deposit_account, etc.) does not exist; action endpoints (close, archive, ping, attribute) return 404 when the parent resource is missing.",
+  "patches": [
+    {
+      "op": "add",
+      "path": "/components/responses",
+      "value": {
+        "Error": {
+          "description": "Error response",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Error" }
+            }
+          }
+        }
+      }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1account_numbers/post/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1account_numbers/post/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1account_numbers~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1account_numbers~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1ach_in~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1ach_in~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1ach_out/post/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1ach_out/post/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1ach_out~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1ach_out~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1blockchain_addresses/post/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1blockchain_addresses/post/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1blockchain_addresses~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1blockchain_addresses~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1blockchain_in~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1blockchain_in~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1blockchain_in~1{id}~1attribute/post/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1blockchain_out/post/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1blockchain_out/post/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1blockchain_out~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1blockchain_out~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1book_transfers/post/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1book_transfers/post/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1book_transfers~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1book_transfers~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1business_applicants~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1business_applicants~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1business_applicants/post/responses/422",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1counterparties/post/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1counterparties~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1counterparties~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1counterparties~1{id}/patch/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1counterparties~1{id}/patch/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1counterparty_blockchain_addresses/post/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1counterparty_blockchain_addresses/post/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1counterparty_blockchain_addresses~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1counterparty_blockchain_addresses~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1counterparty_international_bank_accounts/post/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1counterparty_international_bank_accounts/post/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1counterparty_international_bank_accounts/post/responses/422",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1counterparty_international_bank_accounts~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1counterparty_international_bank_accounts~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1counterparty_rail_addresses/post/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1counterparty_rail_addresses/post/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1counterparty_rail_addresses~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1counterparty_rail_addresses~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1counterparty_us_bank_accounts/post/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1counterparty_us_bank_accounts/post/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1counterparty_us_bank_accounts~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1counterparty_us_bank_accounts~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1customers~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1customers~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1deposit_account_templates~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1deposit_account_templates~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1deposit_accounts/post/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1deposit_accounts/post/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1deposit_accounts~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1deposit_accounts~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1deposit_accounts~1{id}~1close/post/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1deposit_accounts~1{id}~1close/post/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1documents/post/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1documents~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1documents~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1events~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1events~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1international_wire_in~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1international_wire_in~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1international_wire_out/post/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1international_wire_out/post/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1international_wire_out/post/responses/422",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1international_wire_out~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1international_wire_out~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1onboardings~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1onboardings~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1person_applicants/post/responses/422",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1person_applicants~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1person_applicants~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1programs~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1programs~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1rail_in~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1rail_in~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1rail_out/post/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1rail_out/post/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1rail_out~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1rail_out~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1transactions~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1transactions~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1wire_in~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1wire_in~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+
+    {
+      "op": "add",
+      "path": "/paths/~1wire_out/post/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1wire_out/post/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1wire_out~1{id}/get/responses/400",
+      "value": { "$ref": "#/components/responses/Error" }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1wire_out~1{id}/get/responses/404",
+      "value": { "$ref": "#/components/responses/Error" }
+    }
+  ]
+}
