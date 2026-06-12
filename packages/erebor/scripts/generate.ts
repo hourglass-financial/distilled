@@ -1,19 +1,21 @@
 /**
  * Erebor SDK Code Generator
  *
- * Loads the Erebor OpenAPI 3.1 spec from docs/erebor/openapi.json, strips the
- * vendor-defined `Authorization` header parameter from every operation (the
- * runtime client injects auth headers from credentials), then delegates to the
- * shared OpenAPI generator from sdk-core.
+ * Loads the Erebor OpenAPI 3.1 spec from the package-local specs snapshot,
+ * strips the vendor-defined `Authorization` header parameter from every
+ * operation (the runtime client injects auth headers from credentials), then
+ * delegates to the shared OpenAPI generator from sdk-core.
  */
 import * as fs from "fs";
 import * as path from "path";
 import { generateFromOpenAPI } from "@distilled.cloud/core/openapi/generate";
 
 const rootDir = path.join(import.meta.dir, "..");
-const repoRoot = path.join(rootDir, "../..");
 
-const sourceSpecPath = path.join(repoRoot, "docs/erebor/openapi.json");
+const sourceSpecPath = path.join(
+  rootDir,
+  "specs/distilled-spec-erebor/specs/openapi.json",
+);
 const tmpDir = path.join(rootDir, ".gen-tmp");
 const cleanedSpecPath = path.join(tmpDir, "openapi.json");
 

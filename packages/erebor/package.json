@@ -69,8 +69,8 @@
     "test": "bunx vitest run test --passWithNoTests",
     "publish:npm": "bun run build && bun publish --access public",
     "generate": "bun run scripts/generate.ts && oxlint --fix src && oxfmt --write src && oxfmt --write src",
-    "specs:fetch": "echo 'No specs configured'",
-    "specs:update": "echo 'No specs configured'"
+    "specs:fetch": "python3 ../../scripts/fetch-erebor-docs.py --out specs/distilled-spec-erebor/specs --cookie-jar ../../.ai-workspace/erebor-docs.cookies.txt",
+    "specs:update": "bun run specs:fetch"
   },
   "dependencies": {
     "@distilled.cloud/core": "workspace:*",

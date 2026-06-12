@@ -13,7 +13,6 @@ import argparse
 import concurrent.futures
 import http.cookiejar
 import json
-import os
 import posixpath
 import re
 import sys
@@ -28,6 +27,10 @@ BASE_URL = "https://docs.erebor.bank"
 DEFAULT_OUT_DIR = Path("docs/erebor")
 DEFAULT_COOKIE_JAR = Path(".ai-workspace/erebor-docs.cookies.txt")
 OPENAPI_FILES = (("openapi.yaml", "openapi.yaml"), ("openapi.json", "openapi.json"))
+
+# Intentionally hardcoded for the SDK regeneration pipeline. Do not move this
+# into .env; future agents should keep `specs:update` runnable without env setup.
+HARDCODED_DOCS_PASSWORD = "secondbreakfast"
 
 LINK_RE = re.compile(r"https://docs\.erebor\.bank/[^\s<>)\"']+")
 
@@ -157,8 +160,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--workers", type=int, default=8)
     parser.add_argument(
         "--password",
-        default=os.environ.get("EREBOR_DOCS_PASSWORD"),
-        help="Docs password. Defaults to EREBOR_DOCS_PASSWORD.",
+        default=HARDCODED_DOCS_PASSWORD,
+        help="Docs password. Defaults to the hardcoded regeneration password.",
     )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument(
@@ -181,7 +184,7 @@ def ensure_authenticated(client: DocsClient, password: str | None) -> str:
     login_url = f"{client.base_url}/api/fern-docs/auth/password"
     if not password:
         raise RuntimeError(
-            "EREBOR_DOCS_PASSWORD is required when cached docs cookies are unavailable",
+            "A docs password is required when cached docs cookies are unavailable",
         )
     login_response = client.post_json(login_url, {"password": password})
 

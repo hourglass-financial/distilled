@@ -65,6 +65,17 @@ Errors are matched from the JSON response shape `{ error, message, docs_url, fie
 - **Webhooks** — webhook subscriptions and ping
 - **Simulation** (sandbox) — simulate inbound and returned ACH, wire, international wire, and blockchain transfers
 
+## Updating Specs
+
+Refresh the package-local Erebor docs snapshot, then regenerate operations:
+
+```bash
+bun run specs:update
+bun run generate
+```
+
+The canonical spec lives at `packages/erebor/specs/distilled-spec-erebor/specs/openapi.json`.
+
 ## License
 
 MIT
