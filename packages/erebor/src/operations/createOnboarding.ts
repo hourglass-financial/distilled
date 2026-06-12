@@ -1,0 +1,80 @@
+import * as Schema from "effect/Schema";
+import { API } from "../client.ts";
+import * as T from "../traits.ts";
+import { BadRequest, NotFound, UnprocessableEntity } from "../errors.ts";
+
+// Input Schema
+export const CreateOnboardingInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
+  program_id: Schema.optional(Schema.String),
+  person_applicant_id: Schema.optional(Schema.NullOr(Schema.String)),
+  business_applicant_id: Schema.optional(Schema.NullOr(Schema.String)),
+  deposit_account_template_id: Schema.optional(Schema.String),
+  disclosures: Schema.Struct({
+    disclosures_signed_externally: Schema.Boolean,
+  }),
+  custom_ref: Schema.optional(Schema.String),
+  custom_fields: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
+}).pipe(T.Http({ method: "POST", path: "/onboardings" }));
+export type CreateOnboardingInput = typeof CreateOnboardingInput.Type;
+
+// Output Schema
+export const CreateOnboardingOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
+  {
+    id: Schema.String,
+    type: Schema.Literals(["ONBOARDING"]),
+    url: Schema.String,
+    created_at: Schema.String,
+    updated_at: Schema.String,
+    archived_at: Schema.optional(Schema.NullOr(Schema.String)),
+    program_id: Schema.String,
+    status: Schema.Literals([
+      "SUBMITTED",
+      "UNDER_REVIEW",
+      "APPROVED",
+      "REJECTED",
+    ]),
+    applicant_type: Schema.Literals(["PERSON", "BUSINESS"]),
+    person_applicant_id: Schema.optional(Schema.NullOr(Schema.String)),
+    business_applicant_id: Schema.optional(Schema.NullOr(Schema.String)),
+    deposit_account_template_id: Schema.optional(Schema.NullOr(Schema.String)),
+    disclosures: Schema.Struct({
+      disclosures_signed_externally: Schema.Boolean,
+    }),
+    customer_id: Schema.optional(Schema.NullOr(Schema.String)),
+    deposit_account_id: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_ref: Schema.optional(Schema.Unknown),
+    custom_fields: Schema.optional(Schema.Unknown),
+  },
+);
+export type CreateOnboardingOutput = typeof CreateOnboardingOutput.Type;
+
+// The operation
+/**
+ * Create Onboarding
+ *
+ * Start a new Onboarding for a person or business applicant. A successful Onboarding produces a new Customer, linked in the result.
+ * At least one of `deposit_account_template_id` or `program_id` must be provided:
+ * - **`deposit_account_template_id` only** — on approval, we create the Customer **and** open an initial deposit account from the template. The customer is placed in the template's program. Use this when you want a turnkey approve→account flow.
+ * - **`program_id` only** — on approval, we create only the Customer in the given program. No initial deposit account is opened; open accounts later by calling `POST /deposit_accounts` when the customer is ready to transact.
+ * - **Both** — equivalent to providing only `deposit_account_template_id`; the supplied `program_id` is treated as a confirming assertion. Returns `400` if the supplied `program_id` does not match the program the template belongs to.
+ * Supplying neither field returns `400`. An unrecognised `program_id` (or one you do not manage) returns `404`.
+ * On approval the `ONBOARDING.APPROVED` event always fires. The `DEPOSIT_ACCOUNT.PENDING` / `DEPOSIT_ACCOUNT.OPEN` events only fire when the Onboarding was created with `deposit_account_template_id` (either alone or alongside a matching `program_id`).
+ *
+ * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
+
+ * @param Erebor-Simulation-Scenario - **Sandbox only.** Forces a simulated onboarding outcome so you can exercise success and failure paths. Ignored in production, where onboardings always go through real review.
+
+| Value | Outcome |
+|-------|---------|
+| `ONBOARDING_REJECTED` | The Onboarding status is set to `REJECTED`. No Customer or Deposit Account is created. |
+| `ONBOARDING_UNDER_REVIEW` | The Onboarding status is set to `UNDER_REVIEW`. |
+| _(omitted)_ | The Onboarding status is set to `APPROVED` (and opens the initial Deposit Account when `deposit_account_template_id` was supplied). |
+
+An unrecognized value is rejected with `400`. The header name aligns with the platform's `/simulation/` endpoints.
+
+ */
+export const createOnboarding = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  inputSchema: CreateOnboardingInput,
+  outputSchema: CreateOnboardingOutput,
+  errors: [BadRequest, NotFound, UnprocessableEntity] as const,
+}));
