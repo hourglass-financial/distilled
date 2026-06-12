@@ -1,0 +1,82 @@
+name: Publish Private Erebor Packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      dist-tag:
+        description: Dist tag to move after publishing
+        required: true
+        type: string
+        default: erebor-sdk
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build private package inputs
+        run: |
+          bun --filter '@distilled.cloud/core' build
+          bun --filter '@distilled.cloud/erebor' build
+
+      - name: Compute package version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          base_version="$(node -p "require('./packages/erebor/package.json').version")"
+          short_sha="${GITHUB_SHA::7}"
+
+          if [[ "$base_version" == *-* ]]; then
+            version="${base_version}.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}.g${short_sha}"
+          else
+            version="${base_version}-branch.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}.g${short_sha}"
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Publishing version $version"
+
+      - name: Stage package manifests
+        run: |
+          bun run prepare:github-erebor-packages \
+            --version "${{ steps.version.outputs.version }}" \
+            --stage-dir .ai-workspace/github-packages
+
+      - name: Configure GitHub Packages auth
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "@hourglass-financial:registry=https://npm.pkg.github.com" >> ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
+
+      - name: Publish private core
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: .ai-workspace/github-packages/@hourglass-financial__distilled-core
+        run: npm publish --registry=https://npm.pkg.github.com
+
+      - name: Publish private Erebor
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: .ai-workspace/github-packages/@hourglass-financial__erebor
+        run: npm publish --registry=https://npm.pkg.github.com
+
+      - name: Update dist tags
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          DIST_TAG: ${{ inputs['dist-tag'] }}
+        run: |
+          npm dist-tag add "@hourglass-financial/distilled-core@${VERSION}" "${DIST_TAG}" --registry=https://npm.pkg.github.com
+          npm dist-tag add "@hourglass-financial/erebor@${VERSION}" "${DIST_TAG}" --registry=https://npm.pkg.github.com

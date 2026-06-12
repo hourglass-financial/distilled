@@ -22,6 +22,8 @@
     "generate-nuke": "bun ./scripts/generate-nuke.ts",
     "generate-tests": "bun ./scripts/generate-tests.ts",
     "error-discovery": "bun ./scripts/error-discovery.ts",
+    "prepare:github-erebor-packages": "bun ./scripts/prepare-github-erebor-packages.ts",
+    "smoke:github-erebor-install": "bun ./scripts/smoke-github-erebor-install.ts",
     "prepare": "husky"
   },
   "workspaces": {
