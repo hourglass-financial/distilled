@@ -513,7 +513,12 @@ jobs:
         working-directory: packages/core
       - run: bun run check
         working-directory: packages/erebor
+      # The Erebor package currently has generated live API tests that depend
+      # on sandbox fixtures and account capabilities outside this repository's
+      # control. Keep CI on build/check by default; opt into the live suite from
+      # repo variables once those fixtures are stable.
       - run: bun run test
+        if: vars.EREBOR_RUN_LIVE_TESTS == 'true'
         working-directory: packages/erebor
         env:
           EREBOR_API_KEY: ${{ secrets.EREBOR_API_KEY }}
