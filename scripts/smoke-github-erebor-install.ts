@@ -48,8 +48,8 @@ const buildSmokePlan = (options: SmokeOptions): SmokePlan => {
     ].join("\n"),
     installCommand:
       options.packageManager === "bun"
-        ? ["bun", "add", packageSpec]
-        : ["npm", "install", packageSpec],
+        ? ["bun", "add", "--force", "--no-cache", packageSpec]
+        : ["npm", "install", "--prefer-online", packageSpec],
     importCommand:
       options.packageManager === "bun"
         ? ["bun", "./check-erebor-import.mjs"]
@@ -95,6 +95,13 @@ const runSmokeInstall = async (
   await writeFile(
     path.join(tempDir, "check-erebor-import.mjs"),
     [
+      "import { readFile } from 'node:fs/promises';",
+      "import path from 'node:path';",
+      "",
+      `const packageName = ${JSON.stringify(options.packageName)};`,
+      "const packageJsonPath = path.join('node_modules', ...packageName.split('/'), 'package.json');",
+      "const manifest = JSON.parse(await readFile(packageJsonPath, 'utf8'));",
+      "console.log(`Installed ${manifest.name}@${manifest.version}`);",
       `const mod = await import(${JSON.stringify(options.packageName)});`,
       "if (!mod) throw new Error('Erebor package import returned no module');",
       "console.log('Erebor package import succeeded');",
