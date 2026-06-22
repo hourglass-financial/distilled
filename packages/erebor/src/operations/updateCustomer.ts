@@ -6,6 +6,12 @@ import { BadRequest, NotFound } from "../errors.ts";
 // Input Schema
 export const UpdateCustomerInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String.pipe(T.PathParam()),
+  ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
+    T.HttpHeader("Erebor-Idempotency-Key"),
+  ),
+  ereborVersion: Schema.optional(Schema.String).pipe(
+    T.HttpHeader("Erebor-Version"),
+  ),
   custom_ref: Schema.optional(Schema.String),
   custom_fields: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
 }).pipe(T.Http({ method: "PATCH", path: "/customers/{id}" }));
@@ -37,6 +43,7 @@ export type UpdateCustomerOutput = typeof UpdateCustomerOutput.Type;
  * @param id - Customer ID
  * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const updateCustomer = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: UpdateCustomerInput,

@@ -13,6 +13,9 @@ export const ListOutboundWireTransfersInput =
     customer_id: Schema.optional(Schema.String),
     program_id: Schema.optional(Schema.String),
     custom_ref: Schema.optional(Schema.String),
+    ereborVersion: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Version"),
+    ),
   }).pipe(T.Http({ method: "GET", path: "/wire_out" }));
 export type ListOutboundWireTransfersInput =
   typeof ListOutboundWireTransfersInput.Type;
@@ -74,6 +77,7 @@ export type ListOutboundWireTransfersOutput =
  * @param customer_id - Filter by customer ID
  * @param program_id - Filter by program ID
  * @param custom_ref - Filter by exact `custom_ref` match (case-sensitive, up to 255 characters).
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const listOutboundWireTransfers = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({

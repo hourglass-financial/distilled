@@ -12,6 +12,9 @@ export const ListDepositAccountTemplatesInput =
     ownership_type: Schema.optional(Schema.String),
     status: Schema.optional(Schema.String),
     program_id: Schema.optional(Schema.String),
+    ereborVersion: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Version"),
+    ),
   }).pipe(T.Http({ method: "GET", path: "/deposit_account_templates" }));
 export type ListDepositAccountTemplatesInput =
   typeof ListDepositAccountTemplatesInput.Type;
@@ -72,6 +75,7 @@ export type ListDepositAccountTemplatesOutput =
  * @param ownership_type - Filter by ownership type
  * @param status - Filter by template status
  * @param program_id - Filter by program ID
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const listDepositAccountTemplates = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({

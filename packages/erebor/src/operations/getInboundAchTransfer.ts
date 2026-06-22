@@ -7,6 +7,9 @@ import { BadRequest, NotFound } from "../errors.ts";
 export const GetInboundAchTransferInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
+    ereborVersion: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Version"),
+    ),
   }).pipe(T.Http({ method: "GET", path: "/ach_in/{id}" }));
 export type GetInboundAchTransferInput = typeof GetInboundAchTransferInput.Type;
 
@@ -77,6 +80,7 @@ export type GetInboundAchTransferOutput =
  * Retrieve a specific Inbound ACH Transfer by ID
  *
  * @param id - Inbound ACH transfer ID
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const getInboundAchTransfer = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({

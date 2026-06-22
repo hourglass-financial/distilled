@@ -7,6 +7,9 @@ import { BadRequest, NotFound } from "../errors.ts";
 export const GetCounterpartyRailAddressInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
+    ereborVersion: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Version"),
+    ),
   }).pipe(T.Http({ method: "GET", path: "/counterparty_rail_addresses/{id}" }));
 export type GetCounterpartyRailAddressInput =
   typeof GetCounterpartyRailAddressInput.Type;
@@ -38,6 +41,7 @@ export type GetCounterpartyRailAddressOutput =
  * Retrieve a specific Counterparty Rail Address by ID
  *
  * @param id - Rail address ID
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const getCounterpartyRailAddress = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({

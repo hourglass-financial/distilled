@@ -7,6 +7,9 @@ import { SensitiveOutputNullableString } from "../sensitive.ts";
 // Input Schema
 export const ArchiveWebhookInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String.pipe(T.PathParam()),
+  ereborVersion: Schema.optional(Schema.String).pipe(
+    T.HttpHeader("Erebor-Version"),
+  ),
 }).pipe(T.Http({ method: "POST", path: "/webhooks/{id}/archive" }));
 export type ArchiveWebhookInput = typeof ArchiveWebhookInput.Type;
 
@@ -130,6 +133,7 @@ export type ArchiveWebhookOutput = typeof ArchiveWebhookOutput.Type;
  * Archive a webhook. This soft-deletes it — `status` becomes `ARCHIVED`, `archived_at` is set to the current time, and the webhook stops delivering events. Archiving is idempotent; calling it on an already-archived webhook returns the same webhook unchanged.
  *
  * @param id - Webhook ID
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const archiveWebhook = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: ArchiveWebhookInput,

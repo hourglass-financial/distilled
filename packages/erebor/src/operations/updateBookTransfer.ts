@@ -7,6 +7,12 @@ import { BadRequest, NotFound } from "../errors.ts";
 export const UpdateBookTransferInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
+    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Idempotency-Key"),
+    ),
+    ereborVersion: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Version"),
+    ),
     custom_ref: Schema.optional(Schema.String),
     custom_fields: Schema.optional(
       Schema.Record(Schema.String, Schema.Unknown),
@@ -48,6 +54,7 @@ export type UpdateBookTransferOutput = typeof UpdateBookTransferOutput.Type;
  * @param id - Book transfer ID
  * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const updateBookTransfer = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: UpdateBookTransferInput,

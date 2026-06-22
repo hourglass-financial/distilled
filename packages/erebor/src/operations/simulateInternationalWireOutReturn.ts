@@ -7,6 +7,9 @@ import { BadRequest, Forbidden, NotFound, Conflict } from "../errors.ts";
 export const SimulateInternationalWireOutReturnInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
+    ereborVersion: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Version"),
+    ),
   }).pipe(
     T.Http({
       method: "POST",
@@ -33,6 +36,7 @@ export type SimulateInternationalWireOutReturnOutput =
  * The response returns immediately. The transfer is still `SETTLED` at response time; the flip to `RETURNED` is asynchronous — usually within a minute. Poll `GET /international_wire_out/{id}` or listen for the `INTERNATIONAL_WIRE_OUT.RETURNED` webhook to observe the transition.
  *
  * @param id - ID of the outbound international wire transfer to return. Must be in `SETTLED` status.
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const simulateInternationalWireOutReturn =
   /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

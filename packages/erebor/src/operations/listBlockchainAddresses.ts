@@ -11,6 +11,9 @@ export const ListBlockchainAddressesInput =
     deposit_account_id: Schema.optional(Schema.String),
     address: Schema.optional(Schema.String),
     custom_ref: Schema.optional(Schema.String),
+    ereborVersion: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Version"),
+    ),
   }).pipe(T.Http({ method: "GET", path: "/blockchain_addresses" }));
 export type ListBlockchainAddressesInput =
   typeof ListBlockchainAddressesInput.Type;
@@ -58,6 +61,7 @@ export type ListBlockchainAddressesOutput =
  * @param deposit_account_id - Filter by Deposit Account ID
  * @param address - Filter by on-chain address (EVM addresses are often matched case-insensitively)
  * @param custom_ref - Filter by exact `custom_ref` match (case-sensitive, up to 255 characters).
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const listBlockchainAddresses = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({

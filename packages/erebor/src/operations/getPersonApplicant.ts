@@ -7,6 +7,9 @@ import { BadRequest, NotFound } from "../errors.ts";
 export const GetPersonApplicantInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
+    ereborVersion: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Version"),
+    ),
   }).pipe(T.Http({ method: "GET", path: "/person_applicants/{id}" }));
 export type GetPersonApplicantInput = typeof GetPersonApplicantInput.Type;
 
@@ -107,6 +110,7 @@ export type GetPersonApplicantOutput = typeof GetPersonApplicantOutput.Type;
  * Retrieve a specific Person Applicant by ID
  *
  * @param id - Person applicant ID
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const getPersonApplicant = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: GetPersonApplicantInput,

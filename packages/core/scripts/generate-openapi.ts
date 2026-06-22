@@ -242,6 +242,39 @@ function renderEnumLiterals(
   return `Schema.Literals([${literals}])`;
 }
 
+function toParameterFieldName(name: string): string {
+  const camel = toCamelCase(name);
+  return camel.charAt(0).toLowerCase() + camel.slice(1);
+}
+
+function renderParameterSchema(
+  param: {
+    type?: string;
+    enum?: (string | number | boolean)[];
+    schema?: SchemaObject;
+  },
+  spec: any,
+  ctx?: SchemaGenerationContext,
+): string {
+  if (param.schema) {
+    return openApiTypeToEffectSchema(param.schema, spec, "  ", new Set(), ctx);
+  }
+
+  if (param.enum && param.enum.length > 0) {
+    return renderEnumLiterals(param.enum, param.type);
+  }
+
+  switch (param.type) {
+    case "integer":
+    case "number":
+      return "Schema.Number";
+    case "boolean":
+      return "Schema.Boolean";
+    default:
+      return "Schema.String";
+  }
+}
+
 // ============================================================================
 // Version Detection
 // ============================================================================
@@ -398,8 +431,12 @@ function openApiTypeToEffectSchema(
         const mergedProp: SchemaObject = {
           ...resolved,
           ...(prop.nullable !== undefined ? { nullable: prop.nullable } : {}),
-          ...(prop["x-nullable"] !== undefined ? { "x-nullable": prop["x-nullable"] } : {}),
-          ...(prop["x-sensitive"] !== undefined ? { "x-sensitive": prop["x-sensitive"] } : {}),
+          ...(prop["x-nullable"] !== undefined
+            ? { "x-nullable": prop["x-nullable"] }
+            : {}),
+          ...(prop["x-sensitive"] !== undefined
+            ? { "x-sensitive": prop["x-sensitive"] }
+            : {}),
         };
         return openApiTypeToEffectSchema(
           mergedProp,
@@ -477,9 +514,7 @@ function openApiTypeToEffectSchema(
             ? "SensitiveOutputNullableString"
             : "SensitiveOutputString";
         } else {
-          baseSchema = nullable
-            ? "SensitiveNullableString"
-            : "SensitiveString";
+          baseSchema = nullable ? "SensitiveNullableString" : "SensitiveString";
         }
         return baseSchema; // Return early since Sensitive handles null
       }
@@ -711,6 +746,7 @@ function generateInputSchemaSwagger(
   const queryParams = parameters.filter(
     (p) => p.in === "query" && !(apiVersion && p.name === "api-version"),
   );
+  const headerParams = parameters.filter((p) => p.in === "header");
   const bodyParam = parameters.find((p) => p.in === "body");
 
   const fields: string[] = [];
@@ -750,6 +786,22 @@ function generateInputSchemaSwagger(
     fields.push(`  ${param.name}: ${schema},`);
   }
 
+  // Header parameters
+  for (const param of headerParams) {
+    const fieldName = toParameterFieldName(param.name);
+    if (usedNames.has(fieldName)) continue;
+    usedNames.add(fieldName);
+
+    let schema = renderParameterSchema(param, spec, ctx);
+    if (!param.required) {
+      schema = `Schema.optional(${schema})`;
+    }
+
+    fields.push(
+      `  ${quotePropKey(fieldName)}: ${schema}.pipe(T.HttpHeader("${escapeStringLiteral(param.name)}")),`,
+    );
+  }
+
   // Body parameters
   if (bodyParam?.schema) {
     let bodySchema = bodyParam.schema;
@@ -757,17 +809,23 @@ function generateInputSchemaSwagger(
     // Without this, `bodySchema.properties` is undefined and the request body is
     // emitted empty — breaking create/update operations. Mirrors the OAS3 emitter.
     if (bodySchema.$ref) {
-      bodySchema = resolveRef(spec as any, bodySchema.$ref) as typeof bodySchema;
+      bodySchema = resolveRef(
+        spec as any,
+        bodySchema.$ref,
+      ) as typeof bodySchema;
     }
     // Flatten `allOf` so inherited properties surface as body fields.
     if (bodySchema.allOf && bodySchema.allOf.length > 0) {
-      const mergedProps: Record<string, any> = { ...(bodySchema.properties ?? {}) };
+      const mergedProps: Record<string, any> = {
+        ...(bodySchema.properties ?? {}),
+      };
       const mergedRequired: string[] = [...(bodySchema.required ?? [])];
       for (const subSchema of bodySchema.allOf) {
         const resolvedSub = subSchema.$ref
           ? (resolveRef(spec as any, subSchema.$ref) as any)
           : subSchema;
-        if (resolvedSub.properties) Object.assign(mergedProps, resolvedSub.properties);
+        if (resolvedSub.properties)
+          Object.assign(mergedProps, resolvedSub.properties);
         if (resolvedSub.required) mergedRequired.push(...resolvedSub.required);
       }
       bodySchema = {
@@ -793,7 +851,13 @@ function generateInputSchemaSwagger(
           ? { ...value, "x-sensitive": true }
           : value;
 
-        let fieldSchema = openApiTypeToEffectSchema(effectiveValue, spec, "  ", new Set(), ctx);
+        let fieldSchema = openApiTypeToEffectSchema(
+          effectiveValue,
+          spec,
+          "  ",
+          new Set(),
+          ctx,
+        );
         if (!required.has(key)) {
           fieldSchema = `Schema.optional(${fieldSchema})`;
         }
@@ -875,6 +939,7 @@ function generateInputSchema3(
   const queryParams = parameters.filter(
     (p) => p.in === "query" && !(apiVersion && p.name === "api-version"),
   );
+  const headerParams = parameters.filter((p) => p.in === "header");
 
   const fields: string[] = [];
   const usedNames = new Set<string>();
@@ -911,6 +976,22 @@ function generateInputSchema3(
       schemaStr = `Schema.optional(${schemaStr})`;
     }
     fields.push(`  ${param.name}: ${schemaStr},`);
+  }
+
+  // Header parameters
+  for (const param of headerParams) {
+    const fieldName = toParameterFieldName(param.name);
+    if (usedNames.has(fieldName)) continue;
+    usedNames.add(fieldName);
+
+    let schema = renderParameterSchema(param, spec, ctx);
+    if (!param.required) {
+      schema = `Schema.optional(${schema})`;
+    }
+
+    fields.push(
+      `  ${quotePropKey(fieldName)}: ${schema}.pipe(T.HttpHeader("${escapeStringLiteral(param.name)}")),`,
+    );
   }
 
   // Request body — check for JSON, form-urlencoded, or multipart content
@@ -975,7 +1056,13 @@ function generateInputSchema3(
             ? { ...value, "x-sensitive": true }
             : value;
 
-          let fieldSchema = openApiTypeToEffectSchema(effectiveValue, spec, "  ", new Set(), ctx);
+          let fieldSchema = openApiTypeToEffectSchema(
+            effectiveValue,
+            spec,
+            "  ",
+            new Set(),
+            ctx,
+          );
           if (!required.has(key)) {
             fieldSchema = `Schema.optional(${fieldSchema})`;
           }
@@ -985,7 +1072,10 @@ function generateInputSchema3(
     }
   }
 
-  const httpTraitParts = [`method: "${method.toUpperCase()}"`, `path: "${pathTemplate}"`];
+  const httpTraitParts = [
+    `method: "${method.toUpperCase()}"`,
+    `path: "${pathTemplate}"`,
+  ];
   if (bodyContentType) {
     httpTraitParts.push(`contentType: "${bodyContentType}"`);
   }
@@ -1316,12 +1406,15 @@ export function generateFromOpenAPI(config: GeneratorConfig): void {
             version,
             operation.responses,
           );
-          const { outputSchemaCode, outputSchemaName, sensitiveImports: outputSensitiveImports } =
-            generateOutputSchema(
-              operation.operationId,
-              responseSchema,
-              swagger,
-            );
+          const {
+            outputSchemaCode,
+            outputSchemaName,
+            sensitiveImports: outputSensitiveImports,
+          } = generateOutputSchema(
+            operation.operationId,
+            responseSchema,
+            swagger,
+          );
           const sensitiveImports = {
             usesSensitiveString:
               sensitiveCtx.usesSensitiveString ||
@@ -1432,11 +1525,10 @@ export function generateFromOpenAPI(config: GeneratorConfig): void {
           const has3xxLocation = Object.entries(operation.responses ?? {}).some(
             ([status, resp]) => {
               if (!status.startsWith("3")) return false;
-              const respHeaders = (resp as { headers?: Record<string, unknown> })
-                .headers;
-              return (
-                respHeaders !== undefined && "Location" in respHeaders
-              );
+              const respHeaders = (
+                resp as { headers?: Record<string, unknown> }
+              ).headers;
+              return respHeaders !== undefined && "Location" in respHeaders;
             },
           );
           const noFollowRedirect =
@@ -1459,8 +1551,11 @@ export function generateFromOpenAPI(config: GeneratorConfig): void {
             version,
             operation.responses,
           );
-          const { outputSchemaCode, outputSchemaName, sensitiveImports: outputSensitiveImports } =
-            generateOutputSchema(operation.operationId, responseSchema, oas);
+          const {
+            outputSchemaCode,
+            outputSchemaName,
+            sensitiveImports: outputSensitiveImports,
+          } = generateOutputSchema(operation.operationId, responseSchema, oas);
           const sensitiveImports = {
             usesSensitiveString:
               sensitiveCtx.usesSensitiveString ||
@@ -1531,8 +1626,9 @@ export function generateFromOpenAPI(config: GeneratorConfig): void {
   // Write barrel file
   const barrelPath = path.join(outputDir, "index.ts");
   const barrelContent =
-    operations.map((op) => `export * from "./${op.functionName}.ts";`).join("\n") +
-    "\n";
+    operations
+      .map((op) => `export * from "./${op.functionName}.ts";`)
+      .join("\n") + "\n";
   fs.writeFileSync(barrelPath, barrelContent);
 }
 
@@ -1551,7 +1647,14 @@ function detectPagination(
   parameters: ParameterObject3[] | undefined,
   responseSchema: SchemaObject | null,
   spec: any,
-): { mode: "cursor" | "page" | "token"; inputToken: string; outputToken: string; items: string } | undefined {
+):
+  | {
+      mode: "cursor" | "page" | "token";
+      inputToken: string;
+      outputToken: string;
+      items: string;
+    }
+  | undefined {
   if (!responseSchema) return undefined;
 
   // Resolve the response schema if it's still a $ref (callers usually
@@ -1663,7 +1766,14 @@ function buildOperationFile(
     usesSensitiveString: boolean;
     usesSensitiveNullableString: boolean;
   },
-  pagination: { mode: "cursor" | "page" | "token"; inputToken: string; outputToken: string; items: string } | undefined,
+  pagination:
+    | {
+        mode: "cursor" | "page" | "token";
+        inputToken: string;
+        outputToken: string;
+        items: string;
+      }
+    | undefined,
   config: GeneratorConfig,
 ): string {
   const clientImport = config.clientImport ?? `${config.importPrefix}/client`;

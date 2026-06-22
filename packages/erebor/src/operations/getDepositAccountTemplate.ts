@@ -7,6 +7,9 @@ import { BadRequest, NotFound } from "../errors.ts";
 export const GetDepositAccountTemplateInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
+    ereborVersion: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Version"),
+    ),
   }).pipe(T.Http({ method: "GET", path: "/deposit_account_templates/{id}" }));
 export type GetDepositAccountTemplateInput =
   typeof GetDepositAccountTemplateInput.Type;
@@ -50,6 +53,7 @@ export type GetDepositAccountTemplateOutput =
  * Retrieve a specific Deposit Account Template by ID
  *
  * @param id - Deposit account template ID
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const getDepositAccountTemplate = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({

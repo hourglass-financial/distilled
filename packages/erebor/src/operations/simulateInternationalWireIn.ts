@@ -6,6 +6,12 @@ import { BadRequest, Forbidden, Conflict } from "../errors.ts";
 // Input Schema
 export const SimulateInternationalWireInInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
+    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Idempotency-Key"),
+    ),
+    ereborVersion: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Version"),
+    ),
     deposit_account_id: Schema.optional(Schema.String),
     account_number: Schema.optional(Schema.String),
     routing_number: Schema.optional(Schema.String),
@@ -53,6 +59,7 @@ export type SimulateInternationalWireInOutput =
  *
  * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const simulateInternationalWireIn = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({

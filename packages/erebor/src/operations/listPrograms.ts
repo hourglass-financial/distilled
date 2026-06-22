@@ -7,6 +7,9 @@ export const ListProgramsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   page_size: Schema.optional(Schema.Number),
   starting_after: Schema.optional(Schema.String),
   ending_before: Schema.optional(Schema.String),
+  ereborVersion: Schema.optional(Schema.String).pipe(
+    T.HttpHeader("Erebor-Version"),
+  ),
 }).pipe(T.Http({ method: "GET", path: "/programs" }));
 export type ListProgramsInput = typeof ListProgramsInput.Type;
 
@@ -41,6 +44,7 @@ export type ListProgramsOutput = typeof ListProgramsOutput.Type;
  * @param page_size - Number of items per page (max 100)
  * @param starting_after - Cursor for pagination (exclusive start)
  * @param ending_before - Cursor for pagination (exclusive end)
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const listPrograms = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: ListProgramsInput,

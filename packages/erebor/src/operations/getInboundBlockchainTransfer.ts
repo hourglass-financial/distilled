@@ -7,6 +7,9 @@ import { BadRequest, NotFound } from "../errors.ts";
 export const GetInboundBlockchainTransferInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
+    ereborVersion: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Version"),
+    ),
   }).pipe(T.Http({ method: "GET", path: "/blockchain_in/{id}" }));
 export type GetInboundBlockchainTransferInput =
   typeof GetInboundBlockchainTransferInput.Type;
@@ -54,6 +57,7 @@ export type GetInboundBlockchainTransferOutput =
  * Retrieve a specific Inbound Blockchain Transfer by ID
  *
  * @param id - Inbound blockchain transfer ID
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const getInboundBlockchainTransfer =
   /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

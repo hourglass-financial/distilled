@@ -7,6 +7,9 @@ import { BadRequest, Forbidden, NotFound, Conflict } from "../errors.ts";
 export const SimulateWireOutReturnInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
+    ereborVersion: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Version"),
+    ),
   }).pipe(T.Http({ method: "POST", path: "/simulation/wire_out/{id}/return" }));
 export type SimulateWireOutReturnInput = typeof SimulateWireOutReturnInput.Type;
 
@@ -27,6 +30,7 @@ export type SimulateWireOutReturnOutput =
  * The response returns immediately. The transfer is still `SETTLED` at response time; the flip to `RETURNED` is asynchronous — usually within a minute. Poll `GET /wire_out/{id}` or listen for the `WIRE_OUT.RETURNED` webhook to observe the transition.
  *
  * @param id - ID of the outbound wire transfer to return. Must be in `SETTLED` status.
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const simulateWireOutReturn = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({

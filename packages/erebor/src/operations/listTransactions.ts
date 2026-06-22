@@ -13,6 +13,9 @@ export const ListTransactionsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   transaction_type: Schema.optional(Schema.String),
   status: Schema.optional(Schema.String),
   associated_payment_id: Schema.optional(Schema.String),
+  ereborVersion: Schema.optional(Schema.String).pipe(
+    T.HttpHeader("Erebor-Version"),
+  ),
 }).pipe(T.Http({ method: "GET", path: "/transactions" }));
 export type ListTransactionsInput = typeof ListTransactionsInput.Type;
 
@@ -96,6 +99,7 @@ export type ListTransactionsOutput = typeof ListTransactionsOutput.Type;
  * @param transaction_type - Filter by transaction type
  * @param status - Filter by transaction status
  * @param associated_payment_id - Filter by associated payment resource ID
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const listTransactions = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: ListTransactionsInput,

@@ -12,6 +12,9 @@ export const ListBookTransfersInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
     to_deposit_account_id: Schema.optional(Schema.String),
     status: Schema.optional(Schema.String),
     custom_ref: Schema.optional(Schema.String),
+    ereborVersion: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Version"),
+    ),
   },
 ).pipe(T.Http({ method: "GET", path: "/book_transfers" }));
 export type ListBookTransfersInput = typeof ListBookTransfersInput.Type;
@@ -63,6 +66,7 @@ export type ListBookTransfersOutput = typeof ListBookTransfersOutput.Type;
  * @param to_deposit_account_id - Filter by destination account ID
  * @param status - Filter by transfer status
  * @param custom_ref - Filter by exact `custom_ref` match (case-sensitive, up to 255 characters).
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const listBookTransfers = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: ListBookTransfersInput,

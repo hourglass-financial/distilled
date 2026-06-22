@@ -6,6 +6,9 @@ import { BadRequest, NotFound } from "../errors.ts";
 // Input Schema
 export const GetBookTransferInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String.pipe(T.PathParam()),
+  ereborVersion: Schema.optional(Schema.String).pipe(
+    T.HttpHeader("Erebor-Version"),
+  ),
 }).pipe(T.Http({ method: "GET", path: "/book_transfers/{id}" }));
 export type GetBookTransferInput = typeof GetBookTransferInput.Type;
 
@@ -40,6 +43,7 @@ export type GetBookTransferOutput = typeof GetBookTransferOutput.Type;
  * Retrieve a specific Book Transfer by ID
  *
  * @param id - Book transfer ID
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const getBookTransfer = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: GetBookTransferInput,

@@ -9,6 +9,9 @@ export const ListDocumentsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   ending_before: Schema.optional(Schema.String),
   program_id: Schema.optional(Schema.String),
   custom_ref: Schema.optional(Schema.String),
+  ereborVersion: Schema.optional(Schema.String).pipe(
+    T.HttpHeader("Erebor-Version"),
+  ),
 }).pipe(T.Http({ method: "GET", path: "/documents" }));
 export type ListDocumentsInput = typeof ListDocumentsInput.Type;
 
@@ -59,6 +62,7 @@ export type ListDocumentsOutput = typeof ListDocumentsOutput.Type;
  * @param ending_before - Cursor for pagination (exclusive end)
  * @param program_id - Filter by program ID
  * @param custom_ref - Filter by exact `custom_ref` match (case-sensitive, up to 255 characters).
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const listDocuments = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: ListDocumentsInput,

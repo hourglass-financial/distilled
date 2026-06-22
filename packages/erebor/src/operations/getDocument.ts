@@ -6,6 +6,9 @@ import { BadRequest, NotFound } from "../errors.ts";
 // Input Schema
 export const GetDocumentInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String.pipe(T.PathParam()),
+  ereborVersion: Schema.optional(Schema.String).pipe(
+    T.HttpHeader("Erebor-Version"),
+  ),
 }).pipe(T.Http({ method: "GET", path: "/documents/{id}" }));
 export type GetDocumentInput = typeof GetDocumentInput.Type;
 
@@ -43,6 +46,7 @@ export type GetDocumentOutput = typeof GetDocumentOutput.Type;
  * Retrieve document metadata and download URL
  *
  * @param id - Document ID
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const getDocument = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: GetDocumentInput,

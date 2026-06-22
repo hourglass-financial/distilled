@@ -12,6 +12,9 @@ export const ListWebhooksInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   status: Schema.optional(Schema.String),
   webhook_url: Schema.optional(Schema.String),
   custom_ref: Schema.optional(Schema.String),
+  ereborVersion: Schema.optional(Schema.String).pipe(
+    T.HttpHeader("Erebor-Version"),
+  ),
 }).pipe(T.Http({ method: "GET", path: "/webhooks" }));
 export type ListWebhooksInput = typeof ListWebhooksInput.Type;
 
@@ -149,6 +152,7 @@ export type ListWebhooksOutput = typeof ListWebhooksOutput.Type;
  * @param status - Filter by webhook status. Repeat the param to filter on multiple statuses (ORed together).
  * @param webhook_url - Filter by exact webhook URL. Repeat the param to match on multiple URLs (ORed together).
  * @param custom_ref - Filter by exact `custom_ref` match (case-sensitive, up to 255 characters).
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const listWebhooks = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: ListWebhooksInput,

@@ -6,6 +6,9 @@ import { BadRequest, NotFound } from "../errors.ts";
 // Input Schema
 export const GetAccountNumberInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String.pipe(T.PathParam()),
+  ereborVersion: Schema.optional(Schema.String).pipe(
+    T.HttpHeader("Erebor-Version"),
+  ),
 }).pipe(T.Http({ method: "GET", path: "/account_numbers/{id}" }));
 export type GetAccountNumberInput = typeof GetAccountNumberInput.Type;
 
@@ -37,6 +40,7 @@ export type GetAccountNumberOutput = typeof GetAccountNumberOutput.Type;
  * Retrieve a specific Account Number by ID
  *
  * @param id - Account number ID
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const getAccountNumber = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: GetAccountNumberInput,

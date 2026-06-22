@@ -6,6 +6,12 @@ import { BadRequest, NotFound } from "../errors.ts";
 // Input Schema
 export const CreateOutboundAchTransferInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
+    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Idempotency-Key"),
+    ),
+    ereborVersion: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Version"),
+    ),
     deposit_account_id: Schema.String,
     counterparty_us_bank_account_id: Schema.String,
     amount: Schema.Struct({
@@ -68,6 +74,7 @@ export type CreateOutboundAchTransferOutput =
  *
  * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const createOutboundAchTransfer = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({

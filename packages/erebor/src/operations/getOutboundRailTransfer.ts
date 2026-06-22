@@ -7,6 +7,9 @@ import { BadRequest, NotFound } from "../errors.ts";
 export const GetOutboundRailTransferInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
+    ereborVersion: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Version"),
+    ),
   }).pipe(T.Http({ method: "GET", path: "/rail_out/{id}" }));
 export type GetOutboundRailTransferInput =
   typeof GetOutboundRailTransferInput.Type;
@@ -46,6 +49,7 @@ export type GetOutboundRailTransferOutput =
  * Retrieve a specific Outbound Rail Transfer by ID
  *
  * @param id - Outbound Rail Transfer ID
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const getOutboundRailTransfer = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({

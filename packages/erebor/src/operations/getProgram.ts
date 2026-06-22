@@ -6,6 +6,9 @@ import { BadRequest, NotFound } from "../errors.ts";
 // Input Schema
 export const GetProgramInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String.pipe(T.PathParam()),
+  ereborVersion: Schema.optional(Schema.String).pipe(
+    T.HttpHeader("Erebor-Version"),
+  ),
 }).pipe(T.Http({ method: "GET", path: "/programs/{id}" }));
 export type GetProgramInput = typeof GetProgramInput.Type;
 
@@ -29,6 +32,7 @@ export type GetProgramOutput = typeof GetProgramOutput.Type;
  * Retrieve a specific Program by ID
  *
  * @param id - Program ID
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const getProgram = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: GetProgramInput,

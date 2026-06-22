@@ -5,6 +5,15 @@ import { BadRequest, NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
 export const CreateOnboardingInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
+  ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
+    T.HttpHeader("Erebor-Idempotency-Key"),
+  ),
+  ereborSimulationScenario: Schema.optional(
+    Schema.Literals(["ONBOARDING_REJECTED", "ONBOARDING_UNDER_REVIEW"]),
+  ).pipe(T.HttpHeader("Erebor-Simulation-Scenario")),
+  ereborVersion: Schema.optional(Schema.String).pipe(
+    T.HttpHeader("Erebor-Version"),
+  ),
   program_id: Schema.optional(Schema.String),
   person_applicant_id: Schema.optional(Schema.NullOr(Schema.String)),
   business_applicant_id: Schema.optional(Schema.NullOr(Schema.String)),
@@ -72,6 +81,7 @@ export type CreateOnboardingOutput = typeof CreateOnboardingOutput.Type;
 
 An unrecognized value is rejected with `400`. The header name aligns with the platform's `/simulation/` endpoints.
 
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const createOnboarding = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: CreateOnboardingInput,

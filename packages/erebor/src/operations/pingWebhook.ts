@@ -6,6 +6,9 @@ import { NotFound } from "../errors.ts";
 // Input Schema
 export const PingWebhookInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String.pipe(T.PathParam()),
+  ereborVersion: Schema.optional(Schema.String).pipe(
+    T.HttpHeader("Erebor-Version"),
+  ),
 }).pipe(T.Http({ method: "POST", path: "/webhooks/{id}/ping" }));
 export type PingWebhookInput = typeof PingWebhookInput.Type;
 
@@ -25,6 +28,7 @@ export type PingWebhookOutput = typeof PingWebhookOutput.Type;
  * Send a test event to a Webhook endpoint.
  *
  * @param id - Webhook ID
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const pingWebhook = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: PingWebhookInput,

@@ -7,6 +7,9 @@ import { BadRequest, NotFound } from "../errors.ts";
 export const GetOutboundInternationalWireTransferInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
+    ereborVersion: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Version"),
+    ),
   }).pipe(T.Http({ method: "GET", path: "/international_wire_out/{id}" }));
 export type GetOutboundInternationalWireTransferInput =
   typeof GetOutboundInternationalWireTransferInput.Type;
@@ -44,6 +47,7 @@ export type GetOutboundInternationalWireTransferOutput =
  * Retrieve a specific Outbound International Wire by ID
  *
  * @param id - Outbound International Wire ID
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const getOutboundInternationalWireTransfer =
   /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

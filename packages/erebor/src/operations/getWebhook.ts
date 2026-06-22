@@ -7,6 +7,9 @@ import { SensitiveOutputNullableString } from "../sensitive.ts";
 // Input Schema
 export const GetWebhookInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String.pipe(T.PathParam()),
+  ereborVersion: Schema.optional(Schema.String).pipe(
+    T.HttpHeader("Erebor-Version"),
+  ),
 }).pipe(T.Http({ method: "GET", path: "/webhooks/{id}" }));
 export type GetWebhookInput = typeof GetWebhookInput.Type;
 
@@ -130,6 +133,7 @@ export type GetWebhookOutput = typeof GetWebhookOutput.Type;
  * Retrieve a specific Webhook by ID.
  *
  * @param id - Webhook ID
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const getWebhook = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: GetWebhookInput,

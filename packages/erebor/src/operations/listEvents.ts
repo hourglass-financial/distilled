@@ -9,6 +9,9 @@ export const ListEventsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   ending_before: Schema.optional(Schema.String),
   event_type: Schema.optional(Schema.String),
   program_id: Schema.optional(Schema.String),
+  ereborVersion: Schema.optional(Schema.String).pipe(
+    T.HttpHeader("Erebor-Version"),
+  ),
 }).pipe(T.Http({ method: "GET", path: "/events" }));
 export type ListEventsInput = typeof ListEventsInput.Type;
 
@@ -135,6 +138,7 @@ export type ListEventsOutput = typeof ListEventsOutput.Type;
  * @param ending_before - Cursor for pagination (exclusive end)
  * @param event_type - Filter by event type. See [Supported Events](/api-reference/events/supported-events) for a list of available event types.
  * @param program_id - Filter by program ID
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const listEvents = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: ListEventsInput,

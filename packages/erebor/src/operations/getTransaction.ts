@@ -6,6 +6,9 @@ import { BadRequest, NotFound } from "../errors.ts";
 // Input Schema
 export const GetTransactionInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String.pipe(T.PathParam()),
+  ereborVersion: Schema.optional(Schema.String).pipe(
+    T.HttpHeader("Erebor-Version"),
+  ),
 }).pipe(T.Http({ method: "GET", path: "/transactions/{id}" }));
 export type GetTransactionInput = typeof GetTransactionInput.Type;
 
@@ -70,6 +73,7 @@ export type GetTransactionOutput = typeof GetTransactionOutput.Type;
  * Transactions represent the complete history of balance changes across all accounts. Unlike Payments, which are instructions to move money, transactions are records that represent balance movements in the bank's ledger. This endpoint retrieves a specific Transaction by its ID.
  *
  * @param id - Transaction ID
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const getTransaction = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: GetTransactionInput,

@@ -6,6 +6,9 @@ import { BadRequest, NotFound } from "../errors.ts";
 // Input Schema
 export const GetOnboardingInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String.pipe(T.PathParam()),
+  ereborVersion: Schema.optional(Schema.String).pipe(
+    T.HttpHeader("Erebor-Version"),
+  ),
 }).pipe(T.Http({ method: "GET", path: "/onboardings/{id}" }));
 export type GetOnboardingInput = typeof GetOnboardingInput.Type;
 
@@ -45,6 +48,7 @@ export type GetOnboardingOutput = typeof GetOnboardingOutput.Type;
  * Retrieve a specific Onboarding process by ID
  *
  * @param id - Onboarding ID
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const getOnboarding = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: GetOnboardingInput,

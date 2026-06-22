@@ -7,6 +7,9 @@ import { BadRequest, NotFound } from "../errors.ts";
 export const GetCounterpartyUsBankAccountInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
+    ereborVersion: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Version"),
+    ),
   }).pipe(
     T.Http({ method: "GET", path: "/counterparty_us_bank_accounts/{id}" }),
   );
@@ -42,6 +45,7 @@ export type GetCounterpartyUsBankAccountOutput =
  * Retrieve a specific Counterparty US Bank Account by ID
  *
  * @param id - US Bank Account ID
+ * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const getCounterpartyUsBankAccount =
   /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
