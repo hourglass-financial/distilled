@@ -1,5 +1,6 @@
 name: Nuke Test Resources
 
+# HOURGLASS PATCH: GitHub Actions pinned to full commit SHAs (org policy requires it).
 on:
   merge_group:
     types: [destroyed]
@@ -122,10 +123,10 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v6
+        uses: aws-actions/configure-aws-credentials@254c19bd240aabef8777f48595e9d2d7b972184b # v6
         with:
           role-to-assume: arn:aws:iam::391965393224:role/distilled-github-oidc-role
           aws-region: us-east-1
@@ -146,8 +147,8 @@ jobs:
     if: needs.gate.outputs.run == 'true' && (github.event_name == 'merge_group' || inputs.all || inputs.fly-io)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
@@ -165,8 +166,8 @@ jobs:
     if: needs.gate.outputs.run == 'true' && (github.event_name == 'merge_group' || inputs.all || inputs.kubernetes)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
@@ -185,8 +186,8 @@ jobs:
     if: needs.gate.outputs.run == 'true' && (github.event_name == 'merge_group' || inputs.all || inputs.mongodb-atlas)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
@@ -205,8 +206,8 @@ jobs:
     if: needs.gate.outputs.run == 'true' && (github.event_name == 'merge_group' || inputs.all || inputs.neon)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
@@ -224,8 +225,8 @@ jobs:
     if: needs.gate.outputs.run == 'true' && (github.event_name == 'merge_group' || inputs.all || inputs.prisma-postgres)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
@@ -243,8 +244,8 @@ jobs:
     if: needs.gate.outputs.run == 'true' && (github.event_name == 'merge_group' || inputs.all || inputs.stripe)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
@@ -262,8 +263,8 @@ jobs:
     if: needs.gate.outputs.run == 'true' && (github.event_name == 'merge_group' || inputs.all || inputs.supabase)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
@@ -281,8 +282,8 @@ jobs:
   #   if: needs.gate.outputs.run == 'true' && (github.event_name == 'merge_group' || inputs.all || inputs.cloudflare)
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v6
-  #     - uses: oven-sh/setup-bun@v2
+  #     - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+  #     - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
   #       with:
   #         bun-version: latest
   #     - run: bun install --frozen-lockfile

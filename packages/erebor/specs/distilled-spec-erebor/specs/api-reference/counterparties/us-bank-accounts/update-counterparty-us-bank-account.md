@@ -42,6 +42,14 @@ paths:
           required: true
           schema:
             type: string
+        - name: Erebor-Version
+          in: header
+          description: >
+            Pins the API version used to process this request. Format is
+            `YYYY-MM-DD`. When omitted, the current default version is used.
+          required: false
+          schema:
+            type: string
         - name: Erebor-Idempotency-Key
           in: header
           description: >
@@ -66,6 +74,12 @@ paths:
                 $ref: '#/components/schemas/Error'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict
           content:
             application/json:
               schema:
@@ -116,7 +130,7 @@ components:
           type: string
           description: >-
             Unique identifier for the counterparty US bank account, prefixed
-            with `cp_us_bank_`.
+            with `cp_us_bank_acct_`.
         type:
           type: string
           enum:
@@ -282,9 +296,9 @@ components:
 
 ```json
 {
-  "id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+  "id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
   "type": "COUNTERPARTY_US_BANK_ACCOUNT",
-  "url": "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+  "url": "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
   "created_at": "2025-01-15T09:30:00Z",
   "updated_at": "2025-01-15T09:30:00Z",
   "description": "Primary USD Account",
@@ -308,7 +322,7 @@ components:
 ```python
 import requests
 
-url = "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_01kasd1tthf1ns1pjn1kncctwd"
+url = "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd"
 
 payload = {
     "description": "Primary USD Account",
@@ -329,7 +343,7 @@ print(response.json())
 ```
 
 ```javascript
-const url = 'https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_01kasd1tthf1ns1pjn1kncctwd';
+const url = 'https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd';
 const options = {
   method: 'PATCH',
   headers: {Authorization: '<apiKey>', 'Content-Type': 'application/json'},
@@ -357,7 +371,7 @@ import (
 
 func main() {
 
-	url := "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_01kasd1tthf1ns1pjn1kncctwd"
+	url := "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd"
 
 	payload := strings.NewReader("{\n  \"description\": \"Primary USD Account\",\n  \"custom_ref\": \"CP-USBA-2025-001\",\n  \"custom_fields\": {\n    \"aba_verified\": \"true\",\n    \"bank_name\": \"Wells Fargo\"\n  }\n}")
 
@@ -381,7 +395,7 @@ func main() {
 require 'uri'
 require 'net/http'
 
-url = URI("https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_01kasd1tthf1ns1pjn1kncctwd")
+url = URI("https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd")
 
 http = Net::HTTP.new(url.host, url.port)
 http.use_ssl = true
@@ -399,7 +413,7 @@ puts response.read_body
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 
-HttpResponse<String> response = Unirest.patch("https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_01kasd1tthf1ns1pjn1kncctwd")
+HttpResponse<String> response = Unirest.patch("https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd")
   .header("Authorization", "<apiKey>")
   .header("Content-Type", "application/json")
   .body("{\n  \"description\": \"Primary USD Account\",\n  \"custom_ref\": \"CP-USBA-2025-001\",\n  \"custom_fields\": {\n    \"aba_verified\": \"true\",\n    \"bank_name\": \"Wells Fargo\"\n  }\n}")
@@ -412,7 +426,7 @@ require_once('vendor/autoload.php');
 
 $client = new \GuzzleHttp\Client();
 
-$response = $client->request('PATCH', 'https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_01kasd1tthf1ns1pjn1kncctwd', [
+$response = $client->request('PATCH', 'https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd', [
   'body' => '{
   "description": "Primary USD Account",
   "custom_ref": "CP-USBA-2025-001",
@@ -433,7 +447,7 @@ echo $response->getBody();
 ```csharp
 using RestSharp;
 
-var client = new RestClient("https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_01kasd1tthf1ns1pjn1kncctwd");
+var client = new RestClient("https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd");
 var request = new RestRequest(Method.PATCH);
 request.AddHeader("Authorization", "<apiKey>");
 request.AddHeader("Content-Type", "application/json");
@@ -459,7 +473,7 @@ let parameters = [
 
 let postData = JSONSerialization.data(withJSONObject: parameters, options: [])
 
-let request = NSMutableURLRequest(url: NSURL(string: "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_01kasd1tthf1ns1pjn1kncctwd")! as URL,
+let request = NSMutableURLRequest(url: NSURL(string: "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd")! as URL,
                                         cachePolicy: .useProtocolCachePolicy,
                                     timeoutInterval: 10.0)
 request.httpMethod = "PATCH"

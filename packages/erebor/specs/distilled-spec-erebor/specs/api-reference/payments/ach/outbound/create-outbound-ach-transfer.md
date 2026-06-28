@@ -34,6 +34,14 @@ paths:
           required: true
           schema:
             type: string
+        - name: Erebor-Version
+          in: header
+          description: >
+            Pins the API version used to process this request. Format is
+            `YYYY-MM-DD`. When omitted, the current default version is used.
+          required: false
+          schema:
+            type: string
         - name: Erebor-Idempotency-Key
           in: header
           description: >
@@ -50,6 +58,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OutboundACHTransfer'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
       requestBody:
         content:
           application/json:
@@ -179,12 +199,14 @@ components:
     OutboundACHTransferStatus:
       type: string
       enum:
+        - CREATED
         - PENDING
         - SETTLED
         - FAILED
         - RETURNED
       description: |
         Outbound ACH transfer status:
+        - CREATED: Transfer was created
         - PENDING: Transfer created, awaiting submission
         - SETTLED: Transfer has been completed
         - FAILED: Transfer failed
@@ -262,7 +284,7 @@ components:
           type: string
           description: >-
             ID of the external US bank account receiving the transfer, prefixed
-            with `cp_us_bank_`.
+            with `cp_us_bank_acct_`.
         amount:
           $ref: '#/components/schemas/FiatAmount'
         direction:
@@ -329,6 +351,65 @@ components:
         - addenda
         - service
       title: OutboundACHTransfer
+    ErrorDetail:
+      oneOf:
+        - type: object
+          properties:
+            error_detail_type:
+              type: string
+              description: Discriminator indicating the kind of detail.
+            field:
+              type: string
+              description: Dot-notated path to the field that failed validation.
+            message:
+              type: string
+              description: Human-readable description of the failure.
+          required:
+            - error_detail_type
+            - field
+            - message
+          description: FIELD_ERROR variant
+      discriminator:
+        propertyName: error_detail_type
+      description: >-
+        A structured error detail. Use `error_detail_type` to determine which
+        fields are present. New detail types may be added in the future;
+        consumers should ignore unrecognized values.
+      title: ErrorDetail
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        field:
+          type:
+            - string
+            - 'null'
+          description: >-
+            Deprecated: use error_details instead. Contains the field from the
+            first error_details entry for backwards compatibility. May be
+            removed in a future API version.
+        docs_url:
+          type:
+            - string
+            - 'null'
+          format: uri
+        error_details:
+          type:
+            - array
+            - 'null'
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+          description: >-
+            Structured error details providing granular information about
+            validation failures. Each item includes an `error_detail_type`
+            discriminator indicating the kind of detail.
+      required:
+        - error
+        - message
+      title: Error
   securitySchemes:
     ApiKeyAuth:
       type: apiKey
@@ -350,7 +431,7 @@ components:
 ```json
 {
   "deposit_account_id": "dep_acct_01kasd1tthf1ns1pjn1kncctwd",
-  "counterparty_us_bank_account_id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+  "counterparty_us_bank_account_id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
   "amount": {
     "currency": "USD",
     "value": "12345"
@@ -376,9 +457,9 @@ components:
   "url": "https://api.erebor.bank/ach_out/ach_out_01kasd1tthf1ns1pjn1kncctwd",
   "created_at": "2025-01-15T09:30:00Z",
   "updated_at": "2025-01-15T09:30:00Z",
-  "status": "PENDING",
+  "status": "CREATED",
   "deposit_account_id": "dep_acct_01kasd1tthf1ns1pjn1kncctwd",
-  "counterparty_us_bank_account_id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+  "counterparty_us_bank_account_id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
   "amount": {
     "currency": "USD",
     "exponent": 2,
@@ -415,7 +496,7 @@ url = "https://api.erebor.bank/ach_out"
 
 payload = {
     "deposit_account_id": "dep_acct_01kasd1tthf1ns1pjn1kncctwd",
-    "counterparty_us_bank_account_id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+    "counterparty_us_bank_account_id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
     "amount": {
         "currency": "USD",
         "value": "12345"
@@ -445,7 +526,7 @@ const url = 'https://api.erebor.bank/ach_out';
 const options = {
   method: 'POST',
   headers: {Authorization: '<apiKey>', 'Content-Type': 'application/json'},
-  body: '{"deposit_account_id":"dep_acct_01kasd1tthf1ns1pjn1kncctwd","counterparty_us_bank_account_id":"cp_us_bank_01kasd1tthf1ns1pjn1kncctwd","amount":{"currency":"USD","value":"12345"},"direction":"CREDIT","sec_code":"CCD","company_entry_description":"PAYMENT","service":"SAME_DAY","custom_ref":"INV-2025-04812","custom_fields":{"invoice_id":"INV-2025-04812","vendor":"Acme Supplies"}}'
+  body: '{"deposit_account_id":"dep_acct_01kasd1tthf1ns1pjn1kncctwd","counterparty_us_bank_account_id":"cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd","amount":{"currency":"USD","value":"12345"},"direction":"CREDIT","sec_code":"CCD","company_entry_description":"PAYMENT","service":"SAME_DAY","custom_ref":"INV-2025-04812","custom_fields":{"invoice_id":"INV-2025-04812","vendor":"Acme Supplies"}}'
 };
 
 try {
@@ -471,7 +552,7 @@ func main() {
 
 	url := "https://api.erebor.bank/ach_out"
 
-	payload := strings.NewReader("{\n  \"deposit_account_id\": \"dep_acct_01kasd1tthf1ns1pjn1kncctwd\",\n  \"counterparty_us_bank_account_id\": \"cp_us_bank_01kasd1tthf1ns1pjn1kncctwd\",\n  \"amount\": {\n    \"currency\": \"USD\",\n    \"value\": \"12345\"\n  },\n  \"direction\": \"CREDIT\",\n  \"sec_code\": \"CCD\",\n  \"company_entry_description\": \"PAYMENT\",\n  \"service\": \"SAME_DAY\",\n  \"custom_ref\": \"INV-2025-04812\",\n  \"custom_fields\": {\n    \"invoice_id\": \"INV-2025-04812\",\n    \"vendor\": \"Acme Supplies\"\n  }\n}")
+	payload := strings.NewReader("{\n  \"deposit_account_id\": \"dep_acct_01kasd1tthf1ns1pjn1kncctwd\",\n  \"counterparty_us_bank_account_id\": \"cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd\",\n  \"amount\": {\n    \"currency\": \"USD\",\n    \"value\": \"12345\"\n  },\n  \"direction\": \"CREDIT\",\n  \"sec_code\": \"CCD\",\n  \"company_entry_description\": \"PAYMENT\",\n  \"service\": \"SAME_DAY\",\n  \"custom_ref\": \"INV-2025-04812\",\n  \"custom_fields\": {\n    \"invoice_id\": \"INV-2025-04812\",\n    \"vendor\": \"Acme Supplies\"\n  }\n}")
 
 	req, _ := http.NewRequest("POST", url, payload)
 
@@ -501,7 +582,7 @@ http.use_ssl = true
 request = Net::HTTP::Post.new(url)
 request["Authorization"] = '<apiKey>'
 request["Content-Type"] = 'application/json'
-request.body = "{\n  \"deposit_account_id\": \"dep_acct_01kasd1tthf1ns1pjn1kncctwd\",\n  \"counterparty_us_bank_account_id\": \"cp_us_bank_01kasd1tthf1ns1pjn1kncctwd\",\n  \"amount\": {\n    \"currency\": \"USD\",\n    \"value\": \"12345\"\n  },\n  \"direction\": \"CREDIT\",\n  \"sec_code\": \"CCD\",\n  \"company_entry_description\": \"PAYMENT\",\n  \"service\": \"SAME_DAY\",\n  \"custom_ref\": \"INV-2025-04812\",\n  \"custom_fields\": {\n    \"invoice_id\": \"INV-2025-04812\",\n    \"vendor\": \"Acme Supplies\"\n  }\n}"
+request.body = "{\n  \"deposit_account_id\": \"dep_acct_01kasd1tthf1ns1pjn1kncctwd\",\n  \"counterparty_us_bank_account_id\": \"cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd\",\n  \"amount\": {\n    \"currency\": \"USD\",\n    \"value\": \"12345\"\n  },\n  \"direction\": \"CREDIT\",\n  \"sec_code\": \"CCD\",\n  \"company_entry_description\": \"PAYMENT\",\n  \"service\": \"SAME_DAY\",\n  \"custom_ref\": \"INV-2025-04812\",\n  \"custom_fields\": {\n    \"invoice_id\": \"INV-2025-04812\",\n    \"vendor\": \"Acme Supplies\"\n  }\n}"
 
 response = http.request(request)
 puts response.read_body
@@ -514,7 +595,7 @@ import com.mashape.unirest.http.Unirest;
 HttpResponse<String> response = Unirest.post("https://api.erebor.bank/ach_out")
   .header("Authorization", "<apiKey>")
   .header("Content-Type", "application/json")
-  .body("{\n  \"deposit_account_id\": \"dep_acct_01kasd1tthf1ns1pjn1kncctwd\",\n  \"counterparty_us_bank_account_id\": \"cp_us_bank_01kasd1tthf1ns1pjn1kncctwd\",\n  \"amount\": {\n    \"currency\": \"USD\",\n    \"value\": \"12345\"\n  },\n  \"direction\": \"CREDIT\",\n  \"sec_code\": \"CCD\",\n  \"company_entry_description\": \"PAYMENT\",\n  \"service\": \"SAME_DAY\",\n  \"custom_ref\": \"INV-2025-04812\",\n  \"custom_fields\": {\n    \"invoice_id\": \"INV-2025-04812\",\n    \"vendor\": \"Acme Supplies\"\n  }\n}")
+  .body("{\n  \"deposit_account_id\": \"dep_acct_01kasd1tthf1ns1pjn1kncctwd\",\n  \"counterparty_us_bank_account_id\": \"cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd\",\n  \"amount\": {\n    \"currency\": \"USD\",\n    \"value\": \"12345\"\n  },\n  \"direction\": \"CREDIT\",\n  \"sec_code\": \"CCD\",\n  \"company_entry_description\": \"PAYMENT\",\n  \"service\": \"SAME_DAY\",\n  \"custom_ref\": \"INV-2025-04812\",\n  \"custom_fields\": {\n    \"invoice_id\": \"INV-2025-04812\",\n    \"vendor\": \"Acme Supplies\"\n  }\n}")
   .asString();
 ```
 
@@ -527,7 +608,7 @@ $client = new \GuzzleHttp\Client();
 $response = $client->request('POST', 'https://api.erebor.bank/ach_out', [
   'body' => '{
   "deposit_account_id": "dep_acct_01kasd1tthf1ns1pjn1kncctwd",
-  "counterparty_us_bank_account_id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+  "counterparty_us_bank_account_id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
   "amount": {
     "currency": "USD",
     "value": "12345"
@@ -558,7 +639,7 @@ var client = new RestClient("https://api.erebor.bank/ach_out");
 var request = new RestRequest(Method.POST);
 request.AddHeader("Authorization", "<apiKey>");
 request.AddHeader("Content-Type", "application/json");
-request.AddParameter("application/json", "{\n  \"deposit_account_id\": \"dep_acct_01kasd1tthf1ns1pjn1kncctwd\",\n  \"counterparty_us_bank_account_id\": \"cp_us_bank_01kasd1tthf1ns1pjn1kncctwd\",\n  \"amount\": {\n    \"currency\": \"USD\",\n    \"value\": \"12345\"\n  },\n  \"direction\": \"CREDIT\",\n  \"sec_code\": \"CCD\",\n  \"company_entry_description\": \"PAYMENT\",\n  \"service\": \"SAME_DAY\",\n  \"custom_ref\": \"INV-2025-04812\",\n  \"custom_fields\": {\n    \"invoice_id\": \"INV-2025-04812\",\n    \"vendor\": \"Acme Supplies\"\n  }\n}", ParameterType.RequestBody);
+request.AddParameter("application/json", "{\n  \"deposit_account_id\": \"dep_acct_01kasd1tthf1ns1pjn1kncctwd\",\n  \"counterparty_us_bank_account_id\": \"cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd\",\n  \"amount\": {\n    \"currency\": \"USD\",\n    \"value\": \"12345\"\n  },\n  \"direction\": \"CREDIT\",\n  \"sec_code\": \"CCD\",\n  \"company_entry_description\": \"PAYMENT\",\n  \"service\": \"SAME_DAY\",\n  \"custom_ref\": \"INV-2025-04812\",\n  \"custom_fields\": {\n    \"invoice_id\": \"INV-2025-04812\",\n    \"vendor\": \"Acme Supplies\"\n  }\n}", ParameterType.RequestBody);
 IRestResponse response = client.Execute(request);
 ```
 
@@ -571,7 +652,7 @@ let headers = [
 ]
 let parameters = [
   "deposit_account_id": "dep_acct_01kasd1tthf1ns1pjn1kncctwd",
-  "counterparty_us_bank_account_id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+  "counterparty_us_bank_account_id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
   "amount": [
     "currency": "USD",
     "value": "12345"

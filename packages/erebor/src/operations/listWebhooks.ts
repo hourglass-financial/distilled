@@ -152,7 +152,8 @@ export type ListWebhooksOutput = typeof ListWebhooksOutput.Type;
  * @param status - Filter by webhook status. Repeat the param to filter on multiple statuses (ORed together).
  * @param webhook_url - Filter by exact webhook URL. Repeat the param to match on multiple URLs (ORed together).
  * @param custom_ref - Filter by exact `custom_ref` match (case-sensitive, up to 255 characters).
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const listWebhooks = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: ListWebhooksInput,

@@ -29,11 +29,12 @@ describe("createDepositAccount", () => {
         const seed = list.data[0]!;
 
         const customRef = `distilled-erebor-${testRunId}`;
+        const accountName = `distilled-erebor-da-${testRunId}`;
         const result = await runEffect(
           createDepositAccount({
             deposit_account_template_id: seed.deposit_account_template_id,
             customer_id: seed.customer_id,
-            name: `distilled-erebor-da-${testRunId}`,
+            name: accountName,
             disclosures: { disclosures_signed_externally: true },
             custom_ref: customRef,
             custom_fields: { test_run_id: testRunId, source: "distilled" },
@@ -47,7 +48,13 @@ describe("createDepositAccount", () => {
         expect(result.deposit_account_template_id).toBe(
           seed.deposit_account_template_id,
         );
-        expect(result.custom_ref).toBe(customRef);
+        // The create response echoes the submitted `name` and reflects the
+        // newly-created account's lifecycle/ownership state, but does NOT
+        // echo `custom_ref` (the field is absent from the POST response body
+        // as of the current API version). Assert on what the API returns.
+        expect(result.name).toBe(accountName);
+        expect(result.status).toBe("PENDING");
+        expect(result.ownership_type).toBe(seed.ownership_type);
         expect(result.disclosures.disclosures_signed_externally).toBe(true);
       },
       60_000,

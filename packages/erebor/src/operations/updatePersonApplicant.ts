@@ -1,17 +1,17 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
-import { BadRequest, NotFound } from "../errors.ts";
+import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
 export const UpdatePersonApplicantInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
-    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
-      T.HttpHeader("Erebor-Idempotency-Key"),
-    ),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
+    ),
+    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Idempotency-Key"),
     ),
     custom_ref: Schema.optional(Schema.String),
     custom_fields: Schema.optional(
@@ -30,6 +30,7 @@ export const UpdatePersonApplicantOutput =
     updated_at: Schema.String,
     archived_at: Schema.optional(Schema.NullOr(Schema.String)),
     program_id: Schema.String,
+    person_applicant_type: Schema.optional(Schema.Unknown),
     first_name: Schema.String,
     middle_name: Schema.optional(Schema.NullOr(Schema.String)),
     last_name: Schema.String,
@@ -60,10 +61,15 @@ export const UpdatePersonApplicantOutput =
       Schema.NullOr(
         Schema.Array(
           Schema.Literals([
-            "INCOME",
+            "CRYPTO",
+            "SALE_OF_BUSINESS",
             "OWNERSHIP_STAKE",
             "INVESTMENT_INCOME",
+            "REAL_ESTATE",
+            "EXECUTIVE",
             "INHERITANCE",
+            "INCOME",
+            "INTELLECTUAL",
             "OTHER",
           ]),
         ),
@@ -91,7 +97,13 @@ export const UpdatePersonApplicantOutput =
     source_of_funds: Schema.optional(
       Schema.NullOr(
         Schema.Array(
-          Schema.Literals(["INCOME", "ASSET_SALE", "SAVINGS", "OTHER"]),
+          Schema.Literals([
+            "INCOME",
+            "ASSET_SALE",
+            "FINANCING",
+            "SAVINGS",
+            "OTHER",
+          ]),
         ),
       ),
     ),
@@ -118,14 +130,15 @@ export type UpdatePersonApplicantOutput =
  * Update a person applicant's `custom_ref` or `custom_fields`. Identity fields used for KYC are immutable.
  *
  * @param id - Person applicant ID
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const updatePersonApplicant = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({
     inputSchema: UpdatePersonApplicantInput,
     outputSchema: UpdatePersonApplicantOutput,
-    errors: [BadRequest, NotFound] as const,
+    errors: [BadRequest, NotFound, Conflict] as const,
   }),
 );

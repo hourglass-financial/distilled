@@ -84,6 +84,14 @@ paths:
           required: true
           schema:
             type: string
+        - name: Erebor-Version
+          in: header
+          description: >
+            Pins the API version used to process this request. Format is
+            `YYYY-MM-DD`. When omitted, the current default version is used.
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: List of Inbound Wire Transfers
@@ -100,6 +108,7 @@ components:
     InboundWireTransferStatus:
       type: string
       enum:
+        - CREATED
         - PENDING
         - SETTLED
         - FAILED
@@ -107,6 +116,8 @@ components:
         - RESOLVING_FROM_SUSPENSE
       description: >
         Inbound wire transfer status:
+
+        - CREATED: Transfer was created
 
         - PENDING: Transfer received, awaiting settlement
 
@@ -231,7 +242,7 @@ components:
           type: string
           description: >-
             ID of the external US bank account that sent the wire, prefixed with
-            `cp_us_bank_`.
+            `cp_us_bank_acct_`.
         deposit_account_id:
           type: string
           description: >-
@@ -385,7 +396,7 @@ components:
       "created_at": "2025-01-15T09:00:00Z",
       "updated_at": "2025-01-15T09:00:00Z",
       "status": "PENDING",
-      "counterparty_us_bank_account_id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+      "counterparty_us_bank_account_id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
       "deposit_account_id": "dep_acct_01kasd1tthf1ns1pjn1kncctwd",
       "amount": {
         "currency": "USD",

@@ -1,15 +1,15 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
-import { BadRequest } from "../errors.ts";
+import { BadRequest, Conflict } from "../errors.ts";
 
 // Input Schema
 export const CreateDocumentInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
-    T.HttpHeader("Erebor-Idempotency-Key"),
-  ),
   ereborVersion: Schema.optional(Schema.String).pipe(
     T.HttpHeader("Erebor-Version"),
+  ),
+  ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
+    T.HttpHeader("Erebor-Idempotency-Key"),
   ),
   file: Schema.String,
   document_type: Schema.Literals([
@@ -62,12 +62,13 @@ export type CreateDocumentOutput = typeof CreateDocumentOutput.Type;
  *
  * Upload a document for Onboarding verification
  *
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const createDocument = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: CreateDocumentInput,
   outputSchema: CreateDocumentOutput,
-  errors: [BadRequest] as const,
+  errors: [BadRequest, Conflict] as const,
 }));

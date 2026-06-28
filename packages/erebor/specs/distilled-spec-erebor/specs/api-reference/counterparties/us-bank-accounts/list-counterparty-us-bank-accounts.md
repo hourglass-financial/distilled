@@ -78,6 +78,14 @@ paths:
           required: true
           schema:
             type: string
+        - name: Erebor-Version
+          in: header
+          description: >
+            Pins the API version used to process this request. Format is
+            `YYYY-MM-DD`. When omitted, the current default version is used.
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: List of Counterparty US Bank Accounts
@@ -142,7 +150,7 @@ components:
           type: string
           description: >-
             Unique identifier for the counterparty US bank account, prefixed
-            with `cp_us_bank_`.
+            with `cp_us_bank_acct_`.
         type:
           type: string
           enum:
@@ -272,9 +280,9 @@ components:
   "url": "https://api.erebor.bank/counterparty_us_bank_accounts?page_size=1",
   "data": [
     {
-      "id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+      "id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
       "type": "COUNTERPARTY_US_BANK_ACCOUNT",
-      "url": "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+      "url": "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
       "created_at": "2025-01-15T09:00:00Z",
       "updated_at": "2025-01-15T09:00:00Z",
       "description": "Primary USD Account",
@@ -292,7 +300,7 @@ components:
       }
     }
   ],
-  "page_next": "https://api.erebor.bank/counterparty_us_bank_accounts?starting_after=cp_us_bank_01kasd1tthf1ns1pjn1kncctwd&page_size=1",
+  "page_next": "https://api.erebor.bank/counterparty_us_bank_accounts?starting_after=cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd&page_size=1",
   "page_prev": null
 }
 ```

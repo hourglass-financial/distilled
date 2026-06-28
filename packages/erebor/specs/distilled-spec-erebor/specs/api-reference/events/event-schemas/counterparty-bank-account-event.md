@@ -47,7 +47,9 @@ components:
       type: object
       properties:
         request_id:
-          type: string
+          type:
+            - string
+            - 'null'
         request_idempotency_key:
           type:
             - string
@@ -82,7 +84,7 @@ components:
           type: string
           description: >-
             Unique identifier for the counterparty US bank account, prefixed
-            with `cp_us_bank_`.
+            with `cp_us_bank_acct_`.
         type:
           type: string
           enum:

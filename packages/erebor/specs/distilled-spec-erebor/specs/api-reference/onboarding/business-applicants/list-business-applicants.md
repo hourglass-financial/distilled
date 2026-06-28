@@ -66,6 +66,14 @@ paths:
           required: true
           schema:
             type: string
+        - name: Erebor-Version
+          in: header
+          description: >
+            Pins the API version used to process this request. Format is
+            `YYYY-MM-DD`. When omitted, the current default version is used.
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: List of Business Applicants
@@ -111,11 +119,17 @@ components:
       type: string
       enum:
         - CORPORATION
+        - JOINT_VENTURE
         - LLC
+        - LLP
+        - LP
         - NON_PROFIT
         - PARTNERSHIP
-        - SOLE_PROPRIETORSHIP
         - TRUST
+        - SOLE_PROPRIETORSHIP
+        - PRIVATE_LIMITED_COMPANY
+        - SPV
+        - GOVERNMENT_ENTITY
       description: Type of legal entity.
       title: BusinessApplicantLegalEntityType
     Address:
@@ -153,13 +167,19 @@ components:
         - BANK
         - CONSTRUCTION
         - CRYPTO
+        - DEFENSE
         - E_COMMERCE
         - ENERGY
         - ENTERTAINMENT
         - FINANCIAL_SERVICES
+        - FINANCIAL_TRADING
         - GAMBLING
         - HEALTH
+        - HOLDING_COMPANY
+        - MANUFACTURING
+        - NONPROFIT
         - OPERATING_COMPANY
+        - PAYMENTS
         - PROFESSIONAL_SERVICES
         - REAL_ESTATE
         - TECHNOLOGY
@@ -229,6 +249,8 @@ components:
       enum:
         - REVENUE
         - INVESTMENT
+        - INHERITANCE
+        - GIFT
         - OTHER
       title: BusinessApplicantSourceOfFundsItems
     AssociatedPersonRolesItems:
@@ -237,6 +259,7 @@ components:
         - CONTROL_PERSON
         - BENEFICIAL_OWNER
         - SIGNER
+        - APPLICANT
       title: AssociatedPersonRolesItems
     AssociatedPerson:
       type: object
@@ -251,7 +274,9 @@ components:
             $ref: '#/components/schemas/AssociatedPersonRolesItems'
           description: >-
             At least one associated person must have the CONTROL_PERSON role and
-            at least one must have the SIGNER role.
+            at least one must have the SIGNER role. The APPLICANT role
+            identifies the person who submitted the application; it may appear
+            on applicants onboarded through Erebor-hosted onboarding.
         ownership_percentage:
           type: number
           format: double

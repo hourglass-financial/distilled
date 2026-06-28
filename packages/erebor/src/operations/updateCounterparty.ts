@@ -1,17 +1,17 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
-import { BadRequest, NotFound } from "../errors.ts";
+import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
 export const UpdateCounterpartyInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
-    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
-      T.HttpHeader("Erebor-Idempotency-Key"),
-    ),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
+    ),
+    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Idempotency-Key"),
     ),
     name: Schema.optional(Schema.NullOr(Schema.String)),
     address: Schema.optional(Schema.Unknown),
@@ -53,12 +53,13 @@ export type UpdateCounterpartyOutput = typeof UpdateCounterpartyOutput.Type;
  * Update a counterparty's name and/or address.
  *
  * @param id - Counterparty ID
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const updateCounterparty = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: UpdateCounterpartyInput,
   outputSchema: UpdateCounterpartyOutput,
-  errors: [BadRequest, NotFound] as const,
+  errors: [BadRequest, NotFound, Conflict] as const,
 }));

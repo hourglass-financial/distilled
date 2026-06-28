@@ -150,7 +150,7 @@ Navigate to your Erebor Integrations page and disconnect the NetSuite integratio
 To reconnect after a disconnection:
 
 1. Confirm the previous Format Profile is set to **Inactive** in NetSuite
-2. Start a new connection from the Erebor dashboard (follow the steps in [Connecting to Erebor](#connecting-to-erebor))
+2. Start a new connection from the Erebor dashboard (follow the steps in [Connecting to Erebor](#how-it-works))
 3. Remap your accounts — previous mappings are not preserved
 
 After reconnecting, your previously synced accounts won't carry over automatically. You'll need to remap each Erebor account to the appropriate NetSuite GL account.

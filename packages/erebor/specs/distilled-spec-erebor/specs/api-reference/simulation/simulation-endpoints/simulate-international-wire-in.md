@@ -64,6 +64,14 @@ paths:
           required: true
           schema:
             type: string
+        - name: Erebor-Version
+          in: header
+          description: >
+            Pins the API version used to process this request. Format is
+            `YYYY-MM-DD`. When omitted, the current default version is used.
+          required: false
+          schema:
+            type: string
         - name: Erebor-Idempotency-Key
           in: header
           description: >
@@ -228,12 +236,14 @@ components:
     InternationalWireTransferStatus:
       type: string
       enum:
+        - CREATED
         - PENDING
         - SETTLED
         - FAILED
         - RETURNED
       description: |
         International wire transfer status:
+        - CREATED: Transfer was created
         - PENDING: Transfer is being processed
         - SETTLED: Transfer has been completed
         - FAILED: Transfer failed

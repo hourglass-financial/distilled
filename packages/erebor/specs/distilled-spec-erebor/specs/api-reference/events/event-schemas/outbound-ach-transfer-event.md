@@ -50,7 +50,9 @@ components:
       type: object
       properties:
         request_id:
-          type: string
+          type:
+            - string
+            - 'null'
         request_idempotency_key:
           type:
             - string
@@ -68,12 +70,14 @@ components:
     OutboundACHTransferStatus:
       type: string
       enum:
+        - CREATED
         - PENDING
         - SETTLED
         - FAILED
         - RETURNED
       description: |
         Outbound ACH transfer status:
+        - CREATED: Transfer was created
         - PENDING: Transfer created, awaiting submission
         - SETTLED: Transfer has been completed
         - FAILED: Transfer failed
@@ -196,7 +200,7 @@ components:
           type: string
           description: >-
             ID of the external US bank account receiving the transfer, prefixed
-            with `cp_us_bank_`.
+            with `cp_us_bank_acct_`.
         amount:
           $ref: '#/components/schemas/FiatAmount'
         direction:

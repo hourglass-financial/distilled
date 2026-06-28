@@ -59,9 +59,13 @@ describe("createOutboundAchTransfer", () => {
         expect(result.sec_code).toBe("CCD");
         expect(result.service).toBe("STANDARD");
         expect(result.custom_ref).toBe(customRef);
-        expect(["PENDING", "SETTLED", "FAILED", "RETURNED"]).toContain(
-          result.status,
-        );
+        expect([
+          "CREATED",
+          "PENDING",
+          "SETTLED",
+          "FAILED",
+          "RETURNED",
+        ]).toContain(result.status);
       },
       30_000,
     );

@@ -48,7 +48,9 @@ components:
       type: object
       properties:
         request_id:
-          type: string
+          type:
+            - string
+            - 'null'
         request_idempotency_key:
           type:
             - string

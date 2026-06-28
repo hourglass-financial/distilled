@@ -4,7 +4,10 @@
 
 POST https://api.erebor.bank/deposit_accounts/{id}/close
 
-Close a Deposit Account
+<Callout intent="warn" title="**Coming Soon**">
+Programmatic account closure is not yet available. This endpoint will return a `429` response. 
+</Callout>
+
 
 Reference: https://docs.erebor.bank/api-reference/accounts/deposit-accounts/close-deposit-account
 
@@ -20,7 +23,13 @@ paths:
     post:
       operationId: close-deposit-account
       summary: Close Deposit Account
-      description: Close a Deposit Account
+      description: >
+        <Callout intent="warn" title="**Coming Soon**">
+
+        Programmatic account closure is not yet available. This endpoint will
+        return a `429` response. 
+
+        </Callout>
       tags:
         - subpackage_depositAccounts
       parameters:
@@ -39,6 +48,14 @@ paths:
           required: true
           schema:
             type: string
+        - name: Erebor-Version
+          in: header
+          description: >
+            Pins the API version used to process this request. Format is
+            `YYYY-MM-DD`. When omitted, the current default version is used.
+          required: false
+          schema:
+            type: string
         - name: Erebor-Idempotency-Key
           in: header
           description: >
@@ -55,6 +72,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DepositAccount'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: >-
+            Programmatic account closure is not enabled for this API key.
+            Although the status code is `429`, this is a capability gate, not a
+            transient rate limit — retrying (with or without backoff) will not
+            succeed. Contact Erebor to enable account closure for your
+            integration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 servers:
   - url: https://api.erebor.bank
     description: API server (environment determined by API key)
@@ -469,6 +515,65 @@ components:
         - balances
         - disclosures
       title: DepositAccount
+    ErrorDetail:
+      oneOf:
+        - type: object
+          properties:
+            error_detail_type:
+              type: string
+              description: Discriminator indicating the kind of detail.
+            field:
+              type: string
+              description: Dot-notated path to the field that failed validation.
+            message:
+              type: string
+              description: Human-readable description of the failure.
+          required:
+            - error_detail_type
+            - field
+            - message
+          description: FIELD_ERROR variant
+      discriminator:
+        propertyName: error_detail_type
+      description: >-
+        A structured error detail. Use `error_detail_type` to determine which
+        fields are present. New detail types may be added in the future;
+        consumers should ignore unrecognized values.
+      title: ErrorDetail
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        field:
+          type:
+            - string
+            - 'null'
+          description: >-
+            Deprecated: use error_details instead. Contains the field from the
+            first error_details entry for backwards compatibility. May be
+            removed in a future API version.
+        docs_url:
+          type:
+            - string
+            - 'null'
+          format: uri
+        error_details:
+          type:
+            - array
+            - 'null'
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+          description: >-
+            Structured error details providing granular information about
+            validation failures. Each item includes an `error_detail_type`
+            discriminator indicating the kind of detail.
+      required:
+        - error
+        - message
+      title: Error
   securitySchemes:
     ApiKeyAuth:
       type: apiKey

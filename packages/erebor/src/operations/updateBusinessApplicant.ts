@@ -1,17 +1,17 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
-import { BadRequest, NotFound } from "../errors.ts";
+import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
 export const UpdateBusinessApplicantInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
-    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
-      T.HttpHeader("Erebor-Idempotency-Key"),
-    ),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
+    ),
+    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Idempotency-Key"),
     ),
     custom_ref: Schema.optional(Schema.String),
     custom_fields: Schema.optional(
@@ -62,7 +62,15 @@ export const UpdateBusinessApplicantOutput =
     ),
     source_of_funds: Schema.optional(
       Schema.NullOr(
-        Schema.Array(Schema.Literals(["REVENUE", "INVESTMENT", "OTHER"])),
+        Schema.Array(
+          Schema.Literals([
+            "REVENUE",
+            "INVESTMENT",
+            "INHERITANCE",
+            "GIFT",
+            "OTHER",
+          ]),
+        ),
       ),
     ),
     source_of_funds_other_description: Schema.optional(
@@ -74,7 +82,12 @@ export const UpdateBusinessApplicantOutput =
           person_applicant_id: Schema.String,
           title: Schema.String,
           roles: Schema.Array(
-            Schema.Literals(["CONTROL_PERSON", "BENEFICIAL_OWNER", "SIGNER"]),
+            Schema.Literals([
+              "CONTROL_PERSON",
+              "BENEFICIAL_OWNER",
+              "SIGNER",
+              "APPLICANT",
+            ]),
           ),
           ownership_percentage: Schema.Number,
         }),
@@ -119,14 +132,15 @@ export type UpdateBusinessApplicantOutput =
  * Update a business applicant's `custom_ref` or `custom_fields`. Identity fields used for KYC are immutable.
  *
  * @param id - Business applicant ID
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const updateBusinessApplicant = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({
     inputSchema: UpdateBusinessApplicantInput,
     outputSchema: UpdateBusinessApplicantOutput,
-    errors: [BadRequest, NotFound] as const,
+    errors: [BadRequest, NotFound, Conflict] as const,
   }),
 );

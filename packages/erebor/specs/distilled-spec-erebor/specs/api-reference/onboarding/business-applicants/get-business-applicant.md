@@ -39,6 +39,14 @@ paths:
           required: true
           schema:
             type: string
+        - name: Erebor-Version
+          in: header
+          description: >
+            Pins the API version used to process this request. Format is
+            `YYYY-MM-DD`. When omitted, the current default version is used.
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: Business applicant details
@@ -46,6 +54,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BusinessApplicant'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 servers:
   - url: https://api.erebor.bank
     description: API server (environment determined by API key)
@@ -55,11 +75,17 @@ components:
       type: string
       enum:
         - CORPORATION
+        - JOINT_VENTURE
         - LLC
+        - LLP
+        - LP
         - NON_PROFIT
         - PARTNERSHIP
-        - SOLE_PROPRIETORSHIP
         - TRUST
+        - SOLE_PROPRIETORSHIP
+        - PRIVATE_LIMITED_COMPANY
+        - SPV
+        - GOVERNMENT_ENTITY
       description: Type of legal entity.
       title: BusinessApplicantLegalEntityType
     Address:
@@ -97,13 +123,19 @@ components:
         - BANK
         - CONSTRUCTION
         - CRYPTO
+        - DEFENSE
         - E_COMMERCE
         - ENERGY
         - ENTERTAINMENT
         - FINANCIAL_SERVICES
+        - FINANCIAL_TRADING
         - GAMBLING
         - HEALTH
+        - HOLDING_COMPANY
+        - MANUFACTURING
+        - NONPROFIT
         - OPERATING_COMPANY
+        - PAYMENTS
         - PROFESSIONAL_SERVICES
         - REAL_ESTATE
         - TECHNOLOGY
@@ -173,6 +205,8 @@ components:
       enum:
         - REVENUE
         - INVESTMENT
+        - INHERITANCE
+        - GIFT
         - OTHER
       title: BusinessApplicantSourceOfFundsItems
     AssociatedPersonRolesItems:
@@ -181,6 +215,7 @@ components:
         - CONTROL_PERSON
         - BENEFICIAL_OWNER
         - SIGNER
+        - APPLICANT
       title: AssociatedPersonRolesItems
     AssociatedPerson:
       type: object
@@ -195,7 +230,9 @@ components:
             $ref: '#/components/schemas/AssociatedPersonRolesItems'
           description: >-
             At least one associated person must have the CONTROL_PERSON role and
-            at least one must have the SIGNER role.
+            at least one must have the SIGNER role. The APPLICANT role
+            identifies the person who submitted the application; it may appear
+            on applicants onboarded through Erebor-hosted onboarding.
         ownership_percentage:
           type: number
           format: double
@@ -474,6 +511,65 @@ components:
         - incorporation_address
         - physical_address
       title: BusinessApplicant
+    ErrorDetail:
+      oneOf:
+        - type: object
+          properties:
+            error_detail_type:
+              type: string
+              description: Discriminator indicating the kind of detail.
+            field:
+              type: string
+              description: Dot-notated path to the field that failed validation.
+            message:
+              type: string
+              description: Human-readable description of the failure.
+          required:
+            - error_detail_type
+            - field
+            - message
+          description: FIELD_ERROR variant
+      discriminator:
+        propertyName: error_detail_type
+      description: >-
+        A structured error detail. Use `error_detail_type` to determine which
+        fields are present. New detail types may be added in the future;
+        consumers should ignore unrecognized values.
+      title: ErrorDetail
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        field:
+          type:
+            - string
+            - 'null'
+          description: >-
+            Deprecated: use error_details instead. Contains the field from the
+            first error_details entry for backwards compatibility. May be
+            removed in a future API version.
+        docs_url:
+          type:
+            - string
+            - 'null'
+          format: uri
+        error_details:
+          type:
+            - array
+            - 'null'
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+          description: >-
+            Structured error details providing granular information about
+            validation failures. Each item includes an `error_detail_type`
+            discriminator indicating the kind of detail.
+      required:
+        - error
+        - message
+      title: Error
   securitySchemes:
     ApiKeyAuth:
       type: apiKey

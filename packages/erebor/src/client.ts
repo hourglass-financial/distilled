@@ -1,12 +1,28 @@
 /**
  * Erebor API Client.
  *
- * Wraps the shared REST client from sdk-core with Erebor-specific
- * error matching and credential handling.
+ * This is the standard sdk-core client scaffold — the same `makeAPI` + `matchError`
+ * shape every package in this repo uses (cf. `packages/neon/src/client.ts`) —
+ * customized for Erebor's API in the places the `create-sdk` pipeline is designed
+ * to customize per-SDK. It is a per-package file, not shared code, so it carries no
+ * `HOURGLASS PATCH` markers; the notes below document where it diverges from the
+ * generated scaffold default so the custom surface is obvious to future readers.
  *
- * Erebor authenticates with an API key passed directly as the value of the
- * `Authorization` header (no `Bearer` prefix). Errors are JSON objects of the
- * form `{ error: <CODE>, message: <human>, field?, docs_url?, error_details? }`.
+ * Erebor-specific deviations from the scaffold default:
+ *   1. Auth — the API key is sent verbatim as the `Authorization` header value with
+ *      NO `Bearer` prefix (the scaffold default is `Bearer <key>`). See `getAuthHeaders`.
+ *   2. Error body shape — `{ error, message, field?, docs_url?, error_details? }`
+ *      (the scaffold's `ApiErrorResponse` is just `{ code?, message }`). `error` is the
+ *      machine code (e.g. `UNAUTHORIZED`, `INVALID_REQUEST`); `message` is human text.
+ *   3. `matchError` adds two body-aware special cases on top of the scaffold's plain
+ *      status -> `HTTP_STATUS_MAP` mapping: 422 `VALIDATION_ERROR` -> `EreborValidationError`
+ *      (preserving `error_details`), and 429 feature-gate messages ->
+ *      `EreborFeatureNotEnabled` (see the `matchError` doc comment).
+ *   4. `retryAfter` is attached only for genuinely retryable statuses
+ *      (`RETRYABLE_HTTP_STATUSES`); the scaffold attaches it unconditionally.
+ *
+ * Everything else (the `makeAPI` wiring, the decode-then-map control flow, and the
+ * `Unknown*` fallback) is unmodified scaffold.
  */
 import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
@@ -57,9 +73,11 @@ const RETRYABLE_HTTP_STATUSES = new Set([423, 429, 500, 502, 503, 504]);
  *   preserving the `error_details` array for per-field surfacing.
  * - 429 whose message contains "not enabled" (observed:
  *   "Programmatic account closure is not enabled for this API key.")
- *   -> `EreborFeatureNotEnabled`. Erebor folds permission failures
- *   into the rate-limit status and reuses `error: "RATE_LIMITED"`,
- *   so the *message* is the only reliable disambiguator.
+ *   or "not yet available" (observed: "Renaming blockchain addresses
+ *   is not yet available.") -> `EreborFeatureNotEnabled`. Erebor folds
+ *   permission/feature-gate failures into the rate-limit status and
+ *   reuses `error: "RATE_LIMITED"`, so the *message* is the only
+ *   reliable disambiguator.
  */
 const matchError = (
   status: number,
@@ -84,12 +102,12 @@ const matchError = (
       );
     }
 
-    // 429 — Erebor folds permission failures ("feature not enabled for
-    // this API key") into the rate-limit status, *still* tagged with
-    // `error: "RATE_LIMITED"`. The only reliable signal is the message
-    // text. Detecting this lets the retry policy skip a request that
-    // will never succeed.
-    if (status === 429 && /not enabled/i.test(message)) {
+    // 429 — Erebor folds permission/feature-gate failures ("feature not
+    // enabled for this API key", "... is not yet available") into the
+    // rate-limit status, *still* tagged with `error: "RATE_LIMITED"`. The
+    // only reliable signal is the message text. Detecting this lets the
+    // retry policy skip a request that will never succeed.
+    if (status === 429 && /not enabled|not yet available/i.test(message)) {
       return Effect.fail(
         new EreborFeatureNotEnabled({ message, code: parsed.error }),
       );

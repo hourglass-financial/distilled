@@ -19,12 +19,12 @@ Create an outbound wire transfer by specifying the source account, destination c
 
 ```bash
 curl -X POST "https://api.erebor.bank/wire_out" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j" \
+  -H "Authorization: test_key_YOUR_API_KEY_HERE" \
   -H "Erebor-Idempotency-Key: unique-wire-request-001" \
   -H "Content-Type: application/json" \
   -d '{
     "deposit_account_id": "dep_acct_01kasd1tthf1ns1pjn1kncctwd",
-    "counterparty_us_bank_account_id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+    "counterparty_us_bank_account_id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
     "amount": {
       "currency": "USD",
       "value": "150000"
@@ -53,12 +53,14 @@ The Fedwire network's official customer credit cutoff is 6:45 PM ET, but Erebor'
 
 Domestic wires progress through the following statuses:
 
-| Status     | Description                                                                           |
-| ---------- | ------------------------------------------------------------------------------------- |
-| `PENDING`  | Wire submitted and queued for processing.                                             |
-| `SETTLED`  | Funds delivered to the beneficiary.                                                   |
-| `FAILED`   | Wire rejected — insufficient funds, invalid account, or compliance screening failure. |
-| `RETURNED` | Receiving institution returned the wire. Funds credited back to your account.         |
+| Status                    | Description                                                                                                             |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `CREATED`                 | Wire was created.                                                                                                       |
+| `PENDING`                 | Wire submitted and queued for processing.                                                                               |
+| `SETTLED`                 | Funds delivered to the beneficiary.                                                                                     |
+| `FAILED`                  | Wire rejected — insufficient funds, invalid account, or compliance screening failure.                                   |
+| `RETURNED`                | Receiving institution returned the wire. Funds credited back to your account.                                           |
+| `RESOLVING_FROM_SUSPENSE` | Inbound only — wire was held in suspense (unroutable on initial receipt) and is being resolved to the customer account. |
 
 ## Receiving inbound wires
 
@@ -68,7 +70,7 @@ Retrieve an inbound wire:
 
 ```bash
 curl -X GET "https://api.erebor.bank/wire_in/wire_in_01kasd1tthf1ns1pjn1kncctwd" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j"
+  -H "Authorization: test_key_YOUR_API_KEY_HERE"
 ```
 
 ## Webhooks

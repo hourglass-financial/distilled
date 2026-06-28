@@ -1,19 +1,24 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
-import { BadRequest, NotFound, UnprocessableEntity } from "../errors.ts";
+import {
+  BadRequest,
+  NotFound,
+  Conflict,
+  UnprocessableEntity,
+} from "../errors.ts";
 
 // Input Schema
 export const CreateOnboardingInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
+  ereborVersion: Schema.optional(Schema.String).pipe(
+    T.HttpHeader("Erebor-Version"),
+  ),
   ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
     T.HttpHeader("Erebor-Idempotency-Key"),
   ),
   ereborSimulationScenario: Schema.optional(
     Schema.Literals(["ONBOARDING_REJECTED", "ONBOARDING_UNDER_REVIEW"]),
   ).pipe(T.HttpHeader("Erebor-Simulation-Scenario")),
-  ereborVersion: Schema.optional(Schema.String).pipe(
-    T.HttpHeader("Erebor-Version"),
-  ),
   program_id: Schema.optional(Schema.String),
   person_applicant_id: Schema.optional(Schema.NullOr(Schema.String)),
   business_applicant_id: Schema.optional(Schema.NullOr(Schema.String)),
@@ -46,13 +51,16 @@ export const CreateOnboardingOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
     person_applicant_id: Schema.optional(Schema.NullOr(Schema.String)),
     business_applicant_id: Schema.optional(Schema.NullOr(Schema.String)),
     deposit_account_template_id: Schema.optional(Schema.NullOr(Schema.String)),
-    disclosures: Schema.Struct({
-      disclosures_signed_externally: Schema.Boolean,
-    }),
+    disclosures: Schema.optional(
+      Schema.Struct({
+        disclosures_signed_externally: Schema.Boolean,
+      }),
+    ),
     customer_id: Schema.optional(Schema.NullOr(Schema.String)),
     deposit_account_id: Schema.optional(Schema.NullOr(Schema.String)),
     custom_ref: Schema.optional(Schema.Unknown),
     custom_fields: Schema.optional(Schema.Unknown),
+    rejection_reason: Schema.optional(Schema.NullOr(Schema.String)),
   },
 );
 export type CreateOnboardingOutput = typeof CreateOnboardingOutput.Type;
@@ -69,6 +77,8 @@ export type CreateOnboardingOutput = typeof CreateOnboardingOutput.Type;
  * Supplying neither field returns `400`. An unrecognised `program_id` (or one you do not manage) returns `404`.
  * On approval the `ONBOARDING.APPROVED` event always fires. The `DEPOSIT_ACCOUNT.PENDING` / `DEPOSIT_ACCOUNT.OPEN` events only fire when the Onboarding was created with `deposit_account_template_id` (either alone or alongside a matching `program_id`).
  *
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
  * @param Erebor-Simulation-Scenario - **Sandbox only.** Forces a simulated onboarding outcome so you can exercise success and failure paths. Ignored in production, where onboardings always go through real review.
@@ -81,10 +91,9 @@ export type CreateOnboardingOutput = typeof CreateOnboardingOutput.Type;
 
 An unrecognized value is rejected with `400`. The header name aligns with the platform's `/simulation/` endpoints.
 
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const createOnboarding = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: CreateOnboardingInput,
   outputSchema: CreateOnboardingOutput,
-  errors: [BadRequest, NotFound, UnprocessableEntity] as const,
+  errors: [BadRequest, NotFound, Conflict, UnprocessableEntity] as const,
 }));

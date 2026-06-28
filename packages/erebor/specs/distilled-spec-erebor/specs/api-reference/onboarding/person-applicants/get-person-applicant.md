@@ -39,6 +39,14 @@ paths:
           required: true
           schema:
             type: string
+        - name: Erebor-Version
+          in: header
+          description: >
+            Pins the API version used to process this request. Format is
+            `YYYY-MM-DD`. When omitted, the current default version is used.
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: Person applicant details
@@ -46,11 +54,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PersonApplicant'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 servers:
   - url: https://api.erebor.bank
     description: API server (environment determined by API key)
 components:
   schemas:
+    PersonApplicantType:
+      type: string
+      enum:
+        - LEGACY
+        - RETAIL_CUSTOMER
+        - HNWI_CUSTOMER
+        - ASSOCIATED_PERSON
+      description: >-
+        Intended use of the person applicant. `LEGACY` represents applicants
+        without an assigned classification and is the default when omitted or
+        set to `null`.
+      title: PersonApplicantType
     PersonApplicantPhysicalAddress:
       type: object
       properties:
@@ -112,10 +144,15 @@ components:
     PersonApplicantSourceOfWealthItems:
       type: string
       enum:
-        - INCOME
+        - CRYPTO
+        - SALE_OF_BUSINESS
         - OWNERSHIP_STAKE
         - INVESTMENT_INCOME
+        - REAL_ESTATE
+        - EXECUTIVE
         - INHERITANCE
+        - INCOME
+        - INTELLECTUAL
         - OTHER
       title: PersonApplicantSourceOfWealthItems
     PersonApplicantAccountPurposesItems:
@@ -132,6 +169,7 @@ components:
       enum:
         - INCOME
         - ASSET_SALE
+        - FINANCING
         - SAVINGS
         - OTHER
       title: PersonApplicantSourceOfFundsItems
@@ -237,6 +275,10 @@ components:
           description: >-
             Unique identifier of the program this person applicant belongs to,
             prefixed with `prgrm_`.
+        person_applicant_type:
+          oneOf:
+            - $ref: '#/components/schemas/PersonApplicantType'
+            - type: 'null'
         first_name:
           type: string
           description: Applicant's first name.
@@ -377,6 +419,65 @@ components:
         - date_of_birth
         - physical_address
       title: PersonApplicant
+    ErrorDetail:
+      oneOf:
+        - type: object
+          properties:
+            error_detail_type:
+              type: string
+              description: Discriminator indicating the kind of detail.
+            field:
+              type: string
+              description: Dot-notated path to the field that failed validation.
+            message:
+              type: string
+              description: Human-readable description of the failure.
+          required:
+            - error_detail_type
+            - field
+            - message
+          description: FIELD_ERROR variant
+      discriminator:
+        propertyName: error_detail_type
+      description: >-
+        A structured error detail. Use `error_detail_type` to determine which
+        fields are present. New detail types may be added in the future;
+        consumers should ignore unrecognized values.
+      title: ErrorDetail
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        field:
+          type:
+            - string
+            - 'null'
+          description: >-
+            Deprecated: use error_details instead. Contains the field from the
+            first error_details entry for backwards compatibility. May be
+            removed in a future API version.
+        docs_url:
+          type:
+            - string
+            - 'null'
+          format: uri
+        error_details:
+          type:
+            - array
+            - 'null'
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+          description: >-
+            Structured error details providing granular information about
+            validation failures. Each item includes an `error_detail_type`
+            discriminator indicating the kind of detail.
+      required:
+        - error
+        - message
+      title: Error
   securitySchemes:
     ApiKeyAuth:
       type: apiKey
@@ -414,6 +515,7 @@ components:
     "country_area": "CA"
   },
   "archived_at": null,
+  "person_applicant_type": "RETAIL_CUSTOMER",
   "middle_name": "William",
   "citizenship": "US",
   "email_address": "john.smith@example.com",

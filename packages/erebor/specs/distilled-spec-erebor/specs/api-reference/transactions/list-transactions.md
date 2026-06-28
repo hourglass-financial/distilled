@@ -95,6 +95,14 @@ paths:
           required: true
           schema:
             type: string
+        - name: Erebor-Version
+          in: header
+          description: >
+            Pins the API version used to process this request. Format is
+            `YYYY-MM-DD`. When omitted, the current default version is used.
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: List of transactions
@@ -456,9 +464,9 @@ components:
         }
       ],
       "from": {
-        "id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+        "id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
         "type": "COUNTERPARTY_US_BANK_ACCOUNT",
-        "url": "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+        "url": "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
         "description": "Client wire account"
       },
       "to": {

@@ -8,16 +8,13 @@ The Erebor API lets you onboard customers, open accounts, and move money, 24/7/3
 
 ### Authentication
 
-All API requests require an API key in the Authorization header. Keys can be created, managed, and revoked in the [Developer Dashboard](https://developer.erebor.bank/)
+All API requests require an API key in the `Authorization` header. See [Authentication](/using-the-api/authentication) for key management, test and live environments, IP allowlisting, and mTLS.
 
 ```bash
-curl -H "Authorization: your_api_key_here" ...
+curl -H "Authorization: test_key_..." ...
 ```
 
-**Environment-Specific Keys:**
-
-* **Live keys** (`live_`): Access production data and real money
-* **Test keys** (`test_`): Access sandbox data with fake money for development
+Use `test_key_` keys for sandbox data and `live_key_` keys for production data and real money.
 
 ### REST URL Patterns
 
@@ -41,7 +38,7 @@ Responses echo the version served. Breaking changes create new versions (date-ba
 
 ### Idempotency
 
-Write operations support safe retries using the `Erebor-Idempotency-Key` header. If this header is present, multiple requests including the same key will only perform the action once, and will return the same result (even if the result was an error). We recommend using an internal identifier unique to the request, and uniqueness across the Erebor API will be guaranteed for 72 hours. Idempotency keys sent to requests that are inherently idempotent like `GET` and `PATCH` will be ignored.
+`POST`, `PATCH`, and `PUT` requests support safe retries using the `Erebor-Idempotency-Key` header. If this header is present, multiple requests including the same key will only perform the action once, and successful responses can be replayed for 72 hours. We recommend using an internal identifier unique to the request. Idempotency keys sent to requests that are inherently idempotent like `GET` will be ignored.
 
 ```bash
 curl -H "Erebor-Idempotency-Key: transfer-abc-123" ...
@@ -61,7 +58,7 @@ Every response includes a unique `Erebor-Request-ID` header for debugging.
 
 ```bash
 # Response headers
-Erebor-Request-ID: req_01kasd1tthf1ns1pjn1kncctwd
+Erebor-Request-ID: 0197b6f0-3f6a-7c3e-9b2a-d41e8c9f5a6b
 ```
 
 Use this ID when contacting support or viewing request logs in the Developer Portal.
@@ -78,82 +75,23 @@ The API uses three response patterns based on the operation.
 
 ### Pagination
 
-List endpoints use cursor-based pagination for performance.
-
-```json
-{
-  "data": [...],
-  "has_more": true,
-  "page_size": 25,
-  "page_next": "https://api.erebor.bank/deposit_accounts?starting_after=dep_acct_01kasd1tthf1ns1pjn1kncctwd",
-  "page_prev": "https://api.erebor.bank/deposit_accounts?ending_before=dep_acct_01hbsd2ughf2ns2pjn2kncctxe"
-}
-```
-
-Navigate pages using `starting_after` and `ending_before` cursors, or follow the `page_next` and `page_prev` URLs.
+List endpoints use cursor-based pagination. See [Pagination](/using-the-api/pagination) for request fields, response fields, and examples.
 
 ### Error Handling
 
-All errors return structured JSON responses with actionable error codes.
-
-```json
-{
-  "error": "INSUFFICIENT_FUNDS",
-  "message": "The originating account has insufficient funds to cover the transfer.",
-  "field": null,
-  "docs_url": "https://docs.erebor.so/errors/insufficient-funds",
-  "error_details": null
-}
-```
-
-When a specific field causes the error, the response includes `field` (deprecated) and `error_details`:
-
-```json
-{
-  "error": "INVALID_PARAMETER_VALUE",
-  "message": "The value provided for 'amount' is not valid.",
-  "field": "amount.raw_value",
-  "docs_url": "https://docs.erebor.so/errors/invalid-parameter-value",
-  "error_details": null
-}
-```
-
-When fields fail validation, the response includes `error_details`:
-
-```json
-{
-  "error": "VALIDATION_ERROR",
-  "message": "Person applicant validation failed.",
-  "field": "citizenship",
-  "error_details": [
-    { "error_detail_type": "FIELD_ERROR", "field": "citizenship", "message": "citizenship is required." },
-    { "error_detail_type": "FIELD_ERROR", "field": "tin", "message": "tin is required." }
-  ],
-  "docs_url": null
-}
-```
-
-**Response Fields:**
-
-* **`error`** *(required)*: Machine-readable error code
-* **`message`** *(required)*: Human-readable description of the error
-* **`field`** *(deprecated)*: Contains the field from the first `error_details` entry for backwards compatibility. Use `error_details` instead. May be removed in a future API version.
-* **`docs_url`**: Link to relevant documentation for additional context
-* **`error_details`**: An array of structured detail objects providing granular information about validation failures. Each item includes an `error_detail_type` discriminator (e.g., `FIELD_ERROR`) with per-field `field` and `message` properties.
+All errors return structured JSON responses with actionable error codes. See [Errors](/using-the-api/errors) for response fields, validation details, common codes, and retry guidance.
 
 ## Working with Data
 
 ### Object IDs
 
-All resources have IDs in the format `{type}_{uuid}` using UUIDv7.
+All resources have typed IDs.
 
-```json
-{
-  "id": "bk_01kasd1tthf1ns1pjn1kncctwd",  // Book Transfer
-  "id": "txn_01kasd1tthf1ns1pjn1kncctwd",  // Transaction
-  "id": "cust_01kasd1tthf1ns1pjn1kncctwd"   // Customer
-}
-```
+| Resource      | Example ID                        |
+| ------------- | --------------------------------- |
+| Book Transfer | `bk_01kasd1tthf1ns1pjn1kncctwd`   |
+| Transaction   | `txn_01kasd1tthf1ns1pjn1kncctwd`  |
+| Customer      | `cust_01kasd1tthf1ns1pjn1kncctwd` |
 
 IDs are temporally sortable and globally unique.
 
@@ -190,7 +128,7 @@ Archived objects have `archived_at` set and are excluded from responses by defau
 All API elements follow consistent naming conventions.
 
 * **Fields** use `snake_case` (e.g., `account_number`, `created_at`).
-* **Headers** use `Pascal-Case` (e.g., `Erebor-Request-ID`, `Erebor-Version`).
+* **Headers** use `Title-Case` (e.g., `Erebor-Request-ID`, `Erebor-Version`).
 * **Enums** use `SCREAMING_CASE` (e.g., `ACTIVE`, `PENDING_APPROVAL`).
 
 ### Common Types

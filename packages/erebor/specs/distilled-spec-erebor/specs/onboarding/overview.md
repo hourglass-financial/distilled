@@ -76,7 +76,7 @@ Retrieve the Onboarding to see what was created:
 
 ```bash
 curl -X GET "https://api.erebor.bank/onboardings/onb_01kasd1tthf1ns1pjn1kncctwd" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j"
+  -H "Authorization: test_key_YOUR_API_KEY_HERE"
 ```
 
 ```json
@@ -118,12 +118,12 @@ List your available programs and templates:
 
 ```bash
 curl -X GET "https://api.erebor.bank/programs" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j"
+  -H "Authorization: test_key_YOUR_API_KEY_HERE"
 ```
 
 ```bash
 curl -X GET "https://api.erebor.bank/deposit_account_templates" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j"
+  -H "Authorization: test_key_YOUR_API_KEY_HERE"
 ```
 
 ## Next steps

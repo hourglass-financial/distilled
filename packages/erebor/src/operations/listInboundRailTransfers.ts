@@ -32,7 +32,7 @@ export const ListInboundRailTransfersOutput =
         updated_at: Schema.String,
         archived_at: Schema.optional(Schema.NullOr(Schema.String)),
         program_id: Schema.optional(Schema.NullOr(Schema.String)),
-        status: Schema.Literals(["SETTLED", "FAILED"]),
+        status: Schema.Literals(["CREATED", "PENDING", "SETTLED", "FAILED"]),
         to_deposit_account_id: Schema.String,
         from_deposit_account_id: Schema.optional(Schema.NullOr(Schema.String)),
         counterparty_rail_address_id: Schema.optional(
@@ -72,7 +72,8 @@ export type ListInboundRailTransfersOutput =
  * @param customer_id - Filter by customer ID
  * @param program_id - Filter by program ID
  * @param custom_ref - Filter by exact `custom_ref` match (case-sensitive, up to 255 characters).
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const listInboundRailTransfers = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({

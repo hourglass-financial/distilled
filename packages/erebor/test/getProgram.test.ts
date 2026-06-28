@@ -28,7 +28,11 @@ describe("getProgram", () => {
         expect(result.type).toBe("PROGRAM");
         expect(result.id).toBe(target.id);
         expect(typeof result.name).toBe("string");
-        expect(typeof result.billing_deposit_account_id).toBe("string");
+        // billing_deposit_account_id is now optional (omitted for MANAGED
+        // programs). Only assert its type when the field is present.
+        if (result.billing_deposit_account_id !== undefined) {
+          expect(typeof result.billing_deposit_account_id).toBe("string");
+        }
       },
       30_000,
     );

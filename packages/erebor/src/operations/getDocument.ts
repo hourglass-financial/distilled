@@ -46,7 +46,8 @@ export type GetDocumentOutput = typeof GetDocumentOutput.Type;
  * Retrieve document metadata and download URL
  *
  * @param id - Document ID
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const getDocument = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: GetDocumentInput,

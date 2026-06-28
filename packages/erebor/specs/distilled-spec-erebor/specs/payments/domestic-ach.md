@@ -19,12 +19,12 @@ Create an outbound ACH transfer by specifying the source account, destination co
 
 ```bash
 curl -X POST "https://api.erebor.bank/ach_out" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j" \
+  -H "Authorization: test_key_YOUR_API_KEY_HERE" \
   -H "Erebor-Idempotency-Key: unique-ach-request-001" \
   -H "Content-Type: application/json" \
   -d '{
     "deposit_account_id": "dep_acct_01kasd1tthf1ns1pjn1kncctwd",
-    "counterparty_us_bank_account_id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+    "counterparty_us_bank_account_id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
     "amount": {
       "currency": "USD",
       "value": "150000"
@@ -93,7 +93,8 @@ ACH transfers progress through the following statuses:
 
 | Status     | Description                                                                               |
 | ---------- | ----------------------------------------------------------------------------------------- |
-| `PENDING`  | Transfer created and queued for processing.                                               |
+| `CREATED`  | Transfer was created.                                                                     |
+| `PENDING`  | Transfer queued for processing.                                                           |
 | `SETTLED`  | Funds delivered to the destination account.                                               |
 | `FAILED`   | Transfer rejected — insufficient funds, invalid account, or compliance screening failure. |
 | `RETURNED` | Receiving institution returned the transfer. Funds credited back to your account.         |
@@ -106,7 +107,7 @@ Retrieve an inbound ACH transfer:
 
 ```bash
 curl -X GET "https://api.erebor.bank/ach_in/ach_in_01kasd1tthf1ns1pjn1kncctwd" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j"
+  -H "Authorization: test_key_YOUR_API_KEY_HERE"
 ```
 
 ## Webhooks

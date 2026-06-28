@@ -19,7 +19,7 @@ Specify the source account, destination account, amount, and an optional memo.
 
 ```bash
 curl -X POST "https://api.erebor.bank/book_transfers" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j" \
+  -H "Authorization: test_key_YOUR_API_KEY_HERE" \
   -H "Erebor-Idempotency-Key: unique-book-transfer-001" \
   -H "Content-Type: application/json" \
   -d '{
@@ -49,7 +49,7 @@ Book transfers progress through the following statuses:
 
 ```bash
 curl -X GET "https://api.erebor.bank/book_transfers/bk_01kasd1tthf1ns1pjn1kncctwd" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j"
+  -H "Authorization: test_key_YOUR_API_KEY_HERE"
 ```
 
 ## Webhooks

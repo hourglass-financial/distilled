@@ -54,7 +54,15 @@ export const GetBusinessApplicantOutput =
     ),
     source_of_funds: Schema.optional(
       Schema.NullOr(
-        Schema.Array(Schema.Literals(["REVENUE", "INVESTMENT", "OTHER"])),
+        Schema.Array(
+          Schema.Literals([
+            "REVENUE",
+            "INVESTMENT",
+            "INHERITANCE",
+            "GIFT",
+            "OTHER",
+          ]),
+        ),
       ),
     ),
     source_of_funds_other_description: Schema.optional(
@@ -66,7 +74,12 @@ export const GetBusinessApplicantOutput =
           person_applicant_id: Schema.String,
           title: Schema.String,
           roles: Schema.Array(
-            Schema.Literals(["CONTROL_PERSON", "BENEFICIAL_OWNER", "SIGNER"]),
+            Schema.Literals([
+              "CONTROL_PERSON",
+              "BENEFICIAL_OWNER",
+              "SIGNER",
+              "APPLICANT",
+            ]),
           ),
           ownership_percentage: Schema.Number,
         }),
@@ -110,7 +123,8 @@ export type GetBusinessApplicantOutput = typeof GetBusinessApplicantOutput.Type;
  * Retrieve a specific Business Applicant by ID
  *
  * @param id - Business applicant ID
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const getBusinessApplicant = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({

@@ -1,0 +1,65 @@
+{
+  "description": "Fix response-schema drift between the Erebor OpenAPI snapshot and the live API, verified against api.erebor.bank. (1) Program.billing_deposit_account_id is declared required but is omitted from MANAGED program responses -> make optional. (2) Program responses include an undocumented program_type field (observed value MANAGED) -> add it. (3) Onboarding.disclosures is declared required but is omitted from every onboarding response (list/get/create/update) -> make optional. (4) Onboarding responses include an undocumented rejection_reason field -> add it. (5) The user-supplied `description` field is declared as a non-nullable string on every counterparty address/account output schema and on Transaction, but the API returns null when no description was set -> make nullable on all five output schemas. These were reported upstream in .ai-workspace/erebor-openapi-spec-issues.md.",
+  "patches": [
+    {
+      "op": "replace",
+      "path": "/components/schemas/Program/required",
+      "value": ["id", "type", "url", "created_at", "updated_at", "name"]
+    },
+    {
+      "op": "add",
+      "path": "/components/schemas/Program/properties/program_type",
+      "value": {
+        "type": ["string", "null"],
+        "description": "Program type classification. Observed value: `MANAGED`. Undocumented in the OpenAPI snapshot but returned by the live API."
+      }
+    },
+    {
+      "op": "replace",
+      "path": "/components/schemas/Onboarding/required",
+      "value": [
+        "id",
+        "type",
+        "url",
+        "created_at",
+        "updated_at",
+        "program_id",
+        "status",
+        "applicant_type"
+      ]
+    },
+    {
+      "op": "add",
+      "path": "/components/schemas/Onboarding/properties/rejection_reason",
+      "value": {
+        "type": ["string", "null"],
+        "description": "Reason the onboarding was rejected, or null when not rejected. Undocumented in the OpenAPI snapshot but returned by the live API."
+      }
+    },
+    {
+      "op": "replace",
+      "path": "/components/schemas/CounterpartyRailAddress/properties/description/type",
+      "value": ["string", "null"]
+    },
+    {
+      "op": "replace",
+      "path": "/components/schemas/CounterpartyUSBankAccount/properties/description/type",
+      "value": ["string", "null"]
+    },
+    {
+      "op": "replace",
+      "path": "/components/schemas/CounterpartyInternationalBankAccount/properties/description/type",
+      "value": ["string", "null"]
+    },
+    {
+      "op": "replace",
+      "path": "/components/schemas/CounterpartyBlockchainAddress/properties/description/type",
+      "value": ["string", "null"]
+    },
+    {
+      "op": "replace",
+      "path": "/components/schemas/Transaction/properties/description/type",
+      "value": ["string", "null"]
+    }
+  ]
+}

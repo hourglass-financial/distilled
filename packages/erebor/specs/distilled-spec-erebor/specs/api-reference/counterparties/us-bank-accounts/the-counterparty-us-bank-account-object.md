@@ -6,9 +6,9 @@ A counterparty US bank account stores the routing and account number for a domes
 
 ```json title="The Counterparty US Bank Account Object"
 {
-  "id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+  "id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
   "type": "COUNTERPARTY_US_BANK_ACCOUNT",
-  "url": "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+  "url": "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
   "created_at": "2025-01-15T09:30:00Z",
   "updated_at": "2025-01-15T09:30:00Z",
   "customer_id": "cust_01kasd1tthf1ns1pjn1kncctwd",
@@ -58,7 +58,7 @@ components:
           type: string
           description: >-
             Unique identifier for the counterparty US bank account, prefixed
-            with `cp_us_bank_`.
+            with `cp_us_bank_acct_`.
         type:
           type: string
           enum:

@@ -41,7 +41,8 @@ export type GetBlockchainAddressOutput = typeof GetBlockchainAddressOutput.Type;
  * Retrieve a specific Blockchain Address by ID
  *
  * @param id - Blockchain address ID
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const getBlockchainAddress = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({

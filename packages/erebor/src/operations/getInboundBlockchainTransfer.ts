@@ -25,6 +25,7 @@ export const GetInboundBlockchainTransferOutput =
     archived_at: Schema.optional(Schema.NullOr(Schema.String)),
     program_id: Schema.optional(Schema.NullOr(Schema.String)),
     status: Schema.Literals([
+      "CREATED",
       "PENDING",
       "NEEDS_ATTRIBUTION",
       "SETTLED",
@@ -57,7 +58,8 @@ export type GetInboundBlockchainTransferOutput =
  * Retrieve a specific Inbound Blockchain Transfer by ID
  *
  * @param id - Inbound blockchain transfer ID
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const getInboundBlockchainTransfer =
   /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

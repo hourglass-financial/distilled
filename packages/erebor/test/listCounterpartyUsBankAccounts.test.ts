@@ -30,7 +30,11 @@ describe("listCounterpartyUsBankAccounts", () => {
         for (const acct of result.data) {
           expect(acct.type).toBe("COUNTERPARTY_US_BANK_ACCOUNT");
           expect(typeof acct.id).toBe("string");
-          expect(typeof acct.description).toBe("string");
+          // `description` is nullable in the current spec; accept string | null.
+          expect(["string", "object"]).toContain(typeof acct.description);
+          if (acct.description !== null) {
+            expect(typeof acct.description).toBe("string");
+          }
           expect(typeof acct.account_number).toBe("string");
           expect(typeof acct.routing_number).toBe("string");
         }

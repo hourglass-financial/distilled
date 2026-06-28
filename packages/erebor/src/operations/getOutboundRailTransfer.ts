@@ -24,7 +24,7 @@ export const GetOutboundRailTransferOutput =
     updated_at: Schema.String,
     archived_at: Schema.optional(Schema.NullOr(Schema.String)),
     program_id: Schema.optional(Schema.NullOr(Schema.String)),
-    status: Schema.Literals(["PENDING", "SETTLED", "FAILED"]),
+    status: Schema.Literals(["CREATED", "PENDING", "SETTLED", "FAILED"]),
     from_deposit_account_id: Schema.String,
     counterparty_rail_address_id: Schema.optional(Schema.NullOr(Schema.String)),
     to_deposit_account_id: Schema.optional(Schema.NullOr(Schema.String)),
@@ -49,7 +49,8 @@ export type GetOutboundRailTransferOutput =
  * Retrieve a specific Outbound Rail Transfer by ID
  *
  * @param id - Outbound Rail Transfer ID
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const getOutboundRailTransfer = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({

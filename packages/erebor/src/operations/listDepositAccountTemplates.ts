@@ -75,7 +75,8 @@ export type ListDepositAccountTemplatesOutput =
  * @param ownership_type - Filter by ownership type
  * @param status - Filter by template status
  * @param program_id - Filter by program ID
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const listDepositAccountTemplates = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({

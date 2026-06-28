@@ -38,6 +38,7 @@ export * from "./listCounterparties.ts";
 export * from "./createCounterparty.ts";
 export * from "./getCounterparty.ts";
 export * from "./updateCounterparty.ts";
+export * from "./archiveCounterparty.ts";
 export * from "./listCounterpartyUsBankAccounts.ts";
 export * from "./createCounterpartyUsBankAccount.ts";
 export * from "./getCounterpartyUsBankAccount.ts";

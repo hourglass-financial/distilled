@@ -121,7 +121,8 @@ export type GetDepositAccountOutput = typeof GetDepositAccountOutput.Type;
  * Retrieve a specific Deposit Account by ID
  *
  * @param id - Deposit Account ID
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const getDepositAccount = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: GetDepositAccountInput,

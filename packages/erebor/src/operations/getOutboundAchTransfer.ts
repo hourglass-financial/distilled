@@ -24,7 +24,13 @@ export const GetOutboundAchTransferOutput =
     updated_at: Schema.String,
     archived_at: Schema.optional(Schema.NullOr(Schema.String)),
     program_id: Schema.optional(Schema.NullOr(Schema.String)),
-    status: Schema.Literals(["PENDING", "SETTLED", "FAILED", "RETURNED"]),
+    status: Schema.Literals([
+      "CREATED",
+      "PENDING",
+      "SETTLED",
+      "FAILED",
+      "RETURNED",
+    ]),
     deposit_account_id: Schema.String,
     counterparty_us_bank_account_id: Schema.String,
     amount: Schema.Struct({
@@ -55,7 +61,8 @@ export type GetOutboundAchTransferOutput =
  * Retrieve a specific Outbound ACH Transfer by ID
  *
  * @param id - Outbound ACH transfer ID
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const getOutboundAchTransfer = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({

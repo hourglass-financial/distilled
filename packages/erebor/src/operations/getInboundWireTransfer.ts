@@ -25,6 +25,7 @@ export const GetInboundWireTransferOutput =
     archived_at: Schema.optional(Schema.NullOr(Schema.String)),
     program_id: Schema.optional(Schema.NullOr(Schema.String)),
     status: Schema.Literals([
+      "CREATED",
       "PENDING",
       "SETTLED",
       "FAILED",
@@ -62,7 +63,8 @@ export type GetInboundWireTransferOutput =
  * Retrieve a specific Inbound Wire Transfer by ID
  *
  * @param id - Inbound wire transfer ID
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const getInboundWireTransfer = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({

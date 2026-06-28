@@ -34,6 +34,7 @@ export const ListInboundBlockchainTransfersOutput =
         archived_at: Schema.optional(Schema.NullOr(Schema.String)),
         program_id: Schema.optional(Schema.NullOr(Schema.String)),
         status: Schema.Literals([
+          "CREATED",
           "PENDING",
           "NEEDS_ATTRIBUTION",
           "SETTLED",
@@ -81,7 +82,8 @@ export type ListInboundBlockchainTransfersOutput =
  * @param network - Filter by blockchain network
  * @param program_id - Filter by program ID
  * @param custom_ref - Filter by exact `custom_ref` match (case-sensitive, up to 255 characters).
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const listInboundBlockchainTransfers =
   /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

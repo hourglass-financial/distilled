@@ -1,8 +1,8 @@
 /**
  * Tests for the `createCounterpartyInternationalBankAccount` operation.
  *
- * Happy path discovers a real `counterparty_id` via `listCounterparties`
- * and attaches a new international bank account with a valid IBAN + BIC.
+ * Happy path creates a dedicated counterparty and attaches a new
+ * international bank account with a valid IBAN + BIC.
  * Error coverage hits Forbidden (bad key), NotFound (unknown
  * counterparty_id), BadRequest (malformed counterparty_id), and
  * EreborValidationError (malformed IBAN that fails the structural
@@ -13,26 +13,68 @@ import * as Layer from "effect/Layer";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import { describe, expect, it } from "vitest";
 import { Credentials, DEFAULT_API_BASE_URL } from "../src/credentials.ts";
+import { createCounterparty } from "../src/operations/createCounterparty.ts";
 import { createCounterpartyInternationalBankAccount } from "../src/operations/createCounterpartyInternationalBankAccount.ts";
-import { listCounterparties } from "../src/operations/listCounterparties.ts";
 import { runEffect, testRunId, unknownId } from "./setup.ts";
 
-// Deutsche Bank Frankfurt sample IBAN + BIC — passes structural validation.
-const VALID_IBAN = "DE89370400440532013000";
+// Create a dedicated counterparty rather than borrowing one from
+// listCounterparties: shared counterparties can be archived by the
+// archiveCounterparty test running in parallel, which would make this create
+// race into a "Counterparty not found" BadRequest.
+const newCounterparty = () =>
+  createCounterparty({
+    name: `Distilled CP intl bank ${testRunId}`,
+    address: {
+      street_address: "123 Test Street",
+      city: "San Francisco",
+      country_area: "CA",
+      postal_code: "94105",
+      country: "US",
+    },
+  });
+
 const VALID_BIC = "DEUTDEFF";
 // Same digits but with the country/check digits scrambled — fails IBAN
 // modulo-97 / structural validation.
 const INVALID_IBAN = "DE00000000000000000001";
+
+// A German IBAN must be unique per Erebor account — reusing a fixed IBAN
+// across runs fails with `Address is already attached to another party.`
+// Build a structurally valid (modulo-97) German IBAN whose 18-digit BBAN is
+// derived from `testRunId`, so each run attaches a fresh address.
+// Layout: DE + 2 check digits + 18-digit BBAN (8-digit bank code + 10-digit
+// account number) = 22 chars.
+const ibanCheckDigits = (countryCode: string, bban: string): string => {
+  const rearranged = `${bban}${countryCode}00`;
+  let numeric = "";
+  for (const ch of rearranged) {
+    numeric +=
+      ch >= "0" && ch <= "9" ? ch : (ch.charCodeAt(0) - 55).toString();
+  }
+  let remainder = 0;
+  for (let i = 0; i < numeric.length; i += 7) {
+    remainder = Number(BigInt(`${remainder}${numeric.slice(i, i + 7)}`) % 97n);
+  }
+  return (98 - remainder).toString().padStart(2, "0");
+};
+
+const uniqueValidIban = (): string => {
+  const bban = BigInt(`0x${testRunId}`)
+    .toString()
+    .padStart(18, "0")
+    .slice(-18);
+  return `DE${ibanCheckDigits("DE", bban)}${bban}`;
+};
+
+// Structurally valid IBAN, unique per test run.
+const VALID_IBAN = uniqueValidIban();
 
 describe("createCounterpartyInternationalBankAccount", () => {
   describe("happy path", () => {
     it(
       "creates an international bank account for an existing counterparty",
       async () => {
-        const list = await runEffect(listCounterparties({ page_size: 1 }));
-        if (list.data.length === 0) return;
-
-        const counterparty = list.data[0]!;
+        const counterparty = await runEffect(newCounterparty());
         const customRef = `distilled-erebor-${testRunId}`;
         const result = await runEffect(
           createCounterpartyInternationalBankAccount({
@@ -133,9 +175,7 @@ describe("createCounterpartyInternationalBankAccount", () => {
         // IBAN check failure surfaces as 422 VALIDATION_ERROR, which the
         // client remaps to EreborValidationError (preserving the
         // structured error_details array).
-        const list = await runEffect(listCounterparties({ page_size: 1 }));
-        if (list.data.length === 0) return;
-        const counterparty = list.data[0]!;
+        const counterparty = await runEffect(newCounterparty());
 
         const error = (await runEffect(
           createCounterpartyInternationalBankAccount({

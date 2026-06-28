@@ -49,7 +49,7 @@ export const GetTransactionOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     value: Schema.String,
     display_value: Schema.optional(Schema.String),
   }),
-  description: Schema.String,
+  description: Schema.NullOr(Schema.String),
   associated_payments: Schema.optional(
     Schema.NullOr(
       Schema.Array(
@@ -73,7 +73,8 @@ export type GetTransactionOutput = typeof GetTransactionOutput.Type;
  * Transactions represent the complete history of balance changes across all accounts. Unlike Payments, which are instructions to move money, transactions are records that represent balance movements in the bank's ledger. This endpoint retrieves a specific Transaction by its ID.
  *
  * @param id - Transaction ID
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const getTransaction = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: GetTransactionInput,

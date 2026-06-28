@@ -6,11 +6,11 @@ import { BadRequest, Forbidden, Conflict } from "../errors.ts";
 // Input Schema
 export const SimulateInternationalWireInInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
-      T.HttpHeader("Erebor-Idempotency-Key"),
-    ),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
+    ),
+    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Idempotency-Key"),
     ),
     deposit_account_id: Schema.optional(Schema.String),
     account_number: Schema.optional(Schema.String),
@@ -43,7 +43,13 @@ export const SimulateInternationalWireInOutput =
       currency: Schema.Literals(["USD"]),
       value: Schema.String,
     }),
-    status: Schema.Literals(["PENDING", "SETTLED", "FAILED", "RETURNED"]),
+    status: Schema.Literals([
+      "CREATED",
+      "PENDING",
+      "SETTLED",
+      "FAILED",
+      "RETURNED",
+    ]),
   });
 export type SimulateInternationalWireInOutput =
   typeof SimulateInternationalWireInOutput.Type;
@@ -57,9 +63,10 @@ export type SimulateInternationalWireInOutput =
  * The response returns the new transfer's customer-facing ID with status `PENDING`. Settlement (`SETTLED`) is asynchronous — typically within seconds. Poll `GET /international_wire_in/{international_wire_in_id}` or listen for the `INTERNATIONAL_WIRE_IN.SETTLED` webhook to observe the transition.
  * Idempotency: when retrying with the same `Erebor-Idempotency-Key`, the response reflects the existing row's current status (`PENDING` or `SETTLED`). A key reused across customers returns `409 Conflict` — regenerate the key.
  *
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const simulateInternationalWireIn = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({

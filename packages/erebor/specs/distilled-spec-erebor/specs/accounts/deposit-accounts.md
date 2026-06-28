@@ -38,27 +38,18 @@ Even though your end customers are legal customers of the bank, you — the prog
 * Each account holder is fully KYC'd and a legal customer of the bank, but you retain the customer relationship
 * Your platform initiates all transactions on behalf of the end customer, which lets you enforce custom rules and approval workflows before any funds move
 
-### FBO & Virtual accounts
+### FBO and Virtual accounts
 
-Virtual accounts are `VIRTUAL_DDA`s that sit underneath an `FBO` account in a program. Account holders go through lightweight KYC — they are *not* legal customers of Erebor. Instead, you (the program manager) are the legal customer, and you hold funds on their behalf through the parent FBO.
-
-Each virtual account has the same transaction and balance properties as a regular DDA, enabling complete subledgering. You cannot transact directly in and out of the parent FBO — all activity flows through the virtual accounts underneath it, and the FBO's balance is always the sum of its virtual accounts.
-
-**Use when:**
-
-* You need to segregate funds for accounting or reconciliation without opening separate bank accounts
-* You're managing funds for multiple entities, departments, or purposes under one structure
-* You don't need full KYC for each individual account holder
+Virtual accounts are `VIRTUAL_DDA`s that sit underneath an `FBO` account in a program. Each one has the same balance and transaction properties as a regular DDA, enabling complete subledgering: the FBO's balance is always the sum of its virtual accounts, and you cannot transact directly on the FBO — all activity flows through the virtual accounts underneath it.
 
 **How they differ from managed accounts:**
 
-* Account holders go through lightweight KYC and are not legal customers of the bank — you are
+* Account holders go through lightweight KYC and are not legal customers of the bank — you (the program manager) are, holding funds on their behalf through the parent FBO
 * Virtual accounts share a parent FBO account instead of each being a standalone DDA
 * Each virtual account tracks its own balance within the parent FBO's total
-* The parent FBO balance is always the sum of all its virtual accounts
 * Book transfers between virtual accounts on the same parent settle instantly with no fees
 
-Virtual accounts are ideal for platforms managing pooled funds — marketplaces holding seller balances, payroll platforms segregating employer funds, or treasury operations splitting funds across business units.
+See [Virtual accounts](/accounts/virtual-accounts) for the full guide — use cases, how they're created, routing to a sub-account, and moving funds between sub-accounts.
 
 ## How accounts are created
 

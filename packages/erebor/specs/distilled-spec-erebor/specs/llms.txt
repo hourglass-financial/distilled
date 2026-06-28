@@ -3,7 +3,6 @@
 ## Instructions for AI Agents
 
 - For clean Markdown of any page, append `.md` to the page URL
-- For a complete documentation index, see https://docs.erebor.bank/llms.txt
 - For section-specific indexes, append `/llms.txt` to any section URL
 - For AI client integration (Claude Code, Cursor, etc.), connect to the MCP server at https://docs.erebor.bank/_mcp/server
 
@@ -11,6 +10,11 @@
 
 - [Home](https://docs.erebor.bank/home.md)
 - [Getting started](https://docs.erebor.bank/getting-started.md)
+- [Overview](https://docs.erebor.bank/using-the-api/overview.md)
+- [MCP server](https://docs.erebor.bank/using-the-api/mcp-server.md)
+- [Authentication](https://docs.erebor.bank/using-the-api/authentication.md)
+- [Pagination](https://docs.erebor.bank/using-the-api/pagination.md)
+- [Errors](https://docs.erebor.bank/using-the-api/errors.md)
 - [Overview](https://docs.erebor.bank/onboarding/overview.md)
 - [Person onboarding](https://docs.erebor.bank/onboarding/person-onboarding.md)
 - [Business onboarding](https://docs.erebor.bank/onboarding/business-onboarding.md)
@@ -103,6 +107,7 @@
 - API Reference > Counterparties > Counterparties [Create Counterparty](https://docs.erebor.bank/api-reference/counterparties/counterparties/create-counterparty.md)
 - API Reference > Counterparties > Counterparties [Retrieve Counterparty](https://docs.erebor.bank/api-reference/counterparties/counterparties/get-counterparty.md)
 - API Reference > Counterparties > Counterparties [Update Counterparty](https://docs.erebor.bank/api-reference/counterparties/counterparties/update-counterparty.md)
+- API Reference > Counterparties > Counterparties [Archive Counterparty](https://docs.erebor.bank/api-reference/counterparties/counterparties/archive-counterparty.md)
 - API Reference > Counterparties > US Bank Accounts [List Counterparty US Bank Accounts](https://docs.erebor.bank/api-reference/counterparties/us-bank-accounts/list-counterparty-us-bank-accounts.md)
 - API Reference > Counterparties > US Bank Accounts [Create Counterparty US Bank Account](https://docs.erebor.bank/api-reference/counterparties/us-bank-accounts/create-counterparty-us-bank-account.md)
 - API Reference > Counterparties > US Bank Accounts [Retrieve Counterparty US Bank Account](https://docs.erebor.bank/api-reference/counterparties/us-bank-accounts/get-counterparty-us-bank-account.md)

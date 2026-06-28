@@ -1,17 +1,17 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
-import { BadRequest, NotFound } from "../errors.ts";
+import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
 export const UpdateCounterpartyInternationalBankAccountInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
-    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
-      T.HttpHeader("Erebor-Idempotency-Key"),
-    ),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
+    ),
+    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Idempotency-Key"),
     ),
     description: Schema.optional(Schema.String),
     custom_ref: Schema.optional(Schema.String),
@@ -39,7 +39,7 @@ export const UpdateCounterpartyInternationalBankAccountOutput =
     customer_id: Schema.optional(Schema.NullOr(Schema.String)),
     program_id: Schema.optional(Schema.NullOr(Schema.String)),
     counterparty_id: Schema.optional(Schema.NullOr(Schema.String)),
-    description: Schema.String,
+    description: Schema.NullOr(Schema.String),
     account_number: Schema.String,
     bic: Schema.String,
     country_code: Schema.String,
@@ -57,13 +57,14 @@ export type UpdateCounterpartyInternationalBankAccountOutput =
  * Update a counterparty international bank account's `description`, `custom_ref`, or `custom_fields`. The account number and BIC are immutable.
  *
  * @param id - International bank account ID
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const updateCounterpartyInternationalBankAccount =
   /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
     inputSchema: UpdateCounterpartyInternationalBankAccountInput,
     outputSchema: UpdateCounterpartyInternationalBankAccountOutput,
-    errors: [BadRequest, NotFound] as const,
+    errors: [BadRequest, NotFound, Conflict] as const,
   }));

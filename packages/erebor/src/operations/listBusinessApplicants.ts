@@ -62,7 +62,15 @@ export const ListBusinessApplicantsOutput =
         ),
         source_of_funds: Schema.optional(
           Schema.NullOr(
-            Schema.Array(Schema.Literals(["REVENUE", "INVESTMENT", "OTHER"])),
+            Schema.Array(
+              Schema.Literals([
+                "REVENUE",
+                "INVESTMENT",
+                "INHERITANCE",
+                "GIFT",
+                "OTHER",
+              ]),
+            ),
           ),
         ),
         source_of_funds_other_description: Schema.optional(
@@ -78,6 +86,7 @@ export const ListBusinessApplicantsOutput =
                   "CONTROL_PERSON",
                   "BENEFICIAL_OWNER",
                   "SIGNER",
+                  "APPLICANT",
                 ]),
               ),
               ownership_percentage: Schema.Number,
@@ -138,7 +147,8 @@ export type ListBusinessApplicantsOutput =
  * @param ending_before - Cursor for pagination (exclusive end)
  * @param program_id - Filter by program ID
  * @param custom_ref - Filter by exact `custom_ref` match (case-sensitive, up to 255 characters).
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const listBusinessApplicants = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({

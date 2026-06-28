@@ -34,6 +34,14 @@ paths:
           required: true
           schema:
             type: string
+        - name: Erebor-Version
+          in: header
+          description: >
+            Pins the API version used to process this request. Format is
+            `YYYY-MM-DD`. When omitted, the current default version is used.
+          required: false
+          schema:
+            type: string
         - name: Erebor-Idempotency-Key
           in: header
           description: >
@@ -50,12 +58,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OutboundWireTransfer'
-        '422':
-          description: Validation error
+        '400':
+          description: Bad Request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OutboundWireTransferValidationError'
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: >-
+            Unprocessable Content — the request was valid but the transfer
+            cannot be processed. Match on the `error` code, not the `message`
+            text: messages are human-readable, may vary by rail, and may change
+            without notice.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
       requestBody:
         content:
           application/json:
@@ -131,12 +155,14 @@ components:
     OutboundWireTransferStatus:
       type: string
       enum:
+        - CREATED
         - PENDING
         - SETTLED
         - FAILED
         - RETURNED
       description: |
         Outbound wire transfer status:
+        - CREATED: Transfer was created
         - PENDING: Transfer is being processed
         - SETTLED: Transfer has been completed
         - FAILED: Transfer failed
@@ -214,7 +240,7 @@ components:
           type: string
           description: >-
             ID of the external US bank account receiving the wire, prefixed with
-            `cp_us_bank_`.
+            `cp_us_bank_acct_`.
         bank_name:
           type:
             - string
@@ -288,31 +314,65 @@ components:
         - instruction_id
         - uetr
       title: OutboundWireTransfer
-    OutboundWireTransferValidationErrorCode:
-      type: string
-      enum:
-        - INVALID_CURRENCY
-        - INVALID_REQUEST
-      description: Machine-readable error code
-      title: OutboundWireTransferValidationErrorCode
-    OutboundWireTransferValidationError:
+    ErrorDetail:
+      oneOf:
+        - type: object
+          properties:
+            error_detail_type:
+              type: string
+              description: Discriminator indicating the kind of detail.
+            field:
+              type: string
+              description: Dot-notated path to the field that failed validation.
+            message:
+              type: string
+              description: Human-readable description of the failure.
+          required:
+            - error_detail_type
+            - field
+            - message
+          description: FIELD_ERROR variant
+      discriminator:
+        propertyName: error_detail_type
+      description: >-
+        A structured error detail. Use `error_detail_type` to determine which
+        fields are present. New detail types may be added in the future;
+        consumers should ignore unrecognized values.
+      title: ErrorDetail
+    Error:
       type: object
       properties:
         error:
           type: string
-          description: Human-readable error message
-        code:
-          $ref: '#/components/schemas/OutboundWireTransferValidationErrorCode'
-          description: Machine-readable error code
+        message:
+          type: string
         field:
           type:
             - string
             - 'null'
-          description: The field that caused the validation error
+          description: >-
+            Deprecated: use error_details instead. Contains the field from the
+            first error_details entry for backwards compatibility. May be
+            removed in a future API version.
+        docs_url:
+          type:
+            - string
+            - 'null'
+          format: uri
+        error_details:
+          type:
+            - array
+            - 'null'
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+          description: >-
+            Structured error details providing granular information about
+            validation failures. Each item includes an `error_detail_type`
+            discriminator indicating the kind of detail.
       required:
         - error
-        - code
-      title: OutboundWireTransferValidationError
+        - message
+      title: Error
   securitySchemes:
     ApiKeyAuth:
       type: apiKey
@@ -334,7 +394,7 @@ components:
 ```json
 {
   "deposit_account_id": "dep_acct_01kasd1tthf1ns1pjn1kncctwd",
-  "counterparty_us_bank_account_id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+  "counterparty_us_bank_account_id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
   "amount": {
     "currency": "USD",
     "value": "12345"
@@ -357,9 +417,9 @@ components:
   "url": "https://api.erebor.bank/wire_out/wire_out_01kasd1tthf1ns1pjn1kncctwd",
   "created_at": "2025-01-15T09:30:00Z",
   "updated_at": "2025-01-15T09:30:00Z",
-  "status": "PENDING",
+  "status": "CREATED",
   "deposit_account_id": "dep_acct_01kasd1tthf1ns1pjn1kncctwd",
-  "counterparty_us_bank_account_id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+  "counterparty_us_bank_account_id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
   "amount": {
     "currency": "USD",
     "exponent": 2,
@@ -394,7 +454,7 @@ url = "https://api.erebor.bank/wire_out"
 
 payload = {
     "deposit_account_id": "dep_acct_01kasd1tthf1ns1pjn1kncctwd",
-    "counterparty_us_bank_account_id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+    "counterparty_us_bank_account_id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
     "amount": {
         "currency": "USD",
         "value": "12345"
@@ -421,7 +481,7 @@ const url = 'https://api.erebor.bank/wire_out';
 const options = {
   method: 'POST',
   headers: {Authorization: '<apiKey>', 'Content-Type': 'application/json'},
-  body: '{"deposit_account_id":"dep_acct_01kasd1tthf1ns1pjn1kncctwd","counterparty_us_bank_account_id":"cp_us_bank_01kasd1tthf1ns1pjn1kncctwd","amount":{"currency":"USD","value":"12345"},"memo":"Invoice #12345 - Q4 Services","custom_ref":"PO-2025-7821","custom_fields":{"po_number":"PO-2025-7821","department":"operations"}}'
+  body: '{"deposit_account_id":"dep_acct_01kasd1tthf1ns1pjn1kncctwd","counterparty_us_bank_account_id":"cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd","amount":{"currency":"USD","value":"12345"},"memo":"Invoice #12345 - Q4 Services","custom_ref":"PO-2025-7821","custom_fields":{"po_number":"PO-2025-7821","department":"operations"}}'
 };
 
 try {
@@ -447,7 +507,7 @@ func main() {
 
 	url := "https://api.erebor.bank/wire_out"
 
-	payload := strings.NewReader("{\n  \"deposit_account_id\": \"dep_acct_01kasd1tthf1ns1pjn1kncctwd\",\n  \"counterparty_us_bank_account_id\": \"cp_us_bank_01kasd1tthf1ns1pjn1kncctwd\",\n  \"amount\": {\n    \"currency\": \"USD\",\n    \"value\": \"12345\"\n  },\n  \"memo\": \"Invoice #12345 - Q4 Services\",\n  \"custom_ref\": \"PO-2025-7821\",\n  \"custom_fields\": {\n    \"po_number\": \"PO-2025-7821\",\n    \"department\": \"operations\"\n  }\n}")
+	payload := strings.NewReader("{\n  \"deposit_account_id\": \"dep_acct_01kasd1tthf1ns1pjn1kncctwd\",\n  \"counterparty_us_bank_account_id\": \"cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd\",\n  \"amount\": {\n    \"currency\": \"USD\",\n    \"value\": \"12345\"\n  },\n  \"memo\": \"Invoice #12345 - Q4 Services\",\n  \"custom_ref\": \"PO-2025-7821\",\n  \"custom_fields\": {\n    \"po_number\": \"PO-2025-7821\",\n    \"department\": \"operations\"\n  }\n}")
 
 	req, _ := http.NewRequest("POST", url, payload)
 
@@ -477,7 +537,7 @@ http.use_ssl = true
 request = Net::HTTP::Post.new(url)
 request["Authorization"] = '<apiKey>'
 request["Content-Type"] = 'application/json'
-request.body = "{\n  \"deposit_account_id\": \"dep_acct_01kasd1tthf1ns1pjn1kncctwd\",\n  \"counterparty_us_bank_account_id\": \"cp_us_bank_01kasd1tthf1ns1pjn1kncctwd\",\n  \"amount\": {\n    \"currency\": \"USD\",\n    \"value\": \"12345\"\n  },\n  \"memo\": \"Invoice #12345 - Q4 Services\",\n  \"custom_ref\": \"PO-2025-7821\",\n  \"custom_fields\": {\n    \"po_number\": \"PO-2025-7821\",\n    \"department\": \"operations\"\n  }\n}"
+request.body = "{\n  \"deposit_account_id\": \"dep_acct_01kasd1tthf1ns1pjn1kncctwd\",\n  \"counterparty_us_bank_account_id\": \"cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd\",\n  \"amount\": {\n    \"currency\": \"USD\",\n    \"value\": \"12345\"\n  },\n  \"memo\": \"Invoice #12345 - Q4 Services\",\n  \"custom_ref\": \"PO-2025-7821\",\n  \"custom_fields\": {\n    \"po_number\": \"PO-2025-7821\",\n    \"department\": \"operations\"\n  }\n}"
 
 response = http.request(request)
 puts response.read_body
@@ -490,7 +550,7 @@ import com.mashape.unirest.http.Unirest;
 HttpResponse<String> response = Unirest.post("https://api.erebor.bank/wire_out")
   .header("Authorization", "<apiKey>")
   .header("Content-Type", "application/json")
-  .body("{\n  \"deposit_account_id\": \"dep_acct_01kasd1tthf1ns1pjn1kncctwd\",\n  \"counterparty_us_bank_account_id\": \"cp_us_bank_01kasd1tthf1ns1pjn1kncctwd\",\n  \"amount\": {\n    \"currency\": \"USD\",\n    \"value\": \"12345\"\n  },\n  \"memo\": \"Invoice #12345 - Q4 Services\",\n  \"custom_ref\": \"PO-2025-7821\",\n  \"custom_fields\": {\n    \"po_number\": \"PO-2025-7821\",\n    \"department\": \"operations\"\n  }\n}")
+  .body("{\n  \"deposit_account_id\": \"dep_acct_01kasd1tthf1ns1pjn1kncctwd\",\n  \"counterparty_us_bank_account_id\": \"cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd\",\n  \"amount\": {\n    \"currency\": \"USD\",\n    \"value\": \"12345\"\n  },\n  \"memo\": \"Invoice #12345 - Q4 Services\",\n  \"custom_ref\": \"PO-2025-7821\",\n  \"custom_fields\": {\n    \"po_number\": \"PO-2025-7821\",\n    \"department\": \"operations\"\n  }\n}")
   .asString();
 ```
 
@@ -503,7 +563,7 @@ $client = new \GuzzleHttp\Client();
 $response = $client->request('POST', 'https://api.erebor.bank/wire_out', [
   'body' => '{
   "deposit_account_id": "dep_acct_01kasd1tthf1ns1pjn1kncctwd",
-  "counterparty_us_bank_account_id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+  "counterparty_us_bank_account_id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
   "amount": {
     "currency": "USD",
     "value": "12345"
@@ -531,7 +591,7 @@ var client = new RestClient("https://api.erebor.bank/wire_out");
 var request = new RestRequest(Method.POST);
 request.AddHeader("Authorization", "<apiKey>");
 request.AddHeader("Content-Type", "application/json");
-request.AddParameter("application/json", "{\n  \"deposit_account_id\": \"dep_acct_01kasd1tthf1ns1pjn1kncctwd\",\n  \"counterparty_us_bank_account_id\": \"cp_us_bank_01kasd1tthf1ns1pjn1kncctwd\",\n  \"amount\": {\n    \"currency\": \"USD\",\n    \"value\": \"12345\"\n  },\n  \"memo\": \"Invoice #12345 - Q4 Services\",\n  \"custom_ref\": \"PO-2025-7821\",\n  \"custom_fields\": {\n    \"po_number\": \"PO-2025-7821\",\n    \"department\": \"operations\"\n  }\n}", ParameterType.RequestBody);
+request.AddParameter("application/json", "{\n  \"deposit_account_id\": \"dep_acct_01kasd1tthf1ns1pjn1kncctwd\",\n  \"counterparty_us_bank_account_id\": \"cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd\",\n  \"amount\": {\n    \"currency\": \"USD\",\n    \"value\": \"12345\"\n  },\n  \"memo\": \"Invoice #12345 - Q4 Services\",\n  \"custom_ref\": \"PO-2025-7821\",\n  \"custom_fields\": {\n    \"po_number\": \"PO-2025-7821\",\n    \"department\": \"operations\"\n  }\n}", ParameterType.RequestBody);
 IRestResponse response = client.Execute(request);
 ```
 
@@ -544,7 +604,7 @@ let headers = [
 ]
 let parameters = [
   "deposit_account_id": "dep_acct_01kasd1tthf1ns1pjn1kncctwd",
-  "counterparty_us_bank_account_id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+  "counterparty_us_bank_account_id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
   "amount": [
     "currency": "USD",
     "value": "12345"
