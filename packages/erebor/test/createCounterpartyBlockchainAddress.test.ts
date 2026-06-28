@@ -1,8 +1,8 @@
 /**
  * Tests for the `createCounterpartyBlockchainAddress` operation.
  *
- * Happy path discovers a real `counterparty_id` via `listCounterparties`
- * and attaches a new blockchain address with a valid Ethereum address.
+ * Happy path creates a dedicated counterparty and attaches a new blockchain
+ * address with a valid Ethereum address.
  * Error coverage hits Forbidden (bad key), NotFound (unknown
  * counterparty_id), BadRequest (malformed counterparty_id), and
  * EreborValidationError (malformed address that fails structural
@@ -13,8 +13,8 @@ import * as Layer from "effect/Layer";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import { describe, expect, it } from "vitest";
 import { Credentials, DEFAULT_API_BASE_URL } from "../src/credentials.ts";
+import { createCounterparty } from "../src/operations/createCounterparty.ts";
 import { createCounterpartyBlockchainAddress } from "../src/operations/createCounterpartyBlockchainAddress.ts";
-import { listCounterparties } from "../src/operations/listCounterparties.ts";
 import { runEffect, testRunId, unknownId } from "./setup.ts";
 
 // Well-formed 20-byte (40 hex char) Ethereum address derived from the
@@ -26,15 +26,28 @@ const VALID_ETH_ADDRESS = `0x${testRunId.repeat(5).slice(0, 40)}`;
 // check, which the API reports as 422 VALIDATION_ERROR.
 const INVALID_ETH_ADDRESS = "0xnotahexaddress";
 
+// Create a dedicated counterparty rather than borrowing one from
+// listCounterparties: shared counterparties can be archived by the
+// archiveCounterparty test running in parallel, which would make this create
+// race into a "Counterparty not found" BadRequest.
+const newCounterparty = () =>
+  createCounterparty({
+    name: `Distilled CP blockchain ${testRunId}`,
+    address: {
+      street_address: "123 Test Street",
+      city: "San Francisco",
+      country_area: "CA",
+      postal_code: "94105",
+      country: "US",
+    },
+  });
+
 describe("createCounterpartyBlockchainAddress", () => {
   describe("happy path", () => {
     it(
       "creates a blockchain address for an existing counterparty",
       async () => {
-        const list = await runEffect(listCounterparties({ page_size: 1 }));
-        if (list.data.length === 0) return;
-
-        const counterparty = list.data[0]!;
+        const counterparty = await runEffect(newCounterparty());
         const customRef = `distilled-erebor-${testRunId}`;
         const result = await runEffect(
           createCounterpartyBlockchainAddress({
@@ -143,9 +156,7 @@ describe("createCounterpartyBlockchainAddress", () => {
         // address check failure surfaces as 422 VALIDATION_ERROR, which
         // the client remaps to EreborValidationError (preserving the
         // structured error_details array).
-        const list = await runEffect(listCounterparties({ page_size: 1 }));
-        if (list.data.length === 0) return;
-        const counterparty = list.data[0]!;
+        const counterparty = await runEffect(newCounterparty());
 
         const error = (await runEffect(
           createCounterpartyBlockchainAddress({
