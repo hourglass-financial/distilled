@@ -42,6 +42,14 @@ paths:
           required: true
           schema:
             type: string
+        - name: Erebor-Version
+          in: header
+          description: >
+            Pins the API version used to process this request. Format is
+            `YYYY-MM-DD`. When omitted, the current default version is used.
+          required: false
+          schema:
+            type: string
         - name: Erebor-Idempotency-Key
           in: header
           description: >
@@ -66,6 +74,12 @@ paths:
                 $ref: '#/components/schemas/Error'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict
           content:
             application/json:
               schema:
@@ -107,6 +121,7 @@ components:
     InboundWireTransferStatus:
       type: string
       enum:
+        - CREATED
         - PENDING
         - SETTLED
         - FAILED
@@ -114,6 +129,8 @@ components:
         - RESOLVING_FROM_SUSPENSE
       description: >
         Inbound wire transfer status:
+
+        - CREATED: Transfer was created
 
         - PENDING: Transfer received, awaiting settlement
 
@@ -194,7 +211,7 @@ components:
           type: string
           description: >-
             ID of the external US bank account that sent the wire, prefixed with
-            `cp_us_bank_`.
+            `cp_us_bank_acct_`.
         deposit_account_id:
           type: string
           description: >-
@@ -383,8 +400,8 @@ components:
   "url": "https://api.erebor.bank/wire_in/wire_in_01kasd1tthf1ns1pjn1kncctwd",
   "created_at": "2025-01-15T09:30:00Z",
   "updated_at": "2025-01-15T09:30:00Z",
-  "status": "PENDING",
-  "counterparty_us_bank_account_id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+  "status": "CREATED",
+  "counterparty_us_bank_account_id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
   "deposit_account_id": "dep_acct_01kasd1tthf1ns1pjn1kncctwd",
   "amount": {
     "currency": "USD",

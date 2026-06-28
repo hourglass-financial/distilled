@@ -1,16 +1,16 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
-import { BadRequest, NotFound, UnprocessableEntity } from "../errors.ts";
+import { BadRequest, Conflict, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
 export const CreateOutboundRailTransferInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
-      T.HttpHeader("Erebor-Idempotency-Key"),
-    ),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
+    ),
+    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Idempotency-Key"),
     ),
     from_deposit_account_id: Schema.String,
     counterparty_rail_address_id: Schema.optional(Schema.NullOr(Schema.String)),
@@ -39,7 +39,7 @@ export const CreateOutboundRailTransferOutput =
     updated_at: Schema.String,
     archived_at: Schema.optional(Schema.NullOr(Schema.String)),
     program_id: Schema.optional(Schema.NullOr(Schema.String)),
-    status: Schema.Literals(["PENDING", "SETTLED", "FAILED"]),
+    status: Schema.Literals(["CREATED", "PENDING", "SETTLED", "FAILED"]),
     from_deposit_account_id: Schema.String,
     counterparty_rail_address_id: Schema.optional(Schema.NullOr(Schema.String)),
     to_deposit_account_id: Schema.optional(Schema.NullOr(Schema.String)),
@@ -63,14 +63,15 @@ export type CreateOutboundRailTransferOutput =
  *
  * Create a new Outbound Rail Transfer
  *
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const createOutboundRailTransfer = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({
     inputSchema: CreateOutboundRailTransferInput,
     outputSchema: CreateOutboundRailTransferOutput,
-    errors: [BadRequest, NotFound, UnprocessableEntity] as const,
+    errors: [BadRequest, Conflict, UnprocessableEntity] as const,
   }),
 );

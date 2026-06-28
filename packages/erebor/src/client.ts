@@ -57,9 +57,11 @@ const RETRYABLE_HTTP_STATUSES = new Set([423, 429, 500, 502, 503, 504]);
  *   preserving the `error_details` array for per-field surfacing.
  * - 429 whose message contains "not enabled" (observed:
  *   "Programmatic account closure is not enabled for this API key.")
- *   -> `EreborFeatureNotEnabled`. Erebor folds permission failures
- *   into the rate-limit status and reuses `error: "RATE_LIMITED"`,
- *   so the *message* is the only reliable disambiguator.
+ *   or "not yet available" (observed: "Renaming blockchain addresses
+ *   is not yet available.") -> `EreborFeatureNotEnabled`. Erebor folds
+ *   permission/feature-gate failures into the rate-limit status and
+ *   reuses `error: "RATE_LIMITED"`, so the *message* is the only
+ *   reliable disambiguator.
  */
 const matchError = (
   status: number,
@@ -84,12 +86,12 @@ const matchError = (
       );
     }
 
-    // 429 — Erebor folds permission failures ("feature not enabled for
-    // this API key") into the rate-limit status, *still* tagged with
-    // `error: "RATE_LIMITED"`. The only reliable signal is the message
-    // text. Detecting this lets the retry policy skip a request that
-    // will never succeed.
-    if (status === 429 && /not enabled/i.test(message)) {
+    // 429 — Erebor folds permission/feature-gate failures ("feature not
+    // enabled for this API key", "... is not yet available") into the
+    // rate-limit status, *still* tagged with `error: "RATE_LIMITED"`. The
+    // only reliable signal is the message text. Detecting this lets the
+    // retry policy skip a request that will never succeed.
+    if (status === 429 && /not enabled|not yet available/i.test(message)) {
       return Effect.fail(
         new EreborFeatureNotEnabled({ message, code: parsed.error }),
       );

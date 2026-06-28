@@ -142,7 +142,8 @@ export type ListDepositAccountsOutput = typeof ListDepositAccountsOutput.Type;
  * @param program_id - Filter by program ID
  * @param parent_account_id - Filter by parent account ID (for virtual DDA accounts)
  * @param custom_ref - Filter by exact `custom_ref` match (case-sensitive, up to 255 characters).
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const listDepositAccounts = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: ListDepositAccountsInput,

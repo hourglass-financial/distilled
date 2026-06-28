@@ -21,11 +21,12 @@ Every business applicant includes an `associated_persons` array identifying the 
 
 **Roles**
 
-| Role               | Description                                                                     |
-| ------------------ | ------------------------------------------------------------------------------- |
-| `CONTROL_PERSON`   | Individual with significant management responsibility. At least one required.   |
-| `BENEFICIAL_OWNER` | Individual with 25% or more ownership in the entity.                            |
-| `SIGNER`           | Individual authorized to sign on behalf of the business. At least one required. |
+| Role               | Description                                                                                                                                          |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CONTROL_PERSON`   | Individual with significant management responsibility. At least one required.                                                                        |
+| `BENEFICIAL_OWNER` | Individual with 25% or more ownership in the entity.                                                                                                 |
+| `SIGNER`           | Individual authorized to sign on behalf of the business. At least one required.                                                                      |
+| `APPLICANT`        | Individual who submitted the application on behalf of the business. Optional; also appears on applicants onboarded through Erebor-hosted onboarding. |
 
 One person can hold multiple roles. A CEO who owns 60% and signs on behalf of the company would have `roles: ["CONTROL_PERSON", "BENEFICIAL_OWNER", "SIGNER"]`.
 
@@ -46,7 +47,7 @@ Upload documents for both the business and each associated person.
 
 ```bash
 curl -X POST "https://api.erebor.bank/documents" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j" \
+  -H "Authorization: test_key_YOUR_API_KEY_HERE" \
   -H "Erebor-Idempotency-Key: unique-key-formation-doc" \
   -F "file=@articles_of_incorporation.pdf" \
   -F "document_type=FORMATION_DOCUMENT" \
@@ -64,7 +65,7 @@ Create the business applicant, referencing person applicants as associated perso
 
 ```bash
 curl -X POST "https://api.erebor.bank/business_applicants" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j" \
+  -H "Authorization: test_key_YOUR_API_KEY_HERE" \
   -H "Content-Type: application/json" \
   -H "Erebor-Idempotency-Key: unique-key-business-applicant" \
   -d '{
@@ -125,7 +126,7 @@ Submit the Onboarding with the Business Applicant. Provide **at least one** of `
 
 ```bash
 curl -X POST "https://api.erebor.bank/onboardings" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j" \
+  -H "Authorization: test_key_YOUR_API_KEY_HERE" \
   -H "Content-Type: application/json" \
   -H "Erebor-Idempotency-Key: unique-key-onboarding" \
   -d '{
@@ -141,7 +142,7 @@ curl -X POST "https://api.erebor.bank/onboardings" \
 
 ```bash
 curl -X POST "https://api.erebor.bank/onboardings" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j" \
+  -H "Authorization: test_key_YOUR_API_KEY_HERE" \
   -H "Content-Type: application/json" \
   -H "Erebor-Idempotency-Key: unique-key-onboarding" \
   -d '{

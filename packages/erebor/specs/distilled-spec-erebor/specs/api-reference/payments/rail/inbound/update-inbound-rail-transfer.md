@@ -42,6 +42,14 @@ paths:
           required: true
           schema:
             type: string
+        - name: Erebor-Version
+          in: header
+          description: >
+            Pins the API version used to process this request. Format is
+            `YYYY-MM-DD`. When omitted, the current default version is used.
+          required: false
+          schema:
+            type: string
         - name: Erebor-Idempotency-Key
           in: header
           description: >
@@ -66,6 +74,12 @@ paths:
                 $ref: '#/components/schemas/Error'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict
           content:
             application/json:
               schema:
@@ -107,10 +121,14 @@ components:
     InboundRailTransferStatus:
       type: string
       enum:
+        - CREATED
+        - PENDING
         - SETTLED
         - FAILED
       description: |
         Inbound Rail transfer status:
+        - CREATED: Rail transfer was created
+        - PENDING: Rail transfer is being processed
         - SETTLED: Rail transfer completed successfully
         - FAILED: Rail transfer failed
       title: InboundRailTransferStatus
@@ -317,7 +335,7 @@ components:
   "url": "https://api.erebor.bank/rail_in/rail_in_01kasd1tthf1ns1pjn1kncctwd",
   "created_at": "2025-01-15T09:30:00Z",
   "updated_at": "2025-01-15T09:30:00Z",
-  "status": "SETTLED",
+  "status": "CREATED",
   "to_deposit_account_id": "dep_acct_01kasd1tthf1ns1pjn1kncctwd",
   "amount": {
     "currency": "USD",

@@ -50,7 +50,9 @@ components:
       type: object
       properties:
         request_id:
-          type: string
+          type:
+            - string
+            - 'null'
         request_idempotency_key:
           type:
             - string
@@ -68,12 +70,14 @@ components:
     OutboundWireTransferStatus:
       type: string
       enum:
+        - CREATED
         - PENDING
         - SETTLED
         - FAILED
         - RETURNED
       description: |
         Outbound wire transfer status:
+        - CREATED: Transfer was created
         - PENDING: Transfer is being processed
         - SETTLED: Transfer has been completed
         - FAILED: Transfer failed
@@ -167,7 +171,7 @@ components:
           type: string
           description: >-
             ID of the external US bank account receiving the wire, prefixed with
-            `cp_us_bank_`.
+            `cp_us_bank_acct_`.
         bank_name:
           type:
             - string

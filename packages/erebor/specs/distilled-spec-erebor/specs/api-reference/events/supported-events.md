@@ -22,9 +22,17 @@ Events follow the format `RESOURCE.ACTION` and are delivered in real-time when s
 
 `resource` is an [Onboarding](/api-reference/onboarding/onboarding/the-onboarding-object). Onboarding application has been rejected.
 
+#### `CUSTOMER.CREATED`
+
+`resource` is a [Customer](/api-reference/customers/the-customer-object). A new customer has been created (e.g. when an onboarding is approved).
+
+#### `DEPOSIT_ACCOUNT.CREATED`
+
+`resource` is a [Deposit Account](/api-reference/accounts/deposit-accounts/the-deposit-account-object). The deposit account record has been created. This is the first event in the account lifecycle; the account then progresses through `DEPOSIT_ACCOUNT.PENDING` → `DEPOSIT_ACCOUNT.OPEN`.
+
 #### `DEPOSIT_ACCOUNT.PENDING`
 
-`resource` is a [Deposit Account](/api-reference/accounts/deposit-accounts/the-deposit-account-object). Deposit account has been created and is pending activation.
+`resource` is a [Deposit Account](/api-reference/accounts/deposit-accounts/the-deposit-account-object). The deposit account is provisioning and pending activation. Fires on the status transition after `DEPOSIT_ACCOUNT.CREATED`.
 
 #### `DEPOSIT_ACCOUNT.OPEN`
 
@@ -54,6 +62,10 @@ Events follow the format `RESOURCE.ACTION` and are delivered in real-time when s
 
 `resource` is a [Counterparty US Bank Account](/api-reference/counterparties/us-bank-accounts/the-counterparty-us-bank-account-object). A new counterparty bank account has been created.
 
+#### `COUNTERPARTY_BANK_ACCOUNT.ARCHIVED`
+
+`resource` is a [Counterparty US Bank Account](/api-reference/counterparties/us-bank-accounts/the-counterparty-us-bank-account-object). A counterparty bank account has been archived.
+
 #### `COUNTERPARTY_BLOCKCHAIN_ADDRESS.CREATED`
 
 `resource` is a [Counterparty Blockchain Address](/api-reference/counterparties/blockchain-addresses/the-counterparty-blockchain-address-object). A new counterparty blockchain address has been created.
@@ -69,6 +81,22 @@ Events follow the format `RESOURCE.ACTION` and are delivered in real-time when s
 #### `COUNTERPARTY_BLOCKCHAIN_ADDRESS.ATTRIBUTED.CUSTODIAN_OTHER`
 
 `resource` is a [Counterparty Blockchain Address](/api-reference/counterparties/blockchain-addresses/the-counterparty-blockchain-address-object). Blockchain address has been attributed to another custodian.
+
+#### `COUNTERPARTY_BLOCKCHAIN_ADDRESS.ARCHIVED`
+
+`resource` is a [Counterparty Blockchain Address](/api-reference/counterparties/blockchain-addresses/the-counterparty-blockchain-address-object). A counterparty blockchain address has been archived.
+
+#### `COUNTERPARTY_INTERNATIONAL_BANK_ACCOUNT.ARCHIVED`
+
+`resource` is a [Counterparty International Bank Account](/api-reference/counterparties/international-bank-accounts/the-counterparty-international-bank-account-object). A counterparty international bank account has been archived.
+
+#### `COUNTERPARTY_RAIL_ADDRESS.ARCHIVED`
+
+`resource` is a [Counterparty Rail Address](/api-reference/counterparties/rail-addresses/the-counterparty-rail-address-object). A counterparty rail address has been archived.
+
+#### `ACH_IN.CREATED`
+
+`resource` is an [Inbound ACH Transfer](/api-reference/payments/ach/inbound/the-inbound-ach-transfer-object). Inbound ACH transfer has been created.
 
 #### `ACH_IN.PENDING`
 
@@ -86,6 +114,10 @@ Events follow the format `RESOURCE.ACTION` and are delivered in real-time when s
 
 `resource` is an [Inbound ACH Transfer](/api-reference/payments/ach/inbound/the-inbound-ach-transfer-object). Inbound ACH transfer has been returned.
 
+#### `ACH_OUT.CREATED`
+
+`resource` is an [Outbound ACH Transfer](/api-reference/payments/ach/outbound/the-outbound-ach-transfer-object). Outbound ACH transfer has been created.
+
 #### `ACH_OUT.PENDING`
 
 `resource` is an [Outbound ACH Transfer](/api-reference/payments/ach/outbound/the-outbound-ach-transfer-object). Outbound ACH transfer is pending.
@@ -101,6 +133,10 @@ Events follow the format `RESOURCE.ACTION` and are delivered in real-time when s
 #### `ACH_OUT.RETURNED`
 
 `resource` is an [Outbound ACH Transfer](/api-reference/payments/ach/outbound/the-outbound-ach-transfer-object). Outbound ACH transfer has been returned.
+
+#### `WIRE_IN.CREATED`
+
+`resource` is an [Inbound Wire Transfer](/api-reference/payments/wire/inbound/the-inbound-wire-transfer-object). Inbound wire transfer has been created.
 
 #### `WIRE_IN.PENDING`
 
@@ -122,6 +158,10 @@ Events follow the format `RESOURCE.ACTION` and are delivered in real-time when s
 
 `resource` is an [Inbound Wire Transfer](/api-reference/payments/wire/inbound/the-inbound-wire-transfer-object). Inbound wire transfer was previously held in suspense (unroutable on initial receipt) and is being resolved to the customer account.
 
+#### `WIRE_OUT.CREATED`
+
+`resource` is an [Outbound Wire Transfer](/api-reference/payments/wire/outbound/the-outbound-wire-transfer-object). Outbound wire transfer has been created.
+
 #### `WIRE_OUT.PENDING`
 
 `resource` is an [Outbound Wire Transfer](/api-reference/payments/wire/outbound/the-outbound-wire-transfer-object). Outbound wire transfer is pending.
@@ -138,6 +178,14 @@ Events follow the format `RESOURCE.ACTION` and are delivered in real-time when s
 
 `resource` is an [Outbound Wire Transfer](/api-reference/payments/wire/outbound/the-outbound-wire-transfer-object). Outbound wire transfer has been returned.
 
+#### `BLOCKCHAIN_IN.CREATED`
+
+`resource` is an [Inbound Blockchain Transfer](/api-reference/payments/blockchain/inbound/the-inbound-blockchain-transfer-object). Inbound blockchain transfer has been created.
+
+#### `BLOCKCHAIN_IN.NEEDS_ATTRIBUTION`
+
+`resource` is an [Inbound Blockchain Transfer](/api-reference/payments/blockchain/inbound/the-inbound-blockchain-transfer-object). Inbound blockchain transfer is awaiting attribution — the originating address must be identified before it can proceed.
+
 #### `BLOCKCHAIN_IN.PENDING`
 
 `resource` is an [Inbound Blockchain Transfer](/api-reference/payments/blockchain/inbound/the-inbound-blockchain-transfer-object). Inbound blockchain transfer is pending.
@@ -149,6 +197,10 @@ Events follow the format `RESOURCE.ACTION` and are delivered in real-time when s
 #### `BLOCKCHAIN_IN.FAILED`
 
 `resource` is an [Inbound Blockchain Transfer](/api-reference/payments/blockchain/inbound/the-inbound-blockchain-transfer-object). Inbound blockchain transfer has failed.
+
+#### `BLOCKCHAIN_OUT.CREATED`
+
+`resource` is an [Outbound Blockchain Transfer](/api-reference/payments/blockchain/outbound/the-outbound-blockchain-transfer-object). Outbound blockchain transfer has been created.
 
 #### `BLOCKCHAIN_OUT.PENDING`
 
@@ -162,6 +214,10 @@ Events follow the format `RESOURCE.ACTION` and are delivered in real-time when s
 
 `resource` is an [Outbound Blockchain Transfer](/api-reference/payments/blockchain/outbound/the-outbound-blockchain-transfer-object). Outbound blockchain transfer has failed.
 
+#### `BOOK_TRANSFER.CREATED`
+
+`resource` is a [Book Transfer](/api-reference/payments/book-transfers/the-book-transfer-object). Book transfer has been created.
+
 #### `BOOK_TRANSFER.PENDING`
 
 `resource` is a [Book Transfer](/api-reference/payments/book-transfers/the-book-transfer-object). Book transfer is pending.
@@ -174,9 +230,25 @@ Events follow the format `RESOURCE.ACTION` and are delivered in real-time when s
 
 `resource` is a [Book Transfer](/api-reference/payments/book-transfers/the-book-transfer-object). Book transfer has failed.
 
+#### `RAIL_IN.CREATED`
+
+`resource` is an [Inbound Rail Transfer](/api-reference/payments/rail/inbound/the-inbound-rail-transfer-object). Inbound rail transfer has been created.
+
+#### `RAIL_IN.PENDING`
+
+`resource` is an [Inbound Rail Transfer](/api-reference/payments/rail/inbound/the-inbound-rail-transfer-object). Inbound rail transfer is pending.
+
 #### `RAIL_IN.SETTLED`
 
 `resource` is an [Inbound Rail Transfer](/api-reference/payments/rail/inbound/the-inbound-rail-transfer-object). Inbound rail transfer has settled.
+
+#### `RAIL_IN.FAILED`
+
+`resource` is an [Inbound Rail Transfer](/api-reference/payments/rail/inbound/the-inbound-rail-transfer-object). Inbound rail transfer has failed.
+
+#### `RAIL_OUT.CREATED`
+
+`resource` is an [Outbound Rail Transfer](/api-reference/payments/rail/outbound/the-outbound-rail-transfer-object). Outbound rail transfer has been created.
 
 #### `RAIL_OUT.PENDING`
 
@@ -206,6 +278,10 @@ Events follow the format `RESOURCE.ACTION` and are delivered in real-time when s
 
 `resource` is an [Inbound International Wire](/api-reference/payments/international-wire/inbound/the-inbound-international-wire-object). Inbound international wire has been returned.
 
+#### `INTERNATIONAL_WIRE_OUT.CREATED`
+
+`resource` is an [Outbound International Wire](/api-reference/payments/international-wire/outbound/the-outbound-international-wire-object). Outbound international wire has been created.
+
 #### `INTERNATIONAL_WIRE_OUT.PENDING`
 
 `resource` is an [Outbound International Wire](/api-reference/payments/international-wire/outbound/the-outbound-international-wire-object). Outbound international wire is pending.
@@ -229,6 +305,10 @@ Events follow the format `RESOURCE.ACTION` and are delivered in real-time when s
 #### `TRANSACTION.PENDING`
 
 `resource` is a [Transaction](/api-reference/transactions/the-transaction-object). Transaction is pending processing.
+
+#### `TRANSACTION.POSTED`
+
+`resource` is a [Transaction](/api-reference/transactions/the-transaction-object). Transaction has posted to the account.
 
 #### `TRANSACTION.SETTLED`
 

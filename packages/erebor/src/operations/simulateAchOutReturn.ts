@@ -34,7 +34,8 @@ export type SimulateAchOutReturnOutput = typeof SimulateAchOutReturnOutput.Type;
  * @param id - ID of the outbound ACH transfer to return. Must be in `SETTLED` status.
  * @param return_code - NACHA return reason code to apply to the returned transfer. Defaults to `R01` (Insufficient Funds) when omitted. Must be a NACHA return reason code matching `^R[0-9]{2}$` (R01-R85). Codes that match the pattern but are not in the NACHA set return `400`.
 
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const simulateAchOutReturn = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({

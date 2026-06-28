@@ -15,7 +15,7 @@ An outbound wire transfer sends funds via the Fedwire network from a deposit acc
   "program_id": "prgrm_01kasd1tthf1ns1pjn1kncctwd",
   "status": "PENDING",
   "deposit_account_id": "dep_acct_01kasd1tthf1ns1pjn1kncctwd",
-  "counterparty_us_bank_account_id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+  "counterparty_us_bank_account_id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
   "bank_name": "Example National Bank",
   "amount": {
     "currency": "USD",
@@ -46,12 +46,14 @@ components:
     OutboundWireTransferStatus:
       type: string
       enum:
+        - CREATED
         - PENDING
         - SETTLED
         - FAILED
         - RETURNED
       description: |
         Outbound wire transfer status:
+        - CREATED: Transfer was created
         - PENDING: Transfer is being processed
         - SETTLED: Transfer has been completed
         - FAILED: Transfer failed
@@ -145,7 +147,7 @@ components:
           type: string
           description: >-
             ID of the external US bank account receiving the wire, prefixed with
-            `cp_us_bank_`.
+            `cp_us_bank_acct_`.
         bank_name:
           type:
             - string

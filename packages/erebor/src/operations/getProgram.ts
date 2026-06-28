@@ -21,7 +21,8 @@ export const GetProgramOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   updated_at: Schema.String,
   archived_at: Schema.optional(Schema.NullOr(Schema.String)),
   name: Schema.String,
-  billing_deposit_account_id: Schema.String,
+  billing_deposit_account_id: Schema.optional(Schema.String),
+  program_type: Schema.optional(Schema.NullOr(Schema.String)),
 });
 export type GetProgramOutput = typeof GetProgramOutput.Type;
 
@@ -32,7 +33,8 @@ export type GetProgramOutput = typeof GetProgramOutput.Type;
  * Retrieve a specific Program by ID
  *
  * @param id - Program ID
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const getProgram = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: GetProgramInput,

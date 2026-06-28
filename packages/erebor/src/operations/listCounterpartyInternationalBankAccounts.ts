@@ -38,7 +38,7 @@ export const ListCounterpartyInternationalBankAccountsOutput =
         customer_id: Schema.optional(Schema.NullOr(Schema.String)),
         program_id: Schema.optional(Schema.NullOr(Schema.String)),
         counterparty_id: Schema.optional(Schema.NullOr(Schema.String)),
-        description: Schema.String,
+        description: Schema.NullOr(Schema.String),
         account_number: Schema.String,
         bic: Schema.String,
         country_code: Schema.String,
@@ -69,7 +69,8 @@ export type ListCounterpartyInternationalBankAccountsOutput =
  * @param customer_id - Filter by customer ID
  * @param program_id - Filter by program ID
  * @param custom_ref - Filter by exact `custom_ref` match (case-sensitive, up to 255 characters).
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const listCounterpartyInternationalBankAccounts =
   /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

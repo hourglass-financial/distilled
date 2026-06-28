@@ -3,16 +3,23 @@ import * as Layer from "effect/Layer";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import { describe, expect, it } from "vitest";
 import { Credentials, DEFAULT_API_BASE_URL } from "../src/credentials.ts";
-import { listWebhooks } from "../src/operations/listWebhooks.ts";
+import { createWebhook } from "../src/operations/createWebhook.ts";
 import { updateWebhook } from "../src/operations/updateWebhook.ts";
 import { runEffect, testRunId, unknownId } from "./setup.ts";
 
 describe("updateWebhook", () => {
   describe("happy path", () => {
     it("patches custom_ref and custom_fields on an existing webhook", async () => {
-      const list = await runEffect(listWebhooks({ page_size: 10 }));
-      const target = list.data.find((w) => w.status !== "ARCHIVED");
-      if (!target) return;
+      // Create a dedicated webhook rather than borrowing one from the list:
+      // the shared webhooks can be archived by archiveWebhook tests running in
+      // parallel, which would make this update race into a NotFound.
+      const target = await runEffect(
+        createWebhook({
+          name: `distilled-erebor-update-${testRunId}`,
+          webhook_url: `https://example.com/distilled-erebor-update-${testRunId}`,
+          event_types: ["TRANSACTION.SETTLED"],
+        }),
+      );
       const newRef = `distilled-erebor-${testRunId}`;
       const newFields = { test_run_id: testRunId, source: "distilled" };
       const result = await runEffect(

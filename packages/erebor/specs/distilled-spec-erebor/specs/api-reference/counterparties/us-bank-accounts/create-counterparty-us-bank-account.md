@@ -34,6 +34,14 @@ paths:
           required: true
           schema:
             type: string
+        - name: Erebor-Version
+          in: header
+          description: >
+            Pins the API version used to process this request. Format is
+            `YYYY-MM-DD`. When omitted, the current default version is used.
+          required: false
+          schema:
+            type: string
         - name: Erebor-Idempotency-Key
           in: header
           description: >
@@ -50,6 +58,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CounterpartyUSBankAccount'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '422':
           description: >-
             The destination account belongs to an Erebor customer. Use Rail
@@ -115,7 +135,7 @@ components:
           type: string
           description: >-
             Unique identifier for the counterparty US bank account, prefixed
-            with `cp_us_bank_`.
+            with `cp_us_bank_acct_`.
         type:
           type: string
           enum:
@@ -276,9 +296,9 @@ undefined
 
 ```json
 {
-  "id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+  "id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
   "type": "COUNTERPARTY_US_BANK_ACCOUNT",
-  "url": "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+  "url": "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
   "created_at": "2025-01-15T09:30:00Z",
   "updated_at": "2025-01-15T09:30:00Z",
   "description": "Primary USD Account",
@@ -464,9 +484,9 @@ dataTask.resume()
 
 ```json
 {
-  "id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+  "id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
   "type": "COUNTERPARTY_US_BANK_ACCOUNT",
-  "url": "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+  "url": "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
   "created_at": "2025-01-15T09:30:00Z",
   "updated_at": "2025-01-15T09:30:00Z",
   "description": "Primary USD Account",

@@ -34,6 +34,14 @@ paths:
           required: true
           schema:
             type: string
+        - name: Erebor-Version
+          in: header
+          description: >
+            Pins the API version used to process this request. Format is
+            `YYYY-MM-DD`. When omitted, the current default version is used.
+          required: false
+          schema:
+            type: string
         - name: Erebor-Idempotency-Key
           in: header
           description: >
@@ -56,6 +64,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '422':
           description: >-
             Unprocessable content — the applicant failed validation against your
@@ -74,6 +88,18 @@ servers:
     description: API server (environment determined by API key)
 components:
   schemas:
+    PersonApplicantType:
+      type: string
+      enum:
+        - LEGACY
+        - RETAIL_CUSTOMER
+        - HNWI_CUSTOMER
+        - ASSOCIATED_PERSON
+      description: >-
+        Intended use of the person applicant. `LEGACY` represents applicants
+        without an assigned classification and is the default when omitted or
+        set to `null`.
+      title: PersonApplicantType
     CreatePersonApplicantRequestPhysicalAddress:
       type: object
       properties:
@@ -135,10 +161,15 @@ components:
     CreatePersonApplicantRequestSourceOfWealthItems:
       type: string
       enum:
-        - INCOME
+        - CRYPTO
+        - SALE_OF_BUSINESS
         - OWNERSHIP_STAKE
         - INVESTMENT_INCOME
+        - REAL_ESTATE
+        - EXECUTIVE
         - INHERITANCE
+        - INCOME
+        - INTELLECTUAL
         - OTHER
       title: CreatePersonApplicantRequestSourceOfWealthItems
     CreatePersonApplicantRequestAccountPurposesItems:
@@ -155,6 +186,7 @@ components:
       enum:
         - INCOME
         - ASSET_SALE
+        - FINANCING
         - SAVINGS
         - OTHER
       title: CreatePersonApplicantRequestSourceOfFundsItems
@@ -226,6 +258,10 @@ components:
         program_id:
           type: string
           description: Unique identifier for the program this person applicant belongs to
+        person_applicant_type:
+          oneOf:
+            - $ref: '#/components/schemas/PersonApplicantType'
+            - type: 'null'
         first_name:
           type: string
         middle_name:
@@ -413,10 +449,15 @@ components:
     PersonApplicantSourceOfWealthItems:
       type: string
       enum:
-        - INCOME
+        - CRYPTO
+        - SALE_OF_BUSINESS
         - OWNERSHIP_STAKE
         - INVESTMENT_INCOME
+        - REAL_ESTATE
+        - EXECUTIVE
         - INHERITANCE
+        - INCOME
+        - INTELLECTUAL
         - OTHER
       title: PersonApplicantSourceOfWealthItems
     PersonApplicantAccountPurposesItems:
@@ -433,6 +474,7 @@ components:
       enum:
         - INCOME
         - ASSET_SALE
+        - FINANCING
         - SAVINGS
         - OTHER
       title: PersonApplicantSourceOfFundsItems
@@ -522,6 +564,10 @@ components:
           description: >-
             Unique identifier of the program this person applicant belongs to,
             prefixed with `prgrm_`.
+        person_applicant_type:
+          oneOf:
+            - $ref: '#/components/schemas/PersonApplicantType'
+            - type: 'null'
         first_name:
           type: string
           description: Applicant's first name.
@@ -751,6 +797,7 @@ components:
     "postal_code": "94105",
     "street_address": "123 Main Street, Apt 4B"
   },
+  "person_applicant_type": "RETAIL_CUSTOMER",
   "custom_ref": "APPLICANT-7821",
   "custom_fields": {
     "referral_source": "partner_program",
@@ -780,6 +827,7 @@ components:
     "country_area": "CA"
   },
   "archived_at": null,
+  "person_applicant_type": "RETAIL_CUSTOMER",
   "middle_name": "William",
   "citizenship": "US",
   "email_address": "john.smith@example.com",
@@ -849,6 +897,7 @@ payload = {
         "postal_code": "94105",
         "street_address": "123 Main Street, Apt 4B"
     },
+    "person_applicant_type": "RETAIL_CUSTOMER",
     "custom_ref": "APPLICANT-7821",
     "custom_fields": {
         "referral_source": "partner_program",
@@ -870,7 +919,7 @@ const url = 'https://api.erebor.bank/person_applicants';
 const options = {
   method: 'POST',
   headers: {Authorization: '<apiKey>', 'Content-Type': 'application/json'},
-  body: '{"program_id":"prgrm_01kasd1tthf1ns1pjn1kncctwd","first_name":"John","last_name":"Smith","date_of_birth":"1990-05-15","physical_address":{"city":"San Francisco","country":"US","postal_code":"94105","street_address":"123 Main Street, Apt 4B"},"custom_ref":"APPLICANT-7821","custom_fields":{"referral_source":"partner_program","internal_id":"APPLICANT-7821"}}'
+  body: '{"program_id":"prgrm_01kasd1tthf1ns1pjn1kncctwd","first_name":"John","last_name":"Smith","date_of_birth":"1990-05-15","physical_address":{"city":"San Francisco","country":"US","postal_code":"94105","street_address":"123 Main Street, Apt 4B"},"person_applicant_type":"RETAIL_CUSTOMER","custom_ref":"APPLICANT-7821","custom_fields":{"referral_source":"partner_program","internal_id":"APPLICANT-7821"}}'
 };
 
 try {
@@ -896,7 +945,7 @@ func main() {
 
 	url := "https://api.erebor.bank/person_applicants"
 
-	payload := strings.NewReader("{\n  \"program_id\": \"prgrm_01kasd1tthf1ns1pjn1kncctwd\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Smith\",\n  \"date_of_birth\": \"1990-05-15\",\n  \"physical_address\": {\n    \"city\": \"San Francisco\",\n    \"country\": \"US\",\n    \"postal_code\": \"94105\",\n    \"street_address\": \"123 Main Street, Apt 4B\"\n  },\n  \"custom_ref\": \"APPLICANT-7821\",\n  \"custom_fields\": {\n    \"referral_source\": \"partner_program\",\n    \"internal_id\": \"APPLICANT-7821\"\n  }\n}")
+	payload := strings.NewReader("{\n  \"program_id\": \"prgrm_01kasd1tthf1ns1pjn1kncctwd\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Smith\",\n  \"date_of_birth\": \"1990-05-15\",\n  \"physical_address\": {\n    \"city\": \"San Francisco\",\n    \"country\": \"US\",\n    \"postal_code\": \"94105\",\n    \"street_address\": \"123 Main Street, Apt 4B\"\n  },\n  \"person_applicant_type\": \"RETAIL_CUSTOMER\",\n  \"custom_ref\": \"APPLICANT-7821\",\n  \"custom_fields\": {\n    \"referral_source\": \"partner_program\",\n    \"internal_id\": \"APPLICANT-7821\"\n  }\n}")
 
 	req, _ := http.NewRequest("POST", url, payload)
 
@@ -926,7 +975,7 @@ http.use_ssl = true
 request = Net::HTTP::Post.new(url)
 request["Authorization"] = '<apiKey>'
 request["Content-Type"] = 'application/json'
-request.body = "{\n  \"program_id\": \"prgrm_01kasd1tthf1ns1pjn1kncctwd\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Smith\",\n  \"date_of_birth\": \"1990-05-15\",\n  \"physical_address\": {\n    \"city\": \"San Francisco\",\n    \"country\": \"US\",\n    \"postal_code\": \"94105\",\n    \"street_address\": \"123 Main Street, Apt 4B\"\n  },\n  \"custom_ref\": \"APPLICANT-7821\",\n  \"custom_fields\": {\n    \"referral_source\": \"partner_program\",\n    \"internal_id\": \"APPLICANT-7821\"\n  }\n}"
+request.body = "{\n  \"program_id\": \"prgrm_01kasd1tthf1ns1pjn1kncctwd\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Smith\",\n  \"date_of_birth\": \"1990-05-15\",\n  \"physical_address\": {\n    \"city\": \"San Francisco\",\n    \"country\": \"US\",\n    \"postal_code\": \"94105\",\n    \"street_address\": \"123 Main Street, Apt 4B\"\n  },\n  \"person_applicant_type\": \"RETAIL_CUSTOMER\",\n  \"custom_ref\": \"APPLICANT-7821\",\n  \"custom_fields\": {\n    \"referral_source\": \"partner_program\",\n    \"internal_id\": \"APPLICANT-7821\"\n  }\n}"
 
 response = http.request(request)
 puts response.read_body
@@ -939,7 +988,7 @@ import com.mashape.unirest.http.Unirest;
 HttpResponse<String> response = Unirest.post("https://api.erebor.bank/person_applicants")
   .header("Authorization", "<apiKey>")
   .header("Content-Type", "application/json")
-  .body("{\n  \"program_id\": \"prgrm_01kasd1tthf1ns1pjn1kncctwd\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Smith\",\n  \"date_of_birth\": \"1990-05-15\",\n  \"physical_address\": {\n    \"city\": \"San Francisco\",\n    \"country\": \"US\",\n    \"postal_code\": \"94105\",\n    \"street_address\": \"123 Main Street, Apt 4B\"\n  },\n  \"custom_ref\": \"APPLICANT-7821\",\n  \"custom_fields\": {\n    \"referral_source\": \"partner_program\",\n    \"internal_id\": \"APPLICANT-7821\"\n  }\n}")
+  .body("{\n  \"program_id\": \"prgrm_01kasd1tthf1ns1pjn1kncctwd\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Smith\",\n  \"date_of_birth\": \"1990-05-15\",\n  \"physical_address\": {\n    \"city\": \"San Francisco\",\n    \"country\": \"US\",\n    \"postal_code\": \"94105\",\n    \"street_address\": \"123 Main Street, Apt 4B\"\n  },\n  \"person_applicant_type\": \"RETAIL_CUSTOMER\",\n  \"custom_ref\": \"APPLICANT-7821\",\n  \"custom_fields\": {\n    \"referral_source\": \"partner_program\",\n    \"internal_id\": \"APPLICANT-7821\"\n  }\n}")
   .asString();
 ```
 
@@ -961,6 +1010,7 @@ $response = $client->request('POST', 'https://api.erebor.bank/person_applicants'
     "postal_code": "94105",
     "street_address": "123 Main Street, Apt 4B"
   },
+  "person_applicant_type": "RETAIL_CUSTOMER",
   "custom_ref": "APPLICANT-7821",
   "custom_fields": {
     "referral_source": "partner_program",
@@ -983,7 +1033,7 @@ var client = new RestClient("https://api.erebor.bank/person_applicants");
 var request = new RestRequest(Method.POST);
 request.AddHeader("Authorization", "<apiKey>");
 request.AddHeader("Content-Type", "application/json");
-request.AddParameter("application/json", "{\n  \"program_id\": \"prgrm_01kasd1tthf1ns1pjn1kncctwd\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Smith\",\n  \"date_of_birth\": \"1990-05-15\",\n  \"physical_address\": {\n    \"city\": \"San Francisco\",\n    \"country\": \"US\",\n    \"postal_code\": \"94105\",\n    \"street_address\": \"123 Main Street, Apt 4B\"\n  },\n  \"custom_ref\": \"APPLICANT-7821\",\n  \"custom_fields\": {\n    \"referral_source\": \"partner_program\",\n    \"internal_id\": \"APPLICANT-7821\"\n  }\n}", ParameterType.RequestBody);
+request.AddParameter("application/json", "{\n  \"program_id\": \"prgrm_01kasd1tthf1ns1pjn1kncctwd\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Smith\",\n  \"date_of_birth\": \"1990-05-15\",\n  \"physical_address\": {\n    \"city\": \"San Francisco\",\n    \"country\": \"US\",\n    \"postal_code\": \"94105\",\n    \"street_address\": \"123 Main Street, Apt 4B\"\n  },\n  \"person_applicant_type\": \"RETAIL_CUSTOMER\",\n  \"custom_ref\": \"APPLICANT-7821\",\n  \"custom_fields\": {\n    \"referral_source\": \"partner_program\",\n    \"internal_id\": \"APPLICANT-7821\"\n  }\n}", ParameterType.RequestBody);
 IRestResponse response = client.Execute(request);
 ```
 
@@ -1005,6 +1055,7 @@ let parameters = [
     "postal_code": "94105",
     "street_address": "123 Main Street, Apt 4B"
   ],
+  "person_applicant_type": "RETAIL_CUSTOMER",
   "custom_ref": "APPLICANT-7821",
   "custom_fields": [
     "referral_source": "partner_program",

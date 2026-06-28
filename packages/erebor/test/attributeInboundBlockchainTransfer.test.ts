@@ -13,6 +13,7 @@ import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import { describe, expect, it } from "vitest";
 import { Credentials, DEFAULT_API_BASE_URL } from "../src/credentials.ts";
 import { attributeInboundBlockchainTransfer } from "../src/operations/attributeInboundBlockchainTransfer.ts";
+import { getDepositAccount } from "../src/operations/getDepositAccount.ts";
 import { listCounterparties } from "../src/operations/listCounterparties.ts";
 import { listInboundBlockchainTransfers } from "../src/operations/listInboundBlockchainTransfers.ts";
 import { runEffect, testRunId, unknownId } from "./setup.ts";
@@ -21,7 +22,7 @@ describe("attributeInboundBlockchainTransfer", () => {
   describe("happy path", () => {
     it(
       "attributes an inbound blockchain transfer awaiting attribution to a counterparty",
-      async () => {
+      async (ctx) => {
         // Only NEEDS_ATTRIBUTION transfers can be attributed.
         const transfers = await runEffect(
           listInboundBlockchainTransfers({
@@ -29,13 +30,26 @@ describe("attributeInboundBlockchainTransfer", () => {
             page_size: 1,
           }),
         );
-        if (transfers.data.length === 0) return;
-        const counterparties = await runEffect(
-          listCounterparties({ page_size: 1 }),
-        );
-        if (counterparties.data.length === 0) return;
+        if (transfers.data.length === 0) ctx.skip();
 
         const transfer = transfers.data[0]!;
+
+        // The chosen counterparty must belong to the transfer's customer, or
+        // the API rejects the attribution with a 400 BadRequest. The transfer
+        // payload doesn't expose the customer directly, so resolve it via the
+        // owning deposit account, then list counterparties scoped to that
+        // customer.
+        const depositAccount = await runEffect(
+          getDepositAccount({ id: transfer.deposit_account_id }),
+        );
+        const counterparties = await runEffect(
+          listCounterparties({
+            customer_id: depositAccount.customer_id,
+            page_size: 1,
+          }),
+        );
+        if (counterparties.data.length === 0) ctx.skip();
+
         const counterparty = counterparties.data[0]!;
 
         const result = await runEffect(

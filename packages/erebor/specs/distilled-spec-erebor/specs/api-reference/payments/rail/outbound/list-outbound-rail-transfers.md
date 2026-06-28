@@ -84,6 +84,14 @@ paths:
           required: true
           schema:
             type: string
+        - name: Erebor-Version
+          in: header
+          description: >
+            Pins the API version used to process this request. Format is
+            `YYYY-MM-DD`. When omitted, the current default version is used.
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: List of Outbound Rail Transfers
@@ -100,11 +108,13 @@ components:
     OutboundRailTransferStatus:
       type: string
       enum:
+        - CREATED
         - PENDING
         - SETTLED
         - FAILED
       description: |
         Outbound Rail transfer status:
+        - CREATED: Rail transfer was created
         - PENDING: Rail transfer is being processed
         - SETTLED: Rail transfer has been completed
         - FAILED: Rail transfer failed

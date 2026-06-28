@@ -56,7 +56,9 @@ describe("createOnboarding", () => {
         expect(["SUBMITTED", "UNDER_REVIEW", "APPROVED", "REJECTED"]).toContain(
           result.status,
         );
-        expect(result.disclosures.disclosures_signed_externally).toBe(true);
+        // The onboarding response does not echo `disclosures` (input-only
+        // field), so assert the program linkage the create body established.
+        expect(result.program_id).toBe(programId);
       },
       60_000,
     );

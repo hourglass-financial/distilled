@@ -42,6 +42,14 @@ paths:
           required: true
           schema:
             type: string
+        - name: Erebor-Version
+          in: header
+          description: >
+            Pins the API version used to process this request. Format is
+            `YYYY-MM-DD`. When omitted, the current default version is used.
+          required: false
+          schema:
+            type: string
         - name: Erebor-Idempotency-Key
           in: header
           description: >
@@ -66,6 +74,12 @@ paths:
                 $ref: '#/components/schemas/Error'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict
           content:
             application/json:
               schema:
@@ -104,6 +118,18 @@ components:
         custom_fields:
           $ref: '#/components/schemas/CustomFields'
       title: UpdatePersonApplicantRequest
+    PersonApplicantType:
+      type: string
+      enum:
+        - LEGACY
+        - RETAIL_CUSTOMER
+        - HNWI_CUSTOMER
+        - ASSOCIATED_PERSON
+      description: >-
+        Intended use of the person applicant. `LEGACY` represents applicants
+        without an assigned classification and is the default when omitted or
+        set to `null`.
+      title: PersonApplicantType
     PersonApplicantPhysicalAddress:
       type: object
       properties:
@@ -165,10 +191,15 @@ components:
     PersonApplicantSourceOfWealthItems:
       type: string
       enum:
-        - INCOME
+        - CRYPTO
+        - SALE_OF_BUSINESS
         - OWNERSHIP_STAKE
         - INVESTMENT_INCOME
+        - REAL_ESTATE
+        - EXECUTIVE
         - INHERITANCE
+        - INCOME
+        - INTELLECTUAL
         - OTHER
       title: PersonApplicantSourceOfWealthItems
     PersonApplicantAccountPurposesItems:
@@ -185,6 +216,7 @@ components:
       enum:
         - INCOME
         - ASSET_SALE
+        - FINANCING
         - SAVINGS
         - OTHER
       title: PersonApplicantSourceOfFundsItems
@@ -274,6 +306,10 @@ components:
           description: >-
             Unique identifier of the program this person applicant belongs to,
             prefixed with `prgrm_`.
+        person_applicant_type:
+          oneOf:
+            - $ref: '#/components/schemas/PersonApplicantType'
+            - type: 'null'
         first_name:
           type: string
           description: Applicant's first name.
@@ -522,6 +558,7 @@ components:
     "country_area": "CA"
   },
   "archived_at": null,
+  "person_applicant_type": "RETAIL_CUSTOMER",
   "middle_name": "William",
   "citizenship": "US",
   "email_address": "john.smith@example.com",

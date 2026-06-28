@@ -12,7 +12,7 @@ Register a webhook by providing a URL and the event types you want to receive. U
 
 ```bash
 curl -X POST "https://api.erebor.bank/webhooks" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j" \
+  -H "Authorization: test_key_YOUR_API_KEY_HERE" \
   -H "Erebor-Idempotency-Key: unique-webhook-create-001" \
   -H "Content-Type: application/json" \
   -d '{
@@ -128,7 +128,7 @@ Use the ping endpoint to send a test event to your webhook. This is useful for v
 
 ```bash
 curl -X POST "https://api.erebor.bank/webhooks/wh_01j0a1b2c3d4e5f6g7h8i9j0k1/ping" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j"
+  -H "Authorization: test_key_YOUR_API_KEY_HERE"
 ```
 
 The response tells you whether delivery succeeded:
@@ -152,7 +152,7 @@ Set `status` to `DISABLED` via `PATCH /webhooks/{id}` to stop delivery without l
 
 ```bash
 curl -X PATCH "https://api.erebor.bank/webhooks/whk_01kasd1tthf1ns1pjn1kncctwd" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j" \
+  -H "Authorization: test_key_YOUR_API_KEY_HERE" \
   -H "Erebor-Idempotency-Key: pause-webhook-001" \
   -H "Content-Type: application/json" \
   -d '{ "status": "DISABLED" }'
@@ -164,7 +164,7 @@ Archive a webhook with `POST /webhooks/{id}/archive` when you don't need it anym
 
 ```bash
 curl -X POST "https://api.erebor.bank/webhooks/whk_01kasd1tthf1ns1pjn1kncctwd/archive" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j"
+  -H "Authorization: test_key_YOUR_API_KEY_HERE"
 ```
 
 Use `DISABLED` for maintenance windows and temporary pauses. Archive when you're retiring the webhook for good.

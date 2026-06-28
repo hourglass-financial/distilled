@@ -42,6 +42,14 @@ paths:
           required: true
           schema:
             type: string
+        - name: Erebor-Version
+          in: header
+          description: >
+            Pins the API version used to process this request. Format is
+            `YYYY-MM-DD`. When omitted, the current default version is used.
+          required: false
+          schema:
+            type: string
         - name: Erebor-Idempotency-Key
           in: header
           description: >
@@ -60,6 +68,18 @@ paths:
                 $ref: '#/components/schemas/InboundBlockchainTransfer'
         '400':
           description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict
           content:
             application/json:
               schema:
@@ -148,12 +168,15 @@ components:
     InboundBlockchainTransferStatus:
       type: string
       enum:
+        - CREATED
         - PENDING
         - NEEDS_ATTRIBUTION
         - SETTLED
         - FAILED
       description: >
         Inbound blockchain transfer status:
+
+        - CREATED: Transfer was created
 
         - PENDING: Transfer is being processed
 

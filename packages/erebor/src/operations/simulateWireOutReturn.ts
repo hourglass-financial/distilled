@@ -30,7 +30,8 @@ export type SimulateWireOutReturnOutput =
  * The response returns immediately. The transfer is still `SETTLED` at response time; the flip to `RETURNED` is asynchronous — usually within a minute. Poll `GET /wire_out/{id}` or listen for the `WIRE_OUT.RETURNED` webhook to observe the transition.
  *
  * @param id - ID of the outbound wire transfer to return. Must be in `SETTLED` status.
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const simulateWireOutReturn = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({

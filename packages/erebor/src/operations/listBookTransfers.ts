@@ -66,7 +66,8 @@ export type ListBookTransfersOutput = typeof ListBookTransfersOutput.Type;
  * @param to_deposit_account_id - Filter by destination account ID
  * @param status - Filter by transfer status
  * @param custom_ref - Filter by exact `custom_ref` match (case-sensitive, up to 255 characters).
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const listBookTransfers = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: ListBookTransfersInput,

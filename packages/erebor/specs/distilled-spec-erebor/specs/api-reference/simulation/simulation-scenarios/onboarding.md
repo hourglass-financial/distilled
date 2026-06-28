@@ -14,7 +14,7 @@ An unrecognized value is rejected with `400`, so a mistyped scenario surfaces im
 
 ```bash
 curl -X POST "https://api.erebor.bank/onboardings" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j" \
+  -H "Authorization: test_key_YOUR_API_KEY_HERE" \
   -H "Erebor-Simulation-Scenario: ONBOARDING_REJECTED" \
   -H "Content-Type: application/json" \
   -d '{

@@ -44,11 +44,13 @@ components:
     OutboundBlockchainTransferStatus:
       type: string
       enum:
+        - CREATED
         - PENDING
         - SETTLED
         - FAILED
       description: |
         Outbound blockchain transfer status:
+        - CREATED: Transfer was created
         - PENDING: Transfer is being processed
         - SETTLED: Transfer completed successfully (terminal)
         - FAILED: Transfer failed (terminal)

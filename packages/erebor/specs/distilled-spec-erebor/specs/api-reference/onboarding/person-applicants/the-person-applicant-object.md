@@ -12,6 +12,7 @@ A person applicant represents an individual applying for banking services. You c
   "created_at": "2025-01-15T09:30:00Z",
   "updated_at": "2025-01-15T09:30:00Z",
   "program_id": "prgrm_01kasd1tthf1ns1pjn1kncctwd",
+  "person_applicant_type": "RETAIL_CUSTOMER",
   "first_name": "John",
   "middle_name": "William",
   "last_name": "Smith",
@@ -61,6 +62,18 @@ A person applicant represents an individual applying for banking services. You c
 ```yaml
 components:
   schemas:
+    PersonApplicantType:
+      type: string
+      enum:
+        - LEGACY
+        - RETAIL_CUSTOMER
+        - HNWI_CUSTOMER
+        - ASSOCIATED_PERSON
+      description: >-
+        Intended use of the person applicant. `LEGACY` represents applicants
+        without an assigned classification and is the default when omitted or
+        set to `null`.
+      title: PersonApplicantType
     PersonApplicantPhysicalAddress:
       type: object
       properties:
@@ -122,10 +135,15 @@ components:
     PersonApplicantSourceOfWealthItems:
       type: string
       enum:
-        - INCOME
+        - CRYPTO
+        - SALE_OF_BUSINESS
         - OWNERSHIP_STAKE
         - INVESTMENT_INCOME
+        - REAL_ESTATE
+        - EXECUTIVE
         - INHERITANCE
+        - INCOME
+        - INTELLECTUAL
         - OTHER
       title: PersonApplicantSourceOfWealthItems
     PersonApplicantAccountPurposesItems:
@@ -142,6 +160,7 @@ components:
       enum:
         - INCOME
         - ASSET_SALE
+        - FINANCING
         - SAVINGS
         - OTHER
       title: PersonApplicantSourceOfFundsItems
@@ -247,6 +266,10 @@ components:
           description: >-
             Unique identifier of the program this person applicant belongs to,
             prefixed with `prgrm_`.
+        person_applicant_type:
+          oneOf:
+            - $ref: '#/components/schemas/PersonApplicantType'
+            - type: 'null'
         first_name:
           type: string
           description: Applicant's first name.

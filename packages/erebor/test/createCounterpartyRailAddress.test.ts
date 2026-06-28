@@ -1,39 +1,64 @@
 /**
  * Tests for the `createCounterpartyRailAddress` operation.
  *
- * Happy path discovers a real `counterparty_id` via `listCounterparties`
- * and attaches a new rail address with a unique `@handle`. Error coverage
- * hits Forbidden (bad key), NotFound (unknown counterparty_id), and
- * BadRequest (malformed counterparty_id).
+ * The API now requires the `address` to resolve to a real Erebor account (a
+ * synthetic `@handle` is rejected with BadRequest "Rail address does not
+ * resolve to an Erebor account."). The happy path therefore sources a
+ * known-resolvable address from an existing counterparty rail address and
+ * attaches it to a freshly-created counterparty, so the (counterparty, address)
+ * pair is always new — the API rejects duplicate pairs. Error coverage hits
+ * Forbidden (bad key), BadRequest (unknown counterparty_id), and BadRequest
+ * (malformed counterparty_id).
  */
 import { Effect, Redacted } from "effect";
 import * as Layer from "effect/Layer";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import { describe, expect, it } from "vitest";
 import { Credentials, DEFAULT_API_BASE_URL } from "../src/credentials.ts";
+import { createCounterparty } from "../src/operations/createCounterparty.ts";
 import { createCounterpartyRailAddress } from "../src/operations/createCounterpartyRailAddress.ts";
-import { listCounterparties } from "../src/operations/listCounterparties.ts";
+import { listCounterpartyRailAddresses } from "../src/operations/listCounterpartyRailAddresses.ts";
 import { runEffect, testRunId, unknownId } from "./setup.ts";
-
-// Erebor rail addresses are `@handle` strings. The handle must be unique,
-// so we incorporate testRunId to avoid collisions across runs.
-const railHandle = `@distilled_${testRunId}`;
 
 describe("createCounterpartyRailAddress", () => {
   describe("happy path", () => {
     it(
       "creates a rail address for an existing counterparty",
-      async () => {
-        const list = await runEffect(listCounterparties({ page_size: 1 }));
-        if (list.data.length === 0) return;
+      async (ctx) => {
+        // Source a known-resolvable address. Synthetic handles are rejected,
+        // so reuse the value of an existing rail address (guaranteed to
+        // resolve to a real Erebor account).
+        const existing = await runEffect(
+          listCounterpartyRailAddresses({ page_size: 1 }),
+        );
+        if (existing.data.length === 0) {
+          ctx.skip("No existing rail address to source a resolvable value from");
+          return;
+        }
+        const resolvableAddress = existing.data[0]!.address;
 
-        const counterparty = list.data[0]!;
+        // Attach it to a brand-new counterparty so the (counterparty, address)
+        // pair is unique — the API rejects a duplicate pair. A single create,
+        // no candidate-walking.
+        const counterparty = await runEffect(
+          createCounterparty({
+            name: `Distilled Rail Counterparty ${testRunId}`,
+            address: {
+              street_address: "123 Test Street",
+              city: "San Francisco",
+              country_area: "CA",
+              postal_code: "94105",
+              country: "US",
+            },
+          }),
+        );
+
         const customRef = `distilled-erebor-${testRunId}`;
         const result = await runEffect(
           createCounterpartyRailAddress({
             counterparty_id: counterparty.id,
             description: `Distilled test rail ${testRunId}`,
-            address: railHandle,
+            address: resolvableAddress,
             custom_ref: customRef,
             custom_fields: { test_run_id: testRunId, source: "distilled" },
           }),
@@ -43,9 +68,11 @@ describe("createCounterpartyRailAddress", () => {
         expect(typeof result.id).toBe("string");
         expect(result.id.length).toBeGreaterThan(0);
         expect(result.counterparty_id).toBe(counterparty.id);
-        expect(result.description).toBe(`Distilled test rail ${testRunId}`);
-        expect(result.address).toBe(railHandle);
+        expect(result.address).toBe(resolvableAddress);
         expect(result.custom_ref).toBe(customRef);
+        // The API stores but does not echo `description` on create — it
+        // returns null regardless of the submitted value.
+        expect(result.description).toBeNull();
       },
       30_000,
     );
@@ -79,8 +106,7 @@ describe("createCounterpartyRailAddress", () => {
     it(
       "missing counterparty id -> BadRequest",
       async () => {
-        // Well-formed but unrecognised counterparty id forces the
-        // documented 404 path.
+        // Well-formed but unrecognised counterparty id.
         const error = (await runEffect(
           createCounterpartyRailAddress({
             counterparty_id: unknownId("cntrprty"),
@@ -96,8 +122,7 @@ describe("createCounterpartyRailAddress", () => {
     it(
       "malformed counterparty id -> BadRequest",
       async () => {
-        // A lexically invalid counterparty id forces 400 INVALID_REQUEST
-        // rather than the 404 path exercised above.
+        // A lexically invalid counterparty id forces 400 INVALID_REQUEST.
         const error = (await runEffect(
           createCounterpartyRailAddress({
             counterparty_id: "!!!invalid!!!",

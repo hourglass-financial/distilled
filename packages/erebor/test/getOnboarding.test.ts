@@ -32,7 +32,8 @@ describe("getOnboarding", () => {
           result.status,
         );
         expect(["PERSON", "BUSINESS"]).toContain(result.applicant_type);
-        expect(result.disclosures).toBeTruthy();
+        // `disclosures` is now optional per the spec patch and is absent from
+        // live responses, so we no longer assert on its presence.
       },
       30_000,
     );

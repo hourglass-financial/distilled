@@ -133,7 +133,8 @@ export type GetWebhookOutput = typeof GetWebhookOutput.Type;
  * Retrieve a specific Webhook by ID.
  *
  * @param id - Webhook ID
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const getWebhook = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: GetWebhookInput,

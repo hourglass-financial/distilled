@@ -20,28 +20,14 @@ flowchart LR
 
 ## Authentication
 
-All requests require an API key in the `Authorization` header. Your key's prefix determines the environment:
+All requests require an API key in the `Authorization` header. Use a `test_key_` key while building, and use a `live_key_` key only when you are ready to operate in production with real money.
 
-* `test_` keys hit the sandbox with simulated data
-* `live_` keys hit production with real money
-
-Both environments use the same base URL: `https://api.erebor.bank`.
+See [Authentication](/using-the-api/authentication) for API key management, test and live environments, IP allowlisting, and mTLS.
 
 ```bash
 curl -X GET "https://api.erebor.bank/programs" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j"
+  -H "Authorization: test_key_YOUR_API_KEY_HERE"
 ```
-
-## Core resources
-
-| Resource             | What it does                                                                              |
-| -------------------- | ----------------------------------------------------------------------------------------- |
-| **Programs**         | Top-level container configured by Erebor. All customers and accounts belong to a program. |
-| **Customers**        | People or businesses that have passed onboarding and KYC review.                          |
-| **Deposit Accounts** | Bank accounts that hold funds. Created automatically when onboarding is approved.         |
-| **Counterparties**   | External parties you send money to or receive money from.                                 |
-| **Transfers**        | Payment instructions — wires, ACH, book transfers, blockchain, and rail transfers.        |
-| **Webhooks**         | Real-time notifications for status changes across all resources.                          |
 
 ## Idempotency
 
@@ -49,7 +35,7 @@ All write operations accept an `Erebor-Idempotency-Key` header. If you retry a r
 
 ```bash
 curl -X POST "https://api.erebor.bank/wire_out" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j" \
+  -H "Authorization: test_key_YOUR_API_KEY_HERE" \
   -H "Erebor-Idempotency-Key: transfer-abc-123" \
   -H "Content-Type: application/json" \
   -d '{ ... }'

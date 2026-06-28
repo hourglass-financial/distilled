@@ -5,7 +5,7 @@
 PATCH https://api.erebor.bank/blockchain_addresses/{id}
 Content-Type: application/json
 
-Update a blockchain address's `name`, `custom_ref`, or `custom_fields`. The on-chain address, address type, and network set are immutable.
+Update a blockchain address's `custom_ref` or `custom_fields`. Renaming is not yet available — requests that include `name` return a `429 RATE_LIMITED` error and no changes are applied. The on-chain address, address type, and network set are immutable.
 
 Reference: https://docs.erebor.bank/api-reference/accounts/blockchain-addresses/update-blockchain-address
 
@@ -22,8 +22,10 @@ paths:
       operationId: update-blockchain-address
       summary: Update Blockchain Address
       description: >-
-        Update a blockchain address's `name`, `custom_ref`, or `custom_fields`.
-        The on-chain address, address type, and network set are immutable.
+        Update a blockchain address's `custom_ref` or `custom_fields`. Renaming
+        is not yet available — requests that include `name` return a `429
+        RATE_LIMITED` error and no changes are applied. The on-chain address,
+        address type, and network set are immutable.
       tags:
         - subpackage_blockchainAddresses
       parameters:
@@ -40,6 +42,14 @@ paths:
 
             Example: `Authorization: your_api_key_here`
           required: true
+          schema:
+            type: string
+        - name: Erebor-Version
+          in: header
+          description: >
+            Pins the API version used to process this request. Format is
+            `YYYY-MM-DD`. When omitted, the current default version is used.
+          required: false
           schema:
             type: string
         - name: Erebor-Idempotency-Key
@@ -66,6 +76,24 @@ paths:
                 $ref: '#/components/schemas/Error'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: >-
+            Renaming blockchain addresses is not yet available. Returned when
+            the request body includes a non-null `name`; no changes are applied
+            (an explicit `name: null` is accepted and ignored). Although the
+            status code is `429`, this is a capability gate, not a transient
+            rate limit — retrying (with or without backoff) will not succeed.
+            Resend the request without `name` to update the other fields.
           content:
             application/json:
               schema:
@@ -103,6 +131,11 @@ components:
           type:
             - string
             - 'null'
+          description: >-
+            Display name for the blockchain address. Renaming is not yet
+            available — requests that include a non-null `name` return a `429
+            RATE_LIMITED` error and no changes are applied. An explicit `name:
+            null` is accepted and ignored.
         custom_ref:
           $ref: '#/components/schemas/CustomRef'
         custom_fields:
@@ -292,7 +325,6 @@ components:
 
 ```json
 {
-  "name": "Treasury — EVM deposits",
   "custom_ref": "WALLET-2025-001",
   "custom_fields": {
     "purpose": "treasury",
@@ -336,7 +368,6 @@ import requests
 url = "https://api.erebor.bank/blockchain_addresses/bc_addr_01kasd1tthf1ns1pjn1kncctwd"
 
 payload = {
-    "name": "Treasury — EVM deposits",
     "custom_ref": "WALLET-2025-001",
     "custom_fields": {
         "purpose": "treasury",
@@ -358,7 +389,7 @@ const url = 'https://api.erebor.bank/blockchain_addresses/bc_addr_01kasd1tthf1ns
 const options = {
   method: 'PATCH',
   headers: {Authorization: '<apiKey>', 'Content-Type': 'application/json'},
-  body: '{"name":"Treasury — EVM deposits","custom_ref":"WALLET-2025-001","custom_fields":{"purpose":"treasury","network_tag":"evm-l2"}}'
+  body: '{"custom_ref":"WALLET-2025-001","custom_fields":{"purpose":"treasury","network_tag":"evm-l2"}}'
 };
 
 try {
@@ -384,7 +415,7 @@ func main() {
 
 	url := "https://api.erebor.bank/blockchain_addresses/bc_addr_01kasd1tthf1ns1pjn1kncctwd"
 
-	payload := strings.NewReader("{\n  \"name\": \"Treasury — EVM deposits\",\n  \"custom_ref\": \"WALLET-2025-001\",\n  \"custom_fields\": {\n    \"purpose\": \"treasury\",\n    \"network_tag\": \"evm-l2\"\n  }\n}")
+	payload := strings.NewReader("{\n  \"custom_ref\": \"WALLET-2025-001\",\n  \"custom_fields\": {\n    \"purpose\": \"treasury\",\n    \"network_tag\": \"evm-l2\"\n  }\n}")
 
 	req, _ := http.NewRequest("PATCH", url, payload)
 
@@ -414,7 +445,7 @@ http.use_ssl = true
 request = Net::HTTP::Patch.new(url)
 request["Authorization"] = '<apiKey>'
 request["Content-Type"] = 'application/json'
-request.body = "{\n  \"name\": \"Treasury — EVM deposits\",\n  \"custom_ref\": \"WALLET-2025-001\",\n  \"custom_fields\": {\n    \"purpose\": \"treasury\",\n    \"network_tag\": \"evm-l2\"\n  }\n}"
+request.body = "{\n  \"custom_ref\": \"WALLET-2025-001\",\n  \"custom_fields\": {\n    \"purpose\": \"treasury\",\n    \"network_tag\": \"evm-l2\"\n  }\n}"
 
 response = http.request(request)
 puts response.read_body
@@ -427,7 +458,7 @@ import com.mashape.unirest.http.Unirest;
 HttpResponse<String> response = Unirest.patch("https://api.erebor.bank/blockchain_addresses/bc_addr_01kasd1tthf1ns1pjn1kncctwd")
   .header("Authorization", "<apiKey>")
   .header("Content-Type", "application/json")
-  .body("{\n  \"name\": \"Treasury — EVM deposits\",\n  \"custom_ref\": \"WALLET-2025-001\",\n  \"custom_fields\": {\n    \"purpose\": \"treasury\",\n    \"network_tag\": \"evm-l2\"\n  }\n}")
+  .body("{\n  \"custom_ref\": \"WALLET-2025-001\",\n  \"custom_fields\": {\n    \"purpose\": \"treasury\",\n    \"network_tag\": \"evm-l2\"\n  }\n}")
   .asString();
 ```
 
@@ -439,7 +470,6 @@ $client = new \GuzzleHttp\Client();
 
 $response = $client->request('PATCH', 'https://api.erebor.bank/blockchain_addresses/bc_addr_01kasd1tthf1ns1pjn1kncctwd', [
   'body' => '{
-  "name": "Treasury — EVM deposits",
   "custom_ref": "WALLET-2025-001",
   "custom_fields": {
     "purpose": "treasury",
@@ -462,7 +492,7 @@ var client = new RestClient("https://api.erebor.bank/blockchain_addresses/bc_add
 var request = new RestRequest(Method.PATCH);
 request.AddHeader("Authorization", "<apiKey>");
 request.AddHeader("Content-Type", "application/json");
-request.AddParameter("application/json", "{\n  \"name\": \"Treasury — EVM deposits\",\n  \"custom_ref\": \"WALLET-2025-001\",\n  \"custom_fields\": {\n    \"purpose\": \"treasury\",\n    \"network_tag\": \"evm-l2\"\n  }\n}", ParameterType.RequestBody);
+request.AddParameter("application/json", "{\n  \"custom_ref\": \"WALLET-2025-001\",\n  \"custom_fields\": {\n    \"purpose\": \"treasury\",\n    \"network_tag\": \"evm-l2\"\n  }\n}", ParameterType.RequestBody);
 IRestResponse response = client.Execute(request);
 ```
 
@@ -474,7 +504,6 @@ let headers = [
   "Content-Type": "application/json"
 ]
 let parameters = [
-  "name": "Treasury — EVM deposits",
   "custom_ref": "WALLET-2025-001",
   "custom_fields": [
     "purpose": "treasury",

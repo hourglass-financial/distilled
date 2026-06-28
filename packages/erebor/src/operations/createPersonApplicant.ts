@@ -1,18 +1,19 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
-import { BadRequest, UnprocessableEntity } from "../errors.ts";
+import { BadRequest, Conflict, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
 export const CreatePersonApplicantInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
-      T.HttpHeader("Erebor-Idempotency-Key"),
-    ),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
+    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Idempotency-Key"),
+    ),
     program_id: Schema.String,
+    person_applicant_type: Schema.optional(Schema.Unknown),
     first_name: Schema.String,
     middle_name: Schema.optional(Schema.NullOr(Schema.String)),
     last_name: Schema.String,
@@ -43,10 +44,15 @@ export const CreatePersonApplicantInput =
       Schema.NullOr(
         Schema.Array(
           Schema.Literals([
-            "INCOME",
+            "CRYPTO",
+            "SALE_OF_BUSINESS",
             "OWNERSHIP_STAKE",
             "INVESTMENT_INCOME",
+            "REAL_ESTATE",
+            "EXECUTIVE",
             "INHERITANCE",
+            "INCOME",
+            "INTELLECTUAL",
             "OTHER",
           ]),
         ),
@@ -74,7 +80,13 @@ export const CreatePersonApplicantInput =
     source_of_funds: Schema.optional(
       Schema.NullOr(
         Schema.Array(
-          Schema.Literals(["INCOME", "ASSET_SALE", "SAVINGS", "OTHER"]),
+          Schema.Literals([
+            "INCOME",
+            "ASSET_SALE",
+            "FINANCING",
+            "SAVINGS",
+            "OTHER",
+          ]),
         ),
       ),
     ),
@@ -105,6 +117,7 @@ export const CreatePersonApplicantOutput =
     updated_at: Schema.String,
     archived_at: Schema.optional(Schema.NullOr(Schema.String)),
     program_id: Schema.String,
+    person_applicant_type: Schema.optional(Schema.Unknown),
     first_name: Schema.String,
     middle_name: Schema.optional(Schema.NullOr(Schema.String)),
     last_name: Schema.String,
@@ -135,10 +148,15 @@ export const CreatePersonApplicantOutput =
       Schema.NullOr(
         Schema.Array(
           Schema.Literals([
-            "INCOME",
+            "CRYPTO",
+            "SALE_OF_BUSINESS",
             "OWNERSHIP_STAKE",
             "INVESTMENT_INCOME",
+            "REAL_ESTATE",
+            "EXECUTIVE",
             "INHERITANCE",
+            "INCOME",
+            "INTELLECTUAL",
             "OTHER",
           ]),
         ),
@@ -166,7 +184,13 @@ export const CreatePersonApplicantOutput =
     source_of_funds: Schema.optional(
       Schema.NullOr(
         Schema.Array(
-          Schema.Literals(["INCOME", "ASSET_SALE", "SAVINGS", "OTHER"]),
+          Schema.Literals([
+            "INCOME",
+            "ASSET_SALE",
+            "FINANCING",
+            "SAVINGS",
+            "OTHER",
+          ]),
         ),
       ),
     ),
@@ -192,14 +216,15 @@ export type CreatePersonApplicantOutput =
  *
  * Create a new Person Applicant for onboarding
  *
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const createPersonApplicant = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({
     inputSchema: CreatePersonApplicantInput,
     outputSchema: CreatePersonApplicantOutput,
-    errors: [BadRequest, UnprocessableEntity] as const,
+    errors: [BadRequest, Conflict, UnprocessableEntity] as const,
   }),
 );

@@ -54,7 +54,9 @@ describe("createOutboundBlockchainTransfer", () => {
         expect(result.amount.value).toBe("1");
         expect(result.network).toBe(sample.network);
         expect(result.custom_ref).toBe(customRef);
-        expect(["PENDING", "SETTLED", "FAILED"]).toContain(result.status);
+        expect(["CREATED", "PENDING", "SETTLED", "FAILED"]).toContain(
+          result.status,
+        );
       },
       30_000,
     );

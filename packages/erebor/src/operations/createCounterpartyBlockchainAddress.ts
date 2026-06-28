@@ -1,16 +1,16 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
-import { BadRequest, NotFound, UnprocessableEntity } from "../errors.ts";
+import { BadRequest, Conflict, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
 export const CreateCounterpartyBlockchainAddressInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
-      T.HttpHeader("Erebor-Idempotency-Key"),
-    ),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
+    ),
+    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Idempotency-Key"),
     ),
     counterparty_id: Schema.String,
     description: Schema.String,
@@ -78,7 +78,7 @@ export const CreateCounterpartyBlockchainAddressOutput =
     customer_id: Schema.optional(Schema.NullOr(Schema.String)),
     program_id: Schema.optional(Schema.NullOr(Schema.String)),
     counterparty_id: Schema.optional(Schema.NullOr(Schema.String)),
-    description: Schema.String,
+    description: Schema.NullOr(Schema.String),
     address: Schema.String,
     network: Schema.Literals(["BASE", "ETHEREUM", "INK", "SOLANA", "SUI"]),
     custodian: Schema.Literals([
@@ -133,13 +133,14 @@ export type CreateCounterpartyBlockchainAddressOutput =
  *
  * Create a new Blockchain Address for a Counterparty
  *
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const createCounterpartyBlockchainAddress =
   /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
     inputSchema: CreateCounterpartyBlockchainAddressInput,
     outputSchema: CreateCounterpartyBlockchainAddressOutput,
-    errors: [BadRequest, NotFound, UnprocessableEntity] as const,
+    errors: [BadRequest, Conflict, UnprocessableEntity] as const,
   }));

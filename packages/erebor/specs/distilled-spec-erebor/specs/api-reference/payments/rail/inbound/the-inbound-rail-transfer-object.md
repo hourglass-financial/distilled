@@ -37,10 +37,14 @@ components:
     InboundRailTransferStatus:
       type: string
       enum:
+        - CREATED
+        - PENDING
         - SETTLED
         - FAILED
       description: |
         Inbound Rail transfer status:
+        - CREATED: Rail transfer was created
+        - PENDING: Rail transfer is being processed
         - SETTLED: Rail transfer completed successfully
         - FAILED: Rail transfer failed
       title: InboundRailTransferStatus

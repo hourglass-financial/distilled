@@ -17,12 +17,41 @@ import { createCounterpartyInternationalBankAccount } from "../src/operations/cr
 import { listCounterparties } from "../src/operations/listCounterparties.ts";
 import { runEffect, testRunId, unknownId } from "./setup.ts";
 
-// Deutsche Bank Frankfurt sample IBAN + BIC — passes structural validation.
-const VALID_IBAN = "DE89370400440532013000";
 const VALID_BIC = "DEUTDEFF";
 // Same digits but with the country/check digits scrambled — fails IBAN
 // modulo-97 / structural validation.
 const INVALID_IBAN = "DE00000000000000000001";
+
+// A German IBAN must be unique per Erebor account — reusing a fixed IBAN
+// across runs fails with `Address is already attached to another party.`
+// Build a structurally valid (modulo-97) German IBAN whose 18-digit BBAN is
+// derived from `testRunId`, so each run attaches a fresh address.
+// Layout: DE + 2 check digits + 18-digit BBAN (8-digit bank code + 10-digit
+// account number) = 22 chars.
+const ibanCheckDigits = (countryCode: string, bban: string): string => {
+  const rearranged = `${bban}${countryCode}00`;
+  let numeric = "";
+  for (const ch of rearranged) {
+    numeric +=
+      ch >= "0" && ch <= "9" ? ch : (ch.charCodeAt(0) - 55).toString();
+  }
+  let remainder = 0;
+  for (let i = 0; i < numeric.length; i += 7) {
+    remainder = Number(BigInt(`${remainder}${numeric.slice(i, i + 7)}`) % 97n);
+  }
+  return (98 - remainder).toString().padStart(2, "0");
+};
+
+const uniqueValidIban = (): string => {
+  const bban = BigInt(`0x${testRunId}`)
+    .toString()
+    .padStart(18, "0")
+    .slice(-18);
+  return `DE${ibanCheckDigits("DE", bban)}${bban}`;
+};
+
+// Structurally valid IBAN, unique per test run.
+const VALID_IBAN = uniqueValidIban();
 
 describe("createCounterpartyInternationalBankAccount", () => {
   describe("happy path", () => {

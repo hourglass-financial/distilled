@@ -39,6 +39,14 @@ paths:
           required: true
           schema:
             type: string
+        - name: Erebor-Version
+          in: header
+          description: >
+            Pins the API version used to process this request. Format is
+            `YYYY-MM-DD`. When omitted, the current default version is used.
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: US Bank Account details
@@ -46,6 +54,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CounterpartyUSBankAccount'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 servers:
   - url: https://api.erebor.bank
     description: API server (environment determined by API key)
@@ -74,7 +94,7 @@ components:
           type: string
           description: >-
             Unique identifier for the counterparty US bank account, prefixed
-            with `cp_us_bank_`.
+            with `cp_us_bank_acct_`.
         type:
           type: string
           enum:
@@ -148,6 +168,65 @@ components:
         - account_number
         - routing_number
       title: CounterpartyUSBankAccount
+    ErrorDetail:
+      oneOf:
+        - type: object
+          properties:
+            error_detail_type:
+              type: string
+              description: Discriminator indicating the kind of detail.
+            field:
+              type: string
+              description: Dot-notated path to the field that failed validation.
+            message:
+              type: string
+              description: Human-readable description of the failure.
+          required:
+            - error_detail_type
+            - field
+            - message
+          description: FIELD_ERROR variant
+      discriminator:
+        propertyName: error_detail_type
+      description: >-
+        A structured error detail. Use `error_detail_type` to determine which
+        fields are present. New detail types may be added in the future;
+        consumers should ignore unrecognized values.
+      title: ErrorDetail
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        field:
+          type:
+            - string
+            - 'null'
+          description: >-
+            Deprecated: use error_details instead. Contains the field from the
+            first error_details entry for backwards compatibility. May be
+            removed in a future API version.
+        docs_url:
+          type:
+            - string
+            - 'null'
+          format: uri
+        error_details:
+          type:
+            - array
+            - 'null'
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+          description: >-
+            Structured error details providing granular information about
+            validation failures. Each item includes an `error_detail_type`
+            discriminator indicating the kind of detail.
+      required:
+        - error
+        - message
+      title: Error
   securitySchemes:
     ApiKeyAuth:
       type: apiKey
@@ -168,9 +247,9 @@ components:
 
 ```json
 {
-  "id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+  "id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
   "type": "COUNTERPARTY_US_BANK_ACCOUNT",
-  "url": "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+  "url": "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
   "created_at": "2025-01-15T09:30:00Z",
   "updated_at": "2025-01-15T09:30:00Z",
   "description": "Primary USD Account",
@@ -194,7 +273,7 @@ components:
 ```python Counterparty US Bank Account details
 import requests
 
-url = "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_01kasd1tthf1ns1pjn1kncctwd"
+url = "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd"
 
 headers = {"Authorization": "<apiKey>"}
 
@@ -204,7 +283,7 @@ print(response.json())
 ```
 
 ```javascript Counterparty US Bank Account details
-const url = 'https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_01kasd1tthf1ns1pjn1kncctwd';
+const url = 'https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd';
 const options = {method: 'GET', headers: {Authorization: '<apiKey>'}};
 
 try {
@@ -227,7 +306,7 @@ import (
 
 func main() {
 
-	url := "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_01kasd1tthf1ns1pjn1kncctwd"
+	url := "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd"
 
 	req, _ := http.NewRequest("GET", url, nil)
 
@@ -248,7 +327,7 @@ func main() {
 require 'uri'
 require 'net/http'
 
-url = URI("https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_01kasd1tthf1ns1pjn1kncctwd")
+url = URI("https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd")
 
 http = Net::HTTP.new(url.host, url.port)
 http.use_ssl = true
@@ -264,7 +343,7 @@ puts response.read_body
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 
-HttpResponse<String> response = Unirest.get("https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_01kasd1tthf1ns1pjn1kncctwd")
+HttpResponse<String> response = Unirest.get("https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd")
   .header("Authorization", "<apiKey>")
   .asString();
 ```
@@ -275,7 +354,7 @@ require_once('vendor/autoload.php');
 
 $client = new \GuzzleHttp\Client();
 
-$response = $client->request('GET', 'https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_01kasd1tthf1ns1pjn1kncctwd', [
+$response = $client->request('GET', 'https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd', [
   'headers' => [
     'Authorization' => '<apiKey>',
   ],
@@ -287,7 +366,7 @@ echo $response->getBody();
 ```csharp Counterparty US Bank Account details
 using RestSharp;
 
-var client = new RestClient("https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_01kasd1tthf1ns1pjn1kncctwd");
+var client = new RestClient("https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd");
 var request = new RestRequest(Method.GET);
 request.AddHeader("Authorization", "<apiKey>");
 IRestResponse response = client.Execute(request);
@@ -298,7 +377,7 @@ import Foundation
 
 let headers = ["Authorization": "<apiKey>"]
 
-let request = NSMutableURLRequest(url: NSURL(string: "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_01kasd1tthf1ns1pjn1kncctwd")! as URL,
+let request = NSMutableURLRequest(url: NSURL(string: "https://api.erebor.bank/counterparty_us_bank_accounts/cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd")! as URL,
                                         cachePolicy: .useProtocolCachePolicy,
                                     timeoutInterval: 10.0)
 request.httpMethod = "GET"

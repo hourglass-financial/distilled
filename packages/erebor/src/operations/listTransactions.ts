@@ -59,7 +59,7 @@ export const ListTransactionsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
           value: Schema.String,
           display_value: Schema.optional(Schema.String),
         }),
-        description: Schema.String,
+        description: Schema.NullOr(Schema.String),
         associated_payments: Schema.optional(
           Schema.NullOr(
             Schema.Array(
@@ -99,7 +99,8 @@ export type ListTransactionsOutput = typeof ListTransactionsOutput.Type;
  * @param transaction_type - Filter by transaction type
  * @param status - Filter by transaction status
  * @param associated_payment_id - Filter by associated payment resource ID
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const listTransactions = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: ListTransactionsInput,

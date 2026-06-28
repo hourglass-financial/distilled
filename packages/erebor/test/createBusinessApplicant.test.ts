@@ -1,10 +1,14 @@
 /**
  * Tests for the `createBusinessApplicant` operation.
  *
- * Happy path requires a real program id (EREBOR_TEST_PROGRAM_ID). Error
- * paths cover Forbidden (bad key), BadRequest (malformed program_id),
- * and EreborValidationError (422 VALIDATION_ERROR remapped by the
- * client's matchError when required KYC fields are incomplete).
+ * Happy path requires a real program id (EREBOR_TEST_PROGRAM_ID) and a
+ * full KYC payload: beyond the spec's four `required` fields the API also
+ * mandates description (>= 100 chars), industry, incorporation_date, tin,
+ * source_of_funds, account_purposes, and a formation document (uploaded
+ * via createDocument). Error paths cover Forbidden (bad key), BadRequest
+ * (malformed program_id), and EreborValidationError (422 VALIDATION_ERROR
+ * remapped by the client's matchError when required KYC fields are
+ * incomplete).
  */
 import { Effect, Redacted } from "effect";
 import * as Layer from "effect/Layer";
@@ -12,6 +16,7 @@ import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import { describe, expect, it } from "vitest";
 import { Credentials, DEFAULT_API_BASE_URL } from "../src/credentials.ts";
 import { createBusinessApplicant } from "../src/operations/createBusinessApplicant.ts";
+import { createDocument } from "../src/operations/createDocument.ts";
 import { runEffect, testRunId } from "./setup.ts";
 
 const requireProgramId = (): string => {
@@ -28,13 +33,33 @@ const usAddress = {
   country: "US",
 };
 
+// Erebor enforces a minimum length of 100 characters on the business
+// `description`, so keep this comfortably above that bound.
+const businessDescription = `Distilled SDK integration test business applicant created against the Erebor sandbox to exercise the create business applicant happy path end to end ${testRunId}.`;
+
 describe("createBusinessApplicant", () => {
   describe("happy path", () => {
     it(
-      "creates a business applicant with the minimal required fields",
+      "creates a business applicant with the KYC fields the API requires",
       async () => {
         if (!process.env.EREBOR_TEST_PROGRAM_ID) return;
         const programId = requireProgramId();
+
+        // Erebor's validation goes well beyond the spec's four `required`
+        // fields: a real onboarding submission also needs description,
+        // industry, incorporation_date, tin, source_of_funds,
+        // account_purposes, and a formation document. Upload that document
+        // first so we can reference its id.
+        const formationDoc = await runEffect(
+          createDocument({
+            program_id: programId,
+            document_type: "FORMATION_DOCUMENT",
+            name: `distilled-erebor-formation-${testRunId}.txt`,
+            file: `distilled erebor formation fixture ${testRunId}`,
+            custom_ref: `distilled-erebor-${testRunId}`,
+          }),
+        );
+        expect(formationDoc.document_type).toBe("FORMATION_DOCUMENT");
 
         const result = await runEffect(
           createBusinessApplicant({
@@ -42,6 +67,13 @@ describe("createBusinessApplicant", () => {
             name: `Distilled Test Co ${testRunId}`,
             incorporation_address: usAddress,
             physical_address: usAddress,
+            description: businessDescription,
+            industry: "TECHNOLOGY",
+            incorporation_date: "2020-01-15",
+            tin: "12-3456789",
+            source_of_funds: ["REVENUE"],
+            account_purposes: ["BUSINESS_OPERATIONS"],
+            formation_document_id: formationDoc.id,
             custom_ref: `distilled-erebor-${testRunId}`,
           }),
         );
@@ -53,8 +85,14 @@ describe("createBusinessApplicant", () => {
         expect(result.name).toBe(`Distilled Test Co ${testRunId}`);
         expect(result.incorporation_address.country).toBe("US");
         expect(result.physical_address.country).toBe("US");
+        expect(result.industry).toBe("TECHNOLOGY");
+        expect(result.tin).toBe("12-3456789");
+        expect(result.incorporation_date).toBe("2020-01-15");
+        expect(result.source_of_funds).toEqual(["REVENUE"]);
+        expect(result.account_purposes).toEqual(["BUSINESS_OPERATIONS"]);
+        expect(result.formation_document_id).toBe(formationDoc.id);
       },
-      30_000,
+      60_000,
     );
   });
 

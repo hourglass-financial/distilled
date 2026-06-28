@@ -60,7 +60,9 @@ components:
       type: object
       properties:
         request_id:
-          type: string
+          type:
+            - string
+            - 'null'
         request_idempotency_key:
           type:
             - string
@@ -79,6 +81,7 @@ components:
     InboundWireTransferStatus:
       type: string
       enum:
+        - CREATED
         - PENDING
         - SETTLED
         - FAILED
@@ -86,6 +89,8 @@ components:
         - RESOLVING_FROM_SUSPENSE
       description: >
         Inbound wire transfer status:
+
+        - CREATED: Transfer was created
 
         - PENDING: Transfer received, awaiting settlement
 
@@ -182,7 +187,7 @@ components:
           type: string
           description: >-
             ID of the external US bank account that sent the wire, prefixed with
-            `cp_us_bank_`.
+            `cp_us_bank_acct_`.
         deposit_account_id:
           type: string
           description: >-

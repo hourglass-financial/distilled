@@ -17,8 +17,11 @@ import { createCounterpartyBlockchainAddress } from "../src/operations/createCou
 import { listCounterparties } from "../src/operations/listCounterparties.ts";
 import { runEffect, testRunId, unknownId } from "./setup.ts";
 
-// Well-formed 20-byte Ethereum address — passes structural validation.
-const VALID_ETH_ADDRESS = "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb4";
+// Well-formed 20-byte (40 hex char) Ethereum address derived from the
+// per-run testRunId so re-runs don't collide on the live sandbox (the API
+// rejects re-attaching an address with "Address is already attached to
+// another party"). testRunId is 8 hex chars; repeat + slice to 40.
+const VALID_ETH_ADDRESS = `0x${testRunId.repeat(5).slice(0, 40)}`;
 // Not a hex-encoded 20-byte payload — fails the address regex / length
 // check, which the API reports as 422 VALIDATION_ERROR.
 const INVALID_ETH_ADDRESS = "0xnotahexaddress";
@@ -52,7 +55,11 @@ describe("createCounterpartyBlockchainAddress", () => {
         expect(result.description).toBe(
           `Distilled test blockchain ${testRunId}`,
         );
-        expect(result.address).toBe(VALID_ETH_ADDRESS);
+        // The API normalises the address to lowercase, so compare
+        // case-insensitively rather than asserting exact byte equality.
+        expect(result.address.toLowerCase()).toBe(
+          VALID_ETH_ADDRESS.toLowerCase(),
+        );
         expect(result.network).toBe("ETHEREUM");
         expect(result.custodian).toBe("SELF_HOSTED");
         expect(result.custom_ref).toBe(customRef);

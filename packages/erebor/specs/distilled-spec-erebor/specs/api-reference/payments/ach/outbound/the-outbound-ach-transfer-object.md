@@ -15,7 +15,7 @@ An outbound ACH transfer sends funds via the ACH network from a deposit account 
   "program_id": "prgrm_01kasd1tthf1ns1pjn1kncctwd",
   "status": "PENDING",
   "deposit_account_id": "dep_acct_01kasd1tthf1ns1pjn1kncctwd",
-  "counterparty_us_bank_account_id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+  "counterparty_us_bank_account_id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
   "amount": {
     "currency": "USD",
     "exponent": 2,
@@ -47,12 +47,14 @@ components:
     OutboundACHTransferStatus:
       type: string
       enum:
+        - CREATED
         - PENDING
         - SETTLED
         - FAILED
         - RETURNED
       description: |
         Outbound ACH transfer status:
+        - CREATED: Transfer was created
         - PENDING: Transfer created, awaiting submission
         - SETTLED: Transfer has been completed
         - FAILED: Transfer failed
@@ -175,7 +177,7 @@ components:
           type: string
           description: >-
             ID of the external US bank account receiving the transfer, prefixed
-            with `cp_us_bank_`.
+            with `cp_us_bank_acct_`.
         amount:
           $ref: '#/components/schemas/FiatAmount'
         direction:

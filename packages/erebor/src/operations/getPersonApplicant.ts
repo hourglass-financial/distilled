@@ -23,6 +23,7 @@ export const GetPersonApplicantOutput =
     updated_at: Schema.String,
     archived_at: Schema.optional(Schema.NullOr(Schema.String)),
     program_id: Schema.String,
+    person_applicant_type: Schema.optional(Schema.Unknown),
     first_name: Schema.String,
     middle_name: Schema.optional(Schema.NullOr(Schema.String)),
     last_name: Schema.String,
@@ -53,10 +54,15 @@ export const GetPersonApplicantOutput =
       Schema.NullOr(
         Schema.Array(
           Schema.Literals([
-            "INCOME",
+            "CRYPTO",
+            "SALE_OF_BUSINESS",
             "OWNERSHIP_STAKE",
             "INVESTMENT_INCOME",
+            "REAL_ESTATE",
+            "EXECUTIVE",
             "INHERITANCE",
+            "INCOME",
+            "INTELLECTUAL",
             "OTHER",
           ]),
         ),
@@ -84,7 +90,13 @@ export const GetPersonApplicantOutput =
     source_of_funds: Schema.optional(
       Schema.NullOr(
         Schema.Array(
-          Schema.Literals(["INCOME", "ASSET_SALE", "SAVINGS", "OTHER"]),
+          Schema.Literals([
+            "INCOME",
+            "ASSET_SALE",
+            "FINANCING",
+            "SAVINGS",
+            "OTHER",
+          ]),
         ),
       ),
     ),
@@ -110,7 +122,8 @@ export type GetPersonApplicantOutput = typeof GetPersonApplicantOutput.Type;
  * Retrieve a specific Person Applicant by ID
  *
  * @param id - Person applicant ID
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const getPersonApplicant = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: GetPersonApplicantInput,

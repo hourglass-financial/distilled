@@ -26,7 +26,7 @@ export const GetCounterpartyRailAddressOutput =
     customer_id: Schema.optional(Schema.NullOr(Schema.String)),
     program_id: Schema.optional(Schema.NullOr(Schema.String)),
     counterparty_id: Schema.optional(Schema.NullOr(Schema.String)),
-    description: Schema.optional(Schema.String),
+    description: Schema.optional(Schema.NullOr(Schema.String)),
     address: Schema.String,
     custom_ref: Schema.optional(Schema.Unknown),
     custom_fields: Schema.optional(Schema.Unknown),
@@ -41,7 +41,8 @@ export type GetCounterpartyRailAddressOutput =
  * Retrieve a specific Counterparty Rail Address by ID
  *
  * @param id - Rail address ID
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const getCounterpartyRailAddress = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({

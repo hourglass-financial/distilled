@@ -35,7 +35,7 @@ Create an outbound blockchain transfer by specifying the source account, destina
 
 ```bash
 curl -X POST "https://api.erebor.bank/blockchain_out" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j" \
+  -H "Authorization: test_key_YOUR_API_KEY_HERE" \
   -H "Erebor-Idempotency-Key: unique-blockchain-request-001" \
   -H "Content-Type: application/json" \
   -d '{
@@ -57,6 +57,7 @@ Outbound blockchain transfers progress through the following statuses:
 
 | Status    | Description                                                                                               |
 | --------- | --------------------------------------------------------------------------------------------------------- |
+| `CREATED` | Transfer was created.                                                                                     |
 | `PENDING` | Transfer submitted and processing on-chain.                                                               |
 | `SETTLED` | Funds delivered to the destination address. Terminal state.                                               |
 | `FAILED`  | Transfer rejected — insufficient funds, invalid address, or compliance screening failure. Terminal state. |
@@ -69,13 +70,14 @@ Retrieve an inbound blockchain transfer:
 
 ```bash
 curl -X GET "https://api.erebor.bank/blockchain_in/bc_in_01kasd1tthf1ns1pjn1kncctwd" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j"
+  -H "Authorization: test_key_YOUR_API_KEY_HERE"
 ```
 
 ### Inbound transfer statuses
 
 | Status              | Description                                                                         |
 | ------------------- | ----------------------------------------------------------------------------------- |
+| `CREATED`           | Transfer was created.                                                               |
 | `PENDING`           | Transfer detected on-chain and processing.                                          |
 | `NEEDS_ATTRIBUTION` | Transfer requires attribution to a counterparty and custodian before it can settle. |
 | `SETTLED`           | Funds credited to the deposit account. Terminal state.                              |
@@ -87,7 +89,7 @@ When an inbound blockchain transfer enters `NEEDS_ATTRIBUTION` status, you must 
 
 ```bash
 curl -X POST "https://api.erebor.bank/blockchain_in/bc_in_01kasd1tthf1ns1pjn1kncctwd/attribute" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j" \
+  -H "Authorization: test_key_YOUR_API_KEY_HERE" \
   -H "Erebor-Idempotency-Key: unique-attribution-001" \
   -H "Content-Type: application/json" \
   -d '{

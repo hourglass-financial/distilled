@@ -39,12 +39,15 @@ components:
     InboundBlockchainTransferStatus:
       type: string
       enum:
+        - CREATED
         - PENDING
         - NEEDS_ATTRIBUTION
         - SETTLED
         - FAILED
       description: >
         Inbound blockchain transfer status:
+
+        - CREATED: Transfer was created
 
         - PENDING: Transfer is being processed
 

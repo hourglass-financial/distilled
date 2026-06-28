@@ -1,16 +1,16 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
-import { BadRequest, UnprocessableEntity } from "../errors.ts";
+import { BadRequest, Conflict, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
 export const CreateBusinessApplicantInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
-      T.HttpHeader("Erebor-Idempotency-Key"),
-    ),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
+    ),
+    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Idempotency-Key"),
     ),
     program_id: Schema.String,
     name: Schema.String,
@@ -44,7 +44,15 @@ export const CreateBusinessApplicantInput =
     ),
     source_of_funds: Schema.optional(
       Schema.NullOr(
-        Schema.Array(Schema.Literals(["REVENUE", "INVESTMENT", "OTHER"])),
+        Schema.Array(
+          Schema.Literals([
+            "REVENUE",
+            "INVESTMENT",
+            "INHERITANCE",
+            "GIFT",
+            "OTHER",
+          ]),
+        ),
       ),
     ),
     source_of_funds_other_description: Schema.optional(
@@ -56,7 +64,12 @@ export const CreateBusinessApplicantInput =
           person_applicant_id: Schema.String,
           title: Schema.String,
           roles: Schema.Array(
-            Schema.Literals(["CONTROL_PERSON", "BENEFICIAL_OWNER", "SIGNER"]),
+            Schema.Literals([
+              "CONTROL_PERSON",
+              "BENEFICIAL_OWNER",
+              "SIGNER",
+              "APPLICANT",
+            ]),
           ),
           ownership_percentage: Schema.Number,
         }),
@@ -137,7 +150,15 @@ export const CreateBusinessApplicantOutput =
     ),
     source_of_funds: Schema.optional(
       Schema.NullOr(
-        Schema.Array(Schema.Literals(["REVENUE", "INVESTMENT", "OTHER"])),
+        Schema.Array(
+          Schema.Literals([
+            "REVENUE",
+            "INVESTMENT",
+            "INHERITANCE",
+            "GIFT",
+            "OTHER",
+          ]),
+        ),
       ),
     ),
     source_of_funds_other_description: Schema.optional(
@@ -149,7 +170,12 @@ export const CreateBusinessApplicantOutput =
           person_applicant_id: Schema.String,
           title: Schema.String,
           roles: Schema.Array(
-            Schema.Literals(["CONTROL_PERSON", "BENEFICIAL_OWNER", "SIGNER"]),
+            Schema.Literals([
+              "CONTROL_PERSON",
+              "BENEFICIAL_OWNER",
+              "SIGNER",
+              "APPLICANT",
+            ]),
           ),
           ownership_percentage: Schema.Number,
         }),
@@ -193,14 +219,15 @@ export type CreateBusinessApplicantOutput =
  *
  * Create a new Business Applicant for onboarding
  *
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const createBusinessApplicant = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({
     inputSchema: CreateBusinessApplicantInput,
     outputSchema: CreateBusinessApplicantOutput,
-    errors: [BadRequest, UnprocessableEntity] as const,
+    errors: [BadRequest, Conflict, UnprocessableEntity] as const,
   }),
 );

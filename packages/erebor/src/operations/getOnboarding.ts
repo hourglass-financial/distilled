@@ -31,13 +31,16 @@ export const GetOnboardingOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   person_applicant_id: Schema.optional(Schema.NullOr(Schema.String)),
   business_applicant_id: Schema.optional(Schema.NullOr(Schema.String)),
   deposit_account_template_id: Schema.optional(Schema.NullOr(Schema.String)),
-  disclosures: Schema.Struct({
-    disclosures_signed_externally: Schema.Boolean,
-  }),
+  disclosures: Schema.optional(
+    Schema.Struct({
+      disclosures_signed_externally: Schema.Boolean,
+    }),
+  ),
   customer_id: Schema.optional(Schema.NullOr(Schema.String)),
   deposit_account_id: Schema.optional(Schema.NullOr(Schema.String)),
   custom_ref: Schema.optional(Schema.Unknown),
   custom_fields: Schema.optional(Schema.Unknown),
+  rejection_reason: Schema.optional(Schema.NullOr(Schema.String)),
 });
 export type GetOnboardingOutput = typeof GetOnboardingOutput.Type;
 
@@ -48,7 +51,8 @@ export type GetOnboardingOutput = typeof GetOnboardingOutput.Type;
  * Retrieve a specific Onboarding process by ID
  *
  * @param id - Onboarding ID
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const getOnboarding = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: GetOnboardingInput,

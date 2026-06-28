@@ -14,7 +14,7 @@ An inbound wire transfer represents funds received via the Fedwire network from 
   "archived_at": null,
   "program_id": "prgrm_01kasd1tthf1ns1pjn1kncctwd",
   "status": "SETTLED",
-  "counterparty_us_bank_account_id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+  "counterparty_us_bank_account_id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
   "deposit_account_id": "dep_acct_01kasd1tthf1ns1pjn1kncctwd",
   "bank_name": "Example National Bank",
   "amount": {
@@ -41,6 +41,7 @@ components:
     InboundWireTransferStatus:
       type: string
       enum:
+        - CREATED
         - PENDING
         - SETTLED
         - FAILED
@@ -48,6 +49,8 @@ components:
         - RESOLVING_FROM_SUSPENSE
       description: >
         Inbound wire transfer status:
+
+        - CREATED: Transfer was created
 
         - PENDING: Transfer received, awaiting settlement
 
@@ -144,7 +147,7 @@ components:
           type: string
           description: >-
             ID of the external US bank account that sent the wire, prefixed with
-            `cp_us_bank_`.
+            `cp_us_bank_acct_`.
         deposit_account_id:
           type: string
           description: >-

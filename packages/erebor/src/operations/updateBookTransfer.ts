@@ -1,17 +1,17 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
-import { BadRequest, NotFound } from "../errors.ts";
+import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
 export const UpdateBookTransferInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
-    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
-      T.HttpHeader("Erebor-Idempotency-Key"),
-    ),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
+    ),
+    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Idempotency-Key"),
     ),
     custom_ref: Schema.optional(Schema.String),
     custom_fields: Schema.optional(
@@ -52,12 +52,13 @@ export type UpdateBookTransferOutput = typeof UpdateBookTransferOutput.Type;
  * Update a book transfer's `custom_ref` or `custom_fields`. Amount, parties, and status are immutable.
  *
  * @param id - Book transfer ID
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const updateBookTransfer = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: UpdateBookTransferInput,
   outputSchema: UpdateBookTransferOutput,
-  errors: [BadRequest, NotFound] as const,
+  errors: [BadRequest, NotFound, Conflict] as const,
 }));

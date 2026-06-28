@@ -106,7 +106,7 @@ export const GetEventOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   api_version: Schema.String,
   trace: Schema.optional(
     Schema.Struct({
-      request_id: Schema.optional(Schema.String),
+      request_id: Schema.optional(Schema.NullOr(Schema.String)),
       request_idempotency_key: Schema.optional(Schema.NullOr(Schema.String)),
     }),
   ),
@@ -120,7 +120,8 @@ export type GetEventOutput = typeof GetEventOutput.Type;
  * Retrieve a specific Event by ID
  *
  * @param id - Event ID
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const getEvent = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: GetEventInput,

@@ -61,7 +61,8 @@ export type ListBlockchainAddressesOutput =
  * @param deposit_account_id - Filter by Deposit Account ID
  * @param address - Filter by on-chain address (EVM addresses are often matched case-insensitively)
  * @param custom_ref - Filter by exact `custom_ref` match (case-sensitive, up to 255 characters).
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const listBlockchainAddresses = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({

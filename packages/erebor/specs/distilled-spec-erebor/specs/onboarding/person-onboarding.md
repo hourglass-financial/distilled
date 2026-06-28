@@ -20,7 +20,7 @@ Upload a government-issued ID. Supported types: `US_DRIVERS_LICENSE`, `PASSPORT`
 
 ```bash
 curl -X POST "https://api.erebor.bank/documents" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j" \
+  -H "Authorization: test_key_YOUR_API_KEY_HERE" \
   -H "Erebor-Idempotency-Key: unique-key-front-id" \
   -F "file=@drivers_license_front.pdf" \
   -F "document_type=US_DRIVERS_LICENSE" \
@@ -34,13 +34,16 @@ Driver's licenses need both front and back as separate uploads. Passports only n
 
 Create a person applicant that references the uploaded document IDs.
 
+`person_applicant_type` defaults to `LEGACY` when omitted or set to `null`. Use `RETAIL_CUSTOMER`, `HNWI_CUSTOMER`, or `ASSOCIATED_PERSON` to assign a classification explicitly.
+
 ```bash
 curl -X POST "https://api.erebor.bank/person_applicants" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j" \
+  -H "Authorization: test_key_YOUR_API_KEY_HERE" \
   -H "Content-Type: application/json" \
   -H "Erebor-Idempotency-Key: unique-key-person-applicant" \
   -d '{
     "program_id": "prgrm_01kasd1tthf1ns1pjn1kncctwd",
+    "person_applicant_type": "RETAIL_CUSTOMER",
     "first_name": "John",
     "last_name": "Smith",
     "date_of_birth": "1990-05-15",
@@ -80,7 +83,7 @@ Submit the Onboarding with the Person Applicant. Provide **at least one** of `de
 
 ```bash
 curl -X POST "https://api.erebor.bank/onboardings" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j" \
+  -H "Authorization: test_key_YOUR_API_KEY_HERE" \
   -H "Content-Type: application/json" \
   -H "Erebor-Idempotency-Key: unique-key-onboarding" \
   -d '{
@@ -96,7 +99,7 @@ curl -X POST "https://api.erebor.bank/onboardings" \
 
 ```bash
 curl -X POST "https://api.erebor.bank/onboardings" \
-  -H "Authorization: test_1a2b3c4d5e6f7g8h9i0j" \
+  -H "Authorization: test_key_YOUR_API_KEY_HERE" \
   -H "Content-Type: application/json" \
   -H "Erebor-Idempotency-Key: unique-key-onboarding" \
   -d '{

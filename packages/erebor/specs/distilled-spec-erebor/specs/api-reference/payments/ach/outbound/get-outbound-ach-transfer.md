@@ -39,6 +39,14 @@ paths:
           required: true
           schema:
             type: string
+        - name: Erebor-Version
+          in: header
+          description: >
+            Pins the API version used to process this request. Format is
+            `YYYY-MM-DD`. When omitted, the current default version is used.
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: Outbound ACH transfer details
@@ -46,6 +54,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OutboundACHTransfer'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 servers:
   - url: https://api.erebor.bank
     description: API server (environment determined by API key)
@@ -54,12 +74,14 @@ components:
     OutboundACHTransferStatus:
       type: string
       enum:
+        - CREATED
         - PENDING
         - SETTLED
         - FAILED
         - RETURNED
       description: |
         Outbound ACH transfer status:
+        - CREATED: Transfer was created
         - PENDING: Transfer created, awaiting submission
         - SETTLED: Transfer has been completed
         - FAILED: Transfer failed
@@ -182,7 +204,7 @@ components:
           type: string
           description: >-
             ID of the external US bank account receiving the transfer, prefixed
-            with `cp_us_bank_`.
+            with `cp_us_bank_acct_`.
         amount:
           $ref: '#/components/schemas/FiatAmount'
         direction:
@@ -249,6 +271,65 @@ components:
         - addenda
         - service
       title: OutboundACHTransfer
+    ErrorDetail:
+      oneOf:
+        - type: object
+          properties:
+            error_detail_type:
+              type: string
+              description: Discriminator indicating the kind of detail.
+            field:
+              type: string
+              description: Dot-notated path to the field that failed validation.
+            message:
+              type: string
+              description: Human-readable description of the failure.
+          required:
+            - error_detail_type
+            - field
+            - message
+          description: FIELD_ERROR variant
+      discriminator:
+        propertyName: error_detail_type
+      description: >-
+        A structured error detail. Use `error_detail_type` to determine which
+        fields are present. New detail types may be added in the future;
+        consumers should ignore unrecognized values.
+      title: ErrorDetail
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        field:
+          type:
+            - string
+            - 'null'
+          description: >-
+            Deprecated: use error_details instead. Contains the field from the
+            first error_details entry for backwards compatibility. May be
+            removed in a future API version.
+        docs_url:
+          type:
+            - string
+            - 'null'
+          format: uri
+        error_details:
+          type:
+            - array
+            - 'null'
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+          description: >-
+            Structured error details providing granular information about
+            validation failures. Each item includes an `error_detail_type`
+            discriminator indicating the kind of detail.
+      required:
+        - error
+        - message
+      title: Error
   securitySchemes:
     ApiKeyAuth:
       type: apiKey
@@ -274,9 +355,9 @@ components:
   "url": "https://api.erebor.bank/ach_out/ach_out_01kasd1tthf1ns1pjn1kncctwd",
   "created_at": "2025-01-15T09:30:00Z",
   "updated_at": "2025-01-15T09:30:00Z",
-  "status": "PENDING",
+  "status": "CREATED",
   "deposit_account_id": "dep_acct_01kasd1tthf1ns1pjn1kncctwd",
-  "counterparty_us_bank_account_id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+  "counterparty_us_bank_account_id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
   "amount": {
     "currency": "USD",
     "exponent": 2,

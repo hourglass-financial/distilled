@@ -31,7 +31,7 @@ export const GetCounterpartyInternationalBankAccountOutput =
     customer_id: Schema.optional(Schema.NullOr(Schema.String)),
     program_id: Schema.optional(Schema.NullOr(Schema.String)),
     counterparty_id: Schema.optional(Schema.NullOr(Schema.String)),
-    description: Schema.String,
+    description: Schema.NullOr(Schema.String),
     account_number: Schema.String,
     bic: Schema.String,
     country_code: Schema.String,
@@ -49,7 +49,8 @@ export type GetCounterpartyInternationalBankAccountOutput =
  * Retrieve a specific Counterparty International Bank Account by ID
  *
  * @param id - International bank account ID
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  */
 export const getCounterpartyInternationalBankAccount =
   /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

@@ -84,6 +84,14 @@ paths:
           required: true
           schema:
             type: string
+        - name: Erebor-Version
+          in: header
+          description: >
+            Pins the API version used to process this request. Format is
+            `YYYY-MM-DD`. When omitted, the current default version is used.
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: List of Outbound Wire Transfers
@@ -100,12 +108,14 @@ components:
     OutboundWireTransferStatus:
       type: string
       enum:
+        - CREATED
         - PENDING
         - SETTLED
         - FAILED
         - RETURNED
       description: |
         Outbound wire transfer status:
+        - CREATED: Transfer was created
         - PENDING: Transfer is being processed
         - SETTLED: Transfer has been completed
         - FAILED: Transfer failed
@@ -227,7 +237,7 @@ components:
           type: string
           description: >-
             ID of the external US bank account receiving the wire, prefixed with
-            `cp_us_bank_`.
+            `cp_us_bank_acct_`.
         bank_name:
           type:
             - string
@@ -363,7 +373,7 @@ components:
       "updated_at": "2025-01-15T09:00:00Z",
       "status": "PENDING",
       "deposit_account_id": "dep_acct_01kasd1tthf1ns1pjn1kncctwd",
-      "counterparty_us_bank_account_id": "cp_us_bank_01kasd1tthf1ns1pjn1kncctwd",
+      "counterparty_us_bank_account_id": "cp_us_bank_acct_01kasd1tthf1ns1pjn1kncctwd",
       "amount": {
         "currency": "USD",
         "exponent": 2,

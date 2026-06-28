@@ -1,17 +1,17 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
-import { BadRequest, NotFound } from "../errors.ts";
+import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
 export const UpdateInboundRailTransferInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
-    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
-      T.HttpHeader("Erebor-Idempotency-Key"),
-    ),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
+    ),
+    ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
+      T.HttpHeader("Erebor-Idempotency-Key"),
     ),
     custom_ref: Schema.optional(Schema.String),
     custom_fields: Schema.optional(
@@ -31,7 +31,7 @@ export const UpdateInboundRailTransferOutput =
     updated_at: Schema.String,
     archived_at: Schema.optional(Schema.NullOr(Schema.String)),
     program_id: Schema.optional(Schema.NullOr(Schema.String)),
-    status: Schema.Literals(["SETTLED", "FAILED"]),
+    status: Schema.Literals(["CREATED", "PENDING", "SETTLED", "FAILED"]),
     to_deposit_account_id: Schema.String,
     from_deposit_account_id: Schema.optional(Schema.NullOr(Schema.String)),
     counterparty_rail_address_id: Schema.optional(Schema.NullOr(Schema.String)),
@@ -55,14 +55,15 @@ export type UpdateInboundRailTransferOutput =
  * Update an inbound rail transfer's `custom_ref` or `custom_fields` for reconciliation. All other fields are immutable.
  *
  * @param id - Inbound Rail transfer ID
+ * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+
  * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
- * @param Erebor-Version - Optional API version header. Use a date-based Erebor API version when you need to pin request behavior.
  */
 export const updateInboundRailTransfer = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({
     inputSchema: UpdateInboundRailTransferInput,
     outputSchema: UpdateInboundRailTransferOutput,
-    errors: [BadRequest, NotFound] as const,
+    errors: [BadRequest, NotFound, Conflict] as const,
   }),
 );
