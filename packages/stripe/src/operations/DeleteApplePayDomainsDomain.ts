@@ -19,7 +19,7 @@ export type DeleteApplePayDomainsDomainInput =
 // Output Schema
 export const DeleteApplePayDomainsDomainOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    deleted: Schema.Literals(["true"]),
+    deleted: Schema.Literals([true]),
     id: Schema.String,
     object: Schema.Literals(["apple_pay_domain"]),
   });

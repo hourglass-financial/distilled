@@ -13,6 +13,34 @@ import type { Credentials } from "../credentials.ts";
 import { type DefaultErrors } from "../errors.ts";
 
 // =============================================================================
+// Errors
+// =============================================================================
+
+export class ContentScanningNotEnabled extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<ContentScanningNotEnabled>()(
+    "ContentScanningNotEnabled",
+    { code: Schema.Number, message: Schema.String },
+  ),
+  [{ status: 400, message: { includes: "File Upload Scan not enabled" } }],
+) {}
+
+export class ContentScanningNotEntitled extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<ContentScanningNotEntitled>()(
+    "ContentScanningNotEntitled",
+    { code: Schema.Number, message: Schema.String },
+  ),
+  [{ status: 400, message: { includes: "not entitled" } }],
+) {}
+
+export class Forbidden extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<Forbidden>()("Forbidden", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ status: 403 }],
+) {}
+
+// =============================================================================
 // ContentScanning
 // =============================================================================
 
@@ -22,13 +50,15 @@ export interface GetContentScanningRequest {
 }
 
 export const GetContentScanningRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
-  }).pipe(
-    T.Http({
-      method: "GET",
-      path: "/zones/{zone_id}/content-upload-scan/settings",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/zones/{zone_id}/content-upload-scan/settings",
+      }),
+    ),
   ) as unknown as Schema.Schema<GetContentScanningRequest>;
 
 export interface GetContentScanningResponse {
@@ -39,14 +69,14 @@ export interface GetContentScanningResponse {
 }
 
 export const GetContentScanningResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    value: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  }).pipe(
-    T.ResponsePath("result"),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      value: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    }).pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<GetContentScanningResponse>;
 
-export type GetContentScanningError = DefaultErrors;
+export type GetContentScanningError = DefaultErrors | Forbidden;
 
 export const getContentScanning: API.OperationMethod<
   GetContentScanningRequest,
@@ -56,7 +86,7 @@ export const getContentScanning: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: GetContentScanningRequest,
   output: GetContentScanningResponse,
-  errors: [],
+  errors: [Forbidden],
 }));
 
 export interface CreateContentScanningRequest {
@@ -67,17 +97,19 @@ export interface CreateContentScanningRequest {
 }
 
 export const CreateContentScanningRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
-    value: Schema.Union([
-      Schema.Literals(["enabled", "disabled"]),
-      Schema.String,
-    ]),
-  }).pipe(
-    T.Http({
-      method: "PUT",
-      path: "/zones/{zone_id}/content-upload-scan/settings",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
+      value: Schema.Union([
+        Schema.Literals(["enabled", "disabled"]),
+        Schema.String,
+      ]),
+    }).pipe(
+      T.Http({
+        method: "PUT",
+        path: "/zones/{zone_id}/content-upload-scan/settings",
+      }),
+    ),
   ) as unknown as Schema.Schema<CreateContentScanningRequest>;
 
 export interface CreateContentScanningResponse {
@@ -88,14 +120,17 @@ export interface CreateContentScanningResponse {
 }
 
 export const CreateContentScanningResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    value: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  }).pipe(
-    T.ResponsePath("result"),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      value: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    }).pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<CreateContentScanningResponse>;
 
-export type CreateContentScanningError = DefaultErrors;
+export type CreateContentScanningError =
+  | DefaultErrors
+  | ContentScanningNotEntitled
+  | Forbidden;
 
 export const createContentScanning: API.OperationMethod<
   CreateContentScanningRequest,
@@ -105,7 +140,7 @@ export const createContentScanning: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: CreateContentScanningRequest,
   output: CreateContentScanningResponse,
-  errors: [],
+  errors: [ContentScanningNotEntitled, Forbidden],
 }));
 
 export interface PutContentScanningRequest {
@@ -116,17 +151,19 @@ export interface PutContentScanningRequest {
 }
 
 export const PutContentScanningRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
-    value: Schema.Union([
-      Schema.Literals(["enabled", "disabled"]),
-      Schema.String,
-    ]),
-  }).pipe(
-    T.Http({
-      method: "PUT",
-      path: "/zones/{zone_id}/content-upload-scan/settings",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
+      value: Schema.Union([
+        Schema.Literals(["enabled", "disabled"]),
+        Schema.String,
+      ]),
+    }).pipe(
+      T.Http({
+        method: "PUT",
+        path: "/zones/{zone_id}/content-upload-scan/settings",
+      }),
+    ),
   ) as unknown as Schema.Schema<PutContentScanningRequest>;
 
 export interface PutContentScanningResponse {
@@ -137,14 +174,17 @@ export interface PutContentScanningResponse {
 }
 
 export const PutContentScanningResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    value: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  }).pipe(
-    T.ResponsePath("result"),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      value: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    }).pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<PutContentScanningResponse>;
 
-export type PutContentScanningError = DefaultErrors;
+export type PutContentScanningError =
+  | DefaultErrors
+  | ContentScanningNotEntitled
+  | Forbidden;
 
 export const putContentScanning: API.OperationMethod<
   PutContentScanningRequest,
@@ -154,7 +194,7 @@ export const putContentScanning: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: PutContentScanningRequest,
   output: PutContentScanningResponse,
-  errors: [],
+  errors: [ContentScanningNotEntitled, Forbidden],
 }));
 
 export interface EnableContentScanningRequest {
@@ -163,20 +203,22 @@ export interface EnableContentScanningRequest {
 }
 
 export const EnableContentScanningRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
-  }).pipe(
-    T.Http({
-      method: "POST",
-      path: "/zones/{zone_id}/content-upload-scan/enable",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
+    }).pipe(
+      T.Http({
+        method: "POST",
+        path: "/zones/{zone_id}/content-upload-scan/enable",
+      }),
+    ),
   ) as unknown as Schema.Schema<EnableContentScanningRequest>;
 
 export type EnableContentScanningResponse = unknown;
 
 export const EnableContentScanningResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Unknown.pipe(
-    T.ResponsePath("result"),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Unknown.pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<EnableContentScanningResponse>;
 
 export type EnableContentScanningError = DefaultErrors;
@@ -198,20 +240,22 @@ export interface DisableContentScanningRequest {
 }
 
 export const DisableContentScanningRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
-  }).pipe(
-    T.Http({
-      method: "POST",
-      path: "/zones/{zone_id}/content-upload-scan/disable",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
+    }).pipe(
+      T.Http({
+        method: "POST",
+        path: "/zones/{zone_id}/content-upload-scan/disable",
+      }),
+    ),
   ) as unknown as Schema.Schema<DisableContentScanningRequest>;
 
 export type DisableContentScanningResponse = unknown;
 
 export const DisableContentScanningResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Unknown.pipe(
-    T.ResponsePath("result"),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Unknown.pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<DisableContentScanningResponse>;
 
 export type DisableContentScanningError = DefaultErrors;
@@ -236,29 +280,38 @@ export interface ListPayloadsRequest {
   zoneId: string;
 }
 
-export const ListPayloadsRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
-}).pipe(
-  T.Http({
-    method: "GET",
-    path: "/zones/{zone_id}/content-upload-scan/payloads",
-  }),
+export const ListPayloadsRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/zones/{zone_id}/content-upload-scan/payloads",
+      }),
+    ),
 ) as unknown as Schema.Schema<ListPayloadsRequest>;
 
 export interface ListPayloadsResponse {
   result: { id?: string | null; payload?: string | null }[];
 }
 
-export const ListPayloadsResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  result: Schema.Array(
+export const ListPayloadsResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
     Schema.Struct({
-      id: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      payload: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      result: Schema.Array(
+        Schema.Struct({
+          id: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+          payload: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        }),
+      ),
     }),
-  ),
-}) as unknown as Schema.Schema<ListPayloadsResponse>;
+) as unknown as Schema.Schema<ListPayloadsResponse>;
 
-export type ListPayloadsError = DefaultErrors;
+export type ListPayloadsError =
+  | DefaultErrors
+  | ContentScanningNotEnabled
+  | Forbidden;
 
 export const listPayloads: API.PaginatedOperationMethod<
   ListPayloadsRequest,
@@ -268,7 +321,7 @@ export const listPayloads: API.PaginatedOperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.makePaginated(() => ({
   input: ListPayloadsRequest,
   output: ListPayloadsResponse,
-  errors: [],
+  errors: [ContentScanningNotEnabled, Forbidden],
   pagination: {
     mode: "single",
     items: "result",
@@ -282,34 +335,44 @@ export interface CreatePayloadRequest {
   body: { payload: string }[];
 }
 
-export const CreatePayloadRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
-  body: Schema.Array(
+export const CreatePayloadRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
     Schema.Struct({
-      payload: Schema.String,
-    }),
-  ).pipe(T.HttpBody()),
-}).pipe(
-  T.Http({
-    method: "POST",
-    path: "/zones/{zone_id}/content-upload-scan/payloads",
-  }),
+      zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
+      body: Schema.Array(
+        Schema.Struct({
+          payload: Schema.String,
+        }),
+      ).pipe(T.HttpBody()),
+    }).pipe(
+      T.Http({
+        method: "POST",
+        path: "/zones/{zone_id}/content-upload-scan/payloads",
+      }),
+    ),
 ) as unknown as Schema.Schema<CreatePayloadRequest>;
 
 export interface CreatePayloadResponse {
   result: { id?: string | null; payload?: string | null }[];
 }
 
-export const CreatePayloadResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  result: Schema.Array(
+export const CreatePayloadResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
     Schema.Struct({
-      id: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      payload: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      result: Schema.Array(
+        Schema.Struct({
+          id: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+          payload: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        }),
+      ),
     }),
-  ),
-}) as unknown as Schema.Schema<CreatePayloadResponse>;
+) as unknown as Schema.Schema<CreatePayloadResponse>;
 
-export type CreatePayloadError = DefaultErrors;
+export type CreatePayloadError =
+  | DefaultErrors
+  | ContentScanningNotEnabled
+  | ContentScanningNotEntitled
+  | Forbidden;
 
 export const createPayload: API.PaginatedOperationMethod<
   CreatePayloadRequest,
@@ -319,7 +382,7 @@ export const createPayload: API.PaginatedOperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.makePaginated(() => ({
   input: CreatePayloadRequest,
   output: CreatePayloadResponse,
-  errors: [],
+  errors: [ContentScanningNotEnabled, ContentScanningNotEntitled, Forbidden],
   pagination: {
     mode: "single",
     items: "result",
@@ -332,30 +395,39 @@ export interface DeletePayloadRequest {
   zoneId: string;
 }
 
-export const DeletePayloadRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  expressionId: Schema.String.pipe(T.HttpPath("expressionId")),
-  zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
-}).pipe(
-  T.Http({
-    method: "DELETE",
-    path: "/zones/{zone_id}/content-upload-scan/payloads/{expressionId}",
-  }),
+export const DeletePayloadRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      expressionId: Schema.String.pipe(T.HttpPath("expressionId")),
+      zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
+    }).pipe(
+      T.Http({
+        method: "DELETE",
+        path: "/zones/{zone_id}/content-upload-scan/payloads/{expressionId}",
+      }),
+    ),
 ) as unknown as Schema.Schema<DeletePayloadRequest>;
 
 export interface DeletePayloadResponse {
   result: { id?: string | null; payload?: string | null }[];
 }
 
-export const DeletePayloadResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  result: Schema.Array(
+export const DeletePayloadResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
     Schema.Struct({
-      id: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      payload: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      result: Schema.Array(
+        Schema.Struct({
+          id: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+          payload: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        }),
+      ),
     }),
-  ),
-}) as unknown as Schema.Schema<DeletePayloadResponse>;
+) as unknown as Schema.Schema<DeletePayloadResponse>;
 
-export type DeletePayloadError = DefaultErrors;
+export type DeletePayloadError =
+  | DefaultErrors
+  | ContentScanningNotEnabled
+  | Forbidden;
 
 export const deletePayload: API.PaginatedOperationMethod<
   DeletePayloadRequest,
@@ -365,7 +437,7 @@ export const deletePayload: API.PaginatedOperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.makePaginated(() => ({
   input: DeletePayloadRequest,
   output: DeletePayloadResponse,
-  errors: [],
+  errors: [ContentScanningNotEnabled, Forbidden],
   pagination: {
     mode: "single",
     items: "result",
@@ -381,13 +453,16 @@ export interface GetSettingRequest {
   zoneId: string;
 }
 
-export const GetSettingRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
-}).pipe(
-  T.Http({
-    method: "GET",
-    path: "/zones/{zone_id}/content-upload-scan/settings",
-  }),
+export const GetSettingRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/zones/{zone_id}/content-upload-scan/settings",
+      }),
+    ),
 ) as unknown as Schema.Schema<GetSettingRequest>;
 
 export interface GetSettingResponse {
@@ -397,14 +472,15 @@ export interface GetSettingResponse {
   value?: string | null;
 }
 
-export const GetSettingResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  value: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-}).pipe(
-  T.ResponsePath("result"),
+export const GetSettingResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      value: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    }).pipe(T.ResponsePath("result")),
 ) as unknown as Schema.Schema<GetSettingResponse>;
 
-export type GetSettingError = DefaultErrors;
+export type GetSettingError = DefaultErrors | Forbidden;
 
 export const getSetting: API.OperationMethod<
   GetSettingRequest,
@@ -414,5 +490,5 @@ export const getSetting: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: GetSettingRequest,
   output: GetSettingResponse,
-  errors: [],
+  errors: [Forbidden],
 }));

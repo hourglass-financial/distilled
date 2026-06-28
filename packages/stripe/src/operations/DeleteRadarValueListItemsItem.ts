@@ -19,7 +19,7 @@ export type DeleteRadarValueListItemsItemInput =
 // Output Schema
 export const DeleteRadarValueListItemsItemOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    deleted: Schema.Literals(["true"]),
+    deleted: Schema.Literals([true]),
     id: Schema.String,
     object: Schema.Literals(["radar.value_list_item"]),
   });

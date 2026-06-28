@@ -646,11 +646,6 @@ paths:
                           description: Indicates the version number of last saved configuration.
                       required:
                         - id
-                        - destination
-                        - endpoint
-                        - name
-                        - source
-                        - version
                   success:
                     type: boolean
                     description: Indicates whether the API call was successful.
@@ -1378,6 +1373,15 @@ paths:
             application/json:
               schema: {}
       x-distilled-response-path: result
+      x-distilled-errors:
+        SinkNotFound:
+          - code: 1015
+        InvalidSinkId:
+          - code: 2
+        SinkInUse:
+          - status: 422
+            message:
+              includes: in use
   /accounts/{account_id}/pipelines/v1/sinks:
     get:
       operationId: listSinks
@@ -1402,6 +1406,12 @@ paths:
           required: false
           schema:
             type: number
+        - name: name
+          in: query
+          required: false
+          description: "Query param: Filters sinks by name (case-insensitive substring)."
+          schema:
+            type: string
         - name: pipeline_id
           in: query
           required: false
@@ -2308,7 +2318,6 @@ paths:
                         required:
                           - account_id
                           - bucket
-                          - credentials
                       - type: object
                         properties:
                           token:
@@ -3269,6 +3278,14 @@ paths:
       x-distilled-errors:
         PipelineNotExists:
           - code: 1000
+        StreamNotFound:
+          - code: 1016
+        InvalidStreamId:
+          - code: 2
+        StreamInUse:
+          - status: 422
+            message:
+              includes: in use
   /accounts/{account_id}/pipelines/v1/streams:
     get:
       operationId: listStreams
@@ -3293,6 +3310,12 @@ paths:
           required: false
           schema:
             type: number
+        - name: name
+          in: query
+          required: false
+          description: "Query param: Filters streams by name (case-insensitive substring)."
+          schema:
+            type: string
         - name: pipeline_id
           in: query
           required: false
@@ -4421,6 +4444,13 @@ paths:
           required: false
           schema:
             type: number
+        - name: name
+          in: query
+          required: false
+          description: "Query param: Filters pipelines by name (case-insensitive
+            substring)."
+          schema:
+            type: string
       responses:
         "200":
           description: Success

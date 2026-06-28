@@ -50,10 +50,15 @@ export type PaginationStrategy = <
   Output,
   E,
   R,
+  RequestOptions = never,
 >(
-  operation: (input: Input) => Effect.Effect<Output, E, R>,
+  operation: (
+    input: Input,
+    requestOptions?: RequestOptions,
+  ) => Effect.Effect<Output, E, R>,
   input: Input,
   pagination: PaginatedTrait,
+  requestOptions?: RequestOptions,
 ) => Stream.Stream<Output, E, R>;
 
 const missingPaginationConfig = (kind: string) => Stream.die(new Error(kind));
@@ -61,9 +66,16 @@ const missingPaginationConfig = (kind: string) => Stream.die(new Error(kind));
 /**
  * Creates a stream for single-shot list endpoints that still expose the paginated API surface.
  */
-export const paginateSingle: PaginationStrategy = (operation, input) =>
+export const paginateSingle: PaginationStrategy = (
+  operation,
+  input,
+  _pagination,
+  requestOptions,
+) =>
   Stream.make(input).pipe(
-    Stream.mapEffect((requestPayload) => operation(requestPayload)),
+    Stream.mapEffect((requestPayload) =>
+      operation(requestPayload, requestOptions),
+    ),
   );
 
 // ============================================================================
@@ -83,10 +95,15 @@ export const paginatePageNumber = <
   Output,
   E,
   R,
+  RequestOptions = never,
 >(
-  operation: (input: Input) => Effect.Effect<Output, E, R>,
+  operation: (
+    input: Input,
+    requestOptions?: RequestOptions,
+  ) => Effect.Effect<Output, E, R>,
   input: Omit<Input, string>,
   pagination: PaginatedTrait,
+  requestOptions?: RequestOptions,
 ): Stream.Stream<Output, E, R> => {
   const inputToken = pagination.inputToken;
   const outputToken = pagination.outputToken;
@@ -113,16 +130,34 @@ export const paginatePageNumber = <
         [inputToken]: state.page,
       } as Input;
 
-      const response = yield* operation(requestPayload);
+      const response = yield* operation(requestPayload, requestOptions);
 
       const nextPage = getPath(response, outputToken) as
         | number
         | null
         | undefined;
 
+      // Some APIs report the CURRENT page at `outputToken` rather than
+      // the next one (e.g. Cloudflare's `result_info.page`). Taking that
+      // value as the next page re-requests the same page forever. Only
+      // accept an *advancing* page number; otherwise advance by one and
+      // terminate when a page comes back with no items (or the token is
+      // absent).
+      const items = pagination.items
+        ? (getPath(response, pagination.items) as
+            | readonly unknown[]
+            | undefined)
+        : undefined;
+
       const nextState: State = {
-        page: nextPage ?? state.page + 1,
-        done: nextPage === null || nextPage === undefined,
+        page:
+          typeof nextPage === "number" && nextPage > state.page
+            ? nextPage
+            : state.page + 1,
+        done:
+          nextPage === null ||
+          nextPage === undefined ||
+          (items !== undefined && items.length === 0),
       };
 
       return [response, nextState] as const;
@@ -148,10 +183,15 @@ export const paginateCursor = <
   Output,
   E,
   R,
+  RequestOptions = never,
 >(
-  operation: (input: Input) => Effect.Effect<Output, E, R>,
+  operation: (
+    input: Input,
+    requestOptions?: RequestOptions,
+  ) => Effect.Effect<Output, E, R>,
   input: Omit<Input, string>,
   pagination: PaginatedTrait,
+  requestOptions?: RequestOptions,
 ): Stream.Stream<Output, E, R> => {
   const inputToken = pagination.inputToken;
   const outputToken = pagination.outputToken;
@@ -178,7 +218,7 @@ export const paginateCursor = <
         ...(state.cursor ? { [inputToken]: state.cursor } : {}),
       } as Input;
 
-      const response = yield* operation(requestPayload);
+      const response = yield* operation(requestPayload, requestOptions);
 
       const nextCursor = getPath(response, outputToken) as
         | string
@@ -213,10 +253,15 @@ export const paginateToken = <
   Output,
   E,
   R,
+  RequestOptions = never,
 >(
-  operation: (input: Input) => Effect.Effect<Output, E, R>,
+  operation: (
+    input: Input,
+    requestOptions?: RequestOptions,
+  ) => Effect.Effect<Output, E, R>,
   input: Input,
   pagination: PaginatedTrait,
+  requestOptions?: RequestOptions,
 ): Stream.Stream<Output, E, R> => {
   const inputToken = pagination.inputToken;
   const outputToken = pagination.outputToken;
@@ -240,7 +285,10 @@ export const paginateToken = <
           ? { ...input, [inputToken]: state.token }
           : input;
 
-      const response = yield* operation(requestPayload as Input);
+      const response = yield* operation(
+        requestPayload as Input,
+        requestOptions,
+      );
 
       const nextToken = getPath(response, outputToken);
 
@@ -262,21 +310,22 @@ export const paginateWithDefaults: PaginationStrategy = (
   operation,
   input,
   pagination,
+  requestOptions,
 ) => {
   const mode = pagination.mode ?? "token";
 
   switch (mode) {
     case "page":
-      return paginatePageNumber(operation, input, pagination);
+      return paginatePageNumber(operation, input, pagination, requestOptions);
     case "cursor":
-      return paginateCursor(operation, input, pagination);
+      return paginateCursor(operation, input, pagination, requestOptions);
     case "single":
       return missingPaginationConfig(
         "Single-page pagination requires a provider-specific pagination strategy",
       );
     case "token":
     default:
-      return paginateToken(operation, input, pagination);
+      return paginateToken(operation, input, pagination, requestOptions);
   }
 };
 

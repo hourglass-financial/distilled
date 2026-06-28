@@ -1,7 +1,15 @@
 {
-  "errors": {},
+  "errors": {
+    "UserGroupNotFound": [
+      { "code": 404, "message": { "includes": "User group" } }
+    ],
+    "PolicyValidationFailed": [
+      { "status": 400, "message": { "includes": "Policy validation failed" } }
+    ]
+  },
   "response": {
     "properties": {
+      "result": { "nullable": true },
       "result_info": { "optional": true }
     }
   }

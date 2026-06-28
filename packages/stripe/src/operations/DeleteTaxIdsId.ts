@@ -16,7 +16,7 @@ export type DeleteTaxIdsIdInput = typeof DeleteTaxIdsIdInput.Type;
 
 // Output Schema
 export const DeleteTaxIdsIdOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  deleted: Schema.Literals(["true"]),
+  deleted: Schema.Literals([true]),
   id: Schema.String,
   object: Schema.Literals(["tax_id"]),
 });

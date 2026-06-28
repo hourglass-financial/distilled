@@ -1,11 +1,12 @@
 {
   "name": "@distilled.cloud/stripe",
-  "version": "0.24.5",
+  "version": "0.27.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/alchemy-run/distilled",
     "directory": "packages/stripe"
   },
+  "license": "Apache-2.0",
   "type": "module",
   "sideEffects": false,
   "module": "src/index.ts",
@@ -38,6 +39,11 @@
       "types": "./lib/errors.d.ts",
       "bun": "./src/errors.ts",
       "default": "./lib/errors.js"
+    },
+    "./Webhooks": {
+      "types": "./lib/webhooks.d.ts",
+      "bun": "./src/webhooks.ts",
+      "default": "./lib/webhooks.js"
     },
     "./Operations": {
       "types": "./lib/operations/index.d.ts",

@@ -17,35 +17,131 @@ import { UploadableSchema } from "../schemas.ts";
 // Errors
 // =============================================================================
 
-export class InvalidRoute extends Schema.TaggedErrorClass<InvalidRoute>()(
-  "InvalidRoute",
-  { code: Schema.Number, message: Schema.String },
+export class AiSearchInstanceNotFound extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<AiSearchInstanceNotFound>()(
+    "AiSearchInstanceNotFound",
+    { code: Schema.Number, message: Schema.String },
+  ),
+  [
+    { code: 7002 },
+    { status: 404, message: { includes: "ai_search_not_found" } },
+  ],
 ) {}
-T.applyErrorMatchers(InvalidRoute, [{ code: 7003 }]);
 
-export class NotFound extends Schema.TaggedErrorClass<NotFound>()("NotFound", {
-  code: Schema.Number,
-  message: Schema.String,
-}) {}
-T.applyErrorMatchers(NotFound, [{ code: 7002 }]);
-
-export class SyncInCooldown extends Schema.TaggedErrorClass<SyncInCooldown>()(
-  "SyncInCooldown",
-  { code: Schema.Number, message: Schema.String },
+export class Forbidden extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<Forbidden>()("Forbidden", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ status: 403 }],
 ) {}
-T.applyErrorMatchers(SyncInCooldown, [{ code: 7020 }]);
 
-export class UnableToConnect extends Schema.TaggedErrorClass<UnableToConnect>()(
-  "UnableToConnect",
-  { code: Schema.Number, message: Schema.String },
+export class InstanceAlreadyExists extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<InstanceAlreadyExists>()("InstanceAlreadyExists", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ status: 400, message: { includes: "already_exist" } }],
 ) {}
-T.applyErrorMatchers(UnableToConnect, [{ code: 7017 }]);
 
-export class ValidationError extends Schema.TaggedErrorClass<ValidationError>()(
-  "ValidationError",
-  { code: Schema.Number, message: Schema.String },
+export class InvalidRoute extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<InvalidRoute>()("InvalidRoute", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ code: 7003 }],
 ) {}
-T.applyErrorMatchers(ValidationError, [{ code: 7001 }]);
+
+export class InvalidTokenCredentials extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<InvalidTokenCredentials>()(
+    "InvalidTokenCredentials",
+    { code: Schema.Number, message: Schema.String },
+  ),
+  [{ code: 7012 }, { status: 400, message: { includes: "invalid_token" } }],
+) {}
+
+export class MissingSitemap extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<MissingSitemap>()("MissingSitemap", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ status: 400, message: { includes: "missing_sitemap" } }],
+) {}
+
+export class NamespaceAlreadyExists extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<NamespaceAlreadyExists>()("NamespaceAlreadyExists", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ code: 7064 }],
+) {}
+
+export class NamespaceNotFound extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<NamespaceNotFound>()("NamespaceNotFound", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [
+    { code: 7063 },
+    { status: 404, message: { includes: "namespace_not_found" } },
+  ],
+) {}
+
+export class NotFound extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<NotFound>()("NotFound", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ code: 7002 }],
+) {}
+
+export class SyncInCooldown extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<SyncInCooldown>()("SyncInCooldown", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ code: 7020 }],
+) {}
+
+export class TokenInUseByInstances extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<TokenInUseByInstances>()("TokenInUseByInstances", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ status: 409, message: { includes: "token_in_use_by_instances" } }],
+) {}
+
+export class TokenNotFound extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<TokenNotFound>()("TokenNotFound", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ code: 7075 }],
+) {}
+
+export class UnableToConnect extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<UnableToConnect>()("UnableToConnect", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ code: 7017 }],
+) {}
+
+export class ValidationError extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<ValidationError>()("ValidationError", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ code: 7001 }],
+) {}
+
+export class WebCrawlerDomainNotOwned extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<WebCrawlerDomainNotOwned>()(
+    "WebCrawlerDomainNotOwned",
+    { code: Schema.Number, message: Schema.String },
+  ),
+  [{ status: 400, message: { includes: "domain_not_owned_by_user" } }],
+) {}
 
 // =============================================================================
 // CompletionsInstance
@@ -171,214 +267,227 @@ export interface ChatCompletionsInstanceRequest {
 }
 
 export const ChatCompletionsInstanceRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    id: Schema.String.pipe(T.HttpPath("id")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    messages: Schema.Array(
-      Schema.Struct({
-        content: Schema.Union([Schema.String, Schema.Null]),
-        role: Schema.Union([
-          Schema.Literals(["system", "developer", "user", "assistant", "tool"]),
-          Schema.String,
-        ]),
-      }),
-    ),
-    aiSearchOptions: Schema.optional(
-      Schema.Struct({
-        cache: Schema.optional(
-          Schema.Struct({
-            cacheThreshold: Schema.optional(
-              Schema.Union([
-                Schema.Literals([
-                  "super_strict_match",
-                  "close_enough",
-                  "flexible_friend",
-                  "anything_goes",
-                ]),
-                Schema.String,
-              ]),
-            ),
-            enabled: Schema.optional(Schema.Boolean),
-          }).pipe(
-            Schema.encodeKeys({
-              cacheThreshold: "cache_threshold",
-              enabled: "enabled",
-            }),
-          ),
-        ),
-        queryRewrite: Schema.optional(
-          Schema.Struct({
-            enabled: Schema.optional(Schema.Boolean),
-            model: Schema.optional(
-              Schema.Union([
-                Schema.Literals([
-                  "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-                  "@cf/zai-org/glm-4.7-flash",
-                  "@cf/meta/llama-3.1-8b-instruct-fast",
-                  "@cf/meta/llama-3.1-8b-instruct-fp8",
-                  "@cf/meta/llama-4-scout-17b-16e-instruct",
-                  "@cf/qwen/qwen3-30b-a3b-fp8",
-                  "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
-                  "@cf/moonshotai/kimi-k2-instruct",
-                  "@cf/google/gemma-3-12b-it",
-                  "@cf/google/gemma-4-26b-a4b-it",
-                  "@cf/moonshotai/kimi-k2.5",
-                  "anthropic/claude-3-7-sonnet",
-                  "anthropic/claude-sonnet-4",
-                  "anthropic/claude-opus-4",
-                  "anthropic/claude-3-5-haiku",
-                  "cerebras/qwen-3-235b-a22b-instruct",
-                  "cerebras/qwen-3-235b-a22b-thinking",
-                  "cerebras/llama-3.3-70b",
-                  "cerebras/llama-4-maverick-17b-128e-instruct",
-                  "cerebras/llama-4-scout-17b-16e-instruct",
-                  "cerebras/gpt-oss-120b",
-                  "google-ai-studio/gemini-2.5-flash",
-                  "google-ai-studio/gemini-2.5-pro",
-                  "grok/grok-4",
-                  "groq/llama-3.3-70b-versatile",
-                  "groq/llama-3.1-8b-instant",
-                  "openai/gpt-5",
-                  "openai/gpt-5-mini",
-                  "openai/gpt-5-nano",
-                  "",
-                ]),
-                Schema.String,
-              ]),
-            ),
-            rewritePrompt: Schema.optional(Schema.String),
-          }).pipe(
-            Schema.encodeKeys({
-              enabled: "enabled",
-              model: "model",
-              rewritePrompt: "rewrite_prompt",
-            }),
-          ),
-        ),
-        reranking: Schema.optional(
-          Schema.Struct({
-            enabled: Schema.optional(Schema.Boolean),
-            matchThreshold: Schema.optional(Schema.Number),
-            model: Schema.optional(
-              Schema.Union([
-                Schema.Literals(["@cf/baai/bge-reranker-base", ""]),
-                Schema.String,
-              ]),
-            ),
-          }).pipe(
-            Schema.encodeKeys({
-              enabled: "enabled",
-              matchThreshold: "match_threshold",
-              model: "model",
-            }),
-          ),
-        ),
-        retrieval: Schema.optional(
-          Schema.Struct({
-            boostBy: Schema.optional(
-              Schema.Array(
-                Schema.Struct({
-                  field: Schema.String,
-                  direction: Schema.optional(
-                    Schema.Union([
-                      Schema.Literals(["asc", "desc", "exists", "not_exists"]),
-                      Schema.String,
-                    ]),
-                  ),
-                }),
-              ),
-            ),
-            contextExpansion: Schema.optional(Schema.Number),
-            filters: Schema.optional(
-              Schema.Record(Schema.String, Schema.Unknown),
-            ),
-            fusionMethod: Schema.optional(
-              Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
-            ),
-            keywordMatchMode: Schema.optional(
-              Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
-            ),
-            matchThreshold: Schema.optional(Schema.Number),
-            maxNumResults: Schema.optional(Schema.Number),
-            retrievalType: Schema.optional(
-              Schema.Union([
-                Schema.Literals(["vector", "keyword", "hybrid"]),
-                Schema.String,
-              ]),
-            ),
-            returnOnFailure: Schema.optional(Schema.Boolean),
-          }).pipe(
-            Schema.encodeKeys({
-              boostBy: "boost_by",
-              contextExpansion: "context_expansion",
-              filters: "filters",
-              fusionMethod: "fusion_method",
-              keywordMatchMode: "keyword_match_mode",
-              matchThreshold: "match_threshold",
-              maxNumResults: "max_num_results",
-              retrievalType: "retrieval_type",
-              returnOnFailure: "return_on_failure",
-            }),
-          ),
-        ),
-      }).pipe(
-        Schema.encodeKeys({
-          cache: "cache",
-          queryRewrite: "query_rewrite",
-          reranking: "reranking",
-          retrieval: "retrieval",
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      id: Schema.String.pipe(T.HttpPath("id")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      messages: Schema.Array(
+        Schema.Struct({
+          content: Schema.Union([Schema.String, Schema.Null]),
+          role: Schema.Union([
+            Schema.Literals([
+              "system",
+              "developer",
+              "user",
+              "assistant",
+              "tool",
+            ]),
+            Schema.String,
+          ]),
         }),
       ),
-    ),
-    model: Schema.optional(
-      Schema.Union([
-        Schema.Literals([
-          "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-          "@cf/zai-org/glm-4.7-flash",
-          "@cf/meta/llama-3.1-8b-instruct-fast",
-          "@cf/meta/llama-3.1-8b-instruct-fp8",
-          "@cf/meta/llama-4-scout-17b-16e-instruct",
-          "@cf/qwen/qwen3-30b-a3b-fp8",
-          "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
-          "@cf/moonshotai/kimi-k2-instruct",
-          "@cf/google/gemma-3-12b-it",
-          "@cf/google/gemma-4-26b-a4b-it",
-          "@cf/moonshotai/kimi-k2.5",
-          "anthropic/claude-3-7-sonnet",
-          "anthropic/claude-sonnet-4",
-          "anthropic/claude-opus-4",
-          "anthropic/claude-3-5-haiku",
-          "cerebras/qwen-3-235b-a22b-instruct",
-          "cerebras/qwen-3-235b-a22b-thinking",
-          "cerebras/llama-3.3-70b",
-          "cerebras/llama-4-maverick-17b-128e-instruct",
-          "cerebras/llama-4-scout-17b-16e-instruct",
-          "cerebras/gpt-oss-120b",
-          "google-ai-studio/gemini-2.5-flash",
-          "google-ai-studio/gemini-2.5-pro",
-          "grok/grok-4",
-          "groq/llama-3.3-70b-versatile",
-          "groq/llama-3.1-8b-instant",
-          "openai/gpt-5",
-          "openai/gpt-5-mini",
-          "openai/gpt-5-nano",
-          "",
+      aiSearchOptions: Schema.optional(
+        Schema.Struct({
+          cache: Schema.optional(
+            Schema.Struct({
+              cacheThreshold: Schema.optional(
+                Schema.Union([
+                  Schema.Literals([
+                    "super_strict_match",
+                    "close_enough",
+                    "flexible_friend",
+                    "anything_goes",
+                  ]),
+                  Schema.String,
+                ]),
+              ),
+              enabled: Schema.optional(Schema.Boolean),
+            }).pipe(
+              Schema.encodeKeys({
+                cacheThreshold: "cache_threshold",
+                enabled: "enabled",
+              }),
+            ),
+          ),
+          queryRewrite: Schema.optional(
+            Schema.Struct({
+              enabled: Schema.optional(Schema.Boolean),
+              model: Schema.optional(
+                Schema.Union([
+                  Schema.Literals([
+                    "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+                    "@cf/zai-org/glm-4.7-flash",
+                    "@cf/meta/llama-3.1-8b-instruct-fast",
+                    "@cf/meta/llama-3.1-8b-instruct-fp8",
+                    "@cf/meta/llama-4-scout-17b-16e-instruct",
+                    "@cf/qwen/qwen3-30b-a3b-fp8",
+                    "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
+                    "@cf/moonshotai/kimi-k2-instruct",
+                    "@cf/google/gemma-3-12b-it",
+                    "@cf/google/gemma-4-26b-a4b-it",
+                    "@cf/moonshotai/kimi-k2.5",
+                    "anthropic/claude-3-7-sonnet",
+                    "anthropic/claude-sonnet-4",
+                    "anthropic/claude-opus-4",
+                    "anthropic/claude-3-5-haiku",
+                    "cerebras/qwen-3-235b-a22b-instruct",
+                    "cerebras/qwen-3-235b-a22b-thinking",
+                    "cerebras/llama-3.3-70b",
+                    "cerebras/llama-4-maverick-17b-128e-instruct",
+                    "cerebras/llama-4-scout-17b-16e-instruct",
+                    "cerebras/gpt-oss-120b",
+                    "google-ai-studio/gemini-2.5-flash",
+                    "google-ai-studio/gemini-2.5-pro",
+                    "grok/grok-4",
+                    "groq/llama-3.3-70b-versatile",
+                    "groq/llama-3.1-8b-instant",
+                    "openai/gpt-5",
+                    "openai/gpt-5-mini",
+                    "openai/gpt-5-nano",
+                    "",
+                  ]),
+                  Schema.String,
+                ]),
+              ),
+              rewritePrompt: Schema.optional(Schema.String),
+            }).pipe(
+              Schema.encodeKeys({
+                enabled: "enabled",
+                model: "model",
+                rewritePrompt: "rewrite_prompt",
+              }),
+            ),
+          ),
+          reranking: Schema.optional(
+            Schema.Struct({
+              enabled: Schema.optional(Schema.Boolean),
+              matchThreshold: Schema.optional(Schema.Number),
+              model: Schema.optional(
+                Schema.Union([
+                  Schema.Literals(["@cf/baai/bge-reranker-base", ""]),
+                  Schema.String,
+                ]),
+              ),
+            }).pipe(
+              Schema.encodeKeys({
+                enabled: "enabled",
+                matchThreshold: "match_threshold",
+                model: "model",
+              }),
+            ),
+          ),
+          retrieval: Schema.optional(
+            Schema.Struct({
+              boostBy: Schema.optional(
+                Schema.Array(
+                  Schema.Struct({
+                    field: Schema.String,
+                    direction: Schema.optional(
+                      Schema.Union([
+                        Schema.Literals([
+                          "asc",
+                          "desc",
+                          "exists",
+                          "not_exists",
+                        ]),
+                        Schema.String,
+                      ]),
+                    ),
+                  }),
+                ),
+              ),
+              contextExpansion: Schema.optional(Schema.Number),
+              filters: Schema.optional(
+                Schema.Record(Schema.String, Schema.Unknown),
+              ),
+              fusionMethod: Schema.optional(
+                Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
+              ),
+              keywordMatchMode: Schema.optional(
+                Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
+              ),
+              matchThreshold: Schema.optional(Schema.Number),
+              maxNumResults: Schema.optional(Schema.Number),
+              retrievalType: Schema.optional(
+                Schema.Union([
+                  Schema.Literals(["vector", "keyword", "hybrid"]),
+                  Schema.String,
+                ]),
+              ),
+              returnOnFailure: Schema.optional(Schema.Boolean),
+            }).pipe(
+              Schema.encodeKeys({
+                boostBy: "boost_by",
+                contextExpansion: "context_expansion",
+                filters: "filters",
+                fusionMethod: "fusion_method",
+                keywordMatchMode: "keyword_match_mode",
+                matchThreshold: "match_threshold",
+                maxNumResults: "max_num_results",
+                retrievalType: "retrieval_type",
+                returnOnFailure: "return_on_failure",
+              }),
+            ),
+          ),
+        }).pipe(
+          Schema.encodeKeys({
+            cache: "cache",
+            queryRewrite: "query_rewrite",
+            reranking: "reranking",
+            retrieval: "retrieval",
+          }),
+        ),
+      ),
+      model: Schema.optional(
+        Schema.Union([
+          Schema.Literals([
+            "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+            "@cf/zai-org/glm-4.7-flash",
+            "@cf/meta/llama-3.1-8b-instruct-fast",
+            "@cf/meta/llama-3.1-8b-instruct-fp8",
+            "@cf/meta/llama-4-scout-17b-16e-instruct",
+            "@cf/qwen/qwen3-30b-a3b-fp8",
+            "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
+            "@cf/moonshotai/kimi-k2-instruct",
+            "@cf/google/gemma-3-12b-it",
+            "@cf/google/gemma-4-26b-a4b-it",
+            "@cf/moonshotai/kimi-k2.5",
+            "anthropic/claude-3-7-sonnet",
+            "anthropic/claude-sonnet-4",
+            "anthropic/claude-opus-4",
+            "anthropic/claude-3-5-haiku",
+            "cerebras/qwen-3-235b-a22b-instruct",
+            "cerebras/qwen-3-235b-a22b-thinking",
+            "cerebras/llama-3.3-70b",
+            "cerebras/llama-4-maverick-17b-128e-instruct",
+            "cerebras/llama-4-scout-17b-16e-instruct",
+            "cerebras/gpt-oss-120b",
+            "google-ai-studio/gemini-2.5-flash",
+            "google-ai-studio/gemini-2.5-pro",
+            "grok/grok-4",
+            "groq/llama-3.3-70b-versatile",
+            "groq/llama-3.1-8b-instant",
+            "openai/gpt-5",
+            "openai/gpt-5-mini",
+            "openai/gpt-5-nano",
+            "",
+          ]),
+          Schema.String,
         ]),
-        Schema.String,
-      ]),
+      ),
+      stream: Schema.optional(Schema.Boolean),
+    }).pipe(
+      Schema.encodeKeys({
+        messages: "messages",
+        aiSearchOptions: "ai_search_options",
+        model: "model",
+        stream: "stream",
+      }),
+      T.Http({
+        method: "POST",
+        path: "/accounts/{account_id}/ai-search/instances/{id}/chat/completions",
+      }),
     ),
-    stream: Schema.optional(Schema.Boolean),
-  }).pipe(
-    Schema.encodeKeys({
-      messages: "messages",
-      aiSearchOptions: "ai_search_options",
-      model: "model",
-      stream: "stream",
-    }),
-    T.Http({
-      method: "POST",
-      path: "/accounts/{account_id}/ai-search/instances/{id}/chat/completions",
-    }),
   ) as unknown as Schema.Schema<ChatCompletionsInstanceRequest>;
 
 export interface ChatCompletionsInstanceResponse {
@@ -420,103 +529,105 @@ export interface ChatCompletionsInstanceResponse {
 }
 
 export const ChatCompletionsInstanceResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    choices: Schema.Array(
-      Schema.Struct({
-        message: Schema.Struct({
-          content: Schema.Union([Schema.String, Schema.Null]),
-          role: Schema.Union([
-            Schema.Literals([
-              "system",
-              "developer",
-              "user",
-              "assistant",
-              "tool",
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      choices: Schema.Array(
+        Schema.Struct({
+          message: Schema.Struct({
+            content: Schema.Union([Schema.String, Schema.Null]),
+            role: Schema.Union([
+              Schema.Literals([
+                "system",
+                "developer",
+                "user",
+                "assistant",
+                "tool",
+              ]),
+              Schema.String,
             ]),
-            Schema.String,
-          ]),
-        }),
-        index: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-      }),
-    ),
-    chunks: Schema.Array(
-      Schema.Struct({
-        id: Schema.String,
-        score: Schema.Number,
-        text: Schema.String,
-        type: Schema.String,
-        item: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              key: Schema.String,
-              metadata: Schema.optional(
-                Schema.Union([
-                  Schema.Record(Schema.String, Schema.Unknown),
-                  Schema.Null,
-                ]),
-              ),
-              timestamp: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-            }),
-            Schema.Null,
-          ]),
-        ),
-        scoringDetails: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              fusionMethod: Schema.optional(
-                Schema.Union([
-                  Schema.Union([
-                    Schema.Literals(["rrf", "max"]),
-                    Schema.String,
-                  ]),
-                  Schema.Null,
-                ]),
-              ),
-              keywordRank: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              keywordScore: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              rerankingScore: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              vectorRank: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              vectorScore: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-            }).pipe(
-              Schema.encodeKeys({
-                fusionMethod: "fusion_method",
-                keywordRank: "keyword_rank",
-                keywordScore: "keyword_score",
-                rerankingScore: "reranking_score",
-                vectorRank: "vector_rank",
-                vectorScore: "vector_score",
-              }),
-            ),
-            Schema.Null,
-          ]),
-        ),
-      }).pipe(
-        Schema.encodeKeys({
-          id: "id",
-          score: "score",
-          text: "text",
-          type: "type",
-          item: "item",
-          scoringDetails: "scoring_details",
+          }),
+          index: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
         }),
       ),
-    ),
-    id: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    model: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    object: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  }) as unknown as Schema.Schema<ChatCompletionsInstanceResponse>;
+      chunks: Schema.Array(
+        Schema.Struct({
+          id: Schema.String,
+          score: Schema.Number,
+          text: Schema.String,
+          type: Schema.String,
+          item: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                key: Schema.String,
+                metadata: Schema.optional(
+                  Schema.Union([
+                    Schema.Record(Schema.String, Schema.Unknown),
+                    Schema.Null,
+                  ]),
+                ),
+                timestamp: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+              }),
+              Schema.Null,
+            ]),
+          ),
+          scoringDetails: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                fusionMethod: Schema.optional(
+                  Schema.Union([
+                    Schema.Union([
+                      Schema.Literals(["rrf", "max"]),
+                      Schema.String,
+                    ]),
+                    Schema.Null,
+                  ]),
+                ),
+                keywordRank: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+                keywordScore: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+                rerankingScore: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+                vectorRank: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+                vectorScore: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+              }).pipe(
+                Schema.encodeKeys({
+                  fusionMethod: "fusion_method",
+                  keywordRank: "keyword_rank",
+                  keywordScore: "keyword_score",
+                  rerankingScore: "reranking_score",
+                  vectorRank: "vector_rank",
+                  vectorScore: "vector_score",
+                }),
+              ),
+              Schema.Null,
+            ]),
+          ),
+        }).pipe(
+          Schema.encodeKeys({
+            id: "id",
+            score: "score",
+            text: "text",
+            type: "type",
+            item: "item",
+            scoringDetails: "scoring_details",
+          }),
+        ),
+      ),
+      id: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      model: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      object: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    }),
+  ) as unknown as Schema.Schema<ChatCompletionsInstanceResponse>;
 
 export type ChatCompletionsInstanceError = DefaultErrors;
 
@@ -656,214 +767,222 @@ export interface ChatCompletionsNamespaceRequest {
 }
 
 export const ChatCompletionsNamespaceRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    name: Schema.String.pipe(T.HttpPath("name")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    aiSearchOptions: Schema.Struct({
-      instanceIds: Schema.Array(Schema.String),
-      cache: Schema.optional(
-        Schema.Struct({
-          cacheThreshold: Schema.optional(
-            Schema.Union([
-              Schema.Literals([
-                "super_strict_match",
-                "close_enough",
-                "flexible_friend",
-                "anything_goes",
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      aiSearchOptions: Schema.Struct({
+        instanceIds: Schema.Array(Schema.String),
+        cache: Schema.optional(
+          Schema.Struct({
+            cacheThreshold: Schema.optional(
+              Schema.Union([
+                Schema.Literals([
+                  "super_strict_match",
+                  "close_enough",
+                  "flexible_friend",
+                  "anything_goes",
+                ]),
+                Schema.String,
               ]),
-              Schema.String,
-            ]),
-          ),
-          enabled: Schema.optional(Schema.Boolean),
-        }).pipe(
-          Schema.encodeKeys({
-            cacheThreshold: "cache_threshold",
-            enabled: "enabled",
-          }),
-        ),
-      ),
-      queryRewrite: Schema.optional(
-        Schema.Struct({
-          enabled: Schema.optional(Schema.Boolean),
-          model: Schema.optional(
-            Schema.Union([
-              Schema.Literals([
-                "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-                "@cf/zai-org/glm-4.7-flash",
-                "@cf/meta/llama-3.1-8b-instruct-fast",
-                "@cf/meta/llama-3.1-8b-instruct-fp8",
-                "@cf/meta/llama-4-scout-17b-16e-instruct",
-                "@cf/qwen/qwen3-30b-a3b-fp8",
-                "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
-                "@cf/moonshotai/kimi-k2-instruct",
-                "@cf/google/gemma-3-12b-it",
-                "@cf/google/gemma-4-26b-a4b-it",
-                "@cf/moonshotai/kimi-k2.5",
-                "anthropic/claude-3-7-sonnet",
-                "anthropic/claude-sonnet-4",
-                "anthropic/claude-opus-4",
-                "anthropic/claude-3-5-haiku",
-                "cerebras/qwen-3-235b-a22b-instruct",
-                "cerebras/qwen-3-235b-a22b-thinking",
-                "cerebras/llama-3.3-70b",
-                "cerebras/llama-4-maverick-17b-128e-instruct",
-                "cerebras/llama-4-scout-17b-16e-instruct",
-                "cerebras/gpt-oss-120b",
-                "google-ai-studio/gemini-2.5-flash",
-                "google-ai-studio/gemini-2.5-pro",
-                "grok/grok-4",
-                "groq/llama-3.3-70b-versatile",
-                "groq/llama-3.1-8b-instant",
-                "openai/gpt-5",
-                "openai/gpt-5-mini",
-                "openai/gpt-5-nano",
-                "",
-              ]),
-              Schema.String,
-            ]),
-          ),
-          rewritePrompt: Schema.optional(Schema.String),
-        }).pipe(
-          Schema.encodeKeys({
-            enabled: "enabled",
-            model: "model",
-            rewritePrompt: "rewrite_prompt",
-          }),
-        ),
-      ),
-      reranking: Schema.optional(
-        Schema.Struct({
-          enabled: Schema.optional(Schema.Boolean),
-          matchThreshold: Schema.optional(Schema.Number),
-          model: Schema.optional(
-            Schema.Union([
-              Schema.Literals(["@cf/baai/bge-reranker-base", ""]),
-              Schema.String,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            enabled: "enabled",
-            matchThreshold: "match_threshold",
-            model: "model",
-          }),
-        ),
-      ),
-      retrieval: Schema.optional(
-        Schema.Struct({
-          boostBy: Schema.optional(
-            Schema.Array(
-              Schema.Struct({
-                field: Schema.String,
-                direction: Schema.optional(
-                  Schema.Union([
-                    Schema.Literals(["asc", "desc", "exists", "not_exists"]),
-                    Schema.String,
-                  ]),
-                ),
-              }),
             ),
+            enabled: Schema.optional(Schema.Boolean),
+          }).pipe(
+            Schema.encodeKeys({
+              cacheThreshold: "cache_threshold",
+              enabled: "enabled",
+            }),
           ),
-          contextExpansion: Schema.optional(Schema.Number),
-          filters: Schema.optional(
-            Schema.Record(Schema.String, Schema.Unknown),
-          ),
-          fusionMethod: Schema.optional(
-            Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
-          ),
-          keywordMatchMode: Schema.optional(
-            Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
-          ),
-          matchThreshold: Schema.optional(Schema.Number),
-          maxNumResults: Schema.optional(Schema.Number),
-          retrievalType: Schema.optional(
-            Schema.Union([
-              Schema.Literals(["vector", "keyword", "hybrid"]),
-              Schema.String,
-            ]),
-          ),
-          returnOnFailure: Schema.optional(Schema.Boolean),
-        }).pipe(
-          Schema.encodeKeys({
-            boostBy: "boost_by",
-            contextExpansion: "context_expansion",
-            filters: "filters",
-            fusionMethod: "fusion_method",
-            keywordMatchMode: "keyword_match_mode",
-            matchThreshold: "match_threshold",
-            maxNumResults: "max_num_results",
-            retrievalType: "retrieval_type",
-            returnOnFailure: "return_on_failure",
-          }),
         ),
+        queryRewrite: Schema.optional(
+          Schema.Struct({
+            enabled: Schema.optional(Schema.Boolean),
+            model: Schema.optional(
+              Schema.Union([
+                Schema.Literals([
+                  "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+                  "@cf/zai-org/glm-4.7-flash",
+                  "@cf/meta/llama-3.1-8b-instruct-fast",
+                  "@cf/meta/llama-3.1-8b-instruct-fp8",
+                  "@cf/meta/llama-4-scout-17b-16e-instruct",
+                  "@cf/qwen/qwen3-30b-a3b-fp8",
+                  "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
+                  "@cf/moonshotai/kimi-k2-instruct",
+                  "@cf/google/gemma-3-12b-it",
+                  "@cf/google/gemma-4-26b-a4b-it",
+                  "@cf/moonshotai/kimi-k2.5",
+                  "anthropic/claude-3-7-sonnet",
+                  "anthropic/claude-sonnet-4",
+                  "anthropic/claude-opus-4",
+                  "anthropic/claude-3-5-haiku",
+                  "cerebras/qwen-3-235b-a22b-instruct",
+                  "cerebras/qwen-3-235b-a22b-thinking",
+                  "cerebras/llama-3.3-70b",
+                  "cerebras/llama-4-maverick-17b-128e-instruct",
+                  "cerebras/llama-4-scout-17b-16e-instruct",
+                  "cerebras/gpt-oss-120b",
+                  "google-ai-studio/gemini-2.5-flash",
+                  "google-ai-studio/gemini-2.5-pro",
+                  "grok/grok-4",
+                  "groq/llama-3.3-70b-versatile",
+                  "groq/llama-3.1-8b-instant",
+                  "openai/gpt-5",
+                  "openai/gpt-5-mini",
+                  "openai/gpt-5-nano",
+                  "",
+                ]),
+                Schema.String,
+              ]),
+            ),
+            rewritePrompt: Schema.optional(Schema.String),
+          }).pipe(
+            Schema.encodeKeys({
+              enabled: "enabled",
+              model: "model",
+              rewritePrompt: "rewrite_prompt",
+            }),
+          ),
+        ),
+        reranking: Schema.optional(
+          Schema.Struct({
+            enabled: Schema.optional(Schema.Boolean),
+            matchThreshold: Schema.optional(Schema.Number),
+            model: Schema.optional(
+              Schema.Union([
+                Schema.Literals(["@cf/baai/bge-reranker-base", ""]),
+                Schema.String,
+              ]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              enabled: "enabled",
+              matchThreshold: "match_threshold",
+              model: "model",
+            }),
+          ),
+        ),
+        retrieval: Schema.optional(
+          Schema.Struct({
+            boostBy: Schema.optional(
+              Schema.Array(
+                Schema.Struct({
+                  field: Schema.String,
+                  direction: Schema.optional(
+                    Schema.Union([
+                      Schema.Literals(["asc", "desc", "exists", "not_exists"]),
+                      Schema.String,
+                    ]),
+                  ),
+                }),
+              ),
+            ),
+            contextExpansion: Schema.optional(Schema.Number),
+            filters: Schema.optional(
+              Schema.Record(Schema.String, Schema.Unknown),
+            ),
+            fusionMethod: Schema.optional(
+              Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
+            ),
+            keywordMatchMode: Schema.optional(
+              Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
+            ),
+            matchThreshold: Schema.optional(Schema.Number),
+            maxNumResults: Schema.optional(Schema.Number),
+            retrievalType: Schema.optional(
+              Schema.Union([
+                Schema.Literals(["vector", "keyword", "hybrid"]),
+                Schema.String,
+              ]),
+            ),
+            returnOnFailure: Schema.optional(Schema.Boolean),
+          }).pipe(
+            Schema.encodeKeys({
+              boostBy: "boost_by",
+              contextExpansion: "context_expansion",
+              filters: "filters",
+              fusionMethod: "fusion_method",
+              keywordMatchMode: "keyword_match_mode",
+              matchThreshold: "match_threshold",
+              maxNumResults: "max_num_results",
+              retrievalType: "retrieval_type",
+              returnOnFailure: "return_on_failure",
+            }),
+          ),
+        ),
+      }).pipe(
+        Schema.encodeKeys({
+          instanceIds: "instance_ids",
+          cache: "cache",
+          queryRewrite: "query_rewrite",
+          reranking: "reranking",
+          retrieval: "retrieval",
+        }),
       ),
-    }).pipe(
-      Schema.encodeKeys({
-        instanceIds: "instance_ids",
-        cache: "cache",
-        queryRewrite: "query_rewrite",
-        reranking: "reranking",
-        retrieval: "retrieval",
-      }),
-    ),
-    messages: Schema.Array(
-      Schema.Struct({
-        content: Schema.Union([Schema.String, Schema.Null]),
-        role: Schema.Union([
-          Schema.Literals(["system", "developer", "user", "assistant", "tool"]),
+      messages: Schema.Array(
+        Schema.Struct({
+          content: Schema.Union([Schema.String, Schema.Null]),
+          role: Schema.Union([
+            Schema.Literals([
+              "system",
+              "developer",
+              "user",
+              "assistant",
+              "tool",
+            ]),
+            Schema.String,
+          ]),
+        }),
+      ),
+      model: Schema.optional(
+        Schema.Union([
+          Schema.Literals([
+            "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+            "@cf/zai-org/glm-4.7-flash",
+            "@cf/meta/llama-3.1-8b-instruct-fast",
+            "@cf/meta/llama-3.1-8b-instruct-fp8",
+            "@cf/meta/llama-4-scout-17b-16e-instruct",
+            "@cf/qwen/qwen3-30b-a3b-fp8",
+            "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
+            "@cf/moonshotai/kimi-k2-instruct",
+            "@cf/google/gemma-3-12b-it",
+            "@cf/google/gemma-4-26b-a4b-it",
+            "@cf/moonshotai/kimi-k2.5",
+            "anthropic/claude-3-7-sonnet",
+            "anthropic/claude-sonnet-4",
+            "anthropic/claude-opus-4",
+            "anthropic/claude-3-5-haiku",
+            "cerebras/qwen-3-235b-a22b-instruct",
+            "cerebras/qwen-3-235b-a22b-thinking",
+            "cerebras/llama-3.3-70b",
+            "cerebras/llama-4-maverick-17b-128e-instruct",
+            "cerebras/llama-4-scout-17b-16e-instruct",
+            "cerebras/gpt-oss-120b",
+            "google-ai-studio/gemini-2.5-flash",
+            "google-ai-studio/gemini-2.5-pro",
+            "grok/grok-4",
+            "groq/llama-3.3-70b-versatile",
+            "groq/llama-3.1-8b-instant",
+            "openai/gpt-5",
+            "openai/gpt-5-mini",
+            "openai/gpt-5-nano",
+            "",
+          ]),
           Schema.String,
         ]),
+      ),
+      stream: Schema.optional(Schema.Boolean),
+    }).pipe(
+      Schema.encodeKeys({
+        aiSearchOptions: "ai_search_options",
+        messages: "messages",
+        model: "model",
+        stream: "stream",
+      }),
+      T.Http({
+        method: "POST",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}/chat/completions",
       }),
     ),
-    model: Schema.optional(
-      Schema.Union([
-        Schema.Literals([
-          "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-          "@cf/zai-org/glm-4.7-flash",
-          "@cf/meta/llama-3.1-8b-instruct-fast",
-          "@cf/meta/llama-3.1-8b-instruct-fp8",
-          "@cf/meta/llama-4-scout-17b-16e-instruct",
-          "@cf/qwen/qwen3-30b-a3b-fp8",
-          "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
-          "@cf/moonshotai/kimi-k2-instruct",
-          "@cf/google/gemma-3-12b-it",
-          "@cf/google/gemma-4-26b-a4b-it",
-          "@cf/moonshotai/kimi-k2.5",
-          "anthropic/claude-3-7-sonnet",
-          "anthropic/claude-sonnet-4",
-          "anthropic/claude-opus-4",
-          "anthropic/claude-3-5-haiku",
-          "cerebras/qwen-3-235b-a22b-instruct",
-          "cerebras/qwen-3-235b-a22b-thinking",
-          "cerebras/llama-3.3-70b",
-          "cerebras/llama-4-maverick-17b-128e-instruct",
-          "cerebras/llama-4-scout-17b-16e-instruct",
-          "cerebras/gpt-oss-120b",
-          "google-ai-studio/gemini-2.5-flash",
-          "google-ai-studio/gemini-2.5-pro",
-          "grok/grok-4",
-          "groq/llama-3.3-70b-versatile",
-          "groq/llama-3.1-8b-instant",
-          "openai/gpt-5",
-          "openai/gpt-5-mini",
-          "openai/gpt-5-nano",
-          "",
-        ]),
-        Schema.String,
-      ]),
-    ),
-    stream: Schema.optional(Schema.Boolean),
-  }).pipe(
-    Schema.encodeKeys({
-      aiSearchOptions: "ai_search_options",
-      messages: "messages",
-      model: "model",
-      stream: "stream",
-    }),
-    T.Http({
-      method: "POST",
-      path: "/accounts/{account_id}/ai-search/namespaces/{name}/chat/completions",
-    }),
   ) as unknown as Schema.Schema<ChatCompletionsNamespaceRequest>;
 
 export interface ChatCompletionsNamespaceResponse {
@@ -907,121 +1026,123 @@ export interface ChatCompletionsNamespaceResponse {
 }
 
 export const ChatCompletionsNamespaceResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    choices: Schema.Array(
-      Schema.Struct({
-        message: Schema.Struct({
-          content: Schema.Union([Schema.String, Schema.Null]),
-          role: Schema.Union([
-            Schema.Literals([
-              "system",
-              "developer",
-              "user",
-              "assistant",
-              "tool",
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      choices: Schema.Array(
+        Schema.Struct({
+          message: Schema.Struct({
+            content: Schema.Union([Schema.String, Schema.Null]),
+            role: Schema.Union([
+              Schema.Literals([
+                "system",
+                "developer",
+                "user",
+                "assistant",
+                "tool",
+              ]),
+              Schema.String,
             ]),
-            Schema.String,
-          ]),
-        }),
-        index: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-      }),
-    ),
-    chunks: Schema.Array(
-      Schema.Struct({
-        id: Schema.String,
-        instanceId: Schema.String,
-        score: Schema.Number,
-        text: Schema.String,
-        type: Schema.String,
-        item: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              key: Schema.String,
-              metadata: Schema.optional(
-                Schema.Union([
-                  Schema.Record(Schema.String, Schema.Unknown),
-                  Schema.Null,
-                ]),
-              ),
-              timestamp: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-            }),
-            Schema.Null,
-          ]),
-        ),
-        scoringDetails: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              fusionMethod: Schema.optional(
-                Schema.Union([
-                  Schema.Union([
-                    Schema.Literals(["rrf", "max"]),
-                    Schema.String,
-                  ]),
-                  Schema.Null,
-                ]),
-              ),
-              keywordRank: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              keywordScore: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              rerankingScore: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              vectorRank: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              vectorScore: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-            }).pipe(
-              Schema.encodeKeys({
-                fusionMethod: "fusion_method",
-                keywordRank: "keyword_rank",
-                keywordScore: "keyword_score",
-                rerankingScore: "reranking_score",
-                vectorRank: "vector_rank",
-                vectorScore: "vector_score",
-              }),
-            ),
-            Schema.Null,
-          ]),
-        ),
-      }).pipe(
-        Schema.encodeKeys({
-          id: "id",
-          instanceId: "instance_id",
-          score: "score",
-          text: "text",
-          type: "type",
-          item: "item",
-          scoringDetails: "scoring_details",
+          }),
+          index: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
         }),
       ),
-    ),
-    id: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    errors: Schema.optional(
-      Schema.Union([
-        Schema.Array(
-          Schema.Struct({
-            instanceId: Schema.String,
-            message: Schema.String,
-          }).pipe(
-            Schema.encodeKeys({
-              instanceId: "instance_id",
-              message: "message",
-            }),
+      chunks: Schema.Array(
+        Schema.Struct({
+          id: Schema.String,
+          instanceId: Schema.String,
+          score: Schema.Number,
+          text: Schema.String,
+          type: Schema.String,
+          item: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                key: Schema.String,
+                metadata: Schema.optional(
+                  Schema.Union([
+                    Schema.Record(Schema.String, Schema.Unknown),
+                    Schema.Null,
+                  ]),
+                ),
+                timestamp: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+              }),
+              Schema.Null,
+            ]),
           ),
+          scoringDetails: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                fusionMethod: Schema.optional(
+                  Schema.Union([
+                    Schema.Union([
+                      Schema.Literals(["rrf", "max"]),
+                      Schema.String,
+                    ]),
+                    Schema.Null,
+                  ]),
+                ),
+                keywordRank: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+                keywordScore: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+                rerankingScore: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+                vectorRank: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+                vectorScore: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+              }).pipe(
+                Schema.encodeKeys({
+                  fusionMethod: "fusion_method",
+                  keywordRank: "keyword_rank",
+                  keywordScore: "keyword_score",
+                  rerankingScore: "reranking_score",
+                  vectorRank: "vector_rank",
+                  vectorScore: "vector_score",
+                }),
+              ),
+              Schema.Null,
+            ]),
+          ),
+        }).pipe(
+          Schema.encodeKeys({
+            id: "id",
+            instanceId: "instance_id",
+            score: "score",
+            text: "text",
+            type: "type",
+            item: "item",
+            scoringDetails: "scoring_details",
+          }),
         ),
-        Schema.Null,
-      ]),
-    ),
-    model: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    object: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  }) as unknown as Schema.Schema<ChatCompletionsNamespaceResponse>;
+      ),
+      id: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      errors: Schema.optional(
+        Schema.Union([
+          Schema.Array(
+            Schema.Struct({
+              instanceId: Schema.String,
+              message: Schema.String,
+            }).pipe(
+              Schema.encodeKeys({
+                instanceId: "instance_id",
+                message: "message",
+              }),
+            ),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      model: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      object: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    }),
+  ) as unknown as Schema.Schema<ChatCompletionsNamespaceResponse>;
 
 export type ChatCompletionsNamespaceError = DefaultErrors;
 
@@ -1161,215 +1282,228 @@ export interface ChatCompletionsNamespaceInstanceRequest {
 }
 
 export const ChatCompletionsNamespaceInstanceRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    name: Schema.String.pipe(T.HttpPath("name")),
-    id: Schema.String.pipe(T.HttpPath("id")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    messages: Schema.Array(
-      Schema.Struct({
-        content: Schema.Union([Schema.String, Schema.Null]),
-        role: Schema.Union([
-          Schema.Literals(["system", "developer", "user", "assistant", "tool"]),
-          Schema.String,
-        ]),
-      }),
-    ),
-    aiSearchOptions: Schema.optional(
-      Schema.Struct({
-        cache: Schema.optional(
-          Schema.Struct({
-            cacheThreshold: Schema.optional(
-              Schema.Union([
-                Schema.Literals([
-                  "super_strict_match",
-                  "close_enough",
-                  "flexible_friend",
-                  "anything_goes",
-                ]),
-                Schema.String,
-              ]),
-            ),
-            enabled: Schema.optional(Schema.Boolean),
-          }).pipe(
-            Schema.encodeKeys({
-              cacheThreshold: "cache_threshold",
-              enabled: "enabled",
-            }),
-          ),
-        ),
-        queryRewrite: Schema.optional(
-          Schema.Struct({
-            enabled: Schema.optional(Schema.Boolean),
-            model: Schema.optional(
-              Schema.Union([
-                Schema.Literals([
-                  "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-                  "@cf/zai-org/glm-4.7-flash",
-                  "@cf/meta/llama-3.1-8b-instruct-fast",
-                  "@cf/meta/llama-3.1-8b-instruct-fp8",
-                  "@cf/meta/llama-4-scout-17b-16e-instruct",
-                  "@cf/qwen/qwen3-30b-a3b-fp8",
-                  "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
-                  "@cf/moonshotai/kimi-k2-instruct",
-                  "@cf/google/gemma-3-12b-it",
-                  "@cf/google/gemma-4-26b-a4b-it",
-                  "@cf/moonshotai/kimi-k2.5",
-                  "anthropic/claude-3-7-sonnet",
-                  "anthropic/claude-sonnet-4",
-                  "anthropic/claude-opus-4",
-                  "anthropic/claude-3-5-haiku",
-                  "cerebras/qwen-3-235b-a22b-instruct",
-                  "cerebras/qwen-3-235b-a22b-thinking",
-                  "cerebras/llama-3.3-70b",
-                  "cerebras/llama-4-maverick-17b-128e-instruct",
-                  "cerebras/llama-4-scout-17b-16e-instruct",
-                  "cerebras/gpt-oss-120b",
-                  "google-ai-studio/gemini-2.5-flash",
-                  "google-ai-studio/gemini-2.5-pro",
-                  "grok/grok-4",
-                  "groq/llama-3.3-70b-versatile",
-                  "groq/llama-3.1-8b-instant",
-                  "openai/gpt-5",
-                  "openai/gpt-5-mini",
-                  "openai/gpt-5-nano",
-                  "",
-                ]),
-                Schema.String,
-              ]),
-            ),
-            rewritePrompt: Schema.optional(Schema.String),
-          }).pipe(
-            Schema.encodeKeys({
-              enabled: "enabled",
-              model: "model",
-              rewritePrompt: "rewrite_prompt",
-            }),
-          ),
-        ),
-        reranking: Schema.optional(
-          Schema.Struct({
-            enabled: Schema.optional(Schema.Boolean),
-            matchThreshold: Schema.optional(Schema.Number),
-            model: Schema.optional(
-              Schema.Union([
-                Schema.Literals(["@cf/baai/bge-reranker-base", ""]),
-                Schema.String,
-              ]),
-            ),
-          }).pipe(
-            Schema.encodeKeys({
-              enabled: "enabled",
-              matchThreshold: "match_threshold",
-              model: "model",
-            }),
-          ),
-        ),
-        retrieval: Schema.optional(
-          Schema.Struct({
-            boostBy: Schema.optional(
-              Schema.Array(
-                Schema.Struct({
-                  field: Schema.String,
-                  direction: Schema.optional(
-                    Schema.Union([
-                      Schema.Literals(["asc", "desc", "exists", "not_exists"]),
-                      Schema.String,
-                    ]),
-                  ),
-                }),
-              ),
-            ),
-            contextExpansion: Schema.optional(Schema.Number),
-            filters: Schema.optional(
-              Schema.Record(Schema.String, Schema.Unknown),
-            ),
-            fusionMethod: Schema.optional(
-              Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
-            ),
-            keywordMatchMode: Schema.optional(
-              Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
-            ),
-            matchThreshold: Schema.optional(Schema.Number),
-            maxNumResults: Schema.optional(Schema.Number),
-            retrievalType: Schema.optional(
-              Schema.Union([
-                Schema.Literals(["vector", "keyword", "hybrid"]),
-                Schema.String,
-              ]),
-            ),
-            returnOnFailure: Schema.optional(Schema.Boolean),
-          }).pipe(
-            Schema.encodeKeys({
-              boostBy: "boost_by",
-              contextExpansion: "context_expansion",
-              filters: "filters",
-              fusionMethod: "fusion_method",
-              keywordMatchMode: "keyword_match_mode",
-              matchThreshold: "match_threshold",
-              maxNumResults: "max_num_results",
-              retrievalType: "retrieval_type",
-              returnOnFailure: "return_on_failure",
-            }),
-          ),
-        ),
-      }).pipe(
-        Schema.encodeKeys({
-          cache: "cache",
-          queryRewrite: "query_rewrite",
-          reranking: "reranking",
-          retrieval: "retrieval",
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      id: Schema.String.pipe(T.HttpPath("id")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      messages: Schema.Array(
+        Schema.Struct({
+          content: Schema.Union([Schema.String, Schema.Null]),
+          role: Schema.Union([
+            Schema.Literals([
+              "system",
+              "developer",
+              "user",
+              "assistant",
+              "tool",
+            ]),
+            Schema.String,
+          ]),
         }),
       ),
-    ),
-    model: Schema.optional(
-      Schema.Union([
-        Schema.Literals([
-          "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-          "@cf/zai-org/glm-4.7-flash",
-          "@cf/meta/llama-3.1-8b-instruct-fast",
-          "@cf/meta/llama-3.1-8b-instruct-fp8",
-          "@cf/meta/llama-4-scout-17b-16e-instruct",
-          "@cf/qwen/qwen3-30b-a3b-fp8",
-          "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
-          "@cf/moonshotai/kimi-k2-instruct",
-          "@cf/google/gemma-3-12b-it",
-          "@cf/google/gemma-4-26b-a4b-it",
-          "@cf/moonshotai/kimi-k2.5",
-          "anthropic/claude-3-7-sonnet",
-          "anthropic/claude-sonnet-4",
-          "anthropic/claude-opus-4",
-          "anthropic/claude-3-5-haiku",
-          "cerebras/qwen-3-235b-a22b-instruct",
-          "cerebras/qwen-3-235b-a22b-thinking",
-          "cerebras/llama-3.3-70b",
-          "cerebras/llama-4-maverick-17b-128e-instruct",
-          "cerebras/llama-4-scout-17b-16e-instruct",
-          "cerebras/gpt-oss-120b",
-          "google-ai-studio/gemini-2.5-flash",
-          "google-ai-studio/gemini-2.5-pro",
-          "grok/grok-4",
-          "groq/llama-3.3-70b-versatile",
-          "groq/llama-3.1-8b-instant",
-          "openai/gpt-5",
-          "openai/gpt-5-mini",
-          "openai/gpt-5-nano",
-          "",
+      aiSearchOptions: Schema.optional(
+        Schema.Struct({
+          cache: Schema.optional(
+            Schema.Struct({
+              cacheThreshold: Schema.optional(
+                Schema.Union([
+                  Schema.Literals([
+                    "super_strict_match",
+                    "close_enough",
+                    "flexible_friend",
+                    "anything_goes",
+                  ]),
+                  Schema.String,
+                ]),
+              ),
+              enabled: Schema.optional(Schema.Boolean),
+            }).pipe(
+              Schema.encodeKeys({
+                cacheThreshold: "cache_threshold",
+                enabled: "enabled",
+              }),
+            ),
+          ),
+          queryRewrite: Schema.optional(
+            Schema.Struct({
+              enabled: Schema.optional(Schema.Boolean),
+              model: Schema.optional(
+                Schema.Union([
+                  Schema.Literals([
+                    "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+                    "@cf/zai-org/glm-4.7-flash",
+                    "@cf/meta/llama-3.1-8b-instruct-fast",
+                    "@cf/meta/llama-3.1-8b-instruct-fp8",
+                    "@cf/meta/llama-4-scout-17b-16e-instruct",
+                    "@cf/qwen/qwen3-30b-a3b-fp8",
+                    "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
+                    "@cf/moonshotai/kimi-k2-instruct",
+                    "@cf/google/gemma-3-12b-it",
+                    "@cf/google/gemma-4-26b-a4b-it",
+                    "@cf/moonshotai/kimi-k2.5",
+                    "anthropic/claude-3-7-sonnet",
+                    "anthropic/claude-sonnet-4",
+                    "anthropic/claude-opus-4",
+                    "anthropic/claude-3-5-haiku",
+                    "cerebras/qwen-3-235b-a22b-instruct",
+                    "cerebras/qwen-3-235b-a22b-thinking",
+                    "cerebras/llama-3.3-70b",
+                    "cerebras/llama-4-maverick-17b-128e-instruct",
+                    "cerebras/llama-4-scout-17b-16e-instruct",
+                    "cerebras/gpt-oss-120b",
+                    "google-ai-studio/gemini-2.5-flash",
+                    "google-ai-studio/gemini-2.5-pro",
+                    "grok/grok-4",
+                    "groq/llama-3.3-70b-versatile",
+                    "groq/llama-3.1-8b-instant",
+                    "openai/gpt-5",
+                    "openai/gpt-5-mini",
+                    "openai/gpt-5-nano",
+                    "",
+                  ]),
+                  Schema.String,
+                ]),
+              ),
+              rewritePrompt: Schema.optional(Schema.String),
+            }).pipe(
+              Schema.encodeKeys({
+                enabled: "enabled",
+                model: "model",
+                rewritePrompt: "rewrite_prompt",
+              }),
+            ),
+          ),
+          reranking: Schema.optional(
+            Schema.Struct({
+              enabled: Schema.optional(Schema.Boolean),
+              matchThreshold: Schema.optional(Schema.Number),
+              model: Schema.optional(
+                Schema.Union([
+                  Schema.Literals(["@cf/baai/bge-reranker-base", ""]),
+                  Schema.String,
+                ]),
+              ),
+            }).pipe(
+              Schema.encodeKeys({
+                enabled: "enabled",
+                matchThreshold: "match_threshold",
+                model: "model",
+              }),
+            ),
+          ),
+          retrieval: Schema.optional(
+            Schema.Struct({
+              boostBy: Schema.optional(
+                Schema.Array(
+                  Schema.Struct({
+                    field: Schema.String,
+                    direction: Schema.optional(
+                      Schema.Union([
+                        Schema.Literals([
+                          "asc",
+                          "desc",
+                          "exists",
+                          "not_exists",
+                        ]),
+                        Schema.String,
+                      ]),
+                    ),
+                  }),
+                ),
+              ),
+              contextExpansion: Schema.optional(Schema.Number),
+              filters: Schema.optional(
+                Schema.Record(Schema.String, Schema.Unknown),
+              ),
+              fusionMethod: Schema.optional(
+                Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
+              ),
+              keywordMatchMode: Schema.optional(
+                Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
+              ),
+              matchThreshold: Schema.optional(Schema.Number),
+              maxNumResults: Schema.optional(Schema.Number),
+              retrievalType: Schema.optional(
+                Schema.Union([
+                  Schema.Literals(["vector", "keyword", "hybrid"]),
+                  Schema.String,
+                ]),
+              ),
+              returnOnFailure: Schema.optional(Schema.Boolean),
+            }).pipe(
+              Schema.encodeKeys({
+                boostBy: "boost_by",
+                contextExpansion: "context_expansion",
+                filters: "filters",
+                fusionMethod: "fusion_method",
+                keywordMatchMode: "keyword_match_mode",
+                matchThreshold: "match_threshold",
+                maxNumResults: "max_num_results",
+                retrievalType: "retrieval_type",
+                returnOnFailure: "return_on_failure",
+              }),
+            ),
+          ),
+        }).pipe(
+          Schema.encodeKeys({
+            cache: "cache",
+            queryRewrite: "query_rewrite",
+            reranking: "reranking",
+            retrieval: "retrieval",
+          }),
+        ),
+      ),
+      model: Schema.optional(
+        Schema.Union([
+          Schema.Literals([
+            "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+            "@cf/zai-org/glm-4.7-flash",
+            "@cf/meta/llama-3.1-8b-instruct-fast",
+            "@cf/meta/llama-3.1-8b-instruct-fp8",
+            "@cf/meta/llama-4-scout-17b-16e-instruct",
+            "@cf/qwen/qwen3-30b-a3b-fp8",
+            "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
+            "@cf/moonshotai/kimi-k2-instruct",
+            "@cf/google/gemma-3-12b-it",
+            "@cf/google/gemma-4-26b-a4b-it",
+            "@cf/moonshotai/kimi-k2.5",
+            "anthropic/claude-3-7-sonnet",
+            "anthropic/claude-sonnet-4",
+            "anthropic/claude-opus-4",
+            "anthropic/claude-3-5-haiku",
+            "cerebras/qwen-3-235b-a22b-instruct",
+            "cerebras/qwen-3-235b-a22b-thinking",
+            "cerebras/llama-3.3-70b",
+            "cerebras/llama-4-maverick-17b-128e-instruct",
+            "cerebras/llama-4-scout-17b-16e-instruct",
+            "cerebras/gpt-oss-120b",
+            "google-ai-studio/gemini-2.5-flash",
+            "google-ai-studio/gemini-2.5-pro",
+            "grok/grok-4",
+            "groq/llama-3.3-70b-versatile",
+            "groq/llama-3.1-8b-instant",
+            "openai/gpt-5",
+            "openai/gpt-5-mini",
+            "openai/gpt-5-nano",
+            "",
+          ]),
+          Schema.String,
         ]),
-        Schema.String,
-      ]),
+      ),
+      stream: Schema.optional(Schema.Boolean),
+    }).pipe(
+      Schema.encodeKeys({
+        messages: "messages",
+        aiSearchOptions: "ai_search_options",
+        model: "model",
+        stream: "stream",
+      }),
+      T.Http({
+        method: "POST",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/chat/completions",
+      }),
     ),
-    stream: Schema.optional(Schema.Boolean),
-  }).pipe(
-    Schema.encodeKeys({
-      messages: "messages",
-      aiSearchOptions: "ai_search_options",
-      model: "model",
-      stream: "stream",
-    }),
-    T.Http({
-      method: "POST",
-      path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/chat/completions",
-    }),
   ) as unknown as Schema.Schema<ChatCompletionsNamespaceInstanceRequest>;
 
 export interface ChatCompletionsNamespaceInstanceResponse {
@@ -1411,103 +1545,105 @@ export interface ChatCompletionsNamespaceInstanceResponse {
 }
 
 export const ChatCompletionsNamespaceInstanceResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    choices: Schema.Array(
-      Schema.Struct({
-        message: Schema.Struct({
-          content: Schema.Union([Schema.String, Schema.Null]),
-          role: Schema.Union([
-            Schema.Literals([
-              "system",
-              "developer",
-              "user",
-              "assistant",
-              "tool",
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      choices: Schema.Array(
+        Schema.Struct({
+          message: Schema.Struct({
+            content: Schema.Union([Schema.String, Schema.Null]),
+            role: Schema.Union([
+              Schema.Literals([
+                "system",
+                "developer",
+                "user",
+                "assistant",
+                "tool",
+              ]),
+              Schema.String,
             ]),
-            Schema.String,
-          ]),
-        }),
-        index: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-      }),
-    ),
-    chunks: Schema.Array(
-      Schema.Struct({
-        id: Schema.String,
-        score: Schema.Number,
-        text: Schema.String,
-        type: Schema.String,
-        item: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              key: Schema.String,
-              metadata: Schema.optional(
-                Schema.Union([
-                  Schema.Record(Schema.String, Schema.Unknown),
-                  Schema.Null,
-                ]),
-              ),
-              timestamp: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-            }),
-            Schema.Null,
-          ]),
-        ),
-        scoringDetails: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              fusionMethod: Schema.optional(
-                Schema.Union([
-                  Schema.Union([
-                    Schema.Literals(["rrf", "max"]),
-                    Schema.String,
-                  ]),
-                  Schema.Null,
-                ]),
-              ),
-              keywordRank: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              keywordScore: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              rerankingScore: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              vectorRank: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              vectorScore: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-            }).pipe(
-              Schema.encodeKeys({
-                fusionMethod: "fusion_method",
-                keywordRank: "keyword_rank",
-                keywordScore: "keyword_score",
-                rerankingScore: "reranking_score",
-                vectorRank: "vector_rank",
-                vectorScore: "vector_score",
-              }),
-            ),
-            Schema.Null,
-          ]),
-        ),
-      }).pipe(
-        Schema.encodeKeys({
-          id: "id",
-          score: "score",
-          text: "text",
-          type: "type",
-          item: "item",
-          scoringDetails: "scoring_details",
+          }),
+          index: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
         }),
       ),
-    ),
-    id: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    model: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    object: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  }) as unknown as Schema.Schema<ChatCompletionsNamespaceInstanceResponse>;
+      chunks: Schema.Array(
+        Schema.Struct({
+          id: Schema.String,
+          score: Schema.Number,
+          text: Schema.String,
+          type: Schema.String,
+          item: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                key: Schema.String,
+                metadata: Schema.optional(
+                  Schema.Union([
+                    Schema.Record(Schema.String, Schema.Unknown),
+                    Schema.Null,
+                  ]),
+                ),
+                timestamp: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+              }),
+              Schema.Null,
+            ]),
+          ),
+          scoringDetails: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                fusionMethod: Schema.optional(
+                  Schema.Union([
+                    Schema.Union([
+                      Schema.Literals(["rrf", "max"]),
+                      Schema.String,
+                    ]),
+                    Schema.Null,
+                  ]),
+                ),
+                keywordRank: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+                keywordScore: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+                rerankingScore: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+                vectorRank: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+                vectorScore: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+              }).pipe(
+                Schema.encodeKeys({
+                  fusionMethod: "fusion_method",
+                  keywordRank: "keyword_rank",
+                  keywordScore: "keyword_score",
+                  rerankingScore: "reranking_score",
+                  vectorRank: "vector_rank",
+                  vectorScore: "vector_score",
+                }),
+              ),
+              Schema.Null,
+            ]),
+          ),
+        }).pipe(
+          Schema.encodeKeys({
+            id: "id",
+            score: "score",
+            text: "text",
+            type: "type",
+            item: "item",
+            scoringDetails: "scoring_details",
+          }),
+        ),
+      ),
+      id: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      model: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      object: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    }),
+  ) as unknown as Schema.Schema<ChatCompletionsNamespaceInstanceResponse>;
 
 export type ChatCompletionsNamespaceInstanceError = DefaultErrors;
 
@@ -1541,20 +1677,26 @@ export interface ListInstancesRequest {
   search?: string;
 }
 
-export const ListInstancesRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  page: Schema.optional(Schema.Number).pipe(T.HttpQuery("page")),
-  perPage: Schema.optional(Schema.Number).pipe(T.HttpQuery("per_page")),
-  namespace: Schema.optional(Schema.String).pipe(T.HttpQuery("namespace")),
-  orderBy: Schema.optional(Schema.Literal("created_at")).pipe(
-    T.HttpQuery("order_by"),
-  ),
-  orderByDirection: Schema.optional(
-    Schema.Union([Schema.Literals(["asc", "desc"]), Schema.String]),
-  ).pipe(T.HttpQuery("order_by_direction")),
-  search: Schema.optional(Schema.String).pipe(T.HttpQuery("search")),
-}).pipe(
-  T.Http({ method: "GET", path: "/accounts/{account_id}/ai-search/instances" }),
+export const ListInstancesRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      page: Schema.optional(Schema.Number).pipe(T.HttpQuery("page")),
+      perPage: Schema.optional(Schema.Number).pipe(T.HttpQuery("per_page")),
+      namespace: Schema.optional(Schema.String).pipe(T.HttpQuery("namespace")),
+      orderBy: Schema.optional(Schema.Literal("created_at")).pipe(
+        T.HttpQuery("order_by"),
+      ),
+      orderByDirection: Schema.optional(
+        Schema.Union([Schema.Literals(["asc", "desc"]), Schema.String]),
+      ).pipe(T.HttpQuery("order_by_direction")),
+      search: Schema.optional(Schema.String).pipe(T.HttpQuery("search")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/ai-search/instances",
+      }),
+    ),
 ) as unknown as Schema.Schema<ListInstancesRequest>;
 
 export interface ListInstancesResponse {
@@ -1602,19 +1744,7 @@ export interface ListInstancesResponse {
       | "flexible_friend"
       | "anything_goes"
       | null;
-    cacheTtl?:
-      | "600"
-      | "1800"
-      | "3600"
-      | "7200"
-      | "21600"
-      | "43200"
-      | "86400"
-      | "172800"
-      | "259200"
-      | "518400"
-      | (string & {})
-      | null;
+    cacheTtl?: number | null;
     chunkOverlap?: number | null;
     chunkSize?: number | null;
     createdBy?: string | null;
@@ -1746,17 +1876,7 @@ export interface ListInstancesResponse {
       } | null;
     } | null;
     status?: string | null;
-    syncInterval?:
-      | "900"
-      | "1800"
-      | "3600"
-      | "7200"
-      | "14400"
-      | "21600"
-      | "43200"
-      | "86400"
-      | (string & {})
-      | null;
+    syncInterval?: number | null;
     tokenId?: string | null;
     type?: "r2" | "web-crawler" | null;
   }[];
@@ -1768,8 +1888,1383 @@ export interface ListInstancesResponse {
   } | null;
 }
 
-export const ListInstancesResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  result: Schema.Array(
+export const ListInstancesResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      result: Schema.Array(
+        Schema.Struct({
+          id: Schema.String,
+          createdAt: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
+          ),
+          modifiedAt: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
+          ),
+          aiGatewayId: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
+          ),
+          aiSearchModel: Schema.optional(
+            Schema.Union([
+              Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+              Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+              Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+              Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+              Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+              Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+              Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+              Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+              Schema.Literal("@cf/google/gemma-3-12b-it"),
+              Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+              Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+              Schema.Literal("anthropic/claude-3-7-sonnet"),
+              Schema.Literal("anthropic/claude-sonnet-4"),
+              Schema.Literal("anthropic/claude-opus-4"),
+              Schema.Literal("anthropic/claude-3-5-haiku"),
+              Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+              Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+              Schema.Literal("cerebras/llama-3.3-70b"),
+              Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+              Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+              Schema.Literal("cerebras/gpt-oss-120b"),
+              Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+              Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+              Schema.Literal("grok/grok-4"),
+              Schema.Literal("groq/llama-3.3-70b-versatile"),
+              Schema.Literal("groq/llama-3.1-8b-instant"),
+              Schema.Literal("openai/gpt-5"),
+              Schema.Literal("openai/gpt-5-mini"),
+              Schema.Literal("openai/gpt-5-nano"),
+              Schema.Literal(""),
+              Schema.Null,
+            ]),
+          ),
+          cache: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+          cacheThreshold: Schema.optional(
+            Schema.Union([
+              Schema.Literal("super_strict_match"),
+              Schema.Literal("close_enough"),
+              Schema.Literal("flexible_friend"),
+              Schema.Literal("anything_goes"),
+              Schema.Null,
+            ]),
+          ),
+          cacheTtl: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+          chunkOverlap: Schema.optional(
+            Schema.Union([Schema.Number, Schema.Null]),
+          ),
+          chunkSize: Schema.optional(
+            Schema.Union([Schema.Number, Schema.Null]),
+          ),
+          createdBy: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
+          ),
+          customMetadata: Schema.optional(
+            Schema.Union([
+              Schema.Array(
+                Schema.Struct({
+                  dataType: Schema.Union([
+                    Schema.Literals(["text", "number", "boolean", "datetime"]),
+                    Schema.String,
+                  ]),
+                  fieldName: Schema.String,
+                }).pipe(
+                  Schema.encodeKeys({
+                    dataType: "data_type",
+                    fieldName: "field_name",
+                  }),
+                ),
+              ),
+              Schema.Null,
+            ]),
+          ),
+          embeddingModel: Schema.optional(
+            Schema.Union([
+              Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
+              Schema.Literal("@cf/baai/bge-m3"),
+              Schema.Literal("@cf/baai/bge-large-en-v1.5"),
+              Schema.Literal("@cf/google/embeddinggemma-300m"),
+              Schema.Literal("google-ai-studio/gemini-embedding-001"),
+              Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
+              Schema.Literal("openai/text-embedding-3-small"),
+              Schema.Literal("openai/text-embedding-3-large"),
+              Schema.Literal(""),
+              Schema.Null,
+            ]),
+          ),
+          enable: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+          engineVersion: Schema.optional(
+            Schema.Union([Schema.Number, Schema.Null]),
+          ),
+          fusionMethod: Schema.optional(
+            Schema.Union([
+              Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
+              Schema.Null,
+            ]),
+          ),
+          hybridSearchEnabled: Schema.optional(
+            Schema.Union([Schema.Boolean, Schema.Null]),
+          ),
+          indexMethod: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                keyword: Schema.Boolean,
+                vector: Schema.Boolean,
+              }),
+              Schema.Null,
+            ]),
+          ),
+          indexingOptions: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                keywordTokenizer: Schema.optional(
+                  Schema.Union([
+                    Schema.Union([
+                      Schema.Literals(["porter", "trigram"]),
+                      Schema.String,
+                    ]),
+                    Schema.Null,
+                  ]),
+                ),
+              }).pipe(
+                Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" }),
+              ),
+              Schema.Null,
+            ]),
+          ),
+          lastActivity: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
+          ),
+          maxNumResults: Schema.optional(
+            Schema.Union([Schema.Number, Schema.Null]),
+          ),
+          metadata: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                createdFromAisearchWizard: Schema.optional(
+                  Schema.Union([Schema.Boolean, Schema.Null]),
+                ),
+                workerDomain: Schema.optional(
+                  Schema.Union([Schema.String, Schema.Null]),
+                ),
+              }).pipe(
+                Schema.encodeKeys({
+                  createdFromAisearchWizard: "created_from_aisearch_wizard",
+                  workerDomain: "worker_domain",
+                }),
+              ),
+              Schema.Null,
+            ]),
+          ),
+          modifiedBy: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
+          ),
+          namespace: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
+          ),
+          paused: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+          publicEndpointId: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
+          ),
+          publicEndpointParams: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                authorizedHosts: Schema.optional(
+                  Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+                ),
+                chatCompletionsEndpoint: Schema.optional(
+                  Schema.Union([
+                    Schema.Struct({
+                      disabled: Schema.optional(
+                        Schema.Union([Schema.Boolean, Schema.Null]),
+                      ),
+                    }),
+                    Schema.Null,
+                  ]),
+                ),
+                enabled: Schema.optional(
+                  Schema.Union([Schema.Boolean, Schema.Null]),
+                ),
+                mcp: Schema.optional(
+                  Schema.Union([
+                    Schema.Struct({
+                      description: Schema.optional(
+                        Schema.Union([Schema.String, Schema.Null]),
+                      ),
+                      disabled: Schema.optional(
+                        Schema.Union([Schema.Boolean, Schema.Null]),
+                      ),
+                    }),
+                    Schema.Null,
+                  ]),
+                ),
+                rateLimit: Schema.optional(
+                  Schema.Union([
+                    Schema.Struct({
+                      periodMs: Schema.optional(
+                        Schema.Union([Schema.Number, Schema.Null]),
+                      ),
+                      requests: Schema.optional(
+                        Schema.Union([Schema.Number, Schema.Null]),
+                      ),
+                      technique: Schema.optional(
+                        Schema.Union([
+                          Schema.Union([
+                            Schema.Literals(["fixed", "sliding"]),
+                            Schema.String,
+                          ]),
+                          Schema.Null,
+                        ]),
+                      ),
+                    }).pipe(
+                      Schema.encodeKeys({
+                        periodMs: "period_ms",
+                        requests: "requests",
+                        technique: "technique",
+                      }),
+                    ),
+                    Schema.Null,
+                  ]),
+                ),
+                searchEndpoint: Schema.optional(
+                  Schema.Union([
+                    Schema.Struct({
+                      disabled: Schema.optional(
+                        Schema.Union([Schema.Boolean, Schema.Null]),
+                      ),
+                    }),
+                    Schema.Null,
+                  ]),
+                ),
+              }).pipe(
+                Schema.encodeKeys({
+                  authorizedHosts: "authorized_hosts",
+                  chatCompletionsEndpoint: "chat_completions_endpoint",
+                  enabled: "enabled",
+                  mcp: "mcp",
+                  rateLimit: "rate_limit",
+                  searchEndpoint: "search_endpoint",
+                }),
+              ),
+              Schema.Null,
+            ]),
+          ),
+          reranking: Schema.optional(
+            Schema.Union([Schema.Boolean, Schema.Null]),
+          ),
+          rerankingModel: Schema.optional(
+            Schema.Union([
+              Schema.Literal("@cf/baai/bge-reranker-base"),
+              Schema.Literal(""),
+              Schema.Null,
+            ]),
+          ),
+          retrievalOptions: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                boostBy: Schema.optional(
+                  Schema.Union([
+                    Schema.Array(
+                      Schema.Struct({
+                        field: Schema.String,
+                        direction: Schema.optional(
+                          Schema.Union([
+                            Schema.Union([
+                              Schema.Literals([
+                                "asc",
+                                "desc",
+                                "exists",
+                                "not_exists",
+                              ]),
+                              Schema.String,
+                            ]),
+                            Schema.Null,
+                          ]),
+                        ),
+                      }),
+                    ),
+                    Schema.Null,
+                  ]),
+                ),
+                keywordMatchMode: Schema.optional(
+                  Schema.Union([
+                    Schema.Union([
+                      Schema.Literals(["and", "or"]),
+                      Schema.String,
+                    ]),
+                    Schema.Null,
+                  ]),
+                ),
+              }).pipe(
+                Schema.encodeKeys({
+                  boostBy: "boost_by",
+                  keywordMatchMode: "keyword_match_mode",
+                }),
+              ),
+              Schema.Null,
+            ]),
+          ),
+          rewriteModel: Schema.optional(
+            Schema.Union([
+              Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+              Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+              Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+              Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+              Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+              Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+              Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+              Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+              Schema.Literal("@cf/google/gemma-3-12b-it"),
+              Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+              Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+              Schema.Literal("anthropic/claude-3-7-sonnet"),
+              Schema.Literal("anthropic/claude-sonnet-4"),
+              Schema.Literal("anthropic/claude-opus-4"),
+              Schema.Literal("anthropic/claude-3-5-haiku"),
+              Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+              Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+              Schema.Literal("cerebras/llama-3.3-70b"),
+              Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+              Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+              Schema.Literal("cerebras/gpt-oss-120b"),
+              Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+              Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+              Schema.Literal("grok/grok-4"),
+              Schema.Literal("groq/llama-3.3-70b-versatile"),
+              Schema.Literal("groq/llama-3.1-8b-instant"),
+              Schema.Literal("openai/gpt-5"),
+              Schema.Literal("openai/gpt-5-mini"),
+              Schema.Literal("openai/gpt-5-nano"),
+              Schema.Literal(""),
+              Schema.Null,
+            ]),
+          ),
+          rewriteQuery: Schema.optional(
+            Schema.Union([Schema.Boolean, Schema.Null]),
+          ),
+          scoreThreshold: Schema.optional(
+            Schema.Union([Schema.Number, Schema.Null]),
+          ),
+          source: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+          sourceParams: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                excludeItems: Schema.optional(
+                  Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+                ),
+                includeItems: Schema.optional(
+                  Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+                ),
+                prefix: Schema.optional(
+                  Schema.Union([Schema.String, Schema.Null]),
+                ),
+                r2Jurisdiction: Schema.optional(
+                  Schema.Union([Schema.String, Schema.Null]),
+                ),
+                webCrawler: Schema.optional(
+                  Schema.Union([
+                    Schema.Struct({
+                      crawlOptions: Schema.optional(
+                        Schema.Union([
+                          Schema.Struct({
+                            depth: Schema.optional(
+                              Schema.Union([Schema.Number, Schema.Null]),
+                            ),
+                            includeExternalLinks: Schema.optional(
+                              Schema.Union([Schema.Boolean, Schema.Null]),
+                            ),
+                            includeSubdomains: Schema.optional(
+                              Schema.Union([Schema.Boolean, Schema.Null]),
+                            ),
+                            maxAge: Schema.optional(
+                              Schema.Union([Schema.Number, Schema.Null]),
+                            ),
+                            source: Schema.optional(
+                              Schema.Union([
+                                Schema.Union([
+                                  Schema.Literals(["all", "sitemaps", "links"]),
+                                  Schema.String,
+                                ]),
+                                Schema.Null,
+                              ]),
+                            ),
+                          }).pipe(
+                            Schema.encodeKeys({
+                              depth: "depth",
+                              includeExternalLinks: "include_external_links",
+                              includeSubdomains: "include_subdomains",
+                              maxAge: "max_age",
+                              source: "source",
+                            }),
+                          ),
+                          Schema.Null,
+                        ]),
+                      ),
+                      parseOptions: Schema.optional(
+                        Schema.Union([
+                          Schema.Struct({
+                            contentSelector: Schema.optional(
+                              Schema.Union([
+                                Schema.Array(
+                                  Schema.Struct({
+                                    path: Schema.String,
+                                    selector: Schema.String,
+                                  }),
+                                ),
+                                Schema.Null,
+                              ]),
+                            ),
+                            includeHeaders: Schema.optional(
+                              Schema.Union([
+                                Schema.Record(Schema.String, Schema.Unknown),
+                                Schema.Null,
+                              ]),
+                            ),
+                            includeImages: Schema.optional(
+                              Schema.Union([Schema.Boolean, Schema.Null]),
+                            ),
+                            specificSitemaps: Schema.optional(
+                              Schema.Union([
+                                Schema.Array(Schema.String),
+                                Schema.Null,
+                              ]),
+                            ),
+                            useBrowserRendering: Schema.optional(
+                              Schema.Union([Schema.Boolean, Schema.Null]),
+                            ),
+                          }).pipe(
+                            Schema.encodeKeys({
+                              contentSelector: "content_selector",
+                              includeHeaders: "include_headers",
+                              includeImages: "include_images",
+                              specificSitemaps: "specific_sitemaps",
+                              useBrowserRendering: "use_browser_rendering",
+                            }),
+                          ),
+                          Schema.Null,
+                        ]),
+                      ),
+                      parseType: Schema.optional(
+                        Schema.Union([
+                          Schema.Union([
+                            Schema.Literals(["sitemap", "feed-rss", "crawl"]),
+                            Schema.String,
+                          ]),
+                          Schema.Null,
+                        ]),
+                      ),
+                      storeOptions: Schema.optional(
+                        Schema.Union([
+                          Schema.Struct({
+                            storageId: Schema.String,
+                            r2Jurisdiction: Schema.optional(
+                              Schema.Union([Schema.String, Schema.Null]),
+                            ),
+                            storageType: Schema.optional(
+                              Schema.Union([Schema.Literal("r2"), Schema.Null]),
+                            ),
+                          }).pipe(
+                            Schema.encodeKeys({
+                              storageId: "storage_id",
+                              r2Jurisdiction: "r2_jurisdiction",
+                              storageType: "storage_type",
+                            }),
+                          ),
+                          Schema.Null,
+                        ]),
+                      ),
+                    }).pipe(
+                      Schema.encodeKeys({
+                        crawlOptions: "crawl_options",
+                        parseOptions: "parse_options",
+                        parseType: "parse_type",
+                        storeOptions: "store_options",
+                      }),
+                    ),
+                    Schema.Null,
+                  ]),
+                ),
+              }).pipe(
+                Schema.encodeKeys({
+                  excludeItems: "exclude_items",
+                  includeItems: "include_items",
+                  prefix: "prefix",
+                  r2Jurisdiction: "r2_jurisdiction",
+                  webCrawler: "web_crawler",
+                }),
+              ),
+              Schema.Null,
+            ]),
+          ),
+          status: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+          syncInterval: Schema.optional(
+            Schema.Union([Schema.Number, Schema.Null]),
+          ),
+          tokenId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+          type: Schema.optional(
+            Schema.Union([
+              Schema.Literal("r2"),
+              Schema.Literal("web-crawler"),
+              Schema.Null,
+            ]),
+          ),
+        }).pipe(
+          Schema.encodeKeys({
+            id: "id",
+            createdAt: "created_at",
+            modifiedAt: "modified_at",
+            aiGatewayId: "ai_gateway_id",
+            aiSearchModel: "ai_search_model",
+            cache: "cache",
+            cacheThreshold: "cache_threshold",
+            cacheTtl: "cache_ttl",
+            chunkOverlap: "chunk_overlap",
+            chunkSize: "chunk_size",
+            createdBy: "created_by",
+            customMetadata: "custom_metadata",
+            embeddingModel: "embedding_model",
+            enable: "enable",
+            engineVersion: "engine_version",
+            fusionMethod: "fusion_method",
+            hybridSearchEnabled: "hybrid_search_enabled",
+            indexMethod: "index_method",
+            indexingOptions: "indexing_options",
+            lastActivity: "last_activity",
+            maxNumResults: "max_num_results",
+            metadata: "metadata",
+            modifiedBy: "modified_by",
+            namespace: "namespace",
+            paused: "paused",
+            publicEndpointId: "public_endpoint_id",
+            publicEndpointParams: "public_endpoint_params",
+            reranking: "reranking",
+            rerankingModel: "reranking_model",
+            retrievalOptions: "retrieval_options",
+            rewriteModel: "rewrite_model",
+            rewriteQuery: "rewrite_query",
+            scoreThreshold: "score_threshold",
+            source: "source",
+            sourceParams: "source_params",
+            status: "status",
+            syncInterval: "sync_interval",
+            tokenId: "token_id",
+            type: "type",
+          }),
+        ),
+      ),
+      resultInfo: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            count: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+            page: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+            perPage: Schema.optional(
+              Schema.Union([Schema.Number, Schema.Null]),
+            ),
+            totalCount: Schema.optional(
+              Schema.Union([Schema.Number, Schema.Null]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              count: "count",
+              page: "page",
+              perPage: "per_page",
+              totalCount: "total_count",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+    }).pipe(Schema.encodeKeys({ result: "result", resultInfo: "result_info" })),
+) as unknown as Schema.Schema<ListInstancesResponse>;
+
+export type ListInstancesError = DefaultErrors | InvalidRoute | Forbidden;
+
+export const listInstances: API.PaginatedOperationMethod<
+  ListInstancesRequest,
+  ListInstancesResponse,
+  ListInstancesError,
+  Credentials | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.makePaginated(() => ({
+  input: ListInstancesRequest,
+  output: ListInstancesResponse,
+  errors: [InvalidRoute, Forbidden],
+  pagination: {
+    mode: "page",
+    inputToken: "page",
+    outputToken: "resultInfo.page",
+    items: "result",
+    pageSize: "perPage",
+  } as const,
+}));
+
+export interface CreateInstanceRequest {
+  /** Path param */
+  accountId: string;
+  /** Body param: AI Search instance ID. Lowercase alphanumeric, hyphens, and underscores. */
+  id: string;
+  /** Body param */
+  aiGatewayId?: string | null;
+  /** Body param */
+  aiSearchModel?:
+    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+    | "@cf/zai-org/glm-4.7-flash"
+    | "@cf/meta/llama-3.1-8b-instruct-fast"
+    | "@cf/meta/llama-3.1-8b-instruct-fp8"
+    | "@cf/meta/llama-4-scout-17b-16e-instruct"
+    | "@cf/qwen/qwen3-30b-a3b-fp8"
+    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+    | "@cf/moonshotai/kimi-k2-instruct"
+    | "@cf/google/gemma-3-12b-it"
+    | "@cf/google/gemma-4-26b-a4b-it"
+    | "@cf/moonshotai/kimi-k2.5"
+    | "anthropic/claude-3-7-sonnet"
+    | "anthropic/claude-sonnet-4"
+    | "anthropic/claude-opus-4"
+    | "anthropic/claude-3-5-haiku"
+    | "cerebras/qwen-3-235b-a22b-instruct"
+    | "cerebras/qwen-3-235b-a22b-thinking"
+    | "cerebras/llama-3.3-70b"
+    | "cerebras/llama-4-maverick-17b-128e-instruct"
+    | "cerebras/llama-4-scout-17b-16e-instruct"
+    | "cerebras/gpt-oss-120b"
+    | "google-ai-studio/gemini-2.5-flash"
+    | "google-ai-studio/gemini-2.5-pro"
+    | "grok/grok-4"
+    | "groq/llama-3.3-70b-versatile"
+    | "groq/llama-3.1-8b-instant"
+    | "openai/gpt-5"
+    | "openai/gpt-5-mini"
+    | "openai/gpt-5-nano"
+    | ""
+    | null;
+  /** Body param */
+  cache?: boolean;
+  /** Body param */
+  cacheThreshold?:
+    | "super_strict_match"
+    | "close_enough"
+    | "flexible_friend"
+    | "anything_goes"
+    | (string & {});
+  /** Body param: Cache entry TTL in seconds. Allowed values: 600 (10min), 1800 (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h), 86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d). */
+  cacheTtl?: number;
+  /** Body param */
+  chunk?: boolean;
+  /** Body param */
+  chunkOverlap?: number;
+  /** Body param */
+  chunkSize?: number;
+  /** Body param */
+  customMetadata?: {
+    dataType: "text" | "number" | "boolean" | "datetime" | (string & {});
+    fieldName: string;
+  }[];
+  /** Body param */
+  embeddingModel?:
+    | "@cf/qwen/qwen3-embedding-0.6b"
+    | "@cf/baai/bge-m3"
+    | "@cf/baai/bge-large-en-v1.5"
+    | "@cf/google/embeddinggemma-300m"
+    | "google-ai-studio/gemini-embedding-001"
+    | "google-ai-studio/gemini-embedding-2-preview"
+    | "openai/text-embedding-3-small"
+    | "openai/text-embedding-3-large"
+    | ""
+    | null;
+  /** Body param */
+  fusionMethod?: "max" | "rrf" | (string & {});
+  /** @deprecated Body param: Deprecated — use index_method instead. */
+  hybridSearchEnabled?: boolean;
+  /** Body param: Controls which storage backends are used during indexing. Defaults to vector-only. */
+  indexMethod?: { keyword: boolean; vector: boolean };
+  /** Body param */
+  indexingOptions?: {
+    keywordTokenizer?: "porter" | "trigram" | (string & {});
+  } | null;
+  /** Body param */
+  maxNumResults?: number;
+  /** Body param */
+  metadata?: { createdFromAisearchWizard?: boolean; workerDomain?: string };
+  /** Body param */
+  publicEndpointParams?: {
+    authorizedHosts?: string[];
+    chatCompletionsEndpoint?: { disabled?: boolean };
+    enabled?: boolean;
+    mcp?: { description?: string; disabled?: boolean };
+    rateLimit?: {
+      periodMs?: number;
+      requests?: number;
+      technique?: "fixed" | "sliding" | (string & {});
+    };
+    searchEndpoint?: { disabled?: boolean };
+  };
+  /** Body param */
+  reranking?: boolean;
+  /** Body param */
+  rerankingModel?: "@cf/baai/bge-reranker-base" | "" | null;
+  /** Body param */
+  retrievalOptions?: {
+    boostBy?: {
+      field: string;
+      direction?: "asc" | "desc" | "exists" | "not_exists" | (string & {});
+    }[];
+    keywordMatchMode?: "and" | "or" | (string & {});
+  } | null;
+  /** Body param */
+  rewriteModel?:
+    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+    | "@cf/zai-org/glm-4.7-flash"
+    | "@cf/meta/llama-3.1-8b-instruct-fast"
+    | "@cf/meta/llama-3.1-8b-instruct-fp8"
+    | "@cf/meta/llama-4-scout-17b-16e-instruct"
+    | "@cf/qwen/qwen3-30b-a3b-fp8"
+    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+    | "@cf/moonshotai/kimi-k2-instruct"
+    | "@cf/google/gemma-3-12b-it"
+    | "@cf/google/gemma-4-26b-a4b-it"
+    | "@cf/moonshotai/kimi-k2.5"
+    | "anthropic/claude-3-7-sonnet"
+    | "anthropic/claude-sonnet-4"
+    | "anthropic/claude-opus-4"
+    | "anthropic/claude-3-5-haiku"
+    | "cerebras/qwen-3-235b-a22b-instruct"
+    | "cerebras/qwen-3-235b-a22b-thinking"
+    | "cerebras/llama-3.3-70b"
+    | "cerebras/llama-4-maverick-17b-128e-instruct"
+    | "cerebras/llama-4-scout-17b-16e-instruct"
+    | "cerebras/gpt-oss-120b"
+    | "google-ai-studio/gemini-2.5-flash"
+    | "google-ai-studio/gemini-2.5-pro"
+    | "grok/grok-4"
+    | "groq/llama-3.3-70b-versatile"
+    | "groq/llama-3.1-8b-instant"
+    | "openai/gpt-5"
+    | "openai/gpt-5-mini"
+    | "openai/gpt-5-nano"
+    | ""
+    | null;
+  /** Body param */
+  rewriteQuery?: boolean;
+  /** Body param */
+  scoreThreshold?: number;
+  /** Body param */
+  source?: string | null;
+  /** Body param */
+  sourceParams?: {
+    excludeItems?: string[];
+    includeItems?: string[];
+    prefix?: string;
+    r2Jurisdiction?: string;
+    webCrawler?: {
+      crawlOptions?: {
+        depth?: number;
+        includeExternalLinks?: boolean;
+        includeSubdomains?: boolean;
+        maxAge?: number;
+        source?: "all" | "sitemaps" | "links" | (string & {});
+      };
+      parseOptions?: {
+        contentSelector?: { path: string; selector: string }[];
+        includeHeaders?: Record<string, unknown>;
+        includeImages?: boolean;
+        specificSitemaps?: string[];
+        useBrowserRendering?: boolean;
+      };
+      parseType?: "sitemap" | "feed-rss" | "crawl" | (string & {});
+      storeOptions?: {
+        storageId: string;
+        r2Jurisdiction?: string;
+        storageType?: "r2";
+      };
+    };
+  } | null;
+  /** Body param: Interval between automatic syncs, in seconds. Allowed values: 900 (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h), 21600 (6h), 43200 (12h), 86400 (24h). */
+  syncInterval?: number;
+  /** Body param */
+  tokenId?: string;
+  /** Body param */
+  type?: "r2" | "web-crawler" | null;
+}
+
+export const CreateInstanceRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      id: Schema.String,
+      aiGatewayId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      aiSearchModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+          Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+          Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+          Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+          Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+          Schema.Literal("@cf/google/gemma-3-12b-it"),
+          Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+          Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+          Schema.Literal("anthropic/claude-3-7-sonnet"),
+          Schema.Literal("anthropic/claude-sonnet-4"),
+          Schema.Literal("anthropic/claude-opus-4"),
+          Schema.Literal("anthropic/claude-3-5-haiku"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+          Schema.Literal("cerebras/llama-3.3-70b"),
+          Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+          Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("cerebras/gpt-oss-120b"),
+          Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+          Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+          Schema.Literal("grok/grok-4"),
+          Schema.Literal("groq/llama-3.3-70b-versatile"),
+          Schema.Literal("groq/llama-3.1-8b-instant"),
+          Schema.Literal("openai/gpt-5"),
+          Schema.Literal("openai/gpt-5-mini"),
+          Schema.Literal("openai/gpt-5-nano"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      cache: Schema.optional(Schema.Boolean),
+      cacheThreshold: Schema.optional(
+        Schema.Union([
+          Schema.Literals([
+            "super_strict_match",
+            "close_enough",
+            "flexible_friend",
+            "anything_goes",
+          ]),
+          Schema.String,
+        ]),
+      ),
+      cacheTtl: Schema.optional(Schema.Number),
+      chunk: Schema.optional(Schema.Boolean),
+      chunkOverlap: Schema.optional(Schema.Number),
+      chunkSize: Schema.optional(Schema.Number),
+      customMetadata: Schema.optional(
+        Schema.Array(
+          Schema.Struct({
+            dataType: Schema.Union([
+              Schema.Literals(["text", "number", "boolean", "datetime"]),
+              Schema.String,
+            ]),
+            fieldName: Schema.String,
+          }).pipe(
+            Schema.encodeKeys({
+              dataType: "data_type",
+              fieldName: "field_name",
+            }),
+          ),
+        ),
+      ),
+      embeddingModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
+          Schema.Literal("@cf/baai/bge-m3"),
+          Schema.Literal("@cf/baai/bge-large-en-v1.5"),
+          Schema.Literal("@cf/google/embeddinggemma-300m"),
+          Schema.Literal("google-ai-studio/gemini-embedding-001"),
+          Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
+          Schema.Literal("openai/text-embedding-3-small"),
+          Schema.Literal("openai/text-embedding-3-large"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      fusionMethod: Schema.optional(
+        Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
+      ),
+      hybridSearchEnabled: Schema.optional(Schema.Boolean),
+      indexMethod: Schema.optional(
+        Schema.Struct({
+          keyword: Schema.Boolean,
+          vector: Schema.Boolean,
+        }),
+      ),
+      indexingOptions: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            keywordTokenizer: Schema.optional(
+              Schema.Union([
+                Schema.Literals(["porter", "trigram"]),
+                Schema.String,
+              ]),
+            ),
+          }).pipe(Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" })),
+          Schema.Null,
+        ]),
+      ),
+      maxNumResults: Schema.optional(Schema.Number),
+      metadata: Schema.optional(
+        Schema.Struct({
+          createdFromAisearchWizard: Schema.optional(Schema.Boolean),
+          workerDomain: Schema.optional(Schema.String),
+        }).pipe(
+          Schema.encodeKeys({
+            createdFromAisearchWizard: "created_from_aisearch_wizard",
+            workerDomain: "worker_domain",
+          }),
+        ),
+      ),
+      publicEndpointParams: Schema.optional(
+        Schema.Struct({
+          authorizedHosts: Schema.optional(Schema.Array(Schema.String)),
+          chatCompletionsEndpoint: Schema.optional(
+            Schema.Struct({
+              disabled: Schema.optional(Schema.Boolean),
+            }),
+          ),
+          enabled: Schema.optional(Schema.Boolean),
+          mcp: Schema.optional(
+            Schema.Struct({
+              description: Schema.optional(Schema.String),
+              disabled: Schema.optional(Schema.Boolean),
+            }),
+          ),
+          rateLimit: Schema.optional(
+            Schema.Struct({
+              periodMs: Schema.optional(Schema.Number),
+              requests: Schema.optional(Schema.Number),
+              technique: Schema.optional(
+                Schema.Union([
+                  Schema.Literals(["fixed", "sliding"]),
+                  Schema.String,
+                ]),
+              ),
+            }).pipe(
+              Schema.encodeKeys({
+                periodMs: "period_ms",
+                requests: "requests",
+                technique: "technique",
+              }),
+            ),
+          ),
+          searchEndpoint: Schema.optional(
+            Schema.Struct({
+              disabled: Schema.optional(Schema.Boolean),
+            }),
+          ),
+        }).pipe(
+          Schema.encodeKeys({
+            authorizedHosts: "authorized_hosts",
+            chatCompletionsEndpoint: "chat_completions_endpoint",
+            enabled: "enabled",
+            mcp: "mcp",
+            rateLimit: "rate_limit",
+            searchEndpoint: "search_endpoint",
+          }),
+        ),
+      ),
+      reranking: Schema.optional(Schema.Boolean),
+      rerankingModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/baai/bge-reranker-base"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      retrievalOptions: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            boostBy: Schema.optional(
+              Schema.Array(
+                Schema.Struct({
+                  field: Schema.String,
+                  direction: Schema.optional(
+                    Schema.Union([
+                      Schema.Literals(["asc", "desc", "exists", "not_exists"]),
+                      Schema.String,
+                    ]),
+                  ),
+                }),
+              ),
+            ),
+            keywordMatchMode: Schema.optional(
+              Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              boostBy: "boost_by",
+              keywordMatchMode: "keyword_match_mode",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      rewriteModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+          Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+          Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+          Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+          Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+          Schema.Literal("@cf/google/gemma-3-12b-it"),
+          Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+          Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+          Schema.Literal("anthropic/claude-3-7-sonnet"),
+          Schema.Literal("anthropic/claude-sonnet-4"),
+          Schema.Literal("anthropic/claude-opus-4"),
+          Schema.Literal("anthropic/claude-3-5-haiku"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+          Schema.Literal("cerebras/llama-3.3-70b"),
+          Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+          Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("cerebras/gpt-oss-120b"),
+          Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+          Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+          Schema.Literal("grok/grok-4"),
+          Schema.Literal("groq/llama-3.3-70b-versatile"),
+          Schema.Literal("groq/llama-3.1-8b-instant"),
+          Schema.Literal("openai/gpt-5"),
+          Schema.Literal("openai/gpt-5-mini"),
+          Schema.Literal("openai/gpt-5-nano"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      rewriteQuery: Schema.optional(Schema.Boolean),
+      scoreThreshold: Schema.optional(Schema.Number),
+      source: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      sourceParams: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            excludeItems: Schema.optional(Schema.Array(Schema.String)),
+            includeItems: Schema.optional(Schema.Array(Schema.String)),
+            prefix: Schema.optional(Schema.String),
+            r2Jurisdiction: Schema.optional(Schema.String),
+            webCrawler: Schema.optional(
+              Schema.Struct({
+                crawlOptions: Schema.optional(
+                  Schema.Struct({
+                    depth: Schema.optional(Schema.Number),
+                    includeExternalLinks: Schema.optional(Schema.Boolean),
+                    includeSubdomains: Schema.optional(Schema.Boolean),
+                    maxAge: Schema.optional(Schema.Number),
+                    source: Schema.optional(
+                      Schema.Union([
+                        Schema.Literals(["all", "sitemaps", "links"]),
+                        Schema.String,
+                      ]),
+                    ),
+                  }).pipe(
+                    Schema.encodeKeys({
+                      depth: "depth",
+                      includeExternalLinks: "include_external_links",
+                      includeSubdomains: "include_subdomains",
+                      maxAge: "max_age",
+                      source: "source",
+                    }),
+                  ),
+                ),
+                parseOptions: Schema.optional(
+                  Schema.Struct({
+                    contentSelector: Schema.optional(
+                      Schema.Array(
+                        Schema.Struct({
+                          path: Schema.String,
+                          selector: Schema.String,
+                        }),
+                      ),
+                    ),
+                    includeHeaders: Schema.optional(
+                      Schema.Record(Schema.String, Schema.Unknown),
+                    ),
+                    includeImages: Schema.optional(Schema.Boolean),
+                    specificSitemaps: Schema.optional(
+                      Schema.Array(Schema.String),
+                    ),
+                    useBrowserRendering: Schema.optional(Schema.Boolean),
+                  }).pipe(
+                    Schema.encodeKeys({
+                      contentSelector: "content_selector",
+                      includeHeaders: "include_headers",
+                      includeImages: "include_images",
+                      specificSitemaps: "specific_sitemaps",
+                      useBrowserRendering: "use_browser_rendering",
+                    }),
+                  ),
+                ),
+                parseType: Schema.optional(
+                  Schema.Union([
+                    Schema.Literals(["sitemap", "feed-rss", "crawl"]),
+                    Schema.String,
+                  ]),
+                ),
+                storeOptions: Schema.optional(
+                  Schema.Struct({
+                    storageId: Schema.String,
+                    r2Jurisdiction: Schema.optional(Schema.String),
+                    storageType: Schema.optional(Schema.Literal("r2")),
+                  }).pipe(
+                    Schema.encodeKeys({
+                      storageId: "storage_id",
+                      r2Jurisdiction: "r2_jurisdiction",
+                      storageType: "storage_type",
+                    }),
+                  ),
+                ),
+              }).pipe(
+                Schema.encodeKeys({
+                  crawlOptions: "crawl_options",
+                  parseOptions: "parse_options",
+                  parseType: "parse_type",
+                  storeOptions: "store_options",
+                }),
+              ),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              excludeItems: "exclude_items",
+              includeItems: "include_items",
+              prefix: "prefix",
+              r2Jurisdiction: "r2_jurisdiction",
+              webCrawler: "web_crawler",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      syncInterval: Schema.optional(Schema.Number),
+      tokenId: Schema.optional(Schema.String),
+      type: Schema.optional(
+        Schema.Union([
+          Schema.Literal("r2"),
+          Schema.Literal("web-crawler"),
+          Schema.Null,
+        ]),
+      ),
+    }).pipe(
+      Schema.encodeKeys({
+        id: "id",
+        aiGatewayId: "ai_gateway_id",
+        aiSearchModel: "ai_search_model",
+        cache: "cache",
+        cacheThreshold: "cache_threshold",
+        cacheTtl: "cache_ttl",
+        chunk: "chunk",
+        chunkOverlap: "chunk_overlap",
+        chunkSize: "chunk_size",
+        customMetadata: "custom_metadata",
+        embeddingModel: "embedding_model",
+        fusionMethod: "fusion_method",
+        hybridSearchEnabled: "hybrid_search_enabled",
+        indexMethod: "index_method",
+        indexingOptions: "indexing_options",
+        maxNumResults: "max_num_results",
+        metadata: "metadata",
+        publicEndpointParams: "public_endpoint_params",
+        reranking: "reranking",
+        rerankingModel: "reranking_model",
+        retrievalOptions: "retrieval_options",
+        rewriteModel: "rewrite_model",
+        rewriteQuery: "rewrite_query",
+        scoreThreshold: "score_threshold",
+        source: "source",
+        sourceParams: "source_params",
+        syncInterval: "sync_interval",
+        tokenId: "token_id",
+        type: "type",
+      }),
+      T.Http({
+        method: "POST",
+        path: "/accounts/{account_id}/ai-search/instances",
+      }),
+    ),
+) as unknown as Schema.Schema<CreateInstanceRequest>;
+
+export interface CreateInstanceResponse {
+  /** AI Search instance ID. Lowercase alphanumeric, hyphens, and underscores. */
+  id: string;
+  createdAt?: string | null;
+  modifiedAt?: string | null;
+  aiGatewayId?: string | null;
+  aiSearchModel?:
+    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+    | "@cf/zai-org/glm-4.7-flash"
+    | "@cf/meta/llama-3.1-8b-instruct-fast"
+    | "@cf/meta/llama-3.1-8b-instruct-fp8"
+    | "@cf/meta/llama-4-scout-17b-16e-instruct"
+    | "@cf/qwen/qwen3-30b-a3b-fp8"
+    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+    | "@cf/moonshotai/kimi-k2-instruct"
+    | "@cf/google/gemma-3-12b-it"
+    | "@cf/google/gemma-4-26b-a4b-it"
+    | "@cf/moonshotai/kimi-k2.5"
+    | "anthropic/claude-3-7-sonnet"
+    | "anthropic/claude-sonnet-4"
+    | "anthropic/claude-opus-4"
+    | "anthropic/claude-3-5-haiku"
+    | "cerebras/qwen-3-235b-a22b-instruct"
+    | "cerebras/qwen-3-235b-a22b-thinking"
+    | "cerebras/llama-3.3-70b"
+    | "cerebras/llama-4-maverick-17b-128e-instruct"
+    | "cerebras/llama-4-scout-17b-16e-instruct"
+    | "cerebras/gpt-oss-120b"
+    | "google-ai-studio/gemini-2.5-flash"
+    | "google-ai-studio/gemini-2.5-pro"
+    | "grok/grok-4"
+    | "groq/llama-3.3-70b-versatile"
+    | "groq/llama-3.1-8b-instant"
+    | "openai/gpt-5"
+    | "openai/gpt-5-mini"
+    | "openai/gpt-5-nano"
+    | ""
+    | null;
+  cache?: boolean | null;
+  cacheThreshold?:
+    | "super_strict_match"
+    | "close_enough"
+    | "flexible_friend"
+    | "anything_goes"
+    | null;
+  /** Cache entry TTL in seconds. Allowed values: 600 (10min), 1800 (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h), 86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d). */
+  cacheTtl?: number | null;
+  chunkOverlap?: number | null;
+  chunkSize?: number | null;
+  createdBy?: string | null;
+  customMetadata?:
+    | {
+        dataType: "text" | "number" | "boolean" | "datetime" | (string & {});
+        fieldName: string;
+      }[]
+    | null;
+  embeddingModel?:
+    | "@cf/qwen/qwen3-embedding-0.6b"
+    | "@cf/baai/bge-m3"
+    | "@cf/baai/bge-large-en-v1.5"
+    | "@cf/google/embeddinggemma-300m"
+    | "google-ai-studio/gemini-embedding-001"
+    | "google-ai-studio/gemini-embedding-2-preview"
+    | "openai/text-embedding-3-small"
+    | "openai/text-embedding-3-large"
+    | ""
+    | null;
+  enable?: boolean | null;
+  engineVersion?: number | null;
+  fusionMethod?: "max" | "rrf" | (string & {}) | null;
+  /** @deprecated Deprecated — use index_method instead. */
+  hybridSearchEnabled?: boolean | null;
+  /** Controls which storage backends are used during indexing. Defaults to vector-only. */
+  indexMethod?: { keyword: boolean; vector: boolean } | null;
+  indexingOptions?: {
+    keywordTokenizer?: "porter" | "trigram" | (string & {}) | null;
+  } | null;
+  lastActivity?: string | null;
+  maxNumResults?: number | null;
+  metadata?: {
+    createdFromAisearchWizard?: boolean | null;
+    workerDomain?: string | null;
+  } | null;
+  modifiedBy?: string | null;
+  namespace?: string | null;
+  paused?: boolean | null;
+  publicEndpointId?: string | null;
+  publicEndpointParams?: {
+    authorizedHosts?: string[] | null;
+    chatCompletionsEndpoint?: { disabled?: boolean | null } | null;
+    enabled?: boolean | null;
+    mcp?: { description?: string | null; disabled?: boolean | null } | null;
+    rateLimit?: {
+      periodMs?: number | null;
+      requests?: number | null;
+      technique?: "fixed" | "sliding" | (string & {}) | null;
+    } | null;
+    searchEndpoint?: { disabled?: boolean | null } | null;
+  } | null;
+  reranking?: boolean | null;
+  rerankingModel?: "@cf/baai/bge-reranker-base" | "" | null;
+  retrievalOptions?: {
+    boostBy?:
+      | {
+          field: string;
+          direction?:
+            | "asc"
+            | "desc"
+            | "exists"
+            | "not_exists"
+            | (string & {})
+            | null;
+        }[]
+      | null;
+    keywordMatchMode?: "and" | "or" | (string & {}) | null;
+  } | null;
+  rewriteModel?:
+    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+    | "@cf/zai-org/glm-4.7-flash"
+    | "@cf/meta/llama-3.1-8b-instruct-fast"
+    | "@cf/meta/llama-3.1-8b-instruct-fp8"
+    | "@cf/meta/llama-4-scout-17b-16e-instruct"
+    | "@cf/qwen/qwen3-30b-a3b-fp8"
+    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+    | "@cf/moonshotai/kimi-k2-instruct"
+    | "@cf/google/gemma-3-12b-it"
+    | "@cf/google/gemma-4-26b-a4b-it"
+    | "@cf/moonshotai/kimi-k2.5"
+    | "anthropic/claude-3-7-sonnet"
+    | "anthropic/claude-sonnet-4"
+    | "anthropic/claude-opus-4"
+    | "anthropic/claude-3-5-haiku"
+    | "cerebras/qwen-3-235b-a22b-instruct"
+    | "cerebras/qwen-3-235b-a22b-thinking"
+    | "cerebras/llama-3.3-70b"
+    | "cerebras/llama-4-maverick-17b-128e-instruct"
+    | "cerebras/llama-4-scout-17b-16e-instruct"
+    | "cerebras/gpt-oss-120b"
+    | "google-ai-studio/gemini-2.5-flash"
+    | "google-ai-studio/gemini-2.5-pro"
+    | "grok/grok-4"
+    | "groq/llama-3.3-70b-versatile"
+    | "groq/llama-3.1-8b-instant"
+    | "openai/gpt-5"
+    | "openai/gpt-5-mini"
+    | "openai/gpt-5-nano"
+    | ""
+    | null;
+  rewriteQuery?: boolean | null;
+  scoreThreshold?: number | null;
+  source?: string | null;
+  sourceParams?: {
+    excludeItems?: string[] | null;
+    includeItems?: string[] | null;
+    prefix?: string | null;
+    r2Jurisdiction?: string | null;
+    webCrawler?: {
+      crawlOptions?: {
+        depth?: number | null;
+        includeExternalLinks?: boolean | null;
+        includeSubdomains?: boolean | null;
+        maxAge?: number | null;
+        source?: "all" | "sitemaps" | "links" | (string & {}) | null;
+      } | null;
+      parseOptions?: {
+        contentSelector?: { path: string; selector: string }[] | null;
+        includeHeaders?: Record<string, unknown> | null;
+        includeImages?: boolean | null;
+        specificSitemaps?: string[] | null;
+        useBrowserRendering?: boolean | null;
+      } | null;
+      parseType?: "sitemap" | "feed-rss" | "crawl" | (string & {}) | null;
+      storeOptions?: {
+        storageId: string;
+        r2Jurisdiction?: string | null;
+        storageType?: "r2" | null;
+      } | null;
+    } | null;
+  } | null;
+  status?: string | null;
+  /** Interval between automatic syncs, in seconds. Allowed values: 900 (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h), 21600 (6h), 43200 (12h), 86400 (24h). */
+  syncInterval?: number | null;
+  tokenId?: string | null;
+  type?: "r2" | "web-crawler" | null;
+}
+
+export const CreateInstanceResponse =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
     Schema.Struct({
       id: Schema.String,
       createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
@@ -1820,26 +3315,7 @@ export const ListInstancesResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
           Schema.Null,
         ]),
       ),
-      cacheTtl: Schema.optional(
-        Schema.Union([
-          Schema.Union([
-            Schema.Literals([
-              "600",
-              "1800",
-              "3600",
-              "7200",
-              "21600",
-              "43200",
-              "86400",
-              "172800",
-              "259200",
-              "518400",
-            ]),
-            Schema.String,
-          ]),
-          Schema.Null,
-        ]),
-      ),
+      cacheTtl: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
       chunkOverlap: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
       chunkSize: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
       createdBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
@@ -2266,24 +3742,7 @@ export const ListInstancesResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
         ]),
       ),
       status: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      syncInterval: Schema.optional(
-        Schema.Union([
-          Schema.Union([
-            Schema.Literals([
-              "900",
-              "1800",
-              "3600",
-              "7200",
-              "14400",
-              "21600",
-              "43200",
-              "86400",
-            ]),
-            Schema.String,
-          ]),
-          Schema.Null,
-        ]),
-      ),
+      syncInterval: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
       tokenId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
       type: Schema.optional(
         Schema.Union([
@@ -2292,1487 +3751,61 @@ export const ListInstancesResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
           Schema.Null,
         ]),
       ),
-    }).pipe(
-      Schema.encodeKeys({
-        id: "id",
-        createdAt: "created_at",
-        modifiedAt: "modified_at",
-        aiGatewayId: "ai_gateway_id",
-        aiSearchModel: "ai_search_model",
-        cache: "cache",
-        cacheThreshold: "cache_threshold",
-        cacheTtl: "cache_ttl",
-        chunkOverlap: "chunk_overlap",
-        chunkSize: "chunk_size",
-        createdBy: "created_by",
-        customMetadata: "custom_metadata",
-        embeddingModel: "embedding_model",
-        enable: "enable",
-        engineVersion: "engine_version",
-        fusionMethod: "fusion_method",
-        hybridSearchEnabled: "hybrid_search_enabled",
-        indexMethod: "index_method",
-        indexingOptions: "indexing_options",
-        lastActivity: "last_activity",
-        maxNumResults: "max_num_results",
-        metadata: "metadata",
-        modifiedBy: "modified_by",
-        namespace: "namespace",
-        paused: "paused",
-        publicEndpointId: "public_endpoint_id",
-        publicEndpointParams: "public_endpoint_params",
-        reranking: "reranking",
-        rerankingModel: "reranking_model",
-        retrievalOptions: "retrieval_options",
-        rewriteModel: "rewrite_model",
-        rewriteQuery: "rewrite_query",
-        scoreThreshold: "score_threshold",
-        source: "source",
-        sourceParams: "source_params",
-        status: "status",
-        syncInterval: "sync_interval",
-        tokenId: "token_id",
-        type: "type",
-      }),
-    ),
-  ),
-  resultInfo: Schema.optional(
-    Schema.Union([
-      Schema.Struct({
-        count: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-        page: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-        perPage: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-        totalCount: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-      }).pipe(
+    })
+      .pipe(
         Schema.encodeKeys({
-          count: "count",
-          page: "page",
-          perPage: "per_page",
-          totalCount: "total_count",
+          id: "id",
+          createdAt: "created_at",
+          modifiedAt: "modified_at",
+          aiGatewayId: "ai_gateway_id",
+          aiSearchModel: "ai_search_model",
+          cache: "cache",
+          cacheThreshold: "cache_threshold",
+          cacheTtl: "cache_ttl",
+          chunkOverlap: "chunk_overlap",
+          chunkSize: "chunk_size",
+          createdBy: "created_by",
+          customMetadata: "custom_metadata",
+          embeddingModel: "embedding_model",
+          enable: "enable",
+          engineVersion: "engine_version",
+          fusionMethod: "fusion_method",
+          hybridSearchEnabled: "hybrid_search_enabled",
+          indexMethod: "index_method",
+          indexingOptions: "indexing_options",
+          lastActivity: "last_activity",
+          maxNumResults: "max_num_results",
+          metadata: "metadata",
+          modifiedBy: "modified_by",
+          namespace: "namespace",
+          paused: "paused",
+          publicEndpointId: "public_endpoint_id",
+          publicEndpointParams: "public_endpoint_params",
+          reranking: "reranking",
+          rerankingModel: "reranking_model",
+          retrievalOptions: "retrieval_options",
+          rewriteModel: "rewrite_model",
+          rewriteQuery: "rewrite_query",
+          scoreThreshold: "score_threshold",
+          source: "source",
+          sourceParams: "source_params",
+          status: "status",
+          syncInterval: "sync_interval",
+          tokenId: "token_id",
+          type: "type",
         }),
-      ),
-      Schema.Null,
-    ]),
-  ),
-}).pipe(
-  Schema.encodeKeys({ result: "result", resultInfo: "result_info" }),
-) as unknown as Schema.Schema<ListInstancesResponse>;
-
-export type ListInstancesError = DefaultErrors | InvalidRoute;
-
-export const listInstances: API.PaginatedOperationMethod<
-  ListInstancesRequest,
-  ListInstancesResponse,
-  ListInstancesError,
-  Credentials | HttpClient.HttpClient
-> = /*@__PURE__*/ /*#__PURE__*/ API.makePaginated(() => ({
-  input: ListInstancesRequest,
-  output: ListInstancesResponse,
-  errors: [InvalidRoute],
-  pagination: {
-    mode: "page",
-    inputToken: "page",
-    outputToken: "resultInfo.page",
-    items: "result",
-    pageSize: "perPage",
-  } as const,
-}));
-
-export interface CreateInstanceRequest {
-  /** Path param */
-  accountId: string;
-  /** Body param: AI Search instance ID. Lowercase alphanumeric, hyphens, and underscores. */
-  id: string;
-  /** Body param */
-  aiGatewayId?: string | null;
-  /** Body param */
-  aiSearchModel?:
-    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-    | "@cf/zai-org/glm-4.7-flash"
-    | "@cf/meta/llama-3.1-8b-instruct-fast"
-    | "@cf/meta/llama-3.1-8b-instruct-fp8"
-    | "@cf/meta/llama-4-scout-17b-16e-instruct"
-    | "@cf/qwen/qwen3-30b-a3b-fp8"
-    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
-    | "@cf/moonshotai/kimi-k2-instruct"
-    | "@cf/google/gemma-3-12b-it"
-    | "@cf/google/gemma-4-26b-a4b-it"
-    | "@cf/moonshotai/kimi-k2.5"
-    | "anthropic/claude-3-7-sonnet"
-    | "anthropic/claude-sonnet-4"
-    | "anthropic/claude-opus-4"
-    | "anthropic/claude-3-5-haiku"
-    | "cerebras/qwen-3-235b-a22b-instruct"
-    | "cerebras/qwen-3-235b-a22b-thinking"
-    | "cerebras/llama-3.3-70b"
-    | "cerebras/llama-4-maverick-17b-128e-instruct"
-    | "cerebras/llama-4-scout-17b-16e-instruct"
-    | "cerebras/gpt-oss-120b"
-    | "google-ai-studio/gemini-2.5-flash"
-    | "google-ai-studio/gemini-2.5-pro"
-    | "grok/grok-4"
-    | "groq/llama-3.3-70b-versatile"
-    | "groq/llama-3.1-8b-instant"
-    | "openai/gpt-5"
-    | "openai/gpt-5-mini"
-    | "openai/gpt-5-nano"
-    | ""
-    | null;
-  /** Body param */
-  cache?: boolean;
-  /** Body param */
-  cacheThreshold?:
-    | "super_strict_match"
-    | "close_enough"
-    | "flexible_friend"
-    | "anything_goes"
-    | (string & {});
-  /** Body param: Cache entry TTL in seconds. Allowed values: 600 (10min), 1800 (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h), 86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d). */
-  cacheTtl?:
-    | "600"
-    | "1800"
-    | "3600"
-    | "7200"
-    | "21600"
-    | "43200"
-    | "86400"
-    | "172800"
-    | "259200"
-    | "518400"
-    | (string & {});
-  /** Body param */
-  chunk?: boolean;
-  /** Body param */
-  chunkOverlap?: number;
-  /** Body param */
-  chunkSize?: number;
-  /** Body param */
-  customMetadata?: {
-    dataType: "text" | "number" | "boolean" | "datetime" | (string & {});
-    fieldName: string;
-  }[];
-  /** Body param */
-  embeddingModel?:
-    | "@cf/qwen/qwen3-embedding-0.6b"
-    | "@cf/baai/bge-m3"
-    | "@cf/baai/bge-large-en-v1.5"
-    | "@cf/google/embeddinggemma-300m"
-    | "google-ai-studio/gemini-embedding-001"
-    | "google-ai-studio/gemini-embedding-2-preview"
-    | "openai/text-embedding-3-small"
-    | "openai/text-embedding-3-large"
-    | ""
-    | null;
-  /** Body param */
-  fusionMethod?: "max" | "rrf" | (string & {});
-  /** @deprecated Body param: Deprecated — use index_method instead. */
-  hybridSearchEnabled?: boolean;
-  /** Body param: Controls which storage backends are used during indexing. Defaults to vector-only. */
-  indexMethod?: { keyword: boolean; vector: boolean };
-  /** Body param */
-  indexingOptions?: {
-    keywordTokenizer?: "porter" | "trigram" | (string & {});
-  } | null;
-  /** Body param */
-  maxNumResults?: number;
-  /** Body param */
-  metadata?: { createdFromAisearchWizard?: boolean; workerDomain?: string };
-  /** Body param */
-  publicEndpointParams?: {
-    authorizedHosts?: string[];
-    chatCompletionsEndpoint?: { disabled?: boolean };
-    enabled?: boolean;
-    mcp?: { description?: string; disabled?: boolean };
-    rateLimit?: {
-      periodMs?: number;
-      requests?: number;
-      technique?: "fixed" | "sliding" | (string & {});
-    };
-    searchEndpoint?: { disabled?: boolean };
-  };
-  /** Body param */
-  reranking?: boolean;
-  /** Body param */
-  rerankingModel?: "@cf/baai/bge-reranker-base" | "" | null;
-  /** Body param */
-  retrievalOptions?: {
-    boostBy?: {
-      field: string;
-      direction?: "asc" | "desc" | "exists" | "not_exists" | (string & {});
-    }[];
-    keywordMatchMode?: "and" | "or" | (string & {});
-  } | null;
-  /** Body param */
-  rewriteModel?:
-    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-    | "@cf/zai-org/glm-4.7-flash"
-    | "@cf/meta/llama-3.1-8b-instruct-fast"
-    | "@cf/meta/llama-3.1-8b-instruct-fp8"
-    | "@cf/meta/llama-4-scout-17b-16e-instruct"
-    | "@cf/qwen/qwen3-30b-a3b-fp8"
-    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
-    | "@cf/moonshotai/kimi-k2-instruct"
-    | "@cf/google/gemma-3-12b-it"
-    | "@cf/google/gemma-4-26b-a4b-it"
-    | "@cf/moonshotai/kimi-k2.5"
-    | "anthropic/claude-3-7-sonnet"
-    | "anthropic/claude-sonnet-4"
-    | "anthropic/claude-opus-4"
-    | "anthropic/claude-3-5-haiku"
-    | "cerebras/qwen-3-235b-a22b-instruct"
-    | "cerebras/qwen-3-235b-a22b-thinking"
-    | "cerebras/llama-3.3-70b"
-    | "cerebras/llama-4-maverick-17b-128e-instruct"
-    | "cerebras/llama-4-scout-17b-16e-instruct"
-    | "cerebras/gpt-oss-120b"
-    | "google-ai-studio/gemini-2.5-flash"
-    | "google-ai-studio/gemini-2.5-pro"
-    | "grok/grok-4"
-    | "groq/llama-3.3-70b-versatile"
-    | "groq/llama-3.1-8b-instant"
-    | "openai/gpt-5"
-    | "openai/gpt-5-mini"
-    | "openai/gpt-5-nano"
-    | ""
-    | null;
-  /** Body param */
-  rewriteQuery?: boolean;
-  /** Body param */
-  scoreThreshold?: number;
-  /** Body param */
-  source?: string | null;
-  /** Body param */
-  sourceParams?: {
-    excludeItems?: string[];
-    includeItems?: string[];
-    prefix?: string;
-    r2Jurisdiction?: string;
-    webCrawler?: {
-      crawlOptions?: {
-        depth?: number;
-        includeExternalLinks?: boolean;
-        includeSubdomains?: boolean;
-        maxAge?: number;
-        source?: "all" | "sitemaps" | "links" | (string & {});
-      };
-      parseOptions?: {
-        contentSelector?: { path: string; selector: string }[];
-        includeHeaders?: Record<string, unknown>;
-        includeImages?: boolean;
-        specificSitemaps?: string[];
-        useBrowserRendering?: boolean;
-      };
-      parseType?: "sitemap" | "feed-rss" | "crawl" | (string & {});
-      storeOptions?: {
-        storageId: string;
-        r2Jurisdiction?: string;
-        storageType?: "r2";
-      };
-    };
-  } | null;
-  /** Body param: Interval between automatic syncs, in seconds. Allowed values: 900 (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h), 21600 (6h), 43200 (12h), 86400 (24h). */
-  syncInterval?:
-    | "900"
-    | "1800"
-    | "3600"
-    | "7200"
-    | "14400"
-    | "21600"
-    | "43200"
-    | "86400"
-    | (string & {});
-  /** Body param */
-  tokenId?: string;
-  /** Body param */
-  type?: "r2" | "web-crawler" | null;
-}
-
-export const CreateInstanceRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  id: Schema.String,
-  aiGatewayId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  aiSearchModel: Schema.optional(
-    Schema.Union([
-      Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-      Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-      Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-      Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-      Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-      Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-      Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-      Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-      Schema.Literal("@cf/google/gemma-3-12b-it"),
-      Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-      Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-      Schema.Literal("anthropic/claude-3-7-sonnet"),
-      Schema.Literal("anthropic/claude-sonnet-4"),
-      Schema.Literal("anthropic/claude-opus-4"),
-      Schema.Literal("anthropic/claude-3-5-haiku"),
-      Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-      Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-      Schema.Literal("cerebras/llama-3.3-70b"),
-      Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-      Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-      Schema.Literal("cerebras/gpt-oss-120b"),
-      Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-      Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-      Schema.Literal("grok/grok-4"),
-      Schema.Literal("groq/llama-3.3-70b-versatile"),
-      Schema.Literal("groq/llama-3.1-8b-instant"),
-      Schema.Literal("openai/gpt-5"),
-      Schema.Literal("openai/gpt-5-mini"),
-      Schema.Literal("openai/gpt-5-nano"),
-      Schema.Literal(""),
-      Schema.Null,
-    ]),
-  ),
-  cache: Schema.optional(Schema.Boolean),
-  cacheThreshold: Schema.optional(
-    Schema.Union([
-      Schema.Literals([
-        "super_strict_match",
-        "close_enough",
-        "flexible_friend",
-        "anything_goes",
-      ]),
-      Schema.String,
-    ]),
-  ),
-  cacheTtl: Schema.optional(
-    Schema.Union([
-      Schema.Literals([
-        "600",
-        "1800",
-        "3600",
-        "7200",
-        "21600",
-        "43200",
-        "86400",
-        "172800",
-        "259200",
-        "518400",
-      ]),
-      Schema.String,
-    ]),
-  ),
-  chunk: Schema.optional(Schema.Boolean),
-  chunkOverlap: Schema.optional(Schema.Number),
-  chunkSize: Schema.optional(Schema.Number),
-  customMetadata: Schema.optional(
-    Schema.Array(
-      Schema.Struct({
-        dataType: Schema.Union([
-          Schema.Literals(["text", "number", "boolean", "datetime"]),
-          Schema.String,
-        ]),
-        fieldName: Schema.String,
-      }).pipe(
-        Schema.encodeKeys({ dataType: "data_type", fieldName: "field_name" }),
-      ),
-    ),
-  ),
-  embeddingModel: Schema.optional(
-    Schema.Union([
-      Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
-      Schema.Literal("@cf/baai/bge-m3"),
-      Schema.Literal("@cf/baai/bge-large-en-v1.5"),
-      Schema.Literal("@cf/google/embeddinggemma-300m"),
-      Schema.Literal("google-ai-studio/gemini-embedding-001"),
-      Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
-      Schema.Literal("openai/text-embedding-3-small"),
-      Schema.Literal("openai/text-embedding-3-large"),
-      Schema.Literal(""),
-      Schema.Null,
-    ]),
-  ),
-  fusionMethod: Schema.optional(
-    Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
-  ),
-  hybridSearchEnabled: Schema.optional(Schema.Boolean),
-  indexMethod: Schema.optional(
-    Schema.Struct({
-      keyword: Schema.Boolean,
-      vector: Schema.Boolean,
-    }),
-  ),
-  indexingOptions: Schema.optional(
-    Schema.Union([
-      Schema.Struct({
-        keywordTokenizer: Schema.optional(
-          Schema.Union([Schema.Literals(["porter", "trigram"]), Schema.String]),
-        ),
-      }).pipe(Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" })),
-      Schema.Null,
-    ]),
-  ),
-  maxNumResults: Schema.optional(Schema.Number),
-  metadata: Schema.optional(
-    Schema.Struct({
-      createdFromAisearchWizard: Schema.optional(Schema.Boolean),
-      workerDomain: Schema.optional(Schema.String),
-    }).pipe(
-      Schema.encodeKeys({
-        createdFromAisearchWizard: "created_from_aisearch_wizard",
-        workerDomain: "worker_domain",
-      }),
-    ),
-  ),
-  publicEndpointParams: Schema.optional(
-    Schema.Struct({
-      authorizedHosts: Schema.optional(Schema.Array(Schema.String)),
-      chatCompletionsEndpoint: Schema.optional(
-        Schema.Struct({
-          disabled: Schema.optional(Schema.Boolean),
-        }),
-      ),
-      enabled: Schema.optional(Schema.Boolean),
-      mcp: Schema.optional(
-        Schema.Struct({
-          description: Schema.optional(Schema.String),
-          disabled: Schema.optional(Schema.Boolean),
-        }),
-      ),
-      rateLimit: Schema.optional(
-        Schema.Struct({
-          periodMs: Schema.optional(Schema.Number),
-          requests: Schema.optional(Schema.Number),
-          technique: Schema.optional(
-            Schema.Union([
-              Schema.Literals(["fixed", "sliding"]),
-              Schema.String,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            periodMs: "period_ms",
-            requests: "requests",
-            technique: "technique",
-          }),
-        ),
-      ),
-      searchEndpoint: Schema.optional(
-        Schema.Struct({
-          disabled: Schema.optional(Schema.Boolean),
-        }),
-      ),
-    }).pipe(
-      Schema.encodeKeys({
-        authorizedHosts: "authorized_hosts",
-        chatCompletionsEndpoint: "chat_completions_endpoint",
-        enabled: "enabled",
-        mcp: "mcp",
-        rateLimit: "rate_limit",
-        searchEndpoint: "search_endpoint",
-      }),
-    ),
-  ),
-  reranking: Schema.optional(Schema.Boolean),
-  rerankingModel: Schema.optional(
-    Schema.Union([
-      Schema.Literal("@cf/baai/bge-reranker-base"),
-      Schema.Literal(""),
-      Schema.Null,
-    ]),
-  ),
-  retrievalOptions: Schema.optional(
-    Schema.Union([
-      Schema.Struct({
-        boostBy: Schema.optional(
-          Schema.Array(
-            Schema.Struct({
-              field: Schema.String,
-              direction: Schema.optional(
-                Schema.Union([
-                  Schema.Literals(["asc", "desc", "exists", "not_exists"]),
-                  Schema.String,
-                ]),
-              ),
-            }),
-          ),
-        ),
-        keywordMatchMode: Schema.optional(
-          Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
-        ),
-      }).pipe(
-        Schema.encodeKeys({
-          boostBy: "boost_by",
-          keywordMatchMode: "keyword_match_mode",
-        }),
-      ),
-      Schema.Null,
-    ]),
-  ),
-  rewriteModel: Schema.optional(
-    Schema.Union([
-      Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-      Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-      Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-      Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-      Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-      Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-      Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-      Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-      Schema.Literal("@cf/google/gemma-3-12b-it"),
-      Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-      Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-      Schema.Literal("anthropic/claude-3-7-sonnet"),
-      Schema.Literal("anthropic/claude-sonnet-4"),
-      Schema.Literal("anthropic/claude-opus-4"),
-      Schema.Literal("anthropic/claude-3-5-haiku"),
-      Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-      Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-      Schema.Literal("cerebras/llama-3.3-70b"),
-      Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-      Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-      Schema.Literal("cerebras/gpt-oss-120b"),
-      Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-      Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-      Schema.Literal("grok/grok-4"),
-      Schema.Literal("groq/llama-3.3-70b-versatile"),
-      Schema.Literal("groq/llama-3.1-8b-instant"),
-      Schema.Literal("openai/gpt-5"),
-      Schema.Literal("openai/gpt-5-mini"),
-      Schema.Literal("openai/gpt-5-nano"),
-      Schema.Literal(""),
-      Schema.Null,
-    ]),
-  ),
-  rewriteQuery: Schema.optional(Schema.Boolean),
-  scoreThreshold: Schema.optional(Schema.Number),
-  source: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  sourceParams: Schema.optional(
-    Schema.Union([
-      Schema.Struct({
-        excludeItems: Schema.optional(Schema.Array(Schema.String)),
-        includeItems: Schema.optional(Schema.Array(Schema.String)),
-        prefix: Schema.optional(Schema.String),
-        r2Jurisdiction: Schema.optional(Schema.String),
-        webCrawler: Schema.optional(
-          Schema.Struct({
-            crawlOptions: Schema.optional(
-              Schema.Struct({
-                depth: Schema.optional(Schema.Number),
-                includeExternalLinks: Schema.optional(Schema.Boolean),
-                includeSubdomains: Schema.optional(Schema.Boolean),
-                maxAge: Schema.optional(Schema.Number),
-                source: Schema.optional(
-                  Schema.Union([
-                    Schema.Literals(["all", "sitemaps", "links"]),
-                    Schema.String,
-                  ]),
-                ),
-              }).pipe(
-                Schema.encodeKeys({
-                  depth: "depth",
-                  includeExternalLinks: "include_external_links",
-                  includeSubdomains: "include_subdomains",
-                  maxAge: "max_age",
-                  source: "source",
-                }),
-              ),
-            ),
-            parseOptions: Schema.optional(
-              Schema.Struct({
-                contentSelector: Schema.optional(
-                  Schema.Array(
-                    Schema.Struct({
-                      path: Schema.String,
-                      selector: Schema.String,
-                    }),
-                  ),
-                ),
-                includeHeaders: Schema.optional(
-                  Schema.Record(Schema.String, Schema.Unknown),
-                ),
-                includeImages: Schema.optional(Schema.Boolean),
-                specificSitemaps: Schema.optional(Schema.Array(Schema.String)),
-                useBrowserRendering: Schema.optional(Schema.Boolean),
-              }).pipe(
-                Schema.encodeKeys({
-                  contentSelector: "content_selector",
-                  includeHeaders: "include_headers",
-                  includeImages: "include_images",
-                  specificSitemaps: "specific_sitemaps",
-                  useBrowserRendering: "use_browser_rendering",
-                }),
-              ),
-            ),
-            parseType: Schema.optional(
-              Schema.Union([
-                Schema.Literals(["sitemap", "feed-rss", "crawl"]),
-                Schema.String,
-              ]),
-            ),
-            storeOptions: Schema.optional(
-              Schema.Struct({
-                storageId: Schema.String,
-                r2Jurisdiction: Schema.optional(Schema.String),
-                storageType: Schema.optional(Schema.Literal("r2")),
-              }).pipe(
-                Schema.encodeKeys({
-                  storageId: "storage_id",
-                  r2Jurisdiction: "r2_jurisdiction",
-                  storageType: "storage_type",
-                }),
-              ),
-            ),
-          }).pipe(
-            Schema.encodeKeys({
-              crawlOptions: "crawl_options",
-              parseOptions: "parse_options",
-              parseType: "parse_type",
-              storeOptions: "store_options",
-            }),
-          ),
-        ),
-      }).pipe(
-        Schema.encodeKeys({
-          excludeItems: "exclude_items",
-          includeItems: "include_items",
-          prefix: "prefix",
-          r2Jurisdiction: "r2_jurisdiction",
-          webCrawler: "web_crawler",
-        }),
-      ),
-      Schema.Null,
-    ]),
-  ),
-  syncInterval: Schema.optional(
-    Schema.Union([
-      Schema.Literals([
-        "900",
-        "1800",
-        "3600",
-        "7200",
-        "14400",
-        "21600",
-        "43200",
-        "86400",
-      ]),
-      Schema.String,
-    ]),
-  ),
-  tokenId: Schema.optional(Schema.String),
-  type: Schema.optional(
-    Schema.Union([
-      Schema.Literal("r2"),
-      Schema.Literal("web-crawler"),
-      Schema.Null,
-    ]),
-  ),
-}).pipe(
-  Schema.encodeKeys({
-    id: "id",
-    aiGatewayId: "ai_gateway_id",
-    aiSearchModel: "ai_search_model",
-    cache: "cache",
-    cacheThreshold: "cache_threshold",
-    cacheTtl: "cache_ttl",
-    chunk: "chunk",
-    chunkOverlap: "chunk_overlap",
-    chunkSize: "chunk_size",
-    customMetadata: "custom_metadata",
-    embeddingModel: "embedding_model",
-    fusionMethod: "fusion_method",
-    hybridSearchEnabled: "hybrid_search_enabled",
-    indexMethod: "index_method",
-    indexingOptions: "indexing_options",
-    maxNumResults: "max_num_results",
-    metadata: "metadata",
-    publicEndpointParams: "public_endpoint_params",
-    reranking: "reranking",
-    rerankingModel: "reranking_model",
-    retrievalOptions: "retrieval_options",
-    rewriteModel: "rewrite_model",
-    rewriteQuery: "rewrite_query",
-    scoreThreshold: "score_threshold",
-    source: "source",
-    sourceParams: "source_params",
-    syncInterval: "sync_interval",
-    tokenId: "token_id",
-    type: "type",
-  }),
-  T.Http({
-    method: "POST",
-    path: "/accounts/{account_id}/ai-search/instances",
-  }),
-) as unknown as Schema.Schema<CreateInstanceRequest>;
-
-export interface CreateInstanceResponse {
-  /** AI Search instance ID. Lowercase alphanumeric, hyphens, and underscores. */
-  id: string;
-  createdAt?: string | null;
-  modifiedAt?: string | null;
-  aiGatewayId?: string | null;
-  aiSearchModel?:
-    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-    | "@cf/zai-org/glm-4.7-flash"
-    | "@cf/meta/llama-3.1-8b-instruct-fast"
-    | "@cf/meta/llama-3.1-8b-instruct-fp8"
-    | "@cf/meta/llama-4-scout-17b-16e-instruct"
-    | "@cf/qwen/qwen3-30b-a3b-fp8"
-    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
-    | "@cf/moonshotai/kimi-k2-instruct"
-    | "@cf/google/gemma-3-12b-it"
-    | "@cf/google/gemma-4-26b-a4b-it"
-    | "@cf/moonshotai/kimi-k2.5"
-    | "anthropic/claude-3-7-sonnet"
-    | "anthropic/claude-sonnet-4"
-    | "anthropic/claude-opus-4"
-    | "anthropic/claude-3-5-haiku"
-    | "cerebras/qwen-3-235b-a22b-instruct"
-    | "cerebras/qwen-3-235b-a22b-thinking"
-    | "cerebras/llama-3.3-70b"
-    | "cerebras/llama-4-maverick-17b-128e-instruct"
-    | "cerebras/llama-4-scout-17b-16e-instruct"
-    | "cerebras/gpt-oss-120b"
-    | "google-ai-studio/gemini-2.5-flash"
-    | "google-ai-studio/gemini-2.5-pro"
-    | "grok/grok-4"
-    | "groq/llama-3.3-70b-versatile"
-    | "groq/llama-3.1-8b-instant"
-    | "openai/gpt-5"
-    | "openai/gpt-5-mini"
-    | "openai/gpt-5-nano"
-    | ""
-    | null;
-  cache?: boolean | null;
-  cacheThreshold?:
-    | "super_strict_match"
-    | "close_enough"
-    | "flexible_friend"
-    | "anything_goes"
-    | null;
-  /** Cache entry TTL in seconds. Allowed values: 600 (10min), 1800 (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h), 86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d). */
-  cacheTtl?:
-    | "600"
-    | "1800"
-    | "3600"
-    | "7200"
-    | "21600"
-    | "43200"
-    | "86400"
-    | "172800"
-    | "259200"
-    | "518400"
-    | (string & {})
-    | null;
-  chunkOverlap?: number | null;
-  chunkSize?: number | null;
-  createdBy?: string | null;
-  customMetadata?:
-    | {
-        dataType: "text" | "number" | "boolean" | "datetime" | (string & {});
-        fieldName: string;
-      }[]
-    | null;
-  embeddingModel?:
-    | "@cf/qwen/qwen3-embedding-0.6b"
-    | "@cf/baai/bge-m3"
-    | "@cf/baai/bge-large-en-v1.5"
-    | "@cf/google/embeddinggemma-300m"
-    | "google-ai-studio/gemini-embedding-001"
-    | "google-ai-studio/gemini-embedding-2-preview"
-    | "openai/text-embedding-3-small"
-    | "openai/text-embedding-3-large"
-    | ""
-    | null;
-  enable?: boolean | null;
-  engineVersion?: number | null;
-  fusionMethod?: "max" | "rrf" | (string & {}) | null;
-  /** @deprecated Deprecated — use index_method instead. */
-  hybridSearchEnabled?: boolean | null;
-  /** Controls which storage backends are used during indexing. Defaults to vector-only. */
-  indexMethod?: { keyword: boolean; vector: boolean } | null;
-  indexingOptions?: {
-    keywordTokenizer?: "porter" | "trigram" | (string & {}) | null;
-  } | null;
-  lastActivity?: string | null;
-  maxNumResults?: number | null;
-  metadata?: {
-    createdFromAisearchWizard?: boolean | null;
-    workerDomain?: string | null;
-  } | null;
-  modifiedBy?: string | null;
-  namespace?: string | null;
-  paused?: boolean | null;
-  publicEndpointId?: string | null;
-  publicEndpointParams?: {
-    authorizedHosts?: string[] | null;
-    chatCompletionsEndpoint?: { disabled?: boolean | null } | null;
-    enabled?: boolean | null;
-    mcp?: { description?: string | null; disabled?: boolean | null } | null;
-    rateLimit?: {
-      periodMs?: number | null;
-      requests?: number | null;
-      technique?: "fixed" | "sliding" | (string & {}) | null;
-    } | null;
-    searchEndpoint?: { disabled?: boolean | null } | null;
-  } | null;
-  reranking?: boolean | null;
-  rerankingModel?: "@cf/baai/bge-reranker-base" | "" | null;
-  retrievalOptions?: {
-    boostBy?:
-      | {
-          field: string;
-          direction?:
-            | "asc"
-            | "desc"
-            | "exists"
-            | "not_exists"
-            | (string & {})
-            | null;
-        }[]
-      | null;
-    keywordMatchMode?: "and" | "or" | (string & {}) | null;
-  } | null;
-  rewriteModel?:
-    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-    | "@cf/zai-org/glm-4.7-flash"
-    | "@cf/meta/llama-3.1-8b-instruct-fast"
-    | "@cf/meta/llama-3.1-8b-instruct-fp8"
-    | "@cf/meta/llama-4-scout-17b-16e-instruct"
-    | "@cf/qwen/qwen3-30b-a3b-fp8"
-    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
-    | "@cf/moonshotai/kimi-k2-instruct"
-    | "@cf/google/gemma-3-12b-it"
-    | "@cf/google/gemma-4-26b-a4b-it"
-    | "@cf/moonshotai/kimi-k2.5"
-    | "anthropic/claude-3-7-sonnet"
-    | "anthropic/claude-sonnet-4"
-    | "anthropic/claude-opus-4"
-    | "anthropic/claude-3-5-haiku"
-    | "cerebras/qwen-3-235b-a22b-instruct"
-    | "cerebras/qwen-3-235b-a22b-thinking"
-    | "cerebras/llama-3.3-70b"
-    | "cerebras/llama-4-maverick-17b-128e-instruct"
-    | "cerebras/llama-4-scout-17b-16e-instruct"
-    | "cerebras/gpt-oss-120b"
-    | "google-ai-studio/gemini-2.5-flash"
-    | "google-ai-studio/gemini-2.5-pro"
-    | "grok/grok-4"
-    | "groq/llama-3.3-70b-versatile"
-    | "groq/llama-3.1-8b-instant"
-    | "openai/gpt-5"
-    | "openai/gpt-5-mini"
-    | "openai/gpt-5-nano"
-    | ""
-    | null;
-  rewriteQuery?: boolean | null;
-  scoreThreshold?: number | null;
-  source?: string | null;
-  sourceParams?: {
-    excludeItems?: string[] | null;
-    includeItems?: string[] | null;
-    prefix?: string | null;
-    r2Jurisdiction?: string | null;
-    webCrawler?: {
-      crawlOptions?: {
-        depth?: number | null;
-        includeExternalLinks?: boolean | null;
-        includeSubdomains?: boolean | null;
-        maxAge?: number | null;
-        source?: "all" | "sitemaps" | "links" | (string & {}) | null;
-      } | null;
-      parseOptions?: {
-        contentSelector?: { path: string; selector: string }[] | null;
-        includeHeaders?: Record<string, unknown> | null;
-        includeImages?: boolean | null;
-        specificSitemaps?: string[] | null;
-        useBrowserRendering?: boolean | null;
-      } | null;
-      parseType?: "sitemap" | "feed-rss" | "crawl" | (string & {}) | null;
-      storeOptions?: {
-        storageId: string;
-        r2Jurisdiction?: string | null;
-        storageType?: "r2" | null;
-      } | null;
-    } | null;
-  } | null;
-  status?: string | null;
-  /** Interval between automatic syncs, in seconds. Allowed values: 900 (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h), 21600 (6h), 43200 (12h), 86400 (24h). */
-  syncInterval?:
-    | "900"
-    | "1800"
-    | "3600"
-    | "7200"
-    | "14400"
-    | "21600"
-    | "43200"
-    | "86400"
-    | (string & {})
-    | null;
-  tokenId?: string | null;
-  type?: "r2" | "web-crawler" | null;
-}
-
-export const CreateInstanceResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
-  {
-    id: Schema.String,
-    createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    modifiedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    aiGatewayId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    aiSearchModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-        Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-        Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-        Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-        Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-        Schema.Literal("@cf/google/gemma-3-12b-it"),
-        Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-        Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-        Schema.Literal("anthropic/claude-3-7-sonnet"),
-        Schema.Literal("anthropic/claude-sonnet-4"),
-        Schema.Literal("anthropic/claude-opus-4"),
-        Schema.Literal("anthropic/claude-3-5-haiku"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-        Schema.Literal("cerebras/llama-3.3-70b"),
-        Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-        Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("cerebras/gpt-oss-120b"),
-        Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-        Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-        Schema.Literal("grok/grok-4"),
-        Schema.Literal("groq/llama-3.3-70b-versatile"),
-        Schema.Literal("groq/llama-3.1-8b-instant"),
-        Schema.Literal("openai/gpt-5"),
-        Schema.Literal("openai/gpt-5-mini"),
-        Schema.Literal("openai/gpt-5-nano"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    cache: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    cacheThreshold: Schema.optional(
-      Schema.Union([
-        Schema.Literal("super_strict_match"),
-        Schema.Literal("close_enough"),
-        Schema.Literal("flexible_friend"),
-        Schema.Literal("anything_goes"),
-        Schema.Null,
-      ]),
-    ),
-    cacheTtl: Schema.optional(
-      Schema.Union([
-        Schema.Union([
-          Schema.Literals([
-            "600",
-            "1800",
-            "3600",
-            "7200",
-            "21600",
-            "43200",
-            "86400",
-            "172800",
-            "259200",
-            "518400",
-          ]),
-          Schema.String,
-        ]),
-        Schema.Null,
-      ]),
-    ),
-    chunkOverlap: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    chunkSize: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    createdBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    customMetadata: Schema.optional(
-      Schema.Union([
-        Schema.Array(
-          Schema.Struct({
-            dataType: Schema.Union([
-              Schema.Literals(["text", "number", "boolean", "datetime"]),
-              Schema.String,
-            ]),
-            fieldName: Schema.String,
-          }).pipe(
-            Schema.encodeKeys({
-              dataType: "data_type",
-              fieldName: "field_name",
-            }),
-          ),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    embeddingModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
-        Schema.Literal("@cf/baai/bge-m3"),
-        Schema.Literal("@cf/baai/bge-large-en-v1.5"),
-        Schema.Literal("@cf/google/embeddinggemma-300m"),
-        Schema.Literal("google-ai-studio/gemini-embedding-001"),
-        Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
-        Schema.Literal("openai/text-embedding-3-small"),
-        Schema.Literal("openai/text-embedding-3-large"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    enable: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    engineVersion: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    fusionMethod: Schema.optional(
-      Schema.Union([
-        Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
-        Schema.Null,
-      ]),
-    ),
-    hybridSearchEnabled: Schema.optional(
-      Schema.Union([Schema.Boolean, Schema.Null]),
-    ),
-    indexMethod: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          keyword: Schema.Boolean,
-          vector: Schema.Boolean,
-        }),
-        Schema.Null,
-      ]),
-    ),
-    indexingOptions: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          keywordTokenizer: Schema.optional(
-            Schema.Union([
-              Schema.Union([
-                Schema.Literals(["porter", "trigram"]),
-                Schema.String,
-              ]),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" })),
-        Schema.Null,
-      ]),
-    ),
-    lastActivity: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    maxNumResults: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    metadata: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          createdFromAisearchWizard: Schema.optional(
-            Schema.Union([Schema.Boolean, Schema.Null]),
-          ),
-          workerDomain: Schema.optional(
-            Schema.Union([Schema.String, Schema.Null]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            createdFromAisearchWizard: "created_from_aisearch_wizard",
-            workerDomain: "worker_domain",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    modifiedBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    namespace: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    paused: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    publicEndpointId: Schema.optional(
-      Schema.Union([Schema.String, Schema.Null]),
-    ),
-    publicEndpointParams: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          authorizedHosts: Schema.optional(
-            Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-          ),
-          chatCompletionsEndpoint: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                disabled: Schema.optional(
-                  Schema.Union([Schema.Boolean, Schema.Null]),
-                ),
-              }),
-              Schema.Null,
-            ]),
-          ),
-          enabled: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-          mcp: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                description: Schema.optional(
-                  Schema.Union([Schema.String, Schema.Null]),
-                ),
-                disabled: Schema.optional(
-                  Schema.Union([Schema.Boolean, Schema.Null]),
-                ),
-              }),
-              Schema.Null,
-            ]),
-          ),
-          rateLimit: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                periodMs: Schema.optional(
-                  Schema.Union([Schema.Number, Schema.Null]),
-                ),
-                requests: Schema.optional(
-                  Schema.Union([Schema.Number, Schema.Null]),
-                ),
-                technique: Schema.optional(
-                  Schema.Union([
-                    Schema.Union([
-                      Schema.Literals(["fixed", "sliding"]),
-                      Schema.String,
-                    ]),
-                    Schema.Null,
-                  ]),
-                ),
-              }).pipe(
-                Schema.encodeKeys({
-                  periodMs: "period_ms",
-                  requests: "requests",
-                  technique: "technique",
-                }),
-              ),
-              Schema.Null,
-            ]),
-          ),
-          searchEndpoint: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                disabled: Schema.optional(
-                  Schema.Union([Schema.Boolean, Schema.Null]),
-                ),
-              }),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            authorizedHosts: "authorized_hosts",
-            chatCompletionsEndpoint: "chat_completions_endpoint",
-            enabled: "enabled",
-            mcp: "mcp",
-            rateLimit: "rate_limit",
-            searchEndpoint: "search_endpoint",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    reranking: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    rerankingModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/baai/bge-reranker-base"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    retrievalOptions: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          boostBy: Schema.optional(
-            Schema.Union([
-              Schema.Array(
-                Schema.Struct({
-                  field: Schema.String,
-                  direction: Schema.optional(
-                    Schema.Union([
-                      Schema.Union([
-                        Schema.Literals([
-                          "asc",
-                          "desc",
-                          "exists",
-                          "not_exists",
-                        ]),
-                        Schema.String,
-                      ]),
-                      Schema.Null,
-                    ]),
-                  ),
-                }),
-              ),
-              Schema.Null,
-            ]),
-          ),
-          keywordMatchMode: Schema.optional(
-            Schema.Union([
-              Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            boostBy: "boost_by",
-            keywordMatchMode: "keyword_match_mode",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    rewriteModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-        Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-        Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-        Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-        Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-        Schema.Literal("@cf/google/gemma-3-12b-it"),
-        Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-        Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-        Schema.Literal("anthropic/claude-3-7-sonnet"),
-        Schema.Literal("anthropic/claude-sonnet-4"),
-        Schema.Literal("anthropic/claude-opus-4"),
-        Schema.Literal("anthropic/claude-3-5-haiku"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-        Schema.Literal("cerebras/llama-3.3-70b"),
-        Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-        Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("cerebras/gpt-oss-120b"),
-        Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-        Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-        Schema.Literal("grok/grok-4"),
-        Schema.Literal("groq/llama-3.3-70b-versatile"),
-        Schema.Literal("groq/llama-3.1-8b-instant"),
-        Schema.Literal("openai/gpt-5"),
-        Schema.Literal("openai/gpt-5-mini"),
-        Schema.Literal("openai/gpt-5-nano"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    rewriteQuery: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    scoreThreshold: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    source: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    sourceParams: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          excludeItems: Schema.optional(
-            Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-          ),
-          includeItems: Schema.optional(
-            Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-          ),
-          prefix: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-          r2Jurisdiction: Schema.optional(
-            Schema.Union([Schema.String, Schema.Null]),
-          ),
-          webCrawler: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                crawlOptions: Schema.optional(
-                  Schema.Union([
-                    Schema.Struct({
-                      depth: Schema.optional(
-                        Schema.Union([Schema.Number, Schema.Null]),
-                      ),
-                      includeExternalLinks: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                      includeSubdomains: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                      maxAge: Schema.optional(
-                        Schema.Union([Schema.Number, Schema.Null]),
-                      ),
-                      source: Schema.optional(
-                        Schema.Union([
-                          Schema.Union([
-                            Schema.Literals(["all", "sitemaps", "links"]),
-                            Schema.String,
-                          ]),
-                          Schema.Null,
-                        ]),
-                      ),
-                    }).pipe(
-                      Schema.encodeKeys({
-                        depth: "depth",
-                        includeExternalLinks: "include_external_links",
-                        includeSubdomains: "include_subdomains",
-                        maxAge: "max_age",
-                        source: "source",
-                      }),
-                    ),
-                    Schema.Null,
-                  ]),
-                ),
-                parseOptions: Schema.optional(
-                  Schema.Union([
-                    Schema.Struct({
-                      contentSelector: Schema.optional(
-                        Schema.Union([
-                          Schema.Array(
-                            Schema.Struct({
-                              path: Schema.String,
-                              selector: Schema.String,
-                            }),
-                          ),
-                          Schema.Null,
-                        ]),
-                      ),
-                      includeHeaders: Schema.optional(
-                        Schema.Union([
-                          Schema.Record(Schema.String, Schema.Unknown),
-                          Schema.Null,
-                        ]),
-                      ),
-                      includeImages: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                      specificSitemaps: Schema.optional(
-                        Schema.Union([
-                          Schema.Array(Schema.String),
-                          Schema.Null,
-                        ]),
-                      ),
-                      useBrowserRendering: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                    }).pipe(
-                      Schema.encodeKeys({
-                        contentSelector: "content_selector",
-                        includeHeaders: "include_headers",
-                        includeImages: "include_images",
-                        specificSitemaps: "specific_sitemaps",
-                        useBrowserRendering: "use_browser_rendering",
-                      }),
-                    ),
-                    Schema.Null,
-                  ]),
-                ),
-                parseType: Schema.optional(
-                  Schema.Union([
-                    Schema.Union([
-                      Schema.Literals(["sitemap", "feed-rss", "crawl"]),
-                      Schema.String,
-                    ]),
-                    Schema.Null,
-                  ]),
-                ),
-                storeOptions: Schema.optional(
-                  Schema.Union([
-                    Schema.Struct({
-                      storageId: Schema.String,
-                      r2Jurisdiction: Schema.optional(
-                        Schema.Union([Schema.String, Schema.Null]),
-                      ),
-                      storageType: Schema.optional(
-                        Schema.Union([Schema.Literal("r2"), Schema.Null]),
-                      ),
-                    }).pipe(
-                      Schema.encodeKeys({
-                        storageId: "storage_id",
-                        r2Jurisdiction: "r2_jurisdiction",
-                        storageType: "storage_type",
-                      }),
-                    ),
-                    Schema.Null,
-                  ]),
-                ),
-              }).pipe(
-                Schema.encodeKeys({
-                  crawlOptions: "crawl_options",
-                  parseOptions: "parse_options",
-                  parseType: "parse_type",
-                  storeOptions: "store_options",
-                }),
-              ),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            excludeItems: "exclude_items",
-            includeItems: "include_items",
-            prefix: "prefix",
-            r2Jurisdiction: "r2_jurisdiction",
-            webCrawler: "web_crawler",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    status: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    syncInterval: Schema.optional(
-      Schema.Union([
-        Schema.Union([
-          Schema.Literals([
-            "900",
-            "1800",
-            "3600",
-            "7200",
-            "14400",
-            "21600",
-            "43200",
-            "86400",
-          ]),
-          Schema.String,
-        ]),
-        Schema.Null,
-      ]),
-    ),
-    tokenId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    type: Schema.optional(
-      Schema.Union([
-        Schema.Literal("r2"),
-        Schema.Literal("web-crawler"),
-        Schema.Null,
-      ]),
-    ),
-  },
-)
-  .pipe(
-    Schema.encodeKeys({
-      id: "id",
-      createdAt: "created_at",
-      modifiedAt: "modified_at",
-      aiGatewayId: "ai_gateway_id",
-      aiSearchModel: "ai_search_model",
-      cache: "cache",
-      cacheThreshold: "cache_threshold",
-      cacheTtl: "cache_ttl",
-      chunkOverlap: "chunk_overlap",
-      chunkSize: "chunk_size",
-      createdBy: "created_by",
-      customMetadata: "custom_metadata",
-      embeddingModel: "embedding_model",
-      enable: "enable",
-      engineVersion: "engine_version",
-      fusionMethod: "fusion_method",
-      hybridSearchEnabled: "hybrid_search_enabled",
-      indexMethod: "index_method",
-      indexingOptions: "indexing_options",
-      lastActivity: "last_activity",
-      maxNumResults: "max_num_results",
-      metadata: "metadata",
-      modifiedBy: "modified_by",
-      namespace: "namespace",
-      paused: "paused",
-      publicEndpointId: "public_endpoint_id",
-      publicEndpointParams: "public_endpoint_params",
-      reranking: "reranking",
-      rerankingModel: "reranking_model",
-      retrievalOptions: "retrieval_options",
-      rewriteModel: "rewrite_model",
-      rewriteQuery: "rewrite_query",
-      scoreThreshold: "score_threshold",
-      source: "source",
-      sourceParams: "source_params",
-      status: "status",
-      syncInterval: "sync_interval",
-      tokenId: "token_id",
-      type: "type",
-    }),
-  )
-  .pipe(
-    T.ResponsePath("result"),
+      )
+      .pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<CreateInstanceResponse>;
 
 export type CreateInstanceError =
   | DefaultErrors
   | ValidationError
   | NotFound
-  | InvalidRoute;
+  | InvalidRoute
+  | InstanceAlreadyExists
+  | InvalidTokenCredentials
+  | Forbidden;
 
 export const createInstance: API.OperationMethod<
   CreateInstanceRequest,
@@ -3782,7 +3815,14 @@ export const createInstance: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: CreateInstanceRequest,
   output: CreateInstanceResponse,
-  errors: [ValidationError, NotFound, InvalidRoute],
+  errors: [
+    ValidationError,
+    NotFound,
+    InvalidRoute,
+    InstanceAlreadyExists,
+    InvalidTokenCredentials,
+    Forbidden,
+  ],
 }));
 
 export interface UpdateInstanceRequest {
@@ -3834,18 +3874,7 @@ export interface UpdateInstanceRequest {
     | "anything_goes"
     | (string & {});
   /** Body param: Cache entry TTL in seconds. Allowed values: 600 (10min), 1800 (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h), 86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d). */
-  cacheTtl?:
-    | "600"
-    | "1800"
-    | "3600"
-    | "7200"
-    | "21600"
-    | "43200"
-    | "86400"
-    | "172800"
-    | "259200"
-    | "518400"
-    | (string & {});
+  cacheTtl?: number;
   /** Body param */
   chunk?: boolean;
   /** Body param */
@@ -4010,16 +4039,7 @@ export interface UpdateInstanceRequest {
     | ""
     | null;
   /** Body param: Interval between automatic syncs, in seconds. Allowed values: 900 (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h), 21600 (6h), 43200 (12h), 86400 (24h). */
-  syncInterval?:
-    | "900"
-    | "1800"
-    | "3600"
-    | "7200"
-    | "14400"
-    | "21600"
-    | "43200"
-    | "86400"
-    | (string & {});
+  syncInterval?: number;
   /** Body param */
   systemPromptAiSearch?: string | null;
   /** Body param */
@@ -4030,454 +4050,435 @@ export interface UpdateInstanceRequest {
   tokenId?: string;
 }
 
-export const UpdateInstanceRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  id: Schema.String.pipe(T.HttpPath("id")),
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  aiGatewayId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  aiSearchModel: Schema.optional(
-    Schema.Union([
-      Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-      Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-      Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-      Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-      Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-      Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-      Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-      Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-      Schema.Literal("@cf/google/gemma-3-12b-it"),
-      Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-      Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-      Schema.Literal("anthropic/claude-3-7-sonnet"),
-      Schema.Literal("anthropic/claude-sonnet-4"),
-      Schema.Literal("anthropic/claude-opus-4"),
-      Schema.Literal("anthropic/claude-3-5-haiku"),
-      Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-      Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-      Schema.Literal("cerebras/llama-3.3-70b"),
-      Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-      Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-      Schema.Literal("cerebras/gpt-oss-120b"),
-      Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-      Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-      Schema.Literal("grok/grok-4"),
-      Schema.Literal("groq/llama-3.3-70b-versatile"),
-      Schema.Literal("groq/llama-3.1-8b-instant"),
-      Schema.Literal("openai/gpt-5"),
-      Schema.Literal("openai/gpt-5-mini"),
-      Schema.Literal("openai/gpt-5-nano"),
-      Schema.Literal(""),
-      Schema.Null,
-    ]),
-  ),
-  cache: Schema.optional(Schema.Boolean),
-  cacheThreshold: Schema.optional(
-    Schema.Union([
-      Schema.Literals([
-        "super_strict_match",
-        "close_enough",
-        "flexible_friend",
-        "anything_goes",
-      ]),
-      Schema.String,
-    ]),
-  ),
-  cacheTtl: Schema.optional(
-    Schema.Union([
-      Schema.Literals([
-        "600",
-        "1800",
-        "3600",
-        "7200",
-        "21600",
-        "43200",
-        "86400",
-        "172800",
-        "259200",
-        "518400",
-      ]),
-      Schema.String,
-    ]),
-  ),
-  chunk: Schema.optional(Schema.Boolean),
-  chunkOverlap: Schema.optional(Schema.Number),
-  chunkSize: Schema.optional(Schema.Number),
-  customMetadata: Schema.optional(
-    Schema.Array(
-      Schema.Struct({
-        dataType: Schema.Union([
-          Schema.Literals(["text", "number", "boolean", "datetime"]),
+export const UpdateInstanceRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      id: Schema.String.pipe(T.HttpPath("id")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      aiGatewayId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      aiSearchModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+          Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+          Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+          Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+          Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+          Schema.Literal("@cf/google/gemma-3-12b-it"),
+          Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+          Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+          Schema.Literal("anthropic/claude-3-7-sonnet"),
+          Schema.Literal("anthropic/claude-sonnet-4"),
+          Schema.Literal("anthropic/claude-opus-4"),
+          Schema.Literal("anthropic/claude-3-5-haiku"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+          Schema.Literal("cerebras/llama-3.3-70b"),
+          Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+          Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("cerebras/gpt-oss-120b"),
+          Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+          Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+          Schema.Literal("grok/grok-4"),
+          Schema.Literal("groq/llama-3.3-70b-versatile"),
+          Schema.Literal("groq/llama-3.1-8b-instant"),
+          Schema.Literal("openai/gpt-5"),
+          Schema.Literal("openai/gpt-5-mini"),
+          Schema.Literal("openai/gpt-5-nano"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      cache: Schema.optional(Schema.Boolean),
+      cacheThreshold: Schema.optional(
+        Schema.Union([
+          Schema.Literals([
+            "super_strict_match",
+            "close_enough",
+            "flexible_friend",
+            "anything_goes",
+          ]),
           Schema.String,
         ]),
-        fieldName: Schema.String,
-      }).pipe(
-        Schema.encodeKeys({ dataType: "data_type", fieldName: "field_name" }),
       ),
-    ),
-  ),
-  embeddingModel: Schema.optional(
-    Schema.Union([
-      Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
-      Schema.Literal("@cf/baai/bge-m3"),
-      Schema.Literal("@cf/baai/bge-large-en-v1.5"),
-      Schema.Literal("@cf/google/embeddinggemma-300m"),
-      Schema.Literal("google-ai-studio/gemini-embedding-001"),
-      Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
-      Schema.Literal("openai/text-embedding-3-small"),
-      Schema.Literal("openai/text-embedding-3-large"),
-      Schema.Literal(""),
-      Schema.Null,
-    ]),
-  ),
-  fusionMethod: Schema.optional(
-    Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
-  ),
-  indexMethod: Schema.optional(
-    Schema.Struct({
-      keyword: Schema.Boolean,
-      vector: Schema.Boolean,
-    }),
-  ),
-  indexingOptions: Schema.optional(
-    Schema.Union([
-      Schema.Struct({
-        keywordTokenizer: Schema.optional(
-          Schema.Union([Schema.Literals(["porter", "trigram"]), Schema.String]),
-        ),
-      }).pipe(Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" })),
-      Schema.Null,
-    ]),
-  ),
-  maxNumResults: Schema.optional(Schema.Number),
-  metadata: Schema.optional(
-    Schema.Struct({
-      createdFromAisearchWizard: Schema.optional(Schema.Boolean),
-      workerDomain: Schema.optional(Schema.String),
-    }).pipe(
-      Schema.encodeKeys({
-        createdFromAisearchWizard: "created_from_aisearch_wizard",
-        workerDomain: "worker_domain",
-      }),
-    ),
-  ),
-  paused: Schema.optional(Schema.Boolean),
-  publicEndpointParams: Schema.optional(
-    Schema.Struct({
-      authorizedHosts: Schema.optional(Schema.Array(Schema.String)),
-      chatCompletionsEndpoint: Schema.optional(
-        Schema.Struct({
-          disabled: Schema.optional(Schema.Boolean),
-        }),
-      ),
-      enabled: Schema.optional(Schema.Boolean),
-      mcp: Schema.optional(
-        Schema.Struct({
-          description: Schema.optional(Schema.String),
-          disabled: Schema.optional(Schema.Boolean),
-        }),
-      ),
-      rateLimit: Schema.optional(
-        Schema.Struct({
-          periodMs: Schema.optional(Schema.Number),
-          requests: Schema.optional(Schema.Number),
-          technique: Schema.optional(
-            Schema.Union([
-              Schema.Literals(["fixed", "sliding"]),
+      cacheTtl: Schema.optional(Schema.Number),
+      chunk: Schema.optional(Schema.Boolean),
+      chunkOverlap: Schema.optional(Schema.Number),
+      chunkSize: Schema.optional(Schema.Number),
+      customMetadata: Schema.optional(
+        Schema.Array(
+          Schema.Struct({
+            dataType: Schema.Union([
+              Schema.Literals(["text", "number", "boolean", "datetime"]),
               Schema.String,
             ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            periodMs: "period_ms",
-            requests: "requests",
-            technique: "technique",
-          }),
-        ),
-      ),
-      searchEndpoint: Schema.optional(
-        Schema.Struct({
-          disabled: Schema.optional(Schema.Boolean),
-        }),
-      ),
-    }).pipe(
-      Schema.encodeKeys({
-        authorizedHosts: "authorized_hosts",
-        chatCompletionsEndpoint: "chat_completions_endpoint",
-        enabled: "enabled",
-        mcp: "mcp",
-        rateLimit: "rate_limit",
-        searchEndpoint: "search_endpoint",
-      }),
-    ),
-  ),
-  reranking: Schema.optional(Schema.Boolean),
-  rerankingModel: Schema.optional(
-    Schema.Union([
-      Schema.Literal("@cf/baai/bge-reranker-base"),
-      Schema.Literal(""),
-      Schema.Null,
-    ]),
-  ),
-  retrievalOptions: Schema.optional(
-    Schema.Union([
-      Schema.Struct({
-        boostBy: Schema.optional(
-          Schema.Array(
-            Schema.Struct({
-              field: Schema.String,
-              direction: Schema.optional(
-                Schema.Union([
-                  Schema.Literals(["asc", "desc", "exists", "not_exists"]),
-                  Schema.String,
-                ]),
-              ),
+            fieldName: Schema.String,
+          }).pipe(
+            Schema.encodeKeys({
+              dataType: "data_type",
+              fieldName: "field_name",
             }),
           ),
         ),
-        keywordMatchMode: Schema.optional(
-          Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
-        ),
-      }).pipe(
-        Schema.encodeKeys({
-          boostBy: "boost_by",
-          keywordMatchMode: "keyword_match_mode",
+      ),
+      embeddingModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
+          Schema.Literal("@cf/baai/bge-m3"),
+          Schema.Literal("@cf/baai/bge-large-en-v1.5"),
+          Schema.Literal("@cf/google/embeddinggemma-300m"),
+          Schema.Literal("google-ai-studio/gemini-embedding-001"),
+          Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
+          Schema.Literal("openai/text-embedding-3-small"),
+          Schema.Literal("openai/text-embedding-3-large"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      fusionMethod: Schema.optional(
+        Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
+      ),
+      indexMethod: Schema.optional(
+        Schema.Struct({
+          keyword: Schema.Boolean,
+          vector: Schema.Boolean,
         }),
       ),
-      Schema.Null,
-    ]),
-  ),
-  rewriteModel: Schema.optional(
-    Schema.Union([
-      Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-      Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-      Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-      Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-      Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-      Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-      Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-      Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-      Schema.Literal("@cf/google/gemma-3-12b-it"),
-      Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-      Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-      Schema.Literal("anthropic/claude-3-7-sonnet"),
-      Schema.Literal("anthropic/claude-sonnet-4"),
-      Schema.Literal("anthropic/claude-opus-4"),
-      Schema.Literal("anthropic/claude-3-5-haiku"),
-      Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-      Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-      Schema.Literal("cerebras/llama-3.3-70b"),
-      Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-      Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-      Schema.Literal("cerebras/gpt-oss-120b"),
-      Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-      Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-      Schema.Literal("grok/grok-4"),
-      Schema.Literal("groq/llama-3.3-70b-versatile"),
-      Schema.Literal("groq/llama-3.1-8b-instant"),
-      Schema.Literal("openai/gpt-5"),
-      Schema.Literal("openai/gpt-5-mini"),
-      Schema.Literal("openai/gpt-5-nano"),
-      Schema.Literal(""),
-      Schema.Null,
-    ]),
-  ),
-  rewriteQuery: Schema.optional(Schema.Boolean),
-  scoreThreshold: Schema.optional(Schema.Number),
-  sourceParams: Schema.optional(
-    Schema.Union([
-      Schema.Struct({
-        excludeItems: Schema.optional(Schema.Array(Schema.String)),
-        includeItems: Schema.optional(Schema.Array(Schema.String)),
-        prefix: Schema.optional(Schema.String),
-        r2Jurisdiction: Schema.optional(Schema.String),
-        webCrawler: Schema.optional(
+      indexingOptions: Schema.optional(
+        Schema.Union([
           Schema.Struct({
-            crawlOptions: Schema.optional(
-              Schema.Struct({
-                depth: Schema.optional(Schema.Number),
-                includeExternalLinks: Schema.optional(Schema.Boolean),
-                includeSubdomains: Schema.optional(Schema.Boolean),
-                maxAge: Schema.optional(Schema.Number),
-                source: Schema.optional(
-                  Schema.Union([
-                    Schema.Literals(["all", "sitemaps", "links"]),
-                    Schema.String,
-                  ]),
-                ),
-              }).pipe(
-                Schema.encodeKeys({
-                  depth: "depth",
-                  includeExternalLinks: "include_external_links",
-                  includeSubdomains: "include_subdomains",
-                  maxAge: "max_age",
-                  source: "source",
-                }),
-              ),
-            ),
-            parseOptions: Schema.optional(
-              Schema.Struct({
-                contentSelector: Schema.optional(
-                  Schema.Array(
-                    Schema.Struct({
-                      path: Schema.String,
-                      selector: Schema.String,
-                    }),
-                  ),
-                ),
-                includeHeaders: Schema.optional(
-                  Schema.Record(Schema.String, Schema.Unknown),
-                ),
-                includeImages: Schema.optional(Schema.Boolean),
-                specificSitemaps: Schema.optional(Schema.Array(Schema.String)),
-                useBrowserRendering: Schema.optional(Schema.Boolean),
-              }).pipe(
-                Schema.encodeKeys({
-                  contentSelector: "content_selector",
-                  includeHeaders: "include_headers",
-                  includeImages: "include_images",
-                  specificSitemaps: "specific_sitemaps",
-                  useBrowserRendering: "use_browser_rendering",
-                }),
-              ),
-            ),
-            parseType: Schema.optional(
+            keywordTokenizer: Schema.optional(
               Schema.Union([
-                Schema.Literals(["sitemap", "feed-rss", "crawl"]),
+                Schema.Literals(["porter", "trigram"]),
                 Schema.String,
               ]),
             ),
-            storeOptions: Schema.optional(
+          }).pipe(Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" })),
+          Schema.Null,
+        ]),
+      ),
+      maxNumResults: Schema.optional(Schema.Number),
+      metadata: Schema.optional(
+        Schema.Struct({
+          createdFromAisearchWizard: Schema.optional(Schema.Boolean),
+          workerDomain: Schema.optional(Schema.String),
+        }).pipe(
+          Schema.encodeKeys({
+            createdFromAisearchWizard: "created_from_aisearch_wizard",
+            workerDomain: "worker_domain",
+          }),
+        ),
+      ),
+      paused: Schema.optional(Schema.Boolean),
+      publicEndpointParams: Schema.optional(
+        Schema.Struct({
+          authorizedHosts: Schema.optional(Schema.Array(Schema.String)),
+          chatCompletionsEndpoint: Schema.optional(
+            Schema.Struct({
+              disabled: Schema.optional(Schema.Boolean),
+            }),
+          ),
+          enabled: Schema.optional(Schema.Boolean),
+          mcp: Schema.optional(
+            Schema.Struct({
+              description: Schema.optional(Schema.String),
+              disabled: Schema.optional(Schema.Boolean),
+            }),
+          ),
+          rateLimit: Schema.optional(
+            Schema.Struct({
+              periodMs: Schema.optional(Schema.Number),
+              requests: Schema.optional(Schema.Number),
+              technique: Schema.optional(
+                Schema.Union([
+                  Schema.Literals(["fixed", "sliding"]),
+                  Schema.String,
+                ]),
+              ),
+            }).pipe(
+              Schema.encodeKeys({
+                periodMs: "period_ms",
+                requests: "requests",
+                technique: "technique",
+              }),
+            ),
+          ),
+          searchEndpoint: Schema.optional(
+            Schema.Struct({
+              disabled: Schema.optional(Schema.Boolean),
+            }),
+          ),
+        }).pipe(
+          Schema.encodeKeys({
+            authorizedHosts: "authorized_hosts",
+            chatCompletionsEndpoint: "chat_completions_endpoint",
+            enabled: "enabled",
+            mcp: "mcp",
+            rateLimit: "rate_limit",
+            searchEndpoint: "search_endpoint",
+          }),
+        ),
+      ),
+      reranking: Schema.optional(Schema.Boolean),
+      rerankingModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/baai/bge-reranker-base"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      retrievalOptions: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            boostBy: Schema.optional(
+              Schema.Array(
+                Schema.Struct({
+                  field: Schema.String,
+                  direction: Schema.optional(
+                    Schema.Union([
+                      Schema.Literals(["asc", "desc", "exists", "not_exists"]),
+                      Schema.String,
+                    ]),
+                  ),
+                }),
+              ),
+            ),
+            keywordMatchMode: Schema.optional(
+              Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              boostBy: "boost_by",
+              keywordMatchMode: "keyword_match_mode",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      rewriteModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+          Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+          Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+          Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+          Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+          Schema.Literal("@cf/google/gemma-3-12b-it"),
+          Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+          Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+          Schema.Literal("anthropic/claude-3-7-sonnet"),
+          Schema.Literal("anthropic/claude-sonnet-4"),
+          Schema.Literal("anthropic/claude-opus-4"),
+          Schema.Literal("anthropic/claude-3-5-haiku"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+          Schema.Literal("cerebras/llama-3.3-70b"),
+          Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+          Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("cerebras/gpt-oss-120b"),
+          Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+          Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+          Schema.Literal("grok/grok-4"),
+          Schema.Literal("groq/llama-3.3-70b-versatile"),
+          Schema.Literal("groq/llama-3.1-8b-instant"),
+          Schema.Literal("openai/gpt-5"),
+          Schema.Literal("openai/gpt-5-mini"),
+          Schema.Literal("openai/gpt-5-nano"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      rewriteQuery: Schema.optional(Schema.Boolean),
+      scoreThreshold: Schema.optional(Schema.Number),
+      sourceParams: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            excludeItems: Schema.optional(Schema.Array(Schema.String)),
+            includeItems: Schema.optional(Schema.Array(Schema.String)),
+            prefix: Schema.optional(Schema.String),
+            r2Jurisdiction: Schema.optional(Schema.String),
+            webCrawler: Schema.optional(
               Schema.Struct({
-                storageId: Schema.String,
-                r2Jurisdiction: Schema.optional(Schema.String),
-                storageType: Schema.optional(Schema.Literal("r2")),
+                crawlOptions: Schema.optional(
+                  Schema.Struct({
+                    depth: Schema.optional(Schema.Number),
+                    includeExternalLinks: Schema.optional(Schema.Boolean),
+                    includeSubdomains: Schema.optional(Schema.Boolean),
+                    maxAge: Schema.optional(Schema.Number),
+                    source: Schema.optional(
+                      Schema.Union([
+                        Schema.Literals(["all", "sitemaps", "links"]),
+                        Schema.String,
+                      ]),
+                    ),
+                  }).pipe(
+                    Schema.encodeKeys({
+                      depth: "depth",
+                      includeExternalLinks: "include_external_links",
+                      includeSubdomains: "include_subdomains",
+                      maxAge: "max_age",
+                      source: "source",
+                    }),
+                  ),
+                ),
+                parseOptions: Schema.optional(
+                  Schema.Struct({
+                    contentSelector: Schema.optional(
+                      Schema.Array(
+                        Schema.Struct({
+                          path: Schema.String,
+                          selector: Schema.String,
+                        }),
+                      ),
+                    ),
+                    includeHeaders: Schema.optional(
+                      Schema.Record(Schema.String, Schema.Unknown),
+                    ),
+                    includeImages: Schema.optional(Schema.Boolean),
+                    specificSitemaps: Schema.optional(
+                      Schema.Array(Schema.String),
+                    ),
+                    useBrowserRendering: Schema.optional(Schema.Boolean),
+                  }).pipe(
+                    Schema.encodeKeys({
+                      contentSelector: "content_selector",
+                      includeHeaders: "include_headers",
+                      includeImages: "include_images",
+                      specificSitemaps: "specific_sitemaps",
+                      useBrowserRendering: "use_browser_rendering",
+                    }),
+                  ),
+                ),
+                parseType: Schema.optional(
+                  Schema.Union([
+                    Schema.Literals(["sitemap", "feed-rss", "crawl"]),
+                    Schema.String,
+                  ]),
+                ),
+                storeOptions: Schema.optional(
+                  Schema.Struct({
+                    storageId: Schema.String,
+                    r2Jurisdiction: Schema.optional(Schema.String),
+                    storageType: Schema.optional(Schema.Literal("r2")),
+                  }).pipe(
+                    Schema.encodeKeys({
+                      storageId: "storage_id",
+                      r2Jurisdiction: "r2_jurisdiction",
+                      storageType: "storage_type",
+                    }),
+                  ),
+                ),
               }).pipe(
                 Schema.encodeKeys({
-                  storageId: "storage_id",
-                  r2Jurisdiction: "r2_jurisdiction",
-                  storageType: "storage_type",
+                  crawlOptions: "crawl_options",
+                  parseOptions: "parse_options",
+                  parseType: "parse_type",
+                  storeOptions: "store_options",
                 }),
               ),
             ),
           }).pipe(
             Schema.encodeKeys({
-              crawlOptions: "crawl_options",
-              parseOptions: "parse_options",
-              parseType: "parse_type",
-              storeOptions: "store_options",
+              excludeItems: "exclude_items",
+              includeItems: "include_items",
+              prefix: "prefix",
+              r2Jurisdiction: "r2_jurisdiction",
+              webCrawler: "web_crawler",
             }),
           ),
-        ),
-      }).pipe(
-        Schema.encodeKeys({
-          excludeItems: "exclude_items",
-          includeItems: "include_items",
-          prefix: "prefix",
-          r2Jurisdiction: "r2_jurisdiction",
-          webCrawler: "web_crawler",
-        }),
+          Schema.Null,
+        ]),
       ),
-      Schema.Null,
-    ]),
-  ),
-  summarization: Schema.optional(Schema.Boolean),
-  summarizationModel: Schema.optional(
-    Schema.Union([
-      Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-      Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-      Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-      Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-      Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-      Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-      Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-      Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-      Schema.Literal("@cf/google/gemma-3-12b-it"),
-      Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-      Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-      Schema.Literal("anthropic/claude-3-7-sonnet"),
-      Schema.Literal("anthropic/claude-sonnet-4"),
-      Schema.Literal("anthropic/claude-opus-4"),
-      Schema.Literal("anthropic/claude-3-5-haiku"),
-      Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-      Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-      Schema.Literal("cerebras/llama-3.3-70b"),
-      Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-      Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-      Schema.Literal("cerebras/gpt-oss-120b"),
-      Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-      Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-      Schema.Literal("grok/grok-4"),
-      Schema.Literal("groq/llama-3.3-70b-versatile"),
-      Schema.Literal("groq/llama-3.1-8b-instant"),
-      Schema.Literal("openai/gpt-5"),
-      Schema.Literal("openai/gpt-5-mini"),
-      Schema.Literal("openai/gpt-5-nano"),
-      Schema.Literal(""),
-      Schema.Null,
-    ]),
-  ),
-  syncInterval: Schema.optional(
-    Schema.Union([
-      Schema.Literals([
-        "900",
-        "1800",
-        "3600",
-        "7200",
-        "14400",
-        "21600",
-        "43200",
-        "86400",
-      ]),
-      Schema.String,
-    ]),
-  ),
-  systemPromptAiSearch: Schema.optional(
-    Schema.Union([Schema.String, Schema.Null]),
-  ),
-  systemPromptIndexSummarization: Schema.optional(
-    Schema.Union([Schema.String, Schema.Null]),
-  ),
-  systemPromptRewriteQuery: Schema.optional(
-    Schema.Union([Schema.String, Schema.Null]),
-  ),
-  tokenId: Schema.optional(Schema.String),
-}).pipe(
-  Schema.encodeKeys({
-    aiGatewayId: "ai_gateway_id",
-    aiSearchModel: "ai_search_model",
-    cache: "cache",
-    cacheThreshold: "cache_threshold",
-    cacheTtl: "cache_ttl",
-    chunk: "chunk",
-    chunkOverlap: "chunk_overlap",
-    chunkSize: "chunk_size",
-    customMetadata: "custom_metadata",
-    embeddingModel: "embedding_model",
-    fusionMethod: "fusion_method",
-    indexMethod: "index_method",
-    indexingOptions: "indexing_options",
-    maxNumResults: "max_num_results",
-    metadata: "metadata",
-    paused: "paused",
-    publicEndpointParams: "public_endpoint_params",
-    reranking: "reranking",
-    rerankingModel: "reranking_model",
-    retrievalOptions: "retrieval_options",
-    rewriteModel: "rewrite_model",
-    rewriteQuery: "rewrite_query",
-    scoreThreshold: "score_threshold",
-    sourceParams: "source_params",
-    summarization: "summarization",
-    summarizationModel: "summarization_model",
-    syncInterval: "sync_interval",
-    systemPromptAiSearch: "system_prompt_ai_search",
-    systemPromptIndexSummarization: "system_prompt_index_summarization",
-    systemPromptRewriteQuery: "system_prompt_rewrite_query",
-    tokenId: "token_id",
-  }),
-  T.Http({
-    method: "PUT",
-    path: "/accounts/{account_id}/ai-search/instances/{id}",
-  }),
+      summarization: Schema.optional(Schema.Boolean),
+      summarizationModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+          Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+          Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+          Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+          Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+          Schema.Literal("@cf/google/gemma-3-12b-it"),
+          Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+          Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+          Schema.Literal("anthropic/claude-3-7-sonnet"),
+          Schema.Literal("anthropic/claude-sonnet-4"),
+          Schema.Literal("anthropic/claude-opus-4"),
+          Schema.Literal("anthropic/claude-3-5-haiku"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+          Schema.Literal("cerebras/llama-3.3-70b"),
+          Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+          Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("cerebras/gpt-oss-120b"),
+          Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+          Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+          Schema.Literal("grok/grok-4"),
+          Schema.Literal("groq/llama-3.3-70b-versatile"),
+          Schema.Literal("groq/llama-3.1-8b-instant"),
+          Schema.Literal("openai/gpt-5"),
+          Schema.Literal("openai/gpt-5-mini"),
+          Schema.Literal("openai/gpt-5-nano"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      syncInterval: Schema.optional(Schema.Number),
+      systemPromptAiSearch: Schema.optional(
+        Schema.Union([Schema.String, Schema.Null]),
+      ),
+      systemPromptIndexSummarization: Schema.optional(
+        Schema.Union([Schema.String, Schema.Null]),
+      ),
+      systemPromptRewriteQuery: Schema.optional(
+        Schema.Union([Schema.String, Schema.Null]),
+      ),
+      tokenId: Schema.optional(Schema.String),
+    }).pipe(
+      Schema.encodeKeys({
+        aiGatewayId: "ai_gateway_id",
+        aiSearchModel: "ai_search_model",
+        cache: "cache",
+        cacheThreshold: "cache_threshold",
+        cacheTtl: "cache_ttl",
+        chunk: "chunk",
+        chunkOverlap: "chunk_overlap",
+        chunkSize: "chunk_size",
+        customMetadata: "custom_metadata",
+        embeddingModel: "embedding_model",
+        fusionMethod: "fusion_method",
+        indexMethod: "index_method",
+        indexingOptions: "indexing_options",
+        maxNumResults: "max_num_results",
+        metadata: "metadata",
+        paused: "paused",
+        publicEndpointParams: "public_endpoint_params",
+        reranking: "reranking",
+        rerankingModel: "reranking_model",
+        retrievalOptions: "retrieval_options",
+        rewriteModel: "rewrite_model",
+        rewriteQuery: "rewrite_query",
+        scoreThreshold: "score_threshold",
+        sourceParams: "source_params",
+        summarization: "summarization",
+        summarizationModel: "summarization_model",
+        syncInterval: "sync_interval",
+        systemPromptAiSearch: "system_prompt_ai_search",
+        systemPromptIndexSummarization: "system_prompt_index_summarization",
+        systemPromptRewriteQuery: "system_prompt_rewrite_query",
+        tokenId: "token_id",
+      }),
+      T.Http({
+        method: "PUT",
+        path: "/accounts/{account_id}/ai-search/instances/{id}",
+      }),
+    ),
 ) as unknown as Schema.Schema<UpdateInstanceRequest>;
 
 export interface UpdateInstanceResponse {
@@ -4526,19 +4527,7 @@ export interface UpdateInstanceResponse {
     | "anything_goes"
     | null;
   /** Cache entry TTL in seconds. Allowed values: 600 (10min), 1800 (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h), 86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d). */
-  cacheTtl?:
-    | "600"
-    | "1800"
-    | "3600"
-    | "7200"
-    | "21600"
-    | "43200"
-    | "86400"
-    | "172800"
-    | "259200"
-    | "518400"
-    | (string & {})
-    | null;
+  cacheTtl?: number | null;
   chunkOverlap?: number | null;
   chunkSize?: number | null;
   createdBy?: string | null;
@@ -4673,588 +4662,553 @@ export interface UpdateInstanceResponse {
   } | null;
   status?: string | null;
   /** Interval between automatic syncs, in seconds. Allowed values: 900 (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h), 21600 (6h), 43200 (12h), 86400 (24h). */
-  syncInterval?:
-    | "900"
-    | "1800"
-    | "3600"
-    | "7200"
-    | "14400"
-    | "21600"
-    | "43200"
-    | "86400"
-    | (string & {})
-    | null;
+  syncInterval?: number | null;
   tokenId?: string | null;
   type?: "r2" | "web-crawler" | null;
 }
 
-export const UpdateInstanceResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
-  {
-    id: Schema.String,
-    createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    modifiedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    aiGatewayId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    aiSearchModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-        Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-        Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-        Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-        Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-        Schema.Literal("@cf/google/gemma-3-12b-it"),
-        Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-        Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-        Schema.Literal("anthropic/claude-3-7-sonnet"),
-        Schema.Literal("anthropic/claude-sonnet-4"),
-        Schema.Literal("anthropic/claude-opus-4"),
-        Schema.Literal("anthropic/claude-3-5-haiku"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-        Schema.Literal("cerebras/llama-3.3-70b"),
-        Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-        Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("cerebras/gpt-oss-120b"),
-        Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-        Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-        Schema.Literal("grok/grok-4"),
-        Schema.Literal("groq/llama-3.3-70b-versatile"),
-        Schema.Literal("groq/llama-3.1-8b-instant"),
-        Schema.Literal("openai/gpt-5"),
-        Schema.Literal("openai/gpt-5-mini"),
-        Schema.Literal("openai/gpt-5-nano"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    cache: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    cacheThreshold: Schema.optional(
-      Schema.Union([
-        Schema.Literal("super_strict_match"),
-        Schema.Literal("close_enough"),
-        Schema.Literal("flexible_friend"),
-        Schema.Literal("anything_goes"),
-        Schema.Null,
-      ]),
-    ),
-    cacheTtl: Schema.optional(
-      Schema.Union([
+export const UpdateInstanceResponse =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      id: Schema.String,
+      createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      modifiedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      aiGatewayId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      aiSearchModel: Schema.optional(
         Schema.Union([
-          Schema.Literals([
-            "600",
-            "1800",
-            "3600",
-            "7200",
-            "21600",
-            "43200",
-            "86400",
-            "172800",
-            "259200",
-            "518400",
-          ]),
-          Schema.String,
+          Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+          Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+          Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+          Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+          Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+          Schema.Literal("@cf/google/gemma-3-12b-it"),
+          Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+          Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+          Schema.Literal("anthropic/claude-3-7-sonnet"),
+          Schema.Literal("anthropic/claude-sonnet-4"),
+          Schema.Literal("anthropic/claude-opus-4"),
+          Schema.Literal("anthropic/claude-3-5-haiku"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+          Schema.Literal("cerebras/llama-3.3-70b"),
+          Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+          Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("cerebras/gpt-oss-120b"),
+          Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+          Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+          Schema.Literal("grok/grok-4"),
+          Schema.Literal("groq/llama-3.3-70b-versatile"),
+          Schema.Literal("groq/llama-3.1-8b-instant"),
+          Schema.Literal("openai/gpt-5"),
+          Schema.Literal("openai/gpt-5-mini"),
+          Schema.Literal("openai/gpt-5-nano"),
+          Schema.Literal(""),
+          Schema.Null,
         ]),
-        Schema.Null,
-      ]),
-    ),
-    chunkOverlap: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    chunkSize: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    createdBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    customMetadata: Schema.optional(
-      Schema.Union([
-        Schema.Array(
-          Schema.Struct({
-            dataType: Schema.Union([
-              Schema.Literals(["text", "number", "boolean", "datetime"]),
-              Schema.String,
-            ]),
-            fieldName: Schema.String,
-          }).pipe(
-            Schema.encodeKeys({
-              dataType: "data_type",
-              fieldName: "field_name",
-            }),
-          ),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    embeddingModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
-        Schema.Literal("@cf/baai/bge-m3"),
-        Schema.Literal("@cf/baai/bge-large-en-v1.5"),
-        Schema.Literal("@cf/google/embeddinggemma-300m"),
-        Schema.Literal("google-ai-studio/gemini-embedding-001"),
-        Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
-        Schema.Literal("openai/text-embedding-3-small"),
-        Schema.Literal("openai/text-embedding-3-large"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    enable: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    engineVersion: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    fusionMethod: Schema.optional(
-      Schema.Union([
-        Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
-        Schema.Null,
-      ]),
-    ),
-    hybridSearchEnabled: Schema.optional(
-      Schema.Union([Schema.Boolean, Schema.Null]),
-    ),
-    indexMethod: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          keyword: Schema.Boolean,
-          vector: Schema.Boolean,
-        }),
-        Schema.Null,
-      ]),
-    ),
-    indexingOptions: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          keywordTokenizer: Schema.optional(
-            Schema.Union([
-              Schema.Union([
-                Schema.Literals(["porter", "trigram"]),
+      ),
+      cache: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      cacheThreshold: Schema.optional(
+        Schema.Union([
+          Schema.Literal("super_strict_match"),
+          Schema.Literal("close_enough"),
+          Schema.Literal("flexible_friend"),
+          Schema.Literal("anything_goes"),
+          Schema.Null,
+        ]),
+      ),
+      cacheTtl: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      chunkOverlap: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      chunkSize: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      createdBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      customMetadata: Schema.optional(
+        Schema.Union([
+          Schema.Array(
+            Schema.Struct({
+              dataType: Schema.Union([
+                Schema.Literals(["text", "number", "boolean", "datetime"]),
                 Schema.String,
               ]),
-              Schema.Null,
-            ]),
+              fieldName: Schema.String,
+            }).pipe(
+              Schema.encodeKeys({
+                dataType: "data_type",
+                fieldName: "field_name",
+              }),
+            ),
           ),
-        }).pipe(Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" })),
-        Schema.Null,
-      ]),
-    ),
-    lastActivity: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    maxNumResults: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    metadata: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          createdFromAisearchWizard: Schema.optional(
-            Schema.Union([Schema.Boolean, Schema.Null]),
-          ),
-          workerDomain: Schema.optional(
-            Schema.Union([Schema.String, Schema.Null]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            createdFromAisearchWizard: "created_from_aisearch_wizard",
-            workerDomain: "worker_domain",
+          Schema.Null,
+        ]),
+      ),
+      embeddingModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
+          Schema.Literal("@cf/baai/bge-m3"),
+          Schema.Literal("@cf/baai/bge-large-en-v1.5"),
+          Schema.Literal("@cf/google/embeddinggemma-300m"),
+          Schema.Literal("google-ai-studio/gemini-embedding-001"),
+          Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
+          Schema.Literal("openai/text-embedding-3-small"),
+          Schema.Literal("openai/text-embedding-3-large"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      enable: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      engineVersion: Schema.optional(
+        Schema.Union([Schema.Number, Schema.Null]),
+      ),
+      fusionMethod: Schema.optional(
+        Schema.Union([
+          Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
+          Schema.Null,
+        ]),
+      ),
+      hybridSearchEnabled: Schema.optional(
+        Schema.Union([Schema.Boolean, Schema.Null]),
+      ),
+      indexMethod: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            keyword: Schema.Boolean,
+            vector: Schema.Boolean,
           }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    modifiedBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    namespace: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    paused: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    publicEndpointId: Schema.optional(
-      Schema.Union([Schema.String, Schema.Null]),
-    ),
-    publicEndpointParams: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          authorizedHosts: Schema.optional(
-            Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+          Schema.Null,
+        ]),
+      ),
+      indexingOptions: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            keywordTokenizer: Schema.optional(
+              Schema.Union([
+                Schema.Union([
+                  Schema.Literals(["porter", "trigram"]),
+                  Schema.String,
+                ]),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" })),
+          Schema.Null,
+        ]),
+      ),
+      lastActivity: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      maxNumResults: Schema.optional(
+        Schema.Union([Schema.Number, Schema.Null]),
+      ),
+      metadata: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            createdFromAisearchWizard: Schema.optional(
+              Schema.Union([Schema.Boolean, Schema.Null]),
+            ),
+            workerDomain: Schema.optional(
+              Schema.Union([Schema.String, Schema.Null]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              createdFromAisearchWizard: "created_from_aisearch_wizard",
+              workerDomain: "worker_domain",
+            }),
           ),
-          chatCompletionsEndpoint: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                disabled: Schema.optional(
-                  Schema.Union([Schema.Boolean, Schema.Null]),
-                ),
-              }),
-              Schema.Null,
-            ]),
-          ),
-          enabled: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-          mcp: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                description: Schema.optional(
-                  Schema.Union([Schema.String, Schema.Null]),
-                ),
-                disabled: Schema.optional(
-                  Schema.Union([Schema.Boolean, Schema.Null]),
-                ),
-              }),
-              Schema.Null,
-            ]),
-          ),
-          rateLimit: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                periodMs: Schema.optional(
-                  Schema.Union([Schema.Number, Schema.Null]),
-                ),
-                requests: Schema.optional(
-                  Schema.Union([Schema.Number, Schema.Null]),
-                ),
-                technique: Schema.optional(
-                  Schema.Union([
-                    Schema.Union([
-                      Schema.Literals(["fixed", "sliding"]),
-                      Schema.String,
-                    ]),
-                    Schema.Null,
-                  ]),
-                ),
-              }).pipe(
-                Schema.encodeKeys({
-                  periodMs: "period_ms",
-                  requests: "requests",
-                  technique: "technique",
-                }),
-              ),
-              Schema.Null,
-            ]),
-          ),
-          searchEndpoint: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                disabled: Schema.optional(
-                  Schema.Union([Schema.Boolean, Schema.Null]),
-                ),
-              }),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            authorizedHosts: "authorized_hosts",
-            chatCompletionsEndpoint: "chat_completions_endpoint",
-            enabled: "enabled",
-            mcp: "mcp",
-            rateLimit: "rate_limit",
-            searchEndpoint: "search_endpoint",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    reranking: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    rerankingModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/baai/bge-reranker-base"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    retrievalOptions: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          boostBy: Schema.optional(
-            Schema.Union([
-              Schema.Array(
+          Schema.Null,
+        ]),
+      ),
+      modifiedBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      namespace: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      paused: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      publicEndpointId: Schema.optional(
+        Schema.Union([Schema.String, Schema.Null]),
+      ),
+      publicEndpointParams: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            authorizedHosts: Schema.optional(
+              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+            ),
+            chatCompletionsEndpoint: Schema.optional(
+              Schema.Union([
                 Schema.Struct({
-                  field: Schema.String,
-                  direction: Schema.optional(
+                  disabled: Schema.optional(
+                    Schema.Union([Schema.Boolean, Schema.Null]),
+                  ),
+                }),
+                Schema.Null,
+              ]),
+            ),
+            enabled: Schema.optional(
+              Schema.Union([Schema.Boolean, Schema.Null]),
+            ),
+            mcp: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  description: Schema.optional(
+                    Schema.Union([Schema.String, Schema.Null]),
+                  ),
+                  disabled: Schema.optional(
+                    Schema.Union([Schema.Boolean, Schema.Null]),
+                  ),
+                }),
+                Schema.Null,
+              ]),
+            ),
+            rateLimit: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  periodMs: Schema.optional(
+                    Schema.Union([Schema.Number, Schema.Null]),
+                  ),
+                  requests: Schema.optional(
+                    Schema.Union([Schema.Number, Schema.Null]),
+                  ),
+                  technique: Schema.optional(
                     Schema.Union([
                       Schema.Union([
-                        Schema.Literals([
-                          "asc",
-                          "desc",
-                          "exists",
-                          "not_exists",
-                        ]),
+                        Schema.Literals(["fixed", "sliding"]),
                         Schema.String,
                       ]),
                       Schema.Null,
                     ]),
                   ),
+                }).pipe(
+                  Schema.encodeKeys({
+                    periodMs: "period_ms",
+                    requests: "requests",
+                    technique: "technique",
+                  }),
+                ),
+                Schema.Null,
+              ]),
+            ),
+            searchEndpoint: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  disabled: Schema.optional(
+                    Schema.Union([Schema.Boolean, Schema.Null]),
+                  ),
                 }),
-              ),
-              Schema.Null,
-            ]),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              authorizedHosts: "authorized_hosts",
+              chatCompletionsEndpoint: "chat_completions_endpoint",
+              enabled: "enabled",
+              mcp: "mcp",
+              rateLimit: "rate_limit",
+              searchEndpoint: "search_endpoint",
+            }),
           ),
-          keywordMatchMode: Schema.optional(
-            Schema.Union([
-              Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            boostBy: "boost_by",
-            keywordMatchMode: "keyword_match_mode",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    rewriteModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-        Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-        Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-        Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-        Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-        Schema.Literal("@cf/google/gemma-3-12b-it"),
-        Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-        Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-        Schema.Literal("anthropic/claude-3-7-sonnet"),
-        Schema.Literal("anthropic/claude-sonnet-4"),
-        Schema.Literal("anthropic/claude-opus-4"),
-        Schema.Literal("anthropic/claude-3-5-haiku"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-        Schema.Literal("cerebras/llama-3.3-70b"),
-        Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-        Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("cerebras/gpt-oss-120b"),
-        Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-        Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-        Schema.Literal("grok/grok-4"),
-        Schema.Literal("groq/llama-3.3-70b-versatile"),
-        Schema.Literal("groq/llama-3.1-8b-instant"),
-        Schema.Literal("openai/gpt-5"),
-        Schema.Literal("openai/gpt-5-mini"),
-        Schema.Literal("openai/gpt-5-nano"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    rewriteQuery: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    scoreThreshold: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    source: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    sourceParams: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          excludeItems: Schema.optional(
-            Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-          ),
-          includeItems: Schema.optional(
-            Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-          ),
-          prefix: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-          r2Jurisdiction: Schema.optional(
-            Schema.Union([Schema.String, Schema.Null]),
-          ),
-          webCrawler: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                crawlOptions: Schema.optional(
-                  Schema.Union([
-                    Schema.Struct({
-                      depth: Schema.optional(
-                        Schema.Union([Schema.Number, Schema.Null]),
-                      ),
-                      includeExternalLinks: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                      includeSubdomains: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                      maxAge: Schema.optional(
-                        Schema.Union([Schema.Number, Schema.Null]),
-                      ),
-                      source: Schema.optional(
-                        Schema.Union([
-                          Schema.Union([
-                            Schema.Literals(["all", "sitemaps", "links"]),
-                            Schema.String,
-                          ]),
-                          Schema.Null,
-                        ]),
-                      ),
-                    }).pipe(
-                      Schema.encodeKeys({
-                        depth: "depth",
-                        includeExternalLinks: "include_external_links",
-                        includeSubdomains: "include_subdomains",
-                        maxAge: "max_age",
-                        source: "source",
-                      }),
-                    ),
-                    Schema.Null,
-                  ]),
-                ),
-                parseOptions: Schema.optional(
-                  Schema.Union([
-                    Schema.Struct({
-                      contentSelector: Schema.optional(
-                        Schema.Union([
-                          Schema.Array(
-                            Schema.Struct({
-                              path: Schema.String,
-                              selector: Schema.String,
-                            }),
-                          ),
-                          Schema.Null,
-                        ]),
-                      ),
-                      includeHeaders: Schema.optional(
-                        Schema.Union([
-                          Schema.Record(Schema.String, Schema.Unknown),
-                          Schema.Null,
-                        ]),
-                      ),
-                      includeImages: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                      specificSitemaps: Schema.optional(
-                        Schema.Union([
-                          Schema.Array(Schema.String),
-                          Schema.Null,
-                        ]),
-                      ),
-                      useBrowserRendering: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                    }).pipe(
-                      Schema.encodeKeys({
-                        contentSelector: "content_selector",
-                        includeHeaders: "include_headers",
-                        includeImages: "include_images",
-                        specificSitemaps: "specific_sitemaps",
-                        useBrowserRendering: "use_browser_rendering",
-                      }),
-                    ),
-                    Schema.Null,
-                  ]),
-                ),
-                parseType: Schema.optional(
-                  Schema.Union([
-                    Schema.Union([
-                      Schema.Literals(["sitemap", "feed-rss", "crawl"]),
-                      Schema.String,
-                    ]),
-                    Schema.Null,
-                  ]),
-                ),
-                storeOptions: Schema.optional(
-                  Schema.Union([
-                    Schema.Struct({
-                      storageId: Schema.String,
-                      r2Jurisdiction: Schema.optional(
-                        Schema.Union([Schema.String, Schema.Null]),
-                      ),
-                      storageType: Schema.optional(
-                        Schema.Union([Schema.Literal("r2"), Schema.Null]),
-                      ),
-                    }).pipe(
-                      Schema.encodeKeys({
-                        storageId: "storage_id",
-                        r2Jurisdiction: "r2_jurisdiction",
-                        storageType: "storage_type",
-                      }),
-                    ),
-                    Schema.Null,
-                  ]),
-                ),
-              }).pipe(
-                Schema.encodeKeys({
-                  crawlOptions: "crawl_options",
-                  parseOptions: "parse_options",
-                  parseType: "parse_type",
-                  storeOptions: "store_options",
-                }),
-              ),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            excludeItems: "exclude_items",
-            includeItems: "include_items",
-            prefix: "prefix",
-            r2Jurisdiction: "r2_jurisdiction",
-            webCrawler: "web_crawler",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    status: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    syncInterval: Schema.optional(
-      Schema.Union([
-        Schema.Union([
-          Schema.Literals([
-            "900",
-            "1800",
-            "3600",
-            "7200",
-            "14400",
-            "21600",
-            "43200",
-            "86400",
-          ]),
-          Schema.String,
+          Schema.Null,
         ]),
-        Schema.Null,
-      ]),
-    ),
-    tokenId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    type: Schema.optional(
-      Schema.Union([
-        Schema.Literal("r2"),
-        Schema.Literal("web-crawler"),
-        Schema.Null,
-      ]),
-    ),
-  },
-)
-  .pipe(
-    Schema.encodeKeys({
-      id: "id",
-      createdAt: "created_at",
-      modifiedAt: "modified_at",
-      aiGatewayId: "ai_gateway_id",
-      aiSearchModel: "ai_search_model",
-      cache: "cache",
-      cacheThreshold: "cache_threshold",
-      cacheTtl: "cache_ttl",
-      chunkOverlap: "chunk_overlap",
-      chunkSize: "chunk_size",
-      createdBy: "created_by",
-      customMetadata: "custom_metadata",
-      embeddingModel: "embedding_model",
-      enable: "enable",
-      engineVersion: "engine_version",
-      fusionMethod: "fusion_method",
-      hybridSearchEnabled: "hybrid_search_enabled",
-      indexMethod: "index_method",
-      indexingOptions: "indexing_options",
-      lastActivity: "last_activity",
-      maxNumResults: "max_num_results",
-      metadata: "metadata",
-      modifiedBy: "modified_by",
-      namespace: "namespace",
-      paused: "paused",
-      publicEndpointId: "public_endpoint_id",
-      publicEndpointParams: "public_endpoint_params",
-      reranking: "reranking",
-      rerankingModel: "reranking_model",
-      retrievalOptions: "retrieval_options",
-      rewriteModel: "rewrite_model",
-      rewriteQuery: "rewrite_query",
-      scoreThreshold: "score_threshold",
-      source: "source",
-      sourceParams: "source_params",
-      status: "status",
-      syncInterval: "sync_interval",
-      tokenId: "token_id",
-      type: "type",
-    }),
-  )
-  .pipe(
-    T.ResponsePath("result"),
+      ),
+      reranking: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      rerankingModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/baai/bge-reranker-base"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      retrievalOptions: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            boostBy: Schema.optional(
+              Schema.Union([
+                Schema.Array(
+                  Schema.Struct({
+                    field: Schema.String,
+                    direction: Schema.optional(
+                      Schema.Union([
+                        Schema.Union([
+                          Schema.Literals([
+                            "asc",
+                            "desc",
+                            "exists",
+                            "not_exists",
+                          ]),
+                          Schema.String,
+                        ]),
+                        Schema.Null,
+                      ]),
+                    ),
+                  }),
+                ),
+                Schema.Null,
+              ]),
+            ),
+            keywordMatchMode: Schema.optional(
+              Schema.Union([
+                Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              boostBy: "boost_by",
+              keywordMatchMode: "keyword_match_mode",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      rewriteModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+          Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+          Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+          Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+          Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+          Schema.Literal("@cf/google/gemma-3-12b-it"),
+          Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+          Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+          Schema.Literal("anthropic/claude-3-7-sonnet"),
+          Schema.Literal("anthropic/claude-sonnet-4"),
+          Schema.Literal("anthropic/claude-opus-4"),
+          Schema.Literal("anthropic/claude-3-5-haiku"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+          Schema.Literal("cerebras/llama-3.3-70b"),
+          Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+          Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("cerebras/gpt-oss-120b"),
+          Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+          Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+          Schema.Literal("grok/grok-4"),
+          Schema.Literal("groq/llama-3.3-70b-versatile"),
+          Schema.Literal("groq/llama-3.1-8b-instant"),
+          Schema.Literal("openai/gpt-5"),
+          Schema.Literal("openai/gpt-5-mini"),
+          Schema.Literal("openai/gpt-5-nano"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      rewriteQuery: Schema.optional(
+        Schema.Union([Schema.Boolean, Schema.Null]),
+      ),
+      scoreThreshold: Schema.optional(
+        Schema.Union([Schema.Number, Schema.Null]),
+      ),
+      source: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      sourceParams: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            excludeItems: Schema.optional(
+              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+            ),
+            includeItems: Schema.optional(
+              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+            ),
+            prefix: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+            r2Jurisdiction: Schema.optional(
+              Schema.Union([Schema.String, Schema.Null]),
+            ),
+            webCrawler: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  crawlOptions: Schema.optional(
+                    Schema.Union([
+                      Schema.Struct({
+                        depth: Schema.optional(
+                          Schema.Union([Schema.Number, Schema.Null]),
+                        ),
+                        includeExternalLinks: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                        includeSubdomains: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                        maxAge: Schema.optional(
+                          Schema.Union([Schema.Number, Schema.Null]),
+                        ),
+                        source: Schema.optional(
+                          Schema.Union([
+                            Schema.Union([
+                              Schema.Literals(["all", "sitemaps", "links"]),
+                              Schema.String,
+                            ]),
+                            Schema.Null,
+                          ]),
+                        ),
+                      }).pipe(
+                        Schema.encodeKeys({
+                          depth: "depth",
+                          includeExternalLinks: "include_external_links",
+                          includeSubdomains: "include_subdomains",
+                          maxAge: "max_age",
+                          source: "source",
+                        }),
+                      ),
+                      Schema.Null,
+                    ]),
+                  ),
+                  parseOptions: Schema.optional(
+                    Schema.Union([
+                      Schema.Struct({
+                        contentSelector: Schema.optional(
+                          Schema.Union([
+                            Schema.Array(
+                              Schema.Struct({
+                                path: Schema.String,
+                                selector: Schema.String,
+                              }),
+                            ),
+                            Schema.Null,
+                          ]),
+                        ),
+                        includeHeaders: Schema.optional(
+                          Schema.Union([
+                            Schema.Record(Schema.String, Schema.Unknown),
+                            Schema.Null,
+                          ]),
+                        ),
+                        includeImages: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                        specificSitemaps: Schema.optional(
+                          Schema.Union([
+                            Schema.Array(Schema.String),
+                            Schema.Null,
+                          ]),
+                        ),
+                        useBrowserRendering: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                      }).pipe(
+                        Schema.encodeKeys({
+                          contentSelector: "content_selector",
+                          includeHeaders: "include_headers",
+                          includeImages: "include_images",
+                          specificSitemaps: "specific_sitemaps",
+                          useBrowserRendering: "use_browser_rendering",
+                        }),
+                      ),
+                      Schema.Null,
+                    ]),
+                  ),
+                  parseType: Schema.optional(
+                    Schema.Union([
+                      Schema.Union([
+                        Schema.Literals(["sitemap", "feed-rss", "crawl"]),
+                        Schema.String,
+                      ]),
+                      Schema.Null,
+                    ]),
+                  ),
+                  storeOptions: Schema.optional(
+                    Schema.Union([
+                      Schema.Struct({
+                        storageId: Schema.String,
+                        r2Jurisdiction: Schema.optional(
+                          Schema.Union([Schema.String, Schema.Null]),
+                        ),
+                        storageType: Schema.optional(
+                          Schema.Union([Schema.Literal("r2"), Schema.Null]),
+                        ),
+                      }).pipe(
+                        Schema.encodeKeys({
+                          storageId: "storage_id",
+                          r2Jurisdiction: "r2_jurisdiction",
+                          storageType: "storage_type",
+                        }),
+                      ),
+                      Schema.Null,
+                    ]),
+                  ),
+                }).pipe(
+                  Schema.encodeKeys({
+                    crawlOptions: "crawl_options",
+                    parseOptions: "parse_options",
+                    parseType: "parse_type",
+                    storeOptions: "store_options",
+                  }),
+                ),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              excludeItems: "exclude_items",
+              includeItems: "include_items",
+              prefix: "prefix",
+              r2Jurisdiction: "r2_jurisdiction",
+              webCrawler: "web_crawler",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      status: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      syncInterval: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      tokenId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      type: Schema.optional(
+        Schema.Union([
+          Schema.Literal("r2"),
+          Schema.Literal("web-crawler"),
+          Schema.Null,
+        ]),
+      ),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          id: "id",
+          createdAt: "created_at",
+          modifiedAt: "modified_at",
+          aiGatewayId: "ai_gateway_id",
+          aiSearchModel: "ai_search_model",
+          cache: "cache",
+          cacheThreshold: "cache_threshold",
+          cacheTtl: "cache_ttl",
+          chunkOverlap: "chunk_overlap",
+          chunkSize: "chunk_size",
+          createdBy: "created_by",
+          customMetadata: "custom_metadata",
+          embeddingModel: "embedding_model",
+          enable: "enable",
+          engineVersion: "engine_version",
+          fusionMethod: "fusion_method",
+          hybridSearchEnabled: "hybrid_search_enabled",
+          indexMethod: "index_method",
+          indexingOptions: "indexing_options",
+          lastActivity: "last_activity",
+          maxNumResults: "max_num_results",
+          metadata: "metadata",
+          modifiedBy: "modified_by",
+          namespace: "namespace",
+          paused: "paused",
+          publicEndpointId: "public_endpoint_id",
+          publicEndpointParams: "public_endpoint_params",
+          reranking: "reranking",
+          rerankingModel: "reranking_model",
+          retrievalOptions: "retrieval_options",
+          rewriteModel: "rewrite_model",
+          rewriteQuery: "rewrite_query",
+          scoreThreshold: "score_threshold",
+          source: "source",
+          sourceParams: "source_params",
+          status: "status",
+          syncInterval: "sync_interval",
+          tokenId: "token_id",
+          type: "type",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<UpdateInstanceResponse>;
 
 export type UpdateInstanceError =
   | DefaultErrors
   | ValidationError
   | NotFound
-  | InvalidRoute;
+  | InvalidRoute
+  | InvalidTokenCredentials
+  | Forbidden;
 
 export const updateInstance: API.OperationMethod<
   UpdateInstanceRequest,
@@ -5264,7 +5218,13 @@ export const updateInstance: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: UpdateInstanceRequest,
   output: UpdateInstanceResponse,
-  errors: [ValidationError, NotFound, InvalidRoute],
+  errors: [
+    ValidationError,
+    NotFound,
+    InvalidRoute,
+    InvalidTokenCredentials,
+    Forbidden,
+  ],
 }));
 
 export interface DeleteInstanceRequest {
@@ -5272,14 +5232,17 @@ export interface DeleteInstanceRequest {
   accountId: string;
 }
 
-export const DeleteInstanceRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  id: Schema.String.pipe(T.HttpPath("id")),
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-}).pipe(
-  T.Http({
-    method: "DELETE",
-    path: "/accounts/{account_id}/ai-search/instances/{id}",
-  }),
+export const DeleteInstanceRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      id: Schema.String.pipe(T.HttpPath("id")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "DELETE",
+        path: "/accounts/{account_id}/ai-search/instances/{id}",
+      }),
+    ),
 ) as unknown as Schema.Schema<DeleteInstanceRequest>;
 
 export interface DeleteInstanceResponse {
@@ -5328,19 +5291,7 @@ export interface DeleteInstanceResponse {
     | "anything_goes"
     | null;
   /** Cache entry TTL in seconds. Allowed values: 600 (10min), 1800 (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h), 86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d). */
-  cacheTtl?:
-    | "600"
-    | "1800"
-    | "3600"
-    | "7200"
-    | "21600"
-    | "43200"
-    | "86400"
-    | "172800"
-    | "259200"
-    | "518400"
-    | (string & {})
-    | null;
+  cacheTtl?: number | null;
   chunkOverlap?: number | null;
   chunkSize?: number | null;
   createdBy?: string | null;
@@ -5475,588 +5426,552 @@ export interface DeleteInstanceResponse {
   } | null;
   status?: string | null;
   /** Interval between automatic syncs, in seconds. Allowed values: 900 (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h), 21600 (6h), 43200 (12h), 86400 (24h). */
-  syncInterval?:
-    | "900"
-    | "1800"
-    | "3600"
-    | "7200"
-    | "14400"
-    | "21600"
-    | "43200"
-    | "86400"
-    | (string & {})
-    | null;
+  syncInterval?: number | null;
   tokenId?: string | null;
   type?: "r2" | "web-crawler" | null;
 }
 
-export const DeleteInstanceResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
-  {
-    id: Schema.String,
-    createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    modifiedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    aiGatewayId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    aiSearchModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-        Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-        Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-        Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-        Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-        Schema.Literal("@cf/google/gemma-3-12b-it"),
-        Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-        Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-        Schema.Literal("anthropic/claude-3-7-sonnet"),
-        Schema.Literal("anthropic/claude-sonnet-4"),
-        Schema.Literal("anthropic/claude-opus-4"),
-        Schema.Literal("anthropic/claude-3-5-haiku"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-        Schema.Literal("cerebras/llama-3.3-70b"),
-        Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-        Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("cerebras/gpt-oss-120b"),
-        Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-        Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-        Schema.Literal("grok/grok-4"),
-        Schema.Literal("groq/llama-3.3-70b-versatile"),
-        Schema.Literal("groq/llama-3.1-8b-instant"),
-        Schema.Literal("openai/gpt-5"),
-        Schema.Literal("openai/gpt-5-mini"),
-        Schema.Literal("openai/gpt-5-nano"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    cache: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    cacheThreshold: Schema.optional(
-      Schema.Union([
-        Schema.Literal("super_strict_match"),
-        Schema.Literal("close_enough"),
-        Schema.Literal("flexible_friend"),
-        Schema.Literal("anything_goes"),
-        Schema.Null,
-      ]),
-    ),
-    cacheTtl: Schema.optional(
-      Schema.Union([
+export const DeleteInstanceResponse =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      id: Schema.String,
+      createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      modifiedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      aiGatewayId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      aiSearchModel: Schema.optional(
         Schema.Union([
-          Schema.Literals([
-            "600",
-            "1800",
-            "3600",
-            "7200",
-            "21600",
-            "43200",
-            "86400",
-            "172800",
-            "259200",
-            "518400",
-          ]),
-          Schema.String,
+          Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+          Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+          Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+          Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+          Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+          Schema.Literal("@cf/google/gemma-3-12b-it"),
+          Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+          Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+          Schema.Literal("anthropic/claude-3-7-sonnet"),
+          Schema.Literal("anthropic/claude-sonnet-4"),
+          Schema.Literal("anthropic/claude-opus-4"),
+          Schema.Literal("anthropic/claude-3-5-haiku"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+          Schema.Literal("cerebras/llama-3.3-70b"),
+          Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+          Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("cerebras/gpt-oss-120b"),
+          Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+          Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+          Schema.Literal("grok/grok-4"),
+          Schema.Literal("groq/llama-3.3-70b-versatile"),
+          Schema.Literal("groq/llama-3.1-8b-instant"),
+          Schema.Literal("openai/gpt-5"),
+          Schema.Literal("openai/gpt-5-mini"),
+          Schema.Literal("openai/gpt-5-nano"),
+          Schema.Literal(""),
+          Schema.Null,
         ]),
-        Schema.Null,
-      ]),
-    ),
-    chunkOverlap: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    chunkSize: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    createdBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    customMetadata: Schema.optional(
-      Schema.Union([
-        Schema.Array(
-          Schema.Struct({
-            dataType: Schema.Union([
-              Schema.Literals(["text", "number", "boolean", "datetime"]),
-              Schema.String,
-            ]),
-            fieldName: Schema.String,
-          }).pipe(
-            Schema.encodeKeys({
-              dataType: "data_type",
-              fieldName: "field_name",
-            }),
-          ),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    embeddingModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
-        Schema.Literal("@cf/baai/bge-m3"),
-        Schema.Literal("@cf/baai/bge-large-en-v1.5"),
-        Schema.Literal("@cf/google/embeddinggemma-300m"),
-        Schema.Literal("google-ai-studio/gemini-embedding-001"),
-        Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
-        Schema.Literal("openai/text-embedding-3-small"),
-        Schema.Literal("openai/text-embedding-3-large"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    enable: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    engineVersion: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    fusionMethod: Schema.optional(
-      Schema.Union([
-        Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
-        Schema.Null,
-      ]),
-    ),
-    hybridSearchEnabled: Schema.optional(
-      Schema.Union([Schema.Boolean, Schema.Null]),
-    ),
-    indexMethod: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          keyword: Schema.Boolean,
-          vector: Schema.Boolean,
-        }),
-        Schema.Null,
-      ]),
-    ),
-    indexingOptions: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          keywordTokenizer: Schema.optional(
-            Schema.Union([
-              Schema.Union([
-                Schema.Literals(["porter", "trigram"]),
+      ),
+      cache: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      cacheThreshold: Schema.optional(
+        Schema.Union([
+          Schema.Literal("super_strict_match"),
+          Schema.Literal("close_enough"),
+          Schema.Literal("flexible_friend"),
+          Schema.Literal("anything_goes"),
+          Schema.Null,
+        ]),
+      ),
+      cacheTtl: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      chunkOverlap: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      chunkSize: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      createdBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      customMetadata: Schema.optional(
+        Schema.Union([
+          Schema.Array(
+            Schema.Struct({
+              dataType: Schema.Union([
+                Schema.Literals(["text", "number", "boolean", "datetime"]),
                 Schema.String,
               ]),
-              Schema.Null,
-            ]),
+              fieldName: Schema.String,
+            }).pipe(
+              Schema.encodeKeys({
+                dataType: "data_type",
+                fieldName: "field_name",
+              }),
+            ),
           ),
-        }).pipe(Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" })),
-        Schema.Null,
-      ]),
-    ),
-    lastActivity: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    maxNumResults: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    metadata: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          createdFromAisearchWizard: Schema.optional(
-            Schema.Union([Schema.Boolean, Schema.Null]),
-          ),
-          workerDomain: Schema.optional(
-            Schema.Union([Schema.String, Schema.Null]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            createdFromAisearchWizard: "created_from_aisearch_wizard",
-            workerDomain: "worker_domain",
+          Schema.Null,
+        ]),
+      ),
+      embeddingModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
+          Schema.Literal("@cf/baai/bge-m3"),
+          Schema.Literal("@cf/baai/bge-large-en-v1.5"),
+          Schema.Literal("@cf/google/embeddinggemma-300m"),
+          Schema.Literal("google-ai-studio/gemini-embedding-001"),
+          Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
+          Schema.Literal("openai/text-embedding-3-small"),
+          Schema.Literal("openai/text-embedding-3-large"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      enable: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      engineVersion: Schema.optional(
+        Schema.Union([Schema.Number, Schema.Null]),
+      ),
+      fusionMethod: Schema.optional(
+        Schema.Union([
+          Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
+          Schema.Null,
+        ]),
+      ),
+      hybridSearchEnabled: Schema.optional(
+        Schema.Union([Schema.Boolean, Schema.Null]),
+      ),
+      indexMethod: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            keyword: Schema.Boolean,
+            vector: Schema.Boolean,
           }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    modifiedBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    namespace: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    paused: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    publicEndpointId: Schema.optional(
-      Schema.Union([Schema.String, Schema.Null]),
-    ),
-    publicEndpointParams: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          authorizedHosts: Schema.optional(
-            Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+          Schema.Null,
+        ]),
+      ),
+      indexingOptions: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            keywordTokenizer: Schema.optional(
+              Schema.Union([
+                Schema.Union([
+                  Schema.Literals(["porter", "trigram"]),
+                  Schema.String,
+                ]),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" })),
+          Schema.Null,
+        ]),
+      ),
+      lastActivity: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      maxNumResults: Schema.optional(
+        Schema.Union([Schema.Number, Schema.Null]),
+      ),
+      metadata: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            createdFromAisearchWizard: Schema.optional(
+              Schema.Union([Schema.Boolean, Schema.Null]),
+            ),
+            workerDomain: Schema.optional(
+              Schema.Union([Schema.String, Schema.Null]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              createdFromAisearchWizard: "created_from_aisearch_wizard",
+              workerDomain: "worker_domain",
+            }),
           ),
-          chatCompletionsEndpoint: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                disabled: Schema.optional(
-                  Schema.Union([Schema.Boolean, Schema.Null]),
-                ),
-              }),
-              Schema.Null,
-            ]),
-          ),
-          enabled: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-          mcp: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                description: Schema.optional(
-                  Schema.Union([Schema.String, Schema.Null]),
-                ),
-                disabled: Schema.optional(
-                  Schema.Union([Schema.Boolean, Schema.Null]),
-                ),
-              }),
-              Schema.Null,
-            ]),
-          ),
-          rateLimit: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                periodMs: Schema.optional(
-                  Schema.Union([Schema.Number, Schema.Null]),
-                ),
-                requests: Schema.optional(
-                  Schema.Union([Schema.Number, Schema.Null]),
-                ),
-                technique: Schema.optional(
-                  Schema.Union([
-                    Schema.Union([
-                      Schema.Literals(["fixed", "sliding"]),
-                      Schema.String,
-                    ]),
-                    Schema.Null,
-                  ]),
-                ),
-              }).pipe(
-                Schema.encodeKeys({
-                  periodMs: "period_ms",
-                  requests: "requests",
-                  technique: "technique",
-                }),
-              ),
-              Schema.Null,
-            ]),
-          ),
-          searchEndpoint: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                disabled: Schema.optional(
-                  Schema.Union([Schema.Boolean, Schema.Null]),
-                ),
-              }),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            authorizedHosts: "authorized_hosts",
-            chatCompletionsEndpoint: "chat_completions_endpoint",
-            enabled: "enabled",
-            mcp: "mcp",
-            rateLimit: "rate_limit",
-            searchEndpoint: "search_endpoint",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    reranking: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    rerankingModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/baai/bge-reranker-base"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    retrievalOptions: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          boostBy: Schema.optional(
-            Schema.Union([
-              Schema.Array(
+          Schema.Null,
+        ]),
+      ),
+      modifiedBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      namespace: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      paused: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      publicEndpointId: Schema.optional(
+        Schema.Union([Schema.String, Schema.Null]),
+      ),
+      publicEndpointParams: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            authorizedHosts: Schema.optional(
+              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+            ),
+            chatCompletionsEndpoint: Schema.optional(
+              Schema.Union([
                 Schema.Struct({
-                  field: Schema.String,
-                  direction: Schema.optional(
+                  disabled: Schema.optional(
+                    Schema.Union([Schema.Boolean, Schema.Null]),
+                  ),
+                }),
+                Schema.Null,
+              ]),
+            ),
+            enabled: Schema.optional(
+              Schema.Union([Schema.Boolean, Schema.Null]),
+            ),
+            mcp: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  description: Schema.optional(
+                    Schema.Union([Schema.String, Schema.Null]),
+                  ),
+                  disabled: Schema.optional(
+                    Schema.Union([Schema.Boolean, Schema.Null]),
+                  ),
+                }),
+                Schema.Null,
+              ]),
+            ),
+            rateLimit: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  periodMs: Schema.optional(
+                    Schema.Union([Schema.Number, Schema.Null]),
+                  ),
+                  requests: Schema.optional(
+                    Schema.Union([Schema.Number, Schema.Null]),
+                  ),
+                  technique: Schema.optional(
                     Schema.Union([
                       Schema.Union([
-                        Schema.Literals([
-                          "asc",
-                          "desc",
-                          "exists",
-                          "not_exists",
-                        ]),
+                        Schema.Literals(["fixed", "sliding"]),
                         Schema.String,
                       ]),
                       Schema.Null,
                     ]),
                   ),
+                }).pipe(
+                  Schema.encodeKeys({
+                    periodMs: "period_ms",
+                    requests: "requests",
+                    technique: "technique",
+                  }),
+                ),
+                Schema.Null,
+              ]),
+            ),
+            searchEndpoint: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  disabled: Schema.optional(
+                    Schema.Union([Schema.Boolean, Schema.Null]),
+                  ),
                 }),
-              ),
-              Schema.Null,
-            ]),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              authorizedHosts: "authorized_hosts",
+              chatCompletionsEndpoint: "chat_completions_endpoint",
+              enabled: "enabled",
+              mcp: "mcp",
+              rateLimit: "rate_limit",
+              searchEndpoint: "search_endpoint",
+            }),
           ),
-          keywordMatchMode: Schema.optional(
-            Schema.Union([
-              Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            boostBy: "boost_by",
-            keywordMatchMode: "keyword_match_mode",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    rewriteModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-        Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-        Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-        Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-        Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-        Schema.Literal("@cf/google/gemma-3-12b-it"),
-        Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-        Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-        Schema.Literal("anthropic/claude-3-7-sonnet"),
-        Schema.Literal("anthropic/claude-sonnet-4"),
-        Schema.Literal("anthropic/claude-opus-4"),
-        Schema.Literal("anthropic/claude-3-5-haiku"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-        Schema.Literal("cerebras/llama-3.3-70b"),
-        Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-        Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("cerebras/gpt-oss-120b"),
-        Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-        Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-        Schema.Literal("grok/grok-4"),
-        Schema.Literal("groq/llama-3.3-70b-versatile"),
-        Schema.Literal("groq/llama-3.1-8b-instant"),
-        Schema.Literal("openai/gpt-5"),
-        Schema.Literal("openai/gpt-5-mini"),
-        Schema.Literal("openai/gpt-5-nano"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    rewriteQuery: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    scoreThreshold: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    source: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    sourceParams: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          excludeItems: Schema.optional(
-            Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-          ),
-          includeItems: Schema.optional(
-            Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-          ),
-          prefix: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-          r2Jurisdiction: Schema.optional(
-            Schema.Union([Schema.String, Schema.Null]),
-          ),
-          webCrawler: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                crawlOptions: Schema.optional(
-                  Schema.Union([
-                    Schema.Struct({
-                      depth: Schema.optional(
-                        Schema.Union([Schema.Number, Schema.Null]),
-                      ),
-                      includeExternalLinks: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                      includeSubdomains: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                      maxAge: Schema.optional(
-                        Schema.Union([Schema.Number, Schema.Null]),
-                      ),
-                      source: Schema.optional(
-                        Schema.Union([
-                          Schema.Union([
-                            Schema.Literals(["all", "sitemaps", "links"]),
-                            Schema.String,
-                          ]),
-                          Schema.Null,
-                        ]),
-                      ),
-                    }).pipe(
-                      Schema.encodeKeys({
-                        depth: "depth",
-                        includeExternalLinks: "include_external_links",
-                        includeSubdomains: "include_subdomains",
-                        maxAge: "max_age",
-                        source: "source",
-                      }),
-                    ),
-                    Schema.Null,
-                  ]),
-                ),
-                parseOptions: Schema.optional(
-                  Schema.Union([
-                    Schema.Struct({
-                      contentSelector: Schema.optional(
-                        Schema.Union([
-                          Schema.Array(
-                            Schema.Struct({
-                              path: Schema.String,
-                              selector: Schema.String,
-                            }),
-                          ),
-                          Schema.Null,
-                        ]),
-                      ),
-                      includeHeaders: Schema.optional(
-                        Schema.Union([
-                          Schema.Record(Schema.String, Schema.Unknown),
-                          Schema.Null,
-                        ]),
-                      ),
-                      includeImages: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                      specificSitemaps: Schema.optional(
-                        Schema.Union([
-                          Schema.Array(Schema.String),
-                          Schema.Null,
-                        ]),
-                      ),
-                      useBrowserRendering: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                    }).pipe(
-                      Schema.encodeKeys({
-                        contentSelector: "content_selector",
-                        includeHeaders: "include_headers",
-                        includeImages: "include_images",
-                        specificSitemaps: "specific_sitemaps",
-                        useBrowserRendering: "use_browser_rendering",
-                      }),
-                    ),
-                    Schema.Null,
-                  ]),
-                ),
-                parseType: Schema.optional(
-                  Schema.Union([
-                    Schema.Union([
-                      Schema.Literals(["sitemap", "feed-rss", "crawl"]),
-                      Schema.String,
-                    ]),
-                    Schema.Null,
-                  ]),
-                ),
-                storeOptions: Schema.optional(
-                  Schema.Union([
-                    Schema.Struct({
-                      storageId: Schema.String,
-                      r2Jurisdiction: Schema.optional(
-                        Schema.Union([Schema.String, Schema.Null]),
-                      ),
-                      storageType: Schema.optional(
-                        Schema.Union([Schema.Literal("r2"), Schema.Null]),
-                      ),
-                    }).pipe(
-                      Schema.encodeKeys({
-                        storageId: "storage_id",
-                        r2Jurisdiction: "r2_jurisdiction",
-                        storageType: "storage_type",
-                      }),
-                    ),
-                    Schema.Null,
-                  ]),
-                ),
-              }).pipe(
-                Schema.encodeKeys({
-                  crawlOptions: "crawl_options",
-                  parseOptions: "parse_options",
-                  parseType: "parse_type",
-                  storeOptions: "store_options",
-                }),
-              ),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            excludeItems: "exclude_items",
-            includeItems: "include_items",
-            prefix: "prefix",
-            r2Jurisdiction: "r2_jurisdiction",
-            webCrawler: "web_crawler",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    status: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    syncInterval: Schema.optional(
-      Schema.Union([
-        Schema.Union([
-          Schema.Literals([
-            "900",
-            "1800",
-            "3600",
-            "7200",
-            "14400",
-            "21600",
-            "43200",
-            "86400",
-          ]),
-          Schema.String,
+          Schema.Null,
         ]),
-        Schema.Null,
-      ]),
-    ),
-    tokenId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    type: Schema.optional(
-      Schema.Union([
-        Schema.Literal("r2"),
-        Schema.Literal("web-crawler"),
-        Schema.Null,
-      ]),
-    ),
-  },
-)
-  .pipe(
-    Schema.encodeKeys({
-      id: "id",
-      createdAt: "created_at",
-      modifiedAt: "modified_at",
-      aiGatewayId: "ai_gateway_id",
-      aiSearchModel: "ai_search_model",
-      cache: "cache",
-      cacheThreshold: "cache_threshold",
-      cacheTtl: "cache_ttl",
-      chunkOverlap: "chunk_overlap",
-      chunkSize: "chunk_size",
-      createdBy: "created_by",
-      customMetadata: "custom_metadata",
-      embeddingModel: "embedding_model",
-      enable: "enable",
-      engineVersion: "engine_version",
-      fusionMethod: "fusion_method",
-      hybridSearchEnabled: "hybrid_search_enabled",
-      indexMethod: "index_method",
-      indexingOptions: "indexing_options",
-      lastActivity: "last_activity",
-      maxNumResults: "max_num_results",
-      metadata: "metadata",
-      modifiedBy: "modified_by",
-      namespace: "namespace",
-      paused: "paused",
-      publicEndpointId: "public_endpoint_id",
-      publicEndpointParams: "public_endpoint_params",
-      reranking: "reranking",
-      rerankingModel: "reranking_model",
-      retrievalOptions: "retrieval_options",
-      rewriteModel: "rewrite_model",
-      rewriteQuery: "rewrite_query",
-      scoreThreshold: "score_threshold",
-      source: "source",
-      sourceParams: "source_params",
-      status: "status",
-      syncInterval: "sync_interval",
-      tokenId: "token_id",
-      type: "type",
-    }),
-  )
-  .pipe(
-    T.ResponsePath("result"),
+      ),
+      reranking: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      rerankingModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/baai/bge-reranker-base"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      retrievalOptions: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            boostBy: Schema.optional(
+              Schema.Union([
+                Schema.Array(
+                  Schema.Struct({
+                    field: Schema.String,
+                    direction: Schema.optional(
+                      Schema.Union([
+                        Schema.Union([
+                          Schema.Literals([
+                            "asc",
+                            "desc",
+                            "exists",
+                            "not_exists",
+                          ]),
+                          Schema.String,
+                        ]),
+                        Schema.Null,
+                      ]),
+                    ),
+                  }),
+                ),
+                Schema.Null,
+              ]),
+            ),
+            keywordMatchMode: Schema.optional(
+              Schema.Union([
+                Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              boostBy: "boost_by",
+              keywordMatchMode: "keyword_match_mode",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      rewriteModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+          Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+          Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+          Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+          Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+          Schema.Literal("@cf/google/gemma-3-12b-it"),
+          Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+          Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+          Schema.Literal("anthropic/claude-3-7-sonnet"),
+          Schema.Literal("anthropic/claude-sonnet-4"),
+          Schema.Literal("anthropic/claude-opus-4"),
+          Schema.Literal("anthropic/claude-3-5-haiku"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+          Schema.Literal("cerebras/llama-3.3-70b"),
+          Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+          Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("cerebras/gpt-oss-120b"),
+          Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+          Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+          Schema.Literal("grok/grok-4"),
+          Schema.Literal("groq/llama-3.3-70b-versatile"),
+          Schema.Literal("groq/llama-3.1-8b-instant"),
+          Schema.Literal("openai/gpt-5"),
+          Schema.Literal("openai/gpt-5-mini"),
+          Schema.Literal("openai/gpt-5-nano"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      rewriteQuery: Schema.optional(
+        Schema.Union([Schema.Boolean, Schema.Null]),
+      ),
+      scoreThreshold: Schema.optional(
+        Schema.Union([Schema.Number, Schema.Null]),
+      ),
+      source: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      sourceParams: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            excludeItems: Schema.optional(
+              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+            ),
+            includeItems: Schema.optional(
+              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+            ),
+            prefix: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+            r2Jurisdiction: Schema.optional(
+              Schema.Union([Schema.String, Schema.Null]),
+            ),
+            webCrawler: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  crawlOptions: Schema.optional(
+                    Schema.Union([
+                      Schema.Struct({
+                        depth: Schema.optional(
+                          Schema.Union([Schema.Number, Schema.Null]),
+                        ),
+                        includeExternalLinks: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                        includeSubdomains: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                        maxAge: Schema.optional(
+                          Schema.Union([Schema.Number, Schema.Null]),
+                        ),
+                        source: Schema.optional(
+                          Schema.Union([
+                            Schema.Union([
+                              Schema.Literals(["all", "sitemaps", "links"]),
+                              Schema.String,
+                            ]),
+                            Schema.Null,
+                          ]),
+                        ),
+                      }).pipe(
+                        Schema.encodeKeys({
+                          depth: "depth",
+                          includeExternalLinks: "include_external_links",
+                          includeSubdomains: "include_subdomains",
+                          maxAge: "max_age",
+                          source: "source",
+                        }),
+                      ),
+                      Schema.Null,
+                    ]),
+                  ),
+                  parseOptions: Schema.optional(
+                    Schema.Union([
+                      Schema.Struct({
+                        contentSelector: Schema.optional(
+                          Schema.Union([
+                            Schema.Array(
+                              Schema.Struct({
+                                path: Schema.String,
+                                selector: Schema.String,
+                              }),
+                            ),
+                            Schema.Null,
+                          ]),
+                        ),
+                        includeHeaders: Schema.optional(
+                          Schema.Union([
+                            Schema.Record(Schema.String, Schema.Unknown),
+                            Schema.Null,
+                          ]),
+                        ),
+                        includeImages: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                        specificSitemaps: Schema.optional(
+                          Schema.Union([
+                            Schema.Array(Schema.String),
+                            Schema.Null,
+                          ]),
+                        ),
+                        useBrowserRendering: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                      }).pipe(
+                        Schema.encodeKeys({
+                          contentSelector: "content_selector",
+                          includeHeaders: "include_headers",
+                          includeImages: "include_images",
+                          specificSitemaps: "specific_sitemaps",
+                          useBrowserRendering: "use_browser_rendering",
+                        }),
+                      ),
+                      Schema.Null,
+                    ]),
+                  ),
+                  parseType: Schema.optional(
+                    Schema.Union([
+                      Schema.Union([
+                        Schema.Literals(["sitemap", "feed-rss", "crawl"]),
+                        Schema.String,
+                      ]),
+                      Schema.Null,
+                    ]),
+                  ),
+                  storeOptions: Schema.optional(
+                    Schema.Union([
+                      Schema.Struct({
+                        storageId: Schema.String,
+                        r2Jurisdiction: Schema.optional(
+                          Schema.Union([Schema.String, Schema.Null]),
+                        ),
+                        storageType: Schema.optional(
+                          Schema.Union([Schema.Literal("r2"), Schema.Null]),
+                        ),
+                      }).pipe(
+                        Schema.encodeKeys({
+                          storageId: "storage_id",
+                          r2Jurisdiction: "r2_jurisdiction",
+                          storageType: "storage_type",
+                        }),
+                      ),
+                      Schema.Null,
+                    ]),
+                  ),
+                }).pipe(
+                  Schema.encodeKeys({
+                    crawlOptions: "crawl_options",
+                    parseOptions: "parse_options",
+                    parseType: "parse_type",
+                    storeOptions: "store_options",
+                  }),
+                ),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              excludeItems: "exclude_items",
+              includeItems: "include_items",
+              prefix: "prefix",
+              r2Jurisdiction: "r2_jurisdiction",
+              webCrawler: "web_crawler",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      status: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      syncInterval: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      tokenId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      type: Schema.optional(
+        Schema.Union([
+          Schema.Literal("r2"),
+          Schema.Literal("web-crawler"),
+          Schema.Null,
+        ]),
+      ),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          id: "id",
+          createdAt: "created_at",
+          modifiedAt: "modified_at",
+          aiGatewayId: "ai_gateway_id",
+          aiSearchModel: "ai_search_model",
+          cache: "cache",
+          cacheThreshold: "cache_threshold",
+          cacheTtl: "cache_ttl",
+          chunkOverlap: "chunk_overlap",
+          chunkSize: "chunk_size",
+          createdBy: "created_by",
+          customMetadata: "custom_metadata",
+          embeddingModel: "embedding_model",
+          enable: "enable",
+          engineVersion: "engine_version",
+          fusionMethod: "fusion_method",
+          hybridSearchEnabled: "hybrid_search_enabled",
+          indexMethod: "index_method",
+          indexingOptions: "indexing_options",
+          lastActivity: "last_activity",
+          maxNumResults: "max_num_results",
+          metadata: "metadata",
+          modifiedBy: "modified_by",
+          namespace: "namespace",
+          paused: "paused",
+          publicEndpointId: "public_endpoint_id",
+          publicEndpointParams: "public_endpoint_params",
+          reranking: "reranking",
+          rerankingModel: "reranking_model",
+          retrievalOptions: "retrieval_options",
+          rewriteModel: "rewrite_model",
+          rewriteQuery: "rewrite_query",
+          scoreThreshold: "score_threshold",
+          source: "source",
+          sourceParams: "source_params",
+          status: "status",
+          syncInterval: "sync_interval",
+          tokenId: "token_id",
+          type: "type",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<DeleteInstanceResponse>;
 
 export type DeleteInstanceError =
   | DefaultErrors
   | ValidationError
   | NotFound
-  | InvalidRoute;
+  | InvalidRoute
+  | Forbidden;
 
 export const deleteInstance: API.OperationMethod<
   DeleteInstanceRequest,
@@ -6066,7 +5981,7 @@ export const deleteInstance: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: DeleteInstanceRequest,
   output: DeleteInstanceResponse,
-  errors: [ValidationError, NotFound, InvalidRoute],
+  errors: [ValidationError, NotFound, InvalidRoute, Forbidden],
 }));
 
 export interface ReadInstanceRequest {
@@ -6074,14 +5989,17 @@ export interface ReadInstanceRequest {
   accountId: string;
 }
 
-export const ReadInstanceRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  id: Schema.String.pipe(T.HttpPath("id")),
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-}).pipe(
-  T.Http({
-    method: "GET",
-    path: "/accounts/{account_id}/ai-search/instances/{id}",
-  }),
+export const ReadInstanceRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      id: Schema.String.pipe(T.HttpPath("id")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/ai-search/instances/{id}",
+      }),
+    ),
 ) as unknown as Schema.Schema<ReadInstanceRequest>;
 
 export interface ReadInstanceResponse {
@@ -6130,19 +6048,7 @@ export interface ReadInstanceResponse {
     | "anything_goes"
     | null;
   /** Cache entry TTL in seconds. Allowed values: 600 (10min), 1800 (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h), 86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d). */
-  cacheTtl?:
-    | "600"
-    | "1800"
-    | "3600"
-    | "7200"
-    | "21600"
-    | "43200"
-    | "86400"
-    | "172800"
-    | "259200"
-    | "518400"
-    | (string & {})
-    | null;
+  cacheTtl?: number | null;
   chunkOverlap?: number | null;
   chunkSize?: number | null;
   createdBy?: string | null;
@@ -6277,573 +6183,552 @@ export interface ReadInstanceResponse {
   } | null;
   status?: string | null;
   /** Interval between automatic syncs, in seconds. Allowed values: 900 (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h), 21600 (6h), 43200 (12h), 86400 (24h). */
-  syncInterval?:
-    | "900"
-    | "1800"
-    | "3600"
-    | "7200"
-    | "14400"
-    | "21600"
-    | "43200"
-    | "86400"
-    | (string & {})
-    | null;
+  syncInterval?: number | null;
   tokenId?: string | null;
   type?: "r2" | "web-crawler" | null;
 }
 
-export const ReadInstanceResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  id: Schema.String,
-  createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  modifiedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  aiGatewayId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  aiSearchModel: Schema.optional(
-    Schema.Union([
-      Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-      Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-      Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-      Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-      Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-      Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-      Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-      Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-      Schema.Literal("@cf/google/gemma-3-12b-it"),
-      Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-      Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-      Schema.Literal("anthropic/claude-3-7-sonnet"),
-      Schema.Literal("anthropic/claude-sonnet-4"),
-      Schema.Literal("anthropic/claude-opus-4"),
-      Schema.Literal("anthropic/claude-3-5-haiku"),
-      Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-      Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-      Schema.Literal("cerebras/llama-3.3-70b"),
-      Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-      Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-      Schema.Literal("cerebras/gpt-oss-120b"),
-      Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-      Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-      Schema.Literal("grok/grok-4"),
-      Schema.Literal("groq/llama-3.3-70b-versatile"),
-      Schema.Literal("groq/llama-3.1-8b-instant"),
-      Schema.Literal("openai/gpt-5"),
-      Schema.Literal("openai/gpt-5-mini"),
-      Schema.Literal("openai/gpt-5-nano"),
-      Schema.Literal(""),
-      Schema.Null,
-    ]),
-  ),
-  cache: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-  cacheThreshold: Schema.optional(
-    Schema.Union([
-      Schema.Literal("super_strict_match"),
-      Schema.Literal("close_enough"),
-      Schema.Literal("flexible_friend"),
-      Schema.Literal("anything_goes"),
-      Schema.Null,
-    ]),
-  ),
-  cacheTtl: Schema.optional(
-    Schema.Union([
-      Schema.Union([
-        Schema.Literals([
-          "600",
-          "1800",
-          "3600",
-          "7200",
-          "21600",
-          "43200",
-          "86400",
-          "172800",
-          "259200",
-          "518400",
+export const ReadInstanceResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      id: Schema.String,
+      createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      modifiedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      aiGatewayId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      aiSearchModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+          Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+          Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+          Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+          Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+          Schema.Literal("@cf/google/gemma-3-12b-it"),
+          Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+          Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+          Schema.Literal("anthropic/claude-3-7-sonnet"),
+          Schema.Literal("anthropic/claude-sonnet-4"),
+          Schema.Literal("anthropic/claude-opus-4"),
+          Schema.Literal("anthropic/claude-3-5-haiku"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+          Schema.Literal("cerebras/llama-3.3-70b"),
+          Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+          Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("cerebras/gpt-oss-120b"),
+          Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+          Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+          Schema.Literal("grok/grok-4"),
+          Schema.Literal("groq/llama-3.3-70b-versatile"),
+          Schema.Literal("groq/llama-3.1-8b-instant"),
+          Schema.Literal("openai/gpt-5"),
+          Schema.Literal("openai/gpt-5-mini"),
+          Schema.Literal("openai/gpt-5-nano"),
+          Schema.Literal(""),
+          Schema.Null,
         ]),
-        Schema.String,
-      ]),
-      Schema.Null,
-    ]),
-  ),
-  chunkOverlap: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-  chunkSize: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-  createdBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  customMetadata: Schema.optional(
-    Schema.Union([
-      Schema.Array(
-        Schema.Struct({
-          dataType: Schema.Union([
-            Schema.Literals(["text", "number", "boolean", "datetime"]),
-            Schema.String,
-          ]),
-          fieldName: Schema.String,
-        }).pipe(
-          Schema.encodeKeys({ dataType: "data_type", fieldName: "field_name" }),
-        ),
       ),
-      Schema.Null,
-    ]),
-  ),
-  embeddingModel: Schema.optional(
-    Schema.Union([
-      Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
-      Schema.Literal("@cf/baai/bge-m3"),
-      Schema.Literal("@cf/baai/bge-large-en-v1.5"),
-      Schema.Literal("@cf/google/embeddinggemma-300m"),
-      Schema.Literal("google-ai-studio/gemini-embedding-001"),
-      Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
-      Schema.Literal("openai/text-embedding-3-small"),
-      Schema.Literal("openai/text-embedding-3-large"),
-      Schema.Literal(""),
-      Schema.Null,
-    ]),
-  ),
-  enable: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-  engineVersion: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-  fusionMethod: Schema.optional(
-    Schema.Union([
-      Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
-      Schema.Null,
-    ]),
-  ),
-  hybridSearchEnabled: Schema.optional(
-    Schema.Union([Schema.Boolean, Schema.Null]),
-  ),
-  indexMethod: Schema.optional(
-    Schema.Union([
-      Schema.Struct({
-        keyword: Schema.Boolean,
-        vector: Schema.Boolean,
-      }),
-      Schema.Null,
-    ]),
-  ),
-  indexingOptions: Schema.optional(
-    Schema.Union([
-      Schema.Struct({
-        keywordTokenizer: Schema.optional(
-          Schema.Union([
-            Schema.Union([
-              Schema.Literals(["porter", "trigram"]),
-              Schema.String,
-            ]),
-            Schema.Null,
-          ]),
-        ),
-      }).pipe(Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" })),
-      Schema.Null,
-    ]),
-  ),
-  lastActivity: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  maxNumResults: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-  metadata: Schema.optional(
-    Schema.Union([
-      Schema.Struct({
-        createdFromAisearchWizard: Schema.optional(
-          Schema.Union([Schema.Boolean, Schema.Null]),
-        ),
-        workerDomain: Schema.optional(
-          Schema.Union([Schema.String, Schema.Null]),
-        ),
-      }).pipe(
-        Schema.encodeKeys({
-          createdFromAisearchWizard: "created_from_aisearch_wizard",
-          workerDomain: "worker_domain",
-        }),
+      cache: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      cacheThreshold: Schema.optional(
+        Schema.Union([
+          Schema.Literal("super_strict_match"),
+          Schema.Literal("close_enough"),
+          Schema.Literal("flexible_friend"),
+          Schema.Literal("anything_goes"),
+          Schema.Null,
+        ]),
       ),
-      Schema.Null,
-    ]),
-  ),
-  modifiedBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  namespace: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  paused: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-  publicEndpointId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  publicEndpointParams: Schema.optional(
-    Schema.Union([
-      Schema.Struct({
-        authorizedHosts: Schema.optional(
-          Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-        ),
-        chatCompletionsEndpoint: Schema.optional(
-          Schema.Union([
+      cacheTtl: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      chunkOverlap: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      chunkSize: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      createdBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      customMetadata: Schema.optional(
+        Schema.Union([
+          Schema.Array(
             Schema.Struct({
-              disabled: Schema.optional(
-                Schema.Union([Schema.Boolean, Schema.Null]),
-              ),
-            }),
-            Schema.Null,
-          ]),
-        ),
-        enabled: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-        mcp: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              description: Schema.optional(
-                Schema.Union([Schema.String, Schema.Null]),
-              ),
-              disabled: Schema.optional(
-                Schema.Union([Schema.Boolean, Schema.Null]),
-              ),
-            }),
-            Schema.Null,
-          ]),
-        ),
-        rateLimit: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              periodMs: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              requests: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              technique: Schema.optional(
-                Schema.Union([
-                  Schema.Union([
-                    Schema.Literals(["fixed", "sliding"]),
-                    Schema.String,
-                  ]),
-                  Schema.Null,
-                ]),
-              ),
+              dataType: Schema.Union([
+                Schema.Literals(["text", "number", "boolean", "datetime"]),
+                Schema.String,
+              ]),
+              fieldName: Schema.String,
             }).pipe(
               Schema.encodeKeys({
-                periodMs: "period_ms",
-                requests: "requests",
-                technique: "technique",
+                dataType: "data_type",
+                fieldName: "field_name",
               }),
             ),
-            Schema.Null,
-          ]),
-        ),
-        searchEndpoint: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              disabled: Schema.optional(
-                Schema.Union([Schema.Boolean, Schema.Null]),
-              ),
-            }),
-            Schema.Null,
-          ]),
-        ),
-      }).pipe(
-        Schema.encodeKeys({
-          authorizedHosts: "authorized_hosts",
-          chatCompletionsEndpoint: "chat_completions_endpoint",
-          enabled: "enabled",
-          mcp: "mcp",
-          rateLimit: "rate_limit",
-          searchEndpoint: "search_endpoint",
-        }),
+          ),
+          Schema.Null,
+        ]),
       ),
-      Schema.Null,
-    ]),
-  ),
-  reranking: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-  rerankingModel: Schema.optional(
-    Schema.Union([
-      Schema.Literal("@cf/baai/bge-reranker-base"),
-      Schema.Literal(""),
-      Schema.Null,
-    ]),
-  ),
-  retrievalOptions: Schema.optional(
-    Schema.Union([
-      Schema.Struct({
-        boostBy: Schema.optional(
-          Schema.Union([
-            Schema.Array(
-              Schema.Struct({
-                field: Schema.String,
-                direction: Schema.optional(
-                  Schema.Union([
-                    Schema.Union([
-                      Schema.Literals(["asc", "desc", "exists", "not_exists"]),
-                      Schema.String,
-                    ]),
-                    Schema.Null,
-                  ]),
-                ),
-              }),
-            ),
-            Schema.Null,
-          ]),
-        ),
-        keywordMatchMode: Schema.optional(
-          Schema.Union([
-            Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
-            Schema.Null,
-          ]),
-        ),
-      }).pipe(
-        Schema.encodeKeys({
-          boostBy: "boost_by",
-          keywordMatchMode: "keyword_match_mode",
-        }),
+      embeddingModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
+          Schema.Literal("@cf/baai/bge-m3"),
+          Schema.Literal("@cf/baai/bge-large-en-v1.5"),
+          Schema.Literal("@cf/google/embeddinggemma-300m"),
+          Schema.Literal("google-ai-studio/gemini-embedding-001"),
+          Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
+          Schema.Literal("openai/text-embedding-3-small"),
+          Schema.Literal("openai/text-embedding-3-large"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
       ),
-      Schema.Null,
-    ]),
-  ),
-  rewriteModel: Schema.optional(
-    Schema.Union([
-      Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-      Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-      Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-      Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-      Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-      Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-      Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-      Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-      Schema.Literal("@cf/google/gemma-3-12b-it"),
-      Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-      Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-      Schema.Literal("anthropic/claude-3-7-sonnet"),
-      Schema.Literal("anthropic/claude-sonnet-4"),
-      Schema.Literal("anthropic/claude-opus-4"),
-      Schema.Literal("anthropic/claude-3-5-haiku"),
-      Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-      Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-      Schema.Literal("cerebras/llama-3.3-70b"),
-      Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-      Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-      Schema.Literal("cerebras/gpt-oss-120b"),
-      Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-      Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-      Schema.Literal("grok/grok-4"),
-      Schema.Literal("groq/llama-3.3-70b-versatile"),
-      Schema.Literal("groq/llama-3.1-8b-instant"),
-      Schema.Literal("openai/gpt-5"),
-      Schema.Literal("openai/gpt-5-mini"),
-      Schema.Literal("openai/gpt-5-nano"),
-      Schema.Literal(""),
-      Schema.Null,
-    ]),
-  ),
-  rewriteQuery: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-  scoreThreshold: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-  source: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  sourceParams: Schema.optional(
-    Schema.Union([
-      Schema.Struct({
-        excludeItems: Schema.optional(
-          Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-        ),
-        includeItems: Schema.optional(
-          Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-        ),
-        prefix: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-        r2Jurisdiction: Schema.optional(
-          Schema.Union([Schema.String, Schema.Null]),
-        ),
-        webCrawler: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              crawlOptions: Schema.optional(
+      enable: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      engineVersion: Schema.optional(
+        Schema.Union([Schema.Number, Schema.Null]),
+      ),
+      fusionMethod: Schema.optional(
+        Schema.Union([
+          Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
+          Schema.Null,
+        ]),
+      ),
+      hybridSearchEnabled: Schema.optional(
+        Schema.Union([Schema.Boolean, Schema.Null]),
+      ),
+      indexMethod: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            keyword: Schema.Boolean,
+            vector: Schema.Boolean,
+          }),
+          Schema.Null,
+        ]),
+      ),
+      indexingOptions: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            keywordTokenizer: Schema.optional(
+              Schema.Union([
                 Schema.Union([
+                  Schema.Literals(["porter", "trigram"]),
+                  Schema.String,
+                ]),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" })),
+          Schema.Null,
+        ]),
+      ),
+      lastActivity: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      maxNumResults: Schema.optional(
+        Schema.Union([Schema.Number, Schema.Null]),
+      ),
+      metadata: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            createdFromAisearchWizard: Schema.optional(
+              Schema.Union([Schema.Boolean, Schema.Null]),
+            ),
+            workerDomain: Schema.optional(
+              Schema.Union([Schema.String, Schema.Null]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              createdFromAisearchWizard: "created_from_aisearch_wizard",
+              workerDomain: "worker_domain",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      modifiedBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      namespace: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      paused: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      publicEndpointId: Schema.optional(
+        Schema.Union([Schema.String, Schema.Null]),
+      ),
+      publicEndpointParams: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            authorizedHosts: Schema.optional(
+              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+            ),
+            chatCompletionsEndpoint: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  disabled: Schema.optional(
+                    Schema.Union([Schema.Boolean, Schema.Null]),
+                  ),
+                }),
+                Schema.Null,
+              ]),
+            ),
+            enabled: Schema.optional(
+              Schema.Union([Schema.Boolean, Schema.Null]),
+            ),
+            mcp: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  description: Schema.optional(
+                    Schema.Union([Schema.String, Schema.Null]),
+                  ),
+                  disabled: Schema.optional(
+                    Schema.Union([Schema.Boolean, Schema.Null]),
+                  ),
+                }),
+                Schema.Null,
+              ]),
+            ),
+            rateLimit: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  periodMs: Schema.optional(
+                    Schema.Union([Schema.Number, Schema.Null]),
+                  ),
+                  requests: Schema.optional(
+                    Schema.Union([Schema.Number, Schema.Null]),
+                  ),
+                  technique: Schema.optional(
+                    Schema.Union([
+                      Schema.Union([
+                        Schema.Literals(["fixed", "sliding"]),
+                        Schema.String,
+                      ]),
+                      Schema.Null,
+                    ]),
+                  ),
+                }).pipe(
+                  Schema.encodeKeys({
+                    periodMs: "period_ms",
+                    requests: "requests",
+                    technique: "technique",
+                  }),
+                ),
+                Schema.Null,
+              ]),
+            ),
+            searchEndpoint: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  disabled: Schema.optional(
+                    Schema.Union([Schema.Boolean, Schema.Null]),
+                  ),
+                }),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              authorizedHosts: "authorized_hosts",
+              chatCompletionsEndpoint: "chat_completions_endpoint",
+              enabled: "enabled",
+              mcp: "mcp",
+              rateLimit: "rate_limit",
+              searchEndpoint: "search_endpoint",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      reranking: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      rerankingModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/baai/bge-reranker-base"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      retrievalOptions: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            boostBy: Schema.optional(
+              Schema.Union([
+                Schema.Array(
                   Schema.Struct({
-                    depth: Schema.optional(
-                      Schema.Union([Schema.Number, Schema.Null]),
-                    ),
-                    includeExternalLinks: Schema.optional(
-                      Schema.Union([Schema.Boolean, Schema.Null]),
-                    ),
-                    includeSubdomains: Schema.optional(
-                      Schema.Union([Schema.Boolean, Schema.Null]),
-                    ),
-                    maxAge: Schema.optional(
-                      Schema.Union([Schema.Number, Schema.Null]),
-                    ),
-                    source: Schema.optional(
+                    field: Schema.String,
+                    direction: Schema.optional(
                       Schema.Union([
                         Schema.Union([
-                          Schema.Literals(["all", "sitemaps", "links"]),
+                          Schema.Literals([
+                            "asc",
+                            "desc",
+                            "exists",
+                            "not_exists",
+                          ]),
                           Schema.String,
                         ]),
                         Schema.Null,
                       ]),
                     ),
-                  }).pipe(
-                    Schema.encodeKeys({
-                      depth: "depth",
-                      includeExternalLinks: "include_external_links",
-                      includeSubdomains: "include_subdomains",
-                      maxAge: "max_age",
-                      source: "source",
-                    }),
-                  ),
-                  Schema.Null,
-                ]),
-              ),
-              parseOptions: Schema.optional(
-                Schema.Union([
-                  Schema.Struct({
-                    contentSelector: Schema.optional(
-                      Schema.Union([
-                        Schema.Array(
-                          Schema.Struct({
-                            path: Schema.String,
-                            selector: Schema.String,
-                          }),
-                        ),
-                        Schema.Null,
-                      ]),
-                    ),
-                    includeHeaders: Schema.optional(
-                      Schema.Union([
-                        Schema.Record(Schema.String, Schema.Unknown),
-                        Schema.Null,
-                      ]),
-                    ),
-                    includeImages: Schema.optional(
-                      Schema.Union([Schema.Boolean, Schema.Null]),
-                    ),
-                    specificSitemaps: Schema.optional(
-                      Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-                    ),
-                    useBrowserRendering: Schema.optional(
-                      Schema.Union([Schema.Boolean, Schema.Null]),
-                    ),
-                  }).pipe(
-                    Schema.encodeKeys({
-                      contentSelector: "content_selector",
-                      includeHeaders: "include_headers",
-                      includeImages: "include_images",
-                      specificSitemaps: "specific_sitemaps",
-                      useBrowserRendering: "use_browser_rendering",
-                    }),
-                  ),
-                  Schema.Null,
-                ]),
-              ),
-              parseType: Schema.optional(
-                Schema.Union([
-                  Schema.Union([
-                    Schema.Literals(["sitemap", "feed-rss", "crawl"]),
-                    Schema.String,
-                  ]),
-                  Schema.Null,
-                ]),
-              ),
-              storeOptions: Schema.optional(
-                Schema.Union([
-                  Schema.Struct({
-                    storageId: Schema.String,
-                    r2Jurisdiction: Schema.optional(
-                      Schema.Union([Schema.String, Schema.Null]),
-                    ),
-                    storageType: Schema.optional(
-                      Schema.Union([Schema.Literal("r2"), Schema.Null]),
-                    ),
-                  }).pipe(
-                    Schema.encodeKeys({
-                      storageId: "storage_id",
-                      r2Jurisdiction: "r2_jurisdiction",
-                      storageType: "storage_type",
-                    }),
-                  ),
-                  Schema.Null,
-                ]),
-              ),
-            }).pipe(
-              Schema.encodeKeys({
-                crawlOptions: "crawl_options",
-                parseOptions: "parse_options",
-                parseType: "parse_type",
-                storeOptions: "store_options",
-              }),
+                  }),
+                ),
+                Schema.Null,
+              ]),
             ),
-            Schema.Null,
-          ]),
-        ),
-      }).pipe(
-        Schema.encodeKeys({
-          excludeItems: "exclude_items",
-          includeItems: "include_items",
-          prefix: "prefix",
-          r2Jurisdiction: "r2_jurisdiction",
-          webCrawler: "web_crawler",
-        }),
-      ),
-      Schema.Null,
-    ]),
-  ),
-  status: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  syncInterval: Schema.optional(
-    Schema.Union([
-      Schema.Union([
-        Schema.Literals([
-          "900",
-          "1800",
-          "3600",
-          "7200",
-          "14400",
-          "21600",
-          "43200",
-          "86400",
+            keywordMatchMode: Schema.optional(
+              Schema.Union([
+                Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              boostBy: "boost_by",
+              keywordMatchMode: "keyword_match_mode",
+            }),
+          ),
+          Schema.Null,
         ]),
-        Schema.String,
-      ]),
-      Schema.Null,
-    ]),
-  ),
-  tokenId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  type: Schema.optional(
-    Schema.Union([
-      Schema.Literal("r2"),
-      Schema.Literal("web-crawler"),
-      Schema.Null,
-    ]),
-  ),
-})
-  .pipe(
-    Schema.encodeKeys({
-      id: "id",
-      createdAt: "created_at",
-      modifiedAt: "modified_at",
-      aiGatewayId: "ai_gateway_id",
-      aiSearchModel: "ai_search_model",
-      cache: "cache",
-      cacheThreshold: "cache_threshold",
-      cacheTtl: "cache_ttl",
-      chunkOverlap: "chunk_overlap",
-      chunkSize: "chunk_size",
-      createdBy: "created_by",
-      customMetadata: "custom_metadata",
-      embeddingModel: "embedding_model",
-      enable: "enable",
-      engineVersion: "engine_version",
-      fusionMethod: "fusion_method",
-      hybridSearchEnabled: "hybrid_search_enabled",
-      indexMethod: "index_method",
-      indexingOptions: "indexing_options",
-      lastActivity: "last_activity",
-      maxNumResults: "max_num_results",
-      metadata: "metadata",
-      modifiedBy: "modified_by",
-      namespace: "namespace",
-      paused: "paused",
-      publicEndpointId: "public_endpoint_id",
-      publicEndpointParams: "public_endpoint_params",
-      reranking: "reranking",
-      rerankingModel: "reranking_model",
-      retrievalOptions: "retrieval_options",
-      rewriteModel: "rewrite_model",
-      rewriteQuery: "rewrite_query",
-      scoreThreshold: "score_threshold",
-      source: "source",
-      sourceParams: "source_params",
-      status: "status",
-      syncInterval: "sync_interval",
-      tokenId: "token_id",
-      type: "type",
-    }),
-  )
-  .pipe(
-    T.ResponsePath("result"),
-  ) as unknown as Schema.Schema<ReadInstanceResponse>;
+      ),
+      rewriteModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+          Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+          Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+          Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+          Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+          Schema.Literal("@cf/google/gemma-3-12b-it"),
+          Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+          Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+          Schema.Literal("anthropic/claude-3-7-sonnet"),
+          Schema.Literal("anthropic/claude-sonnet-4"),
+          Schema.Literal("anthropic/claude-opus-4"),
+          Schema.Literal("anthropic/claude-3-5-haiku"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+          Schema.Literal("cerebras/llama-3.3-70b"),
+          Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+          Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("cerebras/gpt-oss-120b"),
+          Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+          Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+          Schema.Literal("grok/grok-4"),
+          Schema.Literal("groq/llama-3.3-70b-versatile"),
+          Schema.Literal("groq/llama-3.1-8b-instant"),
+          Schema.Literal("openai/gpt-5"),
+          Schema.Literal("openai/gpt-5-mini"),
+          Schema.Literal("openai/gpt-5-nano"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      rewriteQuery: Schema.optional(
+        Schema.Union([Schema.Boolean, Schema.Null]),
+      ),
+      scoreThreshold: Schema.optional(
+        Schema.Union([Schema.Number, Schema.Null]),
+      ),
+      source: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      sourceParams: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            excludeItems: Schema.optional(
+              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+            ),
+            includeItems: Schema.optional(
+              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+            ),
+            prefix: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+            r2Jurisdiction: Schema.optional(
+              Schema.Union([Schema.String, Schema.Null]),
+            ),
+            webCrawler: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  crawlOptions: Schema.optional(
+                    Schema.Union([
+                      Schema.Struct({
+                        depth: Schema.optional(
+                          Schema.Union([Schema.Number, Schema.Null]),
+                        ),
+                        includeExternalLinks: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                        includeSubdomains: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                        maxAge: Schema.optional(
+                          Schema.Union([Schema.Number, Schema.Null]),
+                        ),
+                        source: Schema.optional(
+                          Schema.Union([
+                            Schema.Union([
+                              Schema.Literals(["all", "sitemaps", "links"]),
+                              Schema.String,
+                            ]),
+                            Schema.Null,
+                          ]),
+                        ),
+                      }).pipe(
+                        Schema.encodeKeys({
+                          depth: "depth",
+                          includeExternalLinks: "include_external_links",
+                          includeSubdomains: "include_subdomains",
+                          maxAge: "max_age",
+                          source: "source",
+                        }),
+                      ),
+                      Schema.Null,
+                    ]),
+                  ),
+                  parseOptions: Schema.optional(
+                    Schema.Union([
+                      Schema.Struct({
+                        contentSelector: Schema.optional(
+                          Schema.Union([
+                            Schema.Array(
+                              Schema.Struct({
+                                path: Schema.String,
+                                selector: Schema.String,
+                              }),
+                            ),
+                            Schema.Null,
+                          ]),
+                        ),
+                        includeHeaders: Schema.optional(
+                          Schema.Union([
+                            Schema.Record(Schema.String, Schema.Unknown),
+                            Schema.Null,
+                          ]),
+                        ),
+                        includeImages: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                        specificSitemaps: Schema.optional(
+                          Schema.Union([
+                            Schema.Array(Schema.String),
+                            Schema.Null,
+                          ]),
+                        ),
+                        useBrowserRendering: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                      }).pipe(
+                        Schema.encodeKeys({
+                          contentSelector: "content_selector",
+                          includeHeaders: "include_headers",
+                          includeImages: "include_images",
+                          specificSitemaps: "specific_sitemaps",
+                          useBrowserRendering: "use_browser_rendering",
+                        }),
+                      ),
+                      Schema.Null,
+                    ]),
+                  ),
+                  parseType: Schema.optional(
+                    Schema.Union([
+                      Schema.Union([
+                        Schema.Literals(["sitemap", "feed-rss", "crawl"]),
+                        Schema.String,
+                      ]),
+                      Schema.Null,
+                    ]),
+                  ),
+                  storeOptions: Schema.optional(
+                    Schema.Union([
+                      Schema.Struct({
+                        storageId: Schema.String,
+                        r2Jurisdiction: Schema.optional(
+                          Schema.Union([Schema.String, Schema.Null]),
+                        ),
+                        storageType: Schema.optional(
+                          Schema.Union([Schema.Literal("r2"), Schema.Null]),
+                        ),
+                      }).pipe(
+                        Schema.encodeKeys({
+                          storageId: "storage_id",
+                          r2Jurisdiction: "r2_jurisdiction",
+                          storageType: "storage_type",
+                        }),
+                      ),
+                      Schema.Null,
+                    ]),
+                  ),
+                }).pipe(
+                  Schema.encodeKeys({
+                    crawlOptions: "crawl_options",
+                    parseOptions: "parse_options",
+                    parseType: "parse_type",
+                    storeOptions: "store_options",
+                  }),
+                ),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              excludeItems: "exclude_items",
+              includeItems: "include_items",
+              prefix: "prefix",
+              r2Jurisdiction: "r2_jurisdiction",
+              webCrawler: "web_crawler",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      status: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      syncInterval: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      tokenId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      type: Schema.optional(
+        Schema.Union([
+          Schema.Literal("r2"),
+          Schema.Literal("web-crawler"),
+          Schema.Null,
+        ]),
+      ),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          id: "id",
+          createdAt: "created_at",
+          modifiedAt: "modified_at",
+          aiGatewayId: "ai_gateway_id",
+          aiSearchModel: "ai_search_model",
+          cache: "cache",
+          cacheThreshold: "cache_threshold",
+          cacheTtl: "cache_ttl",
+          chunkOverlap: "chunk_overlap",
+          chunkSize: "chunk_size",
+          createdBy: "created_by",
+          customMetadata: "custom_metadata",
+          embeddingModel: "embedding_model",
+          enable: "enable",
+          engineVersion: "engine_version",
+          fusionMethod: "fusion_method",
+          hybridSearchEnabled: "hybrid_search_enabled",
+          indexMethod: "index_method",
+          indexingOptions: "indexing_options",
+          lastActivity: "last_activity",
+          maxNumResults: "max_num_results",
+          metadata: "metadata",
+          modifiedBy: "modified_by",
+          namespace: "namespace",
+          paused: "paused",
+          publicEndpointId: "public_endpoint_id",
+          publicEndpointParams: "public_endpoint_params",
+          reranking: "reranking",
+          rerankingModel: "reranking_model",
+          retrievalOptions: "retrieval_options",
+          rewriteModel: "rewrite_model",
+          rewriteQuery: "rewrite_query",
+          scoreThreshold: "score_threshold",
+          source: "source",
+          sourceParams: "source_params",
+          status: "status",
+          syncInterval: "sync_interval",
+          tokenId: "token_id",
+          type: "type",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+) as unknown as Schema.Schema<ReadInstanceResponse>;
 
 export type ReadInstanceError =
   | DefaultErrors
   | ValidationError
   | NotFound
-  | InvalidRoute;
+  | InvalidRoute
+  | Forbidden;
 
 export const readInstance: API.OperationMethod<
   ReadInstanceRequest,
@@ -6853,7 +6738,7 @@ export const readInstance: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: ReadInstanceRequest,
   output: ReadInstanceResponse,
-  errors: [ValidationError, NotFound, InvalidRoute],
+  errors: [ValidationError, NotFound, InvalidRoute, Forbidden],
 }));
 
 export interface SearchInstanceRequest {
@@ -6942,178 +6827,192 @@ export interface SearchInstanceRequest {
   query?: string;
 }
 
-export const SearchInstanceRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  id: Schema.String.pipe(T.HttpPath("id")),
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  aiSearchOptions: Schema.optional(
+export const SearchInstanceRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
     Schema.Struct({
-      cache: Schema.optional(
+      id: Schema.String.pipe(T.HttpPath("id")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      aiSearchOptions: Schema.optional(
         Schema.Struct({
-          cacheThreshold: Schema.optional(
-            Schema.Union([
-              Schema.Literals([
-                "super_strict_match",
-                "close_enough",
-                "flexible_friend",
-                "anything_goes",
-              ]),
-              Schema.String,
-            ]),
-          ),
-          enabled: Schema.optional(Schema.Boolean),
-        }).pipe(
-          Schema.encodeKeys({
-            cacheThreshold: "cache_threshold",
-            enabled: "enabled",
-          }),
-        ),
-      ),
-      queryRewrite: Schema.optional(
-        Schema.Struct({
-          enabled: Schema.optional(Schema.Boolean),
-          model: Schema.optional(
-            Schema.Union([
-              Schema.Literals([
-                "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-                "@cf/zai-org/glm-4.7-flash",
-                "@cf/meta/llama-3.1-8b-instruct-fast",
-                "@cf/meta/llama-3.1-8b-instruct-fp8",
-                "@cf/meta/llama-4-scout-17b-16e-instruct",
-                "@cf/qwen/qwen3-30b-a3b-fp8",
-                "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
-                "@cf/moonshotai/kimi-k2-instruct",
-                "@cf/google/gemma-3-12b-it",
-                "@cf/google/gemma-4-26b-a4b-it",
-                "@cf/moonshotai/kimi-k2.5",
-                "anthropic/claude-3-7-sonnet",
-                "anthropic/claude-sonnet-4",
-                "anthropic/claude-opus-4",
-                "anthropic/claude-3-5-haiku",
-                "cerebras/qwen-3-235b-a22b-instruct",
-                "cerebras/qwen-3-235b-a22b-thinking",
-                "cerebras/llama-3.3-70b",
-                "cerebras/llama-4-maverick-17b-128e-instruct",
-                "cerebras/llama-4-scout-17b-16e-instruct",
-                "cerebras/gpt-oss-120b",
-                "google-ai-studio/gemini-2.5-flash",
-                "google-ai-studio/gemini-2.5-pro",
-                "grok/grok-4",
-                "groq/llama-3.3-70b-versatile",
-                "groq/llama-3.1-8b-instant",
-                "openai/gpt-5",
-                "openai/gpt-5-mini",
-                "openai/gpt-5-nano",
-                "",
-              ]),
-              Schema.String,
-            ]),
-          ),
-          rewritePrompt: Schema.optional(Schema.String),
-        }).pipe(
-          Schema.encodeKeys({
-            enabled: "enabled",
-            model: "model",
-            rewritePrompt: "rewrite_prompt",
-          }),
-        ),
-      ),
-      reranking: Schema.optional(
-        Schema.Struct({
-          enabled: Schema.optional(Schema.Boolean),
-          matchThreshold: Schema.optional(Schema.Number),
-          model: Schema.optional(
-            Schema.Union([
-              Schema.Literals(["@cf/baai/bge-reranker-base", ""]),
-              Schema.String,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            enabled: "enabled",
-            matchThreshold: "match_threshold",
-            model: "model",
-          }),
-        ),
-      ),
-      retrieval: Schema.optional(
-        Schema.Struct({
-          boostBy: Schema.optional(
-            Schema.Array(
-              Schema.Struct({
-                field: Schema.String,
-                direction: Schema.optional(
-                  Schema.Union([
-                    Schema.Literals(["asc", "desc", "exists", "not_exists"]),
-                    Schema.String,
+          cache: Schema.optional(
+            Schema.Struct({
+              cacheThreshold: Schema.optional(
+                Schema.Union([
+                  Schema.Literals([
+                    "super_strict_match",
+                    "close_enough",
+                    "flexible_friend",
+                    "anything_goes",
                   ]),
-                ),
+                  Schema.String,
+                ]),
+              ),
+              enabled: Schema.optional(Schema.Boolean),
+            }).pipe(
+              Schema.encodeKeys({
+                cacheThreshold: "cache_threshold",
+                enabled: "enabled",
               }),
             ),
           ),
-          contextExpansion: Schema.optional(Schema.Number),
-          filters: Schema.optional(
-            Schema.Record(Schema.String, Schema.Unknown),
+          queryRewrite: Schema.optional(
+            Schema.Struct({
+              enabled: Schema.optional(Schema.Boolean),
+              model: Schema.optional(
+                Schema.Union([
+                  Schema.Literals([
+                    "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+                    "@cf/zai-org/glm-4.7-flash",
+                    "@cf/meta/llama-3.1-8b-instruct-fast",
+                    "@cf/meta/llama-3.1-8b-instruct-fp8",
+                    "@cf/meta/llama-4-scout-17b-16e-instruct",
+                    "@cf/qwen/qwen3-30b-a3b-fp8",
+                    "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
+                    "@cf/moonshotai/kimi-k2-instruct",
+                    "@cf/google/gemma-3-12b-it",
+                    "@cf/google/gemma-4-26b-a4b-it",
+                    "@cf/moonshotai/kimi-k2.5",
+                    "anthropic/claude-3-7-sonnet",
+                    "anthropic/claude-sonnet-4",
+                    "anthropic/claude-opus-4",
+                    "anthropic/claude-3-5-haiku",
+                    "cerebras/qwen-3-235b-a22b-instruct",
+                    "cerebras/qwen-3-235b-a22b-thinking",
+                    "cerebras/llama-3.3-70b",
+                    "cerebras/llama-4-maverick-17b-128e-instruct",
+                    "cerebras/llama-4-scout-17b-16e-instruct",
+                    "cerebras/gpt-oss-120b",
+                    "google-ai-studio/gemini-2.5-flash",
+                    "google-ai-studio/gemini-2.5-pro",
+                    "grok/grok-4",
+                    "groq/llama-3.3-70b-versatile",
+                    "groq/llama-3.1-8b-instant",
+                    "openai/gpt-5",
+                    "openai/gpt-5-mini",
+                    "openai/gpt-5-nano",
+                    "",
+                  ]),
+                  Schema.String,
+                ]),
+              ),
+              rewritePrompt: Schema.optional(Schema.String),
+            }).pipe(
+              Schema.encodeKeys({
+                enabled: "enabled",
+                model: "model",
+                rewritePrompt: "rewrite_prompt",
+              }),
+            ),
           ),
-          fusionMethod: Schema.optional(
-            Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
+          reranking: Schema.optional(
+            Schema.Struct({
+              enabled: Schema.optional(Schema.Boolean),
+              matchThreshold: Schema.optional(Schema.Number),
+              model: Schema.optional(
+                Schema.Union([
+                  Schema.Literals(["@cf/baai/bge-reranker-base", ""]),
+                  Schema.String,
+                ]),
+              ),
+            }).pipe(
+              Schema.encodeKeys({
+                enabled: "enabled",
+                matchThreshold: "match_threshold",
+                model: "model",
+              }),
+            ),
           ),
-          keywordMatchMode: Schema.optional(
-            Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
+          retrieval: Schema.optional(
+            Schema.Struct({
+              boostBy: Schema.optional(
+                Schema.Array(
+                  Schema.Struct({
+                    field: Schema.String,
+                    direction: Schema.optional(
+                      Schema.Union([
+                        Schema.Literals([
+                          "asc",
+                          "desc",
+                          "exists",
+                          "not_exists",
+                        ]),
+                        Schema.String,
+                      ]),
+                    ),
+                  }),
+                ),
+              ),
+              contextExpansion: Schema.optional(Schema.Number),
+              filters: Schema.optional(
+                Schema.Record(Schema.String, Schema.Unknown),
+              ),
+              fusionMethod: Schema.optional(
+                Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
+              ),
+              keywordMatchMode: Schema.optional(
+                Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
+              ),
+              matchThreshold: Schema.optional(Schema.Number),
+              maxNumResults: Schema.optional(Schema.Number),
+              retrievalType: Schema.optional(
+                Schema.Union([
+                  Schema.Literals(["vector", "keyword", "hybrid"]),
+                  Schema.String,
+                ]),
+              ),
+              returnOnFailure: Schema.optional(Schema.Boolean),
+            }).pipe(
+              Schema.encodeKeys({
+                boostBy: "boost_by",
+                contextExpansion: "context_expansion",
+                filters: "filters",
+                fusionMethod: "fusion_method",
+                keywordMatchMode: "keyword_match_mode",
+                matchThreshold: "match_threshold",
+                maxNumResults: "max_num_results",
+                retrievalType: "retrieval_type",
+                returnOnFailure: "return_on_failure",
+              }),
+            ),
           ),
-          matchThreshold: Schema.optional(Schema.Number),
-          maxNumResults: Schema.optional(Schema.Number),
-          retrievalType: Schema.optional(
-            Schema.Union([
-              Schema.Literals(["vector", "keyword", "hybrid"]),
-              Schema.String,
-            ]),
-          ),
-          returnOnFailure: Schema.optional(Schema.Boolean),
         }).pipe(
           Schema.encodeKeys({
-            boostBy: "boost_by",
-            contextExpansion: "context_expansion",
-            filters: "filters",
-            fusionMethod: "fusion_method",
-            keywordMatchMode: "keyword_match_mode",
-            matchThreshold: "match_threshold",
-            maxNumResults: "max_num_results",
-            retrievalType: "retrieval_type",
-            returnOnFailure: "return_on_failure",
+            cache: "cache",
+            queryRewrite: "query_rewrite",
+            reranking: "reranking",
+            retrieval: "retrieval",
           }),
         ),
       ),
+      messages: Schema.optional(
+        Schema.Array(
+          Schema.Struct({
+            content: Schema.Union([Schema.String, Schema.Null]),
+            role: Schema.Union([
+              Schema.Literals([
+                "system",
+                "developer",
+                "user",
+                "assistant",
+                "tool",
+              ]),
+              Schema.String,
+            ]),
+          }),
+        ),
+      ),
+      query: Schema.optional(Schema.String),
     }).pipe(
       Schema.encodeKeys({
-        cache: "cache",
-        queryRewrite: "query_rewrite",
-        reranking: "reranking",
-        retrieval: "retrieval",
+        aiSearchOptions: "ai_search_options",
+        messages: "messages",
+        query: "query",
+      }),
+      T.Http({
+        method: "POST",
+        path: "/accounts/{account_id}/ai-search/instances/{id}/search",
       }),
     ),
-  ),
-  messages: Schema.optional(
-    Schema.Array(
-      Schema.Struct({
-        content: Schema.Union([Schema.String, Schema.Null]),
-        role: Schema.Union([
-          Schema.Literals(["system", "developer", "user", "assistant", "tool"]),
-          Schema.String,
-        ]),
-      }),
-    ),
-  ),
-  query: Schema.optional(Schema.String),
-}).pipe(
-  Schema.encodeKeys({
-    aiSearchOptions: "ai_search_options",
-    messages: "messages",
-    query: "query",
-  }),
-  T.Http({
-    method: "POST",
-    path: "/accounts/{account_id}/ai-search/instances/{id}/search",
-  }),
 ) as unknown as Schema.Schema<SearchInstanceRequest>;
 
 export interface SearchInstanceResponse {
@@ -7139,88 +7038,89 @@ export interface SearchInstanceResponse {
   searchQuery: string;
 }
 
-export const SearchInstanceResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
-  {
-    chunks: Schema.Array(
-      Schema.Struct({
-        id: Schema.String,
-        score: Schema.Number,
-        text: Schema.String,
-        type: Schema.String,
-        item: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              key: Schema.String,
-              metadata: Schema.optional(
-                Schema.Union([
-                  Schema.Record(Schema.String, Schema.Unknown),
-                  Schema.Null,
-                ]),
-              ),
-              timestamp: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-            }),
-            Schema.Null,
-          ]),
-        ),
-        scoringDetails: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              fusionMethod: Schema.optional(
-                Schema.Union([
+export const SearchInstanceResponse =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      chunks: Schema.Array(
+        Schema.Struct({
+          id: Schema.String,
+          score: Schema.Number,
+          text: Schema.String,
+          type: Schema.String,
+          item: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                key: Schema.String,
+                metadata: Schema.optional(
                   Schema.Union([
-                    Schema.Literals(["rrf", "max"]),
-                    Schema.String,
+                    Schema.Record(Schema.String, Schema.Unknown),
+                    Schema.Null,
                   ]),
-                  Schema.Null,
-                ]),
-              ),
-              keywordRank: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              keywordScore: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              rerankingScore: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              vectorRank: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              vectorScore: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-            }).pipe(
-              Schema.encodeKeys({
-                fusionMethod: "fusion_method",
-                keywordRank: "keyword_rank",
-                keywordScore: "keyword_score",
-                rerankingScore: "reranking_score",
-                vectorRank: "vector_rank",
-                vectorScore: "vector_score",
+                ),
+                timestamp: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
               }),
-            ),
-            Schema.Null,
-          ]),
+              Schema.Null,
+            ]),
+          ),
+          scoringDetails: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                fusionMethod: Schema.optional(
+                  Schema.Union([
+                    Schema.Union([
+                      Schema.Literals(["rrf", "max"]),
+                      Schema.String,
+                    ]),
+                    Schema.Null,
+                  ]),
+                ),
+                keywordRank: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+                keywordScore: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+                rerankingScore: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+                vectorRank: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+                vectorScore: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+              }).pipe(
+                Schema.encodeKeys({
+                  fusionMethod: "fusion_method",
+                  keywordRank: "keyword_rank",
+                  keywordScore: "keyword_score",
+                  rerankingScore: "reranking_score",
+                  vectorRank: "vector_rank",
+                  vectorScore: "vector_score",
+                }),
+              ),
+              Schema.Null,
+            ]),
+          ),
+        }).pipe(
+          Schema.encodeKeys({
+            id: "id",
+            score: "score",
+            text: "text",
+            type: "type",
+            item: "item",
+            scoringDetails: "scoring_details",
+          }),
         ),
-      }).pipe(
-        Schema.encodeKeys({
-          id: "id",
-          score: "score",
-          text: "text",
-          type: "type",
-          item: "item",
-          scoringDetails: "scoring_details",
-        }),
       ),
-    ),
-    searchQuery: Schema.String,
-  },
-)
-  .pipe(Schema.encodeKeys({ chunks: "chunks", searchQuery: "search_query" }))
-  .pipe(
-    T.ResponsePath("result"),
+      searchQuery: Schema.String,
+    })
+      .pipe(
+        Schema.encodeKeys({ chunks: "chunks", searchQuery: "search_query" }),
+      )
+      .pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<SearchInstanceResponse>;
 
 export type SearchInstanceError = DefaultErrors;
@@ -7241,14 +7141,17 @@ export interface StatsInstanceRequest {
   accountId: string;
 }
 
-export const StatsInstanceRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  id: Schema.String.pipe(T.HttpPath("id")),
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-}).pipe(
-  T.Http({
-    method: "GET",
-    path: "/accounts/{account_id}/ai-search/instances/{id}/stats",
-  }),
+export const StatsInstanceRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      id: Schema.String.pipe(T.HttpPath("id")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/ai-search/instances/{id}/stats",
+      }),
+    ),
 ) as unknown as Schema.Schema<StatsInstanceRequest>;
 
 export interface StatsInstanceResponse {
@@ -7274,66 +7177,73 @@ export interface StatsInstanceResponse {
   skipped?: number | null;
 }
 
-export const StatsInstanceResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  completed: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-  degraded: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-  engine: Schema.optional(
-    Schema.Union([
-      Schema.Struct({
-        r2: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              metadataSizeBytes: Schema.Number,
-              objectCount: Schema.Number,
-              payloadSizeBytes: Schema.Number,
-            }),
-            Schema.Null,
-          ]),
-        ),
-        vectorize: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              dimensions: Schema.Number,
-              vectorsCount: Schema.Number,
-            }),
-            Schema.Null,
-          ]),
-        ),
-      }),
-      Schema.Null,
-    ]),
-  ),
-  error: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-  fileEmbedErrors: Schema.optional(
-    Schema.Union([Schema.Record(Schema.String, Schema.Unknown), Schema.Null]),
-  ),
-  indexSourceErrors: Schema.optional(
-    Schema.Union([Schema.Record(Schema.String, Schema.Unknown), Schema.Null]),
-  ),
-  lastActivity: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  outdated: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-  queued: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-  running: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-  skipped: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-})
-  .pipe(
-    Schema.encodeKeys({
-      completed: "completed",
-      degraded: "degraded",
-      engine: "engine",
-      error: "error",
-      fileEmbedErrors: "file_embed_errors",
-      indexSourceErrors: "index_source_errors",
-      lastActivity: "last_activity",
-      outdated: "outdated",
-      queued: "queued",
-      running: "running",
-      skipped: "skipped",
-    }),
-  )
-  .pipe(
-    T.ResponsePath("result"),
-  ) as unknown as Schema.Schema<StatsInstanceResponse>;
+export const StatsInstanceResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      completed: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      degraded: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      engine: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            r2: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  metadataSizeBytes: Schema.Number,
+                  objectCount: Schema.Number,
+                  payloadSizeBytes: Schema.Number,
+                }),
+                Schema.Null,
+              ]),
+            ),
+            vectorize: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  dimensions: Schema.Number,
+                  vectorsCount: Schema.Number,
+                }),
+                Schema.Null,
+              ]),
+            ),
+          }),
+          Schema.Null,
+        ]),
+      ),
+      error: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      fileEmbedErrors: Schema.optional(
+        Schema.Union([
+          Schema.Record(Schema.String, Schema.Unknown),
+          Schema.Null,
+        ]),
+      ),
+      indexSourceErrors: Schema.optional(
+        Schema.Union([
+          Schema.Record(Schema.String, Schema.Unknown),
+          Schema.Null,
+        ]),
+      ),
+      lastActivity: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      outdated: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      queued: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      running: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      skipped: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          completed: "completed",
+          degraded: "degraded",
+          engine: "engine",
+          error: "error",
+          fileEmbedErrors: "file_embed_errors",
+          indexSourceErrors: "index_source_errors",
+          lastActivity: "last_activity",
+          outdated: "outdated",
+          queued: "queued",
+          running: "running",
+          skipped: "skipped",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+) as unknown as Schema.Schema<StatsInstanceResponse>;
 
 export type StatsInstanceError =
   | DefaultErrors
@@ -7362,15 +7272,18 @@ export interface GetInstanceJobRequest {
   accountId: string;
 }
 
-export const GetInstanceJobRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  id: Schema.String.pipe(T.HttpPath("id")),
-  jobId: Schema.String.pipe(T.HttpPath("jobId")),
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-}).pipe(
-  T.Http({
-    method: "GET",
-    path: "/accounts/{account_id}/ai-search/instances/{id}/jobs/{jobId}",
-  }),
+export const GetInstanceJobRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      id: Schema.String.pipe(T.HttpPath("id")),
+      jobId: Schema.String.pipe(T.HttpPath("jobId")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/ai-search/instances/{id}/jobs/{jobId}",
+      }),
+    ),
 ) as unknown as Schema.Schema<GetInstanceJobRequest>;
 
 export interface GetInstanceJobResponse {
@@ -7383,33 +7296,32 @@ export interface GetInstanceJobResponse {
   startedAt?: string | null;
 }
 
-export const GetInstanceJobResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
-  {
-    id: Schema.String,
-    source: Schema.Union([
-      Schema.Literals(["user", "schedule"]),
-      Schema.String,
-    ]),
-    description: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    endReason: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    endedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    lastSeenAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    startedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  },
-)
-  .pipe(
-    Schema.encodeKeys({
-      id: "id",
-      source: "source",
-      description: "description",
-      endReason: "end_reason",
-      endedAt: "ended_at",
-      lastSeenAt: "last_seen_at",
-      startedAt: "started_at",
-    }),
-  )
-  .pipe(
-    T.ResponsePath("result"),
+export const GetInstanceJobResponse =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      id: Schema.String,
+      source: Schema.Union([
+        Schema.Literals(["user", "schedule"]),
+        Schema.String,
+      ]),
+      description: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      endReason: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      endedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      lastSeenAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      startedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          id: "id",
+          source: "source",
+          description: "description",
+          endReason: "end_reason",
+          endedAt: "ended_at",
+          lastSeenAt: "last_seen_at",
+          startedAt: "started_at",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<GetInstanceJobResponse>;
 
 export type GetInstanceJobError =
@@ -7438,16 +7350,18 @@ export interface ListInstanceJobsRequest {
 }
 
 export const ListInstanceJobsRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    id: Schema.String.pipe(T.HttpPath("id")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    page: Schema.optional(Schema.Number).pipe(T.HttpQuery("page")),
-    perPage: Schema.optional(Schema.Number).pipe(T.HttpQuery("per_page")),
-  }).pipe(
-    T.Http({
-      method: "GET",
-      path: "/accounts/{account_id}/ai-search/instances/{id}/jobs",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      id: Schema.String.pipe(T.HttpPath("id")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      page: Schema.optional(Schema.Number).pipe(T.HttpQuery("page")),
+      perPage: Schema.optional(Schema.Number).pipe(T.HttpQuery("per_page")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/ai-search/instances/{id}/jobs",
+      }),
+    ),
   ) as unknown as Schema.Schema<ListInstanceJobsRequest>;
 
 export interface ListInstanceJobsResponse {
@@ -7469,55 +7383,63 @@ export interface ListInstanceJobsResponse {
 }
 
 export const ListInstanceJobsResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    result: Schema.Array(
-      Schema.Struct({
-        id: Schema.String,
-        source: Schema.Union([
-          Schema.Literals(["user", "schedule"]),
-          Schema.String,
-        ]),
-        description: Schema.optional(
-          Schema.Union([Schema.String, Schema.Null]),
-        ),
-        endReason: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-        endedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-        lastSeenAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-        startedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      }).pipe(
-        Schema.encodeKeys({
-          id: "id",
-          source: "source",
-          description: "description",
-          endReason: "end_reason",
-          endedAt: "ended_at",
-          lastSeenAt: "last_seen_at",
-          startedAt: "started_at",
-        }),
-      ),
-    ),
-    resultInfo: Schema.optional(
-      Schema.Union([
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      result: Schema.Array(
         Schema.Struct({
-          count: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-          page: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-          perPage: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-          totalCount: Schema.optional(
-            Schema.Union([Schema.Number, Schema.Null]),
+          id: Schema.String,
+          source: Schema.Union([
+            Schema.Literals(["user", "schedule"]),
+            Schema.String,
+          ]),
+          description: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
+          ),
+          endReason: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
+          ),
+          endedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+          lastSeenAt: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
+          ),
+          startedAt: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
           ),
         }).pipe(
           Schema.encodeKeys({
-            count: "count",
-            page: "page",
-            perPage: "per_page",
-            totalCount: "total_count",
+            id: "id",
+            source: "source",
+            description: "description",
+            endReason: "end_reason",
+            endedAt: "ended_at",
+            lastSeenAt: "last_seen_at",
+            startedAt: "started_at",
           }),
         ),
-        Schema.Null,
-      ]),
-    ),
-  }).pipe(
-    Schema.encodeKeys({ result: "result", resultInfo: "result_info" }),
+      ),
+      resultInfo: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            count: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+            page: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+            perPage: Schema.optional(
+              Schema.Union([Schema.Number, Schema.Null]),
+            ),
+            totalCount: Schema.optional(
+              Schema.Union([Schema.Number, Schema.Null]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              count: "count",
+              page: "page",
+              perPage: "per_page",
+              totalCount: "total_count",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+    }).pipe(Schema.encodeKeys({ result: "result", resultInfo: "result_info" })),
   ) as unknown as Schema.Schema<ListInstanceJobsResponse>;
 
 export type ListInstanceJobsError = DefaultErrors;
@@ -7549,15 +7471,17 @@ export interface CreateInstanceJobRequest {
 }
 
 export const CreateInstanceJobRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    id: Schema.String.pipe(T.HttpPath("id")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    description: Schema.optional(Schema.String),
-  }).pipe(
-    T.Http({
-      method: "POST",
-      path: "/accounts/{account_id}/ai-search/instances/{id}/jobs",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      id: Schema.String.pipe(T.HttpPath("id")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      description: Schema.optional(Schema.String),
+    }).pipe(
+      T.Http({
+        method: "POST",
+        path: "/accounts/{account_id}/ai-search/instances/{id}/jobs",
+      }),
+    ),
   ) as unknown as Schema.Schema<CreateInstanceJobRequest>;
 
 export interface CreateInstanceJobResponse {
@@ -7571,34 +7495,34 @@ export interface CreateInstanceJobResponse {
 }
 
 export const CreateInstanceJobResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    id: Schema.String,
-    source: Schema.optional(
-      Schema.Union([
-        Schema.Union([Schema.Literals(["user", "schedule"]), Schema.String]),
-        Schema.Null,
-      ]),
-    ),
-    description: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    endReason: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    endedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    lastSeenAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    startedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  })
-    .pipe(
-      Schema.encodeKeys({
-        id: "id",
-        source: "source",
-        description: "description",
-        endReason: "end_reason",
-        endedAt: "ended_at",
-        lastSeenAt: "last_seen_at",
-        startedAt: "started_at",
-      }),
-    )
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<CreateInstanceJobResponse>;
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      id: Schema.String,
+      source: Schema.optional(
+        Schema.Union([
+          Schema.Union([Schema.Literals(["user", "schedule"]), Schema.String]),
+          Schema.Null,
+        ]),
+      ),
+      description: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      endReason: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      endedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      lastSeenAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      startedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          id: "id",
+          source: "source",
+          description: "description",
+          endReason: "end_reason",
+          endedAt: "ended_at",
+          lastSeenAt: "last_seen_at",
+          startedAt: "started_at",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<CreateInstanceJobResponse>;
 
 export type CreateInstanceJobError =
   | DefaultErrors
@@ -7636,20 +7560,21 @@ export interface LogsInstanceJobRequest {
   perPage?: number;
 }
 
-export const LogsInstanceJobRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
-  {
-    id: Schema.String.pipe(T.HttpPath("id")),
-    jobId: Schema.String.pipe(T.HttpPath("jobId")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    page: Schema.optional(Schema.Number).pipe(T.HttpQuery("page")),
-    perPage: Schema.optional(Schema.Number).pipe(T.HttpQuery("per_page")),
-  },
-).pipe(
-  T.Http({
-    method: "GET",
-    path: "/accounts/{account_id}/ai-search/instances/{id}/jobs/{jobId}/logs",
-  }),
-) as unknown as Schema.Schema<LogsInstanceJobRequest>;
+export const LogsInstanceJobRequest =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      id: Schema.String.pipe(T.HttpPath("id")),
+      jobId: Schema.String.pipe(T.HttpPath("jobId")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      page: Schema.optional(Schema.Number).pipe(T.HttpQuery("page")),
+      perPage: Schema.optional(Schema.Number).pipe(T.HttpQuery("per_page")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/ai-search/instances/{id}/jobs/{jobId}/logs",
+      }),
+    ),
+  ) as unknown as Schema.Schema<LogsInstanceJobRequest>;
 
 export type LogsInstanceJobResponse = {
   id: number;
@@ -7658,23 +7583,24 @@ export type LogsInstanceJobResponse = {
   messageType: number;
 }[];
 
-export const LogsInstanceJobResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Array(
-  Schema.Struct({
-    id: Schema.Number,
-    createdAt: Schema.Number,
-    message: Schema.String,
-    messageType: Schema.Number,
-  }).pipe(
-    Schema.encodeKeys({
-      id: "id",
-      createdAt: "created_at",
-      message: "message",
-      messageType: "message_type",
-    }),
-  ),
-).pipe(
-  T.ResponsePath("result"),
-) as unknown as Schema.Schema<LogsInstanceJobResponse>;
+export const LogsInstanceJobResponse =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Array(
+      Schema.Struct({
+        id: Schema.Number,
+        createdAt: Schema.Number,
+        message: Schema.String,
+        messageType: Schema.Number,
+      }).pipe(
+        Schema.encodeKeys({
+          id: "id",
+          createdAt: "created_at",
+          message: "message",
+          messageType: "message_type",
+        }),
+      ),
+    ).pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<LogsInstanceJobResponse>;
 
 export type LogsInstanceJobError =
   | DefaultErrors
@@ -7706,16 +7632,19 @@ export interface ListNamespacesRequest {
   search?: string;
 }
 
-export const ListNamespacesRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  page: Schema.optional(Schema.Number).pipe(T.HttpQuery("page")),
-  perPage: Schema.optional(Schema.Number).pipe(T.HttpQuery("per_page")),
-  search: Schema.optional(Schema.String).pipe(T.HttpQuery("search")),
-}).pipe(
-  T.Http({
-    method: "GET",
-    path: "/accounts/{account_id}/ai-search/namespaces",
-  }),
+export const ListNamespacesRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      page: Schema.optional(Schema.Number).pipe(T.HttpQuery("page")),
+      perPage: Schema.optional(Schema.Number).pipe(T.HttpQuery("per_page")),
+      search: Schema.optional(Schema.String).pipe(T.HttpQuery("search")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/ai-search/namespaces",
+      }),
+    ),
 ) as unknown as Schema.Schema<ListNamespacesRequest>;
 
 export interface ListNamespacesResponse {
@@ -7728,47 +7657,48 @@ export interface ListNamespacesResponse {
   } | null;
 }
 
-export const ListNamespacesResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
-  {
-    result: Schema.Array(
-      Schema.Struct({
-        createdAt: Schema.String,
-        name: Schema.String,
-        description: Schema.optional(
-          Schema.Union([Schema.String, Schema.Null]),
-        ),
-      }).pipe(
-        Schema.encodeKeys({
-          createdAt: "created_at",
-          name: "name",
-          description: "description",
-        }),
-      ),
-    ),
-    resultInfo: Schema.optional(
-      Schema.Union([
+export const ListNamespacesResponse =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      result: Schema.Array(
         Schema.Struct({
-          count: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-          page: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-          perPage: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-          totalCount: Schema.optional(
-            Schema.Union([Schema.Number, Schema.Null]),
+          createdAt: Schema.String,
+          name: Schema.String,
+          description: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
           ),
         }).pipe(
           Schema.encodeKeys({
-            count: "count",
-            page: "page",
-            perPage: "per_page",
-            totalCount: "total_count",
+            createdAt: "created_at",
+            name: "name",
+            description: "description",
           }),
         ),
-        Schema.Null,
-      ]),
-    ),
-  },
-).pipe(
-  Schema.encodeKeys({ result: "result", resultInfo: "result_info" }),
-) as unknown as Schema.Schema<ListNamespacesResponse>;
+      ),
+      resultInfo: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            count: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+            page: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+            perPage: Schema.optional(
+              Schema.Union([Schema.Number, Schema.Null]),
+            ),
+            totalCount: Schema.optional(
+              Schema.Union([Schema.Number, Schema.Null]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              count: "count",
+              page: "page",
+              perPage: "per_page",
+              totalCount: "total_count",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+    }).pipe(Schema.encodeKeys({ result: "result", resultInfo: "result_info" })),
+  ) as unknown as Schema.Schema<ListNamespacesResponse>;
 
 export type ListNamespacesError = DefaultErrors;
 
@@ -7799,18 +7729,19 @@ export interface CreateNamespaceRequest {
   description?: string | null;
 }
 
-export const CreateNamespaceRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
-  {
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    name: Schema.String,
-    description: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  },
-).pipe(
-  T.Http({
-    method: "POST",
-    path: "/accounts/{account_id}/ai-search/namespaces",
-  }),
-) as unknown as Schema.Schema<CreateNamespaceRequest>;
+export const CreateNamespaceRequest =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      name: Schema.String,
+      description: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    }).pipe(
+      T.Http({
+        method: "POST",
+        path: "/accounts/{account_id}/ai-search/namespaces",
+      }),
+    ),
+  ) as unknown as Schema.Schema<CreateNamespaceRequest>;
 
 export interface CreateNamespaceResponse {
   createdAt: string;
@@ -7820,23 +7751,26 @@ export interface CreateNamespaceResponse {
 }
 
 export const CreateNamespaceResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    createdAt: Schema.String,
-    name: Schema.String,
-    description: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  })
-    .pipe(
-      Schema.encodeKeys({
-        createdAt: "created_at",
-        name: "name",
-        description: "description",
-      }),
-    )
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<CreateNamespaceResponse>;
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      createdAt: Schema.String,
+      name: Schema.String,
+      description: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          createdAt: "created_at",
+          name: "name",
+          description: "description",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<CreateNamespaceResponse>;
 
-export type CreateNamespaceError = DefaultErrors;
+export type CreateNamespaceError =
+  | DefaultErrors
+  | NamespaceAlreadyExists
+  | Forbidden;
 
 export const createNamespace: API.OperationMethod<
   CreateNamespaceRequest,
@@ -7846,7 +7780,7 @@ export const createNamespace: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: CreateNamespaceRequest,
   output: CreateNamespaceResponse,
-  errors: [],
+  errors: [NamespaceAlreadyExists, Forbidden],
 }));
 
 export interface UpdateNamespaceRequest {
@@ -7857,18 +7791,19 @@ export interface UpdateNamespaceRequest {
   description?: string | null;
 }
 
-export const UpdateNamespaceRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
-  {
-    name: Schema.String.pipe(T.HttpPath("name")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    description: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  },
-).pipe(
-  T.Http({
-    method: "PUT",
-    path: "/accounts/{account_id}/ai-search/namespaces/{name}",
-  }),
-) as unknown as Schema.Schema<UpdateNamespaceRequest>;
+export const UpdateNamespaceRequest =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      description: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    }).pipe(
+      T.Http({
+        method: "PUT",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}",
+      }),
+    ),
+  ) as unknown as Schema.Schema<UpdateNamespaceRequest>;
 
 export interface UpdateNamespaceResponse {
   createdAt: string;
@@ -7878,23 +7813,26 @@ export interface UpdateNamespaceResponse {
 }
 
 export const UpdateNamespaceResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    createdAt: Schema.String,
-    name: Schema.String,
-    description: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  })
-    .pipe(
-      Schema.encodeKeys({
-        createdAt: "created_at",
-        name: "name",
-        description: "description",
-      }),
-    )
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<UpdateNamespaceResponse>;
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      createdAt: Schema.String,
+      name: Schema.String,
+      description: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          createdAt: "created_at",
+          name: "name",
+          description: "description",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<UpdateNamespaceResponse>;
 
-export type UpdateNamespaceError = DefaultErrors;
+export type UpdateNamespaceError =
+  | DefaultErrors
+  | NamespaceNotFound
+  | Forbidden;
 
 export const updateNamespace: API.OperationMethod<
   UpdateNamespaceRequest,
@@ -7904,7 +7842,7 @@ export const updateNamespace: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: UpdateNamespaceRequest,
   output: UpdateNamespaceResponse,
-  errors: [],
+  errors: [NamespaceNotFound, Forbidden],
 }));
 
 export interface DeleteNamespaceRequest {
@@ -7912,26 +7850,30 @@ export interface DeleteNamespaceRequest {
   accountId: string;
 }
 
-export const DeleteNamespaceRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
-  {
-    name: Schema.String.pipe(T.HttpPath("name")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  },
-).pipe(
-  T.Http({
-    method: "DELETE",
-    path: "/accounts/{account_id}/ai-search/namespaces/{name}",
-  }),
-) as unknown as Schema.Schema<DeleteNamespaceRequest>;
+export const DeleteNamespaceRequest =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "DELETE",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}",
+      }),
+    ),
+  ) as unknown as Schema.Schema<DeleteNamespaceRequest>;
 
 export type DeleteNamespaceResponse = unknown;
 
 export const DeleteNamespaceResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Unknown.pipe(
-    T.ResponsePath("result"),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Unknown.pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<DeleteNamespaceResponse>;
 
-export type DeleteNamespaceError = DefaultErrors;
+export type DeleteNamespaceError =
+  | DefaultErrors
+  | NamespaceNotFound
+  | Forbidden;
 
 export const deleteNamespace: API.OperationMethod<
   DeleteNamespaceRequest,
@@ -7941,7 +7883,7 @@ export const deleteNamespace: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: DeleteNamespaceRequest,
   output: DeleteNamespaceResponse,
-  errors: [],
+  errors: [NamespaceNotFound, Forbidden],
 }));
 
 export interface ReadNamespaceRequest {
@@ -7949,14 +7891,17 @@ export interface ReadNamespaceRequest {
   accountId: string;
 }
 
-export const ReadNamespaceRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  name: Schema.String.pipe(T.HttpPath("name")),
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-}).pipe(
-  T.Http({
-    method: "GET",
-    path: "/accounts/{account_id}/ai-search/namespaces/{name}",
-  }),
+export const ReadNamespaceRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}",
+      }),
+    ),
 ) as unknown as Schema.Schema<ReadNamespaceRequest>;
 
 export interface ReadNamespaceResponse {
@@ -7966,23 +7911,24 @@ export interface ReadNamespaceResponse {
   description?: string | null;
 }
 
-export const ReadNamespaceResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  createdAt: Schema.String,
-  name: Schema.String,
-  description: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-})
-  .pipe(
-    Schema.encodeKeys({
-      createdAt: "created_at",
-      name: "name",
-      description: "description",
-    }),
-  )
-  .pipe(
-    T.ResponsePath("result"),
-  ) as unknown as Schema.Schema<ReadNamespaceResponse>;
+export const ReadNamespaceResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      createdAt: Schema.String,
+      name: Schema.String,
+      description: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          createdAt: "created_at",
+          name: "name",
+          description: "description",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+) as unknown as Schema.Schema<ReadNamespaceResponse>;
 
-export type ReadNamespaceError = DefaultErrors;
+export type ReadNamespaceError = DefaultErrors | NamespaceNotFound | Forbidden;
 
 export const readNamespace: API.OperationMethod<
   ReadNamespaceRequest,
@@ -7992,7 +7938,7 @@ export const readNamespace: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: ReadNamespaceRequest,
   output: ReadNamespaceResponse,
-  errors: [],
+  errors: [NamespaceNotFound, Forbidden],
 }));
 
 export interface SearchNamespaceRequest {
@@ -8082,5827 +8028,13 @@ export interface SearchNamespaceRequest {
   query?: string;
 }
 
-export const SearchNamespaceRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
-  {
-    name: Schema.String.pipe(T.HttpPath("name")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    aiSearchOptions: Schema.Struct({
-      instanceIds: Schema.Array(Schema.String),
-      cache: Schema.optional(
-        Schema.Struct({
-          cacheThreshold: Schema.optional(
-            Schema.Union([
-              Schema.Literals([
-                "super_strict_match",
-                "close_enough",
-                "flexible_friend",
-                "anything_goes",
-              ]),
-              Schema.String,
-            ]),
-          ),
-          enabled: Schema.optional(Schema.Boolean),
-        }).pipe(
-          Schema.encodeKeys({
-            cacheThreshold: "cache_threshold",
-            enabled: "enabled",
-          }),
-        ),
-      ),
-      queryRewrite: Schema.optional(
-        Schema.Struct({
-          enabled: Schema.optional(Schema.Boolean),
-          model: Schema.optional(
-            Schema.Union([
-              Schema.Literals([
-                "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-                "@cf/zai-org/glm-4.7-flash",
-                "@cf/meta/llama-3.1-8b-instruct-fast",
-                "@cf/meta/llama-3.1-8b-instruct-fp8",
-                "@cf/meta/llama-4-scout-17b-16e-instruct",
-                "@cf/qwen/qwen3-30b-a3b-fp8",
-                "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
-                "@cf/moonshotai/kimi-k2-instruct",
-                "@cf/google/gemma-3-12b-it",
-                "@cf/google/gemma-4-26b-a4b-it",
-                "@cf/moonshotai/kimi-k2.5",
-                "anthropic/claude-3-7-sonnet",
-                "anthropic/claude-sonnet-4",
-                "anthropic/claude-opus-4",
-                "anthropic/claude-3-5-haiku",
-                "cerebras/qwen-3-235b-a22b-instruct",
-                "cerebras/qwen-3-235b-a22b-thinking",
-                "cerebras/llama-3.3-70b",
-                "cerebras/llama-4-maverick-17b-128e-instruct",
-                "cerebras/llama-4-scout-17b-16e-instruct",
-                "cerebras/gpt-oss-120b",
-                "google-ai-studio/gemini-2.5-flash",
-                "google-ai-studio/gemini-2.5-pro",
-                "grok/grok-4",
-                "groq/llama-3.3-70b-versatile",
-                "groq/llama-3.1-8b-instant",
-                "openai/gpt-5",
-                "openai/gpt-5-mini",
-                "openai/gpt-5-nano",
-                "",
-              ]),
-              Schema.String,
-            ]),
-          ),
-          rewritePrompt: Schema.optional(Schema.String),
-        }).pipe(
-          Schema.encodeKeys({
-            enabled: "enabled",
-            model: "model",
-            rewritePrompt: "rewrite_prompt",
-          }),
-        ),
-      ),
-      reranking: Schema.optional(
-        Schema.Struct({
-          enabled: Schema.optional(Schema.Boolean),
-          matchThreshold: Schema.optional(Schema.Number),
-          model: Schema.optional(
-            Schema.Union([
-              Schema.Literals(["@cf/baai/bge-reranker-base", ""]),
-              Schema.String,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            enabled: "enabled",
-            matchThreshold: "match_threshold",
-            model: "model",
-          }),
-        ),
-      ),
-      retrieval: Schema.optional(
-        Schema.Struct({
-          boostBy: Schema.optional(
-            Schema.Array(
-              Schema.Struct({
-                field: Schema.String,
-                direction: Schema.optional(
-                  Schema.Union([
-                    Schema.Literals(["asc", "desc", "exists", "not_exists"]),
-                    Schema.String,
-                  ]),
-                ),
-              }),
-            ),
-          ),
-          contextExpansion: Schema.optional(Schema.Number),
-          filters: Schema.optional(
-            Schema.Record(Schema.String, Schema.Unknown),
-          ),
-          fusionMethod: Schema.optional(
-            Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
-          ),
-          keywordMatchMode: Schema.optional(
-            Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
-          ),
-          matchThreshold: Schema.optional(Schema.Number),
-          maxNumResults: Schema.optional(Schema.Number),
-          retrievalType: Schema.optional(
-            Schema.Union([
-              Schema.Literals(["vector", "keyword", "hybrid"]),
-              Schema.String,
-            ]),
-          ),
-          returnOnFailure: Schema.optional(Schema.Boolean),
-        }).pipe(
-          Schema.encodeKeys({
-            boostBy: "boost_by",
-            contextExpansion: "context_expansion",
-            filters: "filters",
-            fusionMethod: "fusion_method",
-            keywordMatchMode: "keyword_match_mode",
-            matchThreshold: "match_threshold",
-            maxNumResults: "max_num_results",
-            retrievalType: "retrieval_type",
-            returnOnFailure: "return_on_failure",
-          }),
-        ),
-      ),
-    }).pipe(
-      Schema.encodeKeys({
-        instanceIds: "instance_ids",
-        cache: "cache",
-        queryRewrite: "query_rewrite",
-        reranking: "reranking",
-        retrieval: "retrieval",
-      }),
-    ),
-    messages: Schema.optional(
-      Schema.Array(
-        Schema.Struct({
-          content: Schema.Union([Schema.String, Schema.Null]),
-          role: Schema.Union([
-            Schema.Literals([
-              "system",
-              "developer",
-              "user",
-              "assistant",
-              "tool",
-            ]),
-            Schema.String,
-          ]),
-        }),
-      ),
-    ),
-    query: Schema.optional(Schema.String),
-  },
-).pipe(
-  Schema.encodeKeys({
-    aiSearchOptions: "ai_search_options",
-    messages: "messages",
-    query: "query",
-  }),
-  T.Http({
-    method: "POST",
-    path: "/accounts/{account_id}/ai-search/namespaces/{name}/search",
-  }),
-) as unknown as Schema.Schema<SearchNamespaceRequest>;
-
-export interface SearchNamespaceResponse {
-  chunks: {
-    id: string;
-    instanceId: string;
-    score: number;
-    text: string;
-    type: string;
-    item?: {
-      key: string;
-      metadata?: Record<string, unknown> | null;
-      timestamp?: number | null;
-    } | null;
-    scoringDetails?: {
-      fusionMethod?: "rrf" | "max" | (string & {}) | null;
-      keywordRank?: number | null;
-      keywordScore?: number | null;
-      rerankingScore?: number | null;
-      vectorRank?: number | null;
-      vectorScore?: number | null;
-    } | null;
-  }[];
-  searchQuery: string;
-  errors?: { instanceId: string; message: string }[] | null;
-}
-
-export const SearchNamespaceResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    chunks: Schema.Array(
-      Schema.Struct({
-        id: Schema.String,
-        instanceId: Schema.String,
-        score: Schema.Number,
-        text: Schema.String,
-        type: Schema.String,
-        item: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              key: Schema.String,
-              metadata: Schema.optional(
-                Schema.Union([
-                  Schema.Record(Schema.String, Schema.Unknown),
-                  Schema.Null,
-                ]),
-              ),
-              timestamp: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-            }),
-            Schema.Null,
-          ]),
-        ),
-        scoringDetails: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              fusionMethod: Schema.optional(
-                Schema.Union([
-                  Schema.Union([
-                    Schema.Literals(["rrf", "max"]),
-                    Schema.String,
-                  ]),
-                  Schema.Null,
-                ]),
-              ),
-              keywordRank: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              keywordScore: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              rerankingScore: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              vectorRank: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              vectorScore: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-            }).pipe(
-              Schema.encodeKeys({
-                fusionMethod: "fusion_method",
-                keywordRank: "keyword_rank",
-                keywordScore: "keyword_score",
-                rerankingScore: "reranking_score",
-                vectorRank: "vector_rank",
-                vectorScore: "vector_score",
-              }),
-            ),
-            Schema.Null,
-          ]),
-        ),
-      }).pipe(
-        Schema.encodeKeys({
-          id: "id",
-          instanceId: "instance_id",
-          score: "score",
-          text: "text",
-          type: "type",
-          item: "item",
-          scoringDetails: "scoring_details",
-        }),
-      ),
-    ),
-    searchQuery: Schema.String,
-    errors: Schema.optional(
-      Schema.Union([
-        Schema.Array(
-          Schema.Struct({
-            instanceId: Schema.String,
-            message: Schema.String,
-          }).pipe(
-            Schema.encodeKeys({
-              instanceId: "instance_id",
-              message: "message",
-            }),
-          ),
-        ),
-        Schema.Null,
-      ]),
-    ),
-  })
-    .pipe(
-      Schema.encodeKeys({
-        chunks: "chunks",
-        searchQuery: "search_query",
-        errors: "errors",
-      }),
-    )
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<SearchNamespaceResponse>;
-
-export type SearchNamespaceError = DefaultErrors;
-
-export const searchNamespace: API.OperationMethod<
-  SearchNamespaceRequest,
-  SearchNamespaceResponse,
-  SearchNamespaceError,
-  Credentials | HttpClient.HttpClient
-> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
-  input: SearchNamespaceRequest,
-  output: SearchNamespaceResponse,
-  errors: [],
-}));
-
-// =============================================================================
-// NamespaceInstance
-// =============================================================================
-
-export interface ListNamespaceInstancesRequest {
-  name: string;
-  /** Path param */
-  accountId: string;
-  page?: number;
-  perPage?: number;
-  /** Query param: Filter by namespace. */
-  namespace?: string;
-  /** Query param: Field to order results by. */
-  orderBy?: "created_at";
-  /** Query param: Order direction. */
-  orderByDirection?: "asc" | "desc" | (string & {});
-  /** Query param: Filter instances whose id contains this string (case-insensitive). */
-  search?: string;
-}
-
-export const ListNamespaceInstancesRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    name: Schema.String.pipe(T.HttpPath("name")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    page: Schema.optional(Schema.Number).pipe(T.HttpQuery("page")),
-    perPage: Schema.optional(Schema.Number).pipe(T.HttpQuery("per_page")),
-    namespace: Schema.optional(Schema.String).pipe(T.HttpQuery("namespace")),
-    orderBy: Schema.optional(Schema.Literal("created_at")).pipe(
-      T.HttpQuery("order_by"),
-    ),
-    orderByDirection: Schema.optional(
-      Schema.Union([Schema.Literals(["asc", "desc"]), Schema.String]),
-    ).pipe(T.HttpQuery("order_by_direction")),
-    search: Schema.optional(Schema.String).pipe(T.HttpQuery("search")),
-  }).pipe(
-    T.Http({
-      method: "GET",
-      path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances",
-    }),
-  ) as unknown as Schema.Schema<ListNamespaceInstancesRequest>;
-
-export interface ListNamespaceInstancesResponse {
-  result: {
-    id: string;
-    createdAt: string;
-    modifiedAt: string;
-    aiGatewayId?: string | null;
-    aiSearchModel?:
-      | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-      | "@cf/zai-org/glm-4.7-flash"
-      | "@cf/meta/llama-3.1-8b-instruct-fast"
-      | "@cf/meta/llama-3.1-8b-instruct-fp8"
-      | "@cf/meta/llama-4-scout-17b-16e-instruct"
-      | "@cf/qwen/qwen3-30b-a3b-fp8"
-      | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
-      | "@cf/moonshotai/kimi-k2-instruct"
-      | "@cf/google/gemma-3-12b-it"
-      | "@cf/google/gemma-4-26b-a4b-it"
-      | "@cf/moonshotai/kimi-k2.5"
-      | "anthropic/claude-3-7-sonnet"
-      | "anthropic/claude-sonnet-4"
-      | "anthropic/claude-opus-4"
-      | "anthropic/claude-3-5-haiku"
-      | "cerebras/qwen-3-235b-a22b-instruct"
-      | "cerebras/qwen-3-235b-a22b-thinking"
-      | "cerebras/llama-3.3-70b"
-      | "cerebras/llama-4-maverick-17b-128e-instruct"
-      | "cerebras/llama-4-scout-17b-16e-instruct"
-      | "cerebras/gpt-oss-120b"
-      | "google-ai-studio/gemini-2.5-flash"
-      | "google-ai-studio/gemini-2.5-pro"
-      | "grok/grok-4"
-      | "groq/llama-3.3-70b-versatile"
-      | "groq/llama-3.1-8b-instant"
-      | "openai/gpt-5"
-      | "openai/gpt-5-mini"
-      | "openai/gpt-5-nano"
-      | ""
-      | null;
-    cache?: boolean | null;
-    cacheThreshold?:
-      | "super_strict_match"
-      | "close_enough"
-      | "flexible_friend"
-      | "anything_goes"
-      | (string & {})
-      | null;
-    cacheTtl?:
-      | "600"
-      | "1800"
-      | "3600"
-      | "7200"
-      | "21600"
-      | "43200"
-      | "86400"
-      | "172800"
-      | "259200"
-      | "518400"
-      | (string & {})
-      | null;
-    chunkOverlap?: number | null;
-    chunkSize?: number | null;
-    createdBy?: string | null;
-    customMetadata?:
-      | {
-          dataType: "text" | "number" | "boolean" | "datetime" | (string & {});
-          fieldName: string;
-        }[]
-      | null;
-    embeddingModel?:
-      | "@cf/qwen/qwen3-embedding-0.6b"
-      | "@cf/baai/bge-m3"
-      | "@cf/baai/bge-large-en-v1.5"
-      | "@cf/google/embeddinggemma-300m"
-      | "google-ai-studio/gemini-embedding-001"
-      | "google-ai-studio/gemini-embedding-2-preview"
-      | "openai/text-embedding-3-small"
-      | "openai/text-embedding-3-large"
-      | ""
-      | null;
-    enable?: boolean | null;
-    engineVersion?: number | null;
-    fusionMethod?: "max" | "rrf" | (string & {}) | null;
-    hybridSearchEnabled?: boolean | null;
-    indexMethod?: { keyword: boolean; vector: boolean } | null;
-    indexingOptions?: {
-      keywordTokenizer?: "porter" | "trigram" | (string & {}) | null;
-    } | null;
-    lastActivity?: string | null;
-    maxNumResults?: number | null;
-    metadata?: {
-      createdFromAisearchWizard?: boolean | null;
-      workerDomain?: string | null;
-    } | null;
-    modifiedBy?: string | null;
-    namespace?: string | null;
-    paused?: boolean | null;
-    publicEndpointId?: string | null;
-    publicEndpointParams?: {
-      authorizedHosts?: string[] | null;
-      chatCompletionsEndpoint?: { disabled?: boolean | null } | null;
-      enabled?: boolean | null;
-      mcp?: { description?: string | null; disabled?: boolean | null } | null;
-      rateLimit?: {
-        periodMs?: number | null;
-        requests?: number | null;
-        technique?: "fixed" | "sliding" | (string & {}) | null;
-      } | null;
-      searchEndpoint?: { disabled?: boolean | null } | null;
-    } | null;
-    reranking?: boolean | null;
-    rerankingModel?: "@cf/baai/bge-reranker-base" | "" | null;
-    retrievalOptions?: {
-      boostBy?:
-        | {
-            field: string;
-            direction?:
-              | "asc"
-              | "desc"
-              | "exists"
-              | "not_exists"
-              | (string & {})
-              | null;
-          }[]
-        | null;
-      keywordMatchMode?: "and" | "or" | (string & {}) | null;
-    } | null;
-    rewriteModel?:
-      | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-      | "@cf/zai-org/glm-4.7-flash"
-      | "@cf/meta/llama-3.1-8b-instruct-fast"
-      | "@cf/meta/llama-3.1-8b-instruct-fp8"
-      | "@cf/meta/llama-4-scout-17b-16e-instruct"
-      | "@cf/qwen/qwen3-30b-a3b-fp8"
-      | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
-      | "@cf/moonshotai/kimi-k2-instruct"
-      | "@cf/google/gemma-3-12b-it"
-      | "@cf/google/gemma-4-26b-a4b-it"
-      | "@cf/moonshotai/kimi-k2.5"
-      | "anthropic/claude-3-7-sonnet"
-      | "anthropic/claude-sonnet-4"
-      | "anthropic/claude-opus-4"
-      | "anthropic/claude-3-5-haiku"
-      | "cerebras/qwen-3-235b-a22b-instruct"
-      | "cerebras/qwen-3-235b-a22b-thinking"
-      | "cerebras/llama-3.3-70b"
-      | "cerebras/llama-4-maverick-17b-128e-instruct"
-      | "cerebras/llama-4-scout-17b-16e-instruct"
-      | "cerebras/gpt-oss-120b"
-      | "google-ai-studio/gemini-2.5-flash"
-      | "google-ai-studio/gemini-2.5-pro"
-      | "grok/grok-4"
-      | "groq/llama-3.3-70b-versatile"
-      | "groq/llama-3.1-8b-instant"
-      | "openai/gpt-5"
-      | "openai/gpt-5-mini"
-      | "openai/gpt-5-nano"
-      | ""
-      | null;
-    rewriteQuery?: boolean | null;
-    scoreThreshold?: number | null;
-    source?: string | null;
-    sourceParams?: {
-      excludeItems?: string[] | null;
-      includeItems?: string[] | null;
-      prefix?: string | null;
-      r2Jurisdiction?: string | null;
-      webCrawler?: {
-        crawlOptions?: {
-          depth?: number | null;
-          includeExternalLinks?: boolean | null;
-          includeSubdomains?: boolean | null;
-          maxAge?: number | null;
-          source?: "all" | "sitemaps" | "links" | (string & {}) | null;
-        } | null;
-        parseOptions?: {
-          contentSelector?: { path: string; selector: string }[] | null;
-          includeHeaders?: Record<string, unknown> | null;
-          includeImages?: boolean | null;
-          specificSitemaps?: string[] | null;
-          useBrowserRendering?: boolean | null;
-        } | null;
-        parseType?: "sitemap" | "feed-rss" | "crawl" | (string & {}) | null;
-        storeOptions?: {
-          storageId: string;
-          r2Jurisdiction?: string | null;
-          storageType?: "r2" | null;
-        } | null;
-      } | null;
-    } | null;
-    status?: string | null;
-    syncInterval?:
-      | "900"
-      | "1800"
-      | "3600"
-      | "7200"
-      | "14400"
-      | "21600"
-      | "43200"
-      | "86400"
-      | (string & {})
-      | null;
-    tokenId?: string | null;
-    type?: "r2" | "web-crawler" | null;
-  }[];
-  resultInfo?: {
-    count?: number | null;
-    page?: number | null;
-    perPage?: number | null;
-    totalCount?: number | null;
-  } | null;
-}
-
-export const ListNamespaceInstancesResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    result: Schema.Array(
-      Schema.Struct({
-        id: Schema.String,
-        createdAt: Schema.String,
-        modifiedAt: Schema.String,
-        aiGatewayId: Schema.optional(
-          Schema.Union([Schema.String, Schema.Null]),
-        ),
-        aiSearchModel: Schema.optional(
-          Schema.Union([
-            Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-            Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-            Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-            Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-            Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-            Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-            Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-            Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-            Schema.Literal("@cf/google/gemma-3-12b-it"),
-            Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-            Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-            Schema.Literal("anthropic/claude-3-7-sonnet"),
-            Schema.Literal("anthropic/claude-sonnet-4"),
-            Schema.Literal("anthropic/claude-opus-4"),
-            Schema.Literal("anthropic/claude-3-5-haiku"),
-            Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-            Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-            Schema.Literal("cerebras/llama-3.3-70b"),
-            Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-            Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-            Schema.Literal("cerebras/gpt-oss-120b"),
-            Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-            Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-            Schema.Literal("grok/grok-4"),
-            Schema.Literal("groq/llama-3.3-70b-versatile"),
-            Schema.Literal("groq/llama-3.1-8b-instant"),
-            Schema.Literal("openai/gpt-5"),
-            Schema.Literal("openai/gpt-5-mini"),
-            Schema.Literal("openai/gpt-5-nano"),
-            Schema.Literal(""),
-            Schema.Null,
-          ]),
-        ),
-        cache: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-        cacheThreshold: Schema.optional(
-          Schema.Union([
-            Schema.Union([
-              Schema.Literals([
-                "super_strict_match",
-                "close_enough",
-                "flexible_friend",
-                "anything_goes",
-              ]),
-              Schema.String,
-            ]),
-            Schema.Null,
-          ]),
-        ),
-        cacheTtl: Schema.optional(
-          Schema.Union([
-            Schema.Union([
-              Schema.Literals([
-                "600",
-                "1800",
-                "3600",
-                "7200",
-                "21600",
-                "43200",
-                "86400",
-                "172800",
-                "259200",
-                "518400",
-              ]),
-              Schema.String,
-            ]),
-            Schema.Null,
-          ]),
-        ),
-        chunkOverlap: Schema.optional(
-          Schema.Union([Schema.Number, Schema.Null]),
-        ),
-        chunkSize: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-        createdBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-        customMetadata: Schema.optional(
-          Schema.Union([
-            Schema.Array(
-              Schema.Struct({
-                dataType: Schema.Union([
-                  Schema.Literals(["text", "number", "boolean", "datetime"]),
-                  Schema.String,
-                ]),
-                fieldName: Schema.String,
-              }).pipe(
-                Schema.encodeKeys({
-                  dataType: "data_type",
-                  fieldName: "field_name",
-                }),
-              ),
-            ),
-            Schema.Null,
-          ]),
-        ),
-        embeddingModel: Schema.optional(
-          Schema.Union([
-            Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
-            Schema.Literal("@cf/baai/bge-m3"),
-            Schema.Literal("@cf/baai/bge-large-en-v1.5"),
-            Schema.Literal("@cf/google/embeddinggemma-300m"),
-            Schema.Literal("google-ai-studio/gemini-embedding-001"),
-            Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
-            Schema.Literal("openai/text-embedding-3-small"),
-            Schema.Literal("openai/text-embedding-3-large"),
-            Schema.Literal(""),
-            Schema.Null,
-          ]),
-        ),
-        enable: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-        engineVersion: Schema.optional(
-          Schema.Union([Schema.Number, Schema.Null]),
-        ),
-        fusionMethod: Schema.optional(
-          Schema.Union([
-            Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
-            Schema.Null,
-          ]),
-        ),
-        hybridSearchEnabled: Schema.optional(
-          Schema.Union([Schema.Boolean, Schema.Null]),
-        ),
-        indexMethod: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              keyword: Schema.Boolean,
-              vector: Schema.Boolean,
-            }),
-            Schema.Null,
-          ]),
-        ),
-        indexingOptions: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              keywordTokenizer: Schema.optional(
-                Schema.Union([
-                  Schema.Union([
-                    Schema.Literals(["porter", "trigram"]),
-                    Schema.String,
-                  ]),
-                  Schema.Null,
-                ]),
-              ),
-            }).pipe(
-              Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" }),
-            ),
-            Schema.Null,
-          ]),
-        ),
-        lastActivity: Schema.optional(
-          Schema.Union([Schema.String, Schema.Null]),
-        ),
-        maxNumResults: Schema.optional(
-          Schema.Union([Schema.Number, Schema.Null]),
-        ),
-        metadata: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              createdFromAisearchWizard: Schema.optional(
-                Schema.Union([Schema.Boolean, Schema.Null]),
-              ),
-              workerDomain: Schema.optional(
-                Schema.Union([Schema.String, Schema.Null]),
-              ),
-            }).pipe(
-              Schema.encodeKeys({
-                createdFromAisearchWizard: "created_from_aisearch_wizard",
-                workerDomain: "worker_domain",
-              }),
-            ),
-            Schema.Null,
-          ]),
-        ),
-        modifiedBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-        namespace: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-        paused: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-        publicEndpointId: Schema.optional(
-          Schema.Union([Schema.String, Schema.Null]),
-        ),
-        publicEndpointParams: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              authorizedHosts: Schema.optional(
-                Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-              ),
-              chatCompletionsEndpoint: Schema.optional(
-                Schema.Union([
-                  Schema.Struct({
-                    disabled: Schema.optional(
-                      Schema.Union([Schema.Boolean, Schema.Null]),
-                    ),
-                  }),
-                  Schema.Null,
-                ]),
-              ),
-              enabled: Schema.optional(
-                Schema.Union([Schema.Boolean, Schema.Null]),
-              ),
-              mcp: Schema.optional(
-                Schema.Union([
-                  Schema.Struct({
-                    description: Schema.optional(
-                      Schema.Union([Schema.String, Schema.Null]),
-                    ),
-                    disabled: Schema.optional(
-                      Schema.Union([Schema.Boolean, Schema.Null]),
-                    ),
-                  }),
-                  Schema.Null,
-                ]),
-              ),
-              rateLimit: Schema.optional(
-                Schema.Union([
-                  Schema.Struct({
-                    periodMs: Schema.optional(
-                      Schema.Union([Schema.Number, Schema.Null]),
-                    ),
-                    requests: Schema.optional(
-                      Schema.Union([Schema.Number, Schema.Null]),
-                    ),
-                    technique: Schema.optional(
-                      Schema.Union([
-                        Schema.Union([
-                          Schema.Literals(["fixed", "sliding"]),
-                          Schema.String,
-                        ]),
-                        Schema.Null,
-                      ]),
-                    ),
-                  }).pipe(
-                    Schema.encodeKeys({
-                      periodMs: "period_ms",
-                      requests: "requests",
-                      technique: "technique",
-                    }),
-                  ),
-                  Schema.Null,
-                ]),
-              ),
-              searchEndpoint: Schema.optional(
-                Schema.Union([
-                  Schema.Struct({
-                    disabled: Schema.optional(
-                      Schema.Union([Schema.Boolean, Schema.Null]),
-                    ),
-                  }),
-                  Schema.Null,
-                ]),
-              ),
-            }).pipe(
-              Schema.encodeKeys({
-                authorizedHosts: "authorized_hosts",
-                chatCompletionsEndpoint: "chat_completions_endpoint",
-                enabled: "enabled",
-                mcp: "mcp",
-                rateLimit: "rate_limit",
-                searchEndpoint: "search_endpoint",
-              }),
-            ),
-            Schema.Null,
-          ]),
-        ),
-        reranking: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-        rerankingModel: Schema.optional(
-          Schema.Union([
-            Schema.Literal("@cf/baai/bge-reranker-base"),
-            Schema.Literal(""),
-            Schema.Null,
-          ]),
-        ),
-        retrievalOptions: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              boostBy: Schema.optional(
-                Schema.Union([
-                  Schema.Array(
-                    Schema.Struct({
-                      field: Schema.String,
-                      direction: Schema.optional(
-                        Schema.Union([
-                          Schema.Union([
-                            Schema.Literals([
-                              "asc",
-                              "desc",
-                              "exists",
-                              "not_exists",
-                            ]),
-                            Schema.String,
-                          ]),
-                          Schema.Null,
-                        ]),
-                      ),
-                    }),
-                  ),
-                  Schema.Null,
-                ]),
-              ),
-              keywordMatchMode: Schema.optional(
-                Schema.Union([
-                  Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
-                  Schema.Null,
-                ]),
-              ),
-            }).pipe(
-              Schema.encodeKeys({
-                boostBy: "boost_by",
-                keywordMatchMode: "keyword_match_mode",
-              }),
-            ),
-            Schema.Null,
-          ]),
-        ),
-        rewriteModel: Schema.optional(
-          Schema.Union([
-            Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-            Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-            Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-            Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-            Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-            Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-            Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-            Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-            Schema.Literal("@cf/google/gemma-3-12b-it"),
-            Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-            Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-            Schema.Literal("anthropic/claude-3-7-sonnet"),
-            Schema.Literal("anthropic/claude-sonnet-4"),
-            Schema.Literal("anthropic/claude-opus-4"),
-            Schema.Literal("anthropic/claude-3-5-haiku"),
-            Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-            Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-            Schema.Literal("cerebras/llama-3.3-70b"),
-            Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-            Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-            Schema.Literal("cerebras/gpt-oss-120b"),
-            Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-            Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-            Schema.Literal("grok/grok-4"),
-            Schema.Literal("groq/llama-3.3-70b-versatile"),
-            Schema.Literal("groq/llama-3.1-8b-instant"),
-            Schema.Literal("openai/gpt-5"),
-            Schema.Literal("openai/gpt-5-mini"),
-            Schema.Literal("openai/gpt-5-nano"),
-            Schema.Literal(""),
-            Schema.Null,
-          ]),
-        ),
-        rewriteQuery: Schema.optional(
-          Schema.Union([Schema.Boolean, Schema.Null]),
-        ),
-        scoreThreshold: Schema.optional(
-          Schema.Union([Schema.Number, Schema.Null]),
-        ),
-        source: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-        sourceParams: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              excludeItems: Schema.optional(
-                Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-              ),
-              includeItems: Schema.optional(
-                Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-              ),
-              prefix: Schema.optional(
-                Schema.Union([Schema.String, Schema.Null]),
-              ),
-              r2Jurisdiction: Schema.optional(
-                Schema.Union([Schema.String, Schema.Null]),
-              ),
-              webCrawler: Schema.optional(
-                Schema.Union([
-                  Schema.Struct({
-                    crawlOptions: Schema.optional(
-                      Schema.Union([
-                        Schema.Struct({
-                          depth: Schema.optional(
-                            Schema.Union([Schema.Number, Schema.Null]),
-                          ),
-                          includeExternalLinks: Schema.optional(
-                            Schema.Union([Schema.Boolean, Schema.Null]),
-                          ),
-                          includeSubdomains: Schema.optional(
-                            Schema.Union([Schema.Boolean, Schema.Null]),
-                          ),
-                          maxAge: Schema.optional(
-                            Schema.Union([Schema.Number, Schema.Null]),
-                          ),
-                          source: Schema.optional(
-                            Schema.Union([
-                              Schema.Union([
-                                Schema.Literals(["all", "sitemaps", "links"]),
-                                Schema.String,
-                              ]),
-                              Schema.Null,
-                            ]),
-                          ),
-                        }).pipe(
-                          Schema.encodeKeys({
-                            depth: "depth",
-                            includeExternalLinks: "include_external_links",
-                            includeSubdomains: "include_subdomains",
-                            maxAge: "max_age",
-                            source: "source",
-                          }),
-                        ),
-                        Schema.Null,
-                      ]),
-                    ),
-                    parseOptions: Schema.optional(
-                      Schema.Union([
-                        Schema.Struct({
-                          contentSelector: Schema.optional(
-                            Schema.Union([
-                              Schema.Array(
-                                Schema.Struct({
-                                  path: Schema.String,
-                                  selector: Schema.String,
-                                }),
-                              ),
-                              Schema.Null,
-                            ]),
-                          ),
-                          includeHeaders: Schema.optional(
-                            Schema.Union([
-                              Schema.Record(Schema.String, Schema.Unknown),
-                              Schema.Null,
-                            ]),
-                          ),
-                          includeImages: Schema.optional(
-                            Schema.Union([Schema.Boolean, Schema.Null]),
-                          ),
-                          specificSitemaps: Schema.optional(
-                            Schema.Union([
-                              Schema.Array(Schema.String),
-                              Schema.Null,
-                            ]),
-                          ),
-                          useBrowserRendering: Schema.optional(
-                            Schema.Union([Schema.Boolean, Schema.Null]),
-                          ),
-                        }).pipe(
-                          Schema.encodeKeys({
-                            contentSelector: "content_selector",
-                            includeHeaders: "include_headers",
-                            includeImages: "include_images",
-                            specificSitemaps: "specific_sitemaps",
-                            useBrowserRendering: "use_browser_rendering",
-                          }),
-                        ),
-                        Schema.Null,
-                      ]),
-                    ),
-                    parseType: Schema.optional(
-                      Schema.Union([
-                        Schema.Union([
-                          Schema.Literals(["sitemap", "feed-rss", "crawl"]),
-                          Schema.String,
-                        ]),
-                        Schema.Null,
-                      ]),
-                    ),
-                    storeOptions: Schema.optional(
-                      Schema.Union([
-                        Schema.Struct({
-                          storageId: Schema.String,
-                          r2Jurisdiction: Schema.optional(
-                            Schema.Union([Schema.String, Schema.Null]),
-                          ),
-                          storageType: Schema.optional(
-                            Schema.Union([Schema.Literal("r2"), Schema.Null]),
-                          ),
-                        }).pipe(
-                          Schema.encodeKeys({
-                            storageId: "storage_id",
-                            r2Jurisdiction: "r2_jurisdiction",
-                            storageType: "storage_type",
-                          }),
-                        ),
-                        Schema.Null,
-                      ]),
-                    ),
-                  }).pipe(
-                    Schema.encodeKeys({
-                      crawlOptions: "crawl_options",
-                      parseOptions: "parse_options",
-                      parseType: "parse_type",
-                      storeOptions: "store_options",
-                    }),
-                  ),
-                  Schema.Null,
-                ]),
-              ),
-            }).pipe(
-              Schema.encodeKeys({
-                excludeItems: "exclude_items",
-                includeItems: "include_items",
-                prefix: "prefix",
-                r2Jurisdiction: "r2_jurisdiction",
-                webCrawler: "web_crawler",
-              }),
-            ),
-            Schema.Null,
-          ]),
-        ),
-        status: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-        syncInterval: Schema.optional(
-          Schema.Union([
-            Schema.Union([
-              Schema.Literals([
-                "900",
-                "1800",
-                "3600",
-                "7200",
-                "14400",
-                "21600",
-                "43200",
-                "86400",
-              ]),
-              Schema.String,
-            ]),
-            Schema.Null,
-          ]),
-        ),
-        tokenId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-        type: Schema.optional(
-          Schema.Union([
-            Schema.Literal("r2"),
-            Schema.Literal("web-crawler"),
-            Schema.Null,
-          ]),
-        ),
-      }).pipe(
-        Schema.encodeKeys({
-          id: "id",
-          createdAt: "created_at",
-          modifiedAt: "modified_at",
-          aiGatewayId: "ai_gateway_id",
-          aiSearchModel: "ai_search_model",
-          cache: "cache",
-          cacheThreshold: "cache_threshold",
-          cacheTtl: "cache_ttl",
-          chunkOverlap: "chunk_overlap",
-          chunkSize: "chunk_size",
-          createdBy: "created_by",
-          customMetadata: "custom_metadata",
-          embeddingModel: "embedding_model",
-          enable: "enable",
-          engineVersion: "engine_version",
-          fusionMethod: "fusion_method",
-          hybridSearchEnabled: "hybrid_search_enabled",
-          indexMethod: "index_method",
-          indexingOptions: "indexing_options",
-          lastActivity: "last_activity",
-          maxNumResults: "max_num_results",
-          metadata: "metadata",
-          modifiedBy: "modified_by",
-          namespace: "namespace",
-          paused: "paused",
-          publicEndpointId: "public_endpoint_id",
-          publicEndpointParams: "public_endpoint_params",
-          reranking: "reranking",
-          rerankingModel: "reranking_model",
-          retrievalOptions: "retrieval_options",
-          rewriteModel: "rewrite_model",
-          rewriteQuery: "rewrite_query",
-          scoreThreshold: "score_threshold",
-          source: "source",
-          sourceParams: "source_params",
-          status: "status",
-          syncInterval: "sync_interval",
-          tokenId: "token_id",
-          type: "type",
-        }),
-      ),
-    ),
-    resultInfo: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          count: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-          page: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-          perPage: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-          totalCount: Schema.optional(
-            Schema.Union([Schema.Number, Schema.Null]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            count: "count",
-            page: "page",
-            perPage: "per_page",
-            totalCount: "total_count",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-  }).pipe(
-    Schema.encodeKeys({ result: "result", resultInfo: "result_info" }),
-  ) as unknown as Schema.Schema<ListNamespaceInstancesResponse>;
-
-export type ListNamespaceInstancesError = DefaultErrors;
-
-export const listNamespaceInstances: API.PaginatedOperationMethod<
-  ListNamespaceInstancesRequest,
-  ListNamespaceInstancesResponse,
-  ListNamespaceInstancesError,
-  Credentials | HttpClient.HttpClient
-> = /*@__PURE__*/ /*#__PURE__*/ API.makePaginated(() => ({
-  input: ListNamespaceInstancesRequest,
-  output: ListNamespaceInstancesResponse,
-  errors: [],
-  pagination: {
-    mode: "page",
-    inputToken: "page",
-    outputToken: "resultInfo.page",
-    items: "result",
-    pageSize: "perPage",
-  } as const,
-}));
-
-export interface CreateNamespaceInstanceRequest {
-  name: string;
-  /** Path param */
-  accountId: string;
-  /** Body param: AI Search instance ID. Lowercase alphanumeric, hyphens, and underscores. */
-  id: string;
-  /** Body param */
-  aiGatewayId?: string | null;
-  /** Body param */
-  aiSearchModel?:
-    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-    | "@cf/zai-org/glm-4.7-flash"
-    | "@cf/meta/llama-3.1-8b-instruct-fast"
-    | "@cf/meta/llama-3.1-8b-instruct-fp8"
-    | "@cf/meta/llama-4-scout-17b-16e-instruct"
-    | "@cf/qwen/qwen3-30b-a3b-fp8"
-    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
-    | "@cf/moonshotai/kimi-k2-instruct"
-    | "@cf/google/gemma-3-12b-it"
-    | "@cf/google/gemma-4-26b-a4b-it"
-    | "@cf/moonshotai/kimi-k2.5"
-    | "anthropic/claude-3-7-sonnet"
-    | "anthropic/claude-sonnet-4"
-    | "anthropic/claude-opus-4"
-    | "anthropic/claude-3-5-haiku"
-    | "cerebras/qwen-3-235b-a22b-instruct"
-    | "cerebras/qwen-3-235b-a22b-thinking"
-    | "cerebras/llama-3.3-70b"
-    | "cerebras/llama-4-maverick-17b-128e-instruct"
-    | "cerebras/llama-4-scout-17b-16e-instruct"
-    | "cerebras/gpt-oss-120b"
-    | "google-ai-studio/gemini-2.5-flash"
-    | "google-ai-studio/gemini-2.5-pro"
-    | "grok/grok-4"
-    | "groq/llama-3.3-70b-versatile"
-    | "groq/llama-3.1-8b-instant"
-    | "openai/gpt-5"
-    | "openai/gpt-5-mini"
-    | "openai/gpt-5-nano"
-    | ""
-    | null;
-  /** Body param */
-  cache?: boolean;
-  /** Body param */
-  cacheThreshold?:
-    | "super_strict_match"
-    | "close_enough"
-    | "flexible_friend"
-    | "anything_goes"
-    | (string & {});
-  /** Body param: Cache entry TTL in seconds. Allowed values: 600 (10min), 1800 (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h), 86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d). */
-  cacheTtl?:
-    | "600"
-    | "1800"
-    | "3600"
-    | "7200"
-    | "21600"
-    | "43200"
-    | "86400"
-    | "172800"
-    | "259200"
-    | "518400"
-    | (string & {});
-  /** Body param */
-  chunk?: boolean;
-  /** Body param */
-  chunkOverlap?: number;
-  /** Body param */
-  chunkSize?: number;
-  /** Body param */
-  customMetadata?: {
-    dataType: "text" | "number" | "boolean" | "datetime" | (string & {});
-    fieldName: string;
-  }[];
-  /** Body param */
-  embeddingModel?:
-    | "@cf/qwen/qwen3-embedding-0.6b"
-    | "@cf/baai/bge-m3"
-    | "@cf/baai/bge-large-en-v1.5"
-    | "@cf/google/embeddinggemma-300m"
-    | "google-ai-studio/gemini-embedding-001"
-    | "google-ai-studio/gemini-embedding-2-preview"
-    | "openai/text-embedding-3-small"
-    | "openai/text-embedding-3-large"
-    | ""
-    | null;
-  /** Body param */
-  fusionMethod?: "max" | "rrf" | (string & {});
-  /** @deprecated Body param: Deprecated — use index_method instead. */
-  hybridSearchEnabled?: boolean;
-  /** Body param: Controls which storage backends are used during indexing. Defaults to vector-only. */
-  indexMethod?: { keyword: boolean; vector: boolean };
-  /** Body param */
-  indexingOptions?: {
-    keywordTokenizer?: "porter" | "trigram" | (string & {});
-  } | null;
-  /** Body param */
-  maxNumResults?: number;
-  /** Body param */
-  metadata?: { createdFromAisearchWizard?: boolean; workerDomain?: string };
-  /** Body param */
-  publicEndpointParams?: {
-    authorizedHosts?: string[];
-    chatCompletionsEndpoint?: { disabled?: boolean };
-    enabled?: boolean;
-    mcp?: { description?: string; disabled?: boolean };
-    rateLimit?: {
-      periodMs?: number;
-      requests?: number;
-      technique?: "fixed" | "sliding" | (string & {});
-    };
-    searchEndpoint?: { disabled?: boolean };
-  };
-  /** Body param */
-  reranking?: boolean;
-  /** Body param */
-  rerankingModel?: "@cf/baai/bge-reranker-base" | "" | null;
-  /** Body param */
-  retrievalOptions?: {
-    boostBy?: {
-      field: string;
-      direction?: "asc" | "desc" | "exists" | "not_exists" | (string & {});
-    }[];
-    keywordMatchMode?: "and" | "or" | (string & {});
-  } | null;
-  /** Body param */
-  rewriteModel?:
-    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-    | "@cf/zai-org/glm-4.7-flash"
-    | "@cf/meta/llama-3.1-8b-instruct-fast"
-    | "@cf/meta/llama-3.1-8b-instruct-fp8"
-    | "@cf/meta/llama-4-scout-17b-16e-instruct"
-    | "@cf/qwen/qwen3-30b-a3b-fp8"
-    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
-    | "@cf/moonshotai/kimi-k2-instruct"
-    | "@cf/google/gemma-3-12b-it"
-    | "@cf/google/gemma-4-26b-a4b-it"
-    | "@cf/moonshotai/kimi-k2.5"
-    | "anthropic/claude-3-7-sonnet"
-    | "anthropic/claude-sonnet-4"
-    | "anthropic/claude-opus-4"
-    | "anthropic/claude-3-5-haiku"
-    | "cerebras/qwen-3-235b-a22b-instruct"
-    | "cerebras/qwen-3-235b-a22b-thinking"
-    | "cerebras/llama-3.3-70b"
-    | "cerebras/llama-4-maverick-17b-128e-instruct"
-    | "cerebras/llama-4-scout-17b-16e-instruct"
-    | "cerebras/gpt-oss-120b"
-    | "google-ai-studio/gemini-2.5-flash"
-    | "google-ai-studio/gemini-2.5-pro"
-    | "grok/grok-4"
-    | "groq/llama-3.3-70b-versatile"
-    | "groq/llama-3.1-8b-instant"
-    | "openai/gpt-5"
-    | "openai/gpt-5-mini"
-    | "openai/gpt-5-nano"
-    | ""
-    | null;
-  /** Body param */
-  rewriteQuery?: boolean;
-  /** Body param */
-  scoreThreshold?: number;
-  /** Body param */
-  source?: string | null;
-  /** Body param */
-  sourceParams?: {
-    excludeItems?: string[];
-    includeItems?: string[];
-    prefix?: string;
-    r2Jurisdiction?: string;
-    webCrawler?: {
-      crawlOptions?: {
-        depth?: number;
-        includeExternalLinks?: boolean;
-        includeSubdomains?: boolean;
-        maxAge?: number;
-        source?: "all" | "sitemaps" | "links" | (string & {});
-      };
-      parseOptions?: {
-        contentSelector?: { path: string; selector: string }[];
-        includeHeaders?: Record<string, unknown>;
-        includeImages?: boolean;
-        specificSitemaps?: string[];
-        useBrowserRendering?: boolean;
-      };
-      parseType?: "sitemap" | "feed-rss" | "crawl" | (string & {});
-      storeOptions?: {
-        storageId: string;
-        r2Jurisdiction?: string;
-        storageType?: "r2";
-      };
-    };
-  } | null;
-  /** Body param: Interval between automatic syncs, in seconds. Allowed values: 900 (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h), 21600 (6h), 43200 (12h), 86400 (24h). */
-  syncInterval?:
-    | "900"
-    | "1800"
-    | "3600"
-    | "7200"
-    | "14400"
-    | "21600"
-    | "43200"
-    | "86400"
-    | (string & {});
-  /** Body param */
-  tokenId?: string;
-  /** Body param */
-  type?: "r2" | "web-crawler" | null;
-}
-
-export const CreateNamespaceInstanceRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    name: Schema.String.pipe(T.HttpPath("name")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    id: Schema.String,
-    aiGatewayId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    aiSearchModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-        Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-        Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-        Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-        Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-        Schema.Literal("@cf/google/gemma-3-12b-it"),
-        Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-        Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-        Schema.Literal("anthropic/claude-3-7-sonnet"),
-        Schema.Literal("anthropic/claude-sonnet-4"),
-        Schema.Literal("anthropic/claude-opus-4"),
-        Schema.Literal("anthropic/claude-3-5-haiku"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-        Schema.Literal("cerebras/llama-3.3-70b"),
-        Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-        Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("cerebras/gpt-oss-120b"),
-        Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-        Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-        Schema.Literal("grok/grok-4"),
-        Schema.Literal("groq/llama-3.3-70b-versatile"),
-        Schema.Literal("groq/llama-3.1-8b-instant"),
-        Schema.Literal("openai/gpt-5"),
-        Schema.Literal("openai/gpt-5-mini"),
-        Schema.Literal("openai/gpt-5-nano"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    cache: Schema.optional(Schema.Boolean),
-    cacheThreshold: Schema.optional(
-      Schema.Union([
-        Schema.Literals([
-          "super_strict_match",
-          "close_enough",
-          "flexible_friend",
-          "anything_goes",
-        ]),
-        Schema.String,
-      ]),
-    ),
-    cacheTtl: Schema.optional(
-      Schema.Union([
-        Schema.Literals([
-          "600",
-          "1800",
-          "3600",
-          "7200",
-          "21600",
-          "43200",
-          "86400",
-          "172800",
-          "259200",
-          "518400",
-        ]),
-        Schema.String,
-      ]),
-    ),
-    chunk: Schema.optional(Schema.Boolean),
-    chunkOverlap: Schema.optional(Schema.Number),
-    chunkSize: Schema.optional(Schema.Number),
-    customMetadata: Schema.optional(
-      Schema.Array(
-        Schema.Struct({
-          dataType: Schema.Union([
-            Schema.Literals(["text", "number", "boolean", "datetime"]),
-            Schema.String,
-          ]),
-          fieldName: Schema.String,
-        }).pipe(
-          Schema.encodeKeys({ dataType: "data_type", fieldName: "field_name" }),
-        ),
-      ),
-    ),
-    embeddingModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
-        Schema.Literal("@cf/baai/bge-m3"),
-        Schema.Literal("@cf/baai/bge-large-en-v1.5"),
-        Schema.Literal("@cf/google/embeddinggemma-300m"),
-        Schema.Literal("google-ai-studio/gemini-embedding-001"),
-        Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
-        Schema.Literal("openai/text-embedding-3-small"),
-        Schema.Literal("openai/text-embedding-3-large"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    fusionMethod: Schema.optional(
-      Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
-    ),
-    hybridSearchEnabled: Schema.optional(Schema.Boolean),
-    indexMethod: Schema.optional(
-      Schema.Struct({
-        keyword: Schema.Boolean,
-        vector: Schema.Boolean,
-      }),
-    ),
-    indexingOptions: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          keywordTokenizer: Schema.optional(
-            Schema.Union([
-              Schema.Literals(["porter", "trigram"]),
-              Schema.String,
-            ]),
-          ),
-        }).pipe(Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" })),
-        Schema.Null,
-      ]),
-    ),
-    maxNumResults: Schema.optional(Schema.Number),
-    metadata: Schema.optional(
-      Schema.Struct({
-        createdFromAisearchWizard: Schema.optional(Schema.Boolean),
-        workerDomain: Schema.optional(Schema.String),
-      }).pipe(
-        Schema.encodeKeys({
-          createdFromAisearchWizard: "created_from_aisearch_wizard",
-          workerDomain: "worker_domain",
-        }),
-      ),
-    ),
-    publicEndpointParams: Schema.optional(
-      Schema.Struct({
-        authorizedHosts: Schema.optional(Schema.Array(Schema.String)),
-        chatCompletionsEndpoint: Schema.optional(
-          Schema.Struct({
-            disabled: Schema.optional(Schema.Boolean),
-          }),
-        ),
-        enabled: Schema.optional(Schema.Boolean),
-        mcp: Schema.optional(
-          Schema.Struct({
-            description: Schema.optional(Schema.String),
-            disabled: Schema.optional(Schema.Boolean),
-          }),
-        ),
-        rateLimit: Schema.optional(
-          Schema.Struct({
-            periodMs: Schema.optional(Schema.Number),
-            requests: Schema.optional(Schema.Number),
-            technique: Schema.optional(
-              Schema.Union([
-                Schema.Literals(["fixed", "sliding"]),
-                Schema.String,
-              ]),
-            ),
-          }).pipe(
-            Schema.encodeKeys({
-              periodMs: "period_ms",
-              requests: "requests",
-              technique: "technique",
-            }),
-          ),
-        ),
-        searchEndpoint: Schema.optional(
-          Schema.Struct({
-            disabled: Schema.optional(Schema.Boolean),
-          }),
-        ),
-      }).pipe(
-        Schema.encodeKeys({
-          authorizedHosts: "authorized_hosts",
-          chatCompletionsEndpoint: "chat_completions_endpoint",
-          enabled: "enabled",
-          mcp: "mcp",
-          rateLimit: "rate_limit",
-          searchEndpoint: "search_endpoint",
-        }),
-      ),
-    ),
-    reranking: Schema.optional(Schema.Boolean),
-    rerankingModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/baai/bge-reranker-base"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    retrievalOptions: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          boostBy: Schema.optional(
-            Schema.Array(
-              Schema.Struct({
-                field: Schema.String,
-                direction: Schema.optional(
-                  Schema.Union([
-                    Schema.Literals(["asc", "desc", "exists", "not_exists"]),
-                    Schema.String,
-                  ]),
-                ),
-              }),
-            ),
-          ),
-          keywordMatchMode: Schema.optional(
-            Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            boostBy: "boost_by",
-            keywordMatchMode: "keyword_match_mode",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    rewriteModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-        Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-        Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-        Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-        Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-        Schema.Literal("@cf/google/gemma-3-12b-it"),
-        Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-        Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-        Schema.Literal("anthropic/claude-3-7-sonnet"),
-        Schema.Literal("anthropic/claude-sonnet-4"),
-        Schema.Literal("anthropic/claude-opus-4"),
-        Schema.Literal("anthropic/claude-3-5-haiku"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-        Schema.Literal("cerebras/llama-3.3-70b"),
-        Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-        Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("cerebras/gpt-oss-120b"),
-        Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-        Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-        Schema.Literal("grok/grok-4"),
-        Schema.Literal("groq/llama-3.3-70b-versatile"),
-        Schema.Literal("groq/llama-3.1-8b-instant"),
-        Schema.Literal("openai/gpt-5"),
-        Schema.Literal("openai/gpt-5-mini"),
-        Schema.Literal("openai/gpt-5-nano"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    rewriteQuery: Schema.optional(Schema.Boolean),
-    scoreThreshold: Schema.optional(Schema.Number),
-    source: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    sourceParams: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          excludeItems: Schema.optional(Schema.Array(Schema.String)),
-          includeItems: Schema.optional(Schema.Array(Schema.String)),
-          prefix: Schema.optional(Schema.String),
-          r2Jurisdiction: Schema.optional(Schema.String),
-          webCrawler: Schema.optional(
-            Schema.Struct({
-              crawlOptions: Schema.optional(
-                Schema.Struct({
-                  depth: Schema.optional(Schema.Number),
-                  includeExternalLinks: Schema.optional(Schema.Boolean),
-                  includeSubdomains: Schema.optional(Schema.Boolean),
-                  maxAge: Schema.optional(Schema.Number),
-                  source: Schema.optional(
-                    Schema.Union([
-                      Schema.Literals(["all", "sitemaps", "links"]),
-                      Schema.String,
-                    ]),
-                  ),
-                }).pipe(
-                  Schema.encodeKeys({
-                    depth: "depth",
-                    includeExternalLinks: "include_external_links",
-                    includeSubdomains: "include_subdomains",
-                    maxAge: "max_age",
-                    source: "source",
-                  }),
-                ),
-              ),
-              parseOptions: Schema.optional(
-                Schema.Struct({
-                  contentSelector: Schema.optional(
-                    Schema.Array(
-                      Schema.Struct({
-                        path: Schema.String,
-                        selector: Schema.String,
-                      }),
-                    ),
-                  ),
-                  includeHeaders: Schema.optional(
-                    Schema.Record(Schema.String, Schema.Unknown),
-                  ),
-                  includeImages: Schema.optional(Schema.Boolean),
-                  specificSitemaps: Schema.optional(
-                    Schema.Array(Schema.String),
-                  ),
-                  useBrowserRendering: Schema.optional(Schema.Boolean),
-                }).pipe(
-                  Schema.encodeKeys({
-                    contentSelector: "content_selector",
-                    includeHeaders: "include_headers",
-                    includeImages: "include_images",
-                    specificSitemaps: "specific_sitemaps",
-                    useBrowserRendering: "use_browser_rendering",
-                  }),
-                ),
-              ),
-              parseType: Schema.optional(
-                Schema.Union([
-                  Schema.Literals(["sitemap", "feed-rss", "crawl"]),
-                  Schema.String,
-                ]),
-              ),
-              storeOptions: Schema.optional(
-                Schema.Struct({
-                  storageId: Schema.String,
-                  r2Jurisdiction: Schema.optional(Schema.String),
-                  storageType: Schema.optional(Schema.Literal("r2")),
-                }).pipe(
-                  Schema.encodeKeys({
-                    storageId: "storage_id",
-                    r2Jurisdiction: "r2_jurisdiction",
-                    storageType: "storage_type",
-                  }),
-                ),
-              ),
-            }).pipe(
-              Schema.encodeKeys({
-                crawlOptions: "crawl_options",
-                parseOptions: "parse_options",
-                parseType: "parse_type",
-                storeOptions: "store_options",
-              }),
-            ),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            excludeItems: "exclude_items",
-            includeItems: "include_items",
-            prefix: "prefix",
-            r2Jurisdiction: "r2_jurisdiction",
-            webCrawler: "web_crawler",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    syncInterval: Schema.optional(
-      Schema.Union([
-        Schema.Literals([
-          "900",
-          "1800",
-          "3600",
-          "7200",
-          "14400",
-          "21600",
-          "43200",
-          "86400",
-        ]),
-        Schema.String,
-      ]),
-    ),
-    tokenId: Schema.optional(Schema.String),
-    type: Schema.optional(
-      Schema.Union([
-        Schema.Literal("r2"),
-        Schema.Literal("web-crawler"),
-        Schema.Null,
-      ]),
-    ),
-  }).pipe(
-    Schema.encodeKeys({
-      id: "id",
-      aiGatewayId: "ai_gateway_id",
-      aiSearchModel: "ai_search_model",
-      cache: "cache",
-      cacheThreshold: "cache_threshold",
-      cacheTtl: "cache_ttl",
-      chunk: "chunk",
-      chunkOverlap: "chunk_overlap",
-      chunkSize: "chunk_size",
-      customMetadata: "custom_metadata",
-      embeddingModel: "embedding_model",
-      fusionMethod: "fusion_method",
-      hybridSearchEnabled: "hybrid_search_enabled",
-      indexMethod: "index_method",
-      indexingOptions: "indexing_options",
-      maxNumResults: "max_num_results",
-      metadata: "metadata",
-      publicEndpointParams: "public_endpoint_params",
-      reranking: "reranking",
-      rerankingModel: "reranking_model",
-      retrievalOptions: "retrieval_options",
-      rewriteModel: "rewrite_model",
-      rewriteQuery: "rewrite_query",
-      scoreThreshold: "score_threshold",
-      source: "source",
-      sourceParams: "source_params",
-      syncInterval: "sync_interval",
-      tokenId: "token_id",
-      type: "type",
-    }),
-    T.Http({
-      method: "POST",
-      path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances",
-    }),
-  ) as unknown as Schema.Schema<CreateNamespaceInstanceRequest>;
-
-export interface CreateNamespaceInstanceResponse {
-  /** AI Search instance ID. Lowercase alphanumeric, hyphens, and underscores. */
-  id: string;
-  createdAt: string;
-  modifiedAt: string;
-  aiGatewayId?: string | null;
-  aiSearchModel?:
-    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-    | "@cf/zai-org/glm-4.7-flash"
-    | "@cf/meta/llama-3.1-8b-instruct-fast"
-    | "@cf/meta/llama-3.1-8b-instruct-fp8"
-    | "@cf/meta/llama-4-scout-17b-16e-instruct"
-    | "@cf/qwen/qwen3-30b-a3b-fp8"
-    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
-    | "@cf/moonshotai/kimi-k2-instruct"
-    | "@cf/google/gemma-3-12b-it"
-    | "@cf/google/gemma-4-26b-a4b-it"
-    | "@cf/moonshotai/kimi-k2.5"
-    | "anthropic/claude-3-7-sonnet"
-    | "anthropic/claude-sonnet-4"
-    | "anthropic/claude-opus-4"
-    | "anthropic/claude-3-5-haiku"
-    | "cerebras/qwen-3-235b-a22b-instruct"
-    | "cerebras/qwen-3-235b-a22b-thinking"
-    | "cerebras/llama-3.3-70b"
-    | "cerebras/llama-4-maverick-17b-128e-instruct"
-    | "cerebras/llama-4-scout-17b-16e-instruct"
-    | "cerebras/gpt-oss-120b"
-    | "google-ai-studio/gemini-2.5-flash"
-    | "google-ai-studio/gemini-2.5-pro"
-    | "grok/grok-4"
-    | "groq/llama-3.3-70b-versatile"
-    | "groq/llama-3.1-8b-instant"
-    | "openai/gpt-5"
-    | "openai/gpt-5-mini"
-    | "openai/gpt-5-nano"
-    | ""
-    | null;
-  cache?: boolean | null;
-  cacheThreshold?:
-    | "super_strict_match"
-    | "close_enough"
-    | "flexible_friend"
-    | "anything_goes"
-    | (string & {})
-    | null;
-  /** Cache entry TTL in seconds. Allowed values: 600 (10min), 1800 (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h), 86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d). */
-  cacheTtl?:
-    | "600"
-    | "1800"
-    | "3600"
-    | "7200"
-    | "21600"
-    | "43200"
-    | "86400"
-    | "172800"
-    | "259200"
-    | "518400"
-    | (string & {})
-    | null;
-  chunkOverlap?: number | null;
-  chunkSize?: number | null;
-  createdBy?: string | null;
-  customMetadata?:
-    | {
-        dataType: "text" | "number" | "boolean" | "datetime" | (string & {});
-        fieldName: string;
-      }[]
-    | null;
-  embeddingModel?:
-    | "@cf/qwen/qwen3-embedding-0.6b"
-    | "@cf/baai/bge-m3"
-    | "@cf/baai/bge-large-en-v1.5"
-    | "@cf/google/embeddinggemma-300m"
-    | "google-ai-studio/gemini-embedding-001"
-    | "google-ai-studio/gemini-embedding-2-preview"
-    | "openai/text-embedding-3-small"
-    | "openai/text-embedding-3-large"
-    | ""
-    | null;
-  enable?: boolean | null;
-  engineVersion?: number | null;
-  fusionMethod?: "max" | "rrf" | (string & {}) | null;
-  /** @deprecated Deprecated — use index_method instead. */
-  hybridSearchEnabled?: boolean | null;
-  /** Controls which storage backends are used during indexing. Defaults to vector-only. */
-  indexMethod?: { keyword: boolean; vector: boolean } | null;
-  indexingOptions?: {
-    keywordTokenizer?: "porter" | "trigram" | (string & {}) | null;
-  } | null;
-  lastActivity?: string | null;
-  maxNumResults?: number | null;
-  metadata?: {
-    createdFromAisearchWizard?: boolean | null;
-    workerDomain?: string | null;
-  } | null;
-  modifiedBy?: string | null;
-  namespace?: string | null;
-  paused?: boolean | null;
-  publicEndpointId?: string | null;
-  publicEndpointParams?: {
-    authorizedHosts?: string[] | null;
-    chatCompletionsEndpoint?: { disabled?: boolean | null } | null;
-    enabled?: boolean | null;
-    mcp?: { description?: string | null; disabled?: boolean | null } | null;
-    rateLimit?: {
-      periodMs?: number | null;
-      requests?: number | null;
-      technique?: "fixed" | "sliding" | (string & {}) | null;
-    } | null;
-    searchEndpoint?: { disabled?: boolean | null } | null;
-  } | null;
-  reranking?: boolean | null;
-  rerankingModel?: "@cf/baai/bge-reranker-base" | "" | null;
-  retrievalOptions?: {
-    boostBy?:
-      | {
-          field: string;
-          direction?:
-            | "asc"
-            | "desc"
-            | "exists"
-            | "not_exists"
-            | (string & {})
-            | null;
-        }[]
-      | null;
-    keywordMatchMode?: "and" | "or" | (string & {}) | null;
-  } | null;
-  rewriteModel?:
-    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-    | "@cf/zai-org/glm-4.7-flash"
-    | "@cf/meta/llama-3.1-8b-instruct-fast"
-    | "@cf/meta/llama-3.1-8b-instruct-fp8"
-    | "@cf/meta/llama-4-scout-17b-16e-instruct"
-    | "@cf/qwen/qwen3-30b-a3b-fp8"
-    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
-    | "@cf/moonshotai/kimi-k2-instruct"
-    | "@cf/google/gemma-3-12b-it"
-    | "@cf/google/gemma-4-26b-a4b-it"
-    | "@cf/moonshotai/kimi-k2.5"
-    | "anthropic/claude-3-7-sonnet"
-    | "anthropic/claude-sonnet-4"
-    | "anthropic/claude-opus-4"
-    | "anthropic/claude-3-5-haiku"
-    | "cerebras/qwen-3-235b-a22b-instruct"
-    | "cerebras/qwen-3-235b-a22b-thinking"
-    | "cerebras/llama-3.3-70b"
-    | "cerebras/llama-4-maverick-17b-128e-instruct"
-    | "cerebras/llama-4-scout-17b-16e-instruct"
-    | "cerebras/gpt-oss-120b"
-    | "google-ai-studio/gemini-2.5-flash"
-    | "google-ai-studio/gemini-2.5-pro"
-    | "grok/grok-4"
-    | "groq/llama-3.3-70b-versatile"
-    | "groq/llama-3.1-8b-instant"
-    | "openai/gpt-5"
-    | "openai/gpt-5-mini"
-    | "openai/gpt-5-nano"
-    | ""
-    | null;
-  rewriteQuery?: boolean | null;
-  scoreThreshold?: number | null;
-  source?: string | null;
-  sourceParams?: {
-    excludeItems?: string[] | null;
-    includeItems?: string[] | null;
-    prefix?: string | null;
-    r2Jurisdiction?: string | null;
-    webCrawler?: {
-      crawlOptions?: {
-        depth?: number | null;
-        includeExternalLinks?: boolean | null;
-        includeSubdomains?: boolean | null;
-        maxAge?: number | null;
-        source?: "all" | "sitemaps" | "links" | (string & {}) | null;
-      } | null;
-      parseOptions?: {
-        contentSelector?: { path: string; selector: string }[] | null;
-        includeHeaders?: Record<string, unknown> | null;
-        includeImages?: boolean | null;
-        specificSitemaps?: string[] | null;
-        useBrowserRendering?: boolean | null;
-      } | null;
-      parseType?: "sitemap" | "feed-rss" | "crawl" | (string & {}) | null;
-      storeOptions?: {
-        storageId: string;
-        r2Jurisdiction?: string | null;
-        storageType?: "r2" | null;
-      } | null;
-    } | null;
-  } | null;
-  status?: string | null;
-  /** Interval between automatic syncs, in seconds. Allowed values: 900 (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h), 21600 (6h), 43200 (12h), 86400 (24h). */
-  syncInterval?:
-    | "900"
-    | "1800"
-    | "3600"
-    | "7200"
-    | "14400"
-    | "21600"
-    | "43200"
-    | "86400"
-    | (string & {})
-    | null;
-  tokenId?: string | null;
-  type?: "r2" | "web-crawler" | null;
-}
-
-export const CreateNamespaceInstanceResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    id: Schema.String,
-    createdAt: Schema.String,
-    modifiedAt: Schema.String,
-    aiGatewayId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    aiSearchModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-        Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-        Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-        Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-        Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-        Schema.Literal("@cf/google/gemma-3-12b-it"),
-        Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-        Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-        Schema.Literal("anthropic/claude-3-7-sonnet"),
-        Schema.Literal("anthropic/claude-sonnet-4"),
-        Schema.Literal("anthropic/claude-opus-4"),
-        Schema.Literal("anthropic/claude-3-5-haiku"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-        Schema.Literal("cerebras/llama-3.3-70b"),
-        Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-        Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("cerebras/gpt-oss-120b"),
-        Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-        Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-        Schema.Literal("grok/grok-4"),
-        Schema.Literal("groq/llama-3.3-70b-versatile"),
-        Schema.Literal("groq/llama-3.1-8b-instant"),
-        Schema.Literal("openai/gpt-5"),
-        Schema.Literal("openai/gpt-5-mini"),
-        Schema.Literal("openai/gpt-5-nano"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    cache: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    cacheThreshold: Schema.optional(
-      Schema.Union([
-        Schema.Union([
-          Schema.Literals([
-            "super_strict_match",
-            "close_enough",
-            "flexible_friend",
-            "anything_goes",
-          ]),
-          Schema.String,
-        ]),
-        Schema.Null,
-      ]),
-    ),
-    cacheTtl: Schema.optional(
-      Schema.Union([
-        Schema.Union([
-          Schema.Literals([
-            "600",
-            "1800",
-            "3600",
-            "7200",
-            "21600",
-            "43200",
-            "86400",
-            "172800",
-            "259200",
-            "518400",
-          ]),
-          Schema.String,
-        ]),
-        Schema.Null,
-      ]),
-    ),
-    chunkOverlap: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    chunkSize: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    createdBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    customMetadata: Schema.optional(
-      Schema.Union([
-        Schema.Array(
-          Schema.Struct({
-            dataType: Schema.Union([
-              Schema.Literals(["text", "number", "boolean", "datetime"]),
-              Schema.String,
-            ]),
-            fieldName: Schema.String,
-          }).pipe(
-            Schema.encodeKeys({
-              dataType: "data_type",
-              fieldName: "field_name",
-            }),
-          ),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    embeddingModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
-        Schema.Literal("@cf/baai/bge-m3"),
-        Schema.Literal("@cf/baai/bge-large-en-v1.5"),
-        Schema.Literal("@cf/google/embeddinggemma-300m"),
-        Schema.Literal("google-ai-studio/gemini-embedding-001"),
-        Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
-        Schema.Literal("openai/text-embedding-3-small"),
-        Schema.Literal("openai/text-embedding-3-large"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    enable: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    engineVersion: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    fusionMethod: Schema.optional(
-      Schema.Union([
-        Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
-        Schema.Null,
-      ]),
-    ),
-    hybridSearchEnabled: Schema.optional(
-      Schema.Union([Schema.Boolean, Schema.Null]),
-    ),
-    indexMethod: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          keyword: Schema.Boolean,
-          vector: Schema.Boolean,
-        }),
-        Schema.Null,
-      ]),
-    ),
-    indexingOptions: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          keywordTokenizer: Schema.optional(
-            Schema.Union([
-              Schema.Union([
-                Schema.Literals(["porter", "trigram"]),
-                Schema.String,
-              ]),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" })),
-        Schema.Null,
-      ]),
-    ),
-    lastActivity: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    maxNumResults: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    metadata: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          createdFromAisearchWizard: Schema.optional(
-            Schema.Union([Schema.Boolean, Schema.Null]),
-          ),
-          workerDomain: Schema.optional(
-            Schema.Union([Schema.String, Schema.Null]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            createdFromAisearchWizard: "created_from_aisearch_wizard",
-            workerDomain: "worker_domain",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    modifiedBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    namespace: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    paused: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    publicEndpointId: Schema.optional(
-      Schema.Union([Schema.String, Schema.Null]),
-    ),
-    publicEndpointParams: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          authorizedHosts: Schema.optional(
-            Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-          ),
-          chatCompletionsEndpoint: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                disabled: Schema.optional(
-                  Schema.Union([Schema.Boolean, Schema.Null]),
-                ),
-              }),
-              Schema.Null,
-            ]),
-          ),
-          enabled: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-          mcp: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                description: Schema.optional(
-                  Schema.Union([Schema.String, Schema.Null]),
-                ),
-                disabled: Schema.optional(
-                  Schema.Union([Schema.Boolean, Schema.Null]),
-                ),
-              }),
-              Schema.Null,
-            ]),
-          ),
-          rateLimit: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                periodMs: Schema.optional(
-                  Schema.Union([Schema.Number, Schema.Null]),
-                ),
-                requests: Schema.optional(
-                  Schema.Union([Schema.Number, Schema.Null]),
-                ),
-                technique: Schema.optional(
-                  Schema.Union([
-                    Schema.Union([
-                      Schema.Literals(["fixed", "sliding"]),
-                      Schema.String,
-                    ]),
-                    Schema.Null,
-                  ]),
-                ),
-              }).pipe(
-                Schema.encodeKeys({
-                  periodMs: "period_ms",
-                  requests: "requests",
-                  technique: "technique",
-                }),
-              ),
-              Schema.Null,
-            ]),
-          ),
-          searchEndpoint: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                disabled: Schema.optional(
-                  Schema.Union([Schema.Boolean, Schema.Null]),
-                ),
-              }),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            authorizedHosts: "authorized_hosts",
-            chatCompletionsEndpoint: "chat_completions_endpoint",
-            enabled: "enabled",
-            mcp: "mcp",
-            rateLimit: "rate_limit",
-            searchEndpoint: "search_endpoint",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    reranking: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    rerankingModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/baai/bge-reranker-base"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    retrievalOptions: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          boostBy: Schema.optional(
-            Schema.Union([
-              Schema.Array(
-                Schema.Struct({
-                  field: Schema.String,
-                  direction: Schema.optional(
-                    Schema.Union([
-                      Schema.Union([
-                        Schema.Literals([
-                          "asc",
-                          "desc",
-                          "exists",
-                          "not_exists",
-                        ]),
-                        Schema.String,
-                      ]),
-                      Schema.Null,
-                    ]),
-                  ),
-                }),
-              ),
-              Schema.Null,
-            ]),
-          ),
-          keywordMatchMode: Schema.optional(
-            Schema.Union([
-              Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            boostBy: "boost_by",
-            keywordMatchMode: "keyword_match_mode",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    rewriteModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-        Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-        Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-        Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-        Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-        Schema.Literal("@cf/google/gemma-3-12b-it"),
-        Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-        Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-        Schema.Literal("anthropic/claude-3-7-sonnet"),
-        Schema.Literal("anthropic/claude-sonnet-4"),
-        Schema.Literal("anthropic/claude-opus-4"),
-        Schema.Literal("anthropic/claude-3-5-haiku"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-        Schema.Literal("cerebras/llama-3.3-70b"),
-        Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-        Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("cerebras/gpt-oss-120b"),
-        Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-        Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-        Schema.Literal("grok/grok-4"),
-        Schema.Literal("groq/llama-3.3-70b-versatile"),
-        Schema.Literal("groq/llama-3.1-8b-instant"),
-        Schema.Literal("openai/gpt-5"),
-        Schema.Literal("openai/gpt-5-mini"),
-        Schema.Literal("openai/gpt-5-nano"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    rewriteQuery: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    scoreThreshold: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    source: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    sourceParams: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          excludeItems: Schema.optional(
-            Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-          ),
-          includeItems: Schema.optional(
-            Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-          ),
-          prefix: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-          r2Jurisdiction: Schema.optional(
-            Schema.Union([Schema.String, Schema.Null]),
-          ),
-          webCrawler: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                crawlOptions: Schema.optional(
-                  Schema.Union([
-                    Schema.Struct({
-                      depth: Schema.optional(
-                        Schema.Union([Schema.Number, Schema.Null]),
-                      ),
-                      includeExternalLinks: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                      includeSubdomains: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                      maxAge: Schema.optional(
-                        Schema.Union([Schema.Number, Schema.Null]),
-                      ),
-                      source: Schema.optional(
-                        Schema.Union([
-                          Schema.Union([
-                            Schema.Literals(["all", "sitemaps", "links"]),
-                            Schema.String,
-                          ]),
-                          Schema.Null,
-                        ]),
-                      ),
-                    }).pipe(
-                      Schema.encodeKeys({
-                        depth: "depth",
-                        includeExternalLinks: "include_external_links",
-                        includeSubdomains: "include_subdomains",
-                        maxAge: "max_age",
-                        source: "source",
-                      }),
-                    ),
-                    Schema.Null,
-                  ]),
-                ),
-                parseOptions: Schema.optional(
-                  Schema.Union([
-                    Schema.Struct({
-                      contentSelector: Schema.optional(
-                        Schema.Union([
-                          Schema.Array(
-                            Schema.Struct({
-                              path: Schema.String,
-                              selector: Schema.String,
-                            }),
-                          ),
-                          Schema.Null,
-                        ]),
-                      ),
-                      includeHeaders: Schema.optional(
-                        Schema.Union([
-                          Schema.Record(Schema.String, Schema.Unknown),
-                          Schema.Null,
-                        ]),
-                      ),
-                      includeImages: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                      specificSitemaps: Schema.optional(
-                        Schema.Union([
-                          Schema.Array(Schema.String),
-                          Schema.Null,
-                        ]),
-                      ),
-                      useBrowserRendering: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                    }).pipe(
-                      Schema.encodeKeys({
-                        contentSelector: "content_selector",
-                        includeHeaders: "include_headers",
-                        includeImages: "include_images",
-                        specificSitemaps: "specific_sitemaps",
-                        useBrowserRendering: "use_browser_rendering",
-                      }),
-                    ),
-                    Schema.Null,
-                  ]),
-                ),
-                parseType: Schema.optional(
-                  Schema.Union([
-                    Schema.Union([
-                      Schema.Literals(["sitemap", "feed-rss", "crawl"]),
-                      Schema.String,
-                    ]),
-                    Schema.Null,
-                  ]),
-                ),
-                storeOptions: Schema.optional(
-                  Schema.Union([
-                    Schema.Struct({
-                      storageId: Schema.String,
-                      r2Jurisdiction: Schema.optional(
-                        Schema.Union([Schema.String, Schema.Null]),
-                      ),
-                      storageType: Schema.optional(
-                        Schema.Union([Schema.Literal("r2"), Schema.Null]),
-                      ),
-                    }).pipe(
-                      Schema.encodeKeys({
-                        storageId: "storage_id",
-                        r2Jurisdiction: "r2_jurisdiction",
-                        storageType: "storage_type",
-                      }),
-                    ),
-                    Schema.Null,
-                  ]),
-                ),
-              }).pipe(
-                Schema.encodeKeys({
-                  crawlOptions: "crawl_options",
-                  parseOptions: "parse_options",
-                  parseType: "parse_type",
-                  storeOptions: "store_options",
-                }),
-              ),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            excludeItems: "exclude_items",
-            includeItems: "include_items",
-            prefix: "prefix",
-            r2Jurisdiction: "r2_jurisdiction",
-            webCrawler: "web_crawler",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    status: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    syncInterval: Schema.optional(
-      Schema.Union([
-        Schema.Union([
-          Schema.Literals([
-            "900",
-            "1800",
-            "3600",
-            "7200",
-            "14400",
-            "21600",
-            "43200",
-            "86400",
-          ]),
-          Schema.String,
-        ]),
-        Schema.Null,
-      ]),
-    ),
-    tokenId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    type: Schema.optional(
-      Schema.Union([
-        Schema.Literal("r2"),
-        Schema.Literal("web-crawler"),
-        Schema.Null,
-      ]),
-    ),
-  })
-    .pipe(
-      Schema.encodeKeys({
-        id: "id",
-        createdAt: "created_at",
-        modifiedAt: "modified_at",
-        aiGatewayId: "ai_gateway_id",
-        aiSearchModel: "ai_search_model",
-        cache: "cache",
-        cacheThreshold: "cache_threshold",
-        cacheTtl: "cache_ttl",
-        chunkOverlap: "chunk_overlap",
-        chunkSize: "chunk_size",
-        createdBy: "created_by",
-        customMetadata: "custom_metadata",
-        embeddingModel: "embedding_model",
-        enable: "enable",
-        engineVersion: "engine_version",
-        fusionMethod: "fusion_method",
-        hybridSearchEnabled: "hybrid_search_enabled",
-        indexMethod: "index_method",
-        indexingOptions: "indexing_options",
-        lastActivity: "last_activity",
-        maxNumResults: "max_num_results",
-        metadata: "metadata",
-        modifiedBy: "modified_by",
-        namespace: "namespace",
-        paused: "paused",
-        publicEndpointId: "public_endpoint_id",
-        publicEndpointParams: "public_endpoint_params",
-        reranking: "reranking",
-        rerankingModel: "reranking_model",
-        retrievalOptions: "retrieval_options",
-        rewriteModel: "rewrite_model",
-        rewriteQuery: "rewrite_query",
-        scoreThreshold: "score_threshold",
-        source: "source",
-        sourceParams: "source_params",
-        status: "status",
-        syncInterval: "sync_interval",
-        tokenId: "token_id",
-        type: "type",
-      }),
-    )
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<CreateNamespaceInstanceResponse>;
-
-export type CreateNamespaceInstanceError = DefaultErrors;
-
-export const createNamespaceInstance: API.OperationMethod<
-  CreateNamespaceInstanceRequest,
-  CreateNamespaceInstanceResponse,
-  CreateNamespaceInstanceError,
-  Credentials | HttpClient.HttpClient
-> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
-  input: CreateNamespaceInstanceRequest,
-  output: CreateNamespaceInstanceResponse,
-  errors: [],
-}));
-
-export interface UpdateNamespaceInstanceRequest {
-  name: string;
-  id: string;
-  /** Path param */
-  accountId: string;
-  /** Body param */
-  aiGatewayId?: string | null;
-  /** Body param */
-  aiSearchModel?:
-    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-    | "@cf/zai-org/glm-4.7-flash"
-    | "@cf/meta/llama-3.1-8b-instruct-fast"
-    | "@cf/meta/llama-3.1-8b-instruct-fp8"
-    | "@cf/meta/llama-4-scout-17b-16e-instruct"
-    | "@cf/qwen/qwen3-30b-a3b-fp8"
-    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
-    | "@cf/moonshotai/kimi-k2-instruct"
-    | "@cf/google/gemma-3-12b-it"
-    | "@cf/google/gemma-4-26b-a4b-it"
-    | "@cf/moonshotai/kimi-k2.5"
-    | "anthropic/claude-3-7-sonnet"
-    | "anthropic/claude-sonnet-4"
-    | "anthropic/claude-opus-4"
-    | "anthropic/claude-3-5-haiku"
-    | "cerebras/qwen-3-235b-a22b-instruct"
-    | "cerebras/qwen-3-235b-a22b-thinking"
-    | "cerebras/llama-3.3-70b"
-    | "cerebras/llama-4-maverick-17b-128e-instruct"
-    | "cerebras/llama-4-scout-17b-16e-instruct"
-    | "cerebras/gpt-oss-120b"
-    | "google-ai-studio/gemini-2.5-flash"
-    | "google-ai-studio/gemini-2.5-pro"
-    | "grok/grok-4"
-    | "groq/llama-3.3-70b-versatile"
-    | "groq/llama-3.1-8b-instant"
-    | "openai/gpt-5"
-    | "openai/gpt-5-mini"
-    | "openai/gpt-5-nano"
-    | ""
-    | null;
-  /** Body param */
-  cache?: boolean;
-  /** Body param */
-  cacheThreshold?:
-    | "super_strict_match"
-    | "close_enough"
-    | "flexible_friend"
-    | "anything_goes"
-    | (string & {});
-  /** Body param: Cache entry TTL in seconds. Allowed values: 600 (10min), 1800 (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h), 86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d). */
-  cacheTtl?:
-    | "600"
-    | "1800"
-    | "3600"
-    | "7200"
-    | "21600"
-    | "43200"
-    | "86400"
-    | "172800"
-    | "259200"
-    | "518400"
-    | (string & {});
-  /** Body param */
-  chunk?: boolean;
-  /** Body param */
-  chunkOverlap?: number;
-  /** Body param */
-  chunkSize?: number;
-  /** Body param */
-  customMetadata?: {
-    dataType: "text" | "number" | "boolean" | "datetime" | (string & {});
-    fieldName: string;
-  }[];
-  /** Body param */
-  embeddingModel?:
-    | "@cf/qwen/qwen3-embedding-0.6b"
-    | "@cf/baai/bge-m3"
-    | "@cf/baai/bge-large-en-v1.5"
-    | "@cf/google/embeddinggemma-300m"
-    | "google-ai-studio/gemini-embedding-001"
-    | "google-ai-studio/gemini-embedding-2-preview"
-    | "openai/text-embedding-3-small"
-    | "openai/text-embedding-3-large"
-    | ""
-    | null;
-  /** Body param */
-  fusionMethod?: "max" | "rrf" | (string & {});
-  /** Body param: Controls which storage backends are used during indexing. Defaults to vector-only. */
-  indexMethod?: { keyword: boolean; vector: boolean };
-  /** Body param */
-  indexingOptions?: {
-    keywordTokenizer?: "porter" | "trigram" | (string & {});
-  } | null;
-  /** Body param */
-  maxNumResults?: number;
-  /** Body param */
-  metadata?: { createdFromAisearchWizard?: boolean; workerDomain?: string };
-  /** Body param */
-  paused?: boolean;
-  /** Body param */
-  publicEndpointParams?: {
-    authorizedHosts?: string[];
-    chatCompletionsEndpoint?: { disabled?: boolean };
-    enabled?: boolean;
-    mcp?: { description?: string; disabled?: boolean };
-    rateLimit?: {
-      periodMs?: number;
-      requests?: number;
-      technique?: "fixed" | "sliding" | (string & {});
-    };
-    searchEndpoint?: { disabled?: boolean };
-  };
-  /** Body param */
-  reranking?: boolean;
-  /** Body param */
-  rerankingModel?: "@cf/baai/bge-reranker-base" | "" | null;
-  /** Body param */
-  retrievalOptions?: {
-    boostBy?: {
-      field: string;
-      direction?: "asc" | "desc" | "exists" | "not_exists" | (string & {});
-    }[];
-    keywordMatchMode?: "and" | "or" | (string & {});
-  } | null;
-  /** Body param */
-  rewriteModel?:
-    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-    | "@cf/zai-org/glm-4.7-flash"
-    | "@cf/meta/llama-3.1-8b-instruct-fast"
-    | "@cf/meta/llama-3.1-8b-instruct-fp8"
-    | "@cf/meta/llama-4-scout-17b-16e-instruct"
-    | "@cf/qwen/qwen3-30b-a3b-fp8"
-    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
-    | "@cf/moonshotai/kimi-k2-instruct"
-    | "@cf/google/gemma-3-12b-it"
-    | "@cf/google/gemma-4-26b-a4b-it"
-    | "@cf/moonshotai/kimi-k2.5"
-    | "anthropic/claude-3-7-sonnet"
-    | "anthropic/claude-sonnet-4"
-    | "anthropic/claude-opus-4"
-    | "anthropic/claude-3-5-haiku"
-    | "cerebras/qwen-3-235b-a22b-instruct"
-    | "cerebras/qwen-3-235b-a22b-thinking"
-    | "cerebras/llama-3.3-70b"
-    | "cerebras/llama-4-maverick-17b-128e-instruct"
-    | "cerebras/llama-4-scout-17b-16e-instruct"
-    | "cerebras/gpt-oss-120b"
-    | "google-ai-studio/gemini-2.5-flash"
-    | "google-ai-studio/gemini-2.5-pro"
-    | "grok/grok-4"
-    | "groq/llama-3.3-70b-versatile"
-    | "groq/llama-3.1-8b-instant"
-    | "openai/gpt-5"
-    | "openai/gpt-5-mini"
-    | "openai/gpt-5-nano"
-    | ""
-    | null;
-  /** Body param */
-  rewriteQuery?: boolean;
-  /** Body param */
-  scoreThreshold?: number;
-  /** Body param */
-  sourceParams?: {
-    excludeItems?: string[];
-    includeItems?: string[];
-    prefix?: string;
-    r2Jurisdiction?: string;
-    webCrawler?: {
-      crawlOptions?: {
-        depth?: number;
-        includeExternalLinks?: boolean;
-        includeSubdomains?: boolean;
-        maxAge?: number;
-        source?: "all" | "sitemaps" | "links" | (string & {});
-      };
-      parseOptions?: {
-        contentSelector?: { path: string; selector: string }[];
-        includeHeaders?: Record<string, unknown>;
-        includeImages?: boolean;
-        specificSitemaps?: string[];
-        useBrowserRendering?: boolean;
-      };
-      parseType?: "sitemap" | "feed-rss" | "crawl" | (string & {});
-      storeOptions?: {
-        storageId: string;
-        r2Jurisdiction?: string;
-        storageType?: "r2";
-      };
-    };
-  } | null;
-  /** Body param */
-  summarization?: boolean;
-  /** Body param */
-  summarizationModel?:
-    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-    | "@cf/zai-org/glm-4.7-flash"
-    | "@cf/meta/llama-3.1-8b-instruct-fast"
-    | "@cf/meta/llama-3.1-8b-instruct-fp8"
-    | "@cf/meta/llama-4-scout-17b-16e-instruct"
-    | "@cf/qwen/qwen3-30b-a3b-fp8"
-    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
-    | "@cf/moonshotai/kimi-k2-instruct"
-    | "@cf/google/gemma-3-12b-it"
-    | "@cf/google/gemma-4-26b-a4b-it"
-    | "@cf/moonshotai/kimi-k2.5"
-    | "anthropic/claude-3-7-sonnet"
-    | "anthropic/claude-sonnet-4"
-    | "anthropic/claude-opus-4"
-    | "anthropic/claude-3-5-haiku"
-    | "cerebras/qwen-3-235b-a22b-instruct"
-    | "cerebras/qwen-3-235b-a22b-thinking"
-    | "cerebras/llama-3.3-70b"
-    | "cerebras/llama-4-maverick-17b-128e-instruct"
-    | "cerebras/llama-4-scout-17b-16e-instruct"
-    | "cerebras/gpt-oss-120b"
-    | "google-ai-studio/gemini-2.5-flash"
-    | "google-ai-studio/gemini-2.5-pro"
-    | "grok/grok-4"
-    | "groq/llama-3.3-70b-versatile"
-    | "groq/llama-3.1-8b-instant"
-    | "openai/gpt-5"
-    | "openai/gpt-5-mini"
-    | "openai/gpt-5-nano"
-    | ""
-    | null;
-  /** Body param: Interval between automatic syncs, in seconds. Allowed values: 900 (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h), 21600 (6h), 43200 (12h), 86400 (24h). */
-  syncInterval?:
-    | "900"
-    | "1800"
-    | "3600"
-    | "7200"
-    | "14400"
-    | "21600"
-    | "43200"
-    | "86400"
-    | (string & {});
-  /** Body param */
-  systemPromptAiSearch?: string | null;
-  /** Body param */
-  systemPromptIndexSummarization?: string | null;
-  /** Body param */
-  systemPromptRewriteQuery?: string | null;
-  /** Body param */
-  tokenId?: string;
-}
-
-export const UpdateNamespaceInstanceRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    name: Schema.String.pipe(T.HttpPath("name")),
-    id: Schema.String.pipe(T.HttpPath("id")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    aiGatewayId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    aiSearchModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-        Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-        Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-        Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-        Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-        Schema.Literal("@cf/google/gemma-3-12b-it"),
-        Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-        Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-        Schema.Literal("anthropic/claude-3-7-sonnet"),
-        Schema.Literal("anthropic/claude-sonnet-4"),
-        Schema.Literal("anthropic/claude-opus-4"),
-        Schema.Literal("anthropic/claude-3-5-haiku"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-        Schema.Literal("cerebras/llama-3.3-70b"),
-        Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-        Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("cerebras/gpt-oss-120b"),
-        Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-        Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-        Schema.Literal("grok/grok-4"),
-        Schema.Literal("groq/llama-3.3-70b-versatile"),
-        Schema.Literal("groq/llama-3.1-8b-instant"),
-        Schema.Literal("openai/gpt-5"),
-        Schema.Literal("openai/gpt-5-mini"),
-        Schema.Literal("openai/gpt-5-nano"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    cache: Schema.optional(Schema.Boolean),
-    cacheThreshold: Schema.optional(
-      Schema.Union([
-        Schema.Literals([
-          "super_strict_match",
-          "close_enough",
-          "flexible_friend",
-          "anything_goes",
-        ]),
-        Schema.String,
-      ]),
-    ),
-    cacheTtl: Schema.optional(
-      Schema.Union([
-        Schema.Literals([
-          "600",
-          "1800",
-          "3600",
-          "7200",
-          "21600",
-          "43200",
-          "86400",
-          "172800",
-          "259200",
-          "518400",
-        ]),
-        Schema.String,
-      ]),
-    ),
-    chunk: Schema.optional(Schema.Boolean),
-    chunkOverlap: Schema.optional(Schema.Number),
-    chunkSize: Schema.optional(Schema.Number),
-    customMetadata: Schema.optional(
-      Schema.Array(
-        Schema.Struct({
-          dataType: Schema.Union([
-            Schema.Literals(["text", "number", "boolean", "datetime"]),
-            Schema.String,
-          ]),
-          fieldName: Schema.String,
-        }).pipe(
-          Schema.encodeKeys({ dataType: "data_type", fieldName: "field_name" }),
-        ),
-      ),
-    ),
-    embeddingModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
-        Schema.Literal("@cf/baai/bge-m3"),
-        Schema.Literal("@cf/baai/bge-large-en-v1.5"),
-        Schema.Literal("@cf/google/embeddinggemma-300m"),
-        Schema.Literal("google-ai-studio/gemini-embedding-001"),
-        Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
-        Schema.Literal("openai/text-embedding-3-small"),
-        Schema.Literal("openai/text-embedding-3-large"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    fusionMethod: Schema.optional(
-      Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
-    ),
-    indexMethod: Schema.optional(
-      Schema.Struct({
-        keyword: Schema.Boolean,
-        vector: Schema.Boolean,
-      }),
-    ),
-    indexingOptions: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          keywordTokenizer: Schema.optional(
-            Schema.Union([
-              Schema.Literals(["porter", "trigram"]),
-              Schema.String,
-            ]),
-          ),
-        }).pipe(Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" })),
-        Schema.Null,
-      ]),
-    ),
-    maxNumResults: Schema.optional(Schema.Number),
-    metadata: Schema.optional(
-      Schema.Struct({
-        createdFromAisearchWizard: Schema.optional(Schema.Boolean),
-        workerDomain: Schema.optional(Schema.String),
-      }).pipe(
-        Schema.encodeKeys({
-          createdFromAisearchWizard: "created_from_aisearch_wizard",
-          workerDomain: "worker_domain",
-        }),
-      ),
-    ),
-    paused: Schema.optional(Schema.Boolean),
-    publicEndpointParams: Schema.optional(
-      Schema.Struct({
-        authorizedHosts: Schema.optional(Schema.Array(Schema.String)),
-        chatCompletionsEndpoint: Schema.optional(
-          Schema.Struct({
-            disabled: Schema.optional(Schema.Boolean),
-          }),
-        ),
-        enabled: Schema.optional(Schema.Boolean),
-        mcp: Schema.optional(
-          Schema.Struct({
-            description: Schema.optional(Schema.String),
-            disabled: Schema.optional(Schema.Boolean),
-          }),
-        ),
-        rateLimit: Schema.optional(
-          Schema.Struct({
-            periodMs: Schema.optional(Schema.Number),
-            requests: Schema.optional(Schema.Number),
-            technique: Schema.optional(
-              Schema.Union([
-                Schema.Literals(["fixed", "sliding"]),
-                Schema.String,
-              ]),
-            ),
-          }).pipe(
-            Schema.encodeKeys({
-              periodMs: "period_ms",
-              requests: "requests",
-              technique: "technique",
-            }),
-          ),
-        ),
-        searchEndpoint: Schema.optional(
-          Schema.Struct({
-            disabled: Schema.optional(Schema.Boolean),
-          }),
-        ),
-      }).pipe(
-        Schema.encodeKeys({
-          authorizedHosts: "authorized_hosts",
-          chatCompletionsEndpoint: "chat_completions_endpoint",
-          enabled: "enabled",
-          mcp: "mcp",
-          rateLimit: "rate_limit",
-          searchEndpoint: "search_endpoint",
-        }),
-      ),
-    ),
-    reranking: Schema.optional(Schema.Boolean),
-    rerankingModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/baai/bge-reranker-base"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    retrievalOptions: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          boostBy: Schema.optional(
-            Schema.Array(
-              Schema.Struct({
-                field: Schema.String,
-                direction: Schema.optional(
-                  Schema.Union([
-                    Schema.Literals(["asc", "desc", "exists", "not_exists"]),
-                    Schema.String,
-                  ]),
-                ),
-              }),
-            ),
-          ),
-          keywordMatchMode: Schema.optional(
-            Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            boostBy: "boost_by",
-            keywordMatchMode: "keyword_match_mode",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    rewriteModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-        Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-        Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-        Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-        Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-        Schema.Literal("@cf/google/gemma-3-12b-it"),
-        Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-        Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-        Schema.Literal("anthropic/claude-3-7-sonnet"),
-        Schema.Literal("anthropic/claude-sonnet-4"),
-        Schema.Literal("anthropic/claude-opus-4"),
-        Schema.Literal("anthropic/claude-3-5-haiku"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-        Schema.Literal("cerebras/llama-3.3-70b"),
-        Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-        Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("cerebras/gpt-oss-120b"),
-        Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-        Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-        Schema.Literal("grok/grok-4"),
-        Schema.Literal("groq/llama-3.3-70b-versatile"),
-        Schema.Literal("groq/llama-3.1-8b-instant"),
-        Schema.Literal("openai/gpt-5"),
-        Schema.Literal("openai/gpt-5-mini"),
-        Schema.Literal("openai/gpt-5-nano"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    rewriteQuery: Schema.optional(Schema.Boolean),
-    scoreThreshold: Schema.optional(Schema.Number),
-    sourceParams: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          excludeItems: Schema.optional(Schema.Array(Schema.String)),
-          includeItems: Schema.optional(Schema.Array(Schema.String)),
-          prefix: Schema.optional(Schema.String),
-          r2Jurisdiction: Schema.optional(Schema.String),
-          webCrawler: Schema.optional(
-            Schema.Struct({
-              crawlOptions: Schema.optional(
-                Schema.Struct({
-                  depth: Schema.optional(Schema.Number),
-                  includeExternalLinks: Schema.optional(Schema.Boolean),
-                  includeSubdomains: Schema.optional(Schema.Boolean),
-                  maxAge: Schema.optional(Schema.Number),
-                  source: Schema.optional(
-                    Schema.Union([
-                      Schema.Literals(["all", "sitemaps", "links"]),
-                      Schema.String,
-                    ]),
-                  ),
-                }).pipe(
-                  Schema.encodeKeys({
-                    depth: "depth",
-                    includeExternalLinks: "include_external_links",
-                    includeSubdomains: "include_subdomains",
-                    maxAge: "max_age",
-                    source: "source",
-                  }),
-                ),
-              ),
-              parseOptions: Schema.optional(
-                Schema.Struct({
-                  contentSelector: Schema.optional(
-                    Schema.Array(
-                      Schema.Struct({
-                        path: Schema.String,
-                        selector: Schema.String,
-                      }),
-                    ),
-                  ),
-                  includeHeaders: Schema.optional(
-                    Schema.Record(Schema.String, Schema.Unknown),
-                  ),
-                  includeImages: Schema.optional(Schema.Boolean),
-                  specificSitemaps: Schema.optional(
-                    Schema.Array(Schema.String),
-                  ),
-                  useBrowserRendering: Schema.optional(Schema.Boolean),
-                }).pipe(
-                  Schema.encodeKeys({
-                    contentSelector: "content_selector",
-                    includeHeaders: "include_headers",
-                    includeImages: "include_images",
-                    specificSitemaps: "specific_sitemaps",
-                    useBrowserRendering: "use_browser_rendering",
-                  }),
-                ),
-              ),
-              parseType: Schema.optional(
-                Schema.Union([
-                  Schema.Literals(["sitemap", "feed-rss", "crawl"]),
-                  Schema.String,
-                ]),
-              ),
-              storeOptions: Schema.optional(
-                Schema.Struct({
-                  storageId: Schema.String,
-                  r2Jurisdiction: Schema.optional(Schema.String),
-                  storageType: Schema.optional(Schema.Literal("r2")),
-                }).pipe(
-                  Schema.encodeKeys({
-                    storageId: "storage_id",
-                    r2Jurisdiction: "r2_jurisdiction",
-                    storageType: "storage_type",
-                  }),
-                ),
-              ),
-            }).pipe(
-              Schema.encodeKeys({
-                crawlOptions: "crawl_options",
-                parseOptions: "parse_options",
-                parseType: "parse_type",
-                storeOptions: "store_options",
-              }),
-            ),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            excludeItems: "exclude_items",
-            includeItems: "include_items",
-            prefix: "prefix",
-            r2Jurisdiction: "r2_jurisdiction",
-            webCrawler: "web_crawler",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    summarization: Schema.optional(Schema.Boolean),
-    summarizationModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-        Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-        Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-        Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-        Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-        Schema.Literal("@cf/google/gemma-3-12b-it"),
-        Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-        Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-        Schema.Literal("anthropic/claude-3-7-sonnet"),
-        Schema.Literal("anthropic/claude-sonnet-4"),
-        Schema.Literal("anthropic/claude-opus-4"),
-        Schema.Literal("anthropic/claude-3-5-haiku"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-        Schema.Literal("cerebras/llama-3.3-70b"),
-        Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-        Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("cerebras/gpt-oss-120b"),
-        Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-        Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-        Schema.Literal("grok/grok-4"),
-        Schema.Literal("groq/llama-3.3-70b-versatile"),
-        Schema.Literal("groq/llama-3.1-8b-instant"),
-        Schema.Literal("openai/gpt-5"),
-        Schema.Literal("openai/gpt-5-mini"),
-        Schema.Literal("openai/gpt-5-nano"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    syncInterval: Schema.optional(
-      Schema.Union([
-        Schema.Literals([
-          "900",
-          "1800",
-          "3600",
-          "7200",
-          "14400",
-          "21600",
-          "43200",
-          "86400",
-        ]),
-        Schema.String,
-      ]),
-    ),
-    systemPromptAiSearch: Schema.optional(
-      Schema.Union([Schema.String, Schema.Null]),
-    ),
-    systemPromptIndexSummarization: Schema.optional(
-      Schema.Union([Schema.String, Schema.Null]),
-    ),
-    systemPromptRewriteQuery: Schema.optional(
-      Schema.Union([Schema.String, Schema.Null]),
-    ),
-    tokenId: Schema.optional(Schema.String),
-  }).pipe(
-    Schema.encodeKeys({
-      aiGatewayId: "ai_gateway_id",
-      aiSearchModel: "ai_search_model",
-      cache: "cache",
-      cacheThreshold: "cache_threshold",
-      cacheTtl: "cache_ttl",
-      chunk: "chunk",
-      chunkOverlap: "chunk_overlap",
-      chunkSize: "chunk_size",
-      customMetadata: "custom_metadata",
-      embeddingModel: "embedding_model",
-      fusionMethod: "fusion_method",
-      indexMethod: "index_method",
-      indexingOptions: "indexing_options",
-      maxNumResults: "max_num_results",
-      metadata: "metadata",
-      paused: "paused",
-      publicEndpointParams: "public_endpoint_params",
-      reranking: "reranking",
-      rerankingModel: "reranking_model",
-      retrievalOptions: "retrieval_options",
-      rewriteModel: "rewrite_model",
-      rewriteQuery: "rewrite_query",
-      scoreThreshold: "score_threshold",
-      sourceParams: "source_params",
-      summarization: "summarization",
-      summarizationModel: "summarization_model",
-      syncInterval: "sync_interval",
-      systemPromptAiSearch: "system_prompt_ai_search",
-      systemPromptIndexSummarization: "system_prompt_index_summarization",
-      systemPromptRewriteQuery: "system_prompt_rewrite_query",
-      tokenId: "token_id",
-    }),
-    T.Http({
-      method: "PUT",
-      path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}",
-    }),
-  ) as unknown as Schema.Schema<UpdateNamespaceInstanceRequest>;
-
-export interface UpdateNamespaceInstanceResponse {
-  /** AI Search instance ID. Lowercase alphanumeric, hyphens, and underscores. */
-  id: string;
-  createdAt: string;
-  modifiedAt: string;
-  aiGatewayId?: string | null;
-  aiSearchModel?:
-    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-    | "@cf/zai-org/glm-4.7-flash"
-    | "@cf/meta/llama-3.1-8b-instruct-fast"
-    | "@cf/meta/llama-3.1-8b-instruct-fp8"
-    | "@cf/meta/llama-4-scout-17b-16e-instruct"
-    | "@cf/qwen/qwen3-30b-a3b-fp8"
-    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
-    | "@cf/moonshotai/kimi-k2-instruct"
-    | "@cf/google/gemma-3-12b-it"
-    | "@cf/google/gemma-4-26b-a4b-it"
-    | "@cf/moonshotai/kimi-k2.5"
-    | "anthropic/claude-3-7-sonnet"
-    | "anthropic/claude-sonnet-4"
-    | "anthropic/claude-opus-4"
-    | "anthropic/claude-3-5-haiku"
-    | "cerebras/qwen-3-235b-a22b-instruct"
-    | "cerebras/qwen-3-235b-a22b-thinking"
-    | "cerebras/llama-3.3-70b"
-    | "cerebras/llama-4-maverick-17b-128e-instruct"
-    | "cerebras/llama-4-scout-17b-16e-instruct"
-    | "cerebras/gpt-oss-120b"
-    | "google-ai-studio/gemini-2.5-flash"
-    | "google-ai-studio/gemini-2.5-pro"
-    | "grok/grok-4"
-    | "groq/llama-3.3-70b-versatile"
-    | "groq/llama-3.1-8b-instant"
-    | "openai/gpt-5"
-    | "openai/gpt-5-mini"
-    | "openai/gpt-5-nano"
-    | ""
-    | null;
-  cache?: boolean | null;
-  cacheThreshold?:
-    | "super_strict_match"
-    | "close_enough"
-    | "flexible_friend"
-    | "anything_goes"
-    | (string & {})
-    | null;
-  /** Cache entry TTL in seconds. Allowed values: 600 (10min), 1800 (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h), 86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d). */
-  cacheTtl?:
-    | "600"
-    | "1800"
-    | "3600"
-    | "7200"
-    | "21600"
-    | "43200"
-    | "86400"
-    | "172800"
-    | "259200"
-    | "518400"
-    | (string & {})
-    | null;
-  chunkOverlap?: number | null;
-  chunkSize?: number | null;
-  createdBy?: string | null;
-  customMetadata?:
-    | {
-        dataType: "text" | "number" | "boolean" | "datetime" | (string & {});
-        fieldName: string;
-      }[]
-    | null;
-  embeddingModel?:
-    | "@cf/qwen/qwen3-embedding-0.6b"
-    | "@cf/baai/bge-m3"
-    | "@cf/baai/bge-large-en-v1.5"
-    | "@cf/google/embeddinggemma-300m"
-    | "google-ai-studio/gemini-embedding-001"
-    | "google-ai-studio/gemini-embedding-2-preview"
-    | "openai/text-embedding-3-small"
-    | "openai/text-embedding-3-large"
-    | ""
-    | null;
-  enable?: boolean | null;
-  engineVersion?: number | null;
-  fusionMethod?: "max" | "rrf" | (string & {}) | null;
-  /** @deprecated Deprecated — use index_method instead. */
-  hybridSearchEnabled?: boolean | null;
-  /** Controls which storage backends are used during indexing. Defaults to vector-only. */
-  indexMethod?: { keyword: boolean; vector: boolean } | null;
-  indexingOptions?: {
-    keywordTokenizer?: "porter" | "trigram" | (string & {}) | null;
-  } | null;
-  lastActivity?: string | null;
-  maxNumResults?: number | null;
-  metadata?: {
-    createdFromAisearchWizard?: boolean | null;
-    workerDomain?: string | null;
-  } | null;
-  modifiedBy?: string | null;
-  namespace?: string | null;
-  paused?: boolean | null;
-  publicEndpointId?: string | null;
-  publicEndpointParams?: {
-    authorizedHosts?: string[] | null;
-    chatCompletionsEndpoint?: { disabled?: boolean | null } | null;
-    enabled?: boolean | null;
-    mcp?: { description?: string | null; disabled?: boolean | null } | null;
-    rateLimit?: {
-      periodMs?: number | null;
-      requests?: number | null;
-      technique?: "fixed" | "sliding" | (string & {}) | null;
-    } | null;
-    searchEndpoint?: { disabled?: boolean | null } | null;
-  } | null;
-  reranking?: boolean | null;
-  rerankingModel?: "@cf/baai/bge-reranker-base" | "" | null;
-  retrievalOptions?: {
-    boostBy?:
-      | {
-          field: string;
-          direction?:
-            | "asc"
-            | "desc"
-            | "exists"
-            | "not_exists"
-            | (string & {})
-            | null;
-        }[]
-      | null;
-    keywordMatchMode?: "and" | "or" | (string & {}) | null;
-  } | null;
-  rewriteModel?:
-    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-    | "@cf/zai-org/glm-4.7-flash"
-    | "@cf/meta/llama-3.1-8b-instruct-fast"
-    | "@cf/meta/llama-3.1-8b-instruct-fp8"
-    | "@cf/meta/llama-4-scout-17b-16e-instruct"
-    | "@cf/qwen/qwen3-30b-a3b-fp8"
-    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
-    | "@cf/moonshotai/kimi-k2-instruct"
-    | "@cf/google/gemma-3-12b-it"
-    | "@cf/google/gemma-4-26b-a4b-it"
-    | "@cf/moonshotai/kimi-k2.5"
-    | "anthropic/claude-3-7-sonnet"
-    | "anthropic/claude-sonnet-4"
-    | "anthropic/claude-opus-4"
-    | "anthropic/claude-3-5-haiku"
-    | "cerebras/qwen-3-235b-a22b-instruct"
-    | "cerebras/qwen-3-235b-a22b-thinking"
-    | "cerebras/llama-3.3-70b"
-    | "cerebras/llama-4-maverick-17b-128e-instruct"
-    | "cerebras/llama-4-scout-17b-16e-instruct"
-    | "cerebras/gpt-oss-120b"
-    | "google-ai-studio/gemini-2.5-flash"
-    | "google-ai-studio/gemini-2.5-pro"
-    | "grok/grok-4"
-    | "groq/llama-3.3-70b-versatile"
-    | "groq/llama-3.1-8b-instant"
-    | "openai/gpt-5"
-    | "openai/gpt-5-mini"
-    | "openai/gpt-5-nano"
-    | ""
-    | null;
-  rewriteQuery?: boolean | null;
-  scoreThreshold?: number | null;
-  source?: string | null;
-  sourceParams?: {
-    excludeItems?: string[] | null;
-    includeItems?: string[] | null;
-    prefix?: string | null;
-    r2Jurisdiction?: string | null;
-    webCrawler?: {
-      crawlOptions?: {
-        depth?: number | null;
-        includeExternalLinks?: boolean | null;
-        includeSubdomains?: boolean | null;
-        maxAge?: number | null;
-        source?: "all" | "sitemaps" | "links" | (string & {}) | null;
-      } | null;
-      parseOptions?: {
-        contentSelector?: { path: string; selector: string }[] | null;
-        includeHeaders?: Record<string, unknown> | null;
-        includeImages?: boolean | null;
-        specificSitemaps?: string[] | null;
-        useBrowserRendering?: boolean | null;
-      } | null;
-      parseType?: "sitemap" | "feed-rss" | "crawl" | (string & {}) | null;
-      storeOptions?: {
-        storageId: string;
-        r2Jurisdiction?: string | null;
-        storageType?: "r2" | null;
-      } | null;
-    } | null;
-  } | null;
-  status?: string | null;
-  /** Interval between automatic syncs, in seconds. Allowed values: 900 (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h), 21600 (6h), 43200 (12h), 86400 (24h). */
-  syncInterval?:
-    | "900"
-    | "1800"
-    | "3600"
-    | "7200"
-    | "14400"
-    | "21600"
-    | "43200"
-    | "86400"
-    | (string & {})
-    | null;
-  tokenId?: string | null;
-  type?: "r2" | "web-crawler" | null;
-}
-
-export const UpdateNamespaceInstanceResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    id: Schema.String,
-    createdAt: Schema.String,
-    modifiedAt: Schema.String,
-    aiGatewayId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    aiSearchModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-        Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-        Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-        Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-        Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-        Schema.Literal("@cf/google/gemma-3-12b-it"),
-        Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-        Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-        Schema.Literal("anthropic/claude-3-7-sonnet"),
-        Schema.Literal("anthropic/claude-sonnet-4"),
-        Schema.Literal("anthropic/claude-opus-4"),
-        Schema.Literal("anthropic/claude-3-5-haiku"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-        Schema.Literal("cerebras/llama-3.3-70b"),
-        Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-        Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("cerebras/gpt-oss-120b"),
-        Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-        Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-        Schema.Literal("grok/grok-4"),
-        Schema.Literal("groq/llama-3.3-70b-versatile"),
-        Schema.Literal("groq/llama-3.1-8b-instant"),
-        Schema.Literal("openai/gpt-5"),
-        Schema.Literal("openai/gpt-5-mini"),
-        Schema.Literal("openai/gpt-5-nano"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    cache: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    cacheThreshold: Schema.optional(
-      Schema.Union([
-        Schema.Union([
-          Schema.Literals([
-            "super_strict_match",
-            "close_enough",
-            "flexible_friend",
-            "anything_goes",
-          ]),
-          Schema.String,
-        ]),
-        Schema.Null,
-      ]),
-    ),
-    cacheTtl: Schema.optional(
-      Schema.Union([
-        Schema.Union([
-          Schema.Literals([
-            "600",
-            "1800",
-            "3600",
-            "7200",
-            "21600",
-            "43200",
-            "86400",
-            "172800",
-            "259200",
-            "518400",
-          ]),
-          Schema.String,
-        ]),
-        Schema.Null,
-      ]),
-    ),
-    chunkOverlap: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    chunkSize: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    createdBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    customMetadata: Schema.optional(
-      Schema.Union([
-        Schema.Array(
-          Schema.Struct({
-            dataType: Schema.Union([
-              Schema.Literals(["text", "number", "boolean", "datetime"]),
-              Schema.String,
-            ]),
-            fieldName: Schema.String,
-          }).pipe(
-            Schema.encodeKeys({
-              dataType: "data_type",
-              fieldName: "field_name",
-            }),
-          ),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    embeddingModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
-        Schema.Literal("@cf/baai/bge-m3"),
-        Schema.Literal("@cf/baai/bge-large-en-v1.5"),
-        Schema.Literal("@cf/google/embeddinggemma-300m"),
-        Schema.Literal("google-ai-studio/gemini-embedding-001"),
-        Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
-        Schema.Literal("openai/text-embedding-3-small"),
-        Schema.Literal("openai/text-embedding-3-large"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    enable: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    engineVersion: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    fusionMethod: Schema.optional(
-      Schema.Union([
-        Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
-        Schema.Null,
-      ]),
-    ),
-    hybridSearchEnabled: Schema.optional(
-      Schema.Union([Schema.Boolean, Schema.Null]),
-    ),
-    indexMethod: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          keyword: Schema.Boolean,
-          vector: Schema.Boolean,
-        }),
-        Schema.Null,
-      ]),
-    ),
-    indexingOptions: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          keywordTokenizer: Schema.optional(
-            Schema.Union([
-              Schema.Union([
-                Schema.Literals(["porter", "trigram"]),
-                Schema.String,
-              ]),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" })),
-        Schema.Null,
-      ]),
-    ),
-    lastActivity: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    maxNumResults: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    metadata: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          createdFromAisearchWizard: Schema.optional(
-            Schema.Union([Schema.Boolean, Schema.Null]),
-          ),
-          workerDomain: Schema.optional(
-            Schema.Union([Schema.String, Schema.Null]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            createdFromAisearchWizard: "created_from_aisearch_wizard",
-            workerDomain: "worker_domain",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    modifiedBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    namespace: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    paused: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    publicEndpointId: Schema.optional(
-      Schema.Union([Schema.String, Schema.Null]),
-    ),
-    publicEndpointParams: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          authorizedHosts: Schema.optional(
-            Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-          ),
-          chatCompletionsEndpoint: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                disabled: Schema.optional(
-                  Schema.Union([Schema.Boolean, Schema.Null]),
-                ),
-              }),
-              Schema.Null,
-            ]),
-          ),
-          enabled: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-          mcp: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                description: Schema.optional(
-                  Schema.Union([Schema.String, Schema.Null]),
-                ),
-                disabled: Schema.optional(
-                  Schema.Union([Schema.Boolean, Schema.Null]),
-                ),
-              }),
-              Schema.Null,
-            ]),
-          ),
-          rateLimit: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                periodMs: Schema.optional(
-                  Schema.Union([Schema.Number, Schema.Null]),
-                ),
-                requests: Schema.optional(
-                  Schema.Union([Schema.Number, Schema.Null]),
-                ),
-                technique: Schema.optional(
-                  Schema.Union([
-                    Schema.Union([
-                      Schema.Literals(["fixed", "sliding"]),
-                      Schema.String,
-                    ]),
-                    Schema.Null,
-                  ]),
-                ),
-              }).pipe(
-                Schema.encodeKeys({
-                  periodMs: "period_ms",
-                  requests: "requests",
-                  technique: "technique",
-                }),
-              ),
-              Schema.Null,
-            ]),
-          ),
-          searchEndpoint: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                disabled: Schema.optional(
-                  Schema.Union([Schema.Boolean, Schema.Null]),
-                ),
-              }),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            authorizedHosts: "authorized_hosts",
-            chatCompletionsEndpoint: "chat_completions_endpoint",
-            enabled: "enabled",
-            mcp: "mcp",
-            rateLimit: "rate_limit",
-            searchEndpoint: "search_endpoint",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    reranking: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    rerankingModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/baai/bge-reranker-base"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    retrievalOptions: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          boostBy: Schema.optional(
-            Schema.Union([
-              Schema.Array(
-                Schema.Struct({
-                  field: Schema.String,
-                  direction: Schema.optional(
-                    Schema.Union([
-                      Schema.Union([
-                        Schema.Literals([
-                          "asc",
-                          "desc",
-                          "exists",
-                          "not_exists",
-                        ]),
-                        Schema.String,
-                      ]),
-                      Schema.Null,
-                    ]),
-                  ),
-                }),
-              ),
-              Schema.Null,
-            ]),
-          ),
-          keywordMatchMode: Schema.optional(
-            Schema.Union([
-              Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            boostBy: "boost_by",
-            keywordMatchMode: "keyword_match_mode",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    rewriteModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-        Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-        Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-        Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-        Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-        Schema.Literal("@cf/google/gemma-3-12b-it"),
-        Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-        Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-        Schema.Literal("anthropic/claude-3-7-sonnet"),
-        Schema.Literal("anthropic/claude-sonnet-4"),
-        Schema.Literal("anthropic/claude-opus-4"),
-        Schema.Literal("anthropic/claude-3-5-haiku"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-        Schema.Literal("cerebras/llama-3.3-70b"),
-        Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-        Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("cerebras/gpt-oss-120b"),
-        Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-        Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-        Schema.Literal("grok/grok-4"),
-        Schema.Literal("groq/llama-3.3-70b-versatile"),
-        Schema.Literal("groq/llama-3.1-8b-instant"),
-        Schema.Literal("openai/gpt-5"),
-        Schema.Literal("openai/gpt-5-mini"),
-        Schema.Literal("openai/gpt-5-nano"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    rewriteQuery: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    scoreThreshold: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    source: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    sourceParams: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          excludeItems: Schema.optional(
-            Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-          ),
-          includeItems: Schema.optional(
-            Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-          ),
-          prefix: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-          r2Jurisdiction: Schema.optional(
-            Schema.Union([Schema.String, Schema.Null]),
-          ),
-          webCrawler: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                crawlOptions: Schema.optional(
-                  Schema.Union([
-                    Schema.Struct({
-                      depth: Schema.optional(
-                        Schema.Union([Schema.Number, Schema.Null]),
-                      ),
-                      includeExternalLinks: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                      includeSubdomains: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                      maxAge: Schema.optional(
-                        Schema.Union([Schema.Number, Schema.Null]),
-                      ),
-                      source: Schema.optional(
-                        Schema.Union([
-                          Schema.Union([
-                            Schema.Literals(["all", "sitemaps", "links"]),
-                            Schema.String,
-                          ]),
-                          Schema.Null,
-                        ]),
-                      ),
-                    }).pipe(
-                      Schema.encodeKeys({
-                        depth: "depth",
-                        includeExternalLinks: "include_external_links",
-                        includeSubdomains: "include_subdomains",
-                        maxAge: "max_age",
-                        source: "source",
-                      }),
-                    ),
-                    Schema.Null,
-                  ]),
-                ),
-                parseOptions: Schema.optional(
-                  Schema.Union([
-                    Schema.Struct({
-                      contentSelector: Schema.optional(
-                        Schema.Union([
-                          Schema.Array(
-                            Schema.Struct({
-                              path: Schema.String,
-                              selector: Schema.String,
-                            }),
-                          ),
-                          Schema.Null,
-                        ]),
-                      ),
-                      includeHeaders: Schema.optional(
-                        Schema.Union([
-                          Schema.Record(Schema.String, Schema.Unknown),
-                          Schema.Null,
-                        ]),
-                      ),
-                      includeImages: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                      specificSitemaps: Schema.optional(
-                        Schema.Union([
-                          Schema.Array(Schema.String),
-                          Schema.Null,
-                        ]),
-                      ),
-                      useBrowserRendering: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                    }).pipe(
-                      Schema.encodeKeys({
-                        contentSelector: "content_selector",
-                        includeHeaders: "include_headers",
-                        includeImages: "include_images",
-                        specificSitemaps: "specific_sitemaps",
-                        useBrowserRendering: "use_browser_rendering",
-                      }),
-                    ),
-                    Schema.Null,
-                  ]),
-                ),
-                parseType: Schema.optional(
-                  Schema.Union([
-                    Schema.Union([
-                      Schema.Literals(["sitemap", "feed-rss", "crawl"]),
-                      Schema.String,
-                    ]),
-                    Schema.Null,
-                  ]),
-                ),
-                storeOptions: Schema.optional(
-                  Schema.Union([
-                    Schema.Struct({
-                      storageId: Schema.String,
-                      r2Jurisdiction: Schema.optional(
-                        Schema.Union([Schema.String, Schema.Null]),
-                      ),
-                      storageType: Schema.optional(
-                        Schema.Union([Schema.Literal("r2"), Schema.Null]),
-                      ),
-                    }).pipe(
-                      Schema.encodeKeys({
-                        storageId: "storage_id",
-                        r2Jurisdiction: "r2_jurisdiction",
-                        storageType: "storage_type",
-                      }),
-                    ),
-                    Schema.Null,
-                  ]),
-                ),
-              }).pipe(
-                Schema.encodeKeys({
-                  crawlOptions: "crawl_options",
-                  parseOptions: "parse_options",
-                  parseType: "parse_type",
-                  storeOptions: "store_options",
-                }),
-              ),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            excludeItems: "exclude_items",
-            includeItems: "include_items",
-            prefix: "prefix",
-            r2Jurisdiction: "r2_jurisdiction",
-            webCrawler: "web_crawler",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    status: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    syncInterval: Schema.optional(
-      Schema.Union([
-        Schema.Union([
-          Schema.Literals([
-            "900",
-            "1800",
-            "3600",
-            "7200",
-            "14400",
-            "21600",
-            "43200",
-            "86400",
-          ]),
-          Schema.String,
-        ]),
-        Schema.Null,
-      ]),
-    ),
-    tokenId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    type: Schema.optional(
-      Schema.Union([
-        Schema.Literal("r2"),
-        Schema.Literal("web-crawler"),
-        Schema.Null,
-      ]),
-    ),
-  })
-    .pipe(
-      Schema.encodeKeys({
-        id: "id",
-        createdAt: "created_at",
-        modifiedAt: "modified_at",
-        aiGatewayId: "ai_gateway_id",
-        aiSearchModel: "ai_search_model",
-        cache: "cache",
-        cacheThreshold: "cache_threshold",
-        cacheTtl: "cache_ttl",
-        chunkOverlap: "chunk_overlap",
-        chunkSize: "chunk_size",
-        createdBy: "created_by",
-        customMetadata: "custom_metadata",
-        embeddingModel: "embedding_model",
-        enable: "enable",
-        engineVersion: "engine_version",
-        fusionMethod: "fusion_method",
-        hybridSearchEnabled: "hybrid_search_enabled",
-        indexMethod: "index_method",
-        indexingOptions: "indexing_options",
-        lastActivity: "last_activity",
-        maxNumResults: "max_num_results",
-        metadata: "metadata",
-        modifiedBy: "modified_by",
-        namespace: "namespace",
-        paused: "paused",
-        publicEndpointId: "public_endpoint_id",
-        publicEndpointParams: "public_endpoint_params",
-        reranking: "reranking",
-        rerankingModel: "reranking_model",
-        retrievalOptions: "retrieval_options",
-        rewriteModel: "rewrite_model",
-        rewriteQuery: "rewrite_query",
-        scoreThreshold: "score_threshold",
-        source: "source",
-        sourceParams: "source_params",
-        status: "status",
-        syncInterval: "sync_interval",
-        tokenId: "token_id",
-        type: "type",
-      }),
-    )
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<UpdateNamespaceInstanceResponse>;
-
-export type UpdateNamespaceInstanceError = DefaultErrors;
-
-export const updateNamespaceInstance: API.OperationMethod<
-  UpdateNamespaceInstanceRequest,
-  UpdateNamespaceInstanceResponse,
-  UpdateNamespaceInstanceError,
-  Credentials | HttpClient.HttpClient
-> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
-  input: UpdateNamespaceInstanceRequest,
-  output: UpdateNamespaceInstanceResponse,
-  errors: [],
-}));
-
-export interface DeleteNamespaceInstanceRequest {
-  name: string;
-  id: string;
-  accountId: string;
-}
-
-export const DeleteNamespaceInstanceRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    name: Schema.String.pipe(T.HttpPath("name")),
-    id: Schema.String.pipe(T.HttpPath("id")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  }).pipe(
-    T.Http({
-      method: "DELETE",
-      path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}",
-    }),
-  ) as unknown as Schema.Schema<DeleteNamespaceInstanceRequest>;
-
-export interface DeleteNamespaceInstanceResponse {
-  /** AI Search instance ID. Lowercase alphanumeric, hyphens, and underscores. */
-  id: string;
-  createdAt: string;
-  modifiedAt: string;
-  aiGatewayId?: string | null;
-  aiSearchModel?:
-    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-    | "@cf/zai-org/glm-4.7-flash"
-    | "@cf/meta/llama-3.1-8b-instruct-fast"
-    | "@cf/meta/llama-3.1-8b-instruct-fp8"
-    | "@cf/meta/llama-4-scout-17b-16e-instruct"
-    | "@cf/qwen/qwen3-30b-a3b-fp8"
-    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
-    | "@cf/moonshotai/kimi-k2-instruct"
-    | "@cf/google/gemma-3-12b-it"
-    | "@cf/google/gemma-4-26b-a4b-it"
-    | "@cf/moonshotai/kimi-k2.5"
-    | "anthropic/claude-3-7-sonnet"
-    | "anthropic/claude-sonnet-4"
-    | "anthropic/claude-opus-4"
-    | "anthropic/claude-3-5-haiku"
-    | "cerebras/qwen-3-235b-a22b-instruct"
-    | "cerebras/qwen-3-235b-a22b-thinking"
-    | "cerebras/llama-3.3-70b"
-    | "cerebras/llama-4-maverick-17b-128e-instruct"
-    | "cerebras/llama-4-scout-17b-16e-instruct"
-    | "cerebras/gpt-oss-120b"
-    | "google-ai-studio/gemini-2.5-flash"
-    | "google-ai-studio/gemini-2.5-pro"
-    | "grok/grok-4"
-    | "groq/llama-3.3-70b-versatile"
-    | "groq/llama-3.1-8b-instant"
-    | "openai/gpt-5"
-    | "openai/gpt-5-mini"
-    | "openai/gpt-5-nano"
-    | ""
-    | null;
-  cache?: boolean | null;
-  cacheThreshold?:
-    | "super_strict_match"
-    | "close_enough"
-    | "flexible_friend"
-    | "anything_goes"
-    | (string & {})
-    | null;
-  /** Cache entry TTL in seconds. Allowed values: 600 (10min), 1800 (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h), 86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d). */
-  cacheTtl?:
-    | "600"
-    | "1800"
-    | "3600"
-    | "7200"
-    | "21600"
-    | "43200"
-    | "86400"
-    | "172800"
-    | "259200"
-    | "518400"
-    | (string & {})
-    | null;
-  chunkOverlap?: number | null;
-  chunkSize?: number | null;
-  createdBy?: string | null;
-  customMetadata?:
-    | {
-        dataType: "text" | "number" | "boolean" | "datetime" | (string & {});
-        fieldName: string;
-      }[]
-    | null;
-  embeddingModel?:
-    | "@cf/qwen/qwen3-embedding-0.6b"
-    | "@cf/baai/bge-m3"
-    | "@cf/baai/bge-large-en-v1.5"
-    | "@cf/google/embeddinggemma-300m"
-    | "google-ai-studio/gemini-embedding-001"
-    | "google-ai-studio/gemini-embedding-2-preview"
-    | "openai/text-embedding-3-small"
-    | "openai/text-embedding-3-large"
-    | ""
-    | null;
-  enable?: boolean | null;
-  engineVersion?: number | null;
-  fusionMethod?: "max" | "rrf" | (string & {}) | null;
-  /** @deprecated Deprecated — use index_method instead. */
-  hybridSearchEnabled?: boolean | null;
-  /** Controls which storage backends are used during indexing. Defaults to vector-only. */
-  indexMethod?: { keyword: boolean; vector: boolean } | null;
-  indexingOptions?: {
-    keywordTokenizer?: "porter" | "trigram" | (string & {}) | null;
-  } | null;
-  lastActivity?: string | null;
-  maxNumResults?: number | null;
-  metadata?: {
-    createdFromAisearchWizard?: boolean | null;
-    workerDomain?: string | null;
-  } | null;
-  modifiedBy?: string | null;
-  namespace?: string | null;
-  paused?: boolean | null;
-  publicEndpointId?: string | null;
-  publicEndpointParams?: {
-    authorizedHosts?: string[] | null;
-    chatCompletionsEndpoint?: { disabled?: boolean | null } | null;
-    enabled?: boolean | null;
-    mcp?: { description?: string | null; disabled?: boolean | null } | null;
-    rateLimit?: {
-      periodMs?: number | null;
-      requests?: number | null;
-      technique?: "fixed" | "sliding" | (string & {}) | null;
-    } | null;
-    searchEndpoint?: { disabled?: boolean | null } | null;
-  } | null;
-  reranking?: boolean | null;
-  rerankingModel?: "@cf/baai/bge-reranker-base" | "" | null;
-  retrievalOptions?: {
-    boostBy?:
-      | {
-          field: string;
-          direction?:
-            | "asc"
-            | "desc"
-            | "exists"
-            | "not_exists"
-            | (string & {})
-            | null;
-        }[]
-      | null;
-    keywordMatchMode?: "and" | "or" | (string & {}) | null;
-  } | null;
-  rewriteModel?:
-    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-    | "@cf/zai-org/glm-4.7-flash"
-    | "@cf/meta/llama-3.1-8b-instruct-fast"
-    | "@cf/meta/llama-3.1-8b-instruct-fp8"
-    | "@cf/meta/llama-4-scout-17b-16e-instruct"
-    | "@cf/qwen/qwen3-30b-a3b-fp8"
-    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
-    | "@cf/moonshotai/kimi-k2-instruct"
-    | "@cf/google/gemma-3-12b-it"
-    | "@cf/google/gemma-4-26b-a4b-it"
-    | "@cf/moonshotai/kimi-k2.5"
-    | "anthropic/claude-3-7-sonnet"
-    | "anthropic/claude-sonnet-4"
-    | "anthropic/claude-opus-4"
-    | "anthropic/claude-3-5-haiku"
-    | "cerebras/qwen-3-235b-a22b-instruct"
-    | "cerebras/qwen-3-235b-a22b-thinking"
-    | "cerebras/llama-3.3-70b"
-    | "cerebras/llama-4-maverick-17b-128e-instruct"
-    | "cerebras/llama-4-scout-17b-16e-instruct"
-    | "cerebras/gpt-oss-120b"
-    | "google-ai-studio/gemini-2.5-flash"
-    | "google-ai-studio/gemini-2.5-pro"
-    | "grok/grok-4"
-    | "groq/llama-3.3-70b-versatile"
-    | "groq/llama-3.1-8b-instant"
-    | "openai/gpt-5"
-    | "openai/gpt-5-mini"
-    | "openai/gpt-5-nano"
-    | ""
-    | null;
-  rewriteQuery?: boolean | null;
-  scoreThreshold?: number | null;
-  source?: string | null;
-  sourceParams?: {
-    excludeItems?: string[] | null;
-    includeItems?: string[] | null;
-    prefix?: string | null;
-    r2Jurisdiction?: string | null;
-    webCrawler?: {
-      crawlOptions?: {
-        depth?: number | null;
-        includeExternalLinks?: boolean | null;
-        includeSubdomains?: boolean | null;
-        maxAge?: number | null;
-        source?: "all" | "sitemaps" | "links" | (string & {}) | null;
-      } | null;
-      parseOptions?: {
-        contentSelector?: { path: string; selector: string }[] | null;
-        includeHeaders?: Record<string, unknown> | null;
-        includeImages?: boolean | null;
-        specificSitemaps?: string[] | null;
-        useBrowserRendering?: boolean | null;
-      } | null;
-      parseType?: "sitemap" | "feed-rss" | "crawl" | (string & {}) | null;
-      storeOptions?: {
-        storageId: string;
-        r2Jurisdiction?: string | null;
-        storageType?: "r2" | null;
-      } | null;
-    } | null;
-  } | null;
-  status?: string | null;
-  /** Interval between automatic syncs, in seconds. Allowed values: 900 (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h), 21600 (6h), 43200 (12h), 86400 (24h). */
-  syncInterval?:
-    | "900"
-    | "1800"
-    | "3600"
-    | "7200"
-    | "14400"
-    | "21600"
-    | "43200"
-    | "86400"
-    | (string & {})
-    | null;
-  tokenId?: string | null;
-  type?: "r2" | "web-crawler" | null;
-}
-
-export const DeleteNamespaceInstanceResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    id: Schema.String,
-    createdAt: Schema.String,
-    modifiedAt: Schema.String,
-    aiGatewayId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    aiSearchModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-        Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-        Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-        Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-        Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-        Schema.Literal("@cf/google/gemma-3-12b-it"),
-        Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-        Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-        Schema.Literal("anthropic/claude-3-7-sonnet"),
-        Schema.Literal("anthropic/claude-sonnet-4"),
-        Schema.Literal("anthropic/claude-opus-4"),
-        Schema.Literal("anthropic/claude-3-5-haiku"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-        Schema.Literal("cerebras/llama-3.3-70b"),
-        Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-        Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("cerebras/gpt-oss-120b"),
-        Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-        Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-        Schema.Literal("grok/grok-4"),
-        Schema.Literal("groq/llama-3.3-70b-versatile"),
-        Schema.Literal("groq/llama-3.1-8b-instant"),
-        Schema.Literal("openai/gpt-5"),
-        Schema.Literal("openai/gpt-5-mini"),
-        Schema.Literal("openai/gpt-5-nano"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    cache: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    cacheThreshold: Schema.optional(
-      Schema.Union([
-        Schema.Union([
-          Schema.Literals([
-            "super_strict_match",
-            "close_enough",
-            "flexible_friend",
-            "anything_goes",
-          ]),
-          Schema.String,
-        ]),
-        Schema.Null,
-      ]),
-    ),
-    cacheTtl: Schema.optional(
-      Schema.Union([
-        Schema.Union([
-          Schema.Literals([
-            "600",
-            "1800",
-            "3600",
-            "7200",
-            "21600",
-            "43200",
-            "86400",
-            "172800",
-            "259200",
-            "518400",
-          ]),
-          Schema.String,
-        ]),
-        Schema.Null,
-      ]),
-    ),
-    chunkOverlap: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    chunkSize: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    createdBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    customMetadata: Schema.optional(
-      Schema.Union([
-        Schema.Array(
-          Schema.Struct({
-            dataType: Schema.Union([
-              Schema.Literals(["text", "number", "boolean", "datetime"]),
-              Schema.String,
-            ]),
-            fieldName: Schema.String,
-          }).pipe(
-            Schema.encodeKeys({
-              dataType: "data_type",
-              fieldName: "field_name",
-            }),
-          ),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    embeddingModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
-        Schema.Literal("@cf/baai/bge-m3"),
-        Schema.Literal("@cf/baai/bge-large-en-v1.5"),
-        Schema.Literal("@cf/google/embeddinggemma-300m"),
-        Schema.Literal("google-ai-studio/gemini-embedding-001"),
-        Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
-        Schema.Literal("openai/text-embedding-3-small"),
-        Schema.Literal("openai/text-embedding-3-large"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    enable: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    engineVersion: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    fusionMethod: Schema.optional(
-      Schema.Union([
-        Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
-        Schema.Null,
-      ]),
-    ),
-    hybridSearchEnabled: Schema.optional(
-      Schema.Union([Schema.Boolean, Schema.Null]),
-    ),
-    indexMethod: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          keyword: Schema.Boolean,
-          vector: Schema.Boolean,
-        }),
-        Schema.Null,
-      ]),
-    ),
-    indexingOptions: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          keywordTokenizer: Schema.optional(
-            Schema.Union([
-              Schema.Union([
-                Schema.Literals(["porter", "trigram"]),
-                Schema.String,
-              ]),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" })),
-        Schema.Null,
-      ]),
-    ),
-    lastActivity: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    maxNumResults: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    metadata: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          createdFromAisearchWizard: Schema.optional(
-            Schema.Union([Schema.Boolean, Schema.Null]),
-          ),
-          workerDomain: Schema.optional(
-            Schema.Union([Schema.String, Schema.Null]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            createdFromAisearchWizard: "created_from_aisearch_wizard",
-            workerDomain: "worker_domain",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    modifiedBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    namespace: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    paused: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    publicEndpointId: Schema.optional(
-      Schema.Union([Schema.String, Schema.Null]),
-    ),
-    publicEndpointParams: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          authorizedHosts: Schema.optional(
-            Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-          ),
-          chatCompletionsEndpoint: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                disabled: Schema.optional(
-                  Schema.Union([Schema.Boolean, Schema.Null]),
-                ),
-              }),
-              Schema.Null,
-            ]),
-          ),
-          enabled: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-          mcp: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                description: Schema.optional(
-                  Schema.Union([Schema.String, Schema.Null]),
-                ),
-                disabled: Schema.optional(
-                  Schema.Union([Schema.Boolean, Schema.Null]),
-                ),
-              }),
-              Schema.Null,
-            ]),
-          ),
-          rateLimit: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                periodMs: Schema.optional(
-                  Schema.Union([Schema.Number, Schema.Null]),
-                ),
-                requests: Schema.optional(
-                  Schema.Union([Schema.Number, Schema.Null]),
-                ),
-                technique: Schema.optional(
-                  Schema.Union([
-                    Schema.Union([
-                      Schema.Literals(["fixed", "sliding"]),
-                      Schema.String,
-                    ]),
-                    Schema.Null,
-                  ]),
-                ),
-              }).pipe(
-                Schema.encodeKeys({
-                  periodMs: "period_ms",
-                  requests: "requests",
-                  technique: "technique",
-                }),
-              ),
-              Schema.Null,
-            ]),
-          ),
-          searchEndpoint: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                disabled: Schema.optional(
-                  Schema.Union([Schema.Boolean, Schema.Null]),
-                ),
-              }),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            authorizedHosts: "authorized_hosts",
-            chatCompletionsEndpoint: "chat_completions_endpoint",
-            enabled: "enabled",
-            mcp: "mcp",
-            rateLimit: "rate_limit",
-            searchEndpoint: "search_endpoint",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    reranking: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    rerankingModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/baai/bge-reranker-base"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    retrievalOptions: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          boostBy: Schema.optional(
-            Schema.Union([
-              Schema.Array(
-                Schema.Struct({
-                  field: Schema.String,
-                  direction: Schema.optional(
-                    Schema.Union([
-                      Schema.Union([
-                        Schema.Literals([
-                          "asc",
-                          "desc",
-                          "exists",
-                          "not_exists",
-                        ]),
-                        Schema.String,
-                      ]),
-                      Schema.Null,
-                    ]),
-                  ),
-                }),
-              ),
-              Schema.Null,
-            ]),
-          ),
-          keywordMatchMode: Schema.optional(
-            Schema.Union([
-              Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            boostBy: "boost_by",
-            keywordMatchMode: "keyword_match_mode",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    rewriteModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-        Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-        Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-        Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-        Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-        Schema.Literal("@cf/google/gemma-3-12b-it"),
-        Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-        Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-        Schema.Literal("anthropic/claude-3-7-sonnet"),
-        Schema.Literal("anthropic/claude-sonnet-4"),
-        Schema.Literal("anthropic/claude-opus-4"),
-        Schema.Literal("anthropic/claude-3-5-haiku"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-        Schema.Literal("cerebras/llama-3.3-70b"),
-        Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-        Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("cerebras/gpt-oss-120b"),
-        Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-        Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-        Schema.Literal("grok/grok-4"),
-        Schema.Literal("groq/llama-3.3-70b-versatile"),
-        Schema.Literal("groq/llama-3.1-8b-instant"),
-        Schema.Literal("openai/gpt-5"),
-        Schema.Literal("openai/gpt-5-mini"),
-        Schema.Literal("openai/gpt-5-nano"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    rewriteQuery: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    scoreThreshold: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    source: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    sourceParams: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          excludeItems: Schema.optional(
-            Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-          ),
-          includeItems: Schema.optional(
-            Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-          ),
-          prefix: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-          r2Jurisdiction: Schema.optional(
-            Schema.Union([Schema.String, Schema.Null]),
-          ),
-          webCrawler: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                crawlOptions: Schema.optional(
-                  Schema.Union([
-                    Schema.Struct({
-                      depth: Schema.optional(
-                        Schema.Union([Schema.Number, Schema.Null]),
-                      ),
-                      includeExternalLinks: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                      includeSubdomains: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                      maxAge: Schema.optional(
-                        Schema.Union([Schema.Number, Schema.Null]),
-                      ),
-                      source: Schema.optional(
-                        Schema.Union([
-                          Schema.Union([
-                            Schema.Literals(["all", "sitemaps", "links"]),
-                            Schema.String,
-                          ]),
-                          Schema.Null,
-                        ]),
-                      ),
-                    }).pipe(
-                      Schema.encodeKeys({
-                        depth: "depth",
-                        includeExternalLinks: "include_external_links",
-                        includeSubdomains: "include_subdomains",
-                        maxAge: "max_age",
-                        source: "source",
-                      }),
-                    ),
-                    Schema.Null,
-                  ]),
-                ),
-                parseOptions: Schema.optional(
-                  Schema.Union([
-                    Schema.Struct({
-                      contentSelector: Schema.optional(
-                        Schema.Union([
-                          Schema.Array(
-                            Schema.Struct({
-                              path: Schema.String,
-                              selector: Schema.String,
-                            }),
-                          ),
-                          Schema.Null,
-                        ]),
-                      ),
-                      includeHeaders: Schema.optional(
-                        Schema.Union([
-                          Schema.Record(Schema.String, Schema.Unknown),
-                          Schema.Null,
-                        ]),
-                      ),
-                      includeImages: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                      specificSitemaps: Schema.optional(
-                        Schema.Union([
-                          Schema.Array(Schema.String),
-                          Schema.Null,
-                        ]),
-                      ),
-                      useBrowserRendering: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                    }).pipe(
-                      Schema.encodeKeys({
-                        contentSelector: "content_selector",
-                        includeHeaders: "include_headers",
-                        includeImages: "include_images",
-                        specificSitemaps: "specific_sitemaps",
-                        useBrowserRendering: "use_browser_rendering",
-                      }),
-                    ),
-                    Schema.Null,
-                  ]),
-                ),
-                parseType: Schema.optional(
-                  Schema.Union([
-                    Schema.Union([
-                      Schema.Literals(["sitemap", "feed-rss", "crawl"]),
-                      Schema.String,
-                    ]),
-                    Schema.Null,
-                  ]),
-                ),
-                storeOptions: Schema.optional(
-                  Schema.Union([
-                    Schema.Struct({
-                      storageId: Schema.String,
-                      r2Jurisdiction: Schema.optional(
-                        Schema.Union([Schema.String, Schema.Null]),
-                      ),
-                      storageType: Schema.optional(
-                        Schema.Union([Schema.Literal("r2"), Schema.Null]),
-                      ),
-                    }).pipe(
-                      Schema.encodeKeys({
-                        storageId: "storage_id",
-                        r2Jurisdiction: "r2_jurisdiction",
-                        storageType: "storage_type",
-                      }),
-                    ),
-                    Schema.Null,
-                  ]),
-                ),
-              }).pipe(
-                Schema.encodeKeys({
-                  crawlOptions: "crawl_options",
-                  parseOptions: "parse_options",
-                  parseType: "parse_type",
-                  storeOptions: "store_options",
-                }),
-              ),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            excludeItems: "exclude_items",
-            includeItems: "include_items",
-            prefix: "prefix",
-            r2Jurisdiction: "r2_jurisdiction",
-            webCrawler: "web_crawler",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    status: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    syncInterval: Schema.optional(
-      Schema.Union([
-        Schema.Union([
-          Schema.Literals([
-            "900",
-            "1800",
-            "3600",
-            "7200",
-            "14400",
-            "21600",
-            "43200",
-            "86400",
-          ]),
-          Schema.String,
-        ]),
-        Schema.Null,
-      ]),
-    ),
-    tokenId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    type: Schema.optional(
-      Schema.Union([
-        Schema.Literal("r2"),
-        Schema.Literal("web-crawler"),
-        Schema.Null,
-      ]),
-    ),
-  })
-    .pipe(
-      Schema.encodeKeys({
-        id: "id",
-        createdAt: "created_at",
-        modifiedAt: "modified_at",
-        aiGatewayId: "ai_gateway_id",
-        aiSearchModel: "ai_search_model",
-        cache: "cache",
-        cacheThreshold: "cache_threshold",
-        cacheTtl: "cache_ttl",
-        chunkOverlap: "chunk_overlap",
-        chunkSize: "chunk_size",
-        createdBy: "created_by",
-        customMetadata: "custom_metadata",
-        embeddingModel: "embedding_model",
-        enable: "enable",
-        engineVersion: "engine_version",
-        fusionMethod: "fusion_method",
-        hybridSearchEnabled: "hybrid_search_enabled",
-        indexMethod: "index_method",
-        indexingOptions: "indexing_options",
-        lastActivity: "last_activity",
-        maxNumResults: "max_num_results",
-        metadata: "metadata",
-        modifiedBy: "modified_by",
-        namespace: "namespace",
-        paused: "paused",
-        publicEndpointId: "public_endpoint_id",
-        publicEndpointParams: "public_endpoint_params",
-        reranking: "reranking",
-        rerankingModel: "reranking_model",
-        retrievalOptions: "retrieval_options",
-        rewriteModel: "rewrite_model",
-        rewriteQuery: "rewrite_query",
-        scoreThreshold: "score_threshold",
-        source: "source",
-        sourceParams: "source_params",
-        status: "status",
-        syncInterval: "sync_interval",
-        tokenId: "token_id",
-        type: "type",
-      }),
-    )
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<DeleteNamespaceInstanceResponse>;
-
-export type DeleteNamespaceInstanceError = DefaultErrors;
-
-export const deleteNamespaceInstance: API.OperationMethod<
-  DeleteNamespaceInstanceRequest,
-  DeleteNamespaceInstanceResponse,
-  DeleteNamespaceInstanceError,
-  Credentials | HttpClient.HttpClient
-> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
-  input: DeleteNamespaceInstanceRequest,
-  output: DeleteNamespaceInstanceResponse,
-  errors: [],
-}));
-
-export interface ReadNamespaceInstanceRequest {
-  name: string;
-  id: string;
-  accountId: string;
-}
-
-export const ReadNamespaceInstanceRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    name: Schema.String.pipe(T.HttpPath("name")),
-    id: Schema.String.pipe(T.HttpPath("id")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  }).pipe(
-    T.Http({
-      method: "GET",
-      path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}",
-    }),
-  ) as unknown as Schema.Schema<ReadNamespaceInstanceRequest>;
-
-export interface ReadNamespaceInstanceResponse {
-  /** AI Search instance ID. Lowercase alphanumeric, hyphens, and underscores. */
-  id: string;
-  createdAt: string;
-  modifiedAt: string;
-  aiGatewayId?: string | null;
-  aiSearchModel?:
-    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-    | "@cf/zai-org/glm-4.7-flash"
-    | "@cf/meta/llama-3.1-8b-instruct-fast"
-    | "@cf/meta/llama-3.1-8b-instruct-fp8"
-    | "@cf/meta/llama-4-scout-17b-16e-instruct"
-    | "@cf/qwen/qwen3-30b-a3b-fp8"
-    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
-    | "@cf/moonshotai/kimi-k2-instruct"
-    | "@cf/google/gemma-3-12b-it"
-    | "@cf/google/gemma-4-26b-a4b-it"
-    | "@cf/moonshotai/kimi-k2.5"
-    | "anthropic/claude-3-7-sonnet"
-    | "anthropic/claude-sonnet-4"
-    | "anthropic/claude-opus-4"
-    | "anthropic/claude-3-5-haiku"
-    | "cerebras/qwen-3-235b-a22b-instruct"
-    | "cerebras/qwen-3-235b-a22b-thinking"
-    | "cerebras/llama-3.3-70b"
-    | "cerebras/llama-4-maverick-17b-128e-instruct"
-    | "cerebras/llama-4-scout-17b-16e-instruct"
-    | "cerebras/gpt-oss-120b"
-    | "google-ai-studio/gemini-2.5-flash"
-    | "google-ai-studio/gemini-2.5-pro"
-    | "grok/grok-4"
-    | "groq/llama-3.3-70b-versatile"
-    | "groq/llama-3.1-8b-instant"
-    | "openai/gpt-5"
-    | "openai/gpt-5-mini"
-    | "openai/gpt-5-nano"
-    | ""
-    | null;
-  cache?: boolean | null;
-  cacheThreshold?:
-    | "super_strict_match"
-    | "close_enough"
-    | "flexible_friend"
-    | "anything_goes"
-    | (string & {})
-    | null;
-  /** Cache entry TTL in seconds. Allowed values: 600 (10min), 1800 (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h), 86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d). */
-  cacheTtl?:
-    | "600"
-    | "1800"
-    | "3600"
-    | "7200"
-    | "21600"
-    | "43200"
-    | "86400"
-    | "172800"
-    | "259200"
-    | "518400"
-    | (string & {})
-    | null;
-  chunkOverlap?: number | null;
-  chunkSize?: number | null;
-  createdBy?: string | null;
-  customMetadata?:
-    | {
-        dataType: "text" | "number" | "boolean" | "datetime" | (string & {});
-        fieldName: string;
-      }[]
-    | null;
-  embeddingModel?:
-    | "@cf/qwen/qwen3-embedding-0.6b"
-    | "@cf/baai/bge-m3"
-    | "@cf/baai/bge-large-en-v1.5"
-    | "@cf/google/embeddinggemma-300m"
-    | "google-ai-studio/gemini-embedding-001"
-    | "google-ai-studio/gemini-embedding-2-preview"
-    | "openai/text-embedding-3-small"
-    | "openai/text-embedding-3-large"
-    | ""
-    | null;
-  enable?: boolean | null;
-  engineVersion?: number | null;
-  fusionMethod?: "max" | "rrf" | (string & {}) | null;
-  /** @deprecated Deprecated — use index_method instead. */
-  hybridSearchEnabled?: boolean | null;
-  /** Controls which storage backends are used during indexing. Defaults to vector-only. */
-  indexMethod?: { keyword: boolean; vector: boolean } | null;
-  indexingOptions?: {
-    keywordTokenizer?: "porter" | "trigram" | (string & {}) | null;
-  } | null;
-  lastActivity?: string | null;
-  maxNumResults?: number | null;
-  metadata?: {
-    createdFromAisearchWizard?: boolean | null;
-    workerDomain?: string | null;
-  } | null;
-  modifiedBy?: string | null;
-  namespace?: string | null;
-  paused?: boolean | null;
-  publicEndpointId?: string | null;
-  publicEndpointParams?: {
-    authorizedHosts?: string[] | null;
-    chatCompletionsEndpoint?: { disabled?: boolean | null } | null;
-    enabled?: boolean | null;
-    mcp?: { description?: string | null; disabled?: boolean | null } | null;
-    rateLimit?: {
-      periodMs?: number | null;
-      requests?: number | null;
-      technique?: "fixed" | "sliding" | (string & {}) | null;
-    } | null;
-    searchEndpoint?: { disabled?: boolean | null } | null;
-  } | null;
-  reranking?: boolean | null;
-  rerankingModel?: "@cf/baai/bge-reranker-base" | "" | null;
-  retrievalOptions?: {
-    boostBy?:
-      | {
-          field: string;
-          direction?:
-            | "asc"
-            | "desc"
-            | "exists"
-            | "not_exists"
-            | (string & {})
-            | null;
-        }[]
-      | null;
-    keywordMatchMode?: "and" | "or" | (string & {}) | null;
-  } | null;
-  rewriteModel?:
-    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-    | "@cf/zai-org/glm-4.7-flash"
-    | "@cf/meta/llama-3.1-8b-instruct-fast"
-    | "@cf/meta/llama-3.1-8b-instruct-fp8"
-    | "@cf/meta/llama-4-scout-17b-16e-instruct"
-    | "@cf/qwen/qwen3-30b-a3b-fp8"
-    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
-    | "@cf/moonshotai/kimi-k2-instruct"
-    | "@cf/google/gemma-3-12b-it"
-    | "@cf/google/gemma-4-26b-a4b-it"
-    | "@cf/moonshotai/kimi-k2.5"
-    | "anthropic/claude-3-7-sonnet"
-    | "anthropic/claude-sonnet-4"
-    | "anthropic/claude-opus-4"
-    | "anthropic/claude-3-5-haiku"
-    | "cerebras/qwen-3-235b-a22b-instruct"
-    | "cerebras/qwen-3-235b-a22b-thinking"
-    | "cerebras/llama-3.3-70b"
-    | "cerebras/llama-4-maverick-17b-128e-instruct"
-    | "cerebras/llama-4-scout-17b-16e-instruct"
-    | "cerebras/gpt-oss-120b"
-    | "google-ai-studio/gemini-2.5-flash"
-    | "google-ai-studio/gemini-2.5-pro"
-    | "grok/grok-4"
-    | "groq/llama-3.3-70b-versatile"
-    | "groq/llama-3.1-8b-instant"
-    | "openai/gpt-5"
-    | "openai/gpt-5-mini"
-    | "openai/gpt-5-nano"
-    | ""
-    | null;
-  rewriteQuery?: boolean | null;
-  scoreThreshold?: number | null;
-  source?: string | null;
-  sourceParams?: {
-    excludeItems?: string[] | null;
-    includeItems?: string[] | null;
-    prefix?: string | null;
-    r2Jurisdiction?: string | null;
-    webCrawler?: {
-      crawlOptions?: {
-        depth?: number | null;
-        includeExternalLinks?: boolean | null;
-        includeSubdomains?: boolean | null;
-        maxAge?: number | null;
-        source?: "all" | "sitemaps" | "links" | (string & {}) | null;
-      } | null;
-      parseOptions?: {
-        contentSelector?: { path: string; selector: string }[] | null;
-        includeHeaders?: Record<string, unknown> | null;
-        includeImages?: boolean | null;
-        specificSitemaps?: string[] | null;
-        useBrowserRendering?: boolean | null;
-      } | null;
-      parseType?: "sitemap" | "feed-rss" | "crawl" | (string & {}) | null;
-      storeOptions?: {
-        storageId: string;
-        r2Jurisdiction?: string | null;
-        storageType?: "r2" | null;
-      } | null;
-    } | null;
-  } | null;
-  status?: string | null;
-  /** Interval between automatic syncs, in seconds. Allowed values: 900 (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h), 21600 (6h), 43200 (12h), 86400 (24h). */
-  syncInterval?:
-    | "900"
-    | "1800"
-    | "3600"
-    | "7200"
-    | "14400"
-    | "21600"
-    | "43200"
-    | "86400"
-    | (string & {})
-    | null;
-  tokenId?: string | null;
-  type?: "r2" | "web-crawler" | null;
-}
-
-export const ReadNamespaceInstanceResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    id: Schema.String,
-    createdAt: Schema.String,
-    modifiedAt: Schema.String,
-    aiGatewayId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    aiSearchModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-        Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-        Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-        Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-        Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-        Schema.Literal("@cf/google/gemma-3-12b-it"),
-        Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-        Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-        Schema.Literal("anthropic/claude-3-7-sonnet"),
-        Schema.Literal("anthropic/claude-sonnet-4"),
-        Schema.Literal("anthropic/claude-opus-4"),
-        Schema.Literal("anthropic/claude-3-5-haiku"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-        Schema.Literal("cerebras/llama-3.3-70b"),
-        Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-        Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("cerebras/gpt-oss-120b"),
-        Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-        Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-        Schema.Literal("grok/grok-4"),
-        Schema.Literal("groq/llama-3.3-70b-versatile"),
-        Schema.Literal("groq/llama-3.1-8b-instant"),
-        Schema.Literal("openai/gpt-5"),
-        Schema.Literal("openai/gpt-5-mini"),
-        Schema.Literal("openai/gpt-5-nano"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    cache: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    cacheThreshold: Schema.optional(
-      Schema.Union([
-        Schema.Union([
-          Schema.Literals([
-            "super_strict_match",
-            "close_enough",
-            "flexible_friend",
-            "anything_goes",
-          ]),
-          Schema.String,
-        ]),
-        Schema.Null,
-      ]),
-    ),
-    cacheTtl: Schema.optional(
-      Schema.Union([
-        Schema.Union([
-          Schema.Literals([
-            "600",
-            "1800",
-            "3600",
-            "7200",
-            "21600",
-            "43200",
-            "86400",
-            "172800",
-            "259200",
-            "518400",
-          ]),
-          Schema.String,
-        ]),
-        Schema.Null,
-      ]),
-    ),
-    chunkOverlap: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    chunkSize: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    createdBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    customMetadata: Schema.optional(
-      Schema.Union([
-        Schema.Array(
-          Schema.Struct({
-            dataType: Schema.Union([
-              Schema.Literals(["text", "number", "boolean", "datetime"]),
-              Schema.String,
-            ]),
-            fieldName: Schema.String,
-          }).pipe(
-            Schema.encodeKeys({
-              dataType: "data_type",
-              fieldName: "field_name",
-            }),
-          ),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    embeddingModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
-        Schema.Literal("@cf/baai/bge-m3"),
-        Schema.Literal("@cf/baai/bge-large-en-v1.5"),
-        Schema.Literal("@cf/google/embeddinggemma-300m"),
-        Schema.Literal("google-ai-studio/gemini-embedding-001"),
-        Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
-        Schema.Literal("openai/text-embedding-3-small"),
-        Schema.Literal("openai/text-embedding-3-large"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    enable: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    engineVersion: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    fusionMethod: Schema.optional(
-      Schema.Union([
-        Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
-        Schema.Null,
-      ]),
-    ),
-    hybridSearchEnabled: Schema.optional(
-      Schema.Union([Schema.Boolean, Schema.Null]),
-    ),
-    indexMethod: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          keyword: Schema.Boolean,
-          vector: Schema.Boolean,
-        }),
-        Schema.Null,
-      ]),
-    ),
-    indexingOptions: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          keywordTokenizer: Schema.optional(
-            Schema.Union([
-              Schema.Union([
-                Schema.Literals(["porter", "trigram"]),
-                Schema.String,
-              ]),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" })),
-        Schema.Null,
-      ]),
-    ),
-    lastActivity: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    maxNumResults: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    metadata: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          createdFromAisearchWizard: Schema.optional(
-            Schema.Union([Schema.Boolean, Schema.Null]),
-          ),
-          workerDomain: Schema.optional(
-            Schema.Union([Schema.String, Schema.Null]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            createdFromAisearchWizard: "created_from_aisearch_wizard",
-            workerDomain: "worker_domain",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    modifiedBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    namespace: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    paused: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    publicEndpointId: Schema.optional(
-      Schema.Union([Schema.String, Schema.Null]),
-    ),
-    publicEndpointParams: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          authorizedHosts: Schema.optional(
-            Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-          ),
-          chatCompletionsEndpoint: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                disabled: Schema.optional(
-                  Schema.Union([Schema.Boolean, Schema.Null]),
-                ),
-              }),
-              Schema.Null,
-            ]),
-          ),
-          enabled: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-          mcp: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                description: Schema.optional(
-                  Schema.Union([Schema.String, Schema.Null]),
-                ),
-                disabled: Schema.optional(
-                  Schema.Union([Schema.Boolean, Schema.Null]),
-                ),
-              }),
-              Schema.Null,
-            ]),
-          ),
-          rateLimit: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                periodMs: Schema.optional(
-                  Schema.Union([Schema.Number, Schema.Null]),
-                ),
-                requests: Schema.optional(
-                  Schema.Union([Schema.Number, Schema.Null]),
-                ),
-                technique: Schema.optional(
-                  Schema.Union([
-                    Schema.Union([
-                      Schema.Literals(["fixed", "sliding"]),
-                      Schema.String,
-                    ]),
-                    Schema.Null,
-                  ]),
-                ),
-              }).pipe(
-                Schema.encodeKeys({
-                  periodMs: "period_ms",
-                  requests: "requests",
-                  technique: "technique",
-                }),
-              ),
-              Schema.Null,
-            ]),
-          ),
-          searchEndpoint: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                disabled: Schema.optional(
-                  Schema.Union([Schema.Boolean, Schema.Null]),
-                ),
-              }),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            authorizedHosts: "authorized_hosts",
-            chatCompletionsEndpoint: "chat_completions_endpoint",
-            enabled: "enabled",
-            mcp: "mcp",
-            rateLimit: "rate_limit",
-            searchEndpoint: "search_endpoint",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    reranking: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    rerankingModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/baai/bge-reranker-base"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    retrievalOptions: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          boostBy: Schema.optional(
-            Schema.Union([
-              Schema.Array(
-                Schema.Struct({
-                  field: Schema.String,
-                  direction: Schema.optional(
-                    Schema.Union([
-                      Schema.Union([
-                        Schema.Literals([
-                          "asc",
-                          "desc",
-                          "exists",
-                          "not_exists",
-                        ]),
-                        Schema.String,
-                      ]),
-                      Schema.Null,
-                    ]),
-                  ),
-                }),
-              ),
-              Schema.Null,
-            ]),
-          ),
-          keywordMatchMode: Schema.optional(
-            Schema.Union([
-              Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            boostBy: "boost_by",
-            keywordMatchMode: "keyword_match_mode",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    rewriteModel: Schema.optional(
-      Schema.Union([
-        Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
-        Schema.Literal("@cf/zai-org/glm-4.7-flash"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
-        Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
-        Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
-        Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
-        Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
-        Schema.Literal("@cf/google/gemma-3-12b-it"),
-        Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
-        Schema.Literal("@cf/moonshotai/kimi-k2.5"),
-        Schema.Literal("anthropic/claude-3-7-sonnet"),
-        Schema.Literal("anthropic/claude-sonnet-4"),
-        Schema.Literal("anthropic/claude-opus-4"),
-        Schema.Literal("anthropic/claude-3-5-haiku"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
-        Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
-        Schema.Literal("cerebras/llama-3.3-70b"),
-        Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
-        Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
-        Schema.Literal("cerebras/gpt-oss-120b"),
-        Schema.Literal("google-ai-studio/gemini-2.5-flash"),
-        Schema.Literal("google-ai-studio/gemini-2.5-pro"),
-        Schema.Literal("grok/grok-4"),
-        Schema.Literal("groq/llama-3.3-70b-versatile"),
-        Schema.Literal("groq/llama-3.1-8b-instant"),
-        Schema.Literal("openai/gpt-5"),
-        Schema.Literal("openai/gpt-5-mini"),
-        Schema.Literal("openai/gpt-5-nano"),
-        Schema.Literal(""),
-        Schema.Null,
-      ]),
-    ),
-    rewriteQuery: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    scoreThreshold: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    source: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    sourceParams: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          excludeItems: Schema.optional(
-            Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-          ),
-          includeItems: Schema.optional(
-            Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-          ),
-          prefix: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-          r2Jurisdiction: Schema.optional(
-            Schema.Union([Schema.String, Schema.Null]),
-          ),
-          webCrawler: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                crawlOptions: Schema.optional(
-                  Schema.Union([
-                    Schema.Struct({
-                      depth: Schema.optional(
-                        Schema.Union([Schema.Number, Schema.Null]),
-                      ),
-                      includeExternalLinks: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                      includeSubdomains: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                      maxAge: Schema.optional(
-                        Schema.Union([Schema.Number, Schema.Null]),
-                      ),
-                      source: Schema.optional(
-                        Schema.Union([
-                          Schema.Union([
-                            Schema.Literals(["all", "sitemaps", "links"]),
-                            Schema.String,
-                          ]),
-                          Schema.Null,
-                        ]),
-                      ),
-                    }).pipe(
-                      Schema.encodeKeys({
-                        depth: "depth",
-                        includeExternalLinks: "include_external_links",
-                        includeSubdomains: "include_subdomains",
-                        maxAge: "max_age",
-                        source: "source",
-                      }),
-                    ),
-                    Schema.Null,
-                  ]),
-                ),
-                parseOptions: Schema.optional(
-                  Schema.Union([
-                    Schema.Struct({
-                      contentSelector: Schema.optional(
-                        Schema.Union([
-                          Schema.Array(
-                            Schema.Struct({
-                              path: Schema.String,
-                              selector: Schema.String,
-                            }),
-                          ),
-                          Schema.Null,
-                        ]),
-                      ),
-                      includeHeaders: Schema.optional(
-                        Schema.Union([
-                          Schema.Record(Schema.String, Schema.Unknown),
-                          Schema.Null,
-                        ]),
-                      ),
-                      includeImages: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                      specificSitemaps: Schema.optional(
-                        Schema.Union([
-                          Schema.Array(Schema.String),
-                          Schema.Null,
-                        ]),
-                      ),
-                      useBrowserRendering: Schema.optional(
-                        Schema.Union([Schema.Boolean, Schema.Null]),
-                      ),
-                    }).pipe(
-                      Schema.encodeKeys({
-                        contentSelector: "content_selector",
-                        includeHeaders: "include_headers",
-                        includeImages: "include_images",
-                        specificSitemaps: "specific_sitemaps",
-                        useBrowserRendering: "use_browser_rendering",
-                      }),
-                    ),
-                    Schema.Null,
-                  ]),
-                ),
-                parseType: Schema.optional(
-                  Schema.Union([
-                    Schema.Union([
-                      Schema.Literals(["sitemap", "feed-rss", "crawl"]),
-                      Schema.String,
-                    ]),
-                    Schema.Null,
-                  ]),
-                ),
-                storeOptions: Schema.optional(
-                  Schema.Union([
-                    Schema.Struct({
-                      storageId: Schema.String,
-                      r2Jurisdiction: Schema.optional(
-                        Schema.Union([Schema.String, Schema.Null]),
-                      ),
-                      storageType: Schema.optional(
-                        Schema.Union([Schema.Literal("r2"), Schema.Null]),
-                      ),
-                    }).pipe(
-                      Schema.encodeKeys({
-                        storageId: "storage_id",
-                        r2Jurisdiction: "r2_jurisdiction",
-                        storageType: "storage_type",
-                      }),
-                    ),
-                    Schema.Null,
-                  ]),
-                ),
-              }).pipe(
-                Schema.encodeKeys({
-                  crawlOptions: "crawl_options",
-                  parseOptions: "parse_options",
-                  parseType: "parse_type",
-                  storeOptions: "store_options",
-                }),
-              ),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            excludeItems: "exclude_items",
-            includeItems: "include_items",
-            prefix: "prefix",
-            r2Jurisdiction: "r2_jurisdiction",
-            webCrawler: "web_crawler",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    status: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    syncInterval: Schema.optional(
-      Schema.Union([
-        Schema.Union([
-          Schema.Literals([
-            "900",
-            "1800",
-            "3600",
-            "7200",
-            "14400",
-            "21600",
-            "43200",
-            "86400",
-          ]),
-          Schema.String,
-        ]),
-        Schema.Null,
-      ]),
-    ),
-    tokenId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    type: Schema.optional(
-      Schema.Union([
-        Schema.Literal("r2"),
-        Schema.Literal("web-crawler"),
-        Schema.Null,
-      ]),
-    ),
-  })
-    .pipe(
-      Schema.encodeKeys({
-        id: "id",
-        createdAt: "created_at",
-        modifiedAt: "modified_at",
-        aiGatewayId: "ai_gateway_id",
-        aiSearchModel: "ai_search_model",
-        cache: "cache",
-        cacheThreshold: "cache_threshold",
-        cacheTtl: "cache_ttl",
-        chunkOverlap: "chunk_overlap",
-        chunkSize: "chunk_size",
-        createdBy: "created_by",
-        customMetadata: "custom_metadata",
-        embeddingModel: "embedding_model",
-        enable: "enable",
-        engineVersion: "engine_version",
-        fusionMethod: "fusion_method",
-        hybridSearchEnabled: "hybrid_search_enabled",
-        indexMethod: "index_method",
-        indexingOptions: "indexing_options",
-        lastActivity: "last_activity",
-        maxNumResults: "max_num_results",
-        metadata: "metadata",
-        modifiedBy: "modified_by",
-        namespace: "namespace",
-        paused: "paused",
-        publicEndpointId: "public_endpoint_id",
-        publicEndpointParams: "public_endpoint_params",
-        reranking: "reranking",
-        rerankingModel: "reranking_model",
-        retrievalOptions: "retrieval_options",
-        rewriteModel: "rewrite_model",
-        rewriteQuery: "rewrite_query",
-        scoreThreshold: "score_threshold",
-        source: "source",
-        sourceParams: "source_params",
-        status: "status",
-        syncInterval: "sync_interval",
-        tokenId: "token_id",
-        type: "type",
-      }),
-    )
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<ReadNamespaceInstanceResponse>;
-
-export type ReadNamespaceInstanceError = DefaultErrors;
-
-export const readNamespaceInstance: API.OperationMethod<
-  ReadNamespaceInstanceRequest,
-  ReadNamespaceInstanceResponse,
-  ReadNamespaceInstanceError,
-  Credentials | HttpClient.HttpClient
-> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
-  input: ReadNamespaceInstanceRequest,
-  output: ReadNamespaceInstanceResponse,
-  errors: [],
-}));
-
-export interface SearchNamespaceInstanceRequest {
-  name: string;
-  id: string;
-  /** Path param */
-  accountId: string;
-  /** Body param */
-  aiSearchOptions?: {
-    cache?: {
-      cacheThreshold?:
-        | "super_strict_match"
-        | "close_enough"
-        | "flexible_friend"
-        | "anything_goes"
-        | (string & {});
-      enabled?: boolean;
-    };
-    queryRewrite?: {
-      enabled?: boolean;
-      model?:
-        | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-        | "@cf/zai-org/glm-4.7-flash"
-        | "@cf/meta/llama-3.1-8b-instruct-fast"
-        | "@cf/meta/llama-3.1-8b-instruct-fp8"
-        | "@cf/meta/llama-4-scout-17b-16e-instruct"
-        | "@cf/qwen/qwen3-30b-a3b-fp8"
-        | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
-        | "@cf/moonshotai/kimi-k2-instruct"
-        | "@cf/google/gemma-3-12b-it"
-        | "@cf/google/gemma-4-26b-a4b-it"
-        | "@cf/moonshotai/kimi-k2.5"
-        | "anthropic/claude-3-7-sonnet"
-        | "anthropic/claude-sonnet-4"
-        | "anthropic/claude-opus-4"
-        | "anthropic/claude-3-5-haiku"
-        | "cerebras/qwen-3-235b-a22b-instruct"
-        | "cerebras/qwen-3-235b-a22b-thinking"
-        | "cerebras/llama-3.3-70b"
-        | "cerebras/llama-4-maverick-17b-128e-instruct"
-        | "cerebras/llama-4-scout-17b-16e-instruct"
-        | "cerebras/gpt-oss-120b"
-        | "google-ai-studio/gemini-2.5-flash"
-        | "google-ai-studio/gemini-2.5-pro"
-        | "grok/grok-4"
-        | "groq/llama-3.3-70b-versatile"
-        | "groq/llama-3.1-8b-instant"
-        | "openai/gpt-5"
-        | "openai/gpt-5-mini"
-        | "openai/gpt-5-nano"
-        | ""
-        | (string & {});
-      rewritePrompt?: string;
-    };
-    reranking?: {
-      enabled?: boolean;
-      matchThreshold?: number;
-      model?: "@cf/baai/bge-reranker-base" | "" | (string & {});
-    };
-    retrieval?: {
-      boostBy?: {
-        field: string;
-        direction?: "asc" | "desc" | "exists" | "not_exists" | (string & {});
-      }[];
-      contextExpansion?: number;
-      filters?: Record<string, unknown>;
-      fusionMethod?: "max" | "rrf" | (string & {});
-      keywordMatchMode?: "and" | "or" | (string & {});
-      matchThreshold?: number;
-      maxNumResults?: number;
-      retrievalType?: "vector" | "keyword" | "hybrid" | (string & {});
-      returnOnFailure?: boolean;
-    };
-  };
-  /** Body param */
-  messages?: {
-    content: string | null;
-    role:
-      | "system"
-      | "developer"
-      | "user"
-      | "assistant"
-      | "tool"
-      | (string & {});
-  }[];
-  /** Body param: A simple text query string. Alternative to 'messages' — provide either this or 'messages', not both. */
-  query?: string;
-}
-
-export const SearchNamespaceInstanceRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    name: Schema.String.pipe(T.HttpPath("name")),
-    id: Schema.String.pipe(T.HttpPath("id")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    aiSearchOptions: Schema.optional(
-      Schema.Struct({
+export const SearchNamespaceRequest =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      aiSearchOptions: Schema.Struct({
+        instanceIds: Schema.Array(Schema.String),
         cache: Schema.optional(
           Schema.Struct({
             cacheThreshold: Schema.optional(
@@ -14041,41 +8173,5584 @@ export const SearchNamespaceInstanceRequest =
         ),
       }).pipe(
         Schema.encodeKeys({
+          instanceIds: "instance_ids",
           cache: "cache",
           queryRewrite: "query_rewrite",
           reranking: "reranking",
           retrieval: "retrieval",
         }),
       ),
-    ),
-    messages: Schema.optional(
-      Schema.Array(
-        Schema.Struct({
-          content: Schema.Union([Schema.String, Schema.Null]),
-          role: Schema.Union([
-            Schema.Literals([
-              "system",
-              "developer",
-              "user",
-              "assistant",
-              "tool",
+      messages: Schema.optional(
+        Schema.Array(
+          Schema.Struct({
+            content: Schema.Union([Schema.String, Schema.Null]),
+            role: Schema.Union([
+              Schema.Literals([
+                "system",
+                "developer",
+                "user",
+                "assistant",
+                "tool",
+              ]),
+              Schema.String,
             ]),
-            Schema.String,
+          }),
+        ),
+      ),
+      query: Schema.optional(Schema.String),
+    }).pipe(
+      Schema.encodeKeys({
+        aiSearchOptions: "ai_search_options",
+        messages: "messages",
+        query: "query",
+      }),
+      T.Http({
+        method: "POST",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}/search",
+      }),
+    ),
+  ) as unknown as Schema.Schema<SearchNamespaceRequest>;
+
+export interface SearchNamespaceResponse {
+  chunks: {
+    id: string;
+    instanceId: string;
+    score: number;
+    text: string;
+    type: string;
+    item?: {
+      key: string;
+      metadata?: Record<string, unknown> | null;
+      timestamp?: number | null;
+    } | null;
+    scoringDetails?: {
+      fusionMethod?: "rrf" | "max" | (string & {}) | null;
+      keywordRank?: number | null;
+      keywordScore?: number | null;
+      rerankingScore?: number | null;
+      vectorRank?: number | null;
+      vectorScore?: number | null;
+    } | null;
+  }[];
+  searchQuery: string;
+  errors?: { instanceId: string; message: string }[] | null;
+}
+
+export const SearchNamespaceResponse =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      chunks: Schema.Array(
+        Schema.Struct({
+          id: Schema.String,
+          instanceId: Schema.String,
+          score: Schema.Number,
+          text: Schema.String,
+          type: Schema.String,
+          item: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                key: Schema.String,
+                metadata: Schema.optional(
+                  Schema.Union([
+                    Schema.Record(Schema.String, Schema.Unknown),
+                    Schema.Null,
+                  ]),
+                ),
+                timestamp: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+              }),
+              Schema.Null,
+            ]),
+          ),
+          scoringDetails: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                fusionMethod: Schema.optional(
+                  Schema.Union([
+                    Schema.Union([
+                      Schema.Literals(["rrf", "max"]),
+                      Schema.String,
+                    ]),
+                    Schema.Null,
+                  ]),
+                ),
+                keywordRank: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+                keywordScore: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+                rerankingScore: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+                vectorRank: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+                vectorScore: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+              }).pipe(
+                Schema.encodeKeys({
+                  fusionMethod: "fusion_method",
+                  keywordRank: "keyword_rank",
+                  keywordScore: "keyword_score",
+                  rerankingScore: "reranking_score",
+                  vectorRank: "vector_rank",
+                  vectorScore: "vector_score",
+                }),
+              ),
+              Schema.Null,
+            ]),
+          ),
+        }).pipe(
+          Schema.encodeKeys({
+            id: "id",
+            instanceId: "instance_id",
+            score: "score",
+            text: "text",
+            type: "type",
+            item: "item",
+            scoringDetails: "scoring_details",
+          }),
+        ),
+      ),
+      searchQuery: Schema.String,
+      errors: Schema.optional(
+        Schema.Union([
+          Schema.Array(
+            Schema.Struct({
+              instanceId: Schema.String,
+              message: Schema.String,
+            }).pipe(
+              Schema.encodeKeys({
+                instanceId: "instance_id",
+                message: "message",
+              }),
+            ),
+          ),
+          Schema.Null,
+        ]),
+      ),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          chunks: "chunks",
+          searchQuery: "search_query",
+          errors: "errors",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<SearchNamespaceResponse>;
+
+export type SearchNamespaceError = DefaultErrors;
+
+export const searchNamespace: API.OperationMethod<
+  SearchNamespaceRequest,
+  SearchNamespaceResponse,
+  SearchNamespaceError,
+  Credentials | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: SearchNamespaceRequest,
+  output: SearchNamespaceResponse,
+  errors: [],
+}));
+
+// =============================================================================
+// NamespaceInstance
+// =============================================================================
+
+export interface ListNamespaceInstancesRequest {
+  name: string;
+  /** Path param */
+  accountId: string;
+  page?: number;
+  perPage?: number;
+  /** Query param: Filter by namespace. */
+  namespace?: string;
+  /** Query param: Field to order results by. */
+  orderBy?: "created_at";
+  /** Query param: Order direction. */
+  orderByDirection?: "asc" | "desc" | (string & {});
+  /** Query param: Filter instances whose id contains this string (case-insensitive). */
+  search?: string;
+}
+
+export const ListNamespaceInstancesRequest =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      page: Schema.optional(Schema.Number).pipe(T.HttpQuery("page")),
+      perPage: Schema.optional(Schema.Number).pipe(T.HttpQuery("per_page")),
+      namespace: Schema.optional(Schema.String).pipe(T.HttpQuery("namespace")),
+      orderBy: Schema.optional(Schema.Literal("created_at")).pipe(
+        T.HttpQuery("order_by"),
+      ),
+      orderByDirection: Schema.optional(
+        Schema.Union([Schema.Literals(["asc", "desc"]), Schema.String]),
+      ).pipe(T.HttpQuery("order_by_direction")),
+      search: Schema.optional(Schema.String).pipe(T.HttpQuery("search")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances",
+      }),
+    ),
+  ) as unknown as Schema.Schema<ListNamespaceInstancesRequest>;
+
+export interface ListNamespaceInstancesResponse {
+  result: {
+    id: string;
+    createdAt?: string | null;
+    modifiedAt?: string | null;
+    aiGatewayId?: string | null;
+    aiSearchModel?:
+      | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+      | "@cf/zai-org/glm-4.7-flash"
+      | "@cf/meta/llama-3.1-8b-instruct-fast"
+      | "@cf/meta/llama-3.1-8b-instruct-fp8"
+      | "@cf/meta/llama-4-scout-17b-16e-instruct"
+      | "@cf/qwen/qwen3-30b-a3b-fp8"
+      | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+      | "@cf/moonshotai/kimi-k2-instruct"
+      | "@cf/google/gemma-3-12b-it"
+      | "@cf/google/gemma-4-26b-a4b-it"
+      | "@cf/moonshotai/kimi-k2.5"
+      | "anthropic/claude-3-7-sonnet"
+      | "anthropic/claude-sonnet-4"
+      | "anthropic/claude-opus-4"
+      | "anthropic/claude-3-5-haiku"
+      | "cerebras/qwen-3-235b-a22b-instruct"
+      | "cerebras/qwen-3-235b-a22b-thinking"
+      | "cerebras/llama-3.3-70b"
+      | "cerebras/llama-4-maverick-17b-128e-instruct"
+      | "cerebras/llama-4-scout-17b-16e-instruct"
+      | "cerebras/gpt-oss-120b"
+      | "google-ai-studio/gemini-2.5-flash"
+      | "google-ai-studio/gemini-2.5-pro"
+      | "grok/grok-4"
+      | "groq/llama-3.3-70b-versatile"
+      | "groq/llama-3.1-8b-instant"
+      | "openai/gpt-5"
+      | "openai/gpt-5-mini"
+      | "openai/gpt-5-nano"
+      | ""
+      | null;
+    cache?: boolean | null;
+    cacheThreshold?:
+      | "super_strict_match"
+      | "close_enough"
+      | "flexible_friend"
+      | "anything_goes"
+      | null;
+    cacheTtl?: number | null;
+    chunkOverlap?: number | null;
+    chunkSize?: number | null;
+    createdBy?: string | null;
+    customMetadata?:
+      | {
+          dataType: "text" | "number" | "boolean" | "datetime" | (string & {});
+          fieldName: string;
+        }[]
+      | null;
+    embeddingModel?:
+      | "@cf/qwen/qwen3-embedding-0.6b"
+      | "@cf/baai/bge-m3"
+      | "@cf/baai/bge-large-en-v1.5"
+      | "@cf/google/embeddinggemma-300m"
+      | "google-ai-studio/gemini-embedding-001"
+      | "google-ai-studio/gemini-embedding-2-preview"
+      | "openai/text-embedding-3-small"
+      | "openai/text-embedding-3-large"
+      | ""
+      | null;
+    enable?: boolean | null;
+    engineVersion?: number | null;
+    fusionMethod?: "max" | "rrf" | (string & {}) | null;
+    hybridSearchEnabled?: boolean | null;
+    indexMethod?: { keyword: boolean; vector: boolean } | null;
+    indexingOptions?: {
+      keywordTokenizer?: "porter" | "trigram" | (string & {}) | null;
+    } | null;
+    lastActivity?: string | null;
+    maxNumResults?: number | null;
+    metadata?: {
+      createdFromAisearchWizard?: boolean | null;
+      workerDomain?: string | null;
+    } | null;
+    modifiedBy?: string | null;
+    namespace?: string | null;
+    paused?: boolean | null;
+    publicEndpointId?: string | null;
+    publicEndpointParams?: {
+      authorizedHosts?: string[] | null;
+      chatCompletionsEndpoint?: { disabled?: boolean | null } | null;
+      enabled?: boolean | null;
+      mcp?: { description?: string | null; disabled?: boolean | null } | null;
+      rateLimit?: {
+        periodMs?: number | null;
+        requests?: number | null;
+        technique?: "fixed" | "sliding" | (string & {}) | null;
+      } | null;
+      searchEndpoint?: { disabled?: boolean | null } | null;
+    } | null;
+    reranking?: boolean | null;
+    rerankingModel?: "@cf/baai/bge-reranker-base" | "" | null;
+    retrievalOptions?: {
+      boostBy?:
+        | {
+            field: string;
+            direction?:
+              | "asc"
+              | "desc"
+              | "exists"
+              | "not_exists"
+              | (string & {})
+              | null;
+          }[]
+        | null;
+      keywordMatchMode?: "and" | "or" | (string & {}) | null;
+    } | null;
+    rewriteModel?:
+      | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+      | "@cf/zai-org/glm-4.7-flash"
+      | "@cf/meta/llama-3.1-8b-instruct-fast"
+      | "@cf/meta/llama-3.1-8b-instruct-fp8"
+      | "@cf/meta/llama-4-scout-17b-16e-instruct"
+      | "@cf/qwen/qwen3-30b-a3b-fp8"
+      | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+      | "@cf/moonshotai/kimi-k2-instruct"
+      | "@cf/google/gemma-3-12b-it"
+      | "@cf/google/gemma-4-26b-a4b-it"
+      | "@cf/moonshotai/kimi-k2.5"
+      | "anthropic/claude-3-7-sonnet"
+      | "anthropic/claude-sonnet-4"
+      | "anthropic/claude-opus-4"
+      | "anthropic/claude-3-5-haiku"
+      | "cerebras/qwen-3-235b-a22b-instruct"
+      | "cerebras/qwen-3-235b-a22b-thinking"
+      | "cerebras/llama-3.3-70b"
+      | "cerebras/llama-4-maverick-17b-128e-instruct"
+      | "cerebras/llama-4-scout-17b-16e-instruct"
+      | "cerebras/gpt-oss-120b"
+      | "google-ai-studio/gemini-2.5-flash"
+      | "google-ai-studio/gemini-2.5-pro"
+      | "grok/grok-4"
+      | "groq/llama-3.3-70b-versatile"
+      | "groq/llama-3.1-8b-instant"
+      | "openai/gpt-5"
+      | "openai/gpt-5-mini"
+      | "openai/gpt-5-nano"
+      | ""
+      | null;
+    rewriteQuery?: boolean | null;
+    scoreThreshold?: number | null;
+    source?: string | null;
+    sourceParams?: {
+      excludeItems?: string[] | null;
+      includeItems?: string[] | null;
+      prefix?: string | null;
+      r2Jurisdiction?: string | null;
+      webCrawler?: {
+        crawlOptions?: {
+          depth?: number | null;
+          includeExternalLinks?: boolean | null;
+          includeSubdomains?: boolean | null;
+          maxAge?: number | null;
+          source?: "all" | "sitemaps" | "links" | (string & {}) | null;
+        } | null;
+        parseOptions?: {
+          contentSelector?: { path: string; selector: string }[] | null;
+          includeHeaders?: Record<string, unknown> | null;
+          includeImages?: boolean | null;
+          specificSitemaps?: string[] | null;
+          useBrowserRendering?: boolean | null;
+        } | null;
+        parseType?: "sitemap" | "feed-rss" | "crawl" | (string & {}) | null;
+        storeOptions?: {
+          storageId: string;
+          r2Jurisdiction?: string | null;
+          storageType?: "r2" | null;
+        } | null;
+      } | null;
+    } | null;
+    status?: string | null;
+    syncInterval?: number | null;
+    tokenId?: string | null;
+    type?: "r2" | "web-crawler" | null;
+  }[];
+  resultInfo?: {
+    count?: number | null;
+    page?: number | null;
+    perPage?: number | null;
+    totalCount?: number | null;
+  } | null;
+}
+
+export const ListNamespaceInstancesResponse =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      result: Schema.Array(
+        Schema.Struct({
+          id: Schema.String,
+          createdAt: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
+          ),
+          modifiedAt: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
+          ),
+          aiGatewayId: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
+          ),
+          aiSearchModel: Schema.optional(
+            Schema.Union([
+              Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+              Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+              Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+              Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+              Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+              Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+              Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+              Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+              Schema.Literal("@cf/google/gemma-3-12b-it"),
+              Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+              Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+              Schema.Literal("anthropic/claude-3-7-sonnet"),
+              Schema.Literal("anthropic/claude-sonnet-4"),
+              Schema.Literal("anthropic/claude-opus-4"),
+              Schema.Literal("anthropic/claude-3-5-haiku"),
+              Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+              Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+              Schema.Literal("cerebras/llama-3.3-70b"),
+              Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+              Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+              Schema.Literal("cerebras/gpt-oss-120b"),
+              Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+              Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+              Schema.Literal("grok/grok-4"),
+              Schema.Literal("groq/llama-3.3-70b-versatile"),
+              Schema.Literal("groq/llama-3.1-8b-instant"),
+              Schema.Literal("openai/gpt-5"),
+              Schema.Literal("openai/gpt-5-mini"),
+              Schema.Literal("openai/gpt-5-nano"),
+              Schema.Literal(""),
+              Schema.Null,
+            ]),
+          ),
+          cache: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+          cacheThreshold: Schema.optional(
+            Schema.Union([
+              Schema.Literal("super_strict_match"),
+              Schema.Literal("close_enough"),
+              Schema.Literal("flexible_friend"),
+              Schema.Literal("anything_goes"),
+              Schema.Null,
+            ]),
+          ),
+          cacheTtl: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+          chunkOverlap: Schema.optional(
+            Schema.Union([Schema.Number, Schema.Null]),
+          ),
+          chunkSize: Schema.optional(
+            Schema.Union([Schema.Number, Schema.Null]),
+          ),
+          createdBy: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
+          ),
+          customMetadata: Schema.optional(
+            Schema.Union([
+              Schema.Array(
+                Schema.Struct({
+                  dataType: Schema.Union([
+                    Schema.Literals(["text", "number", "boolean", "datetime"]),
+                    Schema.String,
+                  ]),
+                  fieldName: Schema.String,
+                }).pipe(
+                  Schema.encodeKeys({
+                    dataType: "data_type",
+                    fieldName: "field_name",
+                  }),
+                ),
+              ),
+              Schema.Null,
+            ]),
+          ),
+          embeddingModel: Schema.optional(
+            Schema.Union([
+              Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
+              Schema.Literal("@cf/baai/bge-m3"),
+              Schema.Literal("@cf/baai/bge-large-en-v1.5"),
+              Schema.Literal("@cf/google/embeddinggemma-300m"),
+              Schema.Literal("google-ai-studio/gemini-embedding-001"),
+              Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
+              Schema.Literal("openai/text-embedding-3-small"),
+              Schema.Literal("openai/text-embedding-3-large"),
+              Schema.Literal(""),
+              Schema.Null,
+            ]),
+          ),
+          enable: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+          engineVersion: Schema.optional(
+            Schema.Union([Schema.Number, Schema.Null]),
+          ),
+          fusionMethod: Schema.optional(
+            Schema.Union([
+              Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
+              Schema.Null,
+            ]),
+          ),
+          hybridSearchEnabled: Schema.optional(
+            Schema.Union([Schema.Boolean, Schema.Null]),
+          ),
+          indexMethod: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                keyword: Schema.Boolean,
+                vector: Schema.Boolean,
+              }),
+              Schema.Null,
+            ]),
+          ),
+          indexingOptions: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                keywordTokenizer: Schema.optional(
+                  Schema.Union([
+                    Schema.Union([
+                      Schema.Literals(["porter", "trigram"]),
+                      Schema.String,
+                    ]),
+                    Schema.Null,
+                  ]),
+                ),
+              }).pipe(
+                Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" }),
+              ),
+              Schema.Null,
+            ]),
+          ),
+          lastActivity: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
+          ),
+          maxNumResults: Schema.optional(
+            Schema.Union([Schema.Number, Schema.Null]),
+          ),
+          metadata: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                createdFromAisearchWizard: Schema.optional(
+                  Schema.Union([Schema.Boolean, Schema.Null]),
+                ),
+                workerDomain: Schema.optional(
+                  Schema.Union([Schema.String, Schema.Null]),
+                ),
+              }).pipe(
+                Schema.encodeKeys({
+                  createdFromAisearchWizard: "created_from_aisearch_wizard",
+                  workerDomain: "worker_domain",
+                }),
+              ),
+              Schema.Null,
+            ]),
+          ),
+          modifiedBy: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
+          ),
+          namespace: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
+          ),
+          paused: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+          publicEndpointId: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
+          ),
+          publicEndpointParams: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                authorizedHosts: Schema.optional(
+                  Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+                ),
+                chatCompletionsEndpoint: Schema.optional(
+                  Schema.Union([
+                    Schema.Struct({
+                      disabled: Schema.optional(
+                        Schema.Union([Schema.Boolean, Schema.Null]),
+                      ),
+                    }),
+                    Schema.Null,
+                  ]),
+                ),
+                enabled: Schema.optional(
+                  Schema.Union([Schema.Boolean, Schema.Null]),
+                ),
+                mcp: Schema.optional(
+                  Schema.Union([
+                    Schema.Struct({
+                      description: Schema.optional(
+                        Schema.Union([Schema.String, Schema.Null]),
+                      ),
+                      disabled: Schema.optional(
+                        Schema.Union([Schema.Boolean, Schema.Null]),
+                      ),
+                    }),
+                    Schema.Null,
+                  ]),
+                ),
+                rateLimit: Schema.optional(
+                  Schema.Union([
+                    Schema.Struct({
+                      periodMs: Schema.optional(
+                        Schema.Union([Schema.Number, Schema.Null]),
+                      ),
+                      requests: Schema.optional(
+                        Schema.Union([Schema.Number, Schema.Null]),
+                      ),
+                      technique: Schema.optional(
+                        Schema.Union([
+                          Schema.Union([
+                            Schema.Literals(["fixed", "sliding"]),
+                            Schema.String,
+                          ]),
+                          Schema.Null,
+                        ]),
+                      ),
+                    }).pipe(
+                      Schema.encodeKeys({
+                        periodMs: "period_ms",
+                        requests: "requests",
+                        technique: "technique",
+                      }),
+                    ),
+                    Schema.Null,
+                  ]),
+                ),
+                searchEndpoint: Schema.optional(
+                  Schema.Union([
+                    Schema.Struct({
+                      disabled: Schema.optional(
+                        Schema.Union([Schema.Boolean, Schema.Null]),
+                      ),
+                    }),
+                    Schema.Null,
+                  ]),
+                ),
+              }).pipe(
+                Schema.encodeKeys({
+                  authorizedHosts: "authorized_hosts",
+                  chatCompletionsEndpoint: "chat_completions_endpoint",
+                  enabled: "enabled",
+                  mcp: "mcp",
+                  rateLimit: "rate_limit",
+                  searchEndpoint: "search_endpoint",
+                }),
+              ),
+              Schema.Null,
+            ]),
+          ),
+          reranking: Schema.optional(
+            Schema.Union([Schema.Boolean, Schema.Null]),
+          ),
+          rerankingModel: Schema.optional(
+            Schema.Union([
+              Schema.Literal("@cf/baai/bge-reranker-base"),
+              Schema.Literal(""),
+              Schema.Null,
+            ]),
+          ),
+          retrievalOptions: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                boostBy: Schema.optional(
+                  Schema.Union([
+                    Schema.Array(
+                      Schema.Struct({
+                        field: Schema.String,
+                        direction: Schema.optional(
+                          Schema.Union([
+                            Schema.Union([
+                              Schema.Literals([
+                                "asc",
+                                "desc",
+                                "exists",
+                                "not_exists",
+                              ]),
+                              Schema.String,
+                            ]),
+                            Schema.Null,
+                          ]),
+                        ),
+                      }),
+                    ),
+                    Schema.Null,
+                  ]),
+                ),
+                keywordMatchMode: Schema.optional(
+                  Schema.Union([
+                    Schema.Union([
+                      Schema.Literals(["and", "or"]),
+                      Schema.String,
+                    ]),
+                    Schema.Null,
+                  ]),
+                ),
+              }).pipe(
+                Schema.encodeKeys({
+                  boostBy: "boost_by",
+                  keywordMatchMode: "keyword_match_mode",
+                }),
+              ),
+              Schema.Null,
+            ]),
+          ),
+          rewriteModel: Schema.optional(
+            Schema.Union([
+              Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+              Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+              Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+              Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+              Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+              Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+              Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+              Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+              Schema.Literal("@cf/google/gemma-3-12b-it"),
+              Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+              Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+              Schema.Literal("anthropic/claude-3-7-sonnet"),
+              Schema.Literal("anthropic/claude-sonnet-4"),
+              Schema.Literal("anthropic/claude-opus-4"),
+              Schema.Literal("anthropic/claude-3-5-haiku"),
+              Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+              Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+              Schema.Literal("cerebras/llama-3.3-70b"),
+              Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+              Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+              Schema.Literal("cerebras/gpt-oss-120b"),
+              Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+              Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+              Schema.Literal("grok/grok-4"),
+              Schema.Literal("groq/llama-3.3-70b-versatile"),
+              Schema.Literal("groq/llama-3.1-8b-instant"),
+              Schema.Literal("openai/gpt-5"),
+              Schema.Literal("openai/gpt-5-mini"),
+              Schema.Literal("openai/gpt-5-nano"),
+              Schema.Literal(""),
+              Schema.Null,
+            ]),
+          ),
+          rewriteQuery: Schema.optional(
+            Schema.Union([Schema.Boolean, Schema.Null]),
+          ),
+          scoreThreshold: Schema.optional(
+            Schema.Union([Schema.Number, Schema.Null]),
+          ),
+          source: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+          sourceParams: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                excludeItems: Schema.optional(
+                  Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+                ),
+                includeItems: Schema.optional(
+                  Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+                ),
+                prefix: Schema.optional(
+                  Schema.Union([Schema.String, Schema.Null]),
+                ),
+                r2Jurisdiction: Schema.optional(
+                  Schema.Union([Schema.String, Schema.Null]),
+                ),
+                webCrawler: Schema.optional(
+                  Schema.Union([
+                    Schema.Struct({
+                      crawlOptions: Schema.optional(
+                        Schema.Union([
+                          Schema.Struct({
+                            depth: Schema.optional(
+                              Schema.Union([Schema.Number, Schema.Null]),
+                            ),
+                            includeExternalLinks: Schema.optional(
+                              Schema.Union([Schema.Boolean, Schema.Null]),
+                            ),
+                            includeSubdomains: Schema.optional(
+                              Schema.Union([Schema.Boolean, Schema.Null]),
+                            ),
+                            maxAge: Schema.optional(
+                              Schema.Union([Schema.Number, Schema.Null]),
+                            ),
+                            source: Schema.optional(
+                              Schema.Union([
+                                Schema.Union([
+                                  Schema.Literals(["all", "sitemaps", "links"]),
+                                  Schema.String,
+                                ]),
+                                Schema.Null,
+                              ]),
+                            ),
+                          }).pipe(
+                            Schema.encodeKeys({
+                              depth: "depth",
+                              includeExternalLinks: "include_external_links",
+                              includeSubdomains: "include_subdomains",
+                              maxAge: "max_age",
+                              source: "source",
+                            }),
+                          ),
+                          Schema.Null,
+                        ]),
+                      ),
+                      parseOptions: Schema.optional(
+                        Schema.Union([
+                          Schema.Struct({
+                            contentSelector: Schema.optional(
+                              Schema.Union([
+                                Schema.Array(
+                                  Schema.Struct({
+                                    path: Schema.String,
+                                    selector: Schema.String,
+                                  }),
+                                ),
+                                Schema.Null,
+                              ]),
+                            ),
+                            includeHeaders: Schema.optional(
+                              Schema.Union([
+                                Schema.Record(Schema.String, Schema.Unknown),
+                                Schema.Null,
+                              ]),
+                            ),
+                            includeImages: Schema.optional(
+                              Schema.Union([Schema.Boolean, Schema.Null]),
+                            ),
+                            specificSitemaps: Schema.optional(
+                              Schema.Union([
+                                Schema.Array(Schema.String),
+                                Schema.Null,
+                              ]),
+                            ),
+                            useBrowserRendering: Schema.optional(
+                              Schema.Union([Schema.Boolean, Schema.Null]),
+                            ),
+                          }).pipe(
+                            Schema.encodeKeys({
+                              contentSelector: "content_selector",
+                              includeHeaders: "include_headers",
+                              includeImages: "include_images",
+                              specificSitemaps: "specific_sitemaps",
+                              useBrowserRendering: "use_browser_rendering",
+                            }),
+                          ),
+                          Schema.Null,
+                        ]),
+                      ),
+                      parseType: Schema.optional(
+                        Schema.Union([
+                          Schema.Union([
+                            Schema.Literals(["sitemap", "feed-rss", "crawl"]),
+                            Schema.String,
+                          ]),
+                          Schema.Null,
+                        ]),
+                      ),
+                      storeOptions: Schema.optional(
+                        Schema.Union([
+                          Schema.Struct({
+                            storageId: Schema.String,
+                            r2Jurisdiction: Schema.optional(
+                              Schema.Union([Schema.String, Schema.Null]),
+                            ),
+                            storageType: Schema.optional(
+                              Schema.Union([Schema.Literal("r2"), Schema.Null]),
+                            ),
+                          }).pipe(
+                            Schema.encodeKeys({
+                              storageId: "storage_id",
+                              r2Jurisdiction: "r2_jurisdiction",
+                              storageType: "storage_type",
+                            }),
+                          ),
+                          Schema.Null,
+                        ]),
+                      ),
+                    }).pipe(
+                      Schema.encodeKeys({
+                        crawlOptions: "crawl_options",
+                        parseOptions: "parse_options",
+                        parseType: "parse_type",
+                        storeOptions: "store_options",
+                      }),
+                    ),
+                    Schema.Null,
+                  ]),
+                ),
+              }).pipe(
+                Schema.encodeKeys({
+                  excludeItems: "exclude_items",
+                  includeItems: "include_items",
+                  prefix: "prefix",
+                  r2Jurisdiction: "r2_jurisdiction",
+                  webCrawler: "web_crawler",
+                }),
+              ),
+              Schema.Null,
+            ]),
+          ),
+          status: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+          syncInterval: Schema.optional(
+            Schema.Union([Schema.Number, Schema.Null]),
+          ),
+          tokenId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+          type: Schema.optional(
+            Schema.Union([
+              Schema.Literal("r2"),
+              Schema.Literal("web-crawler"),
+              Schema.Null,
+            ]),
+          ),
+        }).pipe(
+          Schema.encodeKeys({
+            id: "id",
+            createdAt: "created_at",
+            modifiedAt: "modified_at",
+            aiGatewayId: "ai_gateway_id",
+            aiSearchModel: "ai_search_model",
+            cache: "cache",
+            cacheThreshold: "cache_threshold",
+            cacheTtl: "cache_ttl",
+            chunkOverlap: "chunk_overlap",
+            chunkSize: "chunk_size",
+            createdBy: "created_by",
+            customMetadata: "custom_metadata",
+            embeddingModel: "embedding_model",
+            enable: "enable",
+            engineVersion: "engine_version",
+            fusionMethod: "fusion_method",
+            hybridSearchEnabled: "hybrid_search_enabled",
+            indexMethod: "index_method",
+            indexingOptions: "indexing_options",
+            lastActivity: "last_activity",
+            maxNumResults: "max_num_results",
+            metadata: "metadata",
+            modifiedBy: "modified_by",
+            namespace: "namespace",
+            paused: "paused",
+            publicEndpointId: "public_endpoint_id",
+            publicEndpointParams: "public_endpoint_params",
+            reranking: "reranking",
+            rerankingModel: "reranking_model",
+            retrievalOptions: "retrieval_options",
+            rewriteModel: "rewrite_model",
+            rewriteQuery: "rewrite_query",
+            scoreThreshold: "score_threshold",
+            source: "source",
+            sourceParams: "source_params",
+            status: "status",
+            syncInterval: "sync_interval",
+            tokenId: "token_id",
+            type: "type",
+          }),
+        ),
+      ),
+      resultInfo: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            count: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+            page: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+            perPage: Schema.optional(
+              Schema.Union([Schema.Number, Schema.Null]),
+            ),
+            totalCount: Schema.optional(
+              Schema.Union([Schema.Number, Schema.Null]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              count: "count",
+              page: "page",
+              perPage: "per_page",
+              totalCount: "total_count",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+    }).pipe(Schema.encodeKeys({ result: "result", resultInfo: "result_info" })),
+  ) as unknown as Schema.Schema<ListNamespaceInstancesResponse>;
+
+export type ListNamespaceInstancesError =
+  | DefaultErrors
+  | NamespaceNotFound
+  | InvalidRoute
+  | Forbidden;
+
+export const listNamespaceInstances: API.PaginatedOperationMethod<
+  ListNamespaceInstancesRequest,
+  ListNamespaceInstancesResponse,
+  ListNamespaceInstancesError,
+  Credentials | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.makePaginated(() => ({
+  input: ListNamespaceInstancesRequest,
+  output: ListNamespaceInstancesResponse,
+  errors: [NamespaceNotFound, InvalidRoute, Forbidden],
+  pagination: {
+    mode: "page",
+    inputToken: "page",
+    outputToken: "resultInfo.page",
+    items: "result",
+    pageSize: "perPage",
+  } as const,
+}));
+
+export interface CreateNamespaceInstanceRequest {
+  name: string;
+  /** Path param */
+  accountId: string;
+  /** Body param: AI Search instance ID. Lowercase alphanumeric, hyphens, and underscores. */
+  id: string;
+  /** Body param */
+  aiGatewayId?: string | null;
+  /** Body param */
+  aiSearchModel?:
+    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+    | "@cf/zai-org/glm-4.7-flash"
+    | "@cf/meta/llama-3.1-8b-instruct-fast"
+    | "@cf/meta/llama-3.1-8b-instruct-fp8"
+    | "@cf/meta/llama-4-scout-17b-16e-instruct"
+    | "@cf/qwen/qwen3-30b-a3b-fp8"
+    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+    | "@cf/moonshotai/kimi-k2-instruct"
+    | "@cf/google/gemma-3-12b-it"
+    | "@cf/google/gemma-4-26b-a4b-it"
+    | "@cf/moonshotai/kimi-k2.5"
+    | "anthropic/claude-3-7-sonnet"
+    | "anthropic/claude-sonnet-4"
+    | "anthropic/claude-opus-4"
+    | "anthropic/claude-3-5-haiku"
+    | "cerebras/qwen-3-235b-a22b-instruct"
+    | "cerebras/qwen-3-235b-a22b-thinking"
+    | "cerebras/llama-3.3-70b"
+    | "cerebras/llama-4-maverick-17b-128e-instruct"
+    | "cerebras/llama-4-scout-17b-16e-instruct"
+    | "cerebras/gpt-oss-120b"
+    | "google-ai-studio/gemini-2.5-flash"
+    | "google-ai-studio/gemini-2.5-pro"
+    | "grok/grok-4"
+    | "groq/llama-3.3-70b-versatile"
+    | "groq/llama-3.1-8b-instant"
+    | "openai/gpt-5"
+    | "openai/gpt-5-mini"
+    | "openai/gpt-5-nano"
+    | ""
+    | null;
+  /** Body param */
+  cache?: boolean;
+  /** Body param */
+  cacheThreshold?:
+    | "super_strict_match"
+    | "close_enough"
+    | "flexible_friend"
+    | "anything_goes"
+    | (string & {});
+  /** Body param: Cache entry TTL in seconds. Allowed values: 600 (10min), 1800 (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h), 86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d). */
+  cacheTtl?: number;
+  /** Body param */
+  chunk?: boolean;
+  /** Body param */
+  chunkOverlap?: number;
+  /** Body param */
+  chunkSize?: number;
+  /** Body param */
+  customMetadata?: {
+    dataType: "text" | "number" | "boolean" | "datetime" | (string & {});
+    fieldName: string;
+  }[];
+  /** Body param */
+  embeddingModel?:
+    | "@cf/qwen/qwen3-embedding-0.6b"
+    | "@cf/baai/bge-m3"
+    | "@cf/baai/bge-large-en-v1.5"
+    | "@cf/google/embeddinggemma-300m"
+    | "google-ai-studio/gemini-embedding-001"
+    | "google-ai-studio/gemini-embedding-2-preview"
+    | "openai/text-embedding-3-small"
+    | "openai/text-embedding-3-large"
+    | ""
+    | null;
+  /** Body param */
+  fusionMethod?: "max" | "rrf" | (string & {});
+  /** @deprecated Body param: Deprecated — use index_method instead. */
+  hybridSearchEnabled?: boolean;
+  /** Body param: Controls which storage backends are used during indexing. Defaults to vector-only. */
+  indexMethod?: { keyword: boolean; vector: boolean };
+  /** Body param */
+  indexingOptions?: {
+    keywordTokenizer?: "porter" | "trigram" | (string & {});
+  } | null;
+  /** Body param */
+  maxNumResults?: number;
+  /** Body param */
+  metadata?: { createdFromAisearchWizard?: boolean; workerDomain?: string };
+  /** Body param */
+  publicEndpointParams?: {
+    authorizedHosts?: string[];
+    chatCompletionsEndpoint?: { disabled?: boolean };
+    enabled?: boolean;
+    mcp?: { description?: string; disabled?: boolean };
+    rateLimit?: {
+      periodMs?: number;
+      requests?: number;
+      technique?: "fixed" | "sliding" | (string & {});
+    };
+    searchEndpoint?: { disabled?: boolean };
+  };
+  /** Body param */
+  reranking?: boolean;
+  /** Body param */
+  rerankingModel?: "@cf/baai/bge-reranker-base" | "" | null;
+  /** Body param */
+  retrievalOptions?: {
+    boostBy?: {
+      field: string;
+      direction?: "asc" | "desc" | "exists" | "not_exists" | (string & {});
+    }[];
+    keywordMatchMode?: "and" | "or" | (string & {});
+  } | null;
+  /** Body param */
+  rewriteModel?:
+    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+    | "@cf/zai-org/glm-4.7-flash"
+    | "@cf/meta/llama-3.1-8b-instruct-fast"
+    | "@cf/meta/llama-3.1-8b-instruct-fp8"
+    | "@cf/meta/llama-4-scout-17b-16e-instruct"
+    | "@cf/qwen/qwen3-30b-a3b-fp8"
+    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+    | "@cf/moonshotai/kimi-k2-instruct"
+    | "@cf/google/gemma-3-12b-it"
+    | "@cf/google/gemma-4-26b-a4b-it"
+    | "@cf/moonshotai/kimi-k2.5"
+    | "anthropic/claude-3-7-sonnet"
+    | "anthropic/claude-sonnet-4"
+    | "anthropic/claude-opus-4"
+    | "anthropic/claude-3-5-haiku"
+    | "cerebras/qwen-3-235b-a22b-instruct"
+    | "cerebras/qwen-3-235b-a22b-thinking"
+    | "cerebras/llama-3.3-70b"
+    | "cerebras/llama-4-maverick-17b-128e-instruct"
+    | "cerebras/llama-4-scout-17b-16e-instruct"
+    | "cerebras/gpt-oss-120b"
+    | "google-ai-studio/gemini-2.5-flash"
+    | "google-ai-studio/gemini-2.5-pro"
+    | "grok/grok-4"
+    | "groq/llama-3.3-70b-versatile"
+    | "groq/llama-3.1-8b-instant"
+    | "openai/gpt-5"
+    | "openai/gpt-5-mini"
+    | "openai/gpt-5-nano"
+    | ""
+    | null;
+  /** Body param */
+  rewriteQuery?: boolean;
+  /** Body param */
+  scoreThreshold?: number;
+  /** Body param */
+  source?: string | null;
+  /** Body param */
+  sourceParams?: {
+    excludeItems?: string[];
+    includeItems?: string[];
+    prefix?: string;
+    r2Jurisdiction?: string;
+    webCrawler?: {
+      crawlOptions?: {
+        depth?: number;
+        includeExternalLinks?: boolean;
+        includeSubdomains?: boolean;
+        maxAge?: number;
+        source?: "all" | "sitemaps" | "links" | (string & {});
+      };
+      parseOptions?: {
+        contentSelector?: { path: string; selector: string }[];
+        includeHeaders?: Record<string, unknown>;
+        includeImages?: boolean;
+        specificSitemaps?: string[];
+        useBrowserRendering?: boolean;
+      };
+      parseType?: "sitemap" | "feed-rss" | "crawl" | (string & {});
+      storeOptions?: {
+        storageId: string;
+        r2Jurisdiction?: string;
+        storageType?: "r2";
+      };
+    };
+  } | null;
+  /** Body param: Interval between automatic syncs, in seconds. Allowed values: 900 (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h), 21600 (6h), 43200 (12h), 86400 (24h). */
+  syncInterval?: number;
+  /** Body param */
+  tokenId?: string;
+  /** Body param */
+  type?: "r2" | "web-crawler" | null;
+}
+
+export const CreateNamespaceInstanceRequest =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      id: Schema.String,
+      aiGatewayId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      aiSearchModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+          Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+          Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+          Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+          Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+          Schema.Literal("@cf/google/gemma-3-12b-it"),
+          Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+          Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+          Schema.Literal("anthropic/claude-3-7-sonnet"),
+          Schema.Literal("anthropic/claude-sonnet-4"),
+          Schema.Literal("anthropic/claude-opus-4"),
+          Schema.Literal("anthropic/claude-3-5-haiku"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+          Schema.Literal("cerebras/llama-3.3-70b"),
+          Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+          Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("cerebras/gpt-oss-120b"),
+          Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+          Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+          Schema.Literal("grok/grok-4"),
+          Schema.Literal("groq/llama-3.3-70b-versatile"),
+          Schema.Literal("groq/llama-3.1-8b-instant"),
+          Schema.Literal("openai/gpt-5"),
+          Schema.Literal("openai/gpt-5-mini"),
+          Schema.Literal("openai/gpt-5-nano"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      cache: Schema.optional(Schema.Boolean),
+      cacheThreshold: Schema.optional(
+        Schema.Union([
+          Schema.Literals([
+            "super_strict_match",
+            "close_enough",
+            "flexible_friend",
+            "anything_goes",
           ]),
+          Schema.String,
+        ]),
+      ),
+      cacheTtl: Schema.optional(Schema.Number),
+      chunk: Schema.optional(Schema.Boolean),
+      chunkOverlap: Schema.optional(Schema.Number),
+      chunkSize: Schema.optional(Schema.Number),
+      customMetadata: Schema.optional(
+        Schema.Array(
+          Schema.Struct({
+            dataType: Schema.Union([
+              Schema.Literals(["text", "number", "boolean", "datetime"]),
+              Schema.String,
+            ]),
+            fieldName: Schema.String,
+          }).pipe(
+            Schema.encodeKeys({
+              dataType: "data_type",
+              fieldName: "field_name",
+            }),
+          ),
+        ),
+      ),
+      embeddingModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
+          Schema.Literal("@cf/baai/bge-m3"),
+          Schema.Literal("@cf/baai/bge-large-en-v1.5"),
+          Schema.Literal("@cf/google/embeddinggemma-300m"),
+          Schema.Literal("google-ai-studio/gemini-embedding-001"),
+          Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
+          Schema.Literal("openai/text-embedding-3-small"),
+          Schema.Literal("openai/text-embedding-3-large"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      fusionMethod: Schema.optional(
+        Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
+      ),
+      hybridSearchEnabled: Schema.optional(Schema.Boolean),
+      indexMethod: Schema.optional(
+        Schema.Struct({
+          keyword: Schema.Boolean,
+          vector: Schema.Boolean,
         }),
       ),
+      indexingOptions: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            keywordTokenizer: Schema.optional(
+              Schema.Union([
+                Schema.Literals(["porter", "trigram"]),
+                Schema.String,
+              ]),
+            ),
+          }).pipe(Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" })),
+          Schema.Null,
+        ]),
+      ),
+      maxNumResults: Schema.optional(Schema.Number),
+      metadata: Schema.optional(
+        Schema.Struct({
+          createdFromAisearchWizard: Schema.optional(Schema.Boolean),
+          workerDomain: Schema.optional(Schema.String),
+        }).pipe(
+          Schema.encodeKeys({
+            createdFromAisearchWizard: "created_from_aisearch_wizard",
+            workerDomain: "worker_domain",
+          }),
+        ),
+      ),
+      publicEndpointParams: Schema.optional(
+        Schema.Struct({
+          authorizedHosts: Schema.optional(Schema.Array(Schema.String)),
+          chatCompletionsEndpoint: Schema.optional(
+            Schema.Struct({
+              disabled: Schema.optional(Schema.Boolean),
+            }),
+          ),
+          enabled: Schema.optional(Schema.Boolean),
+          mcp: Schema.optional(
+            Schema.Struct({
+              description: Schema.optional(Schema.String),
+              disabled: Schema.optional(Schema.Boolean),
+            }),
+          ),
+          rateLimit: Schema.optional(
+            Schema.Struct({
+              periodMs: Schema.optional(Schema.Number),
+              requests: Schema.optional(Schema.Number),
+              technique: Schema.optional(
+                Schema.Union([
+                  Schema.Literals(["fixed", "sliding"]),
+                  Schema.String,
+                ]),
+              ),
+            }).pipe(
+              Schema.encodeKeys({
+                periodMs: "period_ms",
+                requests: "requests",
+                technique: "technique",
+              }),
+            ),
+          ),
+          searchEndpoint: Schema.optional(
+            Schema.Struct({
+              disabled: Schema.optional(Schema.Boolean),
+            }),
+          ),
+        }).pipe(
+          Schema.encodeKeys({
+            authorizedHosts: "authorized_hosts",
+            chatCompletionsEndpoint: "chat_completions_endpoint",
+            enabled: "enabled",
+            mcp: "mcp",
+            rateLimit: "rate_limit",
+            searchEndpoint: "search_endpoint",
+          }),
+        ),
+      ),
+      reranking: Schema.optional(Schema.Boolean),
+      rerankingModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/baai/bge-reranker-base"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      retrievalOptions: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            boostBy: Schema.optional(
+              Schema.Array(
+                Schema.Struct({
+                  field: Schema.String,
+                  direction: Schema.optional(
+                    Schema.Union([
+                      Schema.Literals(["asc", "desc", "exists", "not_exists"]),
+                      Schema.String,
+                    ]),
+                  ),
+                }),
+              ),
+            ),
+            keywordMatchMode: Schema.optional(
+              Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              boostBy: "boost_by",
+              keywordMatchMode: "keyword_match_mode",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      rewriteModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+          Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+          Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+          Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+          Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+          Schema.Literal("@cf/google/gemma-3-12b-it"),
+          Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+          Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+          Schema.Literal("anthropic/claude-3-7-sonnet"),
+          Schema.Literal("anthropic/claude-sonnet-4"),
+          Schema.Literal("anthropic/claude-opus-4"),
+          Schema.Literal("anthropic/claude-3-5-haiku"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+          Schema.Literal("cerebras/llama-3.3-70b"),
+          Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+          Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("cerebras/gpt-oss-120b"),
+          Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+          Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+          Schema.Literal("grok/grok-4"),
+          Schema.Literal("groq/llama-3.3-70b-versatile"),
+          Schema.Literal("groq/llama-3.1-8b-instant"),
+          Schema.Literal("openai/gpt-5"),
+          Schema.Literal("openai/gpt-5-mini"),
+          Schema.Literal("openai/gpt-5-nano"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      rewriteQuery: Schema.optional(Schema.Boolean),
+      scoreThreshold: Schema.optional(Schema.Number),
+      source: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      sourceParams: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            excludeItems: Schema.optional(Schema.Array(Schema.String)),
+            includeItems: Schema.optional(Schema.Array(Schema.String)),
+            prefix: Schema.optional(Schema.String),
+            r2Jurisdiction: Schema.optional(Schema.String),
+            webCrawler: Schema.optional(
+              Schema.Struct({
+                crawlOptions: Schema.optional(
+                  Schema.Struct({
+                    depth: Schema.optional(Schema.Number),
+                    includeExternalLinks: Schema.optional(Schema.Boolean),
+                    includeSubdomains: Schema.optional(Schema.Boolean),
+                    maxAge: Schema.optional(Schema.Number),
+                    source: Schema.optional(
+                      Schema.Union([
+                        Schema.Literals(["all", "sitemaps", "links"]),
+                        Schema.String,
+                      ]),
+                    ),
+                  }).pipe(
+                    Schema.encodeKeys({
+                      depth: "depth",
+                      includeExternalLinks: "include_external_links",
+                      includeSubdomains: "include_subdomains",
+                      maxAge: "max_age",
+                      source: "source",
+                    }),
+                  ),
+                ),
+                parseOptions: Schema.optional(
+                  Schema.Struct({
+                    contentSelector: Schema.optional(
+                      Schema.Array(
+                        Schema.Struct({
+                          path: Schema.String,
+                          selector: Schema.String,
+                        }),
+                      ),
+                    ),
+                    includeHeaders: Schema.optional(
+                      Schema.Record(Schema.String, Schema.Unknown),
+                    ),
+                    includeImages: Schema.optional(Schema.Boolean),
+                    specificSitemaps: Schema.optional(
+                      Schema.Array(Schema.String),
+                    ),
+                    useBrowserRendering: Schema.optional(Schema.Boolean),
+                  }).pipe(
+                    Schema.encodeKeys({
+                      contentSelector: "content_selector",
+                      includeHeaders: "include_headers",
+                      includeImages: "include_images",
+                      specificSitemaps: "specific_sitemaps",
+                      useBrowserRendering: "use_browser_rendering",
+                    }),
+                  ),
+                ),
+                parseType: Schema.optional(
+                  Schema.Union([
+                    Schema.Literals(["sitemap", "feed-rss", "crawl"]),
+                    Schema.String,
+                  ]),
+                ),
+                storeOptions: Schema.optional(
+                  Schema.Struct({
+                    storageId: Schema.String,
+                    r2Jurisdiction: Schema.optional(Schema.String),
+                    storageType: Schema.optional(Schema.Literal("r2")),
+                  }).pipe(
+                    Schema.encodeKeys({
+                      storageId: "storage_id",
+                      r2Jurisdiction: "r2_jurisdiction",
+                      storageType: "storage_type",
+                    }),
+                  ),
+                ),
+              }).pipe(
+                Schema.encodeKeys({
+                  crawlOptions: "crawl_options",
+                  parseOptions: "parse_options",
+                  parseType: "parse_type",
+                  storeOptions: "store_options",
+                }),
+              ),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              excludeItems: "exclude_items",
+              includeItems: "include_items",
+              prefix: "prefix",
+              r2Jurisdiction: "r2_jurisdiction",
+              webCrawler: "web_crawler",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      syncInterval: Schema.optional(Schema.Number),
+      tokenId: Schema.optional(Schema.String),
+      type: Schema.optional(
+        Schema.Union([
+          Schema.Literal("r2"),
+          Schema.Literal("web-crawler"),
+          Schema.Null,
+        ]),
+      ),
+    }).pipe(
+      Schema.encodeKeys({
+        id: "id",
+        aiGatewayId: "ai_gateway_id",
+        aiSearchModel: "ai_search_model",
+        cache: "cache",
+        cacheThreshold: "cache_threshold",
+        cacheTtl: "cache_ttl",
+        chunk: "chunk",
+        chunkOverlap: "chunk_overlap",
+        chunkSize: "chunk_size",
+        customMetadata: "custom_metadata",
+        embeddingModel: "embedding_model",
+        fusionMethod: "fusion_method",
+        hybridSearchEnabled: "hybrid_search_enabled",
+        indexMethod: "index_method",
+        indexingOptions: "indexing_options",
+        maxNumResults: "max_num_results",
+        metadata: "metadata",
+        publicEndpointParams: "public_endpoint_params",
+        reranking: "reranking",
+        rerankingModel: "reranking_model",
+        retrievalOptions: "retrieval_options",
+        rewriteModel: "rewrite_model",
+        rewriteQuery: "rewrite_query",
+        scoreThreshold: "score_threshold",
+        source: "source",
+        sourceParams: "source_params",
+        syncInterval: "sync_interval",
+        tokenId: "token_id",
+        type: "type",
+      }),
+      T.Http({
+        method: "POST",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances",
+      }),
     ),
-    query: Schema.optional(Schema.String),
-  }).pipe(
-    Schema.encodeKeys({
-      aiSearchOptions: "ai_search_options",
-      messages: "messages",
-      query: "query",
-    }),
-    T.Http({
-      method: "POST",
-      path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/search",
-    }),
+  ) as unknown as Schema.Schema<CreateNamespaceInstanceRequest>;
+
+export interface CreateNamespaceInstanceResponse {
+  /** AI Search instance ID. Lowercase alphanumeric, hyphens, and underscores. */
+  id: string;
+  createdAt?: string | null;
+  modifiedAt?: string | null;
+  aiGatewayId?: string | null;
+  aiSearchModel?:
+    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+    | "@cf/zai-org/glm-4.7-flash"
+    | "@cf/meta/llama-3.1-8b-instruct-fast"
+    | "@cf/meta/llama-3.1-8b-instruct-fp8"
+    | "@cf/meta/llama-4-scout-17b-16e-instruct"
+    | "@cf/qwen/qwen3-30b-a3b-fp8"
+    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+    | "@cf/moonshotai/kimi-k2-instruct"
+    | "@cf/google/gemma-3-12b-it"
+    | "@cf/google/gemma-4-26b-a4b-it"
+    | "@cf/moonshotai/kimi-k2.5"
+    | "anthropic/claude-3-7-sonnet"
+    | "anthropic/claude-sonnet-4"
+    | "anthropic/claude-opus-4"
+    | "anthropic/claude-3-5-haiku"
+    | "cerebras/qwen-3-235b-a22b-instruct"
+    | "cerebras/qwen-3-235b-a22b-thinking"
+    | "cerebras/llama-3.3-70b"
+    | "cerebras/llama-4-maverick-17b-128e-instruct"
+    | "cerebras/llama-4-scout-17b-16e-instruct"
+    | "cerebras/gpt-oss-120b"
+    | "google-ai-studio/gemini-2.5-flash"
+    | "google-ai-studio/gemini-2.5-pro"
+    | "grok/grok-4"
+    | "groq/llama-3.3-70b-versatile"
+    | "groq/llama-3.1-8b-instant"
+    | "openai/gpt-5"
+    | "openai/gpt-5-mini"
+    | "openai/gpt-5-nano"
+    | ""
+    | null;
+  cache?: boolean | null;
+  cacheThreshold?:
+    | "super_strict_match"
+    | "close_enough"
+    | "flexible_friend"
+    | "anything_goes"
+    | null;
+  /** Cache entry TTL in seconds. Allowed values: 600 (10min), 1800 (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h), 86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d). */
+  cacheTtl?: number | null;
+  chunkOverlap?: number | null;
+  chunkSize?: number | null;
+  createdBy?: string | null;
+  customMetadata?:
+    | {
+        dataType: "text" | "number" | "boolean" | "datetime" | (string & {});
+        fieldName: string;
+      }[]
+    | null;
+  embeddingModel?:
+    | "@cf/qwen/qwen3-embedding-0.6b"
+    | "@cf/baai/bge-m3"
+    | "@cf/baai/bge-large-en-v1.5"
+    | "@cf/google/embeddinggemma-300m"
+    | "google-ai-studio/gemini-embedding-001"
+    | "google-ai-studio/gemini-embedding-2-preview"
+    | "openai/text-embedding-3-small"
+    | "openai/text-embedding-3-large"
+    | ""
+    | null;
+  enable?: boolean | null;
+  engineVersion?: number | null;
+  fusionMethod?: "max" | "rrf" | (string & {}) | null;
+  /** @deprecated Deprecated — use index_method instead. */
+  hybridSearchEnabled?: boolean | null;
+  /** Controls which storage backends are used during indexing. Defaults to vector-only. */
+  indexMethod?: { keyword: boolean; vector: boolean } | null;
+  indexingOptions?: {
+    keywordTokenizer?: "porter" | "trigram" | (string & {}) | null;
+  } | null;
+  lastActivity?: string | null;
+  maxNumResults?: number | null;
+  metadata?: {
+    createdFromAisearchWizard?: boolean | null;
+    workerDomain?: string | null;
+  } | null;
+  modifiedBy?: string | null;
+  namespace?: string | null;
+  paused?: boolean | null;
+  publicEndpointId?: string | null;
+  publicEndpointParams?: {
+    authorizedHosts?: string[] | null;
+    chatCompletionsEndpoint?: { disabled?: boolean | null } | null;
+    enabled?: boolean | null;
+    mcp?: { description?: string | null; disabled?: boolean | null } | null;
+    rateLimit?: {
+      periodMs?: number | null;
+      requests?: number | null;
+      technique?: "fixed" | "sliding" | (string & {}) | null;
+    } | null;
+    searchEndpoint?: { disabled?: boolean | null } | null;
+  } | null;
+  reranking?: boolean | null;
+  rerankingModel?: "@cf/baai/bge-reranker-base" | "" | null;
+  retrievalOptions?: {
+    boostBy?:
+      | {
+          field: string;
+          direction?:
+            | "asc"
+            | "desc"
+            | "exists"
+            | "not_exists"
+            | (string & {})
+            | null;
+        }[]
+      | null;
+    keywordMatchMode?: "and" | "or" | (string & {}) | null;
+  } | null;
+  rewriteModel?:
+    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+    | "@cf/zai-org/glm-4.7-flash"
+    | "@cf/meta/llama-3.1-8b-instruct-fast"
+    | "@cf/meta/llama-3.1-8b-instruct-fp8"
+    | "@cf/meta/llama-4-scout-17b-16e-instruct"
+    | "@cf/qwen/qwen3-30b-a3b-fp8"
+    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+    | "@cf/moonshotai/kimi-k2-instruct"
+    | "@cf/google/gemma-3-12b-it"
+    | "@cf/google/gemma-4-26b-a4b-it"
+    | "@cf/moonshotai/kimi-k2.5"
+    | "anthropic/claude-3-7-sonnet"
+    | "anthropic/claude-sonnet-4"
+    | "anthropic/claude-opus-4"
+    | "anthropic/claude-3-5-haiku"
+    | "cerebras/qwen-3-235b-a22b-instruct"
+    | "cerebras/qwen-3-235b-a22b-thinking"
+    | "cerebras/llama-3.3-70b"
+    | "cerebras/llama-4-maverick-17b-128e-instruct"
+    | "cerebras/llama-4-scout-17b-16e-instruct"
+    | "cerebras/gpt-oss-120b"
+    | "google-ai-studio/gemini-2.5-flash"
+    | "google-ai-studio/gemini-2.5-pro"
+    | "grok/grok-4"
+    | "groq/llama-3.3-70b-versatile"
+    | "groq/llama-3.1-8b-instant"
+    | "openai/gpt-5"
+    | "openai/gpt-5-mini"
+    | "openai/gpt-5-nano"
+    | ""
+    | null;
+  rewriteQuery?: boolean | null;
+  scoreThreshold?: number | null;
+  source?: string | null;
+  sourceParams?: {
+    excludeItems?: string[] | null;
+    includeItems?: string[] | null;
+    prefix?: string | null;
+    r2Jurisdiction?: string | null;
+    webCrawler?: {
+      crawlOptions?: {
+        depth?: number | null;
+        includeExternalLinks?: boolean | null;
+        includeSubdomains?: boolean | null;
+        maxAge?: number | null;
+        source?: "all" | "sitemaps" | "links" | (string & {}) | null;
+      } | null;
+      parseOptions?: {
+        contentSelector?: { path: string; selector: string }[] | null;
+        includeHeaders?: Record<string, unknown> | null;
+        includeImages?: boolean | null;
+        specificSitemaps?: string[] | null;
+        useBrowserRendering?: boolean | null;
+      } | null;
+      parseType?: "sitemap" | "feed-rss" | "crawl" | (string & {}) | null;
+      storeOptions?: {
+        storageId: string;
+        r2Jurisdiction?: string | null;
+        storageType?: "r2" | null;
+      } | null;
+    } | null;
+  } | null;
+  status?: string | null;
+  /** Interval between automatic syncs, in seconds. Allowed values: 900 (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h), 21600 (6h), 43200 (12h), 86400 (24h). */
+  syncInterval?: number | null;
+  tokenId?: string | null;
+  type?: "r2" | "web-crawler" | null;
+}
+
+export const CreateNamespaceInstanceResponse =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      id: Schema.String,
+      createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      modifiedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      aiGatewayId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      aiSearchModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+          Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+          Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+          Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+          Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+          Schema.Literal("@cf/google/gemma-3-12b-it"),
+          Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+          Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+          Schema.Literal("anthropic/claude-3-7-sonnet"),
+          Schema.Literal("anthropic/claude-sonnet-4"),
+          Schema.Literal("anthropic/claude-opus-4"),
+          Schema.Literal("anthropic/claude-3-5-haiku"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+          Schema.Literal("cerebras/llama-3.3-70b"),
+          Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+          Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("cerebras/gpt-oss-120b"),
+          Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+          Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+          Schema.Literal("grok/grok-4"),
+          Schema.Literal("groq/llama-3.3-70b-versatile"),
+          Schema.Literal("groq/llama-3.1-8b-instant"),
+          Schema.Literal("openai/gpt-5"),
+          Schema.Literal("openai/gpt-5-mini"),
+          Schema.Literal("openai/gpt-5-nano"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      cache: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      cacheThreshold: Schema.optional(
+        Schema.Union([
+          Schema.Literal("super_strict_match"),
+          Schema.Literal("close_enough"),
+          Schema.Literal("flexible_friend"),
+          Schema.Literal("anything_goes"),
+          Schema.Null,
+        ]),
+      ),
+      cacheTtl: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      chunkOverlap: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      chunkSize: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      createdBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      customMetadata: Schema.optional(
+        Schema.Union([
+          Schema.Array(
+            Schema.Struct({
+              dataType: Schema.Union([
+                Schema.Literals(["text", "number", "boolean", "datetime"]),
+                Schema.String,
+              ]),
+              fieldName: Schema.String,
+            }).pipe(
+              Schema.encodeKeys({
+                dataType: "data_type",
+                fieldName: "field_name",
+              }),
+            ),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      embeddingModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
+          Schema.Literal("@cf/baai/bge-m3"),
+          Schema.Literal("@cf/baai/bge-large-en-v1.5"),
+          Schema.Literal("@cf/google/embeddinggemma-300m"),
+          Schema.Literal("google-ai-studio/gemini-embedding-001"),
+          Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
+          Schema.Literal("openai/text-embedding-3-small"),
+          Schema.Literal("openai/text-embedding-3-large"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      enable: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      engineVersion: Schema.optional(
+        Schema.Union([Schema.Number, Schema.Null]),
+      ),
+      fusionMethod: Schema.optional(
+        Schema.Union([
+          Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
+          Schema.Null,
+        ]),
+      ),
+      hybridSearchEnabled: Schema.optional(
+        Schema.Union([Schema.Boolean, Schema.Null]),
+      ),
+      indexMethod: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            keyword: Schema.Boolean,
+            vector: Schema.Boolean,
+          }),
+          Schema.Null,
+        ]),
+      ),
+      indexingOptions: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            keywordTokenizer: Schema.optional(
+              Schema.Union([
+                Schema.Union([
+                  Schema.Literals(["porter", "trigram"]),
+                  Schema.String,
+                ]),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" })),
+          Schema.Null,
+        ]),
+      ),
+      lastActivity: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      maxNumResults: Schema.optional(
+        Schema.Union([Schema.Number, Schema.Null]),
+      ),
+      metadata: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            createdFromAisearchWizard: Schema.optional(
+              Schema.Union([Schema.Boolean, Schema.Null]),
+            ),
+            workerDomain: Schema.optional(
+              Schema.Union([Schema.String, Schema.Null]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              createdFromAisearchWizard: "created_from_aisearch_wizard",
+              workerDomain: "worker_domain",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      modifiedBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      namespace: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      paused: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      publicEndpointId: Schema.optional(
+        Schema.Union([Schema.String, Schema.Null]),
+      ),
+      publicEndpointParams: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            authorizedHosts: Schema.optional(
+              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+            ),
+            chatCompletionsEndpoint: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  disabled: Schema.optional(
+                    Schema.Union([Schema.Boolean, Schema.Null]),
+                  ),
+                }),
+                Schema.Null,
+              ]),
+            ),
+            enabled: Schema.optional(
+              Schema.Union([Schema.Boolean, Schema.Null]),
+            ),
+            mcp: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  description: Schema.optional(
+                    Schema.Union([Schema.String, Schema.Null]),
+                  ),
+                  disabled: Schema.optional(
+                    Schema.Union([Schema.Boolean, Schema.Null]),
+                  ),
+                }),
+                Schema.Null,
+              ]),
+            ),
+            rateLimit: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  periodMs: Schema.optional(
+                    Schema.Union([Schema.Number, Schema.Null]),
+                  ),
+                  requests: Schema.optional(
+                    Schema.Union([Schema.Number, Schema.Null]),
+                  ),
+                  technique: Schema.optional(
+                    Schema.Union([
+                      Schema.Union([
+                        Schema.Literals(["fixed", "sliding"]),
+                        Schema.String,
+                      ]),
+                      Schema.Null,
+                    ]),
+                  ),
+                }).pipe(
+                  Schema.encodeKeys({
+                    periodMs: "period_ms",
+                    requests: "requests",
+                    technique: "technique",
+                  }),
+                ),
+                Schema.Null,
+              ]),
+            ),
+            searchEndpoint: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  disabled: Schema.optional(
+                    Schema.Union([Schema.Boolean, Schema.Null]),
+                  ),
+                }),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              authorizedHosts: "authorized_hosts",
+              chatCompletionsEndpoint: "chat_completions_endpoint",
+              enabled: "enabled",
+              mcp: "mcp",
+              rateLimit: "rate_limit",
+              searchEndpoint: "search_endpoint",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      reranking: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      rerankingModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/baai/bge-reranker-base"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      retrievalOptions: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            boostBy: Schema.optional(
+              Schema.Union([
+                Schema.Array(
+                  Schema.Struct({
+                    field: Schema.String,
+                    direction: Schema.optional(
+                      Schema.Union([
+                        Schema.Union([
+                          Schema.Literals([
+                            "asc",
+                            "desc",
+                            "exists",
+                            "not_exists",
+                          ]),
+                          Schema.String,
+                        ]),
+                        Schema.Null,
+                      ]),
+                    ),
+                  }),
+                ),
+                Schema.Null,
+              ]),
+            ),
+            keywordMatchMode: Schema.optional(
+              Schema.Union([
+                Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              boostBy: "boost_by",
+              keywordMatchMode: "keyword_match_mode",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      rewriteModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+          Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+          Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+          Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+          Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+          Schema.Literal("@cf/google/gemma-3-12b-it"),
+          Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+          Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+          Schema.Literal("anthropic/claude-3-7-sonnet"),
+          Schema.Literal("anthropic/claude-sonnet-4"),
+          Schema.Literal("anthropic/claude-opus-4"),
+          Schema.Literal("anthropic/claude-3-5-haiku"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+          Schema.Literal("cerebras/llama-3.3-70b"),
+          Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+          Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("cerebras/gpt-oss-120b"),
+          Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+          Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+          Schema.Literal("grok/grok-4"),
+          Schema.Literal("groq/llama-3.3-70b-versatile"),
+          Schema.Literal("groq/llama-3.1-8b-instant"),
+          Schema.Literal("openai/gpt-5"),
+          Schema.Literal("openai/gpt-5-mini"),
+          Schema.Literal("openai/gpt-5-nano"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      rewriteQuery: Schema.optional(
+        Schema.Union([Schema.Boolean, Schema.Null]),
+      ),
+      scoreThreshold: Schema.optional(
+        Schema.Union([Schema.Number, Schema.Null]),
+      ),
+      source: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      sourceParams: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            excludeItems: Schema.optional(
+              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+            ),
+            includeItems: Schema.optional(
+              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+            ),
+            prefix: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+            r2Jurisdiction: Schema.optional(
+              Schema.Union([Schema.String, Schema.Null]),
+            ),
+            webCrawler: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  crawlOptions: Schema.optional(
+                    Schema.Union([
+                      Schema.Struct({
+                        depth: Schema.optional(
+                          Schema.Union([Schema.Number, Schema.Null]),
+                        ),
+                        includeExternalLinks: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                        includeSubdomains: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                        maxAge: Schema.optional(
+                          Schema.Union([Schema.Number, Schema.Null]),
+                        ),
+                        source: Schema.optional(
+                          Schema.Union([
+                            Schema.Union([
+                              Schema.Literals(["all", "sitemaps", "links"]),
+                              Schema.String,
+                            ]),
+                            Schema.Null,
+                          ]),
+                        ),
+                      }).pipe(
+                        Schema.encodeKeys({
+                          depth: "depth",
+                          includeExternalLinks: "include_external_links",
+                          includeSubdomains: "include_subdomains",
+                          maxAge: "max_age",
+                          source: "source",
+                        }),
+                      ),
+                      Schema.Null,
+                    ]),
+                  ),
+                  parseOptions: Schema.optional(
+                    Schema.Union([
+                      Schema.Struct({
+                        contentSelector: Schema.optional(
+                          Schema.Union([
+                            Schema.Array(
+                              Schema.Struct({
+                                path: Schema.String,
+                                selector: Schema.String,
+                              }),
+                            ),
+                            Schema.Null,
+                          ]),
+                        ),
+                        includeHeaders: Schema.optional(
+                          Schema.Union([
+                            Schema.Record(Schema.String, Schema.Unknown),
+                            Schema.Null,
+                          ]),
+                        ),
+                        includeImages: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                        specificSitemaps: Schema.optional(
+                          Schema.Union([
+                            Schema.Array(Schema.String),
+                            Schema.Null,
+                          ]),
+                        ),
+                        useBrowserRendering: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                      }).pipe(
+                        Schema.encodeKeys({
+                          contentSelector: "content_selector",
+                          includeHeaders: "include_headers",
+                          includeImages: "include_images",
+                          specificSitemaps: "specific_sitemaps",
+                          useBrowserRendering: "use_browser_rendering",
+                        }),
+                      ),
+                      Schema.Null,
+                    ]),
+                  ),
+                  parseType: Schema.optional(
+                    Schema.Union([
+                      Schema.Union([
+                        Schema.Literals(["sitemap", "feed-rss", "crawl"]),
+                        Schema.String,
+                      ]),
+                      Schema.Null,
+                    ]),
+                  ),
+                  storeOptions: Schema.optional(
+                    Schema.Union([
+                      Schema.Struct({
+                        storageId: Schema.String,
+                        r2Jurisdiction: Schema.optional(
+                          Schema.Union([Schema.String, Schema.Null]),
+                        ),
+                        storageType: Schema.optional(
+                          Schema.Union([Schema.Literal("r2"), Schema.Null]),
+                        ),
+                      }).pipe(
+                        Schema.encodeKeys({
+                          storageId: "storage_id",
+                          r2Jurisdiction: "r2_jurisdiction",
+                          storageType: "storage_type",
+                        }),
+                      ),
+                      Schema.Null,
+                    ]),
+                  ),
+                }).pipe(
+                  Schema.encodeKeys({
+                    crawlOptions: "crawl_options",
+                    parseOptions: "parse_options",
+                    parseType: "parse_type",
+                    storeOptions: "store_options",
+                  }),
+                ),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              excludeItems: "exclude_items",
+              includeItems: "include_items",
+              prefix: "prefix",
+              r2Jurisdiction: "r2_jurisdiction",
+              webCrawler: "web_crawler",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      status: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      syncInterval: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      tokenId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      type: Schema.optional(
+        Schema.Union([
+          Schema.Literal("r2"),
+          Schema.Literal("web-crawler"),
+          Schema.Null,
+        ]),
+      ),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          id: "id",
+          createdAt: "created_at",
+          modifiedAt: "modified_at",
+          aiGatewayId: "ai_gateway_id",
+          aiSearchModel: "ai_search_model",
+          cache: "cache",
+          cacheThreshold: "cache_threshold",
+          cacheTtl: "cache_ttl",
+          chunkOverlap: "chunk_overlap",
+          chunkSize: "chunk_size",
+          createdBy: "created_by",
+          customMetadata: "custom_metadata",
+          embeddingModel: "embedding_model",
+          enable: "enable",
+          engineVersion: "engine_version",
+          fusionMethod: "fusion_method",
+          hybridSearchEnabled: "hybrid_search_enabled",
+          indexMethod: "index_method",
+          indexingOptions: "indexing_options",
+          lastActivity: "last_activity",
+          maxNumResults: "max_num_results",
+          metadata: "metadata",
+          modifiedBy: "modified_by",
+          namespace: "namespace",
+          paused: "paused",
+          publicEndpointId: "public_endpoint_id",
+          publicEndpointParams: "public_endpoint_params",
+          reranking: "reranking",
+          rerankingModel: "reranking_model",
+          retrievalOptions: "retrieval_options",
+          rewriteModel: "rewrite_model",
+          rewriteQuery: "rewrite_query",
+          scoreThreshold: "score_threshold",
+          source: "source",
+          sourceParams: "source_params",
+          status: "status",
+          syncInterval: "sync_interval",
+          tokenId: "token_id",
+          type: "type",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<CreateNamespaceInstanceResponse>;
+
+export type CreateNamespaceInstanceError =
+  | DefaultErrors
+  | ValidationError
+  | NamespaceNotFound
+  | AiSearchInstanceNotFound
+  | InvalidRoute
+  | InstanceAlreadyExists
+  | InvalidTokenCredentials
+  | WebCrawlerDomainNotOwned
+  | MissingSitemap
+  | Forbidden;
+
+export const createNamespaceInstance: API.OperationMethod<
+  CreateNamespaceInstanceRequest,
+  CreateNamespaceInstanceResponse,
+  CreateNamespaceInstanceError,
+  Credentials | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: CreateNamespaceInstanceRequest,
+  output: CreateNamespaceInstanceResponse,
+  errors: [
+    ValidationError,
+    NamespaceNotFound,
+    AiSearchInstanceNotFound,
+    InvalidRoute,
+    InstanceAlreadyExists,
+    InvalidTokenCredentials,
+    WebCrawlerDomainNotOwned,
+    MissingSitemap,
+    Forbidden,
+  ],
+}));
+
+export interface UpdateNamespaceInstanceRequest {
+  name: string;
+  id: string;
+  /** Path param */
+  accountId: string;
+  /** Body param */
+  aiGatewayId?: string | null;
+  /** Body param */
+  aiSearchModel?:
+    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+    | "@cf/zai-org/glm-4.7-flash"
+    | "@cf/meta/llama-3.1-8b-instruct-fast"
+    | "@cf/meta/llama-3.1-8b-instruct-fp8"
+    | "@cf/meta/llama-4-scout-17b-16e-instruct"
+    | "@cf/qwen/qwen3-30b-a3b-fp8"
+    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+    | "@cf/moonshotai/kimi-k2-instruct"
+    | "@cf/google/gemma-3-12b-it"
+    | "@cf/google/gemma-4-26b-a4b-it"
+    | "@cf/moonshotai/kimi-k2.5"
+    | "anthropic/claude-3-7-sonnet"
+    | "anthropic/claude-sonnet-4"
+    | "anthropic/claude-opus-4"
+    | "anthropic/claude-3-5-haiku"
+    | "cerebras/qwen-3-235b-a22b-instruct"
+    | "cerebras/qwen-3-235b-a22b-thinking"
+    | "cerebras/llama-3.3-70b"
+    | "cerebras/llama-4-maverick-17b-128e-instruct"
+    | "cerebras/llama-4-scout-17b-16e-instruct"
+    | "cerebras/gpt-oss-120b"
+    | "google-ai-studio/gemini-2.5-flash"
+    | "google-ai-studio/gemini-2.5-pro"
+    | "grok/grok-4"
+    | "groq/llama-3.3-70b-versatile"
+    | "groq/llama-3.1-8b-instant"
+    | "openai/gpt-5"
+    | "openai/gpt-5-mini"
+    | "openai/gpt-5-nano"
+    | ""
+    | null;
+  /** Body param */
+  cache?: boolean;
+  /** Body param */
+  cacheThreshold?:
+    | "super_strict_match"
+    | "close_enough"
+    | "flexible_friend"
+    | "anything_goes"
+    | (string & {});
+  /** Body param: Cache entry TTL in seconds. Allowed values: 600 (10min), 1800 (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h), 86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d). */
+  cacheTtl?: number;
+  /** Body param */
+  chunk?: boolean;
+  /** Body param */
+  chunkOverlap?: number;
+  /** Body param */
+  chunkSize?: number;
+  /** Body param */
+  customMetadata?: {
+    dataType: "text" | "number" | "boolean" | "datetime" | (string & {});
+    fieldName: string;
+  }[];
+  /** Body param */
+  embeddingModel?:
+    | "@cf/qwen/qwen3-embedding-0.6b"
+    | "@cf/baai/bge-m3"
+    | "@cf/baai/bge-large-en-v1.5"
+    | "@cf/google/embeddinggemma-300m"
+    | "google-ai-studio/gemini-embedding-001"
+    | "google-ai-studio/gemini-embedding-2-preview"
+    | "openai/text-embedding-3-small"
+    | "openai/text-embedding-3-large"
+    | ""
+    | null;
+  /** Body param */
+  fusionMethod?: "max" | "rrf" | (string & {});
+  /** Body param: Controls which storage backends are used during indexing. Defaults to vector-only. */
+  indexMethod?: { keyword: boolean; vector: boolean };
+  /** Body param */
+  indexingOptions?: {
+    keywordTokenizer?: "porter" | "trigram" | (string & {});
+  } | null;
+  /** Body param */
+  maxNumResults?: number;
+  /** Body param */
+  metadata?: { createdFromAisearchWizard?: boolean; workerDomain?: string };
+  /** Body param */
+  paused?: boolean;
+  /** Body param */
+  publicEndpointParams?: {
+    authorizedHosts?: string[];
+    chatCompletionsEndpoint?: { disabled?: boolean };
+    enabled?: boolean;
+    mcp?: { description?: string; disabled?: boolean };
+    rateLimit?: {
+      periodMs?: number;
+      requests?: number;
+      technique?: "fixed" | "sliding" | (string & {});
+    };
+    searchEndpoint?: { disabled?: boolean };
+  };
+  /** Body param */
+  reranking?: boolean;
+  /** Body param */
+  rerankingModel?: "@cf/baai/bge-reranker-base" | "" | null;
+  /** Body param */
+  retrievalOptions?: {
+    boostBy?: {
+      field: string;
+      direction?: "asc" | "desc" | "exists" | "not_exists" | (string & {});
+    }[];
+    keywordMatchMode?: "and" | "or" | (string & {});
+  } | null;
+  /** Body param */
+  rewriteModel?:
+    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+    | "@cf/zai-org/glm-4.7-flash"
+    | "@cf/meta/llama-3.1-8b-instruct-fast"
+    | "@cf/meta/llama-3.1-8b-instruct-fp8"
+    | "@cf/meta/llama-4-scout-17b-16e-instruct"
+    | "@cf/qwen/qwen3-30b-a3b-fp8"
+    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+    | "@cf/moonshotai/kimi-k2-instruct"
+    | "@cf/google/gemma-3-12b-it"
+    | "@cf/google/gemma-4-26b-a4b-it"
+    | "@cf/moonshotai/kimi-k2.5"
+    | "anthropic/claude-3-7-sonnet"
+    | "anthropic/claude-sonnet-4"
+    | "anthropic/claude-opus-4"
+    | "anthropic/claude-3-5-haiku"
+    | "cerebras/qwen-3-235b-a22b-instruct"
+    | "cerebras/qwen-3-235b-a22b-thinking"
+    | "cerebras/llama-3.3-70b"
+    | "cerebras/llama-4-maverick-17b-128e-instruct"
+    | "cerebras/llama-4-scout-17b-16e-instruct"
+    | "cerebras/gpt-oss-120b"
+    | "google-ai-studio/gemini-2.5-flash"
+    | "google-ai-studio/gemini-2.5-pro"
+    | "grok/grok-4"
+    | "groq/llama-3.3-70b-versatile"
+    | "groq/llama-3.1-8b-instant"
+    | "openai/gpt-5"
+    | "openai/gpt-5-mini"
+    | "openai/gpt-5-nano"
+    | ""
+    | null;
+  /** Body param */
+  rewriteQuery?: boolean;
+  /** Body param */
+  scoreThreshold?: number;
+  /** Body param */
+  sourceParams?: {
+    excludeItems?: string[];
+    includeItems?: string[];
+    prefix?: string;
+    r2Jurisdiction?: string;
+    webCrawler?: {
+      crawlOptions?: {
+        depth?: number;
+        includeExternalLinks?: boolean;
+        includeSubdomains?: boolean;
+        maxAge?: number;
+        source?: "all" | "sitemaps" | "links" | (string & {});
+      };
+      parseOptions?: {
+        contentSelector?: { path: string; selector: string }[];
+        includeHeaders?: Record<string, unknown>;
+        includeImages?: boolean;
+        specificSitemaps?: string[];
+        useBrowserRendering?: boolean;
+      };
+      parseType?: "sitemap" | "feed-rss" | "crawl" | (string & {});
+      storeOptions?: {
+        storageId: string;
+        r2Jurisdiction?: string;
+        storageType?: "r2";
+      };
+    };
+  } | null;
+  /** Body param */
+  summarization?: boolean;
+  /** Body param */
+  summarizationModel?:
+    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+    | "@cf/zai-org/glm-4.7-flash"
+    | "@cf/meta/llama-3.1-8b-instruct-fast"
+    | "@cf/meta/llama-3.1-8b-instruct-fp8"
+    | "@cf/meta/llama-4-scout-17b-16e-instruct"
+    | "@cf/qwen/qwen3-30b-a3b-fp8"
+    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+    | "@cf/moonshotai/kimi-k2-instruct"
+    | "@cf/google/gemma-3-12b-it"
+    | "@cf/google/gemma-4-26b-a4b-it"
+    | "@cf/moonshotai/kimi-k2.5"
+    | "anthropic/claude-3-7-sonnet"
+    | "anthropic/claude-sonnet-4"
+    | "anthropic/claude-opus-4"
+    | "anthropic/claude-3-5-haiku"
+    | "cerebras/qwen-3-235b-a22b-instruct"
+    | "cerebras/qwen-3-235b-a22b-thinking"
+    | "cerebras/llama-3.3-70b"
+    | "cerebras/llama-4-maverick-17b-128e-instruct"
+    | "cerebras/llama-4-scout-17b-16e-instruct"
+    | "cerebras/gpt-oss-120b"
+    | "google-ai-studio/gemini-2.5-flash"
+    | "google-ai-studio/gemini-2.5-pro"
+    | "grok/grok-4"
+    | "groq/llama-3.3-70b-versatile"
+    | "groq/llama-3.1-8b-instant"
+    | "openai/gpt-5"
+    | "openai/gpt-5-mini"
+    | "openai/gpt-5-nano"
+    | ""
+    | null;
+  /** Body param: Interval between automatic syncs, in seconds. Allowed values: 900 (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h), 21600 (6h), 43200 (12h), 86400 (24h). */
+  syncInterval?: number;
+  /** Body param */
+  systemPromptAiSearch?: string | null;
+  /** Body param */
+  systemPromptIndexSummarization?: string | null;
+  /** Body param */
+  systemPromptRewriteQuery?: string | null;
+  /** Body param */
+  tokenId?: string;
+}
+
+export const UpdateNamespaceInstanceRequest =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      id: Schema.String.pipe(T.HttpPath("id")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      aiGatewayId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      aiSearchModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+          Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+          Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+          Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+          Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+          Schema.Literal("@cf/google/gemma-3-12b-it"),
+          Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+          Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+          Schema.Literal("anthropic/claude-3-7-sonnet"),
+          Schema.Literal("anthropic/claude-sonnet-4"),
+          Schema.Literal("anthropic/claude-opus-4"),
+          Schema.Literal("anthropic/claude-3-5-haiku"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+          Schema.Literal("cerebras/llama-3.3-70b"),
+          Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+          Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("cerebras/gpt-oss-120b"),
+          Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+          Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+          Schema.Literal("grok/grok-4"),
+          Schema.Literal("groq/llama-3.3-70b-versatile"),
+          Schema.Literal("groq/llama-3.1-8b-instant"),
+          Schema.Literal("openai/gpt-5"),
+          Schema.Literal("openai/gpt-5-mini"),
+          Schema.Literal("openai/gpt-5-nano"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      cache: Schema.optional(Schema.Boolean),
+      cacheThreshold: Schema.optional(
+        Schema.Union([
+          Schema.Literals([
+            "super_strict_match",
+            "close_enough",
+            "flexible_friend",
+            "anything_goes",
+          ]),
+          Schema.String,
+        ]),
+      ),
+      cacheTtl: Schema.optional(Schema.Number),
+      chunk: Schema.optional(Schema.Boolean),
+      chunkOverlap: Schema.optional(Schema.Number),
+      chunkSize: Schema.optional(Schema.Number),
+      customMetadata: Schema.optional(
+        Schema.Array(
+          Schema.Struct({
+            dataType: Schema.Union([
+              Schema.Literals(["text", "number", "boolean", "datetime"]),
+              Schema.String,
+            ]),
+            fieldName: Schema.String,
+          }).pipe(
+            Schema.encodeKeys({
+              dataType: "data_type",
+              fieldName: "field_name",
+            }),
+          ),
+        ),
+      ),
+      embeddingModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
+          Schema.Literal("@cf/baai/bge-m3"),
+          Schema.Literal("@cf/baai/bge-large-en-v1.5"),
+          Schema.Literal("@cf/google/embeddinggemma-300m"),
+          Schema.Literal("google-ai-studio/gemini-embedding-001"),
+          Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
+          Schema.Literal("openai/text-embedding-3-small"),
+          Schema.Literal("openai/text-embedding-3-large"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      fusionMethod: Schema.optional(
+        Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
+      ),
+      indexMethod: Schema.optional(
+        Schema.Struct({
+          keyword: Schema.Boolean,
+          vector: Schema.Boolean,
+        }),
+      ),
+      indexingOptions: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            keywordTokenizer: Schema.optional(
+              Schema.Union([
+                Schema.Literals(["porter", "trigram"]),
+                Schema.String,
+              ]),
+            ),
+          }).pipe(Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" })),
+          Schema.Null,
+        ]),
+      ),
+      maxNumResults: Schema.optional(Schema.Number),
+      metadata: Schema.optional(
+        Schema.Struct({
+          createdFromAisearchWizard: Schema.optional(Schema.Boolean),
+          workerDomain: Schema.optional(Schema.String),
+        }).pipe(
+          Schema.encodeKeys({
+            createdFromAisearchWizard: "created_from_aisearch_wizard",
+            workerDomain: "worker_domain",
+          }),
+        ),
+      ),
+      paused: Schema.optional(Schema.Boolean),
+      publicEndpointParams: Schema.optional(
+        Schema.Struct({
+          authorizedHosts: Schema.optional(Schema.Array(Schema.String)),
+          chatCompletionsEndpoint: Schema.optional(
+            Schema.Struct({
+              disabled: Schema.optional(Schema.Boolean),
+            }),
+          ),
+          enabled: Schema.optional(Schema.Boolean),
+          mcp: Schema.optional(
+            Schema.Struct({
+              description: Schema.optional(Schema.String),
+              disabled: Schema.optional(Schema.Boolean),
+            }),
+          ),
+          rateLimit: Schema.optional(
+            Schema.Struct({
+              periodMs: Schema.optional(Schema.Number),
+              requests: Schema.optional(Schema.Number),
+              technique: Schema.optional(
+                Schema.Union([
+                  Schema.Literals(["fixed", "sliding"]),
+                  Schema.String,
+                ]),
+              ),
+            }).pipe(
+              Schema.encodeKeys({
+                periodMs: "period_ms",
+                requests: "requests",
+                technique: "technique",
+              }),
+            ),
+          ),
+          searchEndpoint: Schema.optional(
+            Schema.Struct({
+              disabled: Schema.optional(Schema.Boolean),
+            }),
+          ),
+        }).pipe(
+          Schema.encodeKeys({
+            authorizedHosts: "authorized_hosts",
+            chatCompletionsEndpoint: "chat_completions_endpoint",
+            enabled: "enabled",
+            mcp: "mcp",
+            rateLimit: "rate_limit",
+            searchEndpoint: "search_endpoint",
+          }),
+        ),
+      ),
+      reranking: Schema.optional(Schema.Boolean),
+      rerankingModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/baai/bge-reranker-base"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      retrievalOptions: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            boostBy: Schema.optional(
+              Schema.Array(
+                Schema.Struct({
+                  field: Schema.String,
+                  direction: Schema.optional(
+                    Schema.Union([
+                      Schema.Literals(["asc", "desc", "exists", "not_exists"]),
+                      Schema.String,
+                    ]),
+                  ),
+                }),
+              ),
+            ),
+            keywordMatchMode: Schema.optional(
+              Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              boostBy: "boost_by",
+              keywordMatchMode: "keyword_match_mode",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      rewriteModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+          Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+          Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+          Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+          Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+          Schema.Literal("@cf/google/gemma-3-12b-it"),
+          Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+          Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+          Schema.Literal("anthropic/claude-3-7-sonnet"),
+          Schema.Literal("anthropic/claude-sonnet-4"),
+          Schema.Literal("anthropic/claude-opus-4"),
+          Schema.Literal("anthropic/claude-3-5-haiku"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+          Schema.Literal("cerebras/llama-3.3-70b"),
+          Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+          Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("cerebras/gpt-oss-120b"),
+          Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+          Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+          Schema.Literal("grok/grok-4"),
+          Schema.Literal("groq/llama-3.3-70b-versatile"),
+          Schema.Literal("groq/llama-3.1-8b-instant"),
+          Schema.Literal("openai/gpt-5"),
+          Schema.Literal("openai/gpt-5-mini"),
+          Schema.Literal("openai/gpt-5-nano"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      rewriteQuery: Schema.optional(Schema.Boolean),
+      scoreThreshold: Schema.optional(Schema.Number),
+      sourceParams: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            excludeItems: Schema.optional(Schema.Array(Schema.String)),
+            includeItems: Schema.optional(Schema.Array(Schema.String)),
+            prefix: Schema.optional(Schema.String),
+            r2Jurisdiction: Schema.optional(Schema.String),
+            webCrawler: Schema.optional(
+              Schema.Struct({
+                crawlOptions: Schema.optional(
+                  Schema.Struct({
+                    depth: Schema.optional(Schema.Number),
+                    includeExternalLinks: Schema.optional(Schema.Boolean),
+                    includeSubdomains: Schema.optional(Schema.Boolean),
+                    maxAge: Schema.optional(Schema.Number),
+                    source: Schema.optional(
+                      Schema.Union([
+                        Schema.Literals(["all", "sitemaps", "links"]),
+                        Schema.String,
+                      ]),
+                    ),
+                  }).pipe(
+                    Schema.encodeKeys({
+                      depth: "depth",
+                      includeExternalLinks: "include_external_links",
+                      includeSubdomains: "include_subdomains",
+                      maxAge: "max_age",
+                      source: "source",
+                    }),
+                  ),
+                ),
+                parseOptions: Schema.optional(
+                  Schema.Struct({
+                    contentSelector: Schema.optional(
+                      Schema.Array(
+                        Schema.Struct({
+                          path: Schema.String,
+                          selector: Schema.String,
+                        }),
+                      ),
+                    ),
+                    includeHeaders: Schema.optional(
+                      Schema.Record(Schema.String, Schema.Unknown),
+                    ),
+                    includeImages: Schema.optional(Schema.Boolean),
+                    specificSitemaps: Schema.optional(
+                      Schema.Array(Schema.String),
+                    ),
+                    useBrowserRendering: Schema.optional(Schema.Boolean),
+                  }).pipe(
+                    Schema.encodeKeys({
+                      contentSelector: "content_selector",
+                      includeHeaders: "include_headers",
+                      includeImages: "include_images",
+                      specificSitemaps: "specific_sitemaps",
+                      useBrowserRendering: "use_browser_rendering",
+                    }),
+                  ),
+                ),
+                parseType: Schema.optional(
+                  Schema.Union([
+                    Schema.Literals(["sitemap", "feed-rss", "crawl"]),
+                    Schema.String,
+                  ]),
+                ),
+                storeOptions: Schema.optional(
+                  Schema.Struct({
+                    storageId: Schema.String,
+                    r2Jurisdiction: Schema.optional(Schema.String),
+                    storageType: Schema.optional(Schema.Literal("r2")),
+                  }).pipe(
+                    Schema.encodeKeys({
+                      storageId: "storage_id",
+                      r2Jurisdiction: "r2_jurisdiction",
+                      storageType: "storage_type",
+                    }),
+                  ),
+                ),
+              }).pipe(
+                Schema.encodeKeys({
+                  crawlOptions: "crawl_options",
+                  parseOptions: "parse_options",
+                  parseType: "parse_type",
+                  storeOptions: "store_options",
+                }),
+              ),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              excludeItems: "exclude_items",
+              includeItems: "include_items",
+              prefix: "prefix",
+              r2Jurisdiction: "r2_jurisdiction",
+              webCrawler: "web_crawler",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      summarization: Schema.optional(Schema.Boolean),
+      summarizationModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+          Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+          Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+          Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+          Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+          Schema.Literal("@cf/google/gemma-3-12b-it"),
+          Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+          Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+          Schema.Literal("anthropic/claude-3-7-sonnet"),
+          Schema.Literal("anthropic/claude-sonnet-4"),
+          Schema.Literal("anthropic/claude-opus-4"),
+          Schema.Literal("anthropic/claude-3-5-haiku"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+          Schema.Literal("cerebras/llama-3.3-70b"),
+          Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+          Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("cerebras/gpt-oss-120b"),
+          Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+          Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+          Schema.Literal("grok/grok-4"),
+          Schema.Literal("groq/llama-3.3-70b-versatile"),
+          Schema.Literal("groq/llama-3.1-8b-instant"),
+          Schema.Literal("openai/gpt-5"),
+          Schema.Literal("openai/gpt-5-mini"),
+          Schema.Literal("openai/gpt-5-nano"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      syncInterval: Schema.optional(Schema.Number),
+      systemPromptAiSearch: Schema.optional(
+        Schema.Union([Schema.String, Schema.Null]),
+      ),
+      systemPromptIndexSummarization: Schema.optional(
+        Schema.Union([Schema.String, Schema.Null]),
+      ),
+      systemPromptRewriteQuery: Schema.optional(
+        Schema.Union([Schema.String, Schema.Null]),
+      ),
+      tokenId: Schema.optional(Schema.String),
+    }).pipe(
+      Schema.encodeKeys({
+        aiGatewayId: "ai_gateway_id",
+        aiSearchModel: "ai_search_model",
+        cache: "cache",
+        cacheThreshold: "cache_threshold",
+        cacheTtl: "cache_ttl",
+        chunk: "chunk",
+        chunkOverlap: "chunk_overlap",
+        chunkSize: "chunk_size",
+        customMetadata: "custom_metadata",
+        embeddingModel: "embedding_model",
+        fusionMethod: "fusion_method",
+        indexMethod: "index_method",
+        indexingOptions: "indexing_options",
+        maxNumResults: "max_num_results",
+        metadata: "metadata",
+        paused: "paused",
+        publicEndpointParams: "public_endpoint_params",
+        reranking: "reranking",
+        rerankingModel: "reranking_model",
+        retrievalOptions: "retrieval_options",
+        rewriteModel: "rewrite_model",
+        rewriteQuery: "rewrite_query",
+        scoreThreshold: "score_threshold",
+        sourceParams: "source_params",
+        summarization: "summarization",
+        summarizationModel: "summarization_model",
+        syncInterval: "sync_interval",
+        systemPromptAiSearch: "system_prompt_ai_search",
+        systemPromptIndexSummarization: "system_prompt_index_summarization",
+        systemPromptRewriteQuery: "system_prompt_rewrite_query",
+        tokenId: "token_id",
+      }),
+      T.Http({
+        method: "PUT",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}",
+      }),
+    ),
+  ) as unknown as Schema.Schema<UpdateNamespaceInstanceRequest>;
+
+export interface UpdateNamespaceInstanceResponse {
+  /** AI Search instance ID. Lowercase alphanumeric, hyphens, and underscores. */
+  id: string;
+  createdAt?: string | null;
+  modifiedAt?: string | null;
+  aiGatewayId?: string | null;
+  aiSearchModel?:
+    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+    | "@cf/zai-org/glm-4.7-flash"
+    | "@cf/meta/llama-3.1-8b-instruct-fast"
+    | "@cf/meta/llama-3.1-8b-instruct-fp8"
+    | "@cf/meta/llama-4-scout-17b-16e-instruct"
+    | "@cf/qwen/qwen3-30b-a3b-fp8"
+    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+    | "@cf/moonshotai/kimi-k2-instruct"
+    | "@cf/google/gemma-3-12b-it"
+    | "@cf/google/gemma-4-26b-a4b-it"
+    | "@cf/moonshotai/kimi-k2.5"
+    | "anthropic/claude-3-7-sonnet"
+    | "anthropic/claude-sonnet-4"
+    | "anthropic/claude-opus-4"
+    | "anthropic/claude-3-5-haiku"
+    | "cerebras/qwen-3-235b-a22b-instruct"
+    | "cerebras/qwen-3-235b-a22b-thinking"
+    | "cerebras/llama-3.3-70b"
+    | "cerebras/llama-4-maverick-17b-128e-instruct"
+    | "cerebras/llama-4-scout-17b-16e-instruct"
+    | "cerebras/gpt-oss-120b"
+    | "google-ai-studio/gemini-2.5-flash"
+    | "google-ai-studio/gemini-2.5-pro"
+    | "grok/grok-4"
+    | "groq/llama-3.3-70b-versatile"
+    | "groq/llama-3.1-8b-instant"
+    | "openai/gpt-5"
+    | "openai/gpt-5-mini"
+    | "openai/gpt-5-nano"
+    | ""
+    | null;
+  cache?: boolean | null;
+  cacheThreshold?:
+    | "super_strict_match"
+    | "close_enough"
+    | "flexible_friend"
+    | "anything_goes"
+    | null;
+  /** Cache entry TTL in seconds. Allowed values: 600 (10min), 1800 (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h), 86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d). */
+  cacheTtl?: number | null;
+  chunkOverlap?: number | null;
+  chunkSize?: number | null;
+  createdBy?: string | null;
+  customMetadata?:
+    | {
+        dataType: "text" | "number" | "boolean" | "datetime" | (string & {});
+        fieldName: string;
+      }[]
+    | null;
+  embeddingModel?:
+    | "@cf/qwen/qwen3-embedding-0.6b"
+    | "@cf/baai/bge-m3"
+    | "@cf/baai/bge-large-en-v1.5"
+    | "@cf/google/embeddinggemma-300m"
+    | "google-ai-studio/gemini-embedding-001"
+    | "google-ai-studio/gemini-embedding-2-preview"
+    | "openai/text-embedding-3-small"
+    | "openai/text-embedding-3-large"
+    | ""
+    | null;
+  enable?: boolean | null;
+  engineVersion?: number | null;
+  fusionMethod?: "max" | "rrf" | (string & {}) | null;
+  /** @deprecated Deprecated — use index_method instead. */
+  hybridSearchEnabled?: boolean | null;
+  /** Controls which storage backends are used during indexing. Defaults to vector-only. */
+  indexMethod?: { keyword: boolean; vector: boolean } | null;
+  indexingOptions?: {
+    keywordTokenizer?: "porter" | "trigram" | (string & {}) | null;
+  } | null;
+  lastActivity?: string | null;
+  maxNumResults?: number | null;
+  metadata?: {
+    createdFromAisearchWizard?: boolean | null;
+    workerDomain?: string | null;
+  } | null;
+  modifiedBy?: string | null;
+  namespace?: string | null;
+  paused?: boolean | null;
+  publicEndpointId?: string | null;
+  publicEndpointParams?: {
+    authorizedHosts?: string[] | null;
+    chatCompletionsEndpoint?: { disabled?: boolean | null } | null;
+    enabled?: boolean | null;
+    mcp?: { description?: string | null; disabled?: boolean | null } | null;
+    rateLimit?: {
+      periodMs?: number | null;
+      requests?: number | null;
+      technique?: "fixed" | "sliding" | (string & {}) | null;
+    } | null;
+    searchEndpoint?: { disabled?: boolean | null } | null;
+  } | null;
+  reranking?: boolean | null;
+  rerankingModel?: "@cf/baai/bge-reranker-base" | "" | null;
+  retrievalOptions?: {
+    boostBy?:
+      | {
+          field: string;
+          direction?:
+            | "asc"
+            | "desc"
+            | "exists"
+            | "not_exists"
+            | (string & {})
+            | null;
+        }[]
+      | null;
+    keywordMatchMode?: "and" | "or" | (string & {}) | null;
+  } | null;
+  rewriteModel?:
+    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+    | "@cf/zai-org/glm-4.7-flash"
+    | "@cf/meta/llama-3.1-8b-instruct-fast"
+    | "@cf/meta/llama-3.1-8b-instruct-fp8"
+    | "@cf/meta/llama-4-scout-17b-16e-instruct"
+    | "@cf/qwen/qwen3-30b-a3b-fp8"
+    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+    | "@cf/moonshotai/kimi-k2-instruct"
+    | "@cf/google/gemma-3-12b-it"
+    | "@cf/google/gemma-4-26b-a4b-it"
+    | "@cf/moonshotai/kimi-k2.5"
+    | "anthropic/claude-3-7-sonnet"
+    | "anthropic/claude-sonnet-4"
+    | "anthropic/claude-opus-4"
+    | "anthropic/claude-3-5-haiku"
+    | "cerebras/qwen-3-235b-a22b-instruct"
+    | "cerebras/qwen-3-235b-a22b-thinking"
+    | "cerebras/llama-3.3-70b"
+    | "cerebras/llama-4-maverick-17b-128e-instruct"
+    | "cerebras/llama-4-scout-17b-16e-instruct"
+    | "cerebras/gpt-oss-120b"
+    | "google-ai-studio/gemini-2.5-flash"
+    | "google-ai-studio/gemini-2.5-pro"
+    | "grok/grok-4"
+    | "groq/llama-3.3-70b-versatile"
+    | "groq/llama-3.1-8b-instant"
+    | "openai/gpt-5"
+    | "openai/gpt-5-mini"
+    | "openai/gpt-5-nano"
+    | ""
+    | null;
+  rewriteQuery?: boolean | null;
+  scoreThreshold?: number | null;
+  source?: string | null;
+  sourceParams?: {
+    excludeItems?: string[] | null;
+    includeItems?: string[] | null;
+    prefix?: string | null;
+    r2Jurisdiction?: string | null;
+    webCrawler?: {
+      crawlOptions?: {
+        depth?: number | null;
+        includeExternalLinks?: boolean | null;
+        includeSubdomains?: boolean | null;
+        maxAge?: number | null;
+        source?: "all" | "sitemaps" | "links" | (string & {}) | null;
+      } | null;
+      parseOptions?: {
+        contentSelector?: { path: string; selector: string }[] | null;
+        includeHeaders?: Record<string, unknown> | null;
+        includeImages?: boolean | null;
+        specificSitemaps?: string[] | null;
+        useBrowserRendering?: boolean | null;
+      } | null;
+      parseType?: "sitemap" | "feed-rss" | "crawl" | (string & {}) | null;
+      storeOptions?: {
+        storageId: string;
+        r2Jurisdiction?: string | null;
+        storageType?: "r2" | null;
+      } | null;
+    } | null;
+  } | null;
+  status?: string | null;
+  /** Interval between automatic syncs, in seconds. Allowed values: 900 (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h), 21600 (6h), 43200 (12h), 86400 (24h). */
+  syncInterval?: number | null;
+  tokenId?: string | null;
+  type?: "r2" | "web-crawler" | null;
+}
+
+export const UpdateNamespaceInstanceResponse =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      id: Schema.String,
+      createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      modifiedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      aiGatewayId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      aiSearchModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+          Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+          Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+          Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+          Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+          Schema.Literal("@cf/google/gemma-3-12b-it"),
+          Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+          Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+          Schema.Literal("anthropic/claude-3-7-sonnet"),
+          Schema.Literal("anthropic/claude-sonnet-4"),
+          Schema.Literal("anthropic/claude-opus-4"),
+          Schema.Literal("anthropic/claude-3-5-haiku"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+          Schema.Literal("cerebras/llama-3.3-70b"),
+          Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+          Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("cerebras/gpt-oss-120b"),
+          Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+          Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+          Schema.Literal("grok/grok-4"),
+          Schema.Literal("groq/llama-3.3-70b-versatile"),
+          Schema.Literal("groq/llama-3.1-8b-instant"),
+          Schema.Literal("openai/gpt-5"),
+          Schema.Literal("openai/gpt-5-mini"),
+          Schema.Literal("openai/gpt-5-nano"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      cache: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      cacheThreshold: Schema.optional(
+        Schema.Union([
+          Schema.Literal("super_strict_match"),
+          Schema.Literal("close_enough"),
+          Schema.Literal("flexible_friend"),
+          Schema.Literal("anything_goes"),
+          Schema.Null,
+        ]),
+      ),
+      cacheTtl: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      chunkOverlap: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      chunkSize: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      createdBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      customMetadata: Schema.optional(
+        Schema.Union([
+          Schema.Array(
+            Schema.Struct({
+              dataType: Schema.Union([
+                Schema.Literals(["text", "number", "boolean", "datetime"]),
+                Schema.String,
+              ]),
+              fieldName: Schema.String,
+            }).pipe(
+              Schema.encodeKeys({
+                dataType: "data_type",
+                fieldName: "field_name",
+              }),
+            ),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      embeddingModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
+          Schema.Literal("@cf/baai/bge-m3"),
+          Schema.Literal("@cf/baai/bge-large-en-v1.5"),
+          Schema.Literal("@cf/google/embeddinggemma-300m"),
+          Schema.Literal("google-ai-studio/gemini-embedding-001"),
+          Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
+          Schema.Literal("openai/text-embedding-3-small"),
+          Schema.Literal("openai/text-embedding-3-large"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      enable: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      engineVersion: Schema.optional(
+        Schema.Union([Schema.Number, Schema.Null]),
+      ),
+      fusionMethod: Schema.optional(
+        Schema.Union([
+          Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
+          Schema.Null,
+        ]),
+      ),
+      hybridSearchEnabled: Schema.optional(
+        Schema.Union([Schema.Boolean, Schema.Null]),
+      ),
+      indexMethod: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            keyword: Schema.Boolean,
+            vector: Schema.Boolean,
+          }),
+          Schema.Null,
+        ]),
+      ),
+      indexingOptions: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            keywordTokenizer: Schema.optional(
+              Schema.Union([
+                Schema.Union([
+                  Schema.Literals(["porter", "trigram"]),
+                  Schema.String,
+                ]),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" })),
+          Schema.Null,
+        ]),
+      ),
+      lastActivity: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      maxNumResults: Schema.optional(
+        Schema.Union([Schema.Number, Schema.Null]),
+      ),
+      metadata: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            createdFromAisearchWizard: Schema.optional(
+              Schema.Union([Schema.Boolean, Schema.Null]),
+            ),
+            workerDomain: Schema.optional(
+              Schema.Union([Schema.String, Schema.Null]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              createdFromAisearchWizard: "created_from_aisearch_wizard",
+              workerDomain: "worker_domain",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      modifiedBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      namespace: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      paused: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      publicEndpointId: Schema.optional(
+        Schema.Union([Schema.String, Schema.Null]),
+      ),
+      publicEndpointParams: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            authorizedHosts: Schema.optional(
+              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+            ),
+            chatCompletionsEndpoint: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  disabled: Schema.optional(
+                    Schema.Union([Schema.Boolean, Schema.Null]),
+                  ),
+                }),
+                Schema.Null,
+              ]),
+            ),
+            enabled: Schema.optional(
+              Schema.Union([Schema.Boolean, Schema.Null]),
+            ),
+            mcp: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  description: Schema.optional(
+                    Schema.Union([Schema.String, Schema.Null]),
+                  ),
+                  disabled: Schema.optional(
+                    Schema.Union([Schema.Boolean, Schema.Null]),
+                  ),
+                }),
+                Schema.Null,
+              ]),
+            ),
+            rateLimit: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  periodMs: Schema.optional(
+                    Schema.Union([Schema.Number, Schema.Null]),
+                  ),
+                  requests: Schema.optional(
+                    Schema.Union([Schema.Number, Schema.Null]),
+                  ),
+                  technique: Schema.optional(
+                    Schema.Union([
+                      Schema.Union([
+                        Schema.Literals(["fixed", "sliding"]),
+                        Schema.String,
+                      ]),
+                      Schema.Null,
+                    ]),
+                  ),
+                }).pipe(
+                  Schema.encodeKeys({
+                    periodMs: "period_ms",
+                    requests: "requests",
+                    technique: "technique",
+                  }),
+                ),
+                Schema.Null,
+              ]),
+            ),
+            searchEndpoint: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  disabled: Schema.optional(
+                    Schema.Union([Schema.Boolean, Schema.Null]),
+                  ),
+                }),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              authorizedHosts: "authorized_hosts",
+              chatCompletionsEndpoint: "chat_completions_endpoint",
+              enabled: "enabled",
+              mcp: "mcp",
+              rateLimit: "rate_limit",
+              searchEndpoint: "search_endpoint",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      reranking: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      rerankingModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/baai/bge-reranker-base"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      retrievalOptions: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            boostBy: Schema.optional(
+              Schema.Union([
+                Schema.Array(
+                  Schema.Struct({
+                    field: Schema.String,
+                    direction: Schema.optional(
+                      Schema.Union([
+                        Schema.Union([
+                          Schema.Literals([
+                            "asc",
+                            "desc",
+                            "exists",
+                            "not_exists",
+                          ]),
+                          Schema.String,
+                        ]),
+                        Schema.Null,
+                      ]),
+                    ),
+                  }),
+                ),
+                Schema.Null,
+              ]),
+            ),
+            keywordMatchMode: Schema.optional(
+              Schema.Union([
+                Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              boostBy: "boost_by",
+              keywordMatchMode: "keyword_match_mode",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      rewriteModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+          Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+          Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+          Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+          Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+          Schema.Literal("@cf/google/gemma-3-12b-it"),
+          Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+          Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+          Schema.Literal("anthropic/claude-3-7-sonnet"),
+          Schema.Literal("anthropic/claude-sonnet-4"),
+          Schema.Literal("anthropic/claude-opus-4"),
+          Schema.Literal("anthropic/claude-3-5-haiku"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+          Schema.Literal("cerebras/llama-3.3-70b"),
+          Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+          Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("cerebras/gpt-oss-120b"),
+          Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+          Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+          Schema.Literal("grok/grok-4"),
+          Schema.Literal("groq/llama-3.3-70b-versatile"),
+          Schema.Literal("groq/llama-3.1-8b-instant"),
+          Schema.Literal("openai/gpt-5"),
+          Schema.Literal("openai/gpt-5-mini"),
+          Schema.Literal("openai/gpt-5-nano"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      rewriteQuery: Schema.optional(
+        Schema.Union([Schema.Boolean, Schema.Null]),
+      ),
+      scoreThreshold: Schema.optional(
+        Schema.Union([Schema.Number, Schema.Null]),
+      ),
+      source: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      sourceParams: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            excludeItems: Schema.optional(
+              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+            ),
+            includeItems: Schema.optional(
+              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+            ),
+            prefix: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+            r2Jurisdiction: Schema.optional(
+              Schema.Union([Schema.String, Schema.Null]),
+            ),
+            webCrawler: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  crawlOptions: Schema.optional(
+                    Schema.Union([
+                      Schema.Struct({
+                        depth: Schema.optional(
+                          Schema.Union([Schema.Number, Schema.Null]),
+                        ),
+                        includeExternalLinks: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                        includeSubdomains: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                        maxAge: Schema.optional(
+                          Schema.Union([Schema.Number, Schema.Null]),
+                        ),
+                        source: Schema.optional(
+                          Schema.Union([
+                            Schema.Union([
+                              Schema.Literals(["all", "sitemaps", "links"]),
+                              Schema.String,
+                            ]),
+                            Schema.Null,
+                          ]),
+                        ),
+                      }).pipe(
+                        Schema.encodeKeys({
+                          depth: "depth",
+                          includeExternalLinks: "include_external_links",
+                          includeSubdomains: "include_subdomains",
+                          maxAge: "max_age",
+                          source: "source",
+                        }),
+                      ),
+                      Schema.Null,
+                    ]),
+                  ),
+                  parseOptions: Schema.optional(
+                    Schema.Union([
+                      Schema.Struct({
+                        contentSelector: Schema.optional(
+                          Schema.Union([
+                            Schema.Array(
+                              Schema.Struct({
+                                path: Schema.String,
+                                selector: Schema.String,
+                              }),
+                            ),
+                            Schema.Null,
+                          ]),
+                        ),
+                        includeHeaders: Schema.optional(
+                          Schema.Union([
+                            Schema.Record(Schema.String, Schema.Unknown),
+                            Schema.Null,
+                          ]),
+                        ),
+                        includeImages: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                        specificSitemaps: Schema.optional(
+                          Schema.Union([
+                            Schema.Array(Schema.String),
+                            Schema.Null,
+                          ]),
+                        ),
+                        useBrowserRendering: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                      }).pipe(
+                        Schema.encodeKeys({
+                          contentSelector: "content_selector",
+                          includeHeaders: "include_headers",
+                          includeImages: "include_images",
+                          specificSitemaps: "specific_sitemaps",
+                          useBrowserRendering: "use_browser_rendering",
+                        }),
+                      ),
+                      Schema.Null,
+                    ]),
+                  ),
+                  parseType: Schema.optional(
+                    Schema.Union([
+                      Schema.Union([
+                        Schema.Literals(["sitemap", "feed-rss", "crawl"]),
+                        Schema.String,
+                      ]),
+                      Schema.Null,
+                    ]),
+                  ),
+                  storeOptions: Schema.optional(
+                    Schema.Union([
+                      Schema.Struct({
+                        storageId: Schema.String,
+                        r2Jurisdiction: Schema.optional(
+                          Schema.Union([Schema.String, Schema.Null]),
+                        ),
+                        storageType: Schema.optional(
+                          Schema.Union([Schema.Literal("r2"), Schema.Null]),
+                        ),
+                      }).pipe(
+                        Schema.encodeKeys({
+                          storageId: "storage_id",
+                          r2Jurisdiction: "r2_jurisdiction",
+                          storageType: "storage_type",
+                        }),
+                      ),
+                      Schema.Null,
+                    ]),
+                  ),
+                }).pipe(
+                  Schema.encodeKeys({
+                    crawlOptions: "crawl_options",
+                    parseOptions: "parse_options",
+                    parseType: "parse_type",
+                    storeOptions: "store_options",
+                  }),
+                ),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              excludeItems: "exclude_items",
+              includeItems: "include_items",
+              prefix: "prefix",
+              r2Jurisdiction: "r2_jurisdiction",
+              webCrawler: "web_crawler",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      status: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      syncInterval: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      tokenId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      type: Schema.optional(
+        Schema.Union([
+          Schema.Literal("r2"),
+          Schema.Literal("web-crawler"),
+          Schema.Null,
+        ]),
+      ),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          id: "id",
+          createdAt: "created_at",
+          modifiedAt: "modified_at",
+          aiGatewayId: "ai_gateway_id",
+          aiSearchModel: "ai_search_model",
+          cache: "cache",
+          cacheThreshold: "cache_threshold",
+          cacheTtl: "cache_ttl",
+          chunkOverlap: "chunk_overlap",
+          chunkSize: "chunk_size",
+          createdBy: "created_by",
+          customMetadata: "custom_metadata",
+          embeddingModel: "embedding_model",
+          enable: "enable",
+          engineVersion: "engine_version",
+          fusionMethod: "fusion_method",
+          hybridSearchEnabled: "hybrid_search_enabled",
+          indexMethod: "index_method",
+          indexingOptions: "indexing_options",
+          lastActivity: "last_activity",
+          maxNumResults: "max_num_results",
+          metadata: "metadata",
+          modifiedBy: "modified_by",
+          namespace: "namespace",
+          paused: "paused",
+          publicEndpointId: "public_endpoint_id",
+          publicEndpointParams: "public_endpoint_params",
+          reranking: "reranking",
+          rerankingModel: "reranking_model",
+          retrievalOptions: "retrieval_options",
+          rewriteModel: "rewrite_model",
+          rewriteQuery: "rewrite_query",
+          scoreThreshold: "score_threshold",
+          source: "source",
+          sourceParams: "source_params",
+          status: "status",
+          syncInterval: "sync_interval",
+          tokenId: "token_id",
+          type: "type",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<UpdateNamespaceInstanceResponse>;
+
+export type UpdateNamespaceInstanceError =
+  | DefaultErrors
+  | ValidationError
+  | NamespaceNotFound
+  | AiSearchInstanceNotFound
+  | InvalidRoute
+  | InvalidTokenCredentials
+  | WebCrawlerDomainNotOwned
+  | Forbidden;
+
+export const updateNamespaceInstance: API.OperationMethod<
+  UpdateNamespaceInstanceRequest,
+  UpdateNamespaceInstanceResponse,
+  UpdateNamespaceInstanceError,
+  Credentials | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: UpdateNamespaceInstanceRequest,
+  output: UpdateNamespaceInstanceResponse,
+  errors: [
+    ValidationError,
+    NamespaceNotFound,
+    AiSearchInstanceNotFound,
+    InvalidRoute,
+    InvalidTokenCredentials,
+    WebCrawlerDomainNotOwned,
+    Forbidden,
+  ],
+}));
+
+export interface DeleteNamespaceInstanceRequest {
+  name: string;
+  id: string;
+  accountId: string;
+}
+
+export const DeleteNamespaceInstanceRequest =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      id: Schema.String.pipe(T.HttpPath("id")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "DELETE",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}",
+      }),
+    ),
+  ) as unknown as Schema.Schema<DeleteNamespaceInstanceRequest>;
+
+export interface DeleteNamespaceInstanceResponse {
+  /** AI Search instance ID. Lowercase alphanumeric, hyphens, and underscores. */
+  id: string;
+  createdAt?: string | null;
+  modifiedAt?: string | null;
+  aiGatewayId?: string | null;
+  aiSearchModel?:
+    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+    | "@cf/zai-org/glm-4.7-flash"
+    | "@cf/meta/llama-3.1-8b-instruct-fast"
+    | "@cf/meta/llama-3.1-8b-instruct-fp8"
+    | "@cf/meta/llama-4-scout-17b-16e-instruct"
+    | "@cf/qwen/qwen3-30b-a3b-fp8"
+    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+    | "@cf/moonshotai/kimi-k2-instruct"
+    | "@cf/google/gemma-3-12b-it"
+    | "@cf/google/gemma-4-26b-a4b-it"
+    | "@cf/moonshotai/kimi-k2.5"
+    | "anthropic/claude-3-7-sonnet"
+    | "anthropic/claude-sonnet-4"
+    | "anthropic/claude-opus-4"
+    | "anthropic/claude-3-5-haiku"
+    | "cerebras/qwen-3-235b-a22b-instruct"
+    | "cerebras/qwen-3-235b-a22b-thinking"
+    | "cerebras/llama-3.3-70b"
+    | "cerebras/llama-4-maverick-17b-128e-instruct"
+    | "cerebras/llama-4-scout-17b-16e-instruct"
+    | "cerebras/gpt-oss-120b"
+    | "google-ai-studio/gemini-2.5-flash"
+    | "google-ai-studio/gemini-2.5-pro"
+    | "grok/grok-4"
+    | "groq/llama-3.3-70b-versatile"
+    | "groq/llama-3.1-8b-instant"
+    | "openai/gpt-5"
+    | "openai/gpt-5-mini"
+    | "openai/gpt-5-nano"
+    | ""
+    | null;
+  cache?: boolean | null;
+  cacheThreshold?:
+    | "super_strict_match"
+    | "close_enough"
+    | "flexible_friend"
+    | "anything_goes"
+    | null;
+  /** Cache entry TTL in seconds. Allowed values: 600 (10min), 1800 (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h), 86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d). */
+  cacheTtl?: number | null;
+  chunkOverlap?: number | null;
+  chunkSize?: number | null;
+  createdBy?: string | null;
+  customMetadata?:
+    | {
+        dataType: "text" | "number" | "boolean" | "datetime" | (string & {});
+        fieldName: string;
+      }[]
+    | null;
+  embeddingModel?:
+    | "@cf/qwen/qwen3-embedding-0.6b"
+    | "@cf/baai/bge-m3"
+    | "@cf/baai/bge-large-en-v1.5"
+    | "@cf/google/embeddinggemma-300m"
+    | "google-ai-studio/gemini-embedding-001"
+    | "google-ai-studio/gemini-embedding-2-preview"
+    | "openai/text-embedding-3-small"
+    | "openai/text-embedding-3-large"
+    | ""
+    | null;
+  enable?: boolean | null;
+  engineVersion?: number | null;
+  fusionMethod?: "max" | "rrf" | (string & {}) | null;
+  /** @deprecated Deprecated — use index_method instead. */
+  hybridSearchEnabled?: boolean | null;
+  /** Controls which storage backends are used during indexing. Defaults to vector-only. */
+  indexMethod?: { keyword: boolean; vector: boolean } | null;
+  indexingOptions?: {
+    keywordTokenizer?: "porter" | "trigram" | (string & {}) | null;
+  } | null;
+  lastActivity?: string | null;
+  maxNumResults?: number | null;
+  metadata?: {
+    createdFromAisearchWizard?: boolean | null;
+    workerDomain?: string | null;
+  } | null;
+  modifiedBy?: string | null;
+  namespace?: string | null;
+  paused?: boolean | null;
+  publicEndpointId?: string | null;
+  publicEndpointParams?: {
+    authorizedHosts?: string[] | null;
+    chatCompletionsEndpoint?: { disabled?: boolean | null } | null;
+    enabled?: boolean | null;
+    mcp?: { description?: string | null; disabled?: boolean | null } | null;
+    rateLimit?: {
+      periodMs?: number | null;
+      requests?: number | null;
+      technique?: "fixed" | "sliding" | (string & {}) | null;
+    } | null;
+    searchEndpoint?: { disabled?: boolean | null } | null;
+  } | null;
+  reranking?: boolean | null;
+  rerankingModel?: "@cf/baai/bge-reranker-base" | "" | null;
+  retrievalOptions?: {
+    boostBy?:
+      | {
+          field: string;
+          direction?:
+            | "asc"
+            | "desc"
+            | "exists"
+            | "not_exists"
+            | (string & {})
+            | null;
+        }[]
+      | null;
+    keywordMatchMode?: "and" | "or" | (string & {}) | null;
+  } | null;
+  rewriteModel?:
+    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+    | "@cf/zai-org/glm-4.7-flash"
+    | "@cf/meta/llama-3.1-8b-instruct-fast"
+    | "@cf/meta/llama-3.1-8b-instruct-fp8"
+    | "@cf/meta/llama-4-scout-17b-16e-instruct"
+    | "@cf/qwen/qwen3-30b-a3b-fp8"
+    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+    | "@cf/moonshotai/kimi-k2-instruct"
+    | "@cf/google/gemma-3-12b-it"
+    | "@cf/google/gemma-4-26b-a4b-it"
+    | "@cf/moonshotai/kimi-k2.5"
+    | "anthropic/claude-3-7-sonnet"
+    | "anthropic/claude-sonnet-4"
+    | "anthropic/claude-opus-4"
+    | "anthropic/claude-3-5-haiku"
+    | "cerebras/qwen-3-235b-a22b-instruct"
+    | "cerebras/qwen-3-235b-a22b-thinking"
+    | "cerebras/llama-3.3-70b"
+    | "cerebras/llama-4-maverick-17b-128e-instruct"
+    | "cerebras/llama-4-scout-17b-16e-instruct"
+    | "cerebras/gpt-oss-120b"
+    | "google-ai-studio/gemini-2.5-flash"
+    | "google-ai-studio/gemini-2.5-pro"
+    | "grok/grok-4"
+    | "groq/llama-3.3-70b-versatile"
+    | "groq/llama-3.1-8b-instant"
+    | "openai/gpt-5"
+    | "openai/gpt-5-mini"
+    | "openai/gpt-5-nano"
+    | ""
+    | null;
+  rewriteQuery?: boolean | null;
+  scoreThreshold?: number | null;
+  source?: string | null;
+  sourceParams?: {
+    excludeItems?: string[] | null;
+    includeItems?: string[] | null;
+    prefix?: string | null;
+    r2Jurisdiction?: string | null;
+    webCrawler?: {
+      crawlOptions?: {
+        depth?: number | null;
+        includeExternalLinks?: boolean | null;
+        includeSubdomains?: boolean | null;
+        maxAge?: number | null;
+        source?: "all" | "sitemaps" | "links" | (string & {}) | null;
+      } | null;
+      parseOptions?: {
+        contentSelector?: { path: string; selector: string }[] | null;
+        includeHeaders?: Record<string, unknown> | null;
+        includeImages?: boolean | null;
+        specificSitemaps?: string[] | null;
+        useBrowserRendering?: boolean | null;
+      } | null;
+      parseType?: "sitemap" | "feed-rss" | "crawl" | (string & {}) | null;
+      storeOptions?: {
+        storageId: string;
+        r2Jurisdiction?: string | null;
+        storageType?: "r2" | null;
+      } | null;
+    } | null;
+  } | null;
+  status?: string | null;
+  /** Interval between automatic syncs, in seconds. Allowed values: 900 (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h), 21600 (6h), 43200 (12h), 86400 (24h). */
+  syncInterval?: number | null;
+  tokenId?: string | null;
+  type?: "r2" | "web-crawler" | null;
+}
+
+export const DeleteNamespaceInstanceResponse =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      id: Schema.String,
+      createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      modifiedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      aiGatewayId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      aiSearchModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+          Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+          Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+          Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+          Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+          Schema.Literal("@cf/google/gemma-3-12b-it"),
+          Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+          Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+          Schema.Literal("anthropic/claude-3-7-sonnet"),
+          Schema.Literal("anthropic/claude-sonnet-4"),
+          Schema.Literal("anthropic/claude-opus-4"),
+          Schema.Literal("anthropic/claude-3-5-haiku"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+          Schema.Literal("cerebras/llama-3.3-70b"),
+          Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+          Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("cerebras/gpt-oss-120b"),
+          Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+          Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+          Schema.Literal("grok/grok-4"),
+          Schema.Literal("groq/llama-3.3-70b-versatile"),
+          Schema.Literal("groq/llama-3.1-8b-instant"),
+          Schema.Literal("openai/gpt-5"),
+          Schema.Literal("openai/gpt-5-mini"),
+          Schema.Literal("openai/gpt-5-nano"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      cache: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      cacheThreshold: Schema.optional(
+        Schema.Union([
+          Schema.Literal("super_strict_match"),
+          Schema.Literal("close_enough"),
+          Schema.Literal("flexible_friend"),
+          Schema.Literal("anything_goes"),
+          Schema.Null,
+        ]),
+      ),
+      cacheTtl: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      chunkOverlap: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      chunkSize: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      createdBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      customMetadata: Schema.optional(
+        Schema.Union([
+          Schema.Array(
+            Schema.Struct({
+              dataType: Schema.Union([
+                Schema.Literals(["text", "number", "boolean", "datetime"]),
+                Schema.String,
+              ]),
+              fieldName: Schema.String,
+            }).pipe(
+              Schema.encodeKeys({
+                dataType: "data_type",
+                fieldName: "field_name",
+              }),
+            ),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      embeddingModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
+          Schema.Literal("@cf/baai/bge-m3"),
+          Schema.Literal("@cf/baai/bge-large-en-v1.5"),
+          Schema.Literal("@cf/google/embeddinggemma-300m"),
+          Schema.Literal("google-ai-studio/gemini-embedding-001"),
+          Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
+          Schema.Literal("openai/text-embedding-3-small"),
+          Schema.Literal("openai/text-embedding-3-large"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      enable: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      engineVersion: Schema.optional(
+        Schema.Union([Schema.Number, Schema.Null]),
+      ),
+      fusionMethod: Schema.optional(
+        Schema.Union([
+          Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
+          Schema.Null,
+        ]),
+      ),
+      hybridSearchEnabled: Schema.optional(
+        Schema.Union([Schema.Boolean, Schema.Null]),
+      ),
+      indexMethod: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            keyword: Schema.Boolean,
+            vector: Schema.Boolean,
+          }),
+          Schema.Null,
+        ]),
+      ),
+      indexingOptions: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            keywordTokenizer: Schema.optional(
+              Schema.Union([
+                Schema.Union([
+                  Schema.Literals(["porter", "trigram"]),
+                  Schema.String,
+                ]),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" })),
+          Schema.Null,
+        ]),
+      ),
+      lastActivity: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      maxNumResults: Schema.optional(
+        Schema.Union([Schema.Number, Schema.Null]),
+      ),
+      metadata: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            createdFromAisearchWizard: Schema.optional(
+              Schema.Union([Schema.Boolean, Schema.Null]),
+            ),
+            workerDomain: Schema.optional(
+              Schema.Union([Schema.String, Schema.Null]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              createdFromAisearchWizard: "created_from_aisearch_wizard",
+              workerDomain: "worker_domain",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      modifiedBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      namespace: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      paused: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      publicEndpointId: Schema.optional(
+        Schema.Union([Schema.String, Schema.Null]),
+      ),
+      publicEndpointParams: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            authorizedHosts: Schema.optional(
+              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+            ),
+            chatCompletionsEndpoint: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  disabled: Schema.optional(
+                    Schema.Union([Schema.Boolean, Schema.Null]),
+                  ),
+                }),
+                Schema.Null,
+              ]),
+            ),
+            enabled: Schema.optional(
+              Schema.Union([Schema.Boolean, Schema.Null]),
+            ),
+            mcp: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  description: Schema.optional(
+                    Schema.Union([Schema.String, Schema.Null]),
+                  ),
+                  disabled: Schema.optional(
+                    Schema.Union([Schema.Boolean, Schema.Null]),
+                  ),
+                }),
+                Schema.Null,
+              ]),
+            ),
+            rateLimit: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  periodMs: Schema.optional(
+                    Schema.Union([Schema.Number, Schema.Null]),
+                  ),
+                  requests: Schema.optional(
+                    Schema.Union([Schema.Number, Schema.Null]),
+                  ),
+                  technique: Schema.optional(
+                    Schema.Union([
+                      Schema.Union([
+                        Schema.Literals(["fixed", "sliding"]),
+                        Schema.String,
+                      ]),
+                      Schema.Null,
+                    ]),
+                  ),
+                }).pipe(
+                  Schema.encodeKeys({
+                    periodMs: "period_ms",
+                    requests: "requests",
+                    technique: "technique",
+                  }),
+                ),
+                Schema.Null,
+              ]),
+            ),
+            searchEndpoint: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  disabled: Schema.optional(
+                    Schema.Union([Schema.Boolean, Schema.Null]),
+                  ),
+                }),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              authorizedHosts: "authorized_hosts",
+              chatCompletionsEndpoint: "chat_completions_endpoint",
+              enabled: "enabled",
+              mcp: "mcp",
+              rateLimit: "rate_limit",
+              searchEndpoint: "search_endpoint",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      reranking: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      rerankingModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/baai/bge-reranker-base"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      retrievalOptions: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            boostBy: Schema.optional(
+              Schema.Union([
+                Schema.Array(
+                  Schema.Struct({
+                    field: Schema.String,
+                    direction: Schema.optional(
+                      Schema.Union([
+                        Schema.Union([
+                          Schema.Literals([
+                            "asc",
+                            "desc",
+                            "exists",
+                            "not_exists",
+                          ]),
+                          Schema.String,
+                        ]),
+                        Schema.Null,
+                      ]),
+                    ),
+                  }),
+                ),
+                Schema.Null,
+              ]),
+            ),
+            keywordMatchMode: Schema.optional(
+              Schema.Union([
+                Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              boostBy: "boost_by",
+              keywordMatchMode: "keyword_match_mode",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      rewriteModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+          Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+          Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+          Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+          Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+          Schema.Literal("@cf/google/gemma-3-12b-it"),
+          Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+          Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+          Schema.Literal("anthropic/claude-3-7-sonnet"),
+          Schema.Literal("anthropic/claude-sonnet-4"),
+          Schema.Literal("anthropic/claude-opus-4"),
+          Schema.Literal("anthropic/claude-3-5-haiku"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+          Schema.Literal("cerebras/llama-3.3-70b"),
+          Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+          Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("cerebras/gpt-oss-120b"),
+          Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+          Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+          Schema.Literal("grok/grok-4"),
+          Schema.Literal("groq/llama-3.3-70b-versatile"),
+          Schema.Literal("groq/llama-3.1-8b-instant"),
+          Schema.Literal("openai/gpt-5"),
+          Schema.Literal("openai/gpt-5-mini"),
+          Schema.Literal("openai/gpt-5-nano"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      rewriteQuery: Schema.optional(
+        Schema.Union([Schema.Boolean, Schema.Null]),
+      ),
+      scoreThreshold: Schema.optional(
+        Schema.Union([Schema.Number, Schema.Null]),
+      ),
+      source: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      sourceParams: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            excludeItems: Schema.optional(
+              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+            ),
+            includeItems: Schema.optional(
+              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+            ),
+            prefix: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+            r2Jurisdiction: Schema.optional(
+              Schema.Union([Schema.String, Schema.Null]),
+            ),
+            webCrawler: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  crawlOptions: Schema.optional(
+                    Schema.Union([
+                      Schema.Struct({
+                        depth: Schema.optional(
+                          Schema.Union([Schema.Number, Schema.Null]),
+                        ),
+                        includeExternalLinks: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                        includeSubdomains: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                        maxAge: Schema.optional(
+                          Schema.Union([Schema.Number, Schema.Null]),
+                        ),
+                        source: Schema.optional(
+                          Schema.Union([
+                            Schema.Union([
+                              Schema.Literals(["all", "sitemaps", "links"]),
+                              Schema.String,
+                            ]),
+                            Schema.Null,
+                          ]),
+                        ),
+                      }).pipe(
+                        Schema.encodeKeys({
+                          depth: "depth",
+                          includeExternalLinks: "include_external_links",
+                          includeSubdomains: "include_subdomains",
+                          maxAge: "max_age",
+                          source: "source",
+                        }),
+                      ),
+                      Schema.Null,
+                    ]),
+                  ),
+                  parseOptions: Schema.optional(
+                    Schema.Union([
+                      Schema.Struct({
+                        contentSelector: Schema.optional(
+                          Schema.Union([
+                            Schema.Array(
+                              Schema.Struct({
+                                path: Schema.String,
+                                selector: Schema.String,
+                              }),
+                            ),
+                            Schema.Null,
+                          ]),
+                        ),
+                        includeHeaders: Schema.optional(
+                          Schema.Union([
+                            Schema.Record(Schema.String, Schema.Unknown),
+                            Schema.Null,
+                          ]),
+                        ),
+                        includeImages: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                        specificSitemaps: Schema.optional(
+                          Schema.Union([
+                            Schema.Array(Schema.String),
+                            Schema.Null,
+                          ]),
+                        ),
+                        useBrowserRendering: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                      }).pipe(
+                        Schema.encodeKeys({
+                          contentSelector: "content_selector",
+                          includeHeaders: "include_headers",
+                          includeImages: "include_images",
+                          specificSitemaps: "specific_sitemaps",
+                          useBrowserRendering: "use_browser_rendering",
+                        }),
+                      ),
+                      Schema.Null,
+                    ]),
+                  ),
+                  parseType: Schema.optional(
+                    Schema.Union([
+                      Schema.Union([
+                        Schema.Literals(["sitemap", "feed-rss", "crawl"]),
+                        Schema.String,
+                      ]),
+                      Schema.Null,
+                    ]),
+                  ),
+                  storeOptions: Schema.optional(
+                    Schema.Union([
+                      Schema.Struct({
+                        storageId: Schema.String,
+                        r2Jurisdiction: Schema.optional(
+                          Schema.Union([Schema.String, Schema.Null]),
+                        ),
+                        storageType: Schema.optional(
+                          Schema.Union([Schema.Literal("r2"), Schema.Null]),
+                        ),
+                      }).pipe(
+                        Schema.encodeKeys({
+                          storageId: "storage_id",
+                          r2Jurisdiction: "r2_jurisdiction",
+                          storageType: "storage_type",
+                        }),
+                      ),
+                      Schema.Null,
+                    ]),
+                  ),
+                }).pipe(
+                  Schema.encodeKeys({
+                    crawlOptions: "crawl_options",
+                    parseOptions: "parse_options",
+                    parseType: "parse_type",
+                    storeOptions: "store_options",
+                  }),
+                ),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              excludeItems: "exclude_items",
+              includeItems: "include_items",
+              prefix: "prefix",
+              r2Jurisdiction: "r2_jurisdiction",
+              webCrawler: "web_crawler",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      status: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      syncInterval: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      tokenId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      type: Schema.optional(
+        Schema.Union([
+          Schema.Literal("r2"),
+          Schema.Literal("web-crawler"),
+          Schema.Null,
+        ]),
+      ),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          id: "id",
+          createdAt: "created_at",
+          modifiedAt: "modified_at",
+          aiGatewayId: "ai_gateway_id",
+          aiSearchModel: "ai_search_model",
+          cache: "cache",
+          cacheThreshold: "cache_threshold",
+          cacheTtl: "cache_ttl",
+          chunkOverlap: "chunk_overlap",
+          chunkSize: "chunk_size",
+          createdBy: "created_by",
+          customMetadata: "custom_metadata",
+          embeddingModel: "embedding_model",
+          enable: "enable",
+          engineVersion: "engine_version",
+          fusionMethod: "fusion_method",
+          hybridSearchEnabled: "hybrid_search_enabled",
+          indexMethod: "index_method",
+          indexingOptions: "indexing_options",
+          lastActivity: "last_activity",
+          maxNumResults: "max_num_results",
+          metadata: "metadata",
+          modifiedBy: "modified_by",
+          namespace: "namespace",
+          paused: "paused",
+          publicEndpointId: "public_endpoint_id",
+          publicEndpointParams: "public_endpoint_params",
+          reranking: "reranking",
+          rerankingModel: "reranking_model",
+          retrievalOptions: "retrieval_options",
+          rewriteModel: "rewrite_model",
+          rewriteQuery: "rewrite_query",
+          scoreThreshold: "score_threshold",
+          source: "source",
+          sourceParams: "source_params",
+          status: "status",
+          syncInterval: "sync_interval",
+          tokenId: "token_id",
+          type: "type",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<DeleteNamespaceInstanceResponse>;
+
+export type DeleteNamespaceInstanceError =
+  | DefaultErrors
+  | ValidationError
+  | NamespaceNotFound
+  | AiSearchInstanceNotFound
+  | InvalidRoute
+  | Forbidden;
+
+export const deleteNamespaceInstance: API.OperationMethod<
+  DeleteNamespaceInstanceRequest,
+  DeleteNamespaceInstanceResponse,
+  DeleteNamespaceInstanceError,
+  Credentials | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: DeleteNamespaceInstanceRequest,
+  output: DeleteNamespaceInstanceResponse,
+  errors: [
+    ValidationError,
+    NamespaceNotFound,
+    AiSearchInstanceNotFound,
+    InvalidRoute,
+    Forbidden,
+  ],
+}));
+
+export interface ReadNamespaceInstanceRequest {
+  name: string;
+  id: string;
+  accountId: string;
+}
+
+export const ReadNamespaceInstanceRequest =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      id: Schema.String.pipe(T.HttpPath("id")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}",
+      }),
+    ),
+  ) as unknown as Schema.Schema<ReadNamespaceInstanceRequest>;
+
+export interface ReadNamespaceInstanceResponse {
+  /** AI Search instance ID. Lowercase alphanumeric, hyphens, and underscores. */
+  id: string;
+  createdAt?: string | null;
+  modifiedAt?: string | null;
+  aiGatewayId?: string | null;
+  aiSearchModel?:
+    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+    | "@cf/zai-org/glm-4.7-flash"
+    | "@cf/meta/llama-3.1-8b-instruct-fast"
+    | "@cf/meta/llama-3.1-8b-instruct-fp8"
+    | "@cf/meta/llama-4-scout-17b-16e-instruct"
+    | "@cf/qwen/qwen3-30b-a3b-fp8"
+    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+    | "@cf/moonshotai/kimi-k2-instruct"
+    | "@cf/google/gemma-3-12b-it"
+    | "@cf/google/gemma-4-26b-a4b-it"
+    | "@cf/moonshotai/kimi-k2.5"
+    | "anthropic/claude-3-7-sonnet"
+    | "anthropic/claude-sonnet-4"
+    | "anthropic/claude-opus-4"
+    | "anthropic/claude-3-5-haiku"
+    | "cerebras/qwen-3-235b-a22b-instruct"
+    | "cerebras/qwen-3-235b-a22b-thinking"
+    | "cerebras/llama-3.3-70b"
+    | "cerebras/llama-4-maverick-17b-128e-instruct"
+    | "cerebras/llama-4-scout-17b-16e-instruct"
+    | "cerebras/gpt-oss-120b"
+    | "google-ai-studio/gemini-2.5-flash"
+    | "google-ai-studio/gemini-2.5-pro"
+    | "grok/grok-4"
+    | "groq/llama-3.3-70b-versatile"
+    | "groq/llama-3.1-8b-instant"
+    | "openai/gpt-5"
+    | "openai/gpt-5-mini"
+    | "openai/gpt-5-nano"
+    | ""
+    | null;
+  cache?: boolean | null;
+  cacheThreshold?:
+    | "super_strict_match"
+    | "close_enough"
+    | "flexible_friend"
+    | "anything_goes"
+    | null;
+  /** Cache entry TTL in seconds. Allowed values: 600 (10min), 1800 (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h), 86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d). */
+  cacheTtl?: number | null;
+  chunkOverlap?: number | null;
+  chunkSize?: number | null;
+  createdBy?: string | null;
+  customMetadata?:
+    | {
+        dataType: "text" | "number" | "boolean" | "datetime" | (string & {});
+        fieldName: string;
+      }[]
+    | null;
+  embeddingModel?:
+    | "@cf/qwen/qwen3-embedding-0.6b"
+    | "@cf/baai/bge-m3"
+    | "@cf/baai/bge-large-en-v1.5"
+    | "@cf/google/embeddinggemma-300m"
+    | "google-ai-studio/gemini-embedding-001"
+    | "google-ai-studio/gemini-embedding-2-preview"
+    | "openai/text-embedding-3-small"
+    | "openai/text-embedding-3-large"
+    | ""
+    | null;
+  enable?: boolean | null;
+  engineVersion?: number | null;
+  fusionMethod?: "max" | "rrf" | (string & {}) | null;
+  /** @deprecated Deprecated — use index_method instead. */
+  hybridSearchEnabled?: boolean | null;
+  /** Controls which storage backends are used during indexing. Defaults to vector-only. */
+  indexMethod?: { keyword: boolean; vector: boolean } | null;
+  indexingOptions?: {
+    keywordTokenizer?: "porter" | "trigram" | (string & {}) | null;
+  } | null;
+  lastActivity?: string | null;
+  maxNumResults?: number | null;
+  metadata?: {
+    createdFromAisearchWizard?: boolean | null;
+    workerDomain?: string | null;
+  } | null;
+  modifiedBy?: string | null;
+  namespace?: string | null;
+  paused?: boolean | null;
+  publicEndpointId?: string | null;
+  publicEndpointParams?: {
+    authorizedHosts?: string[] | null;
+    chatCompletionsEndpoint?: { disabled?: boolean | null } | null;
+    enabled?: boolean | null;
+    mcp?: { description?: string | null; disabled?: boolean | null } | null;
+    rateLimit?: {
+      periodMs?: number | null;
+      requests?: number | null;
+      technique?: "fixed" | "sliding" | (string & {}) | null;
+    } | null;
+    searchEndpoint?: { disabled?: boolean | null } | null;
+  } | null;
+  reranking?: boolean | null;
+  rerankingModel?: "@cf/baai/bge-reranker-base" | "" | null;
+  retrievalOptions?: {
+    boostBy?:
+      | {
+          field: string;
+          direction?:
+            | "asc"
+            | "desc"
+            | "exists"
+            | "not_exists"
+            | (string & {})
+            | null;
+        }[]
+      | null;
+    keywordMatchMode?: "and" | "or" | (string & {}) | null;
+  } | null;
+  rewriteModel?:
+    | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+    | "@cf/zai-org/glm-4.7-flash"
+    | "@cf/meta/llama-3.1-8b-instruct-fast"
+    | "@cf/meta/llama-3.1-8b-instruct-fp8"
+    | "@cf/meta/llama-4-scout-17b-16e-instruct"
+    | "@cf/qwen/qwen3-30b-a3b-fp8"
+    | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+    | "@cf/moonshotai/kimi-k2-instruct"
+    | "@cf/google/gemma-3-12b-it"
+    | "@cf/google/gemma-4-26b-a4b-it"
+    | "@cf/moonshotai/kimi-k2.5"
+    | "anthropic/claude-3-7-sonnet"
+    | "anthropic/claude-sonnet-4"
+    | "anthropic/claude-opus-4"
+    | "anthropic/claude-3-5-haiku"
+    | "cerebras/qwen-3-235b-a22b-instruct"
+    | "cerebras/qwen-3-235b-a22b-thinking"
+    | "cerebras/llama-3.3-70b"
+    | "cerebras/llama-4-maverick-17b-128e-instruct"
+    | "cerebras/llama-4-scout-17b-16e-instruct"
+    | "cerebras/gpt-oss-120b"
+    | "google-ai-studio/gemini-2.5-flash"
+    | "google-ai-studio/gemini-2.5-pro"
+    | "grok/grok-4"
+    | "groq/llama-3.3-70b-versatile"
+    | "groq/llama-3.1-8b-instant"
+    | "openai/gpt-5"
+    | "openai/gpt-5-mini"
+    | "openai/gpt-5-nano"
+    | ""
+    | null;
+  rewriteQuery?: boolean | null;
+  scoreThreshold?: number | null;
+  source?: string | null;
+  sourceParams?: {
+    excludeItems?: string[] | null;
+    includeItems?: string[] | null;
+    prefix?: string | null;
+    r2Jurisdiction?: string | null;
+    webCrawler?: {
+      crawlOptions?: {
+        depth?: number | null;
+        includeExternalLinks?: boolean | null;
+        includeSubdomains?: boolean | null;
+        maxAge?: number | null;
+        source?: "all" | "sitemaps" | "links" | (string & {}) | null;
+      } | null;
+      parseOptions?: {
+        contentSelector?: { path: string; selector: string }[] | null;
+        includeHeaders?: Record<string, unknown> | null;
+        includeImages?: boolean | null;
+        specificSitemaps?: string[] | null;
+        useBrowserRendering?: boolean | null;
+      } | null;
+      parseType?: "sitemap" | "feed-rss" | "crawl" | (string & {}) | null;
+      storeOptions?: {
+        storageId: string;
+        r2Jurisdiction?: string | null;
+        storageType?: "r2" | null;
+      } | null;
+    } | null;
+  } | null;
+  status?: string | null;
+  /** Interval between automatic syncs, in seconds. Allowed values: 900 (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h), 21600 (6h), 43200 (12h), 86400 (24h). */
+  syncInterval?: number | null;
+  tokenId?: string | null;
+  type?: "r2" | "web-crawler" | null;
+}
+
+export const ReadNamespaceInstanceResponse =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      id: Schema.String,
+      createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      modifiedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      aiGatewayId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      aiSearchModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+          Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+          Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+          Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+          Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+          Schema.Literal("@cf/google/gemma-3-12b-it"),
+          Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+          Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+          Schema.Literal("anthropic/claude-3-7-sonnet"),
+          Schema.Literal("anthropic/claude-sonnet-4"),
+          Schema.Literal("anthropic/claude-opus-4"),
+          Schema.Literal("anthropic/claude-3-5-haiku"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+          Schema.Literal("cerebras/llama-3.3-70b"),
+          Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+          Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("cerebras/gpt-oss-120b"),
+          Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+          Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+          Schema.Literal("grok/grok-4"),
+          Schema.Literal("groq/llama-3.3-70b-versatile"),
+          Schema.Literal("groq/llama-3.1-8b-instant"),
+          Schema.Literal("openai/gpt-5"),
+          Schema.Literal("openai/gpt-5-mini"),
+          Schema.Literal("openai/gpt-5-nano"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      cache: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      cacheThreshold: Schema.optional(
+        Schema.Union([
+          Schema.Literal("super_strict_match"),
+          Schema.Literal("close_enough"),
+          Schema.Literal("flexible_friend"),
+          Schema.Literal("anything_goes"),
+          Schema.Null,
+        ]),
+      ),
+      cacheTtl: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      chunkOverlap: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      chunkSize: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      createdBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      customMetadata: Schema.optional(
+        Schema.Union([
+          Schema.Array(
+            Schema.Struct({
+              dataType: Schema.Union([
+                Schema.Literals(["text", "number", "boolean", "datetime"]),
+                Schema.String,
+              ]),
+              fieldName: Schema.String,
+            }).pipe(
+              Schema.encodeKeys({
+                dataType: "data_type",
+                fieldName: "field_name",
+              }),
+            ),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      embeddingModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/qwen/qwen3-embedding-0.6b"),
+          Schema.Literal("@cf/baai/bge-m3"),
+          Schema.Literal("@cf/baai/bge-large-en-v1.5"),
+          Schema.Literal("@cf/google/embeddinggemma-300m"),
+          Schema.Literal("google-ai-studio/gemini-embedding-001"),
+          Schema.Literal("google-ai-studio/gemini-embedding-2-preview"),
+          Schema.Literal("openai/text-embedding-3-small"),
+          Schema.Literal("openai/text-embedding-3-large"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      enable: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      engineVersion: Schema.optional(
+        Schema.Union([Schema.Number, Schema.Null]),
+      ),
+      fusionMethod: Schema.optional(
+        Schema.Union([
+          Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
+          Schema.Null,
+        ]),
+      ),
+      hybridSearchEnabled: Schema.optional(
+        Schema.Union([Schema.Boolean, Schema.Null]),
+      ),
+      indexMethod: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            keyword: Schema.Boolean,
+            vector: Schema.Boolean,
+          }),
+          Schema.Null,
+        ]),
+      ),
+      indexingOptions: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            keywordTokenizer: Schema.optional(
+              Schema.Union([
+                Schema.Union([
+                  Schema.Literals(["porter", "trigram"]),
+                  Schema.String,
+                ]),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(Schema.encodeKeys({ keywordTokenizer: "keyword_tokenizer" })),
+          Schema.Null,
+        ]),
+      ),
+      lastActivity: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      maxNumResults: Schema.optional(
+        Schema.Union([Schema.Number, Schema.Null]),
+      ),
+      metadata: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            createdFromAisearchWizard: Schema.optional(
+              Schema.Union([Schema.Boolean, Schema.Null]),
+            ),
+            workerDomain: Schema.optional(
+              Schema.Union([Schema.String, Schema.Null]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              createdFromAisearchWizard: "created_from_aisearch_wizard",
+              workerDomain: "worker_domain",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      modifiedBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      namespace: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      paused: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      publicEndpointId: Schema.optional(
+        Schema.Union([Schema.String, Schema.Null]),
+      ),
+      publicEndpointParams: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            authorizedHosts: Schema.optional(
+              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+            ),
+            chatCompletionsEndpoint: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  disabled: Schema.optional(
+                    Schema.Union([Schema.Boolean, Schema.Null]),
+                  ),
+                }),
+                Schema.Null,
+              ]),
+            ),
+            enabled: Schema.optional(
+              Schema.Union([Schema.Boolean, Schema.Null]),
+            ),
+            mcp: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  description: Schema.optional(
+                    Schema.Union([Schema.String, Schema.Null]),
+                  ),
+                  disabled: Schema.optional(
+                    Schema.Union([Schema.Boolean, Schema.Null]),
+                  ),
+                }),
+                Schema.Null,
+              ]),
+            ),
+            rateLimit: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  periodMs: Schema.optional(
+                    Schema.Union([Schema.Number, Schema.Null]),
+                  ),
+                  requests: Schema.optional(
+                    Schema.Union([Schema.Number, Schema.Null]),
+                  ),
+                  technique: Schema.optional(
+                    Schema.Union([
+                      Schema.Union([
+                        Schema.Literals(["fixed", "sliding"]),
+                        Schema.String,
+                      ]),
+                      Schema.Null,
+                    ]),
+                  ),
+                }).pipe(
+                  Schema.encodeKeys({
+                    periodMs: "period_ms",
+                    requests: "requests",
+                    technique: "technique",
+                  }),
+                ),
+                Schema.Null,
+              ]),
+            ),
+            searchEndpoint: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  disabled: Schema.optional(
+                    Schema.Union([Schema.Boolean, Schema.Null]),
+                  ),
+                }),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              authorizedHosts: "authorized_hosts",
+              chatCompletionsEndpoint: "chat_completions_endpoint",
+              enabled: "enabled",
+              mcp: "mcp",
+              rateLimit: "rate_limit",
+              searchEndpoint: "search_endpoint",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      reranking: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      rerankingModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/baai/bge-reranker-base"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      retrievalOptions: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            boostBy: Schema.optional(
+              Schema.Union([
+                Schema.Array(
+                  Schema.Struct({
+                    field: Schema.String,
+                    direction: Schema.optional(
+                      Schema.Union([
+                        Schema.Union([
+                          Schema.Literals([
+                            "asc",
+                            "desc",
+                            "exists",
+                            "not_exists",
+                          ]),
+                          Schema.String,
+                        ]),
+                        Schema.Null,
+                      ]),
+                    ),
+                  }),
+                ),
+                Schema.Null,
+              ]),
+            ),
+            keywordMatchMode: Schema.optional(
+              Schema.Union([
+                Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              boostBy: "boost_by",
+              keywordMatchMode: "keyword_match_mode",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      rewriteModel: Schema.optional(
+        Schema.Union([
+          Schema.Literal("@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+          Schema.Literal("@cf/zai-org/glm-4.7-flash"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fast"),
+          Schema.Literal("@cf/meta/llama-3.1-8b-instruct-fp8"),
+          Schema.Literal("@cf/meta/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("@cf/qwen/qwen3-30b-a3b-fp8"),
+          Schema.Literal("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"),
+          Schema.Literal("@cf/moonshotai/kimi-k2-instruct"),
+          Schema.Literal("@cf/google/gemma-3-12b-it"),
+          Schema.Literal("@cf/google/gemma-4-26b-a4b-it"),
+          Schema.Literal("@cf/moonshotai/kimi-k2.5"),
+          Schema.Literal("anthropic/claude-3-7-sonnet"),
+          Schema.Literal("anthropic/claude-sonnet-4"),
+          Schema.Literal("anthropic/claude-opus-4"),
+          Schema.Literal("anthropic/claude-3-5-haiku"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-instruct"),
+          Schema.Literal("cerebras/qwen-3-235b-a22b-thinking"),
+          Schema.Literal("cerebras/llama-3.3-70b"),
+          Schema.Literal("cerebras/llama-4-maverick-17b-128e-instruct"),
+          Schema.Literal("cerebras/llama-4-scout-17b-16e-instruct"),
+          Schema.Literal("cerebras/gpt-oss-120b"),
+          Schema.Literal("google-ai-studio/gemini-2.5-flash"),
+          Schema.Literal("google-ai-studio/gemini-2.5-pro"),
+          Schema.Literal("grok/grok-4"),
+          Schema.Literal("groq/llama-3.3-70b-versatile"),
+          Schema.Literal("groq/llama-3.1-8b-instant"),
+          Schema.Literal("openai/gpt-5"),
+          Schema.Literal("openai/gpt-5-mini"),
+          Schema.Literal("openai/gpt-5-nano"),
+          Schema.Literal(""),
+          Schema.Null,
+        ]),
+      ),
+      rewriteQuery: Schema.optional(
+        Schema.Union([Schema.Boolean, Schema.Null]),
+      ),
+      scoreThreshold: Schema.optional(
+        Schema.Union([Schema.Number, Schema.Null]),
+      ),
+      source: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      sourceParams: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            excludeItems: Schema.optional(
+              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+            ),
+            includeItems: Schema.optional(
+              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+            ),
+            prefix: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+            r2Jurisdiction: Schema.optional(
+              Schema.Union([Schema.String, Schema.Null]),
+            ),
+            webCrawler: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  crawlOptions: Schema.optional(
+                    Schema.Union([
+                      Schema.Struct({
+                        depth: Schema.optional(
+                          Schema.Union([Schema.Number, Schema.Null]),
+                        ),
+                        includeExternalLinks: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                        includeSubdomains: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                        maxAge: Schema.optional(
+                          Schema.Union([Schema.Number, Schema.Null]),
+                        ),
+                        source: Schema.optional(
+                          Schema.Union([
+                            Schema.Union([
+                              Schema.Literals(["all", "sitemaps", "links"]),
+                              Schema.String,
+                            ]),
+                            Schema.Null,
+                          ]),
+                        ),
+                      }).pipe(
+                        Schema.encodeKeys({
+                          depth: "depth",
+                          includeExternalLinks: "include_external_links",
+                          includeSubdomains: "include_subdomains",
+                          maxAge: "max_age",
+                          source: "source",
+                        }),
+                      ),
+                      Schema.Null,
+                    ]),
+                  ),
+                  parseOptions: Schema.optional(
+                    Schema.Union([
+                      Schema.Struct({
+                        contentSelector: Schema.optional(
+                          Schema.Union([
+                            Schema.Array(
+                              Schema.Struct({
+                                path: Schema.String,
+                                selector: Schema.String,
+                              }),
+                            ),
+                            Schema.Null,
+                          ]),
+                        ),
+                        includeHeaders: Schema.optional(
+                          Schema.Union([
+                            Schema.Record(Schema.String, Schema.Unknown),
+                            Schema.Null,
+                          ]),
+                        ),
+                        includeImages: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                        specificSitemaps: Schema.optional(
+                          Schema.Union([
+                            Schema.Array(Schema.String),
+                            Schema.Null,
+                          ]),
+                        ),
+                        useBrowserRendering: Schema.optional(
+                          Schema.Union([Schema.Boolean, Schema.Null]),
+                        ),
+                      }).pipe(
+                        Schema.encodeKeys({
+                          contentSelector: "content_selector",
+                          includeHeaders: "include_headers",
+                          includeImages: "include_images",
+                          specificSitemaps: "specific_sitemaps",
+                          useBrowserRendering: "use_browser_rendering",
+                        }),
+                      ),
+                      Schema.Null,
+                    ]),
+                  ),
+                  parseType: Schema.optional(
+                    Schema.Union([
+                      Schema.Union([
+                        Schema.Literals(["sitemap", "feed-rss", "crawl"]),
+                        Schema.String,
+                      ]),
+                      Schema.Null,
+                    ]),
+                  ),
+                  storeOptions: Schema.optional(
+                    Schema.Union([
+                      Schema.Struct({
+                        storageId: Schema.String,
+                        r2Jurisdiction: Schema.optional(
+                          Schema.Union([Schema.String, Schema.Null]),
+                        ),
+                        storageType: Schema.optional(
+                          Schema.Union([Schema.Literal("r2"), Schema.Null]),
+                        ),
+                      }).pipe(
+                        Schema.encodeKeys({
+                          storageId: "storage_id",
+                          r2Jurisdiction: "r2_jurisdiction",
+                          storageType: "storage_type",
+                        }),
+                      ),
+                      Schema.Null,
+                    ]),
+                  ),
+                }).pipe(
+                  Schema.encodeKeys({
+                    crawlOptions: "crawl_options",
+                    parseOptions: "parse_options",
+                    parseType: "parse_type",
+                    storeOptions: "store_options",
+                  }),
+                ),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              excludeItems: "exclude_items",
+              includeItems: "include_items",
+              prefix: "prefix",
+              r2Jurisdiction: "r2_jurisdiction",
+              webCrawler: "web_crawler",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      status: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      syncInterval: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      tokenId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      type: Schema.optional(
+        Schema.Union([
+          Schema.Literal("r2"),
+          Schema.Literal("web-crawler"),
+          Schema.Null,
+        ]),
+      ),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          id: "id",
+          createdAt: "created_at",
+          modifiedAt: "modified_at",
+          aiGatewayId: "ai_gateway_id",
+          aiSearchModel: "ai_search_model",
+          cache: "cache",
+          cacheThreshold: "cache_threshold",
+          cacheTtl: "cache_ttl",
+          chunkOverlap: "chunk_overlap",
+          chunkSize: "chunk_size",
+          createdBy: "created_by",
+          customMetadata: "custom_metadata",
+          embeddingModel: "embedding_model",
+          enable: "enable",
+          engineVersion: "engine_version",
+          fusionMethod: "fusion_method",
+          hybridSearchEnabled: "hybrid_search_enabled",
+          indexMethod: "index_method",
+          indexingOptions: "indexing_options",
+          lastActivity: "last_activity",
+          maxNumResults: "max_num_results",
+          metadata: "metadata",
+          modifiedBy: "modified_by",
+          namespace: "namespace",
+          paused: "paused",
+          publicEndpointId: "public_endpoint_id",
+          publicEndpointParams: "public_endpoint_params",
+          reranking: "reranking",
+          rerankingModel: "reranking_model",
+          retrievalOptions: "retrieval_options",
+          rewriteModel: "rewrite_model",
+          rewriteQuery: "rewrite_query",
+          scoreThreshold: "score_threshold",
+          source: "source",
+          sourceParams: "source_params",
+          status: "status",
+          syncInterval: "sync_interval",
+          tokenId: "token_id",
+          type: "type",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<ReadNamespaceInstanceResponse>;
+
+export type ReadNamespaceInstanceError =
+  | DefaultErrors
+  | ValidationError
+  | NamespaceNotFound
+  | AiSearchInstanceNotFound
+  | InvalidRoute
+  | Forbidden;
+
+export const readNamespaceInstance: API.OperationMethod<
+  ReadNamespaceInstanceRequest,
+  ReadNamespaceInstanceResponse,
+  ReadNamespaceInstanceError,
+  Credentials | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: ReadNamespaceInstanceRequest,
+  output: ReadNamespaceInstanceResponse,
+  errors: [
+    ValidationError,
+    NamespaceNotFound,
+    AiSearchInstanceNotFound,
+    InvalidRoute,
+    Forbidden,
+  ],
+}));
+
+export interface SearchNamespaceInstanceRequest {
+  name: string;
+  id: string;
+  /** Path param */
+  accountId: string;
+  /** Body param */
+  aiSearchOptions?: {
+    cache?: {
+      cacheThreshold?:
+        | "super_strict_match"
+        | "close_enough"
+        | "flexible_friend"
+        | "anything_goes"
+        | (string & {});
+      enabled?: boolean;
+    };
+    queryRewrite?: {
+      enabled?: boolean;
+      model?:
+        | "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        | "@cf/zai-org/glm-4.7-flash"
+        | "@cf/meta/llama-3.1-8b-instruct-fast"
+        | "@cf/meta/llama-3.1-8b-instruct-fp8"
+        | "@cf/meta/llama-4-scout-17b-16e-instruct"
+        | "@cf/qwen/qwen3-30b-a3b-fp8"
+        | "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+        | "@cf/moonshotai/kimi-k2-instruct"
+        | "@cf/google/gemma-3-12b-it"
+        | "@cf/google/gemma-4-26b-a4b-it"
+        | "@cf/moonshotai/kimi-k2.5"
+        | "anthropic/claude-3-7-sonnet"
+        | "anthropic/claude-sonnet-4"
+        | "anthropic/claude-opus-4"
+        | "anthropic/claude-3-5-haiku"
+        | "cerebras/qwen-3-235b-a22b-instruct"
+        | "cerebras/qwen-3-235b-a22b-thinking"
+        | "cerebras/llama-3.3-70b"
+        | "cerebras/llama-4-maverick-17b-128e-instruct"
+        | "cerebras/llama-4-scout-17b-16e-instruct"
+        | "cerebras/gpt-oss-120b"
+        | "google-ai-studio/gemini-2.5-flash"
+        | "google-ai-studio/gemini-2.5-pro"
+        | "grok/grok-4"
+        | "groq/llama-3.3-70b-versatile"
+        | "groq/llama-3.1-8b-instant"
+        | "openai/gpt-5"
+        | "openai/gpt-5-mini"
+        | "openai/gpt-5-nano"
+        | ""
+        | (string & {});
+      rewritePrompt?: string;
+    };
+    reranking?: {
+      enabled?: boolean;
+      matchThreshold?: number;
+      model?: "@cf/baai/bge-reranker-base" | "" | (string & {});
+    };
+    retrieval?: {
+      boostBy?: {
+        field: string;
+        direction?: "asc" | "desc" | "exists" | "not_exists" | (string & {});
+      }[];
+      contextExpansion?: number;
+      filters?: Record<string, unknown>;
+      fusionMethod?: "max" | "rrf" | (string & {});
+      keywordMatchMode?: "and" | "or" | (string & {});
+      matchThreshold?: number;
+      maxNumResults?: number;
+      retrievalType?: "vector" | "keyword" | "hybrid" | (string & {});
+      returnOnFailure?: boolean;
+    };
+  };
+  /** Body param */
+  messages?: {
+    content: string | null;
+    role:
+      | "system"
+      | "developer"
+      | "user"
+      | "assistant"
+      | "tool"
+      | (string & {});
+  }[];
+  /** Body param: A simple text query string. Alternative to 'messages' — provide either this or 'messages', not both. */
+  query?: string;
+}
+
+export const SearchNamespaceInstanceRequest =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      id: Schema.String.pipe(T.HttpPath("id")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      aiSearchOptions: Schema.optional(
+        Schema.Struct({
+          cache: Schema.optional(
+            Schema.Struct({
+              cacheThreshold: Schema.optional(
+                Schema.Union([
+                  Schema.Literals([
+                    "super_strict_match",
+                    "close_enough",
+                    "flexible_friend",
+                    "anything_goes",
+                  ]),
+                  Schema.String,
+                ]),
+              ),
+              enabled: Schema.optional(Schema.Boolean),
+            }).pipe(
+              Schema.encodeKeys({
+                cacheThreshold: "cache_threshold",
+                enabled: "enabled",
+              }),
+            ),
+          ),
+          queryRewrite: Schema.optional(
+            Schema.Struct({
+              enabled: Schema.optional(Schema.Boolean),
+              model: Schema.optional(
+                Schema.Union([
+                  Schema.Literals([
+                    "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+                    "@cf/zai-org/glm-4.7-flash",
+                    "@cf/meta/llama-3.1-8b-instruct-fast",
+                    "@cf/meta/llama-3.1-8b-instruct-fp8",
+                    "@cf/meta/llama-4-scout-17b-16e-instruct",
+                    "@cf/qwen/qwen3-30b-a3b-fp8",
+                    "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
+                    "@cf/moonshotai/kimi-k2-instruct",
+                    "@cf/google/gemma-3-12b-it",
+                    "@cf/google/gemma-4-26b-a4b-it",
+                    "@cf/moonshotai/kimi-k2.5",
+                    "anthropic/claude-3-7-sonnet",
+                    "anthropic/claude-sonnet-4",
+                    "anthropic/claude-opus-4",
+                    "anthropic/claude-3-5-haiku",
+                    "cerebras/qwen-3-235b-a22b-instruct",
+                    "cerebras/qwen-3-235b-a22b-thinking",
+                    "cerebras/llama-3.3-70b",
+                    "cerebras/llama-4-maverick-17b-128e-instruct",
+                    "cerebras/llama-4-scout-17b-16e-instruct",
+                    "cerebras/gpt-oss-120b",
+                    "google-ai-studio/gemini-2.5-flash",
+                    "google-ai-studio/gemini-2.5-pro",
+                    "grok/grok-4",
+                    "groq/llama-3.3-70b-versatile",
+                    "groq/llama-3.1-8b-instant",
+                    "openai/gpt-5",
+                    "openai/gpt-5-mini",
+                    "openai/gpt-5-nano",
+                    "",
+                  ]),
+                  Schema.String,
+                ]),
+              ),
+              rewritePrompt: Schema.optional(Schema.String),
+            }).pipe(
+              Schema.encodeKeys({
+                enabled: "enabled",
+                model: "model",
+                rewritePrompt: "rewrite_prompt",
+              }),
+            ),
+          ),
+          reranking: Schema.optional(
+            Schema.Struct({
+              enabled: Schema.optional(Schema.Boolean),
+              matchThreshold: Schema.optional(Schema.Number),
+              model: Schema.optional(
+                Schema.Union([
+                  Schema.Literals(["@cf/baai/bge-reranker-base", ""]),
+                  Schema.String,
+                ]),
+              ),
+            }).pipe(
+              Schema.encodeKeys({
+                enabled: "enabled",
+                matchThreshold: "match_threshold",
+                model: "model",
+              }),
+            ),
+          ),
+          retrieval: Schema.optional(
+            Schema.Struct({
+              boostBy: Schema.optional(
+                Schema.Array(
+                  Schema.Struct({
+                    field: Schema.String,
+                    direction: Schema.optional(
+                      Schema.Union([
+                        Schema.Literals([
+                          "asc",
+                          "desc",
+                          "exists",
+                          "not_exists",
+                        ]),
+                        Schema.String,
+                      ]),
+                    ),
+                  }),
+                ),
+              ),
+              contextExpansion: Schema.optional(Schema.Number),
+              filters: Schema.optional(
+                Schema.Record(Schema.String, Schema.Unknown),
+              ),
+              fusionMethod: Schema.optional(
+                Schema.Union([Schema.Literals(["max", "rrf"]), Schema.String]),
+              ),
+              keywordMatchMode: Schema.optional(
+                Schema.Union([Schema.Literals(["and", "or"]), Schema.String]),
+              ),
+              matchThreshold: Schema.optional(Schema.Number),
+              maxNumResults: Schema.optional(Schema.Number),
+              retrievalType: Schema.optional(
+                Schema.Union([
+                  Schema.Literals(["vector", "keyword", "hybrid"]),
+                  Schema.String,
+                ]),
+              ),
+              returnOnFailure: Schema.optional(Schema.Boolean),
+            }).pipe(
+              Schema.encodeKeys({
+                boostBy: "boost_by",
+                contextExpansion: "context_expansion",
+                filters: "filters",
+                fusionMethod: "fusion_method",
+                keywordMatchMode: "keyword_match_mode",
+                matchThreshold: "match_threshold",
+                maxNumResults: "max_num_results",
+                retrievalType: "retrieval_type",
+                returnOnFailure: "return_on_failure",
+              }),
+            ),
+          ),
+        }).pipe(
+          Schema.encodeKeys({
+            cache: "cache",
+            queryRewrite: "query_rewrite",
+            reranking: "reranking",
+            retrieval: "retrieval",
+          }),
+        ),
+      ),
+      messages: Schema.optional(
+        Schema.Array(
+          Schema.Struct({
+            content: Schema.Union([Schema.String, Schema.Null]),
+            role: Schema.Union([
+              Schema.Literals([
+                "system",
+                "developer",
+                "user",
+                "assistant",
+                "tool",
+              ]),
+              Schema.String,
+            ]),
+          }),
+        ),
+      ),
+      query: Schema.optional(Schema.String),
+    }).pipe(
+      Schema.encodeKeys({
+        aiSearchOptions: "ai_search_options",
+        messages: "messages",
+        query: "query",
+      }),
+      T.Http({
+        method: "POST",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/search",
+      }),
+    ),
   ) as unknown as Schema.Schema<SearchNamespaceInstanceRequest>;
 
 export interface SearchNamespaceInstanceResponse {
@@ -14102,87 +13777,89 @@ export interface SearchNamespaceInstanceResponse {
 }
 
 export const SearchNamespaceInstanceResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    chunks: Schema.Array(
-      Schema.Struct({
-        id: Schema.String,
-        score: Schema.Number,
-        text: Schema.String,
-        type: Schema.String,
-        item: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              key: Schema.String,
-              metadata: Schema.optional(
-                Schema.Union([
-                  Schema.Record(Schema.String, Schema.Unknown),
-                  Schema.Null,
-                ]),
-              ),
-              timestamp: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-            }),
-            Schema.Null,
-          ]),
-        ),
-        scoringDetails: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              fusionMethod: Schema.optional(
-                Schema.Union([
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      chunks: Schema.Array(
+        Schema.Struct({
+          id: Schema.String,
+          score: Schema.Number,
+          text: Schema.String,
+          type: Schema.String,
+          item: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                key: Schema.String,
+                metadata: Schema.optional(
                   Schema.Union([
-                    Schema.Literals(["rrf", "max"]),
-                    Schema.String,
+                    Schema.Record(Schema.String, Schema.Unknown),
+                    Schema.Null,
                   ]),
-                  Schema.Null,
-                ]),
-              ),
-              keywordRank: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              keywordScore: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              rerankingScore: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              vectorRank: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-              vectorScore: Schema.optional(
-                Schema.Union([Schema.Number, Schema.Null]),
-              ),
-            }).pipe(
-              Schema.encodeKeys({
-                fusionMethod: "fusion_method",
-                keywordRank: "keyword_rank",
-                keywordScore: "keyword_score",
-                rerankingScore: "reranking_score",
-                vectorRank: "vector_rank",
-                vectorScore: "vector_score",
+                ),
+                timestamp: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
               }),
-            ),
-            Schema.Null,
-          ]),
+              Schema.Null,
+            ]),
+          ),
+          scoringDetails: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                fusionMethod: Schema.optional(
+                  Schema.Union([
+                    Schema.Union([
+                      Schema.Literals(["rrf", "max"]),
+                      Schema.String,
+                    ]),
+                    Schema.Null,
+                  ]),
+                ),
+                keywordRank: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+                keywordScore: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+                rerankingScore: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+                vectorRank: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+                vectorScore: Schema.optional(
+                  Schema.Union([Schema.Number, Schema.Null]),
+                ),
+              }).pipe(
+                Schema.encodeKeys({
+                  fusionMethod: "fusion_method",
+                  keywordRank: "keyword_rank",
+                  keywordScore: "keyword_score",
+                  rerankingScore: "reranking_score",
+                  vectorRank: "vector_rank",
+                  vectorScore: "vector_score",
+                }),
+              ),
+              Schema.Null,
+            ]),
+          ),
+        }).pipe(
+          Schema.encodeKeys({
+            id: "id",
+            score: "score",
+            text: "text",
+            type: "type",
+            item: "item",
+            scoringDetails: "scoring_details",
+          }),
         ),
-      }).pipe(
-        Schema.encodeKeys({
-          id: "id",
-          score: "score",
-          text: "text",
-          type: "type",
-          item: "item",
-          scoringDetails: "scoring_details",
-        }),
       ),
-    ),
-    searchQuery: Schema.String,
-  })
-    .pipe(Schema.encodeKeys({ chunks: "chunks", searchQuery: "search_query" }))
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<SearchNamespaceInstanceResponse>;
+      searchQuery: Schema.String,
+    })
+      .pipe(
+        Schema.encodeKeys({ chunks: "chunks", searchQuery: "search_query" }),
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<SearchNamespaceInstanceResponse>;
 
 export type SearchNamespaceInstanceError = DefaultErrors;
 
@@ -14204,15 +13881,17 @@ export interface StatsNamespaceInstanceRequest {
 }
 
 export const StatsNamespaceInstanceRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    name: Schema.String.pipe(T.HttpPath("name")),
-    id: Schema.String.pipe(T.HttpPath("id")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  }).pipe(
-    T.Http({
-      method: "GET",
-      path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/stats",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      id: Schema.String.pipe(T.HttpPath("id")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/stats",
+      }),
+    ),
   ) as unknown as Schema.Schema<StatsNamespaceInstanceRequest>;
 
 export interface StatsNamespaceInstanceResponse {
@@ -14239,66 +13918,72 @@ export interface StatsNamespaceInstanceResponse {
 }
 
 export const StatsNamespaceInstanceResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    completed: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    degraded: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-    engine: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          r2: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                metadataSizeBytes: Schema.Number,
-                objectCount: Schema.Number,
-                payloadSizeBytes: Schema.Number,
-              }),
-              Schema.Null,
-            ]),
-          ),
-          vectorize: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                dimensions: Schema.Number,
-                vectorsCount: Schema.Number,
-              }),
-              Schema.Null,
-            ]),
-          ),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      completed: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      degraded: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      engine: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            r2: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  metadataSizeBytes: Schema.Number,
+                  objectCount: Schema.Number,
+                  payloadSizeBytes: Schema.Number,
+                }),
+                Schema.Null,
+              ]),
+            ),
+            vectorize: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  dimensions: Schema.Number,
+                  vectorsCount: Schema.Number,
+                }),
+                Schema.Null,
+              ]),
+            ),
+          }),
+          Schema.Null,
+        ]),
+      ),
+      error: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      fileEmbedErrors: Schema.optional(
+        Schema.Union([
+          Schema.Record(Schema.String, Schema.Unknown),
+          Schema.Null,
+        ]),
+      ),
+      indexSourceErrors: Schema.optional(
+        Schema.Union([
+          Schema.Record(Schema.String, Schema.Unknown),
+          Schema.Null,
+        ]),
+      ),
+      lastActivity: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      outdated: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      queued: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      running: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      skipped: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          completed: "completed",
+          degraded: "degraded",
+          engine: "engine",
+          error: "error",
+          fileEmbedErrors: "file_embed_errors",
+          indexSourceErrors: "index_source_errors",
+          lastActivity: "last_activity",
+          outdated: "outdated",
+          queued: "queued",
+          running: "running",
+          skipped: "skipped",
         }),
-        Schema.Null,
-      ]),
-    ),
-    error: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    fileEmbedErrors: Schema.optional(
-      Schema.Union([Schema.Record(Schema.String, Schema.Unknown), Schema.Null]),
-    ),
-    indexSourceErrors: Schema.optional(
-      Schema.Union([Schema.Record(Schema.String, Schema.Unknown), Schema.Null]),
-    ),
-    lastActivity: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    outdated: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    queued: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    running: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    skipped: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-  })
-    .pipe(
-      Schema.encodeKeys({
-        completed: "completed",
-        degraded: "degraded",
-        engine: "engine",
-        error: "error",
-        fileEmbedErrors: "file_embed_errors",
-        indexSourceErrors: "index_source_errors",
-        lastActivity: "last_activity",
-        outdated: "outdated",
-        queued: "queued",
-        running: "running",
-        skipped: "skipped",
-      }),
-    )
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<StatsNamespaceInstanceResponse>;
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<StatsNamespaceInstanceResponse>;
 
 export type StatsNamespaceInstanceError = DefaultErrors;
 
@@ -14325,16 +14010,18 @@ export interface GetNamespaceInstanceItemRequest {
 }
 
 export const GetNamespaceInstanceItemRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    name: Schema.String.pipe(T.HttpPath("name")),
-    id: Schema.String.pipe(T.HttpPath("id")),
-    itemId: Schema.String.pipe(T.HttpPath("itemId")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  }).pipe(
-    T.Http({
-      method: "GET",
-      path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/items/{itemId}",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      id: Schema.String.pipe(T.HttpPath("id")),
+      itemId: Schema.String.pipe(T.HttpPath("itemId")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/items/{itemId}",
+      }),
+    ),
   ) as unknown as Schema.Schema<GetNamespaceInstanceItemRequest>;
 
 export interface GetNamespaceInstanceItemResponse {
@@ -14361,53 +14048,53 @@ export interface GetNamespaceInstanceItemResponse {
 }
 
 export const GetNamespaceInstanceItemResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    id: Schema.String,
-    checksum: Schema.String,
-    chunksCount: Schema.Union([Schema.Number, Schema.Null]),
-    createdAt: Schema.String,
-    fileSize: Schema.Union([Schema.Number, Schema.Null]),
-    key: Schema.String,
-    lastSeenAt: Schema.String,
-    namespace: Schema.String,
-    nextAction: Schema.Union([
-      Schema.Literal("INDEX"),
-      Schema.Literal("DELETE"),
-      Schema.Null,
-    ]),
-    sourceId: Schema.Union([Schema.String, Schema.Null]),
-    status: Schema.Union([
-      Schema.Literals([
-        "queued",
-        "running",
-        "completed",
-        "error",
-        "skipped",
-        "outdated",
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      id: Schema.String,
+      checksum: Schema.String,
+      chunksCount: Schema.Union([Schema.Number, Schema.Null]),
+      createdAt: Schema.String,
+      fileSize: Schema.Union([Schema.Number, Schema.Null]),
+      key: Schema.String,
+      lastSeenAt: Schema.String,
+      namespace: Schema.String,
+      nextAction: Schema.Union([
+        Schema.Literal("INDEX"),
+        Schema.Literal("DELETE"),
+        Schema.Null,
       ]),
-      Schema.String,
-    ]),
-    error: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  })
-    .pipe(
-      Schema.encodeKeys({
-        id: "id",
-        checksum: "checksum",
-        chunksCount: "chunks_count",
-        createdAt: "created_at",
-        fileSize: "file_size",
-        key: "key",
-        lastSeenAt: "last_seen_at",
-        namespace: "namespace",
-        nextAction: "next_action",
-        sourceId: "source_id",
-        status: "status",
-        error: "error",
-      }),
-    )
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<GetNamespaceInstanceItemResponse>;
+      sourceId: Schema.Union([Schema.String, Schema.Null]),
+      status: Schema.Union([
+        Schema.Literals([
+          "queued",
+          "running",
+          "completed",
+          "error",
+          "skipped",
+          "outdated",
+        ]),
+        Schema.String,
+      ]),
+      error: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          id: "id",
+          checksum: "checksum",
+          chunksCount: "chunks_count",
+          createdAt: "created_at",
+          fileSize: "file_size",
+          key: "key",
+          lastSeenAt: "last_seen_at",
+          namespace: "namespace",
+          nextAction: "next_action",
+          sourceId: "source_id",
+          status: "status",
+          error: "error",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<GetNamespaceInstanceItemResponse>;
 
 export type GetNamespaceInstanceItemError = DefaultErrors;
 
@@ -14451,39 +14138,44 @@ export interface ListNamespaceInstanceItemsRequest {
 }
 
 export const ListNamespaceInstanceItemsRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    name: Schema.String.pipe(T.HttpPath("name")),
-    id: Schema.String.pipe(T.HttpPath("id")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    page: Schema.optional(Schema.Number).pipe(T.HttpQuery("page")),
-    perPage: Schema.optional(Schema.Number).pipe(T.HttpQuery("per_page")),
-    itemId: Schema.optional(Schema.String).pipe(T.HttpQuery("item_id")),
-    metadataFilter: Schema.optional(Schema.String).pipe(
-      T.HttpQuery("metadata_filter"),
-    ),
-    search: Schema.optional(Schema.String).pipe(T.HttpQuery("search")),
-    sortBy: Schema.optional(
-      Schema.Union([Schema.Literals(["status", "modified_at"]), Schema.String]),
-    ).pipe(T.HttpQuery("sort_by")),
-    source: Schema.optional(Schema.String).pipe(T.HttpQuery("source")),
-    status: Schema.optional(
-      Schema.Union([
-        Schema.Literals([
-          "queued",
-          "running",
-          "completed",
-          "error",
-          "skipped",
-          "outdated",
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      id: Schema.String.pipe(T.HttpPath("id")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      page: Schema.optional(Schema.Number).pipe(T.HttpQuery("page")),
+      perPage: Schema.optional(Schema.Number).pipe(T.HttpQuery("per_page")),
+      itemId: Schema.optional(Schema.String).pipe(T.HttpQuery("item_id")),
+      metadataFilter: Schema.optional(Schema.String).pipe(
+        T.HttpQuery("metadata_filter"),
+      ),
+      search: Schema.optional(Schema.String).pipe(T.HttpQuery("search")),
+      sortBy: Schema.optional(
+        Schema.Union([
+          Schema.Literals(["status", "modified_at"]),
+          Schema.String,
         ]),
-        Schema.String,
-      ]),
-    ).pipe(T.HttpQuery("status")),
-  }).pipe(
-    T.Http({
-      method: "GET",
-      path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/items",
-    }),
+      ).pipe(T.HttpQuery("sort_by")),
+      source: Schema.optional(Schema.String).pipe(T.HttpQuery("source")),
+      status: Schema.optional(
+        Schema.Union([
+          Schema.Literals([
+            "queued",
+            "running",
+            "completed",
+            "error",
+            "skipped",
+            "outdated",
+          ]),
+          Schema.String,
+        ]),
+      ).pipe(T.HttpQuery("status")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/items",
+      }),
+    ),
   ) as unknown as Schema.Schema<ListNamespaceInstanceItemsRequest>;
 
 export interface ListNamespaceInstanceItemsResponse {
@@ -14517,74 +14209,76 @@ export interface ListNamespaceInstanceItemsResponse {
 }
 
 export const ListNamespaceInstanceItemsResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    result: Schema.Array(
-      Schema.Struct({
-        id: Schema.String,
-        checksum: Schema.String,
-        chunksCount: Schema.Union([Schema.Number, Schema.Null]),
-        createdAt: Schema.String,
-        fileSize: Schema.Union([Schema.Number, Schema.Null]),
-        key: Schema.String,
-        lastSeenAt: Schema.String,
-        namespace: Schema.String,
-        nextAction: Schema.Union([
-          Schema.Literal("INDEX"),
-          Schema.Literal("DELETE"),
-          Schema.Null,
-        ]),
-        sourceId: Schema.Union([Schema.String, Schema.Null]),
-        status: Schema.Union([
-          Schema.Literals([
-            "queued",
-            "running",
-            "completed",
-            "error",
-            "skipped",
-            "outdated",
-          ]),
-          Schema.String,
-        ]),
-        error: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      }).pipe(
-        Schema.encodeKeys({
-          id: "id",
-          checksum: "checksum",
-          chunksCount: "chunks_count",
-          createdAt: "created_at",
-          fileSize: "file_size",
-          key: "key",
-          lastSeenAt: "last_seen_at",
-          namespace: "namespace",
-          nextAction: "next_action",
-          sourceId: "source_id",
-          status: "status",
-          error: "error",
-        }),
-      ),
-    ),
-    resultInfo: Schema.optional(
-      Schema.Union([
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      result: Schema.Array(
         Schema.Struct({
-          count: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-          page: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-          perPage: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-          totalCount: Schema.optional(
-            Schema.Union([Schema.Number, Schema.Null]),
-          ),
+          id: Schema.String,
+          checksum: Schema.String,
+          chunksCount: Schema.Union([Schema.Number, Schema.Null]),
+          createdAt: Schema.String,
+          fileSize: Schema.Union([Schema.Number, Schema.Null]),
+          key: Schema.String,
+          lastSeenAt: Schema.String,
+          namespace: Schema.String,
+          nextAction: Schema.Union([
+            Schema.Literal("INDEX"),
+            Schema.Literal("DELETE"),
+            Schema.Null,
+          ]),
+          sourceId: Schema.Union([Schema.String, Schema.Null]),
+          status: Schema.Union([
+            Schema.Literals([
+              "queued",
+              "running",
+              "completed",
+              "error",
+              "skipped",
+              "outdated",
+            ]),
+            Schema.String,
+          ]),
+          error: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
         }).pipe(
           Schema.encodeKeys({
-            count: "count",
-            page: "page",
-            perPage: "per_page",
-            totalCount: "total_count",
+            id: "id",
+            checksum: "checksum",
+            chunksCount: "chunks_count",
+            createdAt: "created_at",
+            fileSize: "file_size",
+            key: "key",
+            lastSeenAt: "last_seen_at",
+            namespace: "namespace",
+            nextAction: "next_action",
+            sourceId: "source_id",
+            status: "status",
+            error: "error",
           }),
         ),
-        Schema.Null,
-      ]),
-    ),
-  }).pipe(
-    Schema.encodeKeys({ result: "result", resultInfo: "result_info" }),
+      ),
+      resultInfo: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            count: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+            page: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+            perPage: Schema.optional(
+              Schema.Union([Schema.Number, Schema.Null]),
+            ),
+            totalCount: Schema.optional(
+              Schema.Union([Schema.Number, Schema.Null]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              count: "count",
+              page: "page",
+              perPage: "per_page",
+              totalCount: "total_count",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+    }).pipe(Schema.encodeKeys({ result: "result", resultInfo: "result_info" })),
   ) as unknown as Schema.Schema<ListNamespaceInstanceItemsResponse>;
 
 export type ListNamespaceInstanceItemsError = DefaultErrors;
@@ -14615,16 +14309,18 @@ export interface DeleteNamespaceInstanceItemRequest {
 }
 
 export const DeleteNamespaceInstanceItemRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    name: Schema.String.pipe(T.HttpPath("name")),
-    id: Schema.String.pipe(T.HttpPath("id")),
-    itemId: Schema.String.pipe(T.HttpPath("itemId")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  }).pipe(
-    T.Http({
-      method: "DELETE",
-      path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/items/{itemId}",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      id: Schema.String.pipe(T.HttpPath("id")),
+      itemId: Schema.String.pipe(T.HttpPath("itemId")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "DELETE",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/items/{itemId}",
+      }),
+    ),
   ) as unknown as Schema.Schema<DeleteNamespaceInstanceItemRequest>;
 
 export interface DeleteNamespaceInstanceItemResponse {
@@ -14632,10 +14328,10 @@ export interface DeleteNamespaceInstanceItemResponse {
 }
 
 export const DeleteNamespaceInstanceItemResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    key: Schema.String,
-  }).pipe(
-    T.ResponsePath("result"),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      key: Schema.String,
+    }).pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<DeleteNamespaceInstanceItemResponse>;
 
 export type DeleteNamespaceInstanceItemError = DefaultErrors;
@@ -14659,22 +14355,26 @@ export interface DownloadNamespaceInstanceItemRequest {
 }
 
 export const DownloadNamespaceInstanceItemRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    name: Schema.String.pipe(T.HttpPath("name")),
-    id: Schema.String.pipe(T.HttpPath("id")),
-    itemId: Schema.String.pipe(T.HttpPath("itemId")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  }).pipe(
-    T.Http({
-      method: "GET",
-      path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/items/{itemId}/download",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      id: Schema.String.pipe(T.HttpPath("id")),
+      itemId: Schema.String.pipe(T.HttpPath("itemId")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/items/{itemId}/download",
+      }),
+    ),
   ) as unknown as Schema.Schema<DownloadNamespaceInstanceItemRequest>;
 
 export type DownloadNamespaceInstanceItemResponse = unknown;
 
 export const DownloadNamespaceInstanceItemResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Unknown as unknown as Schema.Schema<DownloadNamespaceInstanceItemResponse>;
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+    () => Schema.Unknown,
+  ) as unknown as Schema.Schema<DownloadNamespaceInstanceItemResponse>;
 
 export type DownloadNamespaceInstanceItemError = DefaultErrors;
 
@@ -14699,27 +14399,29 @@ export interface UploadNamespaceInstanceItemRequest {
 }
 
 export const UploadNamespaceInstanceItemRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    name: Schema.String.pipe(T.HttpPath("name")),
-    id: Schema.String.pipe(T.HttpPath("id")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    file: Schema.Struct({
-      file: UploadableSchema.pipe(T.HttpFormDataFile()),
-      metadata: Schema.optional(Schema.String),
-      waitForCompletion: Schema.optional(Schema.Boolean),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      id: Schema.String.pipe(T.HttpPath("id")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      file: Schema.Struct({
+        file: UploadableSchema.pipe(T.HttpFormDataFile()),
+        metadata: Schema.optional(Schema.String),
+        waitForCompletion: Schema.optional(Schema.Boolean),
+      }).pipe(
+        Schema.encodeKeys({
+          file: "file",
+          metadata: "metadata",
+          waitForCompletion: "wait_for_completion",
+        }),
+      ),
     }).pipe(
-      Schema.encodeKeys({
-        file: "file",
-        metadata: "metadata",
-        waitForCompletion: "wait_for_completion",
+      T.Http({
+        method: "POST",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/items",
+        contentType: "multipart",
       }),
     ),
-  }).pipe(
-    T.Http({
-      method: "POST",
-      path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/items",
-      contentType: "multipart",
-    }),
   ) as unknown as Schema.Schema<UploadNamespaceInstanceItemRequest>;
 
 export interface UploadNamespaceInstanceItemResponse {
@@ -14746,53 +14448,53 @@ export interface UploadNamespaceInstanceItemResponse {
 }
 
 export const UploadNamespaceInstanceItemResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    id: Schema.String,
-    checksum: Schema.String,
-    chunksCount: Schema.Union([Schema.Number, Schema.Null]),
-    createdAt: Schema.String,
-    fileSize: Schema.Union([Schema.Number, Schema.Null]),
-    key: Schema.String,
-    lastSeenAt: Schema.String,
-    namespace: Schema.String,
-    nextAction: Schema.Union([
-      Schema.Literal("INDEX"),
-      Schema.Literal("DELETE"),
-      Schema.Null,
-    ]),
-    sourceId: Schema.Union([Schema.String, Schema.Null]),
-    status: Schema.Union([
-      Schema.Literals([
-        "queued",
-        "running",
-        "completed",
-        "error",
-        "skipped",
-        "outdated",
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      id: Schema.String,
+      checksum: Schema.String,
+      chunksCount: Schema.Union([Schema.Number, Schema.Null]),
+      createdAt: Schema.String,
+      fileSize: Schema.Union([Schema.Number, Schema.Null]),
+      key: Schema.String,
+      lastSeenAt: Schema.String,
+      namespace: Schema.String,
+      nextAction: Schema.Union([
+        Schema.Literal("INDEX"),
+        Schema.Literal("DELETE"),
+        Schema.Null,
       ]),
-      Schema.String,
-    ]),
-    error: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  })
-    .pipe(
-      Schema.encodeKeys({
-        id: "id",
-        checksum: "checksum",
-        chunksCount: "chunks_count",
-        createdAt: "created_at",
-        fileSize: "file_size",
-        key: "key",
-        lastSeenAt: "last_seen_at",
-        namespace: "namespace",
-        nextAction: "next_action",
-        sourceId: "source_id",
-        status: "status",
-        error: "error",
-      }),
-    )
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<UploadNamespaceInstanceItemResponse>;
+      sourceId: Schema.Union([Schema.String, Schema.Null]),
+      status: Schema.Union([
+        Schema.Literals([
+          "queued",
+          "running",
+          "completed",
+          "error",
+          "skipped",
+          "outdated",
+        ]),
+        Schema.String,
+      ]),
+      error: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          id: "id",
+          checksum: "checksum",
+          chunksCount: "chunks_count",
+          createdAt: "created_at",
+          fileSize: "file_size",
+          key: "key",
+          lastSeenAt: "last_seen_at",
+          namespace: "namespace",
+          nextAction: "next_action",
+          sourceId: "source_id",
+          status: "status",
+          error: "error",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<UploadNamespaceInstanceItemResponse>;
 
 export type UploadNamespaceInstanceItemError = DefaultErrors;
 
@@ -14820,18 +14522,20 @@ export interface ChunksNamespaceInstanceItemRequest {
 }
 
 export const ChunksNamespaceInstanceItemRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    name: Schema.String.pipe(T.HttpPath("name")),
-    id: Schema.String.pipe(T.HttpPath("id")),
-    itemId: Schema.String.pipe(T.HttpPath("itemId")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    limit: Schema.optional(Schema.Number).pipe(T.HttpQuery("limit")),
-    offset: Schema.optional(Schema.Number).pipe(T.HttpQuery("offset")),
-  }).pipe(
-    T.Http({
-      method: "GET",
-      path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/items/{itemId}/chunks",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      id: Schema.String.pipe(T.HttpPath("id")),
+      itemId: Schema.String.pipe(T.HttpPath("itemId")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      limit: Schema.optional(Schema.Number).pipe(T.HttpQuery("limit")),
+      offset: Schema.optional(Schema.Number).pipe(T.HttpQuery("offset")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/items/{itemId}/chunks",
+      }),
+    ),
   ) as unknown as Schema.Schema<ChunksNamespaceInstanceItemRequest>;
 
 export type ChunksNamespaceInstanceItemResponse = {
@@ -14847,33 +14551,35 @@ export type ChunksNamespaceInstanceItemResponse = {
 }[];
 
 export const ChunksNamespaceInstanceItemResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Array(
-    Schema.Struct({
-      id: Schema.String,
-      item: Schema.Struct({
-        key: Schema.String,
-        metadata: Schema.optional(
-          Schema.Union([
-            Schema.Record(Schema.String, Schema.Unknown),
-            Schema.Null,
-          ]),
-        ),
-        timestamp: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-      }),
-      text: Schema.String,
-      endByte: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-      startByte: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    }).pipe(
-      Schema.encodeKeys({
-        id: "id",
-        item: "item",
-        text: "text",
-        endByte: "end_byte",
-        startByte: "start_byte",
-      }),
-    ),
-  ).pipe(
-    T.ResponsePath("result"),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Array(
+      Schema.Struct({
+        id: Schema.String,
+        item: Schema.Struct({
+          key: Schema.String,
+          metadata: Schema.optional(
+            Schema.Union([
+              Schema.Record(Schema.String, Schema.Unknown),
+              Schema.Null,
+            ]),
+          ),
+          timestamp: Schema.optional(
+            Schema.Union([Schema.Number, Schema.Null]),
+          ),
+        }),
+        text: Schema.String,
+        endByte: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+        startByte: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      }).pipe(
+        Schema.encodeKeys({
+          id: "id",
+          item: "item",
+          text: "text",
+          endByte: "end_byte",
+          startByte: "start_byte",
+        }),
+      ),
+    ).pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<ChunksNamespaceInstanceItemResponse>;
 
 export type ChunksNamespaceInstanceItemError = DefaultErrors;
@@ -14902,18 +14608,20 @@ export interface LogsNamespaceInstanceItemRequest {
 }
 
 export const LogsNamespaceInstanceItemRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    name: Schema.String.pipe(T.HttpPath("name")),
-    id: Schema.String.pipe(T.HttpPath("id")),
-    itemId: Schema.String.pipe(T.HttpPath("itemId")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    cursor: Schema.optional(Schema.String).pipe(T.HttpQuery("cursor")),
-    limit: Schema.optional(Schema.Number).pipe(T.HttpQuery("limit")),
-  }).pipe(
-    T.Http({
-      method: "GET",
-      path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/items/{itemId}/logs",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      id: Schema.String.pipe(T.HttpPath("id")),
+      itemId: Schema.String.pipe(T.HttpPath("itemId")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      cursor: Schema.optional(Schema.String).pipe(T.HttpQuery("cursor")),
+      limit: Schema.optional(Schema.Number).pipe(T.HttpQuery("limit")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/items/{itemId}/logs",
+      }),
+    ),
   ) as unknown as Schema.Schema<LogsNamespaceInstanceItemRequest>;
 
 export type LogsNamespaceInstanceItemResponse = {
@@ -14927,18 +14635,18 @@ export type LogsNamespaceInstanceItemResponse = {
 }[];
 
 export const LogsNamespaceInstanceItemResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Array(
-    Schema.Struct({
-      action: Schema.String,
-      chunkCount: Schema.Union([Schema.Number, Schema.Null]),
-      errorType: Schema.Union([Schema.String, Schema.Null]),
-      fileKey: Schema.String,
-      message: Schema.Union([Schema.String, Schema.Null]),
-      processingTimeMs: Schema.Union([Schema.Number, Schema.Null]),
-      timestamp: Schema.String,
-    }),
-  ).pipe(
-    T.ResponsePath("result"),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Array(
+      Schema.Struct({
+        action: Schema.String,
+        chunkCount: Schema.Union([Schema.Number, Schema.Null]),
+        errorType: Schema.Union([Schema.String, Schema.Null]),
+        fileKey: Schema.String,
+        message: Schema.Union([Schema.String, Schema.Null]),
+        processingTimeMs: Schema.Union([Schema.Number, Schema.Null]),
+        timestamp: Schema.String,
+      }),
+    ).pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<LogsNamespaceInstanceItemResponse>;
 
 export type LogsNamespaceInstanceItemError = DefaultErrors;
@@ -14967,22 +14675,24 @@ export interface SyncNamespaceInstanceItemRequest {
 }
 
 export const SyncNamespaceInstanceItemRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    name: Schema.String.pipe(T.HttpPath("name")),
-    id: Schema.String.pipe(T.HttpPath("id")),
-    itemId: Schema.String.pipe(T.HttpPath("itemId")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    nextAction: Schema.Literal("INDEX"),
-    waitForCompletion: Schema.optional(Schema.Boolean),
-  }).pipe(
-    Schema.encodeKeys({
-      nextAction: "next_action",
-      waitForCompletion: "wait_for_completion",
-    }),
-    T.Http({
-      method: "PATCH",
-      path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/items/{itemId}",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      id: Schema.String.pipe(T.HttpPath("id")),
+      itemId: Schema.String.pipe(T.HttpPath("itemId")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      nextAction: Schema.Literal("INDEX"),
+      waitForCompletion: Schema.optional(Schema.Boolean),
+    }).pipe(
+      Schema.encodeKeys({
+        nextAction: "next_action",
+        waitForCompletion: "wait_for_completion",
+      }),
+      T.Http({
+        method: "PATCH",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/items/{itemId}",
+      }),
+    ),
   ) as unknown as Schema.Schema<SyncNamespaceInstanceItemRequest>;
 
 export interface SyncNamespaceInstanceItemResponse {
@@ -15009,53 +14719,53 @@ export interface SyncNamespaceInstanceItemResponse {
 }
 
 export const SyncNamespaceInstanceItemResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    id: Schema.String,
-    checksum: Schema.String,
-    chunksCount: Schema.Union([Schema.Number, Schema.Null]),
-    createdAt: Schema.String,
-    fileSize: Schema.Union([Schema.Number, Schema.Null]),
-    key: Schema.String,
-    lastSeenAt: Schema.String,
-    namespace: Schema.String,
-    nextAction: Schema.Union([
-      Schema.Literal("INDEX"),
-      Schema.Literal("DELETE"),
-      Schema.Null,
-    ]),
-    sourceId: Schema.Union([Schema.String, Schema.Null]),
-    status: Schema.Union([
-      Schema.Literals([
-        "queued",
-        "running",
-        "completed",
-        "error",
-        "skipped",
-        "outdated",
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      id: Schema.String,
+      checksum: Schema.String,
+      chunksCount: Schema.Union([Schema.Number, Schema.Null]),
+      createdAt: Schema.String,
+      fileSize: Schema.Union([Schema.Number, Schema.Null]),
+      key: Schema.String,
+      lastSeenAt: Schema.String,
+      namespace: Schema.String,
+      nextAction: Schema.Union([
+        Schema.Literal("INDEX"),
+        Schema.Literal("DELETE"),
+        Schema.Null,
       ]),
-      Schema.String,
-    ]),
-    error: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  })
-    .pipe(
-      Schema.encodeKeys({
-        id: "id",
-        checksum: "checksum",
-        chunksCount: "chunks_count",
-        createdAt: "created_at",
-        fileSize: "file_size",
-        key: "key",
-        lastSeenAt: "last_seen_at",
-        namespace: "namespace",
-        nextAction: "next_action",
-        sourceId: "source_id",
-        status: "status",
-        error: "error",
-      }),
-    )
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<SyncNamespaceInstanceItemResponse>;
+      sourceId: Schema.Union([Schema.String, Schema.Null]),
+      status: Schema.Union([
+        Schema.Literals([
+          "queued",
+          "running",
+          "completed",
+          "error",
+          "skipped",
+          "outdated",
+        ]),
+        Schema.String,
+      ]),
+      error: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          id: "id",
+          checksum: "checksum",
+          chunksCount: "chunks_count",
+          createdAt: "created_at",
+          fileSize: "file_size",
+          key: "key",
+          lastSeenAt: "last_seen_at",
+          namespace: "namespace",
+          nextAction: "next_action",
+          sourceId: "source_id",
+          status: "status",
+          error: "error",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<SyncNamespaceInstanceItemResponse>;
 
 export type SyncNamespaceInstanceItemError = DefaultErrors;
 
@@ -15082,16 +14792,18 @@ export interface GetNamespaceInstanceJobRequest {
 }
 
 export const GetNamespaceInstanceJobRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    name: Schema.String.pipe(T.HttpPath("name")),
-    id: Schema.String.pipe(T.HttpPath("id")),
-    jobId: Schema.String.pipe(T.HttpPath("jobId")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  }).pipe(
-    T.Http({
-      method: "GET",
-      path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/jobs/{jobId}",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      id: Schema.String.pipe(T.HttpPath("id")),
+      jobId: Schema.String.pipe(T.HttpPath("jobId")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/jobs/{jobId}",
+      }),
+    ),
   ) as unknown as Schema.Schema<GetNamespaceInstanceJobRequest>;
 
 export interface GetNamespaceInstanceJobResponse {
@@ -15105,32 +14817,32 @@ export interface GetNamespaceInstanceJobResponse {
 }
 
 export const GetNamespaceInstanceJobResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    id: Schema.String,
-    source: Schema.Union([
-      Schema.Literals(["user", "schedule"]),
-      Schema.String,
-    ]),
-    description: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    endReason: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    endedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    lastSeenAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    startedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  })
-    .pipe(
-      Schema.encodeKeys({
-        id: "id",
-        source: "source",
-        description: "description",
-        endReason: "end_reason",
-        endedAt: "ended_at",
-        lastSeenAt: "last_seen_at",
-        startedAt: "started_at",
-      }),
-    )
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<GetNamespaceInstanceJobResponse>;
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      id: Schema.String,
+      source: Schema.Union([
+        Schema.Literals(["user", "schedule"]),
+        Schema.String,
+      ]),
+      description: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      endReason: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      endedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      lastSeenAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      startedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          id: "id",
+          source: "source",
+          description: "description",
+          endReason: "end_reason",
+          endedAt: "ended_at",
+          lastSeenAt: "last_seen_at",
+          startedAt: "started_at",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<GetNamespaceInstanceJobResponse>;
 
 export type GetNamespaceInstanceJobError = DefaultErrors;
 
@@ -15155,17 +14867,19 @@ export interface ListNamespaceInstanceJobsRequest {
 }
 
 export const ListNamespaceInstanceJobsRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    name: Schema.String.pipe(T.HttpPath("name")),
-    id: Schema.String.pipe(T.HttpPath("id")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    page: Schema.optional(Schema.Number).pipe(T.HttpQuery("page")),
-    perPage: Schema.optional(Schema.Number).pipe(T.HttpQuery("per_page")),
-  }).pipe(
-    T.Http({
-      method: "GET",
-      path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/jobs",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      id: Schema.String.pipe(T.HttpPath("id")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      page: Schema.optional(Schema.Number).pipe(T.HttpQuery("page")),
+      perPage: Schema.optional(Schema.Number).pipe(T.HttpQuery("per_page")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/jobs",
+      }),
+    ),
   ) as unknown as Schema.Schema<ListNamespaceInstanceJobsRequest>;
 
 export interface ListNamespaceInstanceJobsResponse {
@@ -15187,55 +14901,63 @@ export interface ListNamespaceInstanceJobsResponse {
 }
 
 export const ListNamespaceInstanceJobsResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    result: Schema.Array(
-      Schema.Struct({
-        id: Schema.String,
-        source: Schema.Union([
-          Schema.Literals(["user", "schedule"]),
-          Schema.String,
-        ]),
-        description: Schema.optional(
-          Schema.Union([Schema.String, Schema.Null]),
-        ),
-        endReason: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-        endedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-        lastSeenAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-        startedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      }).pipe(
-        Schema.encodeKeys({
-          id: "id",
-          source: "source",
-          description: "description",
-          endReason: "end_reason",
-          endedAt: "ended_at",
-          lastSeenAt: "last_seen_at",
-          startedAt: "started_at",
-        }),
-      ),
-    ),
-    resultInfo: Schema.optional(
-      Schema.Union([
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      result: Schema.Array(
         Schema.Struct({
-          count: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-          page: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-          perPage: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-          totalCount: Schema.optional(
-            Schema.Union([Schema.Number, Schema.Null]),
+          id: Schema.String,
+          source: Schema.Union([
+            Schema.Literals(["user", "schedule"]),
+            Schema.String,
+          ]),
+          description: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
+          ),
+          endReason: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
+          ),
+          endedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+          lastSeenAt: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
+          ),
+          startedAt: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
           ),
         }).pipe(
           Schema.encodeKeys({
-            count: "count",
-            page: "page",
-            perPage: "per_page",
-            totalCount: "total_count",
+            id: "id",
+            source: "source",
+            description: "description",
+            endReason: "end_reason",
+            endedAt: "ended_at",
+            lastSeenAt: "last_seen_at",
+            startedAt: "started_at",
           }),
         ),
-        Schema.Null,
-      ]),
-    ),
-  }).pipe(
-    Schema.encodeKeys({ result: "result", resultInfo: "result_info" }),
+      ),
+      resultInfo: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            count: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+            page: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+            perPage: Schema.optional(
+              Schema.Union([Schema.Number, Schema.Null]),
+            ),
+            totalCount: Schema.optional(
+              Schema.Union([Schema.Number, Schema.Null]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              count: "count",
+              page: "page",
+              perPage: "per_page",
+              totalCount: "total_count",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+    }).pipe(Schema.encodeKeys({ result: "result", resultInfo: "result_info" })),
   ) as unknown as Schema.Schema<ListNamespaceInstanceJobsResponse>;
 
 export type ListNamespaceInstanceJobsError = DefaultErrors;
@@ -15268,16 +14990,18 @@ export interface CreateNamespaceInstanceJobRequest {
 }
 
 export const CreateNamespaceInstanceJobRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    name: Schema.String.pipe(T.HttpPath("name")),
-    id: Schema.String.pipe(T.HttpPath("id")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    description: Schema.optional(Schema.String),
-  }).pipe(
-    T.Http({
-      method: "POST",
-      path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/jobs",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      id: Schema.String.pipe(T.HttpPath("id")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      description: Schema.optional(Schema.String),
+    }).pipe(
+      T.Http({
+        method: "POST",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/jobs",
+      }),
+    ),
   ) as unknown as Schema.Schema<CreateNamespaceInstanceJobRequest>;
 
 export interface CreateNamespaceInstanceJobResponse {
@@ -15291,32 +15015,32 @@ export interface CreateNamespaceInstanceJobResponse {
 }
 
 export const CreateNamespaceInstanceJobResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    id: Schema.String,
-    source: Schema.Union([
-      Schema.Literals(["user", "schedule"]),
-      Schema.String,
-    ]),
-    description: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    endReason: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    endedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    lastSeenAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    startedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  })
-    .pipe(
-      Schema.encodeKeys({
-        id: "id",
-        source: "source",
-        description: "description",
-        endReason: "end_reason",
-        endedAt: "ended_at",
-        lastSeenAt: "last_seen_at",
-        startedAt: "started_at",
-      }),
-    )
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<CreateNamespaceInstanceJobResponse>;
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      id: Schema.String,
+      source: Schema.Union([
+        Schema.Literals(["user", "schedule"]),
+        Schema.String,
+      ]),
+      description: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      endReason: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      endedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      lastSeenAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      startedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          id: "id",
+          source: "source",
+          description: "description",
+          endReason: "end_reason",
+          endedAt: "ended_at",
+          lastSeenAt: "last_seen_at",
+          startedAt: "started_at",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<CreateNamespaceInstanceJobResponse>;
 
 export type CreateNamespaceInstanceJobError = DefaultErrors;
 
@@ -15342,17 +15066,19 @@ export interface PatchNamespaceInstanceJobRequest {
 }
 
 export const PatchNamespaceInstanceJobRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    name: Schema.String.pipe(T.HttpPath("name")),
-    id: Schema.String.pipe(T.HttpPath("id")),
-    jobId: Schema.String.pipe(T.HttpPath("jobId")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    action: Schema.Literal("cancel"),
-  }).pipe(
-    T.Http({
-      method: "PATCH",
-      path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/jobs/{jobId}",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      id: Schema.String.pipe(T.HttpPath("id")),
+      jobId: Schema.String.pipe(T.HttpPath("jobId")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      action: Schema.Literal("cancel"),
+    }).pipe(
+      T.Http({
+        method: "PATCH",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/jobs/{jobId}",
+      }),
+    ),
   ) as unknown as Schema.Schema<PatchNamespaceInstanceJobRequest>;
 
 export interface PatchNamespaceInstanceJobResponse {
@@ -15366,32 +15092,32 @@ export interface PatchNamespaceInstanceJobResponse {
 }
 
 export const PatchNamespaceInstanceJobResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    id: Schema.String,
-    source: Schema.Union([
-      Schema.Literals(["user", "schedule"]),
-      Schema.String,
-    ]),
-    description: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    endReason: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    endedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    lastSeenAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    startedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  })
-    .pipe(
-      Schema.encodeKeys({
-        id: "id",
-        source: "source",
-        description: "description",
-        endReason: "end_reason",
-        endedAt: "ended_at",
-        lastSeenAt: "last_seen_at",
-        startedAt: "started_at",
-      }),
-    )
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<PatchNamespaceInstanceJobResponse>;
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      id: Schema.String,
+      source: Schema.Union([
+        Schema.Literals(["user", "schedule"]),
+        Schema.String,
+      ]),
+      description: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      endReason: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      endedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      lastSeenAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      startedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          id: "id",
+          source: "source",
+          description: "description",
+          endReason: "end_reason",
+          endedAt: "ended_at",
+          lastSeenAt: "last_seen_at",
+          startedAt: "started_at",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<PatchNamespaceInstanceJobResponse>;
 
 export type PatchNamespaceInstanceJobError = DefaultErrors;
 
@@ -15419,18 +15145,20 @@ export interface LogsNamespaceInstanceJobRequest {
 }
 
 export const LogsNamespaceInstanceJobRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    name: Schema.String.pipe(T.HttpPath("name")),
-    id: Schema.String.pipe(T.HttpPath("id")),
-    jobId: Schema.String.pipe(T.HttpPath("jobId")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    page: Schema.optional(Schema.Number).pipe(T.HttpQuery("page")),
-    perPage: Schema.optional(Schema.Number).pipe(T.HttpQuery("per_page")),
-  }).pipe(
-    T.Http({
-      method: "GET",
-      path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/jobs/{jobId}/logs",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      id: Schema.String.pipe(T.HttpPath("id")),
+      jobId: Schema.String.pipe(T.HttpPath("jobId")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      page: Schema.optional(Schema.Number).pipe(T.HttpQuery("page")),
+      perPage: Schema.optional(Schema.Number).pipe(T.HttpQuery("per_page")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/jobs/{jobId}/logs",
+      }),
+    ),
   ) as unknown as Schema.Schema<LogsNamespaceInstanceJobRequest>;
 
 export type LogsNamespaceInstanceJobResponse = {
@@ -15441,22 +15169,22 @@ export type LogsNamespaceInstanceJobResponse = {
 }[];
 
 export const LogsNamespaceInstanceJobResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Array(
-    Schema.Struct({
-      id: Schema.Number,
-      createdAt: Schema.Number,
-      message: Schema.String,
-      messageType: Schema.Number,
-    }).pipe(
-      Schema.encodeKeys({
-        id: "id",
-        createdAt: "created_at",
-        message: "message",
-        messageType: "message_type",
-      }),
-    ),
-  ).pipe(
-    T.ResponsePath("result"),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Array(
+      Schema.Struct({
+        id: Schema.Number,
+        createdAt: Schema.Number,
+        message: Schema.String,
+        messageType: Schema.Number,
+      }).pipe(
+        Schema.encodeKeys({
+          id: "id",
+          createdAt: "created_at",
+          message: "message",
+          messageType: "message_type",
+        }),
+      ),
+    ).pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<LogsNamespaceInstanceJobResponse>;
 
 export type LogsNamespaceInstanceJobError = DefaultErrors;
@@ -15490,23 +15218,25 @@ export interface CreateOrUpdateNamespaceInstanceItemRequest {
 }
 
 export const CreateOrUpdateNamespaceInstanceItemRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    name: Schema.String.pipe(T.HttpPath("name")),
-    id: Schema.String.pipe(T.HttpPath("id")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    key: Schema.String,
-    nextAction: Schema.Literal("INDEX"),
-    waitForCompletion: Schema.optional(Schema.Boolean),
-  }).pipe(
-    Schema.encodeKeys({
-      key: "key",
-      nextAction: "next_action",
-      waitForCompletion: "wait_for_completion",
-    }),
-    T.Http({
-      method: "PUT",
-      path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/items",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      name: Schema.String.pipe(T.HttpPath("name")),
+      id: Schema.String.pipe(T.HttpPath("id")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      key: Schema.String,
+      nextAction: Schema.Literal("INDEX"),
+      waitForCompletion: Schema.optional(Schema.Boolean),
+    }).pipe(
+      Schema.encodeKeys({
+        key: "key",
+        nextAction: "next_action",
+        waitForCompletion: "wait_for_completion",
+      }),
+      T.Http({
+        method: "PUT",
+        path: "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/items",
+      }),
+    ),
   ) as unknown as Schema.Schema<CreateOrUpdateNamespaceInstanceItemRequest>;
 
 export interface CreateOrUpdateNamespaceInstanceItemResponse {
@@ -15533,53 +15263,53 @@ export interface CreateOrUpdateNamespaceInstanceItemResponse {
 }
 
 export const CreateOrUpdateNamespaceInstanceItemResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    id: Schema.String,
-    checksum: Schema.String,
-    chunksCount: Schema.Union([Schema.Number, Schema.Null]),
-    createdAt: Schema.String,
-    fileSize: Schema.Union([Schema.Number, Schema.Null]),
-    key: Schema.String,
-    lastSeenAt: Schema.String,
-    namespace: Schema.String,
-    nextAction: Schema.Union([
-      Schema.Literal("INDEX"),
-      Schema.Literal("DELETE"),
-      Schema.Null,
-    ]),
-    sourceId: Schema.Union([Schema.String, Schema.Null]),
-    status: Schema.Union([
-      Schema.Literals([
-        "queued",
-        "running",
-        "completed",
-        "error",
-        "skipped",
-        "outdated",
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      id: Schema.String,
+      checksum: Schema.String,
+      chunksCount: Schema.Union([Schema.Number, Schema.Null]),
+      createdAt: Schema.String,
+      fileSize: Schema.Union([Schema.Number, Schema.Null]),
+      key: Schema.String,
+      lastSeenAt: Schema.String,
+      namespace: Schema.String,
+      nextAction: Schema.Union([
+        Schema.Literal("INDEX"),
+        Schema.Literal("DELETE"),
+        Schema.Null,
       ]),
-      Schema.String,
-    ]),
-    error: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  })
-    .pipe(
-      Schema.encodeKeys({
-        id: "id",
-        checksum: "checksum",
-        chunksCount: "chunks_count",
-        createdAt: "created_at",
-        fileSize: "file_size",
-        key: "key",
-        lastSeenAt: "last_seen_at",
-        namespace: "namespace",
-        nextAction: "next_action",
-        sourceId: "source_id",
-        status: "status",
-        error: "error",
-      }),
-    )
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<CreateOrUpdateNamespaceInstanceItemResponse>;
+      sourceId: Schema.Union([Schema.String, Schema.Null]),
+      status: Schema.Union([
+        Schema.Literals([
+          "queued",
+          "running",
+          "completed",
+          "error",
+          "skipped",
+          "outdated",
+        ]),
+        Schema.String,
+      ]),
+      error: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          id: "id",
+          checksum: "checksum",
+          chunksCount: "chunks_count",
+          createdAt: "created_at",
+          fileSize: "file_size",
+          key: "key",
+          lastSeenAt: "last_seen_at",
+          namespace: "namespace",
+          nextAction: "next_action",
+          sourceId: "source_id",
+          status: "status",
+          error: "error",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<CreateOrUpdateNamespaceInstanceItemResponse>;
 
 export type CreateOrUpdateNamespaceInstanceItemError = DefaultErrors;
 
@@ -15607,13 +15337,19 @@ export interface ListTokensRequest {
   search?: string;
 }
 
-export const ListTokensRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  page: Schema.optional(Schema.Number).pipe(T.HttpQuery("page")),
-  perPage: Schema.optional(Schema.Number).pipe(T.HttpQuery("per_page")),
-  search: Schema.optional(Schema.String).pipe(T.HttpQuery("search")),
-}).pipe(
-  T.Http({ method: "GET", path: "/accounts/{account_id}/ai-search/tokens" }),
+export const ListTokensRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      page: Schema.optional(Schema.Number).pipe(T.HttpQuery("page")),
+      perPage: Schema.optional(Schema.Number).pipe(T.HttpQuery("per_page")),
+      search: Schema.optional(Schema.String).pipe(T.HttpQuery("search")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/ai-search/tokens",
+      }),
+    ),
 ) as unknown as Schema.Schema<ListTokensRequest>;
 
 export interface ListTokensResponse {
@@ -15636,55 +15372,64 @@ export interface ListTokensResponse {
   } | null;
 }
 
-export const ListTokensResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  result: Schema.Array(
+export const ListTokensResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
     Schema.Struct({
-      id: Schema.String,
-      cfApiId: Schema.String,
-      createdAt: Schema.String,
-      modifiedAt: Schema.String,
-      name: Schema.String,
-      createdBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      enabled: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-      legacy: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-      modifiedBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    }).pipe(
-      Schema.encodeKeys({
-        id: "id",
-        cfApiId: "cf_api_id",
-        createdAt: "created_at",
-        modifiedAt: "modified_at",
-        name: "name",
-        createdBy: "created_by",
-        enabled: "enabled",
-        legacy: "legacy",
-        modifiedBy: "modified_by",
-      }),
-    ),
-  ),
-  resultInfo: Schema.optional(
-    Schema.Union([
-      Schema.Struct({
-        count: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-        page: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-        perPage: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-        totalCount: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-      }).pipe(
-        Schema.encodeKeys({
-          count: "count",
-          page: "page",
-          perPage: "per_page",
-          totalCount: "total_count",
-        }),
+      result: Schema.Array(
+        Schema.Struct({
+          id: Schema.String,
+          cfApiId: Schema.String,
+          createdAt: Schema.String,
+          modifiedAt: Schema.String,
+          name: Schema.String,
+          createdBy: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
+          ),
+          enabled: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+          legacy: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+          modifiedBy: Schema.optional(
+            Schema.Union([Schema.String, Schema.Null]),
+          ),
+        }).pipe(
+          Schema.encodeKeys({
+            id: "id",
+            cfApiId: "cf_api_id",
+            createdAt: "created_at",
+            modifiedAt: "modified_at",
+            name: "name",
+            createdBy: "created_by",
+            enabled: "enabled",
+            legacy: "legacy",
+            modifiedBy: "modified_by",
+          }),
+        ),
       ),
-      Schema.Null,
-    ]),
-  ),
-}).pipe(
-  Schema.encodeKeys({ result: "result", resultInfo: "result_info" }),
+      resultInfo: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            count: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+            page: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+            perPage: Schema.optional(
+              Schema.Union([Schema.Number, Schema.Null]),
+            ),
+            totalCount: Schema.optional(
+              Schema.Union([Schema.Number, Schema.Null]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              count: "count",
+              page: "page",
+              perPage: "per_page",
+              totalCount: "total_count",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+    }).pipe(Schema.encodeKeys({ result: "result", resultInfo: "result_info" })),
 ) as unknown as Schema.Schema<ListTokensResponse>;
 
-export type ListTokensError = DefaultErrors | InvalidRoute;
+export type ListTokensError = DefaultErrors | InvalidRoute | Forbidden;
 
 export const listTokens: API.PaginatedOperationMethod<
   ListTokensRequest,
@@ -15694,7 +15439,7 @@ export const listTokens: API.PaginatedOperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.makePaginated(() => ({
   input: ListTokensRequest,
   output: ListTokensResponse,
-  errors: [InvalidRoute],
+  errors: [InvalidRoute, Forbidden],
   pagination: {
     mode: "page",
     inputToken: "page",
@@ -15717,20 +15462,26 @@ export interface CreateTokenRequest {
   legacy?: boolean;
 }
 
-export const CreateTokenRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  cfApiId: Schema.String,
-  cfApiKey: Schema.String,
-  name: Schema.String,
-  legacy: Schema.optional(Schema.Boolean),
-}).pipe(
-  Schema.encodeKeys({
-    cfApiId: "cf_api_id",
-    cfApiKey: "cf_api_key",
-    name: "name",
-    legacy: "legacy",
-  }),
-  T.Http({ method: "POST", path: "/accounts/{account_id}/ai-search/tokens" }),
+export const CreateTokenRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      cfApiId: Schema.String,
+      cfApiKey: Schema.String,
+      name: Schema.String,
+      legacy: Schema.optional(Schema.Boolean),
+    }).pipe(
+      Schema.encodeKeys({
+        cfApiId: "cf_api_id",
+        cfApiKey: "cf_api_key",
+        name: "name",
+        legacy: "legacy",
+      }),
+      T.Http({
+        method: "POST",
+        path: "/accounts/{account_id}/ai-search/tokens",
+      }),
+    ),
 ) as unknown as Schema.Schema<CreateTokenRequest>;
 
 export interface CreateTokenResponse {
@@ -15745,39 +15496,42 @@ export interface CreateTokenResponse {
   modifiedBy?: string | null;
 }
 
-export const CreateTokenResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  id: Schema.String,
-  cfApiId: Schema.String,
-  createdAt: Schema.String,
-  modifiedAt: Schema.String,
-  name: Schema.String,
-  createdBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  enabled: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-  legacy: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-  modifiedBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-})
-  .pipe(
-    Schema.encodeKeys({
-      id: "id",
-      cfApiId: "cf_api_id",
-      createdAt: "created_at",
-      modifiedAt: "modified_at",
-      name: "name",
-      createdBy: "created_by",
-      enabled: "enabled",
-      legacy: "legacy",
-      modifiedBy: "modified_by",
-    }),
-  )
-  .pipe(
-    T.ResponsePath("result"),
-  ) as unknown as Schema.Schema<CreateTokenResponse>;
+export const CreateTokenResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      id: Schema.String,
+      cfApiId: Schema.String,
+      createdAt: Schema.String,
+      modifiedAt: Schema.String,
+      name: Schema.String,
+      createdBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      enabled: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      legacy: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      modifiedBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          id: "id",
+          cfApiId: "cf_api_id",
+          createdAt: "created_at",
+          modifiedAt: "modified_at",
+          name: "name",
+          createdBy: "created_by",
+          enabled: "enabled",
+          legacy: "legacy",
+          modifiedBy: "modified_by",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+) as unknown as Schema.Schema<CreateTokenResponse>;
 
 export type CreateTokenError =
   | DefaultErrors
   | ValidationError
   | NotFound
-  | InvalidRoute;
+  | InvalidRoute
+  | InvalidTokenCredentials
+  | Forbidden;
 
 export const createToken: API.OperationMethod<
   CreateTokenRequest,
@@ -15787,7 +15541,13 @@ export const createToken: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: CreateTokenRequest,
   output: CreateTokenResponse,
-  errors: [ValidationError, NotFound, InvalidRoute],
+  errors: [
+    ValidationError,
+    NotFound,
+    InvalidRoute,
+    InvalidTokenCredentials,
+    Forbidden,
+  ],
 }));
 
 export interface UpdateTokenRequest {
@@ -15804,24 +15564,27 @@ export interface UpdateTokenRequest {
   legacy?: boolean;
 }
 
-export const UpdateTokenRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  id: Schema.String.pipe(T.HttpPath("id")),
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  cfApiId: Schema.String,
-  cfApiKey: Schema.String,
-  name: Schema.String,
-  legacy: Schema.optional(Schema.Boolean),
-}).pipe(
-  Schema.encodeKeys({
-    cfApiId: "cf_api_id",
-    cfApiKey: "cf_api_key",
-    name: "name",
-    legacy: "legacy",
-  }),
-  T.Http({
-    method: "PUT",
-    path: "/accounts/{account_id}/ai-search/tokens/{id}",
-  }),
+export const UpdateTokenRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      id: Schema.String.pipe(T.HttpPath("id")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      cfApiId: Schema.String,
+      cfApiKey: Schema.String,
+      name: Schema.String,
+      legacy: Schema.optional(Schema.Boolean),
+    }).pipe(
+      Schema.encodeKeys({
+        cfApiId: "cf_api_id",
+        cfApiKey: "cf_api_key",
+        name: "name",
+        legacy: "legacy",
+      }),
+      T.Http({
+        method: "PUT",
+        path: "/accounts/{account_id}/ai-search/tokens/{id}",
+      }),
+    ),
 ) as unknown as Schema.Schema<UpdateTokenRequest>;
 
 export interface UpdateTokenResponse {
@@ -15836,39 +15599,43 @@ export interface UpdateTokenResponse {
   modifiedBy?: string | null;
 }
 
-export const UpdateTokenResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  id: Schema.String,
-  cfApiId: Schema.String,
-  createdAt: Schema.String,
-  modifiedAt: Schema.String,
-  name: Schema.String,
-  createdBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  enabled: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-  legacy: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-  modifiedBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-})
-  .pipe(
-    Schema.encodeKeys({
-      id: "id",
-      cfApiId: "cf_api_id",
-      createdAt: "created_at",
-      modifiedAt: "modified_at",
-      name: "name",
-      createdBy: "created_by",
-      enabled: "enabled",
-      legacy: "legacy",
-      modifiedBy: "modified_by",
-    }),
-  )
-  .pipe(
-    T.ResponsePath("result"),
-  ) as unknown as Schema.Schema<UpdateTokenResponse>;
+export const UpdateTokenResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      id: Schema.String,
+      cfApiId: Schema.String,
+      createdAt: Schema.String,
+      modifiedAt: Schema.String,
+      name: Schema.String,
+      createdBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      enabled: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      legacy: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      modifiedBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          id: "id",
+          cfApiId: "cf_api_id",
+          createdAt: "created_at",
+          modifiedAt: "modified_at",
+          name: "name",
+          createdBy: "created_by",
+          enabled: "enabled",
+          legacy: "legacy",
+          modifiedBy: "modified_by",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+) as unknown as Schema.Schema<UpdateTokenResponse>;
 
 export type UpdateTokenError =
   | DefaultErrors
   | ValidationError
   | NotFound
-  | InvalidRoute;
+  | InvalidRoute
+  | TokenNotFound
+  | Forbidden
+  | InvalidTokenCredentials;
 
 export const updateToken: API.OperationMethod<
   UpdateTokenRequest,
@@ -15878,7 +15645,14 @@ export const updateToken: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: UpdateTokenRequest,
   output: UpdateTokenResponse,
-  errors: [ValidationError, NotFound, InvalidRoute],
+  errors: [
+    ValidationError,
+    NotFound,
+    InvalidRoute,
+    TokenNotFound,
+    Forbidden,
+    InvalidTokenCredentials,
+  ],
 }));
 
 export interface DeleteTokenRequest {
@@ -15886,28 +15660,33 @@ export interface DeleteTokenRequest {
   accountId: string;
 }
 
-export const DeleteTokenRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  id: Schema.String.pipe(T.HttpPath("id")),
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-}).pipe(
-  T.Http({
-    method: "DELETE",
-    path: "/accounts/{account_id}/ai-search/tokens/{id}",
-  }),
+export const DeleteTokenRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      id: Schema.String.pipe(T.HttpPath("id")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "DELETE",
+        path: "/accounts/{account_id}/ai-search/tokens/{id}",
+      }),
+    ),
 ) as unknown as Schema.Schema<DeleteTokenRequest>;
 
 export type DeleteTokenResponse = unknown;
 
-export const DeleteTokenResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Unknown.pipe(
-    T.ResponsePath("result"),
-  ) as unknown as Schema.Schema<DeleteTokenResponse>;
+export const DeleteTokenResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () => Schema.Unknown.pipe(T.ResponsePath("result")),
+) as unknown as Schema.Schema<DeleteTokenResponse>;
 
 export type DeleteTokenError =
   | DefaultErrors
   | ValidationError
   | NotFound
-  | InvalidRoute;
+  | InvalidRoute
+  | TokenNotFound
+  | TokenInUseByInstances
+  | Forbidden;
 
 export const deleteToken: API.OperationMethod<
   DeleteTokenRequest,
@@ -15917,7 +15696,14 @@ export const deleteToken: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: DeleteTokenRequest,
   output: DeleteTokenResponse,
-  errors: [ValidationError, NotFound, InvalidRoute],
+  errors: [
+    ValidationError,
+    NotFound,
+    InvalidRoute,
+    TokenNotFound,
+    TokenInUseByInstances,
+    Forbidden,
+  ],
 }));
 
 export interface ReadTokenRequest {
@@ -15925,14 +15711,16 @@ export interface ReadTokenRequest {
   accountId: string;
 }
 
-export const ReadTokenRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  id: Schema.String.pipe(T.HttpPath("id")),
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-}).pipe(
-  T.Http({
-    method: "GET",
-    path: "/accounts/{account_id}/ai-search/tokens/{id}",
-  }),
+export const ReadTokenRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+  Schema.Struct({
+    id: Schema.String.pipe(T.HttpPath("id")),
+    accountId: Schema.String.pipe(T.HttpPath("account_id")),
+  }).pipe(
+    T.Http({
+      method: "GET",
+      path: "/accounts/{account_id}/ai-search/tokens/{id}",
+    }),
+  ),
 ) as unknown as Schema.Schema<ReadTokenRequest>;
 
 export interface ReadTokenResponse {
@@ -15947,39 +15735,42 @@ export interface ReadTokenResponse {
   modifiedBy?: string | null;
 }
 
-export const ReadTokenResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  id: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  cfApiId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  modifiedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  name: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  createdBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  enabled: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-  legacy: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-  modifiedBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-})
-  .pipe(
-    Schema.encodeKeys({
-      id: "id",
-      cfApiId: "cf_api_id",
-      createdAt: "created_at",
-      modifiedAt: "modified_at",
-      name: "name",
-      createdBy: "created_by",
-      enabled: "enabled",
-      legacy: "legacy",
-      modifiedBy: "modified_by",
-    }),
-  )
-  .pipe(
-    T.ResponsePath("result"),
-  ) as unknown as Schema.Schema<ReadTokenResponse>;
+export const ReadTokenResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      id: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      cfApiId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      modifiedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      name: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      createdBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      enabled: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      legacy: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+      modifiedBy: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          id: "id",
+          cfApiId: "cf_api_id",
+          createdAt: "created_at",
+          modifiedAt: "modified_at",
+          name: "name",
+          createdBy: "created_by",
+          enabled: "enabled",
+          legacy: "legacy",
+          modifiedBy: "modified_by",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+) as unknown as Schema.Schema<ReadTokenResponse>;
 
 export type ReadTokenError =
   | DefaultErrors
   | ValidationError
   | NotFound
-  | InvalidRoute;
+  | InvalidRoute
+  | TokenNotFound
+  | Forbidden;
 
 export const readToken: API.OperationMethod<
   ReadTokenRequest,
@@ -15989,5 +15780,5 @@ export const readToken: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: ReadTokenRequest,
   output: ReadTokenResponse,
-  errors: [ValidationError, NotFound, InvalidRoute],
+  errors: [ValidationError, NotFound, InvalidRoute, TokenNotFound, Forbidden],
 }));

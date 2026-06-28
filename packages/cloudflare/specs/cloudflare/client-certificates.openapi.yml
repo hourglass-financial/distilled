@@ -10,7 +10,7 @@ paths:
     get:
       operationId: getClientCertificate
       description: "Get Details for a single mTLS API Shield Client
-        Certificate  @example ```ts const clientCertificate = await
+        Certificate.  @example ```ts const clientCertificate = await
         client.clientCertificates.get( '023e105f4ecef8ad9ca31a8372d0c353', {
         zone_id: '023e105f4ecef8ad9ca31a8372d0c353' }, ); ```"
       parameters:
@@ -38,7 +38,7 @@ paths:
                     description: Identifier.
                   certificate:
                     type: string
-                    description: The Client Certificate PEM
+                    description: The Client Certificate PEM.
                   certificate_authority:
                     type: object
                     properties:
@@ -46,35 +46,35 @@ paths:
                         type: string
                       name:
                         type: string
-                    description: Certificate Authority used to issue the Client Certificate
+                    description: Certificate Authority used to issue the Client Certificate.
                   common_name:
                     type: string
-                    description: Common Name of the Client Certificate
+                    description: Common Name of the Client Certificate.
                   country:
                     type: string
-                    description: Country, provided by the CSR
+                    description: Country, provided by the CSR.
                   csr:
                     type: string
                     description: The Certificate Signing Request (CSR). Must be newline-encoded.
                   expires_on:
                     type: string
-                    description: Date that the Client Certificate expires
+                    description: Date that the Client Certificate expires.
                   fingerprint_sha256:
                     type: string
-                    description: Unique identifier of the Client Certificate
+                    description: Unique identifier of the Client Certificate.
                   issued_on:
                     type: string
                     description: Date that the Client Certificate was issued by the Certificate
-                      Authority
+                      Authority.
                   location:
                     type: string
-                    description: Location, provided by the CSR
+                    description: Location, provided by the CSR.
                   organization:
                     type: string
-                    description: Organization, provided by the CSR
+                    description: Organization, provided by the CSR.
                   organizational_unit:
                     type: string
-                    description: Organizational Unit, provided by the CSR
+                    description: Organizational Unit, provided by the CSR.
                   serial_number:
                     type: string
                     description: The serial number on the created Client Certificate.
@@ -83,10 +83,10 @@ paths:
                     description: The type of hash used for the Client Certificate..
                   ski:
                     type: string
-                    description: Subject Key Identifier
+                    description: Subject Key Identifier.
                   state:
                     type: string
-                    description: State, provided by the CSR
+                    description: State, provided by the CSR.
                   status:
                     type: string
                     enum:
@@ -96,12 +96,20 @@ paths:
                       - revoked
                     description: Client Certificates may be active or revoked, and the
                       pending_reactivation or pending_revocation represent
-                      in-progress asynchronous transitions
+                      in-progress asynchronous transitions.
                   validity_days:
                     type: number
                     description: The number of days the Client Certificate will be valid after the
-                      issued_on date
+                      issued_on date.
       x-distilled-response-path: result
+      x-distilled-errors:
+        ClientCertificateNotFound:
+          - code: 1415
+            message:
+              includes: Invalid Certificate ID
+          - status: 404
+        Forbidden:
+          - status: 403
     patch:
       operationId: patchClientCertificate
       description: "If a API Shield mTLS Client Certificate is in a pending_revocation
@@ -144,7 +152,7 @@ paths:
                     description: Identifier.
                   certificate:
                     type: string
-                    description: The Client Certificate PEM
+                    description: The Client Certificate PEM.
                   certificate_authority:
                     type: object
                     properties:
@@ -152,35 +160,35 @@ paths:
                         type: string
                       name:
                         type: string
-                    description: Certificate Authority used to issue the Client Certificate
+                    description: Certificate Authority used to issue the Client Certificate.
                   common_name:
                     type: string
-                    description: Common Name of the Client Certificate
+                    description: Common Name of the Client Certificate.
                   country:
                     type: string
-                    description: Country, provided by the CSR
+                    description: Country, provided by the CSR.
                   csr:
                     type: string
                     description: The Certificate Signing Request (CSR). Must be newline-encoded.
                   expires_on:
                     type: string
-                    description: Date that the Client Certificate expires
+                    description: Date that the Client Certificate expires.
                   fingerprint_sha256:
                     type: string
-                    description: Unique identifier of the Client Certificate
+                    description: Unique identifier of the Client Certificate.
                   issued_on:
                     type: string
                     description: Date that the Client Certificate was issued by the Certificate
-                      Authority
+                      Authority.
                   location:
                     type: string
-                    description: Location, provided by the CSR
+                    description: Location, provided by the CSR.
                   organization:
                     type: string
-                    description: Organization, provided by the CSR
+                    description: Organization, provided by the CSR.
                   organizational_unit:
                     type: string
-                    description: Organizational Unit, provided by the CSR
+                    description: Organizational Unit, provided by the CSR.
                   serial_number:
                     type: string
                     description: The serial number on the created Client Certificate.
@@ -189,10 +197,10 @@ paths:
                     description: The type of hash used for the Client Certificate..
                   ski:
                     type: string
-                    description: Subject Key Identifier
+                    description: Subject Key Identifier.
                   state:
                     type: string
-                    description: State, provided by the CSR
+                    description: State, provided by the CSR.
                   status:
                     type: string
                     enum:
@@ -202,12 +210,20 @@ paths:
                       - revoked
                     description: Client Certificates may be active or revoked, and the
                       pending_reactivation or pending_revocation represent
-                      in-progress asynchronous transitions
+                      in-progress asynchronous transitions.
                   validity_days:
                     type: number
                     description: The number of days the Client Certificate will be valid after the
-                      issued_on date
+                      issued_on date.
       x-distilled-response-path: result
+      x-distilled-errors:
+        ClientCertificateNotFound:
+          - code: 1415
+            message:
+              includes: Invalid Certificate ID
+          - status: 404
+        Forbidden:
+          - status: 403
     delete:
       operationId: deleteClientCertificate
       description: "Set a API Shield mTLS Client Certificate to pending_revocation
@@ -240,7 +256,7 @@ paths:
                     description: Identifier.
                   certificate:
                     type: string
-                    description: The Client Certificate PEM
+                    description: The Client Certificate PEM.
                   certificate_authority:
                     type: object
                     properties:
@@ -248,35 +264,35 @@ paths:
                         type: string
                       name:
                         type: string
-                    description: Certificate Authority used to issue the Client Certificate
+                    description: Certificate Authority used to issue the Client Certificate.
                   common_name:
                     type: string
-                    description: Common Name of the Client Certificate
+                    description: Common Name of the Client Certificate.
                   country:
                     type: string
-                    description: Country, provided by the CSR
+                    description: Country, provided by the CSR.
                   csr:
                     type: string
                     description: The Certificate Signing Request (CSR). Must be newline-encoded.
                   expires_on:
                     type: string
-                    description: Date that the Client Certificate expires
+                    description: Date that the Client Certificate expires.
                   fingerprint_sha256:
                     type: string
-                    description: Unique identifier of the Client Certificate
+                    description: Unique identifier of the Client Certificate.
                   issued_on:
                     type: string
                     description: Date that the Client Certificate was issued by the Certificate
-                      Authority
+                      Authority.
                   location:
                     type: string
-                    description: Location, provided by the CSR
+                    description: Location, provided by the CSR.
                   organization:
                     type: string
-                    description: Organization, provided by the CSR
+                    description: Organization, provided by the CSR.
                   organizational_unit:
                     type: string
-                    description: Organizational Unit, provided by the CSR
+                    description: Organizational Unit, provided by the CSR.
                   serial_number:
                     type: string
                     description: The serial number on the created Client Certificate.
@@ -285,10 +301,10 @@ paths:
                     description: The type of hash used for the Client Certificate..
                   ski:
                     type: string
-                    description: Subject Key Identifier
+                    description: Subject Key Identifier.
                   state:
                     type: string
-                    description: State, provided by the CSR
+                    description: State, provided by the CSR.
                   status:
                     type: string
                     enum:
@@ -298,17 +314,29 @@ paths:
                       - revoked
                     description: Client Certificates may be active or revoked, and the
                       pending_reactivation or pending_revocation represent
-                      in-progress asynchronous transitions
+                      in-progress asynchronous transitions.
                   validity_days:
                     type: number
                     description: The number of days the Client Certificate will be valid after the
-                      issued_on date
+                      issued_on date.
       x-distilled-response-path: result
+      x-distilled-errors:
+        ClientCertificateNotFound:
+          - code: 1415
+            message:
+              includes: Invalid Certificate ID
+          - status: 404
+        ClientCertificateAlreadyRevoked:
+          - code: 1407
+            message:
+              includes: already deleted
+        Forbidden:
+          - status: 403
   /zones/{zone_id}/client_certificates:
     get:
       operationId: listClientCertificates
       description: "List all of your Zone's API Shield mTLS Client Certificates by
-        Status and/or using Pagination  @example ```ts // Automatically fetches
+        Status and/or using Pagination.  @example ```ts // Automatically fetches
         more pages as needed. for await (const clientCertificate of
         client.clientCertificates.list( { zone_id:
         '023e105f4ecef8ad9ca31a8372d0c353' }, )) { // ... } ```"
@@ -338,7 +366,7 @@ paths:
         - name: offset
           in: query
           required: false
-          description: "Query param: Offset the results"
+          description: "Query param: Offset the results."
           schema:
             type: number
         - name: status
@@ -366,7 +394,7 @@ paths:
                     description: Identifier.
                   certificate:
                     type: string
-                    description: The Client Certificate PEM
+                    description: The Client Certificate PEM.
                   certificate_authority:
                     type: object
                     properties:
@@ -374,35 +402,35 @@ paths:
                         type: string
                       name:
                         type: string
-                    description: Certificate Authority used to issue the Client Certificate
+                    description: Certificate Authority used to issue the Client Certificate.
                   common_name:
                     type: string
-                    description: Common Name of the Client Certificate
+                    description: Common Name of the Client Certificate.
                   country:
                     type: string
-                    description: Country, provided by the CSR
+                    description: Country, provided by the CSR.
                   csr:
                     type: string
                     description: The Certificate Signing Request (CSR). Must be newline-encoded.
                   expires_on:
                     type: string
-                    description: Date that the Client Certificate expires
+                    description: Date that the Client Certificate expires.
                   fingerprint_sha256:
                     type: string
-                    description: Unique identifier of the Client Certificate
+                    description: Unique identifier of the Client Certificate.
                   issued_on:
                     type: string
                     description: Date that the Client Certificate was issued by the Certificate
-                      Authority
+                      Authority.
                   location:
                     type: string
-                    description: Location, provided by the CSR
+                    description: Location, provided by the CSR.
                   organization:
                     type: string
-                    description: Organization, provided by the CSR
+                    description: Organization, provided by the CSR.
                   organizational_unit:
                     type: string
-                    description: Organizational Unit, provided by the CSR
+                    description: Organizational Unit, provided by the CSR.
                   serial_number:
                     type: string
                     description: The serial number on the created Client Certificate.
@@ -411,10 +439,10 @@ paths:
                     description: The type of hash used for the Client Certificate..
                   ski:
                     type: string
-                    description: Subject Key Identifier
+                    description: Subject Key Identifier.
                   state:
                     type: string
-                    description: State, provided by the CSR
+                    description: State, provided by the CSR.
                   status:
                     type: string
                     enum:
@@ -424,15 +452,18 @@ paths:
                       - revoked
                     description: Client Certificates may be active or revoked, and the
                       pending_reactivation or pending_revocation represent
-                      in-progress asynchronous transitions
+                      in-progress asynchronous transitions.
                   validity_days:
                     type: number
                     description: The number of days the Client Certificate will be valid after the
-                      issued_on date
+                      issued_on date.
       x-distilled-pagination-class: ClientCertificatesV4PagePaginationArray
+      x-distilled-errors:
+        Forbidden:
+          - status: 403
     post:
       operationId: createClientCertificate
-      description: "Create a new API Shield mTLS Client Certificate  @example ```ts
+      description: "Create a new API Shield mTLS Client Certificate.  @example ```ts
         const clientCertificate = await client.clientCertificates.create({
         zone_id: '023e105f4ecef8ad9ca31a8372d0c353', csr: '-----BEGIN
         CERTIFICATE REQUEST-----\\nMIICY....\\n-----END CERTIFICATE
@@ -458,7 +489,7 @@ paths:
                 validity_days:
                   type: number
                   description: "Body param: The number of days the Client Certificate will be
-                    valid after the issued_on date"
+                    valid after the issued_on date."
               required:
                 - csr
                 - validity_days
@@ -475,7 +506,7 @@ paths:
                     description: Identifier.
                   certificate:
                     type: string
-                    description: The Client Certificate PEM
+                    description: The Client Certificate PEM.
                   certificate_authority:
                     type: object
                     properties:
@@ -483,35 +514,35 @@ paths:
                         type: string
                       name:
                         type: string
-                    description: Certificate Authority used to issue the Client Certificate
+                    description: Certificate Authority used to issue the Client Certificate.
                   common_name:
                     type: string
-                    description: Common Name of the Client Certificate
+                    description: Common Name of the Client Certificate.
                   country:
                     type: string
-                    description: Country, provided by the CSR
+                    description: Country, provided by the CSR.
                   csr:
                     type: string
                     description: The Certificate Signing Request (CSR). Must be newline-encoded.
                   expires_on:
                     type: string
-                    description: Date that the Client Certificate expires
+                    description: Date that the Client Certificate expires.
                   fingerprint_sha256:
                     type: string
-                    description: Unique identifier of the Client Certificate
+                    description: Unique identifier of the Client Certificate.
                   issued_on:
                     type: string
                     description: Date that the Client Certificate was issued by the Certificate
-                      Authority
+                      Authority.
                   location:
                     type: string
-                    description: Location, provided by the CSR
+                    description: Location, provided by the CSR.
                   organization:
                     type: string
-                    description: Organization, provided by the CSR
+                    description: Organization, provided by the CSR.
                   organizational_unit:
                     type: string
-                    description: Organizational Unit, provided by the CSR
+                    description: Organizational Unit, provided by the CSR.
                   serial_number:
                     type: string
                     description: The serial number on the created Client Certificate.
@@ -520,10 +551,10 @@ paths:
                     description: The type of hash used for the Client Certificate..
                   ski:
                     type: string
-                    description: Subject Key Identifier
+                    description: Subject Key Identifier.
                   state:
                     type: string
-                    description: State, provided by the CSR
+                    description: State, provided by the CSR.
                   status:
                     type: string
                     enum:
@@ -533,9 +564,12 @@ paths:
                       - revoked
                     description: Client Certificates may be active or revoked, and the
                       pending_reactivation or pending_revocation represent
-                      in-progress asynchronous transitions
+                      in-progress asynchronous transitions.
                   validity_days:
                     type: number
                     description: The number of days the Client Certificate will be valid after the
-                      issued_on date
+                      issued_on date.
       x-distilled-response-path: result
+      x-distilled-errors:
+        Forbidden:
+          - status: 403

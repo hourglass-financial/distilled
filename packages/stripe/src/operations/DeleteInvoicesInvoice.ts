@@ -18,7 +18,7 @@ export type DeleteInvoicesInvoiceInput = typeof DeleteInvoicesInvoiceInput.Type;
 // Output Schema
 export const DeleteInvoicesInvoiceOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    deleted: Schema.Literals(["true"]),
+    deleted: Schema.Literals([true]),
     id: Schema.String,
     object: Schema.Literals(["invoice"]),
   });

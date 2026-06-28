@@ -1,7 +1,14 @@
 openapi: 3.1.0
 info:
-  title: Cloudflare AI-GATEWAY API
+  title: Cloudflare AI Gateway API (patch additions)
   version: 0.0.0
+  description: |
+    Operations missing from the upstream OpenAPI spec / TypeScript SDK.
+    Currently:
+      - deleteProviderConfig: the dashboard deletes BYOK provider configs via
+        DELETE .../provider_configs/{id}; verified live (returns the deleted
+        config object; a second delete returns code 7002 Not Found), but the
+        upstream spec only documents list + create.
 servers:
   - url: https://api.cloudflare.com/client/v4
 x-distilled-service: ai-gateway
@@ -291,12 +298,12 @@ paths:
                         items:
                           type: object
                           properties:
-                            authorization:
-                              type: string
                             headers:
                               type: object
                               additionalProperties: true
                             url:
+                              type: string
+                            authorization:
                               type: string
                             content_type:
                               type: string
@@ -304,7 +311,6 @@ paths:
                                 - json
                                 - protobuf
                           required:
-                            - authorization
                             - headers
                             - url
                     nullable: true
@@ -332,6 +338,70 @@ paths:
                       - type: number
                     nullable: true
                     description: Maximum number of retry attempts for failed requests (1-5)
+                  spend_limits:
+                    oneOf:
+                      - type: object
+                        properties:
+                          enabled:
+                            type: boolean
+                          rules:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                limit:
+                                  type: number
+                                limitType:
+                                  type: string
+                                  enum:
+                                    - cost
+                                window:
+                                  type: number
+                                id:
+                                  type: string
+                                enabled:
+                                  type: boolean
+                                metadata:
+                                  type: object
+                                  additionalProperties: true
+                                model:
+                                  type: object
+                                  properties:
+                                    mode:
+                                      type: string
+                                      enum:
+                                        - filter
+                                    values:
+                                      type: array
+                                      items:
+                                        type: string
+                                  required:
+                                    - mode
+                                    - values
+                                provider:
+                                  type: object
+                                  properties:
+                                    mode:
+                                      type: string
+                                      enum:
+                                        - filter
+                                    values:
+                                      type: array
+                                      items:
+                                        type: string
+                                  required:
+                                    - mode
+                                    - values
+                                technique:
+                                  type: string
+                                  enum:
+                                    - fixed
+                                    - sliding
+                              required:
+                                - limit
+                                - limitType
+                                - window
+                    nullable: true
                   store_id:
                     oneOf:
                       - type: string
@@ -665,12 +735,12 @@ paths:
                       items:
                         type: object
                         properties:
-                          authorization:
-                            type: string
                           headers:
                             type: object
                             additionalProperties: true
                           url:
+                            type: string
+                          authorization:
                             type: string
                           content_type:
                             type: string
@@ -678,7 +748,6 @@ paths:
                               - json
                               - protobuf
                         required:
-                          - authorization
                           - headers
                           - url
                   nullable: true
@@ -709,6 +778,71 @@ paths:
                   nullable: true
                   description: "Body param: Maximum number of retry attempts for failed requests
                     (1-5)"
+                spend_limits:
+                  oneOf:
+                    - type: object
+                      properties:
+                        enabled:
+                          type: boolean
+                        rules:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              limit:
+                                type: number
+                              limitType:
+                                type: string
+                                enum:
+                                  - cost
+                              window:
+                                type: number
+                              id:
+                                type: string
+                              enabled:
+                                type: boolean
+                              metadata:
+                                type: object
+                                additionalProperties: true
+                              model:
+                                type: object
+                                properties:
+                                  mode:
+                                    type: string
+                                    enum:
+                                      - filter
+                                  values:
+                                    type: array
+                                    items:
+                                      type: string
+                                required:
+                                  - mode
+                                  - values
+                              provider:
+                                type: object
+                                properties:
+                                  mode:
+                                    type: string
+                                    enum:
+                                      - filter
+                                  values:
+                                    type: array
+                                    items:
+                                      type: string
+                                required:
+                                  - mode
+                                  - values
+                              technique:
+                                type: string
+                                enum:
+                                  - fixed
+                                  - sliding
+                            required:
+                              - limit
+                              - limitType
+                              - window
+                  nullable: true
+                  description: Body param
                 store_id:
                   oneOf:
                     - type: string
@@ -1018,12 +1152,12 @@ paths:
                         items:
                           type: object
                           properties:
-                            authorization:
-                              type: string
                             headers:
                               type: object
                               additionalProperties: true
                             url:
+                              type: string
+                            authorization:
                               type: string
                             content_type:
                               type: string
@@ -1031,7 +1165,6 @@ paths:
                                 - json
                                 - protobuf
                           required:
-                            - authorization
                             - headers
                             - url
                     nullable: true
@@ -1059,6 +1192,70 @@ paths:
                       - type: number
                     nullable: true
                     description: Maximum number of retry attempts for failed requests (1-5)
+                  spend_limits:
+                    oneOf:
+                      - type: object
+                        properties:
+                          enabled:
+                            type: boolean
+                          rules:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                limit:
+                                  type: number
+                                limitType:
+                                  type: string
+                                  enum:
+                                    - cost
+                                window:
+                                  type: number
+                                id:
+                                  type: string
+                                enabled:
+                                  type: boolean
+                                metadata:
+                                  type: object
+                                  additionalProperties: true
+                                model:
+                                  type: object
+                                  properties:
+                                    mode:
+                                      type: string
+                                      enum:
+                                        - filter
+                                    values:
+                                      type: array
+                                      items:
+                                        type: string
+                                  required:
+                                    - mode
+                                    - values
+                                provider:
+                                  type: object
+                                  properties:
+                                    mode:
+                                      type: string
+                                      enum:
+                                        - filter
+                                    values:
+                                      type: array
+                                      items:
+                                        type: string
+                                  required:
+                                    - mode
+                                    - values
+                                technique:
+                                  type: string
+                                  enum:
+                                    - fixed
+                                    - sliding
+                              required:
+                                - limit
+                                - limitType
+                                - window
+                    nullable: true
                   store_id:
                     oneOf:
                       - type: string
@@ -1387,12 +1584,12 @@ paths:
                         items:
                           type: object
                           properties:
-                            authorization:
-                              type: string
                             headers:
                               type: object
                               additionalProperties: true
                             url:
+                              type: string
+                            authorization:
                               type: string
                             content_type:
                               type: string
@@ -1400,7 +1597,6 @@ paths:
                                 - json
                                 - protobuf
                           required:
-                            - authorization
                             - headers
                             - url
                     nullable: true
@@ -1428,6 +1624,70 @@ paths:
                       - type: number
                     nullable: true
                     description: Maximum number of retry attempts for failed requests (1-5)
+                  spend_limits:
+                    oneOf:
+                      - type: object
+                        properties:
+                          enabled:
+                            type: boolean
+                          rules:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                limit:
+                                  type: number
+                                limitType:
+                                  type: string
+                                  enum:
+                                    - cost
+                                window:
+                                  type: number
+                                id:
+                                  type: string
+                                enabled:
+                                  type: boolean
+                                metadata:
+                                  type: object
+                                  additionalProperties: true
+                                model:
+                                  type: object
+                                  properties:
+                                    mode:
+                                      type: string
+                                      enum:
+                                        - filter
+                                    values:
+                                      type: array
+                                      items:
+                                        type: string
+                                  required:
+                                    - mode
+                                    - values
+                                provider:
+                                  type: object
+                                  properties:
+                                    mode:
+                                      type: string
+                                      enum:
+                                        - filter
+                                    values:
+                                      type: array
+                                      items:
+                                        type: string
+                                  required:
+                                    - mode
+                                    - values
+                                technique:
+                                  type: string
+                                  enum:
+                                    - fixed
+                                    - sliding
+                              required:
+                                - limit
+                                - limitType
+                                - window
+                    nullable: true
                   store_id:
                     oneOf:
                       - type: string
@@ -1770,12 +2030,12 @@ paths:
                         items:
                           type: object
                           properties:
-                            authorization:
-                              type: string
                             headers:
                               type: object
                               additionalProperties: true
                             url:
+                              type: string
+                            authorization:
                               type: string
                             content_type:
                               type: string
@@ -1783,7 +2043,6 @@ paths:
                                 - json
                                 - protobuf
                           required:
-                            - authorization
                             - headers
                             - url
                     nullable: true
@@ -1811,6 +2070,70 @@ paths:
                       - type: number
                     nullable: true
                     description: Maximum number of retry attempts for failed requests (1-5)
+                  spend_limits:
+                    oneOf:
+                      - type: object
+                        properties:
+                          enabled:
+                            type: boolean
+                          rules:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                limit:
+                                  type: number
+                                limitType:
+                                  type: string
+                                  enum:
+                                    - cost
+                                window:
+                                  type: number
+                                id:
+                                  type: string
+                                enabled:
+                                  type: boolean
+                                metadata:
+                                  type: object
+                                  additionalProperties: true
+                                model:
+                                  type: object
+                                  properties:
+                                    mode:
+                                      type: string
+                                      enum:
+                                        - filter
+                                    values:
+                                      type: array
+                                      items:
+                                        type: string
+                                  required:
+                                    - mode
+                                    - values
+                                provider:
+                                  type: object
+                                  properties:
+                                    mode:
+                                      type: string
+                                      enum:
+                                        - filter
+                                    values:
+                                      type: array
+                                      items:
+                                        type: string
+                                  required:
+                                    - mode
+                                    - values
+                                technique:
+                                  type: string
+                                  enum:
+                                    - fixed
+                                    - sliding
+                              required:
+                                - limit
+                                - limitType
+                                - window
+                    nullable: true
                   store_id:
                     oneOf:
                       - type: string
@@ -2231,12 +2554,12 @@ paths:
                         items:
                           type: object
                           properties:
-                            authorization:
-                              type: string
                             headers:
                               type: object
                               additionalProperties: true
                             url:
+                              type: string
+                            authorization:
                               type: string
                             content_type:
                               type: string
@@ -2244,7 +2567,6 @@ paths:
                                 - json
                                 - protobuf
                           required:
-                            - authorization
                             - headers
                             - url
                     nullable: true
@@ -2272,6 +2594,70 @@ paths:
                       - type: number
                     nullable: true
                     description: Maximum number of retry attempts for failed requests (1-5)
+                  spend_limits:
+                    oneOf:
+                      - type: object
+                        properties:
+                          enabled:
+                            type: boolean
+                          rules:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                limit:
+                                  type: number
+                                limitType:
+                                  type: string
+                                  enum:
+                                    - cost
+                                window:
+                                  type: number
+                                id:
+                                  type: string
+                                enabled:
+                                  type: boolean
+                                metadata:
+                                  type: object
+                                  additionalProperties: true
+                                model:
+                                  type: object
+                                  properties:
+                                    mode:
+                                      type: string
+                                      enum:
+                                        - filter
+                                    values:
+                                      type: array
+                                      items:
+                                        type: string
+                                  required:
+                                    - mode
+                                    - values
+                                provider:
+                                  type: object
+                                  properties:
+                                    mode:
+                                      type: string
+                                      enum:
+                                        - filter
+                                    values:
+                                      type: array
+                                      items:
+                                        type: string
+                                  required:
+                                    - mode
+                                    - values
+                                technique:
+                                  type: string
+                                  enum:
+                                    - fixed
+                                    - sliding
+                              required:
+                                - limit
+                                - limitType
+                                - window
+                    nullable: true
                   store_id:
                     oneOf:
                       - type: string
@@ -2377,9 +2763,6 @@ paths:
                         nullable: true
                     required:
                       - amount
-                      - disabledReason
-                      - error
-                      - lastFailedAt
                       - threshold
                   first_topup_success:
                     type: boolean
@@ -2484,6 +2867,14 @@ paths:
             application/json:
               schema: {}
       x-distilled-response-path: result
+      x-distilled-errors:
+        NoManualTopup:
+          - code: 1000
+            message:
+              includes: NO_MANUAL_TOPUP
+        AiGatewaySpendingLimitDeprecated:
+          - message:
+              includes: spending limits are deprecated
     delete:
       operationId: deleteBillingSpendingLimit
       description: "Remove the spending limit for the account.  @example ```ts const
@@ -2648,9 +3039,6 @@ paths:
                     nullable: true
                 required:
                   - amount
-                  - disabledReason
-                  - error
-                  - lastFailedAt
                   - threshold
       x-distilled-response-path: result
     post:
@@ -2810,6 +3198,9 @@ paths:
                   - modified_at
                   - name
       x-distilled-response-path: result
+      x-distilled-errors:
+        DatasetNotFound:
+          - code: 7002
     put:
       operationId: updateDataset
       description: "Updates an existing AI Gateway dataset.  @example ```ts const
@@ -2960,6 +3351,9 @@ paths:
                   - modified_at
                   - name
       x-distilled-response-path: result
+      x-distilled-errors:
+        DatasetNotFound:
+          - code: 7002
     delete:
       operationId: deleteDataset
       description: "Deletes an AI Gateway dataset.  @example ```ts const dataset =
@@ -3050,6 +3444,9 @@ paths:
                   - modified_at
                   - name
       x-distilled-response-path: result
+      x-distilled-errors:
+        DatasetNotFound:
+          - code: 7002
   /accounts/{account_id}/ai-gateway/gateways/{gatewayId}/datasets:
     get:
       operationId: listDatasets
@@ -3167,6 +3564,9 @@ paths:
                   - modified_at
                   - name
       x-distilled-pagination-class: DatasetListResponsesV4PagePaginationArray
+      x-distilled-errors:
+        GatewayNotFound:
+          - code: 7002
     post:
       operationId: createDataset
       description: "Creates a new AI Gateway.  @example ```ts const dataset = await
@@ -3312,6 +3712,13 @@ paths:
                   - modified_at
                   - name
       x-distilled-response-path: result
+      x-distilled-errors:
+        GatewayNotFound:
+          - code: 7002
+        DatasetNameAlreadyExists:
+          - status: 400
+            message:
+              includes: already exists
   /accounts/{account_id}/ai-gateway/gateways/{gatewayId}/routes/{id}/deployments:
     post:
       operationId: createDeploymentDynamicRouting
@@ -3565,11 +3972,15 @@ paths:
                 required:
                   - id
                   - created_at
-                  - elements
                   - gateway_id
                   - modified_at
                   - name
       x-distilled-response-path: result
+      x-distilled-errors:
+        RouteNotFound:
+          - code: 7005
+            message:
+              includes: not found
     get:
       operationId: listDeploymentsDynamicRouting
       description: "List all AI Gateway Dynamic Route Deployments.  @example ```ts
@@ -3896,8 +4307,7 @@ paths:
                           - false
                       created_at:
                         type: string
-                      data:
-                        type: string
+                      data: {}
                       version_id:
                         type: string
                       is_valid:
@@ -3905,18 +4315,23 @@ paths:
                     required:
                       - active
                       - created_at
-                      - data
                       - version_id
                 required:
                   - id
                   - created_at
                   - deployment
-                  - elements
                   - gateway_id
                   - modified_at
                   - name
                   - version
       x-distilled-response-path: result
+      x-distilled-errors:
+        RouteNotFound:
+          - code: 7005
+            message:
+              includes: not found
+        GatewayNotFound:
+          - code: 7002
     patch:
       operationId: patchDynamicRouting
       description: "Update an AI Gateway Dynamic Route.  @example ```ts const
@@ -4194,8 +4609,7 @@ paths:
                               - false
                           created_at:
                             type: string
-                          data:
-                            type: string
+                          data: {}
                           version_id:
                             type: string
                           is_valid:
@@ -4203,14 +4617,11 @@ paths:
                         required:
                           - active
                           - created_at
-                          - data
                           - version_id
                     required:
                       - id
                       - account_tag
                       - created_at
-                      - deployment
-                      - elements
                       - gateway_id
                       - modified_at
                       - name
@@ -4220,6 +4631,15 @@ paths:
                 required:
                   - route
                   - success
+      x-distilled-errors:
+        RouteNotFound:
+          - code: 7005
+            message:
+              includes: not found
+        RouteAlreadyExists:
+          - code: 7005
+            message:
+              includes: already exists
     delete:
       operationId: deleteDynamicRouting
       description: "Delete an AI Gateway Dynamic Route.  @example ```ts const
@@ -4459,11 +4879,17 @@ paths:
                 required:
                   - id
                   - created_at
-                  - elements
                   - gateway_id
                   - modified_at
                   - name
       x-distilled-response-path: result
+      x-distilled-errors:
+        RouteNotFound:
+          - code: 7005
+            message:
+              includes: not found
+        GatewayNotFound:
+          - code: 7002
   /accounts/{account_id}/ai-gateway/gateways/{gatewayId}/routes:
     get:
       operationId: listDynamicRoutings
@@ -4749,8 +5175,7 @@ paths:
                                     - false
                                 created_at:
                                   type: string
-                                data:
-                                  type: string
+                                data: {}
                                 version_id:
                                   type: string
                                 is_valid:
@@ -4758,14 +5183,12 @@ paths:
                               required:
                                 - active
                                 - created_at
-                                - data
                                 - version_id
                           required:
                             - id
                             - account_tag
                             - created_at
                             - deployment
-                            - elements
                             - gateway_id
                             - modified_at
                             - name
@@ -4781,6 +5204,9 @@ paths:
                 required:
                   - data
                   - success
+      x-distilled-errors:
+        GatewayNotFound:
+          - code: 7002
     post:
       operationId: createDynamicRouting
       description: "Create a new AI Gateway Dynamic Route.  @example ```ts const
@@ -5248,8 +5674,7 @@ paths:
                           - false
                       created_at:
                         type: string
-                      data:
-                        type: string
+                      data: {}
                       version_id:
                         type: string
                       is_valid:
@@ -5257,18 +5682,23 @@ paths:
                     required:
                       - active
                       - created_at
-                      - data
                       - version_id
                 required:
                   - id
                   - created_at
                   - deployment
-                  - elements
                   - gateway_id
                   - modified_at
                   - name
                   - version
       x-distilled-response-path: result
+      x-distilled-errors:
+        RouteAlreadyExists:
+          - code: 7005
+            message:
+              includes: already exists
+        GatewayNotFound:
+          - code: 7002
   /accounts/{account_id}/ai-gateway/gateways/{gatewayId}/evaluations/{id}:
     get:
       operationId: getEvaluation
@@ -5317,8 +5747,7 @@ paths:
                           type: string
                         created_at:
                           type: string
-                        enable:
-                          type: boolean
+                        enable: {}
                         filters:
                           type: array
                           items:
@@ -5367,8 +5796,6 @@ paths:
                           type: string
                       required:
                         - id
-                        - account_id
-                        - account_tag
                         - created_at
                         - enable
                         - filters
@@ -5401,10 +5828,8 @@ paths:
                           type: string
                         result:
                           type: string
-                        status:
-                          type: number
-                        status_description:
-                          type: string
+                        status: {}
+                        status_description: {}
                         total_logs:
                           type: number
                       required:
@@ -5430,6 +5855,9 @@ paths:
                   - results
                   - total_logs
       x-distilled-response-path: result
+      x-distilled-errors:
+        EvaluationNotFound:
+          - code: 7002
     delete:
       operationId: deleteEvaluation
       description: "Deletes an AI Gateway dataset.  @example ```ts const evaluation =
@@ -5476,8 +5904,7 @@ paths:
                           type: string
                         created_at:
                           type: string
-                        enable:
-                          type: boolean
+                        enable: {}
                         filters:
                           type: array
                           items:
@@ -5526,8 +5953,6 @@ paths:
                           type: string
                       required:
                         - id
-                        - account_id
-                        - account_tag
                         - created_at
                         - enable
                         - filters
@@ -5560,10 +5985,8 @@ paths:
                           type: string
                         result:
                           type: string
-                        status:
-                          type: number
-                        status_description:
-                          type: string
+                        status: {}
+                        status_description: {}
                         total_logs:
                           type: number
                       required:
@@ -5581,14 +6004,15 @@ paths:
                 required:
                   - id
                   - created_at
-                  - datasets
                   - gateway_id
                   - modified_at
                   - name
                   - processed
-                  - results
                   - total_logs
       x-distilled-response-path: result
+      x-distilled-errors:
+        EvaluationNotFound:
+          - code: 7002
   /accounts/{account_id}/ai-gateway/gateways/{gatewayId}/evaluations:
     get:
       operationId: listEvaluations
@@ -5842,8 +6266,7 @@ paths:
                           type: string
                         created_at:
                           type: string
-                        enable:
-                          type: boolean
+                        enable: {}
                         filters:
                           type: array
                           items:
@@ -5892,8 +6315,6 @@ paths:
                           type: string
                       required:
                         - id
-                        - account_id
-                        - account_tag
                         - created_at
                         - enable
                         - filters
@@ -5926,10 +6347,8 @@ paths:
                           type: string
                         result:
                           type: string
-                        status:
-                          type: number
-                        status_description:
-                          type: string
+                        status: {}
+                        status_description: {}
                         total_logs:
                           type: number
                       required:
@@ -5955,6 +6374,13 @@ paths:
                   - results
                   - total_logs
       x-distilled-response-path: result
+      x-distilled-errors:
+        GatewayNotFound:
+          - code: 7002
+        EvaluationNameAlreadyExists:
+          - status: 400
+            message:
+              includes: already exists
   /accounts/{account_id}/ai-gateway/evaluation-types:
     get:
       operationId: listEvaluationTypes
@@ -6439,6 +6865,7 @@ paths:
                     - wholesale
                     - compatibilityMode
                     - dlp_action
+                    - user_agent
                 operator:
                   type: string
                   enum:
@@ -6709,6 +7136,7 @@ paths:
                     - wholesale
                     - compatibilityMode
                     - dlp_action
+                    - user_agent
                 operator:
                   type: string
                   enum:
@@ -7016,8 +7444,7 @@ paths:
       description: "Creates a new AI Gateway.  @example ```ts const providerConfig =
         await client.aiGateway.providerConfigs.create( 'my-gateway', {
         account_id: '3ebbcb006d4d46d7bb6a8c7f14676cb0', alias: 'alias',
-        default_config: true, provider_slug: 'provider_slug', secret: 'secret',
-        secret_id: 'secret_id', }, ); ```"
+        default_config: true, provider_slug: 'provider_slug', }, ); ```"
       parameters:
         - name: gatewayId
           in: path
@@ -7046,24 +7473,22 @@ paths:
                 provider_slug:
                   type: string
                   description: Body param
-                secret:
-                  type: string
-                  description: Body param
-                secret_id:
-                  type: string
-                  description: Body param
                 rate_limit:
                   type: number
                   description: Body param
                 rate_limit_period:
                   type: number
                   description: Body param
+                secret:
+                  type: string
+                  description: Body param
+                secret_id:
+                  type: string
+                  description: Body param
               required:
                 - alias
                 - default_config
                 - provider_slug
-                - secret
-                - secret_id
       responses:
         "200":
           description: Success
@@ -7076,8 +7501,7 @@ paths:
                     type: string
                   alias:
                     type: string
-                  default_config:
-                    type: boolean
+                  default_config: {}
                   gateway_id:
                     type: string
                     description: gateway id
@@ -7103,6 +7527,72 @@ paths:
                   - secret_id
                   - secret_preview
       x-distilled-response-path: result
+      x-distilled-errors:
+        ProviderConfigSecretNotFound:
+          - code: 7001
+            message:
+              includes: was not found
+        ProviderConfigAlreadyExists:
+          - code: 7001
+            message:
+              includes: already exists
+        GatewayNotFound:
+          - code: 7002
+  /accounts/{account_id}/ai-gateway/gateways/{gatewayId}/provider_configs/{id}:
+    delete:
+      operationId: deleteProviderConfig
+      summary: Delete a BYOK provider config from an AI Gateway
+      parameters:
+        - name: account_id
+          in: path
+          required: true
+          description: Account identifier
+          schema:
+            type: string
+        - name: gatewayId
+          in: path
+          required: true
+          description: Gateway identifier
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          description: Provider config identifier
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: Provider config identifier
+                  alias:
+                    type: string
+                    description: Alias of the deleted provider config
+                  provider_slug:
+                    type: string
+                    description: Provider slug (e.g. openai)
+                  gateway_id:
+                    type: string
+                    description: The gateway the config belonged to
+                  secret_id:
+                    type: string
+                    description: Secrets Store secret id the config referenced
+                  modified_at:
+                    type: string
+                    description: When the config was last modified
+                required:
+                  - id
+      x-distilled-response-path: result
+      x-distilled-errors:
+        ProviderConfigNotFound:
+          - code: 7002
   /accounts/{account_id}/ai-gateway/gateways/{gatewayId}/url/{provider}:
     get:
       operationId: getUrl
@@ -7842,14 +8332,21 @@ paths:
                     type: string
                   name:
                     type: string
+                  version_id:
+                    type: string
                 required:
                   - id
                   - created_at
-                  - elements
                   - gateway_id
                   - modified_at
                   - name
+                  - version_id
       x-distilled-response-path: result
+      x-distilled-errors:
+        RouteNotFound:
+          - code: 7005
+            message:
+              includes: not found
     get:
       operationId: listVersionsDynamicRouting
       description: "List all AI Gateway Dynamic Route Versions.  @example ```ts const

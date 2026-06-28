@@ -20,7 +20,7 @@ export type DeleteAccountsAccountPersonsPersonInput =
 // Output Schema
 export const DeleteAccountsAccountPersonsPersonOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    deleted: Schema.Literals(["true"]),
+    deleted: Schema.Literals([true]),
     id: Schema.String,
     object: Schema.Literals(["person"]),
   });

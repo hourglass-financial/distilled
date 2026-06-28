@@ -70,12 +70,12 @@ const distilledDebugConfig: Effect.Effect<boolean> = Config.string(
  * 1. Direct call: `yield* operation(input)` - returns Effect with requirements
  * 2. Yield first: `const fn = yield* operation` - captures services, returns requirement-free function
  */
-export type OperationMethod<I, A, E, R> = Effect.Effect<
-  (input: I) => Effect.Effect<A, E, never>,
+export type OperationMethod<I, A, E, R, RequestOptions = never> = Effect.Effect<
+  (input: I, requestOptions?: RequestOptions) => Effect.Effect<A, E, never>,
   never,
   R
 > &
-  ((input: I) => Effect.Effect<A, E, R>);
+  ((input: I, requestOptions?: RequestOptions) => Effect.Effect<A, E, R>);
 
 /**
  * A paginated operation that additionally has `.pages()` and `.items()` methods.
@@ -100,14 +100,18 @@ type PaginatedItem<A> =
             ? Item
             : unknown;
 
-export type PaginatedOperationMethod<I, A, E, R> = OperationMethod<
+export type PaginatedOperationMethod<
   I,
   A,
   E,
-  R
-> & {
-  pages: (input: I) => Stream.Stream<A, E, R>;
-  items: (input: I) => Stream.Stream<PaginatedItem<A>, E, R>;
+  R,
+  RequestOptions = never,
+> = OperationMethod<I, A, E, R, RequestOptions> & {
+  pages: (input: I, requestOptions?: RequestOptions) => Stream.Stream<A, E, R>;
+  items: (
+    input: I,
+    requestOptions?: RequestOptions,
+  ) => Stream.Stream<PaginatedItem<A>, E, R>;
 };
 
 type ResolvedClientCredentials<Creds> =
@@ -124,7 +128,7 @@ const isEffectLike = (value: unknown): value is Effect.Effect<unknown> =>
  * Configuration for the API client factory.
  * SDKs provide this to customize how errors are matched and credentials are applied.
  */
-export interface ClientConfig<Creds> {
+export interface ClientConfig<Creds, RequestOptions = never> {
   /** The credentials service tag */
   credentials: Context.ServiceClass<any, any, Effect.Effect<Creds>>;
 
@@ -134,6 +138,22 @@ export interface ClientConfig<Creds> {
   /** Get authorization header(s) from credentials */
   getAuthHeaders: (
     creds: ResolvedClientCredentials<Creds>,
+  ) => Record<string, string>;
+
+  /**
+   * Map provider-specific per-call request options into transport headers.
+   * Request options are intentionally separate from the operation input and
+   * are never passed through the body/query/path schema encoder.
+   */
+  getRequestHeaders?: (
+    requestOptions: RequestOptions | undefined,
+    context: {
+      input: Record<string, unknown>;
+      method: string;
+      pathTemplate: string;
+      parts: Traits.RequestParts;
+      credentials: ResolvedClientCredentials<Creds>;
+    },
   ) => Record<string, string>;
 
   /** Match an error response body to a typed error.
@@ -167,6 +187,17 @@ export interface ClientConfig<Creds> {
   transformResponse?: (body: unknown) => unknown;
 
   /**
+   * Optional predicate identifying a successful-status (2xx) response whose
+   * body is actually an error envelope. Some APIs (notably Cloudflare) return
+   * errors with HTTP 200 and a `success: false` flag instead of a 4xx status.
+   * When this returns `true`, the body is routed through {@link matchError}
+   * (with the operation's typed `errors`) exactly like a status>=400 response,
+   * so per-operation typed error matchers still apply. SDKs that always signal
+   * errors via status codes leave this unset (the default no-ops).
+   */
+  isErrorEnvelope?: (body: unknown) => boolean;
+
+  /**
    * Optional transform applied to encoded request parts before building the
    * outbound HTTP request.
    */
@@ -175,6 +206,7 @@ export interface ClientConfig<Creds> {
     method: string;
     pathTemplate: string;
     parts: Traits.RequestParts;
+    requestOptions: RequestOptions | undefined;
   }) => Traits.RequestParts;
 
   /**
@@ -246,6 +278,20 @@ function isArrayAST(ast: AST.AST): boolean {
   if (ast.encoding && ast.encoding.length > 0)
     return isArrayAST(ast.encoding[0].to);
   return false;
+}
+
+/**
+ * Resolve a (possibly `Schema.suspend`-wrapped) AST down to the concrete
+ * underlying node by forcing the memoized thunk. Generated SDK schemas may
+ * wrap each request/response struct in `Schema.suspend(() => ...)` so the
+ * (expensive) schema construction is deferred from module-load time to the
+ * first time the operation is actually called. Trait extraction needs the
+ * real node, so we force it here. `Suspend.thunk` memoizes, so this only
+ * pays the construction cost once per operation. Returns the input AST
+ * untouched when it isn't a Suspend (the common case for non-suspended SDKs).
+ */
+function resolveAst(ast: AST.AST): AST.AST {
+  return ast._tag === "Suspend" ? resolveAst(ast.thunk()) : ast;
 }
 
 // ============================================================================
@@ -472,7 +518,9 @@ function setBinaryBody(
  * });
  * ```
  */
-export const makeAPI = <Creds>(config: ClientConfig<Creds>) => {
+export const makeAPI = <Creds, RequestOptions = never>(
+  config: ClientConfig<Creds, RequestOptions>,
+) => {
   type _ClientErrors = HttpClientError.HttpClientError | HttpBody.HttpBodyError;
   type ResolvedCreds = ResolvedClientCredentials<Creds>;
 
@@ -487,30 +535,81 @@ export const makeAPI = <Creds>(config: ClientConfig<Creds>) => {
       Schema.Schema.Type<I>,
       Schema.Schema.Type<O>,
       InstanceType<E[number]>,
-      Creds
+      Creds,
+      RequestOptions
     > => {
-      const opConfig = configFn();
-      // Support both input/output and inputSchema/outputSchema aliases
-      const inputSchema = (opConfig.inputSchema ?? opConfig.input)!;
-      const outputSchema = (opConfig.outputSchema ?? opConfig.output)!;
-      const responsePath = Traits.getResponsePath(outputSchema.ast);
-      const graphqlOp = Traits.getGraphQLOp(inputSchema.ast);
-      const noFollowRedirect = Traits.getNoFollowRedirect(inputSchema.ast);
       type Input = Schema.Schema.Type<I>;
 
-      // Read HTTP trait from input schema annotations
-      const httpTrait = Traits.getHttpTrait(inputSchema.ast);
-
-      if (!httpTrait) {
-        throw new Error("Input schema must have Http trait");
+      // Lazily resolve the operation config + schema traits on first use,
+      // not at module-load time. Generated SDKs may wrap each request/response
+      // schema in `Schema.suspend(() => ...)`; forcing them here (rather than
+      // when the `export const` is evaluated) keeps importing a service module
+      // cheap and only pays the schema-construction cost for operations that
+      // are actually called. The result is memoized so subsequent calls are
+      // free, and non-suspended SDKs are unaffected (resolveAst is a no-op).
+      type HttpTraitResolved = NonNullable<
+        ReturnType<typeof Traits.getHttpTrait>
+      >;
+      interface Prepared {
+        opConfig: OperationConfig<I, O, E>;
+        inputSchema: I;
+        outputSchema: O;
+        inputAst: AST.AST;
+        outputAst: AST.AST;
+        responsePath: string | undefined;
+        graphqlOp: ReturnType<typeof Traits.getGraphQLOp>;
+        noFollowRedirect: ReturnType<typeof Traits.getNoFollowRedirect>;
+        httpTrait: HttpTraitResolved;
+        method: HttpTraitResolved["method"];
+        spanName: string;
       }
+      let prepared: Prepared | undefined;
+      const prepare = (): Prepared => {
+        if (prepared) return prepared;
+        const opConfig = configFn();
+        // Support both input/output and inputSchema/outputSchema aliases
+        const inputSchema = (opConfig.inputSchema ?? opConfig.input)!;
+        const outputSchema = (opConfig.outputSchema ?? opConfig.output)!;
+        const inputAst = resolveAst(inputSchema.ast);
+        const outputAst = resolveAst(outputSchema.ast);
+        const httpTrait = Traits.getHttpTrait(inputAst);
+        if (!httpTrait) {
+          throw new Error("Input schema must have Http trait");
+        }
+        const method = httpTrait.method;
+        prepared = {
+          opConfig,
+          inputSchema,
+          outputSchema,
+          inputAst,
+          outputAst,
+          responsePath: Traits.getResponsePath(outputAst),
+          graphqlOp: Traits.getGraphQLOp(inputAst),
+          noFollowRedirect: Traits.getNoFollowRedirect(inputAst),
+          httpTrait,
+          method,
+          spanName: `${method} ${httpTrait.path}`,
+        };
+        return prepared;
+      };
 
-      const method = httpTrait.method;
-
-      const spanName = `${method} ${httpTrait.path}`;
-
-      const innerFn = (input: Input): Effect.Effect<any, any, any> =>
+      const innerFn = (
+        input: Input,
+        requestOptions?: RequestOptions,
+      ): Effect.Effect<any, any, any> =>
         Effect.gen(function* () {
+          const {
+            opConfig,
+            inputSchema,
+            outputSchema,
+            inputAst,
+            outputAst,
+            responsePath,
+            graphqlOp,
+            noFollowRedirect,
+            httpTrait,
+            method,
+          } = prepare();
           const credentials = yield* config.credentials;
           const creds = isEffectLike(credentials)
             ? yield* credentials
@@ -521,7 +620,7 @@ export const makeAPI = <Creds>(config: ClientConfig<Creds>) => {
           // `getBaseUrl` empty (per-service hosts rather than per-credentials).
           let baseUrl = config.getBaseUrl(creds as ResolvedCreds);
           if (!baseUrl) {
-            const svcTrait = Traits.getServiceTrait(inputSchema.ast);
+            const svcTrait = Traits.getServiceTrait(inputAst);
             if (svcTrait?.rootUrl) {
               baseUrl = svcTrait.rootUrl + (svcTrait.servicePath ?? "");
             }
@@ -530,7 +629,7 @@ export const makeAPI = <Creds>(config: ClientConfig<Creds>) => {
 
           // Use schema-aware request builder for proper camelCase → wire_name mapping
           let parts = Traits.buildRequestParts(
-            inputSchema.ast,
+            inputAst,
             httpTrait,
             input as Record<string, unknown>,
             inputSchema,
@@ -556,6 +655,7 @@ export const makeAPI = <Creds>(config: ClientConfig<Creds>) => {
               method,
               pathTemplate: httpTrait.path,
               parts,
+              requestOptions,
             });
           }
 
@@ -573,11 +673,21 @@ export const makeAPI = <Creds>(config: ClientConfig<Creds>) => {
             };
           }
 
+          const requestHeaders =
+            config.getRequestHeaders?.(requestOptions, {
+              input: input as Record<string, unknown>,
+              method,
+              pathTemplate: httpTrait.path,
+              parts,
+              credentials: creds as ResolvedCreds,
+            }) ?? {};
+
           let request = HttpClientRequest.make(method)(
             baseUrl + parts.path,
           ).pipe(
             HttpClientRequest.setHeaders(authHeaders),
             HttpClientRequest.setHeaders(parts.headers),
+            HttpClientRequest.setHeaders(requestHeaders),
             HttpClientRequest.setHeader("Accept", "application/json"),
           );
 
@@ -737,7 +847,7 @@ export const makeAPI = <Creds>(config: ClientConfig<Creds>) => {
           }
 
           // For void-returning operations (e.g. DELETE 204 No Content)
-          if (AST.isVoid(outputSchema.ast)) {
+          if (AST.isVoid(outputAst)) {
             return undefined;
           }
 
@@ -756,7 +866,7 @@ export const makeAPI = <Creds>(config: ClientConfig<Creds>) => {
             const bytes = yield* response.arrayBuffer;
             const stream = Stream.succeed(new Uint8Array(bytes));
             return Traits.buildBinaryResponse(
-              outputSchema.ast,
+              outputAst,
               stream,
               response.headers as Record<string, string>,
             ) as unknown;
@@ -765,7 +875,7 @@ export const makeAPI = <Creds>(config: ClientConfig<Creds>) => {
           // For 204 No Content: if schema is not Unknown, return undefined.
           // If schema IS Unknown, return empty string (so callers get a defined value).
           if (response.status === 204) {
-            if (outputSchema.ast._tag === "Unknown") {
+            if (outputAst._tag === "Unknown") {
               return "";
             }
             return undefined;
@@ -819,18 +929,42 @@ export const makeAPI = <Creds>(config: ClientConfig<Creds>) => {
             }
           }
 
+          // Some APIs (Cloudflare) answer with a 2xx status but an error
+          // envelope (`success: false`) rather than a 4xx. Route those through
+          // `matchError` with the operation's typed `errors` so per-operation
+          // matchers fire — otherwise the envelope falls through to schema
+          // decoding and surfaces as an opaque ParseError.
+          if (config.isErrorEnvelope?.(responseBody)) {
+            return yield* config.matchError(
+              response.status,
+              responseBody,
+              opConfig.errors,
+              response.headers,
+            );
+          }
+
+          // Tracks a `result: null` success that we optimistically coerce to
+          // `{}` below. Some ops legitimately return `null` (e.g. a per-zone
+          // singleton that was never configured) and declare a nullable
+          // output schema — for those, decoding `{}` fails, so we retry the
+          // decode with `null` (see the decode block).
+          let resultWasNull = false;
           if (responsePath) {
             const nested = getPath(responseBody, responsePath);
             if (nested !== undefined) {
-              responseBody =
-                responsePath === "result" && nested === null ? {} : nested;
+              if (responsePath === "result" && nested === null) {
+                responseBody = {};
+                resultWasNull = true;
+              } else {
+                responseBody = nested;
+              }
             }
           }
 
           // Handle Cloudflare-style paginated responses where result is
           // { items: [...] } but the schema expects an array
           if (
-            isArrayAST(outputSchema.ast) &&
+            isArrayAST(outputAst) &&
             !Array.isArray(responseBody) &&
             typeof responseBody === "object" &&
             responseBody !== null &&
@@ -840,11 +974,59 @@ export const makeAPI = <Creds>(config: ClientConfig<Creds>) => {
             responseBody = (responseBody as Record<string, unknown>).items;
           }
 
+          // A list operation whose schema is an array, but whose `result` came
+          // back `null` (coerced to `{}` above), is simply an empty collection:
+          // Cloudflare returns `result: null` instead of `[]` when there are
+          // zero items. Coerce to `[]` so the list decodes cleanly rather than
+          // failing the array decode and surfacing as a ParseError.
+          if (resultWasNull && isArrayAST(outputAst)) {
+            responseBody = [];
+            resultWasNull = false;
+          }
+
+          // Distinguish two very different decode failures:
+          //   1. NON-empty body that doesn't match the schema → a genuine
+          //      schema gap in the SDK. Surface as `ParseError` (NOT retryable)
+          //      so it gets patched (Typed Error Doctrine). Retrying it would
+          //      only mask the bug.
+          //   2. EMPTY / null body where a structured response was expected →
+          //      there is nothing to parse. This is a transient, incomplete
+          //      transport response (e.g. the edge answering a 2xx with a bare
+          //      `null`/empty body under load), NOT a schema bug. Surface it as
+          //      a retryable `TransportError` so the bounded retry policy
+          //      re-fetches the real body. (Void/204 and nullable-schema ops
+          //      decode an empty body successfully and never reach here.)
+          const bodyIsEmpty =
+            rawBody === null || rawBody === undefined || rawBody === "";
           return yield* Schema.decodeUnknownEffect(outputSchema)(
             responseBody,
           ).pipe(
             Effect.catchTag("SchemaError", (cause) =>
-              Effect.fail(new config.ParseError({ body: rawBody, cause })),
+              // A `result: null` success coerced to `{}` that the schema
+              // rejects: retry decoding the genuine `null` (the schema may be
+              // a nullable union). Only then surface the parse error.
+              resultWasNull
+                ? Schema.decodeUnknownEffect(outputSchema)(null).pipe(
+                    Effect.catchTag("SchemaError", () =>
+                      Effect.fail(
+                        new config.ParseError({ body: rawBody, cause }),
+                      ),
+                    ),
+                  )
+                : bodyIsEmpty
+                  ? Effect.fail(
+                      new HttpClientError.HttpClientError({
+                        reason: new HttpClientError.TransportError({
+                          request,
+                          cause,
+                          description:
+                            "Empty response body where a structured response was expected",
+                        }),
+                      }),
+                    )
+                  : Effect.fail(
+                      new config.ParseError({ body: rawBody, cause }),
+                    ),
             ),
           );
         });
@@ -858,7 +1040,11 @@ export const makeAPI = <Creds>(config: ClientConfig<Creds>) => {
       // install a blanket policy at the layer level instead of wrapping
       // every call site with `Effect.retry(...)`.
       const retryTag = config.retry;
-      const fn = (input: Input): Effect.Effect<any, any, any> => {
+      const fn = (
+        input: Input,
+        requestOptions?: RequestOptions,
+      ): Effect.Effect<any, any, any> => {
+        const { spanName, method, httpTrait } = prepare();
         const withRetry = Effect.gen(function* () {
           const lastError = yield* Ref.make<unknown>(undefined);
           const policy = (yield* Effect.serviceOption(retryTag)).pipe(
@@ -869,7 +1055,7 @@ export const makeAPI = <Creds>(config: ClientConfig<Creds>) => {
           );
 
           return yield* pipe(
-            innerFn(input),
+            innerFn(input, requestOptions),
             Effect.tapError((error) => Ref.set(lastError, error)),
             policy.while
               ? (eff) =>
@@ -906,8 +1092,8 @@ export const makeAPI = <Creds>(config: ClientConfig<Creds>) => {
         asEffect() {
           return Effect.map(
             Effect.context(),
-            (context) => (input: Input) =>
-              Effect.provideContext(fn(input), context),
+            (context) => (input: Input, requestOptions?: RequestOptions) =>
+              Effect.provideContext(fn(input, requestOptions), context),
           );
         },
       };
@@ -926,7 +1112,8 @@ export const makeAPI = <Creds>(config: ClientConfig<Creds>) => {
       Schema.Schema.Type<I>,
       Schema.Schema.Type<O>,
       InstanceType<E[number]>,
-      Creds
+      Creds,
+      RequestOptions
     > => {
       const opConfig = configFn();
       const pagination = opConfig.pagination!;
@@ -943,14 +1130,19 @@ export const makeAPI = <Creds>(config: ClientConfig<Creds>) => {
       const paginate = paginateFn ?? paginateWithDefaults;
 
       // Stream all pages
-      const pagesFn = (input: Omit<Input, string>) =>
-        paginate(baseFn as any, input, pagination);
+      const pagesFn = (
+        input: Omit<Input, string>,
+        requestOptions?: RequestOptions,
+      ) => paginate(baseFn as any, input, pagination, requestOptions);
 
       // Stream individual items
-      const itemsFn = (input: Omit<Input, string>) =>
+      const itemsFn = (
+        input: Omit<Input, string>,
+        requestOptions?: RequestOptions,
+      ) =>
         pagination.items
-          ? extractItems(pagesFn(input), pagination.items)
-          : pagesFn(input);
+          ? extractItems(pagesFn(input, requestOptions), pagination.items)
+          : pagesFn(input, requestOptions);
 
       const result = baseFn as typeof baseFn & {
         pages: typeof pagesFn;

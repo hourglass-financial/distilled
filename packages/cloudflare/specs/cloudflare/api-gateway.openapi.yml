@@ -84,6 +84,8 @@ paths:
           - code: 7003
         NotEntitled:
           - code: 10403
+        Forbidden:
+          - status: 403
     put:
       operationId: putConfiguration
       description: "Updates API Shield configuration settings for a zone. Can modify
@@ -214,6 +216,8 @@ paths:
           - code: 7003
         NotEntitled:
           - code: 10403
+        Forbidden:
+          - status: 403
   /zones/{zone_id}/api_gateway/discovery:
     get:
       operationId: getDiscovery
@@ -476,64 +480,6 @@ paths:
           - code: 7003
         NotEntitled:
           - code: 10403
-  /zones/{zone_id}/api_gateway/discovery/operations/{operationId}:
-    patch:
-      operationId: patchDiscoveryOperation
-      description: "Update the `state` on a discovered operation  @example ```ts const
-        response = await client.apiGateway.discovery.operations.edit(
-        'f174e90a-fafe-4643-bbbc-4a0ed4fc8415', { zone_id:
-        '023e105f4ecef8ad9ca31a8372d0c353' }, ); ```"
-      parameters:
-        - name: operationId
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: zone_id
-          in: path
-          required: true
-          description: "Path param: Identifier."
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                state:
-                  type: string
-                  enum:
-                    - review
-                    - ignored
-                  description: "Body param: Mark state of operation in API Discovery  - `review` -
-                    Mark operation as for review - `ignored` - Mark operation as
-                    ignored"
-      responses:
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  state:
-                    type: string
-                    enum:
-                      - review
-                      - saved
-                      - ignored
-                    description: State of operation in API Discovery  - `review` - Operation is not
-                      saved into API Shield Endpoint Management - `saved` -
-                      Operation is saved into API Shield Endpoint Management -
-                      `ignored` - Operation is marked as ignored
-      x-distilled-response-path: result
-      x-distilled-errors:
-        InvalidObjectIdentifier:
-          - code: 7003
-        NotEntitled:
-          - code: 10403
   /zones/{zone_id}/api_gateway/expression-template/fallthrough:
     post:
       operationId: createExpressionTemplateFallthrough
@@ -689,6 +635,13 @@ paths:
                   - name
                   - source
       x-distilled-pagination-class: LabelListResponsesV4PagePaginationArray
+      x-distilled-errors:
+        ZonePurged:
+          - code: 10410
+        Forbidden:
+          - status: 403
+        NotFound:
+          - status: 404
   /zones/{zone_id}/api_gateway/labels/managed/{name}:
     get:
       operationId: getLabelManaged
@@ -893,6 +846,11 @@ paths:
                   - name
                   - source
       x-distilled-response-path: result
+      x-distilled-errors:
+        LabelNotFound:
+          - code: 70014
+        Forbidden:
+          - status: 403
     put:
       operationId: putLabelUser
       description: "Update all fields on a label  @example ```ts const user = await
@@ -957,6 +915,9 @@ paths:
                   - name
                   - source
       x-distilled-response-path: result
+      x-distilled-errors:
+        LabelNotFound:
+          - code: 70014
     patch:
       operationId: patchLabelUser
       description: "Update certain fields on a label  @example ```ts const response =
@@ -1021,6 +982,9 @@ paths:
                   - name
                   - source
       x-distilled-response-path: result
+      x-distilled-errors:
+        LabelNotFound:
+          - code: 70014
     delete:
       operationId: deleteLabelUser
       description: "Delete user label  @example ```ts const user = await
@@ -1073,6 +1037,11 @@ paths:
                   - name
                   - source
       x-distilled-response-path: result
+      x-distilled-errors:
+        LabelNotFound:
+          - code: 70014
+        Forbidden:
+          - status: 403
   /zones/{zone_id}/api_gateway/labels/user:
     post:
       operationId: bulkCreateLabelUsers
@@ -1142,6 +1111,11 @@ paths:
                   - name
                   - source
       x-distilled-pagination-class: UserBulkCreateResponsesSinglePage
+      x-distilled-errors:
+        LabelAlreadyExists:
+          - code: 70009
+        Forbidden:
+          - status: 403
     delete:
       operationId: bulkDeleteLabelUsers
       description: "Delete user labels  @example ```ts // Automatically fetches more
@@ -1557,6 +1531,8 @@ paths:
           - code: 7003
         OperationNotFound:
           - code: 10404
+        Forbidden:
+          - status: 403
     delete:
       operationId: deleteOperation
       description: "Removes a single API operation from API Shield endpoint
@@ -1637,6 +1613,8 @@ paths:
           - code: 7003
         OperationNotFound:
           - code: 10404
+        Forbidden:
+          - status: 403
   /zones/{zone_id}/api_gateway/operations:
     get:
       operationId: listOperations
@@ -1912,6 +1890,9 @@ paths:
                   - method
                   - operation_id
       x-distilled-pagination-class: OperationListResponsesV4PagePaginationArray
+      x-distilled-errors:
+        Forbidden:
+          - status: 403
     post:
       operationId: bulkCreateOperations
       description: "Add one or more operations to a zone. Endpoints can contain path
@@ -2521,6 +2502,8 @@ paths:
       x-distilled-errors:
         InvalidObjectIdentifier:
           - code: 7003
+        Forbidden:
+          - status: 403
   /zones/{zone_id}/api_gateway/operations/{operationId}/labels:
     post:
       operationId: createOperationLabel
@@ -3693,6 +3676,8 @@ paths:
           - code: 7003
         SchemaNotFound:
           - code: 19400
+        Forbidden:
+          - status: 403
     patch:
       operationId: patchUserSchema
       description: Activates schema validation for an uploaded OpenAPI schema.
@@ -3762,6 +3747,8 @@ paths:
           - code: 7003
         SchemaNotFound:
           - code: 19400
+        Forbidden:
+          - status: 403
     delete:
       operationId: deleteUserSchema
       description: Permanently removes an uploaded OpenAPI schema from API Shield
@@ -3841,6 +3828,8 @@ paths:
           - code: 7003
         SchemaNotFound:
           - code: 19400
+        Forbidden:
+          - status: 403
   /zones/{zone_id}/api_gateway/user_schemas:
     get:
       operationId: listUserSchemas
@@ -3912,6 +3901,11 @@ paths:
                   - name
                   - schema_id
       x-distilled-pagination-class: OldPublicSchemasV4PagePaginationArray
+      x-distilled-errors:
+        ZonePurged:
+          - code: 10410
+        Forbidden:
+          - status: 403
     post:
       operationId: createUserSchema
       description: Upload a schema to a zone  @deprecated Use [Schema Validation
@@ -4020,6 +4014,8 @@ paths:
       x-distilled-errors:
         InvalidObjectIdentifier:
           - code: 7003
+        Forbidden:
+          - status: 403
   /zones/{zone_id}/api_gateway/user_schemas/hosts:
     get:
       operationId: listUserSchemaHosts

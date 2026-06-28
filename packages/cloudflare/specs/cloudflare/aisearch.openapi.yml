@@ -133,8 +133,9 @@ paths:
                                 type: string
                                 description: Metadata field name to boost by. Use 'timestamp' for document
                                   freshness, or any custom_metadata field.
-                                  Numeric and datetime fields support asc/desc
-                                  directions; text/boolean fields support
+                                  Numeric and datetime fields support all four
+                                  directions (asc, desc, exists, not_exists);
+                                  text/boolean fields only support
                                   exists/not_exists.
                               direction:
                                 type: string
@@ -147,7 +148,7 @@ paths:
                                   timestamps). 'asc' = lower values rank higher.
                                   'exists' = boost chunks that have the field.
                                   'not_exists' = boost chunks that lack the
-                                  field. Optional ��� defaults to 'asc' for
+                                  field. Optional — defaults to 'asc' for
                                   numeric/datetime fields, 'exists' for
                                   text/boolean fields.
                             required:
@@ -433,8 +434,9 @@ paths:
                                 type: string
                                 description: Metadata field name to boost by. Use 'timestamp' for document
                                   freshness, or any custom_metadata field.
-                                  Numeric and datetime fields support asc/desc
-                                  directions; text/boolean fields support
+                                  Numeric and datetime fields support all four
+                                  directions (asc, desc, exists, not_exists);
+                                  text/boolean fields only support
                                   exists/not_exists.
                               direction:
                                 type: string
@@ -447,7 +449,7 @@ paths:
                                   timestamps). 'asc' = lower values rank higher.
                                   'exists' = boost chunks that have the field.
                                   'not_exists' = boost chunks that lack the
-                                  field. Optional ��� defaults to 'asc' for
+                                  field. Optional — defaults to 'asc' for
                                   numeric/datetime fields, 'exists' for
                                   text/boolean fields.
                             required:
@@ -793,8 +795,9 @@ paths:
                                 type: string
                                 description: Metadata field name to boost by. Use 'timestamp' for document
                                   freshness, or any custom_metadata field.
-                                  Numeric and datetime fields support asc/desc
-                                  directions; text/boolean fields support
+                                  Numeric and datetime fields support all four
+                                  directions (asc, desc, exists, not_exists);
+                                  text/boolean fields only support
                                   exists/not_exists.
                               direction:
                                 type: string
@@ -807,7 +810,7 @@ paths:
                                   timestamps). 'asc' = lower values rank higher.
                                   'exists' = boost chunks that have the field.
                                   'not_exists' = boost chunks that lack the
-                                  field. Optional ��� defaults to 'asc' for
+                                  field. Optional — defaults to 'asc' for
                                   numeric/datetime fields, 'exists' for
                                   text/boolean fields.
                             required:
@@ -1283,8 +1286,9 @@ paths:
                                   type: string
                                   description: Metadata field name to boost by. Use 'timestamp' for document
                                     freshness, or any custom_metadata field.
-                                    Numeric and datetime fields support asc/desc
-                                    directions; text/boolean fields support
+                                    Numeric and datetime fields support all four
+                                    directions (asc, desc, exists, not_exists);
+                                    text/boolean fields only support
                                     exists/not_exists.
                                 direction:
                                   type: string
@@ -1297,17 +1301,17 @@ paths:
                                     timestamps). 'asc' = lower values rank
                                     higher. 'exists' = boost chunks that have
                                     the field. 'not_exists' = boost chunks that
-                                    lack the field. Optional ��� defaults to
-                                    'asc' for numeric/datetime fields, 'exists'
-                                    for text/boolean fields.
+                                    lack the field. Optional — defaults to 'asc'
+                                    for numeric/datetime fields, 'exists' for
+                                    text/boolean fields.
                               required:
                                 - field
                             description: Metadata fields to boost search results by. Each entry specifies a
                               metadata field and an optional direction.
-                              Direction defaults to 'asc' for numeric fields and
-                              'exists' for text/boolean fields. Fields must
-                              match 'timestamp' or a defined custom_metadata
-                              field.
+                              Direction defaults to 'asc' for numeric/datetime
+                              fields and 'exists' for text/boolean fields.
+                              Fields must match 'timestamp' or a defined
+                              custom_metadata field.
                           keyword_match_mode:
                             type: string
                             enum:
@@ -1506,6 +1510,8 @@ paths:
       x-distilled-errors:
         InvalidRoute:
           - code: 7003
+        Forbidden:
+          - status: 403
     post:
       operationId: createInstance
       description: "Create a new instance.  @example ```ts const instance = await
@@ -1582,17 +1588,6 @@ paths:
                   description: Body param
                 cache_ttl:
                   type: number
-                  enum:
-                    - 600
-                    - 1800
-                    - 3600
-                    - 7200
-                    - 21600
-                    - 43200
-                    - 86400
-                    - 172800
-                    - 259200
-                    - 518400
                   description: "Body param: Cache entry TTL in seconds. Allowed values: 600
                     (10min), 1800 (30min), 3600 (1h), 7200 (2h), 21600 (6h),
                     43200 (12h), 86400 (24h), 172800 (48h), 259200 (72h), 518400
@@ -1754,8 +1749,9 @@ paths:
                                 type: string
                                 description: Metadata field name to boost by. Use 'timestamp' for document
                                   freshness, or any custom_metadata field.
-                                  Numeric and datetime fields support asc/desc
-                                  directions; text/boolean fields support
+                                  Numeric and datetime fields support all four
+                                  directions (asc, desc, exists, not_exists);
+                                  text/boolean fields only support
                                   exists/not_exists.
                               direction:
                                 type: string
@@ -1768,15 +1764,15 @@ paths:
                                   timestamps). 'asc' = lower values rank higher.
                                   'exists' = boost chunks that have the field.
                                   'not_exists' = boost chunks that lack the
-                                  field. Optional ��� defaults to 'asc' for
+                                  field. Optional — defaults to 'asc' for
                                   numeric/datetime fields, 'exists' for
                                   text/boolean fields.
                             required:
                               - field
                           description: Metadata fields to boost search results by. Each entry specifies a
                             metadata field and an optional direction. Direction
-                            defaults to 'asc' for numeric fields and 'exists'
-                            for text/boolean fields. Fields must match
+                            defaults to 'asc' for numeric/datetime fields and
+                            'exists' for text/boolean fields. Fields must match
                             'timestamp' or a defined custom_metadata field.
                         keyword_match_mode:
                           type: string
@@ -1952,15 +1948,6 @@ paths:
                   description: Body param
                 sync_interval:
                   type: number
-                  enum:
-                    - 900
-                    - 1800
-                    - 3600
-                    - 7200
-                    - 14400
-                    - 21600
-                    - 43200
-                    - 86400
                   description: "Body param: Interval between automatic syncs, in seconds. Allowed
                     values: 900 (15min), 1800 (30min), 3600 (1h), 7200 (2h),
                     14400 (4h), 21600 (6h), 43200 (12h), 86400 (24h)."
@@ -2042,17 +2029,6 @@ paths:
                     nullable: true
                   cache_ttl:
                     type: number
-                    enum:
-                      - 600
-                      - 1800
-                      - 3600
-                      - 7200
-                      - 21600
-                      - 43200
-                      - 86400
-                      - 172800
-                      - 259200
-                      - 518400
                     description: "Cache entry TTL in seconds. Allowed values: 600 (10min), 1800
                       (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h),
                       86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d)."
@@ -2229,8 +2205,9 @@ paths:
                                   type: string
                                   description: Metadata field name to boost by. Use 'timestamp' for document
                                     freshness, or any custom_metadata field.
-                                    Numeric and datetime fields support asc/desc
-                                    directions; text/boolean fields support
+                                    Numeric and datetime fields support all four
+                                    directions (asc, desc, exists, not_exists);
+                                    text/boolean fields only support
                                     exists/not_exists.
                                 direction:
                                   type: string
@@ -2243,17 +2220,17 @@ paths:
                                     timestamps). 'asc' = lower values rank
                                     higher. 'exists' = boost chunks that have
                                     the field. 'not_exists' = boost chunks that
-                                    lack the field. Optional ��� defaults to
-                                    'asc' for numeric/datetime fields, 'exists'
-                                    for text/boolean fields.
+                                    lack the field. Optional — defaults to 'asc'
+                                    for numeric/datetime fields, 'exists' for
+                                    text/boolean fields.
                               required:
                                 - field
                             description: Metadata fields to boost search results by. Each entry specifies a
                               metadata field and an optional direction.
-                              Direction defaults to 'asc' for numeric fields and
-                              'exists' for text/boolean fields. Fields must
-                              match 'timestamp' or a defined custom_metadata
-                              field.
+                              Direction defaults to 'asc' for numeric/datetime
+                              fields and 'exists' for text/boolean fields.
+                              Fields must match 'timestamp' or a defined
+                              custom_metadata field.
                           keyword_match_mode:
                             type: string
                             enum:
@@ -2424,15 +2401,6 @@ paths:
                     type: string
                   sync_interval:
                     type: number
-                    enum:
-                      - 900
-                      - 1800
-                      - 3600
-                      - 7200
-                      - 14400
-                      - 21600
-                      - 43200
-                      - 86400
                     description: "Interval between automatic syncs, in seconds. Allowed values: 900
                       (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h),
                       21600 (6h), 43200 (12h), 86400 (24h)."
@@ -2454,6 +2422,17 @@ paths:
           - code: 7002
         InvalidRoute:
           - code: 7003
+        InstanceAlreadyExists:
+          - status: 400
+            message:
+              includes: already_exist
+        InvalidTokenCredentials:
+          - code: 7012
+          - status: 400
+            message:
+              includes: invalid_token
+        Forbidden:
+          - status: 403
   /accounts/{account_id}/ai-search/instances/{id}:
     put:
       operationId: updateInstance
@@ -2532,17 +2511,6 @@ paths:
                   description: Body param
                 cache_ttl:
                   type: number
-                  enum:
-                    - 600
-                    - 1800
-                    - 3600
-                    - 7200
-                    - 21600
-                    - 43200
-                    - 86400
-                    - 172800
-                    - 259200
-                    - 518400
                   description: "Body param: Cache entry TTL in seconds. Allowed values: 600
                     (10min), 1800 (30min), 3600 (1h), 7200 (2h), 21600 (6h),
                     43200 (12h), 86400 (24h), 172800 (48h), 259200 (72h), 518400
@@ -2704,8 +2672,9 @@ paths:
                                 type: string
                                 description: Metadata field name to boost by. Use 'timestamp' for document
                                   freshness, or any custom_metadata field.
-                                  Numeric and datetime fields support asc/desc
-                                  directions; text/boolean fields support
+                                  Numeric and datetime fields support all four
+                                  directions (asc, desc, exists, not_exists);
+                                  text/boolean fields only support
                                   exists/not_exists.
                               direction:
                                 type: string
@@ -2718,15 +2687,15 @@ paths:
                                   timestamps). 'asc' = lower values rank higher.
                                   'exists' = boost chunks that have the field.
                                   'not_exists' = boost chunks that lack the
-                                  field. Optional ��� defaults to 'asc' for
+                                  field. Optional — defaults to 'asc' for
                                   numeric/datetime fields, 'exists' for
                                   text/boolean fields.
                             required:
                               - field
                           description: Metadata fields to boost search results by. Each entry specifies a
                             metadata field and an optional direction. Direction
-                            defaults to 'asc' for numeric fields and 'exists'
-                            for text/boolean fields. Fields must match
+                            defaults to 'asc' for numeric/datetime fields and
+                            'exists' for text/boolean fields. Fields must match
                             'timestamp' or a defined custom_metadata field.
                         keyword_match_mode:
                           type: string
@@ -2935,15 +2904,6 @@ paths:
                   description: Body param
                 sync_interval:
                   type: number
-                  enum:
-                    - 900
-                    - 1800
-                    - 3600
-                    - 7200
-                    - 14400
-                    - 21600
-                    - 43200
-                    - 86400
                   description: "Body param: Interval between automatic syncs, in seconds. Allowed
                     values: 900 (15min), 1800 (30min), 3600 (1h), 7200 (2h),
                     14400 (4h), 21600 (6h), 43200 (12h), 86400 (24h)."
@@ -3031,17 +2991,6 @@ paths:
                     nullable: true
                   cache_ttl:
                     type: number
-                    enum:
-                      - 600
-                      - 1800
-                      - 3600
-                      - 7200
-                      - 21600
-                      - 43200
-                      - 86400
-                      - 172800
-                      - 259200
-                      - 518400
                     description: "Cache entry TTL in seconds. Allowed values: 600 (10min), 1800
                       (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h),
                       86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d)."
@@ -3218,8 +3167,9 @@ paths:
                                   type: string
                                   description: Metadata field name to boost by. Use 'timestamp' for document
                                     freshness, or any custom_metadata field.
-                                    Numeric and datetime fields support asc/desc
-                                    directions; text/boolean fields support
+                                    Numeric and datetime fields support all four
+                                    directions (asc, desc, exists, not_exists);
+                                    text/boolean fields only support
                                     exists/not_exists.
                                 direction:
                                   type: string
@@ -3232,17 +3182,17 @@ paths:
                                     timestamps). 'asc' = lower values rank
                                     higher. 'exists' = boost chunks that have
                                     the field. 'not_exists' = boost chunks that
-                                    lack the field. Optional ��� defaults to
-                                    'asc' for numeric/datetime fields, 'exists'
-                                    for text/boolean fields.
+                                    lack the field. Optional — defaults to 'asc'
+                                    for numeric/datetime fields, 'exists' for
+                                    text/boolean fields.
                               required:
                                 - field
                             description: Metadata fields to boost search results by. Each entry specifies a
                               metadata field and an optional direction.
-                              Direction defaults to 'asc' for numeric fields and
-                              'exists' for text/boolean fields. Fields must
-                              match 'timestamp' or a defined custom_metadata
-                              field.
+                              Direction defaults to 'asc' for numeric/datetime
+                              fields and 'exists' for text/boolean fields.
+                              Fields must match 'timestamp' or a defined
+                              custom_metadata field.
                           keyword_match_mode:
                             type: string
                             enum:
@@ -3413,15 +3363,6 @@ paths:
                     type: string
                   sync_interval:
                     type: number
-                    enum:
-                      - 900
-                      - 1800
-                      - 3600
-                      - 7200
-                      - 14400
-                      - 21600
-                      - 43200
-                      - 86400
                     description: "Interval between automatic syncs, in seconds. Allowed values: 900
                       (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h),
                       21600 (6h), 43200 (12h), 86400 (24h)."
@@ -3443,6 +3384,13 @@ paths:
           - code: 7002
         InvalidRoute:
           - code: 7003
+        InvalidTokenCredentials:
+          - code: 7012
+          - status: 400
+            message:
+              includes: invalid_token
+        Forbidden:
+          - status: 403
     delete:
       operationId: deleteInstance
       description: "Delete instance.  @example ```ts const instance = await
@@ -3525,17 +3473,6 @@ paths:
                     nullable: true
                   cache_ttl:
                     type: number
-                    enum:
-                      - 600
-                      - 1800
-                      - 3600
-                      - 7200
-                      - 21600
-                      - 43200
-                      - 86400
-                      - 172800
-                      - 259200
-                      - 518400
                     description: "Cache entry TTL in seconds. Allowed values: 600 (10min), 1800
                       (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h),
                       86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d)."
@@ -3712,8 +3649,9 @@ paths:
                                   type: string
                                   description: Metadata field name to boost by. Use 'timestamp' for document
                                     freshness, or any custom_metadata field.
-                                    Numeric and datetime fields support asc/desc
-                                    directions; text/boolean fields support
+                                    Numeric and datetime fields support all four
+                                    directions (asc, desc, exists, not_exists);
+                                    text/boolean fields only support
                                     exists/not_exists.
                                 direction:
                                   type: string
@@ -3726,17 +3664,17 @@ paths:
                                     timestamps). 'asc' = lower values rank
                                     higher. 'exists' = boost chunks that have
                                     the field. 'not_exists' = boost chunks that
-                                    lack the field. Optional ��� defaults to
-                                    'asc' for numeric/datetime fields, 'exists'
-                                    for text/boolean fields.
+                                    lack the field. Optional — defaults to 'asc'
+                                    for numeric/datetime fields, 'exists' for
+                                    text/boolean fields.
                               required:
                                 - field
                             description: Metadata fields to boost search results by. Each entry specifies a
                               metadata field and an optional direction.
-                              Direction defaults to 'asc' for numeric fields and
-                              'exists' for text/boolean fields. Fields must
-                              match 'timestamp' or a defined custom_metadata
-                              field.
+                              Direction defaults to 'asc' for numeric/datetime
+                              fields and 'exists' for text/boolean fields.
+                              Fields must match 'timestamp' or a defined
+                              custom_metadata field.
                           keyword_match_mode:
                             type: string
                             enum:
@@ -3907,15 +3845,6 @@ paths:
                     type: string
                   sync_interval:
                     type: number
-                    enum:
-                      - 900
-                      - 1800
-                      - 3600
-                      - 7200
-                      - 14400
-                      - 21600
-                      - 43200
-                      - 86400
                     description: "Interval between automatic syncs, in seconds. Allowed values: 900
                       (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h),
                       21600 (6h), 43200 (12h), 86400 (24h)."
@@ -3937,6 +3866,8 @@ paths:
           - code: 7002
         InvalidRoute:
           - code: 7003
+        Forbidden:
+          - status: 403
     get:
       operationId: readInstance
       description: "Read instance.  @example ```ts const response = await
@@ -4019,17 +3950,6 @@ paths:
                     nullable: true
                   cache_ttl:
                     type: number
-                    enum:
-                      - 600
-                      - 1800
-                      - 3600
-                      - 7200
-                      - 21600
-                      - 43200
-                      - 86400
-                      - 172800
-                      - 259200
-                      - 518400
                     description: "Cache entry TTL in seconds. Allowed values: 600 (10min), 1800
                       (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h),
                       86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d)."
@@ -4206,8 +4126,9 @@ paths:
                                   type: string
                                   description: Metadata field name to boost by. Use 'timestamp' for document
                                     freshness, or any custom_metadata field.
-                                    Numeric and datetime fields support asc/desc
-                                    directions; text/boolean fields support
+                                    Numeric and datetime fields support all four
+                                    directions (asc, desc, exists, not_exists);
+                                    text/boolean fields only support
                                     exists/not_exists.
                                 direction:
                                   type: string
@@ -4220,17 +4141,17 @@ paths:
                                     timestamps). 'asc' = lower values rank
                                     higher. 'exists' = boost chunks that have
                                     the field. 'not_exists' = boost chunks that
-                                    lack the field. Optional ��� defaults to
-                                    'asc' for numeric/datetime fields, 'exists'
-                                    for text/boolean fields.
+                                    lack the field. Optional — defaults to 'asc'
+                                    for numeric/datetime fields, 'exists' for
+                                    text/boolean fields.
                               required:
                                 - field
                             description: Metadata fields to boost search results by. Each entry specifies a
                               metadata field and an optional direction.
-                              Direction defaults to 'asc' for numeric fields and
-                              'exists' for text/boolean fields. Fields must
-                              match 'timestamp' or a defined custom_metadata
-                              field.
+                              Direction defaults to 'asc' for numeric/datetime
+                              fields and 'exists' for text/boolean fields.
+                              Fields must match 'timestamp' or a defined
+                              custom_metadata field.
                           keyword_match_mode:
                             type: string
                             enum:
@@ -4401,15 +4322,6 @@ paths:
                     type: string
                   sync_interval:
                     type: number
-                    enum:
-                      - 900
-                      - 1800
-                      - 3600
-                      - 7200
-                      - 14400
-                      - 21600
-                      - 43200
-                      - 86400
                     description: "Interval between automatic syncs, in seconds. Allowed values: 900
                       (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h),
                       21600 (6h), 43200 (12h), 86400 (24h)."
@@ -4431,6 +4343,8 @@ paths:
           - code: 7002
         InvalidRoute:
           - code: 7003
+        Forbidden:
+          - status: 403
   /accounts/{account_id}/ai-search/instances/{id}/search:
     post:
       operationId: searchInstance
@@ -4536,8 +4450,9 @@ paths:
                                 type: string
                                 description: Metadata field name to boost by. Use 'timestamp' for document
                                   freshness, or any custom_metadata field.
-                                  Numeric and datetime fields support asc/desc
-                                  directions; text/boolean fields support
+                                  Numeric and datetime fields support all four
+                                  directions (asc, desc, exists, not_exists);
+                                  text/boolean fields only support
                                   exists/not_exists.
                               direction:
                                 type: string
@@ -4550,7 +4465,7 @@ paths:
                                   timestamps). 'asc' = lower values rank higher.
                                   'exists' = boost chunks that have the field.
                                   'not_exists' = boost chunks that lack the
-                                  field. Optional ��� defaults to 'asc' for
+                                  field. Optional — defaults to 'asc' for
                                   numeric/datetime fields, 'exists' for
                                   text/boolean fields.
                             required:
@@ -5128,6 +5043,11 @@ paths:
                   - created_at
                   - name
       x-distilled-response-path: result
+      x-distilled-errors:
+        NamespaceAlreadyExists:
+          - code: 7064
+        Forbidden:
+          - status: 403
   /accounts/{account_id}/ai-search/namespaces/{name}:
     put:
       operationId: updateNamespace
@@ -5180,6 +5100,11 @@ paths:
                   - created_at
                   - name
       x-distilled-response-path: result
+      x-distilled-errors:
+        NamespaceNotFound:
+          - code: 7063
+        Forbidden:
+          - status: 403
     delete:
       operationId: deleteNamespace
       description: "Delete namespace.  @example ```ts const namespace = await
@@ -5203,6 +5128,11 @@ paths:
             application/json:
               schema: {}
       x-distilled-response-path: result
+      x-distilled-errors:
+        NamespaceNotFound:
+          - code: 7063
+        Forbidden:
+          - status: 403
     get:
       operationId: readNamespace
       description: "Read namespace.  @example ```ts const response = await
@@ -5240,6 +5170,11 @@ paths:
                   - created_at
                   - name
       x-distilled-response-path: result
+      x-distilled-errors:
+        NamespaceNotFound:
+          - code: 7063
+        Forbidden:
+          - status: 403
   /accounts/{account_id}/ai-search/namespaces/{name}/search:
     post:
       operationId: searchNamespace
@@ -5349,8 +5284,9 @@ paths:
                                 type: string
                                 description: Metadata field name to boost by. Use 'timestamp' for document
                                   freshness, or any custom_metadata field.
-                                  Numeric and datetime fields support asc/desc
-                                  directions; text/boolean fields support
+                                  Numeric and datetime fields support all four
+                                  directions (asc, desc, exists, not_exists);
+                                  text/boolean fields only support
                                   exists/not_exists.
                               direction:
                                 type: string
@@ -5363,7 +5299,7 @@ paths:
                                   timestamps). 'asc' = lower values rank higher.
                                   'exists' = boost chunks that have the field.
                                   'not_exists' = boost chunks that lack the
-                                  field. Optional ��� defaults to 'asc' for
+                                  field. Optional — defaults to 'asc' for
                                   numeric/datetime fields, 'exists' for
                                   text/boolean fields.
                             required:
@@ -5819,8 +5755,9 @@ paths:
                                   type: string
                                   description: Metadata field name to boost by. Use 'timestamp' for document
                                     freshness, or any custom_metadata field.
-                                    Numeric and datetime fields support asc/desc
-                                    directions; text/boolean fields support
+                                    Numeric and datetime fields support all four
+                                    directions (asc, desc, exists, not_exists);
+                                    text/boolean fields only support
                                     exists/not_exists.
                                 direction:
                                   type: string
@@ -5833,17 +5770,17 @@ paths:
                                     timestamps). 'asc' = lower values rank
                                     higher. 'exists' = boost chunks that have
                                     the field. 'not_exists' = boost chunks that
-                                    lack the field. Optional ��� defaults to
-                                    'asc' for numeric/datetime fields, 'exists'
-                                    for text/boolean fields.
+                                    lack the field. Optional — defaults to 'asc'
+                                    for numeric/datetime fields, 'exists' for
+                                    text/boolean fields.
                               required:
                                 - field
                             description: Metadata fields to boost search results by. Each entry specifies a
                               metadata field and an optional direction.
-                              Direction defaults to 'asc' for numeric fields and
-                              'exists' for text/boolean fields. Fields must
-                              match 'timestamp' or a defined custom_metadata
-                              field.
+                              Direction defaults to 'asc' for numeric/datetime
+                              fields and 'exists' for text/boolean fields.
+                              Fields must match 'timestamp' or a defined
+                              custom_metadata field.
                           keyword_match_mode:
                             type: string
                             enum:
@@ -6039,6 +5976,16 @@ paths:
                   - created_at
                   - modified_at
       x-distilled-pagination-class: InstanceListResponsesV4PagePaginationArray
+      x-distilled-errors:
+        NamespaceNotFound:
+          - code: 7063
+          - status: 404
+            message:
+              includes: namespace_not_found
+        InvalidRoute:
+          - code: 7003
+        Forbidden:
+          - status: 403
     post:
       operationId: createNamespaceInstance
       description: "Create a new instance.  @example ```ts const instance = await
@@ -6121,17 +6068,6 @@ paths:
                   description: Body param
                 cache_ttl:
                   type: number
-                  enum:
-                    - 600
-                    - 1800
-                    - 3600
-                    - 7200
-                    - 21600
-                    - 43200
-                    - 86400
-                    - 172800
-                    - 259200
-                    - 518400
                   description: "Body param: Cache entry TTL in seconds. Allowed values: 600
                     (10min), 1800 (30min), 3600 (1h), 7200 (2h), 21600 (6h),
                     43200 (12h), 86400 (24h), 172800 (48h), 259200 (72h), 518400
@@ -6293,8 +6229,9 @@ paths:
                                 type: string
                                 description: Metadata field name to boost by. Use 'timestamp' for document
                                   freshness, or any custom_metadata field.
-                                  Numeric and datetime fields support asc/desc
-                                  directions; text/boolean fields support
+                                  Numeric and datetime fields support all four
+                                  directions (asc, desc, exists, not_exists);
+                                  text/boolean fields only support
                                   exists/not_exists.
                               direction:
                                 type: string
@@ -6307,15 +6244,15 @@ paths:
                                   timestamps). 'asc' = lower values rank higher.
                                   'exists' = boost chunks that have the field.
                                   'not_exists' = boost chunks that lack the
-                                  field. Optional ��� defaults to 'asc' for
+                                  field. Optional — defaults to 'asc' for
                                   numeric/datetime fields, 'exists' for
                                   text/boolean fields.
                             required:
                               - field
                           description: Metadata fields to boost search results by. Each entry specifies a
                             metadata field and an optional direction. Direction
-                            defaults to 'asc' for numeric fields and 'exists'
-                            for text/boolean fields. Fields must match
+                            defaults to 'asc' for numeric/datetime fields and
+                            'exists' for text/boolean fields. Fields must match
                             'timestamp' or a defined custom_metadata field.
                         keyword_match_mode:
                           type: string
@@ -6491,15 +6428,6 @@ paths:
                   description: Body param
                 sync_interval:
                   type: number
-                  enum:
-                    - 900
-                    - 1800
-                    - 3600
-                    - 7200
-                    - 14400
-                    - 21600
-                    - 43200
-                    - 86400
                   description: "Body param: Interval between automatic syncs, in seconds. Allowed
                     values: 900 (15min), 1800 (30min), 3600 (1h), 7200 (2h),
                     14400 (4h), 21600 (6h), 43200 (12h), 86400 (24h)."
@@ -6578,19 +6506,9 @@ paths:
                       - close_enough
                       - flexible_friend
                       - anything_goes
+                    nullable: true
                   cache_ttl:
                     type: number
-                    enum:
-                      - 600
-                      - 1800
-                      - 3600
-                      - 7200
-                      - 21600
-                      - 43200
-                      - 86400
-                      - 172800
-                      - 259200
-                      - 518400
                     description: "Cache entry TTL in seconds. Allowed values: 600 (10min), 1800
                       (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h),
                       86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d)."
@@ -6681,12 +6599,14 @@ paths:
                   max_num_results:
                     type: number
                   metadata:
-                    type: object
-                    properties:
-                      created_from_aisearch_wizard:
-                        type: boolean
-                      worker_domain:
-                        type: string
+                    oneOf:
+                      - type: object
+                        properties:
+                          created_from_aisearch_wizard:
+                            type: boolean
+                          worker_domain:
+                            type: string
+                    nullable: true
                   modified_by:
                     oneOf:
                       - type: string
@@ -6702,46 +6622,48 @@ paths:
                       - type: string
                     nullable: true
                   public_endpoint_params:
-                    type: object
-                    properties:
-                      authorized_hosts:
-                        type: array
-                        items:
-                          type: string
-                      chat_completions_endpoint:
-                        type: object
+                    oneOf:
+                      - type: object
                         properties:
-                          disabled:
+                          authorized_hosts:
+                            type: array
+                            items:
+                              type: string
+                          chat_completions_endpoint:
+                            type: object
+                            properties:
+                              disabled:
+                                type: boolean
+                                description: Disable chat completions endpoint for this public endpoint
+                          enabled:
                             type: boolean
-                            description: Disable chat completions endpoint for this public endpoint
-                      enabled:
-                        type: boolean
-                      mcp:
-                        type: object
-                        properties:
-                          description:
-                            type: string
-                          disabled:
-                            type: boolean
-                            description: Disable MCP endpoint for this public endpoint
-                      rate_limit:
-                        type: object
-                        properties:
-                          period_ms:
-                            type: number
-                          requests:
-                            type: number
-                          technique:
-                            type: string
-                            enum:
-                              - fixed
-                              - sliding
-                      search_endpoint:
-                        type: object
-                        properties:
-                          disabled:
-                            type: boolean
-                            description: Disable search endpoint for this public endpoint
+                          mcp:
+                            type: object
+                            properties:
+                              description:
+                                type: string
+                              disabled:
+                                type: boolean
+                                description: Disable MCP endpoint for this public endpoint
+                          rate_limit:
+                            type: object
+                            properties:
+                              period_ms:
+                                type: number
+                              requests:
+                                type: number
+                              technique:
+                                type: string
+                                enum:
+                                  - fixed
+                                  - sliding
+                          search_endpoint:
+                            type: object
+                            properties:
+                              disabled:
+                                type: boolean
+                                description: Disable search endpoint for this public endpoint
+                    nullable: true
                   reranking:
                     type: boolean
                   reranking_model:
@@ -6763,8 +6685,9 @@ paths:
                                   type: string
                                   description: Metadata field name to boost by. Use 'timestamp' for document
                                     freshness, or any custom_metadata field.
-                                    Numeric and datetime fields support asc/desc
-                                    directions; text/boolean fields support
+                                    Numeric and datetime fields support all four
+                                    directions (asc, desc, exists, not_exists);
+                                    text/boolean fields only support
                                     exists/not_exists.
                                 direction:
                                   type: string
@@ -6777,17 +6700,17 @@ paths:
                                     timestamps). 'asc' = lower values rank
                                     higher. 'exists' = boost chunks that have
                                     the field. 'not_exists' = boost chunks that
-                                    lack the field. Optional ��� defaults to
-                                    'asc' for numeric/datetime fields, 'exists'
-                                    for text/boolean fields.
+                                    lack the field. Optional — defaults to 'asc'
+                                    for numeric/datetime fields, 'exists' for
+                                    text/boolean fields.
                               required:
                                 - field
                             description: Metadata fields to boost search results by. Each entry specifies a
                               metadata field and an optional direction.
-                              Direction defaults to 'asc' for numeric fields and
-                              'exists' for text/boolean fields. Fields must
-                              match 'timestamp' or a defined custom_metadata
-                              field.
+                              Direction defaults to 'asc' for numeric/datetime
+                              fields and 'exists' for text/boolean fields.
+                              Fields must match 'timestamp' or a defined
+                              custom_metadata field.
                           keyword_match_mode:
                             type: string
                             enum:
@@ -6958,15 +6881,6 @@ paths:
                     type: string
                   sync_interval:
                     type: number
-                    enum:
-                      - 900
-                      - 1800
-                      - 3600
-                      - 7200
-                      - 14400
-                      - 21600
-                      - 43200
-                      - 86400
                     description: "Interval between automatic syncs, in seconds. Allowed values: 900
                       (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h),
                       21600 (6h), 43200 (12h), 86400 (24h)."
@@ -6980,9 +6894,41 @@ paths:
                     nullable: true
                 required:
                   - id
-                  - created_at
-                  - modified_at
       x-distilled-response-path: result
+      x-distilled-errors:
+        ValidationError:
+          - code: 7001
+        NamespaceNotFound:
+          - code: 7063
+          - status: 404
+            message:
+              includes: namespace_not_found
+        AiSearchInstanceNotFound:
+          - code: 7002
+          - status: 404
+            message:
+              includes: ai_search_not_found
+        InvalidRoute:
+          - code: 7003
+        InstanceAlreadyExists:
+          - status: 400
+            message:
+              includes: already_exist
+        InvalidTokenCredentials:
+          - code: 7012
+          - status: 400
+            message:
+              includes: invalid_token
+        WebCrawlerDomainNotOwned:
+          - status: 400
+            message:
+              includes: domain_not_owned_by_user
+        MissingSitemap:
+          - status: 400
+            message:
+              includes: missing_sitemap
+        Forbidden:
+          - status: 403
   /accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}:
     put:
       operationId: updateNamespaceInstance
@@ -7067,17 +7013,6 @@ paths:
                   description: Body param
                 cache_ttl:
                   type: number
-                  enum:
-                    - 600
-                    - 1800
-                    - 3600
-                    - 7200
-                    - 21600
-                    - 43200
-                    - 86400
-                    - 172800
-                    - 259200
-                    - 518400
                   description: "Body param: Cache entry TTL in seconds. Allowed values: 600
                     (10min), 1800 (30min), 3600 (1h), 7200 (2h), 21600 (6h),
                     43200 (12h), 86400 (24h), 172800 (48h), 259200 (72h), 518400
@@ -7239,8 +7174,9 @@ paths:
                                 type: string
                                 description: Metadata field name to boost by. Use 'timestamp' for document
                                   freshness, or any custom_metadata field.
-                                  Numeric and datetime fields support asc/desc
-                                  directions; text/boolean fields support
+                                  Numeric and datetime fields support all four
+                                  directions (asc, desc, exists, not_exists);
+                                  text/boolean fields only support
                                   exists/not_exists.
                               direction:
                                 type: string
@@ -7253,15 +7189,15 @@ paths:
                                   timestamps). 'asc' = lower values rank higher.
                                   'exists' = boost chunks that have the field.
                                   'not_exists' = boost chunks that lack the
-                                  field. Optional ��� defaults to 'asc' for
+                                  field. Optional — defaults to 'asc' for
                                   numeric/datetime fields, 'exists' for
                                   text/boolean fields.
                             required:
                               - field
                           description: Metadata fields to boost search results by. Each entry specifies a
                             metadata field and an optional direction. Direction
-                            defaults to 'asc' for numeric fields and 'exists'
-                            for text/boolean fields. Fields must match
+                            defaults to 'asc' for numeric/datetime fields and
+                            'exists' for text/boolean fields. Fields must match
                             'timestamp' or a defined custom_metadata field.
                         keyword_match_mode:
                           type: string
@@ -7470,15 +7406,6 @@ paths:
                   description: Body param
                 sync_interval:
                   type: number
-                  enum:
-                    - 900
-                    - 1800
-                    - 3600
-                    - 7200
-                    - 14400
-                    - 21600
-                    - 43200
-                    - 86400
                   description: "Body param: Interval between automatic syncs, in seconds. Allowed
                     values: 900 (15min), 1800 (30min), 3600 (1h), 7200 (2h),
                     14400 (4h), 21600 (6h), 43200 (12h), 86400 (24h)."
@@ -7563,19 +7490,9 @@ paths:
                       - close_enough
                       - flexible_friend
                       - anything_goes
+                    nullable: true
                   cache_ttl:
                     type: number
-                    enum:
-                      - 600
-                      - 1800
-                      - 3600
-                      - 7200
-                      - 21600
-                      - 43200
-                      - 86400
-                      - 172800
-                      - 259200
-                      - 518400
                     description: "Cache entry TTL in seconds. Allowed values: 600 (10min), 1800
                       (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h),
                       86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d)."
@@ -7666,12 +7583,14 @@ paths:
                   max_num_results:
                     type: number
                   metadata:
-                    type: object
-                    properties:
-                      created_from_aisearch_wizard:
-                        type: boolean
-                      worker_domain:
-                        type: string
+                    oneOf:
+                      - type: object
+                        properties:
+                          created_from_aisearch_wizard:
+                            type: boolean
+                          worker_domain:
+                            type: string
+                    nullable: true
                   modified_by:
                     oneOf:
                       - type: string
@@ -7687,46 +7606,48 @@ paths:
                       - type: string
                     nullable: true
                   public_endpoint_params:
-                    type: object
-                    properties:
-                      authorized_hosts:
-                        type: array
-                        items:
-                          type: string
-                      chat_completions_endpoint:
-                        type: object
+                    oneOf:
+                      - type: object
                         properties:
-                          disabled:
+                          authorized_hosts:
+                            type: array
+                            items:
+                              type: string
+                          chat_completions_endpoint:
+                            type: object
+                            properties:
+                              disabled:
+                                type: boolean
+                                description: Disable chat completions endpoint for this public endpoint
+                          enabled:
                             type: boolean
-                            description: Disable chat completions endpoint for this public endpoint
-                      enabled:
-                        type: boolean
-                      mcp:
-                        type: object
-                        properties:
-                          description:
-                            type: string
-                          disabled:
-                            type: boolean
-                            description: Disable MCP endpoint for this public endpoint
-                      rate_limit:
-                        type: object
-                        properties:
-                          period_ms:
-                            type: number
-                          requests:
-                            type: number
-                          technique:
-                            type: string
-                            enum:
-                              - fixed
-                              - sliding
-                      search_endpoint:
-                        type: object
-                        properties:
-                          disabled:
-                            type: boolean
-                            description: Disable search endpoint for this public endpoint
+                          mcp:
+                            type: object
+                            properties:
+                              description:
+                                type: string
+                              disabled:
+                                type: boolean
+                                description: Disable MCP endpoint for this public endpoint
+                          rate_limit:
+                            type: object
+                            properties:
+                              period_ms:
+                                type: number
+                              requests:
+                                type: number
+                              technique:
+                                type: string
+                                enum:
+                                  - fixed
+                                  - sliding
+                          search_endpoint:
+                            type: object
+                            properties:
+                              disabled:
+                                type: boolean
+                                description: Disable search endpoint for this public endpoint
+                    nullable: true
                   reranking:
                     type: boolean
                   reranking_model:
@@ -7748,8 +7669,9 @@ paths:
                                   type: string
                                   description: Metadata field name to boost by. Use 'timestamp' for document
                                     freshness, or any custom_metadata field.
-                                    Numeric and datetime fields support asc/desc
-                                    directions; text/boolean fields support
+                                    Numeric and datetime fields support all four
+                                    directions (asc, desc, exists, not_exists);
+                                    text/boolean fields only support
                                     exists/not_exists.
                                 direction:
                                   type: string
@@ -7762,17 +7684,17 @@ paths:
                                     timestamps). 'asc' = lower values rank
                                     higher. 'exists' = boost chunks that have
                                     the field. 'not_exists' = boost chunks that
-                                    lack the field. Optional ��� defaults to
-                                    'asc' for numeric/datetime fields, 'exists'
-                                    for text/boolean fields.
+                                    lack the field. Optional — defaults to 'asc'
+                                    for numeric/datetime fields, 'exists' for
+                                    text/boolean fields.
                               required:
                                 - field
                             description: Metadata fields to boost search results by. Each entry specifies a
                               metadata field and an optional direction.
-                              Direction defaults to 'asc' for numeric fields and
-                              'exists' for text/boolean fields. Fields must
-                              match 'timestamp' or a defined custom_metadata
-                              field.
+                              Direction defaults to 'asc' for numeric/datetime
+                              fields and 'exists' for text/boolean fields.
+                              Fields must match 'timestamp' or a defined
+                              custom_metadata field.
                           keyword_match_mode:
                             type: string
                             enum:
@@ -7943,15 +7865,6 @@ paths:
                     type: string
                   sync_interval:
                     type: number
-                    enum:
-                      - 900
-                      - 1800
-                      - 3600
-                      - 7200
-                      - 14400
-                      - 21600
-                      - 43200
-                      - 86400
                     description: "Interval between automatic syncs, in seconds. Allowed values: 900
                       (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h),
                       21600 (6h), 43200 (12h), 86400 (24h)."
@@ -7965,9 +7878,33 @@ paths:
                     nullable: true
                 required:
                   - id
-                  - created_at
-                  - modified_at
       x-distilled-response-path: result
+      x-distilled-errors:
+        ValidationError:
+          - code: 7001
+        NamespaceNotFound:
+          - code: 7063
+          - status: 404
+            message:
+              includes: namespace_not_found
+        AiSearchInstanceNotFound:
+          - code: 7002
+          - status: 404
+            message:
+              includes: ai_search_not_found
+        InvalidRoute:
+          - code: 7003
+        InvalidTokenCredentials:
+          - code: 7012
+          - status: 400
+            message:
+              includes: invalid_token
+        WebCrawlerDomainNotOwned:
+          - status: 400
+            message:
+              includes: domain_not_owned_by_user
+        Forbidden:
+          - status: 403
     delete:
       operationId: deleteNamespaceInstance
       description: "Delete instance.  @example ```ts const instance = await
@@ -8053,19 +7990,9 @@ paths:
                       - close_enough
                       - flexible_friend
                       - anything_goes
+                    nullable: true
                   cache_ttl:
                     type: number
-                    enum:
-                      - 600
-                      - 1800
-                      - 3600
-                      - 7200
-                      - 21600
-                      - 43200
-                      - 86400
-                      - 172800
-                      - 259200
-                      - 518400
                     description: "Cache entry TTL in seconds. Allowed values: 600 (10min), 1800
                       (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h),
                       86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d)."
@@ -8156,12 +8083,14 @@ paths:
                   max_num_results:
                     type: number
                   metadata:
-                    type: object
-                    properties:
-                      created_from_aisearch_wizard:
-                        type: boolean
-                      worker_domain:
-                        type: string
+                    oneOf:
+                      - type: object
+                        properties:
+                          created_from_aisearch_wizard:
+                            type: boolean
+                          worker_domain:
+                            type: string
+                    nullable: true
                   modified_by:
                     oneOf:
                       - type: string
@@ -8177,46 +8106,48 @@ paths:
                       - type: string
                     nullable: true
                   public_endpoint_params:
-                    type: object
-                    properties:
-                      authorized_hosts:
-                        type: array
-                        items:
-                          type: string
-                      chat_completions_endpoint:
-                        type: object
+                    oneOf:
+                      - type: object
                         properties:
-                          disabled:
+                          authorized_hosts:
+                            type: array
+                            items:
+                              type: string
+                          chat_completions_endpoint:
+                            type: object
+                            properties:
+                              disabled:
+                                type: boolean
+                                description: Disable chat completions endpoint for this public endpoint
+                          enabled:
                             type: boolean
-                            description: Disable chat completions endpoint for this public endpoint
-                      enabled:
-                        type: boolean
-                      mcp:
-                        type: object
-                        properties:
-                          description:
-                            type: string
-                          disabled:
-                            type: boolean
-                            description: Disable MCP endpoint for this public endpoint
-                      rate_limit:
-                        type: object
-                        properties:
-                          period_ms:
-                            type: number
-                          requests:
-                            type: number
-                          technique:
-                            type: string
-                            enum:
-                              - fixed
-                              - sliding
-                      search_endpoint:
-                        type: object
-                        properties:
-                          disabled:
-                            type: boolean
-                            description: Disable search endpoint for this public endpoint
+                          mcp:
+                            type: object
+                            properties:
+                              description:
+                                type: string
+                              disabled:
+                                type: boolean
+                                description: Disable MCP endpoint for this public endpoint
+                          rate_limit:
+                            type: object
+                            properties:
+                              period_ms:
+                                type: number
+                              requests:
+                                type: number
+                              technique:
+                                type: string
+                                enum:
+                                  - fixed
+                                  - sliding
+                          search_endpoint:
+                            type: object
+                            properties:
+                              disabled:
+                                type: boolean
+                                description: Disable search endpoint for this public endpoint
+                    nullable: true
                   reranking:
                     type: boolean
                   reranking_model:
@@ -8238,8 +8169,9 @@ paths:
                                   type: string
                                   description: Metadata field name to boost by. Use 'timestamp' for document
                                     freshness, or any custom_metadata field.
-                                    Numeric and datetime fields support asc/desc
-                                    directions; text/boolean fields support
+                                    Numeric and datetime fields support all four
+                                    directions (asc, desc, exists, not_exists);
+                                    text/boolean fields only support
                                     exists/not_exists.
                                 direction:
                                   type: string
@@ -8252,17 +8184,17 @@ paths:
                                     timestamps). 'asc' = lower values rank
                                     higher. 'exists' = boost chunks that have
                                     the field. 'not_exists' = boost chunks that
-                                    lack the field. Optional ��� defaults to
-                                    'asc' for numeric/datetime fields, 'exists'
-                                    for text/boolean fields.
+                                    lack the field. Optional — defaults to 'asc'
+                                    for numeric/datetime fields, 'exists' for
+                                    text/boolean fields.
                               required:
                                 - field
                             description: Metadata fields to boost search results by. Each entry specifies a
                               metadata field and an optional direction.
-                              Direction defaults to 'asc' for numeric fields and
-                              'exists' for text/boolean fields. Fields must
-                              match 'timestamp' or a defined custom_metadata
-                              field.
+                              Direction defaults to 'asc' for numeric/datetime
+                              fields and 'exists' for text/boolean fields.
+                              Fields must match 'timestamp' or a defined
+                              custom_metadata field.
                           keyword_match_mode:
                             type: string
                             enum:
@@ -8433,15 +8365,6 @@ paths:
                     type: string
                   sync_interval:
                     type: number
-                    enum:
-                      - 900
-                      - 1800
-                      - 3600
-                      - 7200
-                      - 14400
-                      - 21600
-                      - 43200
-                      - 86400
                     description: "Interval between automatic syncs, in seconds. Allowed values: 900
                       (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h),
                       21600 (6h), 43200 (12h), 86400 (24h)."
@@ -8455,9 +8378,24 @@ paths:
                     nullable: true
                 required:
                   - id
-                  - created_at
-                  - modified_at
       x-distilled-response-path: result
+      x-distilled-errors:
+        ValidationError:
+          - code: 7001
+        NamespaceNotFound:
+          - code: 7063
+          - status: 404
+            message:
+              includes: namespace_not_found
+        AiSearchInstanceNotFound:
+          - code: 7002
+          - status: 404
+            message:
+              includes: ai_search_not_found
+        InvalidRoute:
+          - code: 7003
+        Forbidden:
+          - status: 403
     get:
       operationId: readNamespaceInstance
       description: "Read instance.  @example ```ts const response = await
@@ -8543,19 +8481,9 @@ paths:
                       - close_enough
                       - flexible_friend
                       - anything_goes
+                    nullable: true
                   cache_ttl:
                     type: number
-                    enum:
-                      - 600
-                      - 1800
-                      - 3600
-                      - 7200
-                      - 21600
-                      - 43200
-                      - 86400
-                      - 172800
-                      - 259200
-                      - 518400
                     description: "Cache entry TTL in seconds. Allowed values: 600 (10min), 1800
                       (30min), 3600 (1h), 7200 (2h), 21600 (6h), 43200 (12h),
                       86400 (24h), 172800 (48h), 259200 (72h), 518400 (6d)."
@@ -8646,12 +8574,14 @@ paths:
                   max_num_results:
                     type: number
                   metadata:
-                    type: object
-                    properties:
-                      created_from_aisearch_wizard:
-                        type: boolean
-                      worker_domain:
-                        type: string
+                    oneOf:
+                      - type: object
+                        properties:
+                          created_from_aisearch_wizard:
+                            type: boolean
+                          worker_domain:
+                            type: string
+                    nullable: true
                   modified_by:
                     oneOf:
                       - type: string
@@ -8667,46 +8597,48 @@ paths:
                       - type: string
                     nullable: true
                   public_endpoint_params:
-                    type: object
-                    properties:
-                      authorized_hosts:
-                        type: array
-                        items:
-                          type: string
-                      chat_completions_endpoint:
-                        type: object
+                    oneOf:
+                      - type: object
                         properties:
-                          disabled:
+                          authorized_hosts:
+                            type: array
+                            items:
+                              type: string
+                          chat_completions_endpoint:
+                            type: object
+                            properties:
+                              disabled:
+                                type: boolean
+                                description: Disable chat completions endpoint for this public endpoint
+                          enabled:
                             type: boolean
-                            description: Disable chat completions endpoint for this public endpoint
-                      enabled:
-                        type: boolean
-                      mcp:
-                        type: object
-                        properties:
-                          description:
-                            type: string
-                          disabled:
-                            type: boolean
-                            description: Disable MCP endpoint for this public endpoint
-                      rate_limit:
-                        type: object
-                        properties:
-                          period_ms:
-                            type: number
-                          requests:
-                            type: number
-                          technique:
-                            type: string
-                            enum:
-                              - fixed
-                              - sliding
-                      search_endpoint:
-                        type: object
-                        properties:
-                          disabled:
-                            type: boolean
-                            description: Disable search endpoint for this public endpoint
+                          mcp:
+                            type: object
+                            properties:
+                              description:
+                                type: string
+                              disabled:
+                                type: boolean
+                                description: Disable MCP endpoint for this public endpoint
+                          rate_limit:
+                            type: object
+                            properties:
+                              period_ms:
+                                type: number
+                              requests:
+                                type: number
+                              technique:
+                                type: string
+                                enum:
+                                  - fixed
+                                  - sliding
+                          search_endpoint:
+                            type: object
+                            properties:
+                              disabled:
+                                type: boolean
+                                description: Disable search endpoint for this public endpoint
+                    nullable: true
                   reranking:
                     type: boolean
                   reranking_model:
@@ -8728,8 +8660,9 @@ paths:
                                   type: string
                                   description: Metadata field name to boost by. Use 'timestamp' for document
                                     freshness, or any custom_metadata field.
-                                    Numeric and datetime fields support asc/desc
-                                    directions; text/boolean fields support
+                                    Numeric and datetime fields support all four
+                                    directions (asc, desc, exists, not_exists);
+                                    text/boolean fields only support
                                     exists/not_exists.
                                 direction:
                                   type: string
@@ -8742,17 +8675,17 @@ paths:
                                     timestamps). 'asc' = lower values rank
                                     higher. 'exists' = boost chunks that have
                                     the field. 'not_exists' = boost chunks that
-                                    lack the field. Optional ��� defaults to
-                                    'asc' for numeric/datetime fields, 'exists'
-                                    for text/boolean fields.
+                                    lack the field. Optional — defaults to 'asc'
+                                    for numeric/datetime fields, 'exists' for
+                                    text/boolean fields.
                               required:
                                 - field
                             description: Metadata fields to boost search results by. Each entry specifies a
                               metadata field and an optional direction.
-                              Direction defaults to 'asc' for numeric fields and
-                              'exists' for text/boolean fields. Fields must
-                              match 'timestamp' or a defined custom_metadata
-                              field.
+                              Direction defaults to 'asc' for numeric/datetime
+                              fields and 'exists' for text/boolean fields.
+                              Fields must match 'timestamp' or a defined
+                              custom_metadata field.
                           keyword_match_mode:
                             type: string
                             enum:
@@ -8923,15 +8856,6 @@ paths:
                     type: string
                   sync_interval:
                     type: number
-                    enum:
-                      - 900
-                      - 1800
-                      - 3600
-                      - 7200
-                      - 14400
-                      - 21600
-                      - 43200
-                      - 86400
                     description: "Interval between automatic syncs, in seconds. Allowed values: 900
                       (15min), 1800 (30min), 3600 (1h), 7200 (2h), 14400 (4h),
                       21600 (6h), 43200 (12h), 86400 (24h)."
@@ -8945,9 +8869,24 @@ paths:
                     nullable: true
                 required:
                   - id
-                  - created_at
-                  - modified_at
       x-distilled-response-path: result
+      x-distilled-errors:
+        ValidationError:
+          - code: 7001
+        NamespaceNotFound:
+          - code: 7063
+          - status: 404
+            message:
+              includes: namespace_not_found
+        AiSearchInstanceNotFound:
+          - code: 7002
+          - status: 404
+            message:
+              includes: ai_search_not_found
+        InvalidRoute:
+          - code: 7003
+        Forbidden:
+          - status: 403
   /accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/search:
     post:
       operationId: searchNamespaceInstance
@@ -9059,8 +8998,9 @@ paths:
                                 type: string
                                 description: Metadata field name to boost by. Use 'timestamp' for document
                                   freshness, or any custom_metadata field.
-                                  Numeric and datetime fields support asc/desc
-                                  directions; text/boolean fields support
+                                  Numeric and datetime fields support all four
+                                  directions (asc, desc, exists, not_exists);
+                                  text/boolean fields only support
                                   exists/not_exists.
                               direction:
                                 type: string
@@ -9073,7 +9013,7 @@ paths:
                                   timestamps). 'asc' = lower values rank higher.
                                   'exists' = boost chunks that have the field.
                                   'not_exists' = boost chunks that lack the
-                                  field. Optional ��� defaults to 'asc' for
+                                  field. Optional — defaults to 'asc' for
                                   numeric/datetime fields, 'exists' for
                                   text/boolean fields.
                             required:
@@ -10513,6 +10453,8 @@ paths:
       x-distilled-errors:
         InvalidRoute:
           - code: 7003
+        Forbidden:
+          - status: 403
     post:
       operationId: createToken
       description: "Create a new token.  @example ```ts const token = await
@@ -10593,6 +10535,10 @@ paths:
           - code: 7002
         InvalidRoute:
           - code: 7003
+        InvalidTokenCredentials:
+          - code: 7012
+        Forbidden:
+          - status: 403
   /accounts/{account_id}/ai-search/tokens/{id}:
     put:
       operationId: updateToken
@@ -10679,6 +10625,12 @@ paths:
           - code: 7002
         InvalidRoute:
           - code: 7003
+        TokenNotFound:
+          - code: 7075
+        Forbidden:
+          - status: 403
+        InvalidTokenCredentials:
+          - code: 7012
     delete:
       operationId: deleteToken
       description: "Delete token.  @example ```ts const token = await
@@ -10709,6 +10661,14 @@ paths:
           - code: 7002
         InvalidRoute:
           - code: 7003
+        TokenNotFound:
+          - code: 7075
+        TokenInUseByInstances:
+          - status: 409
+            message:
+              includes: token_in_use_by_instances
+        Forbidden:
+          - status: 403
     get:
       operationId: readToken
       description: "Read token.  @example ```ts const response = await
@@ -10763,3 +10723,7 @@ paths:
           - code: 7002
         InvalidRoute:
           - code: 7003
+        TokenNotFound:
+          - code: 7075
+        Forbidden:
+          - status: 403

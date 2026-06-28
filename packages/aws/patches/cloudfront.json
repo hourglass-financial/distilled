@@ -2,7 +2,12 @@
   "operations": {},
   "enums": {
     "HttpVersion": {
-      "add": ["HTTP1.1", "HTTP2", "HTTP3", "HTTP2AND3"]
+      "add": [
+        "HTTP1.1",
+        "HTTP2",
+        "HTTP3",
+        "HTTP2AND3"
+      ]
     }
   },
   "structures": {
@@ -80,6 +85,15 @@
       "members": {
         "Marker": {
           "optional": true
+        },
+        "IsTruncated": {
+          "optional": true
+        },
+        "MaxItems": {
+          "optional": true
+        },
+        "Quantity": {
+          "optional": true
         }
       }
     },
@@ -93,6 +107,13 @@
     "S3OriginConfig": {
       "members": {
         "OriginAccessIdentity": {
+          "optional": true
+        }
+      }
+    },
+    "FunctionConfig": {
+      "members": {
+        "Comment": {
           "optional": true
         }
       }
