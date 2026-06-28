@@ -1,6 +1,14 @@
 #!/usr/bin/env bun
 
-import { cp, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import {
+  cp,
+  mkdir,
+  readdir,
+  readFile,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import path from "node:path";
 
 const GITHUB_REGISTRY = "https://npm.pkg.github.com";
@@ -61,6 +69,49 @@ const assertDirectory = async (dir: string, label: string): Promise<void> => {
       throw new Error(`${label} is missing. Build the package first: ${dir}`);
     }
     throw error;
+  }
+};
+
+// tsconfig `paths` aliases (e.g. `~/*`) resolve only in-repo. If they leak into
+// emitted declarations they ship as unresolvable imports — TS silently degrades
+// the referenced types to `any` under skipLibCheck, or errors under
+// skipLibCheck:false. Fail the publish before that artifact escapes.
+const PATH_ALIAS_IMPORT = /(?:from\s*|import\s*\(\s*)["']~\//;
+
+const collectFiles = async (
+  dir: string,
+  predicate: (file: string) => boolean,
+): Promise<string[]> => {
+  const entries = await readdir(dir, { recursive: true, withFileTypes: true });
+  return entries
+    .filter((entry) => entry.isFile() && predicate(entry.name))
+    .map((entry) => path.join(entry.parentPath, entry.name));
+};
+
+const assertNoPathAliasImports = async (
+  libDir: string,
+  packageName: string,
+): Promise<void> => {
+  const declarationFiles = await collectFiles(
+    libDir,
+    (file) => file.endsWith(".d.ts") || file.endsWith(".d.ts.map"),
+  );
+
+  const offenders: string[] = [];
+  for (const file of declarationFiles) {
+    const contents = await readFile(file, "utf8");
+    if (PATH_ALIAS_IMPORT.test(contents)) {
+      offenders.push(path.relative(libDir, file));
+    }
+  }
+
+  if (offenders.length > 0) {
+    throw new Error(
+      `${packageName}: ${offenders.length} declaration file(s) reference an unresolvable ` +
+        `"~/" path alias and would ship broken types. Remove the "paths" entry from the ` +
+        `package tsconfig (so tsgo emits relative imports) and rebuild.\n` +
+        offenders.map((file) => `  - lib/${file}`).join("\n"),
+    );
   }
 };
 
@@ -301,7 +352,9 @@ const prepareGithubEreborPackages = async (
     );
 
     await mkdir(outputDir, { recursive: true });
-    await cp(libDir, path.join(outputDir, "lib"), { recursive: true });
+    const stagedLibDir = path.join(outputDir, "lib");
+    await cp(libDir, stagedLibDir, { recursive: true });
+    await assertNoPathAliasImports(stagedLibDir, source.privateName);
     await writeFile(path.join(outputDir, "README.md"), privateReadme(source));
     await writeJson(path.join(outputDir, "package.json"), manifest);
 
