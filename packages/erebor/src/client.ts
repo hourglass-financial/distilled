@@ -1,12 +1,28 @@
 /**
  * Erebor API Client.
  *
- * Wraps the shared REST client from sdk-core with Erebor-specific
- * error matching and credential handling.
+ * This is the standard sdk-core client scaffold — the same `makeAPI` + `matchError`
+ * shape every package in this repo uses (cf. `packages/neon/src/client.ts`) —
+ * customized for Erebor's API in the places the `create-sdk` pipeline is designed
+ * to customize per-SDK. It is a per-package file, not shared code, so it carries no
+ * `HOURGLASS PATCH` markers; the notes below document where it diverges from the
+ * generated scaffold default so the custom surface is obvious to future readers.
  *
- * Erebor authenticates with an API key passed directly as the value of the
- * `Authorization` header (no `Bearer` prefix). Errors are JSON objects of the
- * form `{ error: <CODE>, message: <human>, field?, docs_url?, error_details? }`.
+ * Erebor-specific deviations from the scaffold default:
+ *   1. Auth — the API key is sent verbatim as the `Authorization` header value with
+ *      NO `Bearer` prefix (the scaffold default is `Bearer <key>`). See `getAuthHeaders`.
+ *   2. Error body shape — `{ error, message, field?, docs_url?, error_details? }`
+ *      (the scaffold's `ApiErrorResponse` is just `{ code?, message }`). `error` is the
+ *      machine code (e.g. `UNAUTHORIZED`, `INVALID_REQUEST`); `message` is human text.
+ *   3. `matchError` adds two body-aware special cases on top of the scaffold's plain
+ *      status -> `HTTP_STATUS_MAP` mapping: 422 `VALIDATION_ERROR` -> `EreborValidationError`
+ *      (preserving `error_details`), and 429 feature-gate messages ->
+ *      `EreborFeatureNotEnabled` (see the `matchError` doc comment).
+ *   4. `retryAfter` is attached only for genuinely retryable statuses
+ *      (`RETRYABLE_HTTP_STATUSES`); the scaffold attaches it unconditionally.
+ *
+ * Everything else (the `makeAPI` wiring, the decode-then-map control flow, and the
+ * `Unknown*` fallback) is unmodified scaffold.
  */
 import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
