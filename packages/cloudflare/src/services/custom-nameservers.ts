@@ -13,6 +13,42 @@ import type { Credentials } from "../credentials.ts";
 import { type DefaultErrors } from "../errors.ts";
 
 // =============================================================================
+// Errors
+// =============================================================================
+
+export class CustomNameserverAlreadyExists extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<CustomNameserverAlreadyExists>()(
+    "CustomNameserverAlreadyExists",
+    { code: Schema.Number, message: Schema.String },
+  ),
+  [{ message: { includes: "already exist" } }],
+) {}
+
+export class CustomNameserverNotFound extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<CustomNameserverNotFound>()(
+    "CustomNameserverNotFound",
+    { code: Schema.Number, message: Schema.String },
+  ),
+  [{ status: 404 }],
+) {}
+
+export class CustomNameserversNotEnabled extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<CustomNameserversNotEnabled>()(
+    "CustomNameserversNotEnabled",
+    { code: Schema.Number, message: Schema.String },
+  ),
+  [{ code: 1002, message: { includes: "not enabled" } }],
+) {}
+
+export class Forbidden extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<Forbidden>()("Forbidden", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ status: 403 }],
+) {}
+
+// =============================================================================
 // CustomNameserver
 // =============================================================================
 
@@ -22,10 +58,12 @@ export interface GetCustomNameserverRequest {
 }
 
 export const GetCustomNameserverRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  }).pipe(
-    T.Http({ method: "GET", path: "/accounts/{account_id}/custom_ns" }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({ method: "GET", path: "/accounts/{account_id}/custom_ns" }),
+    ),
   ) as unknown as Schema.Schema<GetCustomNameserverRequest>;
 
 export interface GetCustomNameserverResponse {
@@ -42,40 +80,47 @@ export interface GetCustomNameserverResponse {
 }
 
 export const GetCustomNameserverResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    result: Schema.Array(
-      Schema.Struct({
-        dnsRecords: Schema.Array(
-          Schema.Struct({
-            type: Schema.optional(
-              Schema.Union([
-                Schema.Union([Schema.Literals(["A", "AAAA"]), Schema.String]),
-                Schema.Null,
-              ]),
-            ),
-            value: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      result: Schema.Array(
+        Schema.Struct({
+          dnsRecords: Schema.Array(
+            Schema.Struct({
+              type: Schema.optional(
+                Schema.Union([
+                  Schema.Union([Schema.Literals(["A", "AAAA"]), Schema.String]),
+                  Schema.Null,
+                ]),
+              ),
+              value: Schema.optional(
+                Schema.Union([Schema.String, Schema.Null]),
+              ),
+            }),
+          ),
+          nsName: Schema.String,
+          status: Schema.Union([
+            Schema.Literals(["moved", "pending", "verified"]),
+            Schema.String,
+          ]),
+          zoneTag: Schema.String,
+          nsSet: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+        }).pipe(
+          Schema.encodeKeys({
+            dnsRecords: "dns_records",
+            nsName: "ns_name",
+            status: "status",
+            zoneTag: "zone_tag",
+            nsSet: "ns_set",
           }),
         ),
-        nsName: Schema.String,
-        status: Schema.Union([
-          Schema.Literals(["moved", "pending", "verified"]),
-          Schema.String,
-        ]),
-        zoneTag: Schema.String,
-        nsSet: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-      }).pipe(
-        Schema.encodeKeys({
-          dnsRecords: "dns_records",
-          nsName: "ns_name",
-          status: "status",
-          zoneTag: "zone_tag",
-          nsSet: "ns_set",
-        }),
       ),
-    ),
-  }) as unknown as Schema.Schema<GetCustomNameserverResponse>;
+    }),
+  ) as unknown as Schema.Schema<GetCustomNameserverResponse>;
 
-export type GetCustomNameserverError = DefaultErrors;
+export type GetCustomNameserverError =
+  | DefaultErrors
+  | CustomNameserversNotEnabled
+  | Forbidden;
 
 export const getCustomNameserver: API.PaginatedOperationMethod<
   GetCustomNameserverRequest,
@@ -85,7 +130,7 @@ export const getCustomNameserver: API.PaginatedOperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.makePaginated(() => ({
   input: GetCustomNameserverRequest,
   output: GetCustomNameserverResponse,
-  errors: [],
+  errors: [CustomNameserversNotEnabled, Forbidden],
   pagination: {
     mode: "single",
     items: "result",
@@ -102,13 +147,15 @@ export interface CreateCustomNameserverRequest {
 }
 
 export const CreateCustomNameserverRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    nsName: Schema.String,
-    nsSet: Schema.optional(Schema.Number),
-  }).pipe(
-    Schema.encodeKeys({ nsName: "ns_name", nsSet: "ns_set" }),
-    T.Http({ method: "POST", path: "/accounts/{account_id}/custom_ns" }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      nsName: Schema.String,
+      nsSet: Schema.optional(Schema.Number),
+    }).pipe(
+      Schema.encodeKeys({ nsName: "ns_name", nsSet: "ns_set" }),
+      T.Http({ method: "POST", path: "/accounts/{account_id}/custom_ns" }),
+    ),
   ) as unknown as Schema.Schema<CreateCustomNameserverRequest>;
 
 export interface CreateCustomNameserverResponse {
@@ -128,40 +175,44 @@ export interface CreateCustomNameserverResponse {
 }
 
 export const CreateCustomNameserverResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    dnsRecords: Schema.Array(
-      Schema.Struct({
-        type: Schema.optional(
-          Schema.Union([
-            Schema.Union([Schema.Literals(["A", "AAAA"]), Schema.String]),
-            Schema.Null,
-          ]),
-        ),
-        value: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      }),
-    ),
-    nsName: Schema.String,
-    status: Schema.Union([
-      Schema.Literals(["moved", "pending", "verified"]),
-      Schema.String,
-    ]),
-    zoneTag: Schema.String,
-    nsSet: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-  })
-    .pipe(
-      Schema.encodeKeys({
-        dnsRecords: "dns_records",
-        nsName: "ns_name",
-        status: "status",
-        zoneTag: "zone_tag",
-        nsSet: "ns_set",
-      }),
-    )
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<CreateCustomNameserverResponse>;
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      dnsRecords: Schema.Array(
+        Schema.Struct({
+          type: Schema.optional(
+            Schema.Union([
+              Schema.Union([Schema.Literals(["A", "AAAA"]), Schema.String]),
+              Schema.Null,
+            ]),
+          ),
+          value: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        }),
+      ),
+      nsName: Schema.String,
+      status: Schema.Union([
+        Schema.Literals(["moved", "pending", "verified"]),
+        Schema.String,
+      ]),
+      zoneTag: Schema.String,
+      nsSet: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          dnsRecords: "dns_records",
+          nsName: "ns_name",
+          status: "status",
+          zoneTag: "zone_tag",
+          nsSet: "ns_set",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<CreateCustomNameserverResponse>;
 
-export type CreateCustomNameserverError = DefaultErrors;
+export type CreateCustomNameserverError =
+  | DefaultErrors
+  | CustomNameserversNotEnabled
+  | CustomNameserverAlreadyExists
+  | Forbidden;
 
 export const createCustomNameserver: API.OperationMethod<
   CreateCustomNameserverRequest,
@@ -171,7 +222,11 @@ export const createCustomNameserver: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: CreateCustomNameserverRequest,
   output: CreateCustomNameserverResponse,
-  errors: [],
+  errors: [
+    CustomNameserversNotEnabled,
+    CustomNameserverAlreadyExists,
+    Forbidden,
+  ],
 }));
 
 export interface DeleteCustomNameserverRequest {
@@ -181,14 +236,16 @@ export interface DeleteCustomNameserverRequest {
 }
 
 export const DeleteCustomNameserverRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    customNSId: Schema.String.pipe(T.HttpPath("customNSId")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  }).pipe(
-    T.Http({
-      method: "DELETE",
-      path: "/accounts/{account_id}/custom_ns/{customNSId}",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      customNSId: Schema.String.pipe(T.HttpPath("customNSId")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "DELETE",
+        path: "/accounts/{account_id}/custom_ns/{customNSId}",
+      }),
+    ),
   ) as unknown as Schema.Schema<DeleteCustomNameserverRequest>;
 
 export interface DeleteCustomNameserverResponse {
@@ -196,11 +253,17 @@ export interface DeleteCustomNameserverResponse {
 }
 
 export const DeleteCustomNameserverResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    result: Schema.Array(Schema.String),
-  }) as unknown as Schema.Schema<DeleteCustomNameserverResponse>;
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      result: Schema.Array(Schema.String),
+    }),
+  ) as unknown as Schema.Schema<DeleteCustomNameserverResponse>;
 
-export type DeleteCustomNameserverError = DefaultErrors;
+export type DeleteCustomNameserverError =
+  | DefaultErrors
+  | CustomNameserversNotEnabled
+  | CustomNameserverNotFound
+  | Forbidden;
 
 export const deleteCustomNameserver: API.PaginatedOperationMethod<
   DeleteCustomNameserverRequest,
@@ -210,7 +273,7 @@ export const deleteCustomNameserver: API.PaginatedOperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.makePaginated(() => ({
   input: DeleteCustomNameserverRequest,
   output: DeleteCustomNameserverResponse,
-  errors: [],
+  errors: [CustomNameserversNotEnabled, CustomNameserverNotFound, Forbidden],
   pagination: {
     mode: "single",
     items: "result",

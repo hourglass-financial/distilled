@@ -1509,6 +1509,9 @@ paths:
                     type: string
                     description: The unique identifier for the signing key.
       x-distilled-pagination-class: KeyGetResponsesSinglePage
+      x-distilled-errors:
+        Forbidden:
+          - status: 403
     post:
       operationId: createKey
       description: "Creates an RSA private key in PEM and JWK formats. Key files are
@@ -1576,6 +1579,11 @@ paths:
               schema:
                 type: string
       x-distilled-response-path: result
+      x-distilled-errors:
+        SigningKeyNotFound:
+          - code: 10003
+        Forbidden:
+          - status: 403
   /accounts/{account_id}/stream/live_inputs/{liveInputIdentifier}:
     get:
       operationId: getLiveInput
@@ -1627,6 +1635,11 @@ paths:
                     type: string
                     description: A unique identifier for a live input.
       x-distilled-response-path: result
+      x-distilled-errors:
+        LiveInputNotFound:
+          - code: 10003
+        Forbidden:
+          - status: 403
     put:
       operationId: updateLiveInput
       description: "Updates a specified live input.  @example ```ts const liveInput =
@@ -1764,6 +1777,11 @@ paths:
       responses:
         "200":
           description: Success
+      x-distilled-errors:
+        LiveInputNotFound:
+          - code: 10003
+        Forbidden:
+          - status: 403
   /accounts/{account_id}/stream/live_inputs:
     get:
       operationId: listLiveInputs
@@ -1792,43 +1810,59 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  liveInputs:
-                    type: array
+                oneOf:
+                  - type: object
+                    properties:
+                      liveInputs:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            created:
+                              type: string
+                              description: The date and time the live input was created.
+                            deleteRecordingAfterDays:
+                              type: number
+                              description: Indicates the number of days after which the live inputs recordings
+                                will be deleted. When a stream completes and the
+                                recording is ready, the value is used to
+                                calculate a scheduled deletion date for that
+                                recording. Omit the field to indicate no change,
+                                or include with a `null` value to remove an
+                                existing scheduled deletion.
+                            enabled:
+                              type: boolean
+                              description: Indicates whether the live input is enabled and can accept streams.
+                            meta:
+                              description: A user modifiable key-value store used to reference other systems
+                                of record for managing live inputs.
+                            modified:
+                              type: string
+                              description: The date and time the live input was last modified.
+                            uid:
+                              type: string
+                              description: A unique identifier for a live input.
+                      range:
+                        type: number
+                        description: The total number of remaining live inputs based on cursor position.
+                      total:
+                        type: number
+                        description: The total number of live inputs that match the provided filters.
+                  - type: array
                     items:
                       type: object
                       properties:
-                        created:
-                          type: string
-                          description: The date and time the live input was created.
-                        deleteRecordingAfterDays:
-                          type: number
-                          description: Indicates the number of days after which the live inputs recordings
-                            will be deleted. When a stream completes and the
-                            recording is ready, the value is used to calculate a
-                            scheduled deletion date for that recording. Omit the
-                            field to indicate no change, or include with a
-                            `null` value to remove an existing scheduled
-                            deletion.
-                        enabled:
-                          type: boolean
-                          description: Indicates whether the live input is enabled and can accept streams.
-                        meta:
-                          description: A user modifiable key-value store used to reference other systems
-                            of record for managing live inputs.
-                        modified:
-                          type: string
-                          description: The date and time the live input was last modified.
                         uid:
                           type: string
-                          description: A unique identifier for a live input.
-                  range:
-                    type: number
-                    description: The total number of remaining live inputs based on cursor position.
-                  total:
-                    type: number
-                    description: The total number of live inputs that match the provided filters.
+                        created:
+                          type: string
+                        modified:
+                          type: string
+                        enabled:
+                          type: boolean
+                        deleteRecordingAfterDays:
+                          type: number
+                        meta: {}
       x-distilled-response-path: result
     post:
       operationId: createLiveInput
@@ -1987,6 +2021,11 @@ paths:
                     type: string
                     description: The URL an output uses to restream.
       x-distilled-pagination-class: OutputsSinglePage
+      x-distilled-errors:
+        LiveInputNotFound:
+          - code: 10003
+        Forbidden:
+          - status: 403
     post:
       operationId: createLiveInputOutput
       description: "Creates a new output that can be used to simulcast or restream
@@ -2061,6 +2100,11 @@ paths:
                     type: string
                     description: The URL an output uses to restream.
       x-distilled-response-path: result
+      x-distilled-errors:
+        LiveInputNotFound:
+          - code: 10003
+        Forbidden:
+          - status: 403
   /accounts/{account_id}/stream/live_inputs/{liveInputIdentifier}/outputs/{outputIdentifier}:
     put:
       operationId: updateLiveInputOutput
@@ -2129,6 +2173,11 @@ paths:
                     type: string
                     description: The URL an output uses to restream.
       x-distilled-response-path: result
+      x-distilled-errors:
+        OutputNotFound:
+          - code: 10003
+        Forbidden:
+          - status: 403
     delete:
       operationId: deleteLiveInputOutput
       description: "Deletes an output and removes it from the associated live
@@ -2155,6 +2204,11 @@ paths:
       responses:
         "200":
           description: Success
+      x-distilled-errors:
+        OutputNotFound:
+          - code: 10003
+        Forbidden:
+          - status: 403
   /accounts/{account_id}/stream/{identifier}:
     get:
       operationId: getStream
@@ -3384,6 +3438,11 @@ paths:
                     type: number
                     description: The width of the image in pixels.
       x-distilled-response-path: result
+      x-distilled-errors:
+        WatermarkNotFound:
+          - code: 10003
+        Forbidden:
+          - status: 403
     delete:
       operationId: deleteWatermark
       description: "Deletes a watermark profile.  @example ```ts const watermark =
@@ -3410,6 +3469,11 @@ paths:
               schema:
                 type: string
       x-distilled-response-path: result
+      x-distilled-errors:
+        WatermarkNotFound:
+          - code: 10003
+        Forbidden:
+          - status: 403
   /accounts/{account_id}/stream/watermarks:
     get:
       operationId: listWatermarks
@@ -3588,6 +3652,11 @@ paths:
                     type: number
                     description: The width of the image in pixels.
       x-distilled-response-path: result
+      x-distilled-errors:
+        WatermarkImageInvalid:
+          - code: 10004
+        Forbidden:
+          - status: 403
   /accounts/{account_id}/stream/webhook:
     get:
       operationId: getWebhook
@@ -3619,6 +3688,11 @@ paths:
                     type: string
                     description: The secret used to verify webhook signatures.
       x-distilled-response-path: result
+      x-distilled-errors:
+        WebhookNotFound:
+          - code: 10003
+        Forbidden:
+          - status: 403
     put:
       operationId: putWebhook
       description: "Creates a webhook notification.  @example ```ts const webhook =
@@ -3679,3 +3753,8 @@ paths:
               schema:
                 type: string
       x-distilled-response-path: result
+      x-distilled-errors:
+        WebhookNotFound:
+          - code: 10003
+        Forbidden:
+          - status: 403

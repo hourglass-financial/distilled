@@ -15,6 +15,21 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                account_id:
+                  type: string
+                  description: The Account ID to use for this endpoint. Mutually exclusive with
+                    the Zone ID.
+                zone_id:
+                  type: string
+                  description: The Zone ID to use for this endpoint. Mutually exclusive with the
+                    Account ID.
       responses:
         "200":
           description: Success
@@ -1343,13 +1358,23 @@ paths:
                                       type: boolean
                                       description: Whether to keep the query string of the original request.
                                     status_code:
-                                      type: number
-                                      enum:
-                                        - 301
-                                        - 302
-                                        - 303
-                                        - 307
-                                        - 308
+                                      oneOf:
+                                        - type: number
+                                          enum:
+                                            - 301
+                                        - type: number
+                                          enum:
+                                            - 302
+                                        - type: number
+                                          enum:
+                                            - 303
+                                        - type: number
+                                          enum:
+                                            - 307
+                                        - type: number
+                                          enum:
+                                            - 308
+                                        - type: number
                                       description: The status code to use for the redirect.
                                   required:
                                     - target_url
@@ -3453,6 +3478,12 @@ paths:
                   - phase
                   - version
       x-distilled-response-path: result
+      x-distilled-errors:
+        RulesetNotFound:
+          - code: 10003
+          - code: 10001
+        Forbidden:
+          - status: 403
     put:
       operationId: putPhas
       description: "Updates an account or zone entry point ruleset, creating a new
@@ -10012,6 +10043,16 @@ paths:
                   - phase
                   - version
       x-distilled-response-path: result
+      x-distilled-errors:
+        RulesetNotFound:
+          - code: 10003
+        PhaseNotEntitled:
+          - code: 50002
+          - status: 400
+            message:
+              includes: not entitled
+        Forbidden:
+          - status: 403
   /{accountOrZone}/{accountOrZoneId}/rulesets/phases/{rulesetPhase}/entrypoint/versions/{rulesetVersion}:
     get:
       operationId: getPhasVersion
@@ -10026,6 +10067,21 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                account_id:
+                  type: string
+                  description: The Account ID to use for this endpoint. Mutually exclusive with
+                    the Zone ID.
+                zone_id:
+                  type: string
+                  description: The Zone ID to use for this endpoint. Mutually exclusive with the
+                    Account ID.
       responses:
         "200":
           description: Success
@@ -13472,6 +13528,20 @@ paths:
         - name: rulesetPhase
           in: path
           required: true
+          schema:
+            type: string
+        - name: account_id
+          in: query
+          required: false
+          description: The Account ID to use for this endpoint. Mutually exclusive with
+            the Zone ID.
+          schema:
+            type: string
+        - name: zone_id
+          in: query
+          required: false
+          description: The Zone ID to use for this endpoint. Mutually exclusive with the
+            Account ID.
           schema:
             type: string
       responses:
@@ -23366,6 +23436,21 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                account_id:
+                  type: string
+                  description: The Account ID to use for this endpoint. Mutually exclusive with
+                    the Zone ID.
+                zone_id:
+                  type: string
+                  description: The Zone ID to use for this endpoint. Mutually exclusive with the
+                    Account ID.
       responses:
         "200":
           description: Success
@@ -26814,6 +26899,21 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                account_id:
+                  type: string
+                  description: The Account ID to use for this endpoint. Mutually exclusive with
+                    the Zone ID.
+                zone_id:
+                  type: string
+                  description: The Zone ID to use for this endpoint. Mutually exclusive with the
+                    Account ID.
       responses:
         "200":
           description: Success
@@ -30250,9 +30350,13 @@ paths:
                   - last_updated
                   - name
                   - phase
-                  - rules
                   - version
       x-distilled-response-path: result
+      x-distilled-errors:
+        RulesetNotFound:
+          - code: 10001
+        Forbidden:
+          - status: 403
     put:
       operationId: updateRuleset
       description: "Updates an account or zone ruleset, creating a new
@@ -36846,9 +36950,13 @@ paths:
                   - last_updated
                   - name
                   - phase
-                  - rules
                   - version
       x-distilled-response-path: result
+      x-distilled-errors:
+        RulesetNotFound:
+          - code: 10001
+        Forbidden:
+          - status: 403
     delete:
       operationId: deleteRuleset
       parameters:
@@ -36857,12 +36965,57 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                account_id:
+                  type: string
+                  description: The Account ID to use for this endpoint. Mutually exclusive with
+                    the Zone ID.
+                zone_id:
+                  type: string
+                  description: The Zone ID to use for this endpoint. Mutually exclusive with the
+                    Account ID.
       responses:
         "200":
           description: Success
+      x-distilled-errors:
+        RulesetNotFound:
+          - code: 10001
+        Forbidden:
+          - status: 403
   /{accountOrZone}/{accountOrZoneId}/rulesets:
     get:
       operationId: listRulesets
+      parameters:
+        - name: account_id
+          in: path
+          required: true
+          description: "Path param: The Account ID to use for this endpoint. Mutually
+            exclusive with the Zone ID."
+          schema:
+            type: string
+        - name: zone_id
+          in: path
+          required: true
+          description: "Path param: The Zone ID to use for this endpoint. Mutually
+            exclusive with the Account ID."
+          schema:
+            type: string
+        - name: per_page
+          in: query
+          required: false
+          schema:
+            type: number
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
       responses:
         "200":
           description: Success
@@ -43521,9 +43674,16 @@ paths:
                   - last_updated
                   - name
                   - phase
-                  - rules
                   - version
       x-distilled-response-path: result
+      x-distilled-errors:
+        PhaseNotEntitled:
+          - code: 50002
+          - status: 400
+            message:
+              includes: not entitled
+        Forbidden:
+          - status: 403
   /{accountOrZone}/{accountOrZoneId}/rulesets/{rulesetId}/versions/{rulesetVersion}:
     get:
       operationId: getVersion
@@ -43538,6 +43698,21 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                account_id:
+                  type: string
+                  description: The Account ID to use for this endpoint. Mutually exclusive with
+                    the Zone ID.
+                zone_id:
+                  type: string
+                  description: The Zone ID to use for this endpoint. Mutually exclusive with the
+                    Account ID.
       responses:
         "200":
           description: Success
@@ -46990,6 +47165,21 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                account_id:
+                  type: string
+                  description: The Account ID to use for this endpoint. Mutually exclusive with
+                    the Zone ID.
+                zone_id:
+                  type: string
+                  description: The Zone ID to use for this endpoint. Mutually exclusive with the
+                    Account ID.
       responses:
         "200":
           description: Success
@@ -47000,6 +47190,20 @@ paths:
         - name: rulesetId
           in: path
           required: true
+          schema:
+            type: string
+        - name: account_id
+          in: query
+          required: false
+          description: The Account ID to use for this endpoint. Mutually exclusive with
+            the Zone ID.
+          schema:
+            type: string
+        - name: zone_id
+          in: query
+          required: false
+          description: The Zone ID to use for this endpoint. Mutually exclusive with the
+            Account ID.
           schema:
             type: string
       responses:

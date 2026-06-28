@@ -112,14 +112,21 @@ const GLOBAL_ERROR_CODE_MAP: Record<
   // globally keeps tests for unknown-resource cases off UnknownCloudflareError.
   7003: (message) => new InvalidRoute({ code: 7003, message }),
   // 1000: dual-use code. Cloudflare uses it for several unrelated conditions,
-  // but the "Request timeout" variant is unambiguous from the message and is
-  // a transient, retryable failure. Map only that variant to GatewayTimeout
-  // (retryable + server error); fall back to UnknownCloudflareError for
-  // anything else carried under code 1000 to preserve existing behavior.
-  1000: (message) =>
-    /\btimeout\b/i.test(message)
-      ? new GatewayTimeout({ message })
-      : new UnknownCloudflareError({ code: 1000, message }),
+  // each unambiguous from the message and each a transient, retryable server
+  // failure:
+  //   - "Request timeout"       -> GatewayTimeout
+  //   - "Internal Server Error" -> InternalServerError
+  // Fall back to UnknownCloudflareError for anything else carried under code
+  // 1000 to preserve existing behavior.
+  1000: (message) => {
+    if (/\btimeout\b/i.test(message)) {
+      return new GatewayTimeout({ message });
+    }
+    if (/internal (server )?error/i.test(message)) {
+      return new InternalServerError({ message });
+    }
+    return new UnknownCloudflareError({ code: 1000, message });
+  },
 };
 
 /**
@@ -199,7 +206,17 @@ function matchesExpression(
   status: number,
   message: string,
 ): boolean {
-  if (matcher.code === undefined && matcher.status === undefined) return false;
+  // A matcher must constrain on *something*; a fully-empty matcher would
+  // match every error. A message-only matcher (no code, no status) is
+  // legitimate — Cloudflare sometimes returns a terse enveloped error whose
+  // `code` is absent/zero but whose message is distinctive (e.g. Vectorize's
+  // bare `index deleted`). Only reject the truly-empty matcher here.
+  if (
+    matcher.code === undefined &&
+    matcher.status === undefined &&
+    matcher.message === undefined
+  )
+    return false;
   if (matcher.code !== undefined && matcher.code !== code) return false;
   if (matcher.status !== undefined && matcher.status !== status) return false;
   if (matcher.message !== undefined) {
@@ -260,6 +277,62 @@ function findMatchingError(
 }
 
 /**
+ * Try to match a raw (code, status, message) triple against the
+ * per-operation error schemas and decode the winning TaggedError class.
+ * Returns `undefined` when no matcher fires.
+ */
+const tryMatchOperationError = (
+  errors: readonly ApiErrorClass[] | undefined,
+  errorCode: number | undefined,
+  status: number,
+  errorMessage: string,
+): Effect.Effect<never, unknown> | undefined => {
+  if (!errors || errors.length === 0) return undefined;
+
+  const errorSchemas = new Map<string, Schema.Top>();
+  for (const errorSchema of errors) {
+    const identifier = extractTagFromAst(
+      (errorSchema as unknown as Schema.Top).ast,
+    );
+    if (identifier) {
+      errorSchemas.set(identifier, errorSchema as unknown as Schema.Top);
+    }
+  }
+
+  const matched = findMatchingError(
+    errorSchemas,
+    errorCode,
+    status,
+    errorMessage,
+  );
+  if (!matched) return undefined;
+
+  // Decode using the schema - properly instantiates TaggedError classes
+  const errorData = {
+    _tag: matched.tag,
+    code: errorCode ?? 0,
+    message: errorMessage,
+  };
+  return Schema.decodeUnknownEffect(matched.schema)(errorData).pipe(
+    Effect.flatMap((decoded: unknown) => Effect.fail(decoded)),
+    Effect.catchIf(
+      (e: unknown) =>
+        typeof e === "object" &&
+        e !== null &&
+        "_tag" in e &&
+        (e as any)._tag === "SchemaError",
+      () =>
+        Effect.fail(
+          new UnknownCloudflareError({
+            code: errorCode,
+            message: errorMessage,
+          }),
+        ),
+    ),
+  ) as Effect.Effect<never, unknown>;
+};
+
+/**
  * Match a Cloudflare API error response using per-operation error schemas.
  */
 const matchError = (
@@ -279,6 +352,13 @@ const matchError = (
     if (status >= 500) {
       return Effect.fail(httpStatusError(status, message, headers));
     }
+    // Some endpoints answer 4xx with a bare plain-text body and no JSON
+    // envelope (e.g. Images `GET .../variants/{id}` returns
+    // `variant \`x\` not found`). Still give the per-operation matchers a
+    // chance — `{ status, message }` matchers exist precisely for these
+    // envelope-less responses.
+    const matched = tryMatchOperationError(errors, undefined, status, message);
+    if (matched) return matched;
     return Effect.fail(
       new CloudflareHttpError({
         status,
@@ -322,6 +402,16 @@ const matchError = (
     if (status >= 500) {
       return Effect.fail(httpStatusError(status, bodyStr, headers));
     }
+    // Envelope-less JSON/string bodies still get a shot at the
+    // per-operation `{ status, message }` matchers before falling back to
+    // the catch-all HTTP error.
+    const matchedRaw = tryMatchOperationError(
+      errors,
+      undefined,
+      status,
+      bodyStr,
+    );
+    if (matchedRaw) return matchedRaw;
     return Effect.fail(
       new CloudflareHttpError({
         status,
@@ -332,51 +422,14 @@ const matchError = (
     );
   }
 
-  // Build error schema map from the per-operation errors
-  if (errors && errors.length > 0) {
-    const errorSchemas = new Map<string, Schema.Top>();
-    for (const errorSchema of errors) {
-      const identifier = extractTagFromAst(
-        (errorSchema as unknown as Schema.Top).ast,
-      );
-      if (identifier) {
-        errorSchemas.set(identifier, errorSchema as unknown as Schema.Top);
-      }
-    }
-
-    const matched = findMatchingError(
-      errorSchemas,
-      errorCode,
-      status,
-      errorMessage,
-    );
-
-    if (matched) {
-      // Decode using the schema - properly instantiates TaggedError classes
-      const errorData = {
-        _tag: matched.tag,
-        code: errorCode ?? 0,
-        message: errorMessage,
-      };
-      return Schema.decodeUnknownEffect(matched.schema)(errorData).pipe(
-        Effect.flatMap((decoded: unknown) => Effect.fail(decoded)),
-        Effect.catchIf(
-          (e: unknown) =>
-            typeof e === "object" &&
-            e !== null &&
-            "_tag" in e &&
-            (e as any)._tag === "SchemaError",
-          () =>
-            Effect.fail(
-              new UnknownCloudflareError({
-                code: errorCode,
-                message: errorMessage,
-              }),
-            ),
-        ),
-      ) as Effect.Effect<never, unknown>;
-    }
-  }
+  // Match against the per-operation error schemas
+  const matched = tryMatchOperationError(
+    errors,
+    errorCode,
+    status,
+    errorMessage,
+  );
+  if (matched) return matched;
 
   // Check global error codes before falling through to unknown
   if (errorCode !== undefined && errorCode in GLOBAL_ERROR_CODE_MAP) {
@@ -392,18 +445,10 @@ const matchError = (
     );
   }
 
-  // Heuristic fallback: map by HTTP status, but only for non-retryable
-  // 4xx client errors. Envelope errors that didn't match any per-op or
-  // global error code still carry a meaningful HTTP status (400/404/etc.),
-  // so surface that as the typed status error instead of
-  // UnknownCloudflareError.
-  //
-  // We deliberately exclude 5xx and 429 here: the matching error classes
-  // (InternalServerError, ServiceUnavailable, TooManyRequests) carry
-  // retryable categories and the default `Retry.transient` policy will
-  // loop forever on an envelope-shaped 5xx that has no matching error
-  // code. For those, falling through to UnknownCloudflareError preserves
-  // the previous (non-retryable) behavior.
+  // Heuristic fallback: map by HTTP status. Envelope errors that didn't
+  // match any per-op or global error code still carry a meaningful HTTP
+  // status (400/404/etc.), so surface that as the typed status error
+  // instead of UnknownCloudflareError.
   if (status >= 400 && status < 500 && status !== 429) {
     const StatusErrorClass =
       HTTP_STATUS_MAP[status as keyof typeof HTTP_STATUS_MAP];
@@ -415,6 +460,20 @@ const matchError = (
         }),
       );
     }
+  }
+
+  // 5xx inside a Cloudflare envelope that matched no per-op or global
+  // error code is a genuine transient server-side failure (e.g. a bare
+  // `{ code: ..., message: "An internal server error occurred." }` 500).
+  // Map it to the typed, retryable error (InternalServerError for 500,
+  // the specific 5xx class via HTTP_STATUS_MAP otherwise) so the blanket
+  // retry policy rides it out instead of surfacing a non-retryable
+  // UnknownCloudflareError. The shipped policies are bounded
+  // (`makeDefault` caps at 5 attempts; alchemy caps at 8); only callers
+  // that explicitly opt into the indefinite `Retry.transient` accept an
+  // unbounded loop on a persistently-failing endpoint.
+  if (status >= 500) {
+    return Effect.fail(httpStatusError(status, errorMessage, headers));
   }
 
   // No match — return unknown Cloudflare error
@@ -476,6 +535,14 @@ const _API = makeAPI<Credentials>({
   getAuthHeaders: formatHeaders as any,
   matchError,
   ParseError: CloudflareDecodeError as any,
+  // Cloudflare sometimes returns errors with HTTP 2xx + `success: false`
+  // (e.g. `could not find entrypoint ruleset`, code 10003). Flag those so the
+  // core client routes them through `matchError` instead of failing to decode.
+  isErrorEnvelope: (body: unknown) =>
+    typeof body === "object" &&
+    body !== null &&
+    "success" in body &&
+    (body as { success?: unknown }).success === false,
   transformRequestParts: ({ pathTemplate, parts }) =>
     transformCloudflareRequestParts({ pathTemplate, parts }),
   retry: Retry as any,
@@ -509,6 +576,24 @@ const paginatePageByItems: PaginationStrategy = (
               | readonly unknown[]
               | undefined)
           : undefined;
+
+      // Guard against request schemas that don't carry the page param
+      // (schema encoding silently drops it, so every request returns
+      // page 1 and the empty-page terminator never fires). If the
+      // server reports a page other than the one we asked for, the
+      // param didn't take effect — stop without re-emitting the
+      // duplicate page.
+      const reportedPage = getPath(response, "resultInfo.page") as
+        | number
+        | null
+        | undefined;
+      if (
+        state.page !== startPage &&
+        typeof reportedPage === "number" &&
+        reportedPage !== state.page
+      ) {
+        return undefined;
+      }
 
       return [
         response,

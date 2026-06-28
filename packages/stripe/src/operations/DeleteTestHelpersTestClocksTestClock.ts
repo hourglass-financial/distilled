@@ -19,7 +19,7 @@ export type DeleteTestHelpersTestClocksTestClockInput =
 // Output Schema
 export const DeleteTestHelpersTestClocksTestClockOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    deleted: Schema.Literals(["true"]),
+    deleted: Schema.Literals([true]),
     id: Schema.String,
     object: Schema.Literals(["test_helpers.test_clock"]),
   });

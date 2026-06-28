@@ -13,6 +13,34 @@ import type { Credentials } from "../credentials.ts";
 import { type DefaultErrors } from "../errors.ts";
 
 // =============================================================================
+// Errors
+// =============================================================================
+
+export class CmbConfigNotFound extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<CmbConfigNotFound>()("CmbConfigNotFound", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ status: 404 }],
+) {}
+
+export class Forbidden extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<Forbidden>()("Forbidden", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ status: 403 }],
+) {}
+
+export class LogsControlNotAuthorized extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<LogsControlNotAuthorized>()(
+    "LogsControlNotAuthorized",
+    { code: Schema.Number, message: Schema.String },
+  ),
+  [{ code: 10000, message: { includes: "Unauthorized" } }],
+) {}
+
+// =============================================================================
 // ControlCmbConfig
 // =============================================================================
 
@@ -22,13 +50,15 @@ export interface GetControlCmbConfigRequest {
 }
 
 export const GetControlCmbConfigRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  }).pipe(
-    T.Http({
-      method: "GET",
-      path: "/accounts/{account_id}/logs/control/cmb/config",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/logs/control/cmb/config",
+      }),
+    ),
   ) as unknown as Schema.Schema<GetControlCmbConfigRequest>;
 
 export interface GetControlCmbConfigResponse {
@@ -39,23 +69,27 @@ export interface GetControlCmbConfigResponse {
 }
 
 export const GetControlCmbConfigResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    allowOutOfRegionAccess: Schema.optional(
-      Schema.Union([Schema.Boolean, Schema.Null]),
-    ),
-    regions: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  })
-    .pipe(
-      Schema.encodeKeys({
-        allowOutOfRegionAccess: "allow_out_of_region_access",
-        regions: "regions",
-      }),
-    )
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<GetControlCmbConfigResponse>;
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      allowOutOfRegionAccess: Schema.optional(
+        Schema.Union([Schema.Boolean, Schema.Null]),
+      ),
+      regions: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          allowOutOfRegionAccess: "allow_out_of_region_access",
+          regions: "regions",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<GetControlCmbConfigResponse>;
 
-export type GetControlCmbConfigError = DefaultErrors;
+export type GetControlCmbConfigError =
+  | DefaultErrors
+  | LogsControlNotAuthorized
+  | CmbConfigNotFound
+  | Forbidden;
 
 export const getControlCmbConfig: API.OperationMethod<
   GetControlCmbConfigRequest,
@@ -65,7 +99,7 @@ export const getControlCmbConfig: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: GetControlCmbConfigRequest,
   output: GetControlCmbConfigResponse,
-  errors: [],
+  errors: [LogsControlNotAuthorized, CmbConfigNotFound, Forbidden],
 }));
 
 export interface CreateControlCmbConfigRequest {
@@ -78,19 +112,21 @@ export interface CreateControlCmbConfigRequest {
 }
 
 export const CreateControlCmbConfigRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    allowOutOfRegionAccess: Schema.optional(Schema.Boolean),
-    regions: Schema.optional(Schema.String),
-  }).pipe(
-    Schema.encodeKeys({
-      allowOutOfRegionAccess: "allow_out_of_region_access",
-      regions: "regions",
-    }),
-    T.Http({
-      method: "POST",
-      path: "/accounts/{account_id}/logs/control/cmb/config",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      allowOutOfRegionAccess: Schema.optional(Schema.Boolean),
+      regions: Schema.optional(Schema.String),
+    }).pipe(
+      Schema.encodeKeys({
+        allowOutOfRegionAccess: "allow_out_of_region_access",
+        regions: "regions",
+      }),
+      T.Http({
+        method: "POST",
+        path: "/accounts/{account_id}/logs/control/cmb/config",
+      }),
+    ),
   ) as unknown as Schema.Schema<CreateControlCmbConfigRequest>;
 
 export interface CreateControlCmbConfigResponse {
@@ -101,23 +137,26 @@ export interface CreateControlCmbConfigResponse {
 }
 
 export const CreateControlCmbConfigResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    allowOutOfRegionAccess: Schema.optional(
-      Schema.Union([Schema.Boolean, Schema.Null]),
-    ),
-    regions: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  })
-    .pipe(
-      Schema.encodeKeys({
-        allowOutOfRegionAccess: "allow_out_of_region_access",
-        regions: "regions",
-      }),
-    )
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<CreateControlCmbConfigResponse>;
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      allowOutOfRegionAccess: Schema.optional(
+        Schema.Union([Schema.Boolean, Schema.Null]),
+      ),
+      regions: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          allowOutOfRegionAccess: "allow_out_of_region_access",
+          regions: "regions",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<CreateControlCmbConfigResponse>;
 
-export type CreateControlCmbConfigError = DefaultErrors;
+export type CreateControlCmbConfigError =
+  | DefaultErrors
+  | LogsControlNotAuthorized
+  | Forbidden;
 
 export const createControlCmbConfig: API.OperationMethod<
   CreateControlCmbConfigRequest,
@@ -127,7 +166,7 @@ export const createControlCmbConfig: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: CreateControlCmbConfigRequest,
   output: CreateControlCmbConfigResponse,
-  errors: [],
+  errors: [LogsControlNotAuthorized, Forbidden],
 }));
 
 export interface DeleteControlCmbConfigRequest {
@@ -136,23 +175,29 @@ export interface DeleteControlCmbConfigRequest {
 }
 
 export const DeleteControlCmbConfigRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  }).pipe(
-    T.Http({
-      method: "DELETE",
-      path: "/accounts/{account_id}/logs/control/cmb/config",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "DELETE",
+        path: "/accounts/{account_id}/logs/control/cmb/config",
+      }),
+    ),
   ) as unknown as Schema.Schema<DeleteControlCmbConfigRequest>;
 
 export type DeleteControlCmbConfigResponse = unknown;
 
 export const DeleteControlCmbConfigResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Unknown.pipe(
-    T.ResponsePath("result"),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Unknown.pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<DeleteControlCmbConfigResponse>;
 
-export type DeleteControlCmbConfigError = DefaultErrors;
+export type DeleteControlCmbConfigError =
+  | DefaultErrors
+  | LogsControlNotAuthorized
+  | CmbConfigNotFound
+  | Forbidden;
 
 export const deleteControlCmbConfig: API.OperationMethod<
   DeleteControlCmbConfigRequest,
@@ -162,7 +207,7 @@ export const deleteControlCmbConfig: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: DeleteControlCmbConfigRequest,
   output: DeleteControlCmbConfigResponse,
-  errors: [],
+  errors: [LogsControlNotAuthorized, CmbConfigNotFound, Forbidden],
 }));
 
 // =============================================================================
@@ -175,13 +220,15 @@ export interface GetControlRetentionRequest {
 }
 
 export const GetControlRetentionRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
-  }).pipe(
-    T.Http({
-      method: "GET",
-      path: "/zones/{zone_id}/logs/control/retention/flag",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/zones/{zone_id}/logs/control/retention/flag",
+      }),
+    ),
   ) as unknown as Schema.Schema<GetControlRetentionRequest>;
 
 export interface GetControlRetentionResponse {
@@ -190,13 +237,16 @@ export interface GetControlRetentionResponse {
 }
 
 export const GetControlRetentionResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    flag: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-  }).pipe(
-    T.ResponsePath("result"),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      flag: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+    }).pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<GetControlRetentionResponse>;
 
-export type GetControlRetentionError = DefaultErrors;
+export type GetControlRetentionError =
+  | DefaultErrors
+  | LogsControlNotAuthorized
+  | Forbidden;
 
 export const getControlRetention: API.OperationMethod<
   GetControlRetentionRequest,
@@ -206,7 +256,7 @@ export const getControlRetention: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: GetControlRetentionRequest,
   output: GetControlRetentionResponse,
-  errors: [],
+  errors: [LogsControlNotAuthorized, Forbidden],
 }));
 
 export interface CreateControlRetentionRequest {
@@ -217,14 +267,16 @@ export interface CreateControlRetentionRequest {
 }
 
 export const CreateControlRetentionRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
-    flag: Schema.optional(Schema.Boolean),
-  }).pipe(
-    T.Http({
-      method: "POST",
-      path: "/zones/{zone_id}/logs/control/retention/flag",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
+      flag: Schema.optional(Schema.Boolean),
+    }).pipe(
+      T.Http({
+        method: "POST",
+        path: "/zones/{zone_id}/logs/control/retention/flag",
+      }),
+    ),
   ) as unknown as Schema.Schema<CreateControlRetentionRequest>;
 
 export interface CreateControlRetentionResponse {
@@ -233,13 +285,16 @@ export interface CreateControlRetentionResponse {
 }
 
 export const CreateControlRetentionResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    flag: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
-  }).pipe(
-    T.ResponsePath("result"),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      flag: Schema.optional(Schema.Union([Schema.Boolean, Schema.Null])),
+    }).pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<CreateControlRetentionResponse>;
 
-export type CreateControlRetentionError = DefaultErrors;
+export type CreateControlRetentionError =
+  | DefaultErrors
+  | LogsControlNotAuthorized
+  | Forbidden;
 
 export const createControlRetention: API.OperationMethod<
   CreateControlRetentionRequest,
@@ -249,7 +304,7 @@ export const createControlRetention: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: CreateControlRetentionRequest,
   output: CreateControlRetentionResponse,
-  errors: [],
+  errors: [LogsControlNotAuthorized, Forbidden],
 }));
 
 // =============================================================================
@@ -266,24 +321,27 @@ export interface GetRayidRequest {
   timestamps?: "unix" | "unixnano" | "rfc3339" | (string & {});
 }
 
-export const GetRayidRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  rayID: Schema.String.pipe(T.HttpPath("RayID")),
-  zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
-  fields: Schema.optional(Schema.String).pipe(T.HttpQuery("fields")),
-  timestamps: Schema.optional(
-    Schema.Union([
-      Schema.Literals(["unix", "unixnano", "rfc3339"]),
-      Schema.String,
-    ]),
-  ).pipe(T.HttpQuery("timestamps")),
-}).pipe(
-  T.Http({ method: "GET", path: "/zones/{zone_id}/logs/rayids/{RayID}" }),
+export const GetRayidRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+  Schema.Struct({
+    rayID: Schema.String.pipe(T.HttpPath("RayID")),
+    zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
+    fields: Schema.optional(Schema.String).pipe(T.HttpQuery("fields")),
+    timestamps: Schema.optional(
+      Schema.Union([
+        Schema.Literals(["unix", "unixnano", "rfc3339"]),
+        Schema.String,
+      ]),
+    ).pipe(T.HttpQuery("timestamps")),
+  }).pipe(
+    T.Http({ method: "GET", path: "/zones/{zone_id}/logs/rayids/{RayID}" }),
+  ),
 ) as unknown as Schema.Schema<GetRayidRequest>;
 
 export type GetRayidResponse = unknown;
 
-export const GetRayidResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Unknown as unknown as Schema.Schema<GetRayidResponse>;
+export const GetRayidResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () => Schema.Unknown,
+) as unknown as Schema.Schema<GetRayidResponse>;
 
 export type GetRayidError = DefaultErrors;
 
@@ -319,29 +377,33 @@ export interface GetReceivedRequest {
   timestamps?: "unix" | "unixnano" | "rfc3339" | (string & {});
 }
 
-export const GetReceivedRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
-  end: Schema.Union([Schema.String, Schema.Number]).pipe(T.HttpQuery("end")),
-  count: Schema.optional(Schema.Number).pipe(T.HttpQuery("count")),
-  fields: Schema.optional(Schema.String).pipe(T.HttpQuery("fields")),
-  sample: Schema.optional(Schema.Number).pipe(T.HttpQuery("sample")),
-  start: Schema.optional(Schema.Union([Schema.String, Schema.Number])).pipe(
-    T.HttpQuery("start"),
-  ),
-  timestamps: Schema.optional(
-    Schema.Union([
-      Schema.Literals(["unix", "unixnano", "rfc3339"]),
-      Schema.String,
-    ]),
-  ).pipe(T.HttpQuery("timestamps")),
-}).pipe(
-  T.Http({ method: "GET", path: "/zones/{zone_id}/logs/received" }),
+export const GetReceivedRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
+      end: Schema.Union([Schema.String, Schema.Number]).pipe(
+        T.HttpQuery("end"),
+      ),
+      count: Schema.optional(Schema.Number).pipe(T.HttpQuery("count")),
+      fields: Schema.optional(Schema.String).pipe(T.HttpQuery("fields")),
+      sample: Schema.optional(Schema.Number).pipe(T.HttpQuery("sample")),
+      start: Schema.optional(Schema.Union([Schema.String, Schema.Number])).pipe(
+        T.HttpQuery("start"),
+      ),
+      timestamps: Schema.optional(
+        Schema.Union([
+          Schema.Literals(["unix", "unixnano", "rfc3339"]),
+          Schema.String,
+        ]),
+      ).pipe(T.HttpQuery("timestamps")),
+    }).pipe(T.Http({ method: "GET", path: "/zones/{zone_id}/logs/received" })),
 ) as unknown as Schema.Schema<GetReceivedRequest>;
 
 export type GetReceivedResponse = unknown;
 
-export const GetReceivedResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Unknown as unknown as Schema.Schema<GetReceivedResponse>;
+export const GetReceivedResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () => Schema.Unknown,
+) as unknown as Schema.Schema<GetReceivedResponse>;
 
 export type GetReceivedError = DefaultErrors;
 
@@ -366,10 +428,12 @@ export interface GetReceivedFieldRequest {
 }
 
 export const GetReceivedFieldRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
-  }).pipe(
-    T.Http({ method: "GET", path: "/zones/{zone_id}/logs/received/fields" }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
+    }).pipe(
+      T.Http({ method: "GET", path: "/zones/{zone_id}/logs/received/fields" }),
+    ),
   ) as unknown as Schema.Schema<GetReceivedFieldRequest>;
 
 export interface GetReceivedFieldResponse {
@@ -377,9 +441,11 @@ export interface GetReceivedFieldResponse {
 }
 
 export const GetReceivedFieldResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    key: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  }) as unknown as Schema.Schema<GetReceivedFieldResponse>;
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      key: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    }),
+  ) as unknown as Schema.Schema<GetReceivedFieldResponse>;
 
 export type GetReceivedFieldError = DefaultErrors;
 

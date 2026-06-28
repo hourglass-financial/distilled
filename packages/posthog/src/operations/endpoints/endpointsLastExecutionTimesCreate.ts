@@ -32,7 +32,7 @@ export const EndpointsLastExecutionTimesCreateOutput =
         insight_id: Schema.optional(Schema.NullOr(Schema.Number)),
         labels: Schema.optional(Schema.NullOr(Schema.Array(Schema.String))),
         pickup_time: Schema.optional(Schema.NullOr(Schema.String)),
-        query_async: Schema.optional(Schema.Literals(["true"])),
+        query_async: Schema.optional(Schema.Literals([true])),
         query_progress: Schema.optional(
           Schema.Struct({
             active_cpu_time: Schema.optional(Schema.Number),

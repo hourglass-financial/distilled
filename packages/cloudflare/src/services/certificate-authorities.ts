@@ -13,6 +13,18 @@ import type { Credentials } from "../credentials.ts";
 import { type DefaultErrors } from "../errors.ts";
 
 // =============================================================================
+// Errors
+// =============================================================================
+
+export class Forbidden extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<Forbidden>()("Forbidden", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ status: 403 }],
+) {}
+
+// =============================================================================
 // HostnameAssociation
 // =============================================================================
 
@@ -24,16 +36,18 @@ export interface GetHostnameAssociationRequest {
 }
 
 export const GetHostnameAssociationRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
-    mtlsCertificateId: Schema.optional(Schema.String).pipe(
-      T.HttpQuery("mtls_certificate_id"),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
+      mtlsCertificateId: Schema.optional(Schema.String).pipe(
+        T.HttpQuery("mtls_certificate_id"),
+      ),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/zones/{zone_id}/certificate_authorities/hostname_associations",
+      }),
     ),
-  }).pipe(
-    T.Http({
-      method: "GET",
-      path: "/zones/{zone_id}/certificate_authorities/hostname_associations",
-    }),
   ) as unknown as Schema.Schema<GetHostnameAssociationRequest>;
 
 export interface GetHostnameAssociationResponse {
@@ -41,15 +55,15 @@ export interface GetHostnameAssociationResponse {
 }
 
 export const GetHostnameAssociationResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    hostnames: Schema.optional(
-      Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-    ),
-  }).pipe(
-    T.ResponsePath("result"),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      hostnames: Schema.optional(
+        Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+      ),
+    }).pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<GetHostnameAssociationResponse>;
 
-export type GetHostnameAssociationError = DefaultErrors;
+export type GetHostnameAssociationError = DefaultErrors | Forbidden;
 
 export const getHostnameAssociation: API.OperationMethod<
   GetHostnameAssociationRequest,
@@ -59,7 +73,7 @@ export const getHostnameAssociation: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: GetHostnameAssociationRequest,
   output: GetHostnameAssociationResponse,
-  errors: [],
+  errors: [Forbidden],
 }));
 
 export interface PutHostnameAssociationRequest {
@@ -72,19 +86,21 @@ export interface PutHostnameAssociationRequest {
 }
 
 export const PutHostnameAssociationRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
-    hostnames: Schema.optional(Schema.Array(Schema.String)),
-    mtlsCertificateId: Schema.optional(Schema.String),
-  }).pipe(
-    Schema.encodeKeys({
-      hostnames: "hostnames",
-      mtlsCertificateId: "mtls_certificate_id",
-    }),
-    T.Http({
-      method: "PUT",
-      path: "/zones/{zone_id}/certificate_authorities/hostname_associations",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
+      hostnames: Schema.optional(Schema.Array(Schema.String)),
+      mtlsCertificateId: Schema.optional(Schema.String),
+    }).pipe(
+      Schema.encodeKeys({
+        hostnames: "hostnames",
+        mtlsCertificateId: "mtls_certificate_id",
+      }),
+      T.Http({
+        method: "PUT",
+        path: "/zones/{zone_id}/certificate_authorities/hostname_associations",
+      }),
+    ),
   ) as unknown as Schema.Schema<PutHostnameAssociationRequest>;
 
 export interface PutHostnameAssociationResponse {
@@ -92,15 +108,15 @@ export interface PutHostnameAssociationResponse {
 }
 
 export const PutHostnameAssociationResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    hostnames: Schema.optional(
-      Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-    ),
-  }).pipe(
-    T.ResponsePath("result"),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      hostnames: Schema.optional(
+        Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+      ),
+    }).pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<PutHostnameAssociationResponse>;
 
-export type PutHostnameAssociationError = DefaultErrors;
+export type PutHostnameAssociationError = DefaultErrors | Forbidden;
 
 export const putHostnameAssociation: API.OperationMethod<
   PutHostnameAssociationRequest,
@@ -110,5 +126,5 @@ export const putHostnameAssociation: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: PutHostnameAssociationRequest,
   output: PutHostnameAssociationResponse,
-  errors: [],
+  errors: [Forbidden],
 }));

@@ -13,6 +13,34 @@ import type { Credentials } from "../credentials.ts";
 import { type DefaultErrors } from "../errors.ts";
 
 // =============================================================================
+// Errors
+// =============================================================================
+
+export class CallsAppNotFound extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<CallsAppNotFound>()("CallsAppNotFound", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ code: 20007 }],
+) {}
+
+export class Forbidden extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<Forbidden>()("Forbidden", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ status: 403 }],
+) {}
+
+export class TurnKeyNotFound extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<TurnKeyNotFound>()("TurnKeyNotFound", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ code: 20008 }],
+) {}
+
+// =============================================================================
 // Sfu
 // =============================================================================
 
@@ -22,11 +50,16 @@ export interface GetSfuRequest {
   accountId: string;
 }
 
-export const GetSfuRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  appId: Schema.String.pipe(T.HttpPath("appId")),
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-}).pipe(
-  T.Http({ method: "GET", path: "/accounts/{account_id}/calls/apps/{appId}" }),
+export const GetSfuRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+  Schema.Struct({
+    appId: Schema.String.pipe(T.HttpPath("appId")),
+    accountId: Schema.String.pipe(T.HttpPath("account_id")),
+  }).pipe(
+    T.Http({
+      method: "GET",
+      path: "/accounts/{account_id}/calls/apps/{appId}",
+    }),
+  ),
 ) as unknown as Schema.Schema<GetSfuRequest>;
 
 export interface GetSfuResponse {
@@ -40,14 +73,16 @@ export interface GetSfuResponse {
   uid?: string | null;
 }
 
-export const GetSfuResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  created: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  name: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  uid: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-}).pipe(T.ResponsePath("result")) as unknown as Schema.Schema<GetSfuResponse>;
+export const GetSfuResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+  Schema.Struct({
+    created: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    name: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    uid: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+  }).pipe(T.ResponsePath("result")),
+) as unknown as Schema.Schema<GetSfuResponse>;
 
-export type GetSfuError = DefaultErrors;
+export type GetSfuError = DefaultErrors | CallsAppNotFound | Forbidden;
 
 export const getSfu: API.OperationMethod<
   GetSfuRequest,
@@ -57,7 +92,7 @@ export const getSfu: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: GetSfuRequest,
   output: GetSfuResponse,
-  errors: [],
+  errors: [CallsAppNotFound, Forbidden],
 }));
 
 export interface CreateSfuRequest {
@@ -67,11 +102,13 @@ export interface CreateSfuRequest {
   name?: string;
 }
 
-export const CreateSfuRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  name: Schema.optional(Schema.String),
-}).pipe(
-  T.Http({ method: "POST", path: "/accounts/{account_id}/calls/apps" }),
+export const CreateSfuRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+  Schema.Struct({
+    accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    name: Schema.optional(Schema.String),
+  }).pipe(
+    T.Http({ method: "POST", path: "/accounts/{account_id}/calls/apps" }),
+  ),
 ) as unknown as Schema.Schema<CreateSfuRequest>;
 
 export interface CreateSfuResponse {
@@ -87,17 +124,18 @@ export interface CreateSfuResponse {
   uid?: string | null;
 }
 
-export const CreateSfuResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  created: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  name: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  secret: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  uid: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-}).pipe(
-  T.ResponsePath("result"),
+export const CreateSfuResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      created: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      name: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      secret: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      uid: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    }).pipe(T.ResponsePath("result")),
 ) as unknown as Schema.Schema<CreateSfuResponse>;
 
-export type CreateSfuError = DefaultErrors;
+export type CreateSfuError = DefaultErrors | Forbidden;
 
 export const createSfu: API.OperationMethod<
   CreateSfuRequest,
@@ -107,7 +145,7 @@ export const createSfu: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: CreateSfuRequest,
   output: CreateSfuResponse,
-  errors: [],
+  errors: [Forbidden],
 }));
 
 export interface UpdateSfuRequest {
@@ -118,12 +156,17 @@ export interface UpdateSfuRequest {
   name?: string;
 }
 
-export const UpdateSfuRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  appId: Schema.String.pipe(T.HttpPath("appId")),
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  name: Schema.optional(Schema.String),
-}).pipe(
-  T.Http({ method: "PUT", path: "/accounts/{account_id}/calls/apps/{appId}" }),
+export const UpdateSfuRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+  Schema.Struct({
+    appId: Schema.String.pipe(T.HttpPath("appId")),
+    accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    name: Schema.optional(Schema.String),
+  }).pipe(
+    T.Http({
+      method: "PUT",
+      path: "/accounts/{account_id}/calls/apps/{appId}",
+    }),
+  ),
 ) as unknown as Schema.Schema<UpdateSfuRequest>;
 
 export interface UpdateSfuResponse {
@@ -137,16 +180,17 @@ export interface UpdateSfuResponse {
   uid?: string | null;
 }
 
-export const UpdateSfuResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  created: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  name: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  uid: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-}).pipe(
-  T.ResponsePath("result"),
+export const UpdateSfuResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      created: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      name: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      uid: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    }).pipe(T.ResponsePath("result")),
 ) as unknown as Schema.Schema<UpdateSfuResponse>;
 
-export type UpdateSfuError = DefaultErrors;
+export type UpdateSfuError = DefaultErrors | CallsAppNotFound | Forbidden;
 
 export const updateSfu: API.OperationMethod<
   UpdateSfuRequest,
@@ -156,7 +200,7 @@ export const updateSfu: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: UpdateSfuRequest,
   output: UpdateSfuResponse,
-  errors: [],
+  errors: [CallsAppNotFound, Forbidden],
 }));
 
 export interface DeleteSfuRequest {
@@ -165,14 +209,16 @@ export interface DeleteSfuRequest {
   accountId: string;
 }
 
-export const DeleteSfuRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  appId: Schema.String.pipe(T.HttpPath("appId")),
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-}).pipe(
-  T.Http({
-    method: "DELETE",
-    path: "/accounts/{account_id}/calls/apps/{appId}",
-  }),
+export const DeleteSfuRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+  Schema.Struct({
+    appId: Schema.String.pipe(T.HttpPath("appId")),
+    accountId: Schema.String.pipe(T.HttpPath("account_id")),
+  }).pipe(
+    T.Http({
+      method: "DELETE",
+      path: "/accounts/{account_id}/calls/apps/{appId}",
+    }),
+  ),
 ) as unknown as Schema.Schema<DeleteSfuRequest>;
 
 export interface DeleteSfuResponse {
@@ -186,16 +232,17 @@ export interface DeleteSfuResponse {
   uid?: string | null;
 }
 
-export const DeleteSfuResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  created: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  name: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  uid: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-}).pipe(
-  T.ResponsePath("result"),
+export const DeleteSfuResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      created: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      name: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      uid: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    }).pipe(T.ResponsePath("result")),
 ) as unknown as Schema.Schema<DeleteSfuResponse>;
 
-export type DeleteSfuError = DefaultErrors;
+export type DeleteSfuError = DefaultErrors | CallsAppNotFound | Forbidden;
 
 export const deleteSfu: API.OperationMethod<
   DeleteSfuRequest,
@@ -205,7 +252,7 @@ export const deleteSfu: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: DeleteSfuRequest,
   output: DeleteSfuResponse,
-  errors: [],
+  errors: [CallsAppNotFound, Forbidden],
 }));
 
 // =============================================================================
@@ -217,10 +264,10 @@ export interface ListSfusRequest {
   accountId: string;
 }
 
-export const ListSfusRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-}).pipe(
-  T.Http({ method: "GET", path: "/accounts/{account_id}/calls/apps" }),
+export const ListSfusRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+  Schema.Struct({
+    accountId: Schema.String.pipe(T.HttpPath("account_id")),
+  }).pipe(T.Http({ method: "GET", path: "/accounts/{account_id}/calls/apps" })),
 ) as unknown as Schema.Schema<ListSfusRequest>;
 
 export interface ListSfusResponse {
@@ -232,16 +279,18 @@ export interface ListSfusResponse {
   }[];
 }
 
-export const ListSfusResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  result: Schema.Array(
-    Schema.Struct({
-      created: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      name: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      uid: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    }),
-  ),
-}) as unknown as Schema.Schema<ListSfusResponse>;
+export const ListSfusResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+  Schema.Struct({
+    result: Schema.Array(
+      Schema.Struct({
+        created: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        name: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        uid: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      }),
+    ),
+  }),
+) as unknown as Schema.Schema<ListSfusResponse>;
 
 export type ListSfusError = DefaultErrors;
 
@@ -270,14 +319,16 @@ export interface GetTurnRequest {
   accountId: string;
 }
 
-export const GetTurnRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  keyId: Schema.String.pipe(T.HttpPath("keyId")),
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-}).pipe(
-  T.Http({
-    method: "GET",
-    path: "/accounts/{account_id}/calls/turn_keys/{keyId}",
-  }),
+export const GetTurnRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+  Schema.Struct({
+    keyId: Schema.String.pipe(T.HttpPath("keyId")),
+    accountId: Schema.String.pipe(T.HttpPath("account_id")),
+  }).pipe(
+    T.Http({
+      method: "GET",
+      path: "/accounts/{account_id}/calls/turn_keys/{keyId}",
+    }),
+  ),
 ) as unknown as Schema.Schema<GetTurnRequest>;
 
 export interface GetTurnResponse {
@@ -291,14 +342,16 @@ export interface GetTurnResponse {
   uid?: string | null;
 }
 
-export const GetTurnResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  created: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  name: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  uid: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-}).pipe(T.ResponsePath("result")) as unknown as Schema.Schema<GetTurnResponse>;
+export const GetTurnResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+  Schema.Struct({
+    created: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    name: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    uid: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+  }).pipe(T.ResponsePath("result")),
+) as unknown as Schema.Schema<GetTurnResponse>;
 
-export type GetTurnError = DefaultErrors;
+export type GetTurnError = DefaultErrors | TurnKeyNotFound | Forbidden;
 
 export const getTurn: API.OperationMethod<
   GetTurnRequest,
@@ -308,7 +361,7 @@ export const getTurn: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: GetTurnRequest,
   output: GetTurnResponse,
-  errors: [],
+  errors: [TurnKeyNotFound, Forbidden],
 }));
 
 export interface ListTurnsRequest {
@@ -316,10 +369,12 @@ export interface ListTurnsRequest {
   accountId: string;
 }
 
-export const ListTurnsRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-}).pipe(
-  T.Http({ method: "GET", path: "/accounts/{account_id}/calls/turn_keys" }),
+export const ListTurnsRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+  Schema.Struct({
+    accountId: Schema.String.pipe(T.HttpPath("account_id")),
+  }).pipe(
+    T.Http({ method: "GET", path: "/accounts/{account_id}/calls/turn_keys" }),
+  ),
 ) as unknown as Schema.Schema<ListTurnsRequest>;
 
 export interface ListTurnsResponse {
@@ -331,16 +386,19 @@ export interface ListTurnsResponse {
   }[];
 }
 
-export const ListTurnsResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  result: Schema.Array(
+export const ListTurnsResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
     Schema.Struct({
-      created: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      name: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      uid: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      result: Schema.Array(
+        Schema.Struct({
+          created: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+          modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+          name: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+          uid: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        }),
+      ),
     }),
-  ),
-}) as unknown as Schema.Schema<ListTurnsResponse>;
+) as unknown as Schema.Schema<ListTurnsResponse>;
 
 export type ListTurnsError = DefaultErrors;
 
@@ -366,11 +424,17 @@ export interface CreateTurnRequest {
   name?: string;
 }
 
-export const CreateTurnRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  name: Schema.optional(Schema.String),
-}).pipe(
-  T.Http({ method: "POST", path: "/accounts/{account_id}/calls/turn_keys" }),
+export const CreateTurnRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      name: Schema.optional(Schema.String),
+    }).pipe(
+      T.Http({
+        method: "POST",
+        path: "/accounts/{account_id}/calls/turn_keys",
+      }),
+    ),
 ) as unknown as Schema.Schema<CreateTurnRequest>;
 
 export interface CreateTurnResponse {
@@ -386,17 +450,28 @@ export interface CreateTurnResponse {
   uid?: string | null;
 }
 
-export const CreateTurnResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  created: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  key: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  name: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  uid: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-}).pipe(
-  T.ResponsePath("result"),
+export const CreateTurnResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      created: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      key: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      name: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      uid: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          created: "created",
+          key: "secret",
+          modified: "modified",
+          name: "name",
+          uid: "uid",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
 ) as unknown as Schema.Schema<CreateTurnResponse>;
 
-export type CreateTurnError = DefaultErrors;
+export type CreateTurnError = DefaultErrors | Forbidden;
 
 export const createTurn: API.OperationMethod<
   CreateTurnRequest,
@@ -406,7 +481,7 @@ export const createTurn: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: CreateTurnRequest,
   output: CreateTurnResponse,
-  errors: [],
+  errors: [Forbidden],
 }));
 
 export interface UpdateTurnRequest {
@@ -417,15 +492,18 @@ export interface UpdateTurnRequest {
   name?: string;
 }
 
-export const UpdateTurnRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  keyId: Schema.String.pipe(T.HttpPath("keyId")),
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  name: Schema.optional(Schema.String),
-}).pipe(
-  T.Http({
-    method: "PUT",
-    path: "/accounts/{account_id}/calls/turn_keys/{keyId}",
-  }),
+export const UpdateTurnRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      keyId: Schema.String.pipe(T.HttpPath("keyId")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      name: Schema.optional(Schema.String),
+    }).pipe(
+      T.Http({
+        method: "PUT",
+        path: "/accounts/{account_id}/calls/turn_keys/{keyId}",
+      }),
+    ),
 ) as unknown as Schema.Schema<UpdateTurnRequest>;
 
 export interface UpdateTurnResponse {
@@ -439,16 +517,17 @@ export interface UpdateTurnResponse {
   uid?: string | null;
 }
 
-export const UpdateTurnResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  created: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  name: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  uid: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-}).pipe(
-  T.ResponsePath("result"),
+export const UpdateTurnResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      created: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      name: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      uid: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    }).pipe(T.ResponsePath("result")),
 ) as unknown as Schema.Schema<UpdateTurnResponse>;
 
-export type UpdateTurnError = DefaultErrors;
+export type UpdateTurnError = DefaultErrors | TurnKeyNotFound | Forbidden;
 
 export const updateTurn: API.OperationMethod<
   UpdateTurnRequest,
@@ -458,7 +537,7 @@ export const updateTurn: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: UpdateTurnRequest,
   output: UpdateTurnResponse,
-  errors: [],
+  errors: [TurnKeyNotFound, Forbidden],
 }));
 
 export interface DeleteTurnRequest {
@@ -467,14 +546,17 @@ export interface DeleteTurnRequest {
   accountId: string;
 }
 
-export const DeleteTurnRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  keyId: Schema.String.pipe(T.HttpPath("keyId")),
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-}).pipe(
-  T.Http({
-    method: "DELETE",
-    path: "/accounts/{account_id}/calls/turn_keys/{keyId}",
-  }),
+export const DeleteTurnRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      keyId: Schema.String.pipe(T.HttpPath("keyId")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "DELETE",
+        path: "/accounts/{account_id}/calls/turn_keys/{keyId}",
+      }),
+    ),
 ) as unknown as Schema.Schema<DeleteTurnRequest>;
 
 export interface DeleteTurnResponse {
@@ -488,16 +570,17 @@ export interface DeleteTurnResponse {
   uid?: string | null;
 }
 
-export const DeleteTurnResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  created: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  name: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  uid: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-}).pipe(
-  T.ResponsePath("result"),
+export const DeleteTurnResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      created: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      modified: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      name: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      uid: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+    }).pipe(T.ResponsePath("result")),
 ) as unknown as Schema.Schema<DeleteTurnResponse>;
 
-export type DeleteTurnError = DefaultErrors;
+export type DeleteTurnError = DefaultErrors | TurnKeyNotFound | Forbidden;
 
 export const deleteTurn: API.OperationMethod<
   DeleteTurnRequest,
@@ -507,5 +590,5 @@ export const deleteTurn: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: DeleteTurnRequest,
   output: DeleteTurnResponse,
-  errors: [],
+  errors: [TurnKeyNotFound, Forbidden],
 }));

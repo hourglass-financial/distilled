@@ -19,7 +19,7 @@ export type DeleteTerminalLocationsLocationInput =
 // Output Schema
 export const DeleteTerminalLocationsLocationOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    deleted: Schema.Literals(["true"]),
+    deleted: Schema.Literals([true]),
     id: Schema.String,
     object: Schema.Literals(["terminal.location"]),
   });

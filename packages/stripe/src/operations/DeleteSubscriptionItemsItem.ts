@@ -32,7 +32,7 @@ export type DeleteSubscriptionItemsItemInput =
 // Output Schema
 export const DeleteSubscriptionItemsItemOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    deleted: Schema.Literals(["true"]),
+    deleted: Schema.Literals([true]),
     id: Schema.String,
     object: Schema.Literals(["subscription_item"]),
   });

@@ -16,27 +16,37 @@ import { type DefaultErrors } from "../errors.ts";
 // Errors
 // =============================================================================
 
-export class VpcServiceNameAlreadyExists extends Schema.TaggedErrorClass<VpcServiceNameAlreadyExists>()(
-  "VpcServiceNameAlreadyExists",
-  { code: Schema.Number, message: Schema.String },
+export class Forbidden extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<Forbidden>()("Forbidden", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ status: 403 }],
 ) {}
-T.applyErrorMatchers(VpcServiceNameAlreadyExists, [
-  { code: 5101, message: { includes: "already exists" } },
-]);
 
-export class VpcServiceNotFound extends Schema.TaggedErrorClass<VpcServiceNotFound>()(
-  "VpcServiceNotFound",
-  { code: Schema.Number, message: Schema.String },
+export class VpcServiceNameAlreadyExists extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<VpcServiceNameAlreadyExists>()(
+    "VpcServiceNameAlreadyExists",
+    { code: Schema.Number, message: Schema.String },
+  ),
+  [{ code: 5101, message: { includes: "already exists" } }],
 ) {}
-T.applyErrorMatchers(VpcServiceNotFound, [{ code: 5104 }]);
 
-export class VpcTunnelNotFound extends Schema.TaggedErrorClass<VpcTunnelNotFound>()(
-  "VpcTunnelNotFound",
-  { code: Schema.Number, message: Schema.String },
+export class VpcServiceNotFound extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<VpcServiceNotFound>()("VpcServiceNotFound", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ code: 5104 }],
 ) {}
-T.applyErrorMatchers(VpcTunnelNotFound, [
-  { code: 5101, message: { includes: "Tunnel ID Not Found" } },
-]);
+
+export class VpcTunnelNotFound extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<VpcTunnelNotFound>()("VpcTunnelNotFound", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ code: 5101, message: { includes: "Tunnel ID Not Found" } }],
+) {}
 
 // =============================================================================
 // DirectoryService
@@ -48,14 +58,16 @@ export interface GetDirectoryServiceRequest {
 }
 
 export const GetDirectoryServiceRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    serviceId: Schema.String.pipe(T.HttpPath("serviceId")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  }).pipe(
-    T.Http({
-      method: "GET",
-      path: "/accounts/{account_id}/connectivity/directory/services/{serviceId}",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      serviceId: Schema.String.pipe(T.HttpPath("serviceId")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/connectivity/directory/services/{serviceId}",
+      }),
+    ),
   ) as unknown as Schema.Schema<GetDirectoryServiceRequest>;
 
 export type GetDirectoryServiceResponse =
@@ -79,6 +91,8 @@ export type GetDirectoryServiceResponse =
       serviceId?: string | null;
       tlsSettings?: { certVerificationMode: string } | null;
       updatedAt?: string | null;
+      tcpPort?: number | null;
+      appProtocol?: "postgresql" | "mysql" | null;
     }
   | {
       host:
@@ -100,167 +114,186 @@ export type GetDirectoryServiceResponse =
       tcpPort?: number | null;
       tlsSettings?: { certVerificationMode: string } | null;
       updatedAt?: string | null;
+      httpPort?: number | null;
+      httpsPort?: number | null;
     };
 
 export const GetDirectoryServiceResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Union([
-    Schema.Struct({
-      host: Schema.Union([
-        Schema.Struct({
-          ipv4: Schema.String,
-          ipv6: Schema.String,
-          network: Schema.Struct({
-            tunnelId: Schema.String,
-          }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-        }),
-        Schema.Struct({
-          ipv4: Schema.String,
-          network: Schema.Struct({
-            tunnelId: Schema.String,
-          }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-        }),
-        Schema.Struct({
-          ipv6: Schema.String,
-          network: Schema.Struct({
-            tunnelId: Schema.String,
-          }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-        }),
-        Schema.Struct({
-          hostname: Schema.String,
-          resolverNetwork: Schema.Struct({
-            tunnelId: Schema.String,
-            resolverIps: Schema.optional(
-              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Union([
+      Schema.Struct({
+        host: Schema.Union([
+          Schema.Struct({
+            ipv4: Schema.String,
+            ipv6: Schema.String,
+            network: Schema.Struct({
+              tunnelId: Schema.String,
+            }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
+          }),
+          Schema.Struct({
+            ipv4: Schema.String,
+            network: Schema.Struct({
+              tunnelId: Schema.String,
+            }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
+          }),
+          Schema.Struct({
+            ipv6: Schema.String,
+            network: Schema.Struct({
+              tunnelId: Schema.String,
+            }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
+          }),
+          Schema.Struct({
+            hostname: Schema.String,
+            resolverNetwork: Schema.Struct({
+              tunnelId: Schema.String,
+              resolverIps: Schema.optional(
+                Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+              ),
+            }).pipe(
+              Schema.encodeKeys({
+                tunnelId: "tunnel_id",
+                resolverIps: "resolver_ips",
+              }),
             ),
           }).pipe(
             Schema.encodeKeys({
-              tunnelId: "tunnel_id",
-              resolverIps: "resolver_ips",
+              hostname: "hostname",
+              resolverNetwork: "resolver_network",
             }),
           ),
-        }).pipe(
-          Schema.encodeKeys({
-            hostname: "hostname",
-            resolverNetwork: "resolver_network",
-          }),
-        ),
-      ]),
-      name: Schema.String,
-      type: Schema.Union([Schema.Literals(["tcp", "http"]), Schema.String]),
-      createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      httpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-      httpsPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-      serviceId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      tlsSettings: Schema.optional(
-        Schema.Union([
-          Schema.Struct({
-            certVerificationMode: Schema.String,
-          }).pipe(
-            Schema.encodeKeys({
-              certVerificationMode: "cert_verification_mode",
-            }),
-          ),
-          Schema.Null,
         ]),
+        name: Schema.String,
+        type: Schema.Union([Schema.Literals(["tcp", "http"]), Schema.String]),
+        createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        httpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+        httpsPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+        serviceId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        tlsSettings: Schema.optional(
+          Schema.Union([
+            Schema.Struct({
+              certVerificationMode: Schema.String,
+            }).pipe(
+              Schema.encodeKeys({
+                certVerificationMode: "cert_verification_mode",
+              }),
+            ),
+            Schema.Null,
+          ]),
+        ),
+        updatedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        tcpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+        appProtocol: Schema.optional(
+          Schema.Union([
+            Schema.Literal("postgresql"),
+            Schema.Literal("mysql"),
+            Schema.Null,
+          ]),
+        ),
+      }).pipe(
+        Schema.encodeKeys({
+          host: "host",
+          name: "name",
+          type: "type",
+          createdAt: "created_at",
+          httpPort: "http_port",
+          httpsPort: "https_port",
+          serviceId: "service_id",
+          tlsSettings: "tls_settings",
+          updatedAt: "updated_at",
+          tcpPort: "tcp_port",
+          appProtocol: "app_protocol",
+        }),
       ),
-      updatedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    }).pipe(
-      Schema.encodeKeys({
-        host: "host",
-        name: "name",
-        type: "type",
-        createdAt: "created_at",
-        httpPort: "http_port",
-        httpsPort: "https_port",
-        serviceId: "service_id",
-        tlsSettings: "tls_settings",
-        updatedAt: "updated_at",
-      }),
-    ),
-    Schema.Struct({
-      host: Schema.Union([
-        Schema.Struct({
-          ipv4: Schema.String,
-          ipv6: Schema.String,
-          network: Schema.Struct({
-            tunnelId: Schema.String,
-          }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-        }),
-        Schema.Struct({
-          ipv4: Schema.String,
-          network: Schema.Struct({
-            tunnelId: Schema.String,
-          }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-        }),
-        Schema.Struct({
-          ipv6: Schema.String,
-          network: Schema.Struct({
-            tunnelId: Schema.String,
-          }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-        }),
-        Schema.Struct({
-          hostname: Schema.String,
-          resolverNetwork: Schema.Struct({
-            tunnelId: Schema.String,
-            resolverIps: Schema.optional(
-              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+      Schema.Struct({
+        host: Schema.Union([
+          Schema.Struct({
+            ipv4: Schema.String,
+            ipv6: Schema.String,
+            network: Schema.Struct({
+              tunnelId: Schema.String,
+            }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
+          }),
+          Schema.Struct({
+            ipv4: Schema.String,
+            network: Schema.Struct({
+              tunnelId: Schema.String,
+            }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
+          }),
+          Schema.Struct({
+            ipv6: Schema.String,
+            network: Schema.Struct({
+              tunnelId: Schema.String,
+            }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
+          }),
+          Schema.Struct({
+            hostname: Schema.String,
+            resolverNetwork: Schema.Struct({
+              tunnelId: Schema.String,
+              resolverIps: Schema.optional(
+                Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+              ),
+            }).pipe(
+              Schema.encodeKeys({
+                tunnelId: "tunnel_id",
+                resolverIps: "resolver_ips",
+              }),
             ),
           }).pipe(
             Schema.encodeKeys({
-              tunnelId: "tunnel_id",
-              resolverIps: "resolver_ips",
+              hostname: "hostname",
+              resolverNetwork: "resolver_network",
             }),
           ),
-        }).pipe(
-          Schema.encodeKeys({
-            hostname: "hostname",
-            resolverNetwork: "resolver_network",
-          }),
+        ]),
+        name: Schema.String,
+        type: Schema.Union([Schema.Literals(["tcp", "http"]), Schema.String]),
+        appProtocol: Schema.optional(
+          Schema.Union([
+            Schema.Literal("postgresql"),
+            Schema.Literal("mysql"),
+            Schema.Null,
+          ]),
         ),
-      ]),
-      name: Schema.String,
-      type: Schema.Union([Schema.Literals(["tcp", "http"]), Schema.String]),
-      appProtocol: Schema.optional(
-        Schema.Union([
-          Schema.Literal("postgresql"),
-          Schema.Literal("mysql"),
-          Schema.Null,
-        ]),
+        createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        serviceId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        tcpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+        tlsSettings: Schema.optional(
+          Schema.Union([
+            Schema.Struct({
+              certVerificationMode: Schema.String,
+            }).pipe(
+              Schema.encodeKeys({
+                certVerificationMode: "cert_verification_mode",
+              }),
+            ),
+            Schema.Null,
+          ]),
+        ),
+        updatedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        httpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+        httpsPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      }).pipe(
+        Schema.encodeKeys({
+          host: "host",
+          name: "name",
+          type: "type",
+          appProtocol: "app_protocol",
+          createdAt: "created_at",
+          serviceId: "service_id",
+          tcpPort: "tcp_port",
+          tlsSettings: "tls_settings",
+          updatedAt: "updated_at",
+          httpPort: "http_port",
+          httpsPort: "https_port",
+        }),
       ),
-      createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      serviceId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      tcpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-      tlsSettings: Schema.optional(
-        Schema.Union([
-          Schema.Struct({
-            certVerificationMode: Schema.String,
-          }).pipe(
-            Schema.encodeKeys({
-              certVerificationMode: "cert_verification_mode",
-            }),
-          ),
-          Schema.Null,
-        ]),
-      ),
-      updatedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    }).pipe(
-      Schema.encodeKeys({
-        host: "host",
-        name: "name",
-        type: "type",
-        appProtocol: "app_protocol",
-        createdAt: "created_at",
-        serviceId: "service_id",
-        tcpPort: "tcp_port",
-        tlsSettings: "tls_settings",
-        updatedAt: "updated_at",
-      }),
-    ),
-  ]).pipe(
-    T.ResponsePath("result"),
+    ]).pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<GetDirectoryServiceResponse>;
 
-export type GetDirectoryServiceError = DefaultErrors | VpcServiceNotFound;
+export type GetDirectoryServiceError =
+  | DefaultErrors
+  | VpcServiceNotFound
+  | Forbidden;
 
 export const getDirectoryService: API.OperationMethod<
   GetDirectoryServiceRequest,
@@ -270,7 +303,7 @@ export const getDirectoryService: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: GetDirectoryServiceRequest,
   output: GetDirectoryServiceResponse,
-  errors: [VpcServiceNotFound],
+  errors: [VpcServiceNotFound, Forbidden],
 }));
 
 export interface ListDirectoryServicesRequest {
@@ -283,22 +316,24 @@ export interface ListDirectoryServicesRequest {
 }
 
 export const ListDirectoryServicesRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    page: Schema.optional(Schema.Number).pipe(T.HttpQuery("page")),
-    perPage: Schema.optional(Schema.Number).pipe(T.HttpQuery("per_page")),
-    type: Schema.optional(
-      Schema.Union([
-        Schema.Literal("tcp"),
-        Schema.Literal("http"),
-        Schema.Null,
-      ]),
-    ).pipe(T.HttpQuery("type")),
-  }).pipe(
-    T.Http({
-      method: "GET",
-      path: "/accounts/{account_id}/connectivity/directory/services",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      page: Schema.optional(Schema.Number).pipe(T.HttpQuery("page")),
+      perPage: Schema.optional(Schema.Number).pipe(T.HttpQuery("per_page")),
+      type: Schema.optional(
+        Schema.Union([
+          Schema.Literal("tcp"),
+          Schema.Literal("http"),
+          Schema.Null,
+        ]),
+      ).pipe(T.HttpQuery("type")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/connectivity/directory/services",
+      }),
+    ),
   ) as unknown as Schema.Schema<ListDirectoryServicesRequest>;
 
 export interface ListDirectoryServicesResponse {
@@ -323,6 +358,8 @@ export interface ListDirectoryServicesResponse {
         serviceId?: string | null;
         tlsSettings?: { certVerificationMode: string } | null;
         updatedAt?: string | null;
+        tcpPort?: number | null;
+        appProtocol?: "postgresql" | "mysql" | null;
       }
     | {
         host:
@@ -344,6 +381,8 @@ export interface ListDirectoryServicesResponse {
         tcpPort?: number | null;
         tlsSettings?: { certVerificationMode: string } | null;
         updatedAt?: string | null;
+        httpPort?: number | null;
+        httpsPort?: number | null;
       }
   )[];
   resultInfo?: {
@@ -355,202 +394,234 @@ export interface ListDirectoryServicesResponse {
 }
 
 export const ListDirectoryServicesResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    result: Schema.Array(
-      Schema.Union([
-        Schema.Struct({
-          host: Schema.Union([
-            Schema.Struct({
-              ipv4: Schema.String,
-              ipv6: Schema.String,
-              network: Schema.Struct({
-                tunnelId: Schema.String,
-              }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-            }),
-            Schema.Struct({
-              ipv4: Schema.String,
-              network: Schema.Struct({
-                tunnelId: Schema.String,
-              }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-            }),
-            Schema.Struct({
-              ipv6: Schema.String,
-              network: Schema.Struct({
-                tunnelId: Schema.String,
-              }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-            }),
-            Schema.Struct({
-              hostname: Schema.String,
-              resolverNetwork: Schema.Struct({
-                tunnelId: Schema.String,
-                resolverIps: Schema.optional(
-                  Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      result: Schema.Array(
+        Schema.Union([
+          Schema.Struct({
+            host: Schema.Union([
+              Schema.Struct({
+                ipv4: Schema.String,
+                ipv6: Schema.String,
+                network: Schema.Struct({
+                  tunnelId: Schema.String,
+                }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
+              }),
+              Schema.Struct({
+                ipv4: Schema.String,
+                network: Schema.Struct({
+                  tunnelId: Schema.String,
+                }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
+              }),
+              Schema.Struct({
+                ipv6: Schema.String,
+                network: Schema.Struct({
+                  tunnelId: Schema.String,
+                }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
+              }),
+              Schema.Struct({
+                hostname: Schema.String,
+                resolverNetwork: Schema.Struct({
+                  tunnelId: Schema.String,
+                  resolverIps: Schema.optional(
+                    Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+                  ),
+                }).pipe(
+                  Schema.encodeKeys({
+                    tunnelId: "tunnel_id",
+                    resolverIps: "resolver_ips",
+                  }),
                 ),
               }).pipe(
                 Schema.encodeKeys({
-                  tunnelId: "tunnel_id",
-                  resolverIps: "resolver_ips",
+                  hostname: "hostname",
+                  resolverNetwork: "resolver_network",
                 }),
               ),
-            }).pipe(
-              Schema.encodeKeys({
-                hostname: "hostname",
-                resolverNetwork: "resolver_network",
-              }),
-            ),
-          ]),
-          name: Schema.String,
-          type: Schema.Union([Schema.Literals(["tcp", "http"]), Schema.String]),
-          createdAt: Schema.optional(
-            Schema.Union([Schema.String, Schema.Null]),
-          ),
-          httpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-          httpsPort: Schema.optional(
-            Schema.Union([Schema.Number, Schema.Null]),
-          ),
-          serviceId: Schema.optional(
-            Schema.Union([Schema.String, Schema.Null]),
-          ),
-          tlsSettings: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                certVerificationMode: Schema.String,
-              }).pipe(
-                Schema.encodeKeys({
-                  certVerificationMode: "cert_verification_mode",
-                }),
-              ),
-              Schema.Null,
             ]),
+            name: Schema.String,
+            type: Schema.Union([
+              Schema.Literals(["tcp", "http"]),
+              Schema.String,
+            ]),
+            createdAt: Schema.optional(
+              Schema.Union([Schema.String, Schema.Null]),
+            ),
+            httpPort: Schema.optional(
+              Schema.Union([Schema.Number, Schema.Null]),
+            ),
+            httpsPort: Schema.optional(
+              Schema.Union([Schema.Number, Schema.Null]),
+            ),
+            serviceId: Schema.optional(
+              Schema.Union([Schema.String, Schema.Null]),
+            ),
+            tlsSettings: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  certVerificationMode: Schema.String,
+                }).pipe(
+                  Schema.encodeKeys({
+                    certVerificationMode: "cert_verification_mode",
+                  }),
+                ),
+                Schema.Null,
+              ]),
+            ),
+            updatedAt: Schema.optional(
+              Schema.Union([Schema.String, Schema.Null]),
+            ),
+            tcpPort: Schema.optional(
+              Schema.Union([Schema.Number, Schema.Null]),
+            ),
+            appProtocol: Schema.optional(
+              Schema.Union([
+                Schema.Literal("postgresql"),
+                Schema.Literal("mysql"),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              host: "host",
+              name: "name",
+              type: "type",
+              createdAt: "created_at",
+              httpPort: "http_port",
+              httpsPort: "https_port",
+              serviceId: "service_id",
+              tlsSettings: "tls_settings",
+              updatedAt: "updated_at",
+              tcpPort: "tcp_port",
+              appProtocol: "app_protocol",
+            }),
           ),
-          updatedAt: Schema.optional(
-            Schema.Union([Schema.String, Schema.Null]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            host: "host",
-            name: "name",
-            type: "type",
-            createdAt: "created_at",
-            httpPort: "http_port",
-            httpsPort: "https_port",
-            serviceId: "service_id",
-            tlsSettings: "tls_settings",
-            updatedAt: "updated_at",
-          }),
-        ),
-        Schema.Struct({
-          host: Schema.Union([
-            Schema.Struct({
-              ipv4: Schema.String,
-              ipv6: Schema.String,
-              network: Schema.Struct({
-                tunnelId: Schema.String,
-              }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-            }),
-            Schema.Struct({
-              ipv4: Schema.String,
-              network: Schema.Struct({
-                tunnelId: Schema.String,
-              }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-            }),
-            Schema.Struct({
-              ipv6: Schema.String,
-              network: Schema.Struct({
-                tunnelId: Schema.String,
-              }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-            }),
-            Schema.Struct({
-              hostname: Schema.String,
-              resolverNetwork: Schema.Struct({
-                tunnelId: Schema.String,
-                resolverIps: Schema.optional(
-                  Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+          Schema.Struct({
+            host: Schema.Union([
+              Schema.Struct({
+                ipv4: Schema.String,
+                ipv6: Schema.String,
+                network: Schema.Struct({
+                  tunnelId: Schema.String,
+                }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
+              }),
+              Schema.Struct({
+                ipv4: Schema.String,
+                network: Schema.Struct({
+                  tunnelId: Schema.String,
+                }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
+              }),
+              Schema.Struct({
+                ipv6: Schema.String,
+                network: Schema.Struct({
+                  tunnelId: Schema.String,
+                }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
+              }),
+              Schema.Struct({
+                hostname: Schema.String,
+                resolverNetwork: Schema.Struct({
+                  tunnelId: Schema.String,
+                  resolverIps: Schema.optional(
+                    Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+                  ),
+                }).pipe(
+                  Schema.encodeKeys({
+                    tunnelId: "tunnel_id",
+                    resolverIps: "resolver_ips",
+                  }),
                 ),
               }).pipe(
                 Schema.encodeKeys({
-                  tunnelId: "tunnel_id",
-                  resolverIps: "resolver_ips",
+                  hostname: "hostname",
+                  resolverNetwork: "resolver_network",
                 }),
               ),
-            }).pipe(
-              Schema.encodeKeys({
-                hostname: "hostname",
-                resolverNetwork: "resolver_network",
-              }),
+            ]),
+            name: Schema.String,
+            type: Schema.Union([
+              Schema.Literals(["tcp", "http"]),
+              Schema.String,
+            ]),
+            appProtocol: Schema.optional(
+              Schema.Union([
+                Schema.Literal("postgresql"),
+                Schema.Literal("mysql"),
+                Schema.Null,
+              ]),
             ),
-          ]),
-          name: Schema.String,
-          type: Schema.Union([Schema.Literals(["tcp", "http"]), Schema.String]),
-          appProtocol: Schema.optional(
-            Schema.Union([
-              Schema.Literal("postgresql"),
-              Schema.Literal("mysql"),
-              Schema.Null,
-            ]),
+            createdAt: Schema.optional(
+              Schema.Union([Schema.String, Schema.Null]),
+            ),
+            serviceId: Schema.optional(
+              Schema.Union([Schema.String, Schema.Null]),
+            ),
+            tcpPort: Schema.optional(
+              Schema.Union([Schema.Number, Schema.Null]),
+            ),
+            tlsSettings: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  certVerificationMode: Schema.String,
+                }).pipe(
+                  Schema.encodeKeys({
+                    certVerificationMode: "cert_verification_mode",
+                  }),
+                ),
+                Schema.Null,
+              ]),
+            ),
+            updatedAt: Schema.optional(
+              Schema.Union([Schema.String, Schema.Null]),
+            ),
+            httpPort: Schema.optional(
+              Schema.Union([Schema.Number, Schema.Null]),
+            ),
+            httpsPort: Schema.optional(
+              Schema.Union([Schema.Number, Schema.Null]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              host: "host",
+              name: "name",
+              type: "type",
+              appProtocol: "app_protocol",
+              createdAt: "created_at",
+              serviceId: "service_id",
+              tcpPort: "tcp_port",
+              tlsSettings: "tls_settings",
+              updatedAt: "updated_at",
+              httpPort: "http_port",
+              httpsPort: "https_port",
+            }),
           ),
-          createdAt: Schema.optional(
-            Schema.Union([Schema.String, Schema.Null]),
+        ]),
+      ),
+      resultInfo: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            count: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+            page: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+            perPage: Schema.optional(
+              Schema.Union([Schema.Number, Schema.Null]),
+            ),
+            totalCount: Schema.optional(
+              Schema.Union([Schema.Number, Schema.Null]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              count: "count",
+              page: "page",
+              perPage: "per_page",
+              totalCount: "total_count",
+            }),
           ),
-          serviceId: Schema.optional(
-            Schema.Union([Schema.String, Schema.Null]),
-          ),
-          tcpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-          tlsSettings: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                certVerificationMode: Schema.String,
-              }).pipe(
-                Schema.encodeKeys({
-                  certVerificationMode: "cert_verification_mode",
-                }),
-              ),
-              Schema.Null,
-            ]),
-          ),
-          updatedAt: Schema.optional(
-            Schema.Union([Schema.String, Schema.Null]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            host: "host",
-            name: "name",
-            type: "type",
-            appProtocol: "app_protocol",
-            createdAt: "created_at",
-            serviceId: "service_id",
-            tcpPort: "tcp_port",
-            tlsSettings: "tls_settings",
-            updatedAt: "updated_at",
-          }),
-        ),
-      ]),
-    ),
-    resultInfo: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          count: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-          page: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-          perPage: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-          totalCount: Schema.optional(
-            Schema.Union([Schema.Number, Schema.Null]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            count: "count",
-            page: "page",
-            perPage: "per_page",
-            totalCount: "total_count",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-  }).pipe(
-    Schema.encodeKeys({ result: "result", resultInfo: "result_info" }),
+          Schema.Null,
+        ]),
+      ),
+    }).pipe(Schema.encodeKeys({ result: "result", resultInfo: "result_info" })),
   ) as unknown as Schema.Schema<ListDirectoryServicesResponse>;
 
-export type ListDirectoryServicesError = DefaultErrors;
+export type ListDirectoryServicesError = DefaultErrors | Forbidden;
 
 export const listDirectoryServices: API.PaginatedOperationMethod<
   ListDirectoryServicesRequest,
@@ -560,7 +631,7 @@ export const listDirectoryServices: API.PaginatedOperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.makePaginated(() => ({
   input: ListDirectoryServicesRequest,
   output: ListDirectoryServicesResponse,
-  errors: [],
+  errors: [Forbidden],
   pagination: {
     mode: "page",
     inputToken: "page",
@@ -598,76 +669,80 @@ export interface CreateDirectoryServiceRequest {
 }
 
 export const CreateDirectoryServiceRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    host: Schema.Struct({
-      ipv4: Schema.optional(Schema.String),
-      network: Schema.optional(
-        Schema.Struct({
-          tunnelId: Schema.String,
-        }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-      ),
-      ipv6: Schema.optional(Schema.String),
-      hostname: Schema.optional(Schema.String),
-      resolverNetwork: Schema.optional(
-        Schema.Struct({
-          tunnelId: Schema.String,
-          resolverIps: Schema.optional(
-            Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            tunnelId: "tunnel_id",
-            resolverIps: "resolver_ips",
-          }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      host: Schema.Struct({
+        ipv4: Schema.optional(Schema.String),
+        network: Schema.optional(
+          Schema.Struct({
+            tunnelId: Schema.String,
+          }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
         ),
+        ipv6: Schema.optional(Schema.String),
+        hostname: Schema.optional(Schema.String),
+        resolverNetwork: Schema.optional(
+          Schema.Struct({
+            tunnelId: Schema.String,
+            resolverIps: Schema.optional(
+              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              tunnelId: "tunnel_id",
+              resolverIps: "resolver_ips",
+            }),
+          ),
+        ),
+      }).pipe(
+        Schema.encodeKeys({
+          ipv4: "ipv4",
+          network: "network",
+          ipv6: "ipv6",
+          hostname: "hostname",
+          resolverNetwork: "resolver_network",
+        }),
       ),
+      name: Schema.String,
+      type: Schema.Union([Schema.Literals(["tcp", "http"]), Schema.String]),
+      httpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      httpsPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      tlsSettings: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            certVerificationMode: Schema.String,
+          }).pipe(
+            Schema.encodeKeys({
+              certVerificationMode: "cert_verification_mode",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      appProtocol: Schema.optional(
+        Schema.Union([
+          Schema.Literal("postgresql"),
+          Schema.Literal("mysql"),
+          Schema.Null,
+        ]),
+      ),
+      tcpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
     }).pipe(
       Schema.encodeKeys({
-        ipv4: "ipv4",
-        network: "network",
-        ipv6: "ipv6",
-        hostname: "hostname",
-        resolverNetwork: "resolver_network",
+        host: "host",
+        name: "name",
+        type: "type",
+        httpPort: "http_port",
+        httpsPort: "https_port",
+        tlsSettings: "tls_settings",
+        appProtocol: "app_protocol",
+        tcpPort: "tcp_port",
+      }),
+      T.Http({
+        method: "POST",
+        path: "/accounts/{account_id}/connectivity/directory/services",
       }),
     ),
-    name: Schema.String,
-    type: Schema.Union([Schema.Literals(["tcp", "http"]), Schema.String]),
-    httpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    httpsPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    tlsSettings: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          certVerificationMode: Schema.String,
-        }).pipe(
-          Schema.encodeKeys({ certVerificationMode: "cert_verification_mode" }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    appProtocol: Schema.optional(
-      Schema.Union([
-        Schema.Literal("postgresql"),
-        Schema.Literal("mysql"),
-        Schema.Null,
-      ]),
-    ),
-    tcpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-  }).pipe(
-    Schema.encodeKeys({
-      host: "host",
-      name: "name",
-      type: "type",
-      httpPort: "http_port",
-      httpsPort: "https_port",
-      tlsSettings: "tls_settings",
-      appProtocol: "app_protocol",
-      tcpPort: "tcp_port",
-    }),
-    T.Http({
-      method: "POST",
-      path: "/accounts/{account_id}/connectivity/directory/services",
-    }),
   ) as unknown as Schema.Schema<CreateDirectoryServiceRequest>;
 
 export type CreateDirectoryServiceResponse =
@@ -691,6 +766,8 @@ export type CreateDirectoryServiceResponse =
       serviceId?: string | null;
       tlsSettings?: { certVerificationMode: string } | null;
       updatedAt?: string | null;
+      tcpPort?: number | null;
+      appProtocol?: "postgresql" | "mysql" | null;
     }
   | {
       host:
@@ -712,170 +789,187 @@ export type CreateDirectoryServiceResponse =
       tcpPort?: number | null;
       tlsSettings?: { certVerificationMode: string } | null;
       updatedAt?: string | null;
+      httpPort?: number | null;
+      httpsPort?: number | null;
     };
 
 export const CreateDirectoryServiceResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Union([
-    Schema.Struct({
-      host: Schema.Union([
-        Schema.Struct({
-          ipv4: Schema.String,
-          ipv6: Schema.String,
-          network: Schema.Struct({
-            tunnelId: Schema.String,
-          }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-        }),
-        Schema.Struct({
-          ipv4: Schema.String,
-          network: Schema.Struct({
-            tunnelId: Schema.String,
-          }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-        }),
-        Schema.Struct({
-          ipv6: Schema.String,
-          network: Schema.Struct({
-            tunnelId: Schema.String,
-          }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-        }),
-        Schema.Struct({
-          hostname: Schema.String,
-          resolverNetwork: Schema.Struct({
-            tunnelId: Schema.String,
-            resolverIps: Schema.optional(
-              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Union([
+      Schema.Struct({
+        host: Schema.Union([
+          Schema.Struct({
+            ipv4: Schema.String,
+            ipv6: Schema.String,
+            network: Schema.Struct({
+              tunnelId: Schema.String,
+            }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
+          }),
+          Schema.Struct({
+            ipv4: Schema.String,
+            network: Schema.Struct({
+              tunnelId: Schema.String,
+            }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
+          }),
+          Schema.Struct({
+            ipv6: Schema.String,
+            network: Schema.Struct({
+              tunnelId: Schema.String,
+            }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
+          }),
+          Schema.Struct({
+            hostname: Schema.String,
+            resolverNetwork: Schema.Struct({
+              tunnelId: Schema.String,
+              resolverIps: Schema.optional(
+                Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+              ),
+            }).pipe(
+              Schema.encodeKeys({
+                tunnelId: "tunnel_id",
+                resolverIps: "resolver_ips",
+              }),
             ),
           }).pipe(
             Schema.encodeKeys({
-              tunnelId: "tunnel_id",
-              resolverIps: "resolver_ips",
+              hostname: "hostname",
+              resolverNetwork: "resolver_network",
             }),
           ),
-        }).pipe(
-          Schema.encodeKeys({
-            hostname: "hostname",
-            resolverNetwork: "resolver_network",
-          }),
-        ),
-      ]),
-      name: Schema.String,
-      type: Schema.Union([Schema.Literals(["tcp", "http"]), Schema.String]),
-      createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      httpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-      httpsPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-      serviceId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      tlsSettings: Schema.optional(
-        Schema.Union([
-          Schema.Struct({
-            certVerificationMode: Schema.String,
-          }).pipe(
-            Schema.encodeKeys({
-              certVerificationMode: "cert_verification_mode",
-            }),
-          ),
-          Schema.Null,
         ]),
+        name: Schema.String,
+        type: Schema.Union([Schema.Literals(["tcp", "http"]), Schema.String]),
+        createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        httpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+        httpsPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+        serviceId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        tlsSettings: Schema.optional(
+          Schema.Union([
+            Schema.Struct({
+              certVerificationMode: Schema.String,
+            }).pipe(
+              Schema.encodeKeys({
+                certVerificationMode: "cert_verification_mode",
+              }),
+            ),
+            Schema.Null,
+          ]),
+        ),
+        updatedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        tcpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+        appProtocol: Schema.optional(
+          Schema.Union([
+            Schema.Literal("postgresql"),
+            Schema.Literal("mysql"),
+            Schema.Null,
+          ]),
+        ),
+      }).pipe(
+        Schema.encodeKeys({
+          host: "host",
+          name: "name",
+          type: "type",
+          createdAt: "created_at",
+          httpPort: "http_port",
+          httpsPort: "https_port",
+          serviceId: "service_id",
+          tlsSettings: "tls_settings",
+          updatedAt: "updated_at",
+          tcpPort: "tcp_port",
+          appProtocol: "app_protocol",
+        }),
       ),
-      updatedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    }).pipe(
-      Schema.encodeKeys({
-        host: "host",
-        name: "name",
-        type: "type",
-        createdAt: "created_at",
-        httpPort: "http_port",
-        httpsPort: "https_port",
-        serviceId: "service_id",
-        tlsSettings: "tls_settings",
-        updatedAt: "updated_at",
-      }),
-    ),
-    Schema.Struct({
-      host: Schema.Union([
-        Schema.Struct({
-          ipv4: Schema.String,
-          ipv6: Schema.String,
-          network: Schema.Struct({
-            tunnelId: Schema.String,
-          }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-        }),
-        Schema.Struct({
-          ipv4: Schema.String,
-          network: Schema.Struct({
-            tunnelId: Schema.String,
-          }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-        }),
-        Schema.Struct({
-          ipv6: Schema.String,
-          network: Schema.Struct({
-            tunnelId: Schema.String,
-          }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-        }),
-        Schema.Struct({
-          hostname: Schema.String,
-          resolverNetwork: Schema.Struct({
-            tunnelId: Schema.String,
-            resolverIps: Schema.optional(
-              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+      Schema.Struct({
+        host: Schema.Union([
+          Schema.Struct({
+            ipv4: Schema.String,
+            ipv6: Schema.String,
+            network: Schema.Struct({
+              tunnelId: Schema.String,
+            }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
+          }),
+          Schema.Struct({
+            ipv4: Schema.String,
+            network: Schema.Struct({
+              tunnelId: Schema.String,
+            }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
+          }),
+          Schema.Struct({
+            ipv6: Schema.String,
+            network: Schema.Struct({
+              tunnelId: Schema.String,
+            }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
+          }),
+          Schema.Struct({
+            hostname: Schema.String,
+            resolverNetwork: Schema.Struct({
+              tunnelId: Schema.String,
+              resolverIps: Schema.optional(
+                Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+              ),
+            }).pipe(
+              Schema.encodeKeys({
+                tunnelId: "tunnel_id",
+                resolverIps: "resolver_ips",
+              }),
             ),
           }).pipe(
             Schema.encodeKeys({
-              tunnelId: "tunnel_id",
-              resolverIps: "resolver_ips",
+              hostname: "hostname",
+              resolverNetwork: "resolver_network",
             }),
           ),
-        }).pipe(
-          Schema.encodeKeys({
-            hostname: "hostname",
-            resolverNetwork: "resolver_network",
-          }),
+        ]),
+        name: Schema.String,
+        type: Schema.Union([Schema.Literals(["tcp", "http"]), Schema.String]),
+        appProtocol: Schema.optional(
+          Schema.Union([
+            Schema.Literal("postgresql"),
+            Schema.Literal("mysql"),
+            Schema.Null,
+          ]),
         ),
-      ]),
-      name: Schema.String,
-      type: Schema.Union([Schema.Literals(["tcp", "http"]), Schema.String]),
-      appProtocol: Schema.optional(
-        Schema.Union([
-          Schema.Literal("postgresql"),
-          Schema.Literal("mysql"),
-          Schema.Null,
-        ]),
+        createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        serviceId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        tcpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+        tlsSettings: Schema.optional(
+          Schema.Union([
+            Schema.Struct({
+              certVerificationMode: Schema.String,
+            }).pipe(
+              Schema.encodeKeys({
+                certVerificationMode: "cert_verification_mode",
+              }),
+            ),
+            Schema.Null,
+          ]),
+        ),
+        updatedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        httpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+        httpsPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      }).pipe(
+        Schema.encodeKeys({
+          host: "host",
+          name: "name",
+          type: "type",
+          appProtocol: "app_protocol",
+          createdAt: "created_at",
+          serviceId: "service_id",
+          tcpPort: "tcp_port",
+          tlsSettings: "tls_settings",
+          updatedAt: "updated_at",
+          httpPort: "http_port",
+          httpsPort: "https_port",
+        }),
       ),
-      createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      serviceId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      tcpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-      tlsSettings: Schema.optional(
-        Schema.Union([
-          Schema.Struct({
-            certVerificationMode: Schema.String,
-          }).pipe(
-            Schema.encodeKeys({
-              certVerificationMode: "cert_verification_mode",
-            }),
-          ),
-          Schema.Null,
-        ]),
-      ),
-      updatedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    }).pipe(
-      Schema.encodeKeys({
-        host: "host",
-        name: "name",
-        type: "type",
-        appProtocol: "app_protocol",
-        createdAt: "created_at",
-        serviceId: "service_id",
-        tcpPort: "tcp_port",
-        tlsSettings: "tls_settings",
-        updatedAt: "updated_at",
-      }),
-    ),
-  ]).pipe(
-    T.ResponsePath("result"),
+    ]).pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<CreateDirectoryServiceResponse>;
 
 export type CreateDirectoryServiceError =
   | DefaultErrors
   | VpcServiceNameAlreadyExists
-  | VpcTunnelNotFound;
+  | VpcTunnelNotFound
+  | Forbidden;
 
 export const createDirectoryService: API.OperationMethod<
   CreateDirectoryServiceRequest,
@@ -885,7 +979,7 @@ export const createDirectoryService: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: CreateDirectoryServiceRequest,
   output: CreateDirectoryServiceResponse,
-  errors: [VpcServiceNameAlreadyExists, VpcTunnelNotFound],
+  errors: [VpcServiceNameAlreadyExists, VpcTunnelNotFound, Forbidden],
 }));
 
 export interface UpdateDirectoryServiceRequest {
@@ -917,77 +1011,81 @@ export interface UpdateDirectoryServiceRequest {
 }
 
 export const UpdateDirectoryServiceRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    serviceId: Schema.String.pipe(T.HttpPath("serviceId")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    host: Schema.Struct({
-      ipv4: Schema.optional(Schema.String),
-      network: Schema.optional(
-        Schema.Struct({
-          tunnelId: Schema.String,
-        }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-      ),
-      ipv6: Schema.optional(Schema.String),
-      hostname: Schema.optional(Schema.String),
-      resolverNetwork: Schema.optional(
-        Schema.Struct({
-          tunnelId: Schema.String,
-          resolverIps: Schema.optional(
-            Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            tunnelId: "tunnel_id",
-            resolverIps: "resolver_ips",
-          }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      serviceId: Schema.String.pipe(T.HttpPath("serviceId")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      host: Schema.Struct({
+        ipv4: Schema.optional(Schema.String),
+        network: Schema.optional(
+          Schema.Struct({
+            tunnelId: Schema.String,
+          }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
         ),
+        ipv6: Schema.optional(Schema.String),
+        hostname: Schema.optional(Schema.String),
+        resolverNetwork: Schema.optional(
+          Schema.Struct({
+            tunnelId: Schema.String,
+            resolverIps: Schema.optional(
+              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              tunnelId: "tunnel_id",
+              resolverIps: "resolver_ips",
+            }),
+          ),
+        ),
+      }).pipe(
+        Schema.encodeKeys({
+          ipv4: "ipv4",
+          network: "network",
+          ipv6: "ipv6",
+          hostname: "hostname",
+          resolverNetwork: "resolver_network",
+        }),
       ),
+      name: Schema.String,
+      type: Schema.Union([Schema.Literals(["tcp", "http"]), Schema.String]),
+      httpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      httpsPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      tlsSettings: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            certVerificationMode: Schema.String,
+          }).pipe(
+            Schema.encodeKeys({
+              certVerificationMode: "cert_verification_mode",
+            }),
+          ),
+          Schema.Null,
+        ]),
+      ),
+      appProtocol: Schema.optional(
+        Schema.Union([
+          Schema.Literal("postgresql"),
+          Schema.Literal("mysql"),
+          Schema.Null,
+        ]),
+      ),
+      tcpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
     }).pipe(
       Schema.encodeKeys({
-        ipv4: "ipv4",
-        network: "network",
-        ipv6: "ipv6",
-        hostname: "hostname",
-        resolverNetwork: "resolver_network",
+        host: "host",
+        name: "name",
+        type: "type",
+        httpPort: "http_port",
+        httpsPort: "https_port",
+        tlsSettings: "tls_settings",
+        appProtocol: "app_protocol",
+        tcpPort: "tcp_port",
+      }),
+      T.Http({
+        method: "PUT",
+        path: "/accounts/{account_id}/connectivity/directory/services/{serviceId}",
       }),
     ),
-    name: Schema.String,
-    type: Schema.Union([Schema.Literals(["tcp", "http"]), Schema.String]),
-    httpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    httpsPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-    tlsSettings: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          certVerificationMode: Schema.String,
-        }).pipe(
-          Schema.encodeKeys({ certVerificationMode: "cert_verification_mode" }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    appProtocol: Schema.optional(
-      Schema.Union([
-        Schema.Literal("postgresql"),
-        Schema.Literal("mysql"),
-        Schema.Null,
-      ]),
-    ),
-    tcpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-  }).pipe(
-    Schema.encodeKeys({
-      host: "host",
-      name: "name",
-      type: "type",
-      httpPort: "http_port",
-      httpsPort: "https_port",
-      tlsSettings: "tls_settings",
-      appProtocol: "app_protocol",
-      tcpPort: "tcp_port",
-    }),
-    T.Http({
-      method: "PUT",
-      path: "/accounts/{account_id}/connectivity/directory/services/{serviceId}",
-    }),
   ) as unknown as Schema.Schema<UpdateDirectoryServiceRequest>;
 
 export type UpdateDirectoryServiceResponse =
@@ -1011,6 +1109,8 @@ export type UpdateDirectoryServiceResponse =
       serviceId?: string | null;
       tlsSettings?: { certVerificationMode: string } | null;
       updatedAt?: string | null;
+      tcpPort?: number | null;
+      appProtocol?: "postgresql" | "mysql" | null;
     }
   | {
       host:
@@ -1032,171 +1132,188 @@ export type UpdateDirectoryServiceResponse =
       tcpPort?: number | null;
       tlsSettings?: { certVerificationMode: string } | null;
       updatedAt?: string | null;
+      httpPort?: number | null;
+      httpsPort?: number | null;
     };
 
 export const UpdateDirectoryServiceResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Union([
-    Schema.Struct({
-      host: Schema.Union([
-        Schema.Struct({
-          ipv4: Schema.String,
-          ipv6: Schema.String,
-          network: Schema.Struct({
-            tunnelId: Schema.String,
-          }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-        }),
-        Schema.Struct({
-          ipv4: Schema.String,
-          network: Schema.Struct({
-            tunnelId: Schema.String,
-          }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-        }),
-        Schema.Struct({
-          ipv6: Schema.String,
-          network: Schema.Struct({
-            tunnelId: Schema.String,
-          }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-        }),
-        Schema.Struct({
-          hostname: Schema.String,
-          resolverNetwork: Schema.Struct({
-            tunnelId: Schema.String,
-            resolverIps: Schema.optional(
-              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Union([
+      Schema.Struct({
+        host: Schema.Union([
+          Schema.Struct({
+            ipv4: Schema.String,
+            ipv6: Schema.String,
+            network: Schema.Struct({
+              tunnelId: Schema.String,
+            }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
+          }),
+          Schema.Struct({
+            ipv4: Schema.String,
+            network: Schema.Struct({
+              tunnelId: Schema.String,
+            }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
+          }),
+          Schema.Struct({
+            ipv6: Schema.String,
+            network: Schema.Struct({
+              tunnelId: Schema.String,
+            }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
+          }),
+          Schema.Struct({
+            hostname: Schema.String,
+            resolverNetwork: Schema.Struct({
+              tunnelId: Schema.String,
+              resolverIps: Schema.optional(
+                Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+              ),
+            }).pipe(
+              Schema.encodeKeys({
+                tunnelId: "tunnel_id",
+                resolverIps: "resolver_ips",
+              }),
             ),
           }).pipe(
             Schema.encodeKeys({
-              tunnelId: "tunnel_id",
-              resolverIps: "resolver_ips",
+              hostname: "hostname",
+              resolverNetwork: "resolver_network",
             }),
           ),
-        }).pipe(
-          Schema.encodeKeys({
-            hostname: "hostname",
-            resolverNetwork: "resolver_network",
-          }),
-        ),
-      ]),
-      name: Schema.String,
-      type: Schema.Union([Schema.Literals(["tcp", "http"]), Schema.String]),
-      createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      httpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-      httpsPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-      serviceId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      tlsSettings: Schema.optional(
-        Schema.Union([
-          Schema.Struct({
-            certVerificationMode: Schema.String,
-          }).pipe(
-            Schema.encodeKeys({
-              certVerificationMode: "cert_verification_mode",
-            }),
-          ),
-          Schema.Null,
         ]),
+        name: Schema.String,
+        type: Schema.Union([Schema.Literals(["tcp", "http"]), Schema.String]),
+        createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        httpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+        httpsPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+        serviceId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        tlsSettings: Schema.optional(
+          Schema.Union([
+            Schema.Struct({
+              certVerificationMode: Schema.String,
+            }).pipe(
+              Schema.encodeKeys({
+                certVerificationMode: "cert_verification_mode",
+              }),
+            ),
+            Schema.Null,
+          ]),
+        ),
+        updatedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        tcpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+        appProtocol: Schema.optional(
+          Schema.Union([
+            Schema.Literal("postgresql"),
+            Schema.Literal("mysql"),
+            Schema.Null,
+          ]),
+        ),
+      }).pipe(
+        Schema.encodeKeys({
+          host: "host",
+          name: "name",
+          type: "type",
+          createdAt: "created_at",
+          httpPort: "http_port",
+          httpsPort: "https_port",
+          serviceId: "service_id",
+          tlsSettings: "tls_settings",
+          updatedAt: "updated_at",
+          tcpPort: "tcp_port",
+          appProtocol: "app_protocol",
+        }),
       ),
-      updatedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    }).pipe(
-      Schema.encodeKeys({
-        host: "host",
-        name: "name",
-        type: "type",
-        createdAt: "created_at",
-        httpPort: "http_port",
-        httpsPort: "https_port",
-        serviceId: "service_id",
-        tlsSettings: "tls_settings",
-        updatedAt: "updated_at",
-      }),
-    ),
-    Schema.Struct({
-      host: Schema.Union([
-        Schema.Struct({
-          ipv4: Schema.String,
-          ipv6: Schema.String,
-          network: Schema.Struct({
-            tunnelId: Schema.String,
-          }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-        }),
-        Schema.Struct({
-          ipv4: Schema.String,
-          network: Schema.Struct({
-            tunnelId: Schema.String,
-          }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-        }),
-        Schema.Struct({
-          ipv6: Schema.String,
-          network: Schema.Struct({
-            tunnelId: Schema.String,
-          }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
-        }),
-        Schema.Struct({
-          hostname: Schema.String,
-          resolverNetwork: Schema.Struct({
-            tunnelId: Schema.String,
-            resolverIps: Schema.optional(
-              Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+      Schema.Struct({
+        host: Schema.Union([
+          Schema.Struct({
+            ipv4: Schema.String,
+            ipv6: Schema.String,
+            network: Schema.Struct({
+              tunnelId: Schema.String,
+            }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
+          }),
+          Schema.Struct({
+            ipv4: Schema.String,
+            network: Schema.Struct({
+              tunnelId: Schema.String,
+            }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
+          }),
+          Schema.Struct({
+            ipv6: Schema.String,
+            network: Schema.Struct({
+              tunnelId: Schema.String,
+            }).pipe(Schema.encodeKeys({ tunnelId: "tunnel_id" })),
+          }),
+          Schema.Struct({
+            hostname: Schema.String,
+            resolverNetwork: Schema.Struct({
+              tunnelId: Schema.String,
+              resolverIps: Schema.optional(
+                Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+              ),
+            }).pipe(
+              Schema.encodeKeys({
+                tunnelId: "tunnel_id",
+                resolverIps: "resolver_ips",
+              }),
             ),
           }).pipe(
             Schema.encodeKeys({
-              tunnelId: "tunnel_id",
-              resolverIps: "resolver_ips",
+              hostname: "hostname",
+              resolverNetwork: "resolver_network",
             }),
           ),
-        }).pipe(
-          Schema.encodeKeys({
-            hostname: "hostname",
-            resolverNetwork: "resolver_network",
-          }),
+        ]),
+        name: Schema.String,
+        type: Schema.Union([Schema.Literals(["tcp", "http"]), Schema.String]),
+        appProtocol: Schema.optional(
+          Schema.Union([
+            Schema.Literal("postgresql"),
+            Schema.Literal("mysql"),
+            Schema.Null,
+          ]),
         ),
-      ]),
-      name: Schema.String,
-      type: Schema.Union([Schema.Literals(["tcp", "http"]), Schema.String]),
-      appProtocol: Schema.optional(
-        Schema.Union([
-          Schema.Literal("postgresql"),
-          Schema.Literal("mysql"),
-          Schema.Null,
-        ]),
+        createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        serviceId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        tcpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+        tlsSettings: Schema.optional(
+          Schema.Union([
+            Schema.Struct({
+              certVerificationMode: Schema.String,
+            }).pipe(
+              Schema.encodeKeys({
+                certVerificationMode: "cert_verification_mode",
+              }),
+            ),
+            Schema.Null,
+          ]),
+        ),
+        updatedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+        httpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+        httpsPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+      }).pipe(
+        Schema.encodeKeys({
+          host: "host",
+          name: "name",
+          type: "type",
+          appProtocol: "app_protocol",
+          createdAt: "created_at",
+          serviceId: "service_id",
+          tcpPort: "tcp_port",
+          tlsSettings: "tls_settings",
+          updatedAt: "updated_at",
+          httpPort: "http_port",
+          httpsPort: "https_port",
+        }),
       ),
-      createdAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      serviceId: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-      tcpPort: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
-      tlsSettings: Schema.optional(
-        Schema.Union([
-          Schema.Struct({
-            certVerificationMode: Schema.String,
-          }).pipe(
-            Schema.encodeKeys({
-              certVerificationMode: "cert_verification_mode",
-            }),
-          ),
-          Schema.Null,
-        ]),
-      ),
-      updatedAt: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    }).pipe(
-      Schema.encodeKeys({
-        host: "host",
-        name: "name",
-        type: "type",
-        appProtocol: "app_protocol",
-        createdAt: "created_at",
-        serviceId: "service_id",
-        tcpPort: "tcp_port",
-        tlsSettings: "tls_settings",
-        updatedAt: "updated_at",
-      }),
-    ),
-  ]).pipe(
-    T.ResponsePath("result"),
+    ]).pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<UpdateDirectoryServiceResponse>;
 
 export type UpdateDirectoryServiceError =
   | DefaultErrors
   | VpcServiceNotFound
   | VpcServiceNameAlreadyExists
-  | VpcTunnelNotFound;
+  | VpcTunnelNotFound
+  | Forbidden;
 
 export const updateDirectoryService: API.OperationMethod<
   UpdateDirectoryServiceRequest,
@@ -1206,7 +1323,12 @@ export const updateDirectoryService: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: UpdateDirectoryServiceRequest,
   output: UpdateDirectoryServiceResponse,
-  errors: [VpcServiceNotFound, VpcServiceNameAlreadyExists, VpcTunnelNotFound],
+  errors: [
+    VpcServiceNotFound,
+    VpcServiceNameAlreadyExists,
+    VpcTunnelNotFound,
+    Forbidden,
+  ],
 }));
 
 export interface DeleteDirectoryServiceRequest {
@@ -1215,22 +1337,29 @@ export interface DeleteDirectoryServiceRequest {
 }
 
 export const DeleteDirectoryServiceRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    serviceId: Schema.String.pipe(T.HttpPath("serviceId")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  }).pipe(
-    T.Http({
-      method: "DELETE",
-      path: "/accounts/{account_id}/connectivity/directory/services/{serviceId}",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      serviceId: Schema.String.pipe(T.HttpPath("serviceId")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "DELETE",
+        path: "/accounts/{account_id}/connectivity/directory/services/{serviceId}",
+      }),
+    ),
   ) as unknown as Schema.Schema<DeleteDirectoryServiceRequest>;
 
 export type DeleteDirectoryServiceResponse = unknown;
 
 export const DeleteDirectoryServiceResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Unknown as unknown as Schema.Schema<DeleteDirectoryServiceResponse>;
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+    () => Schema.Unknown,
+  ) as unknown as Schema.Schema<DeleteDirectoryServiceResponse>;
 
-export type DeleteDirectoryServiceError = DefaultErrors | VpcServiceNotFound;
+export type DeleteDirectoryServiceError =
+  | DefaultErrors
+  | VpcServiceNotFound
+  | Forbidden;
 
 export const deleteDirectoryService: API.OperationMethod<
   DeleteDirectoryServiceRequest,
@@ -1240,5 +1369,5 @@ export const deleteDirectoryService: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: DeleteDirectoryServiceRequest,
   output: DeleteDirectoryServiceResponse,
-  errors: [VpcServiceNotFound],
+  errors: [VpcServiceNotFound, Forbidden],
 }));

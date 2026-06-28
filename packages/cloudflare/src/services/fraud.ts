@@ -13,6 +13,26 @@ import type { Credentials } from "../credentials.ts";
 import { type DefaultErrors } from "../errors.ts";
 
 // =============================================================================
+// Errors
+// =============================================================================
+
+export class Forbidden extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<Forbidden>()("Forbidden", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ status: 403 }],
+) {}
+
+export class FraudDetectionNotEntitled extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<FraudDetectionNotEntitled>()(
+    "FraudDetectionNotEntitled",
+    { code: Schema.Number, message: Schema.String },
+  ),
+  [{ code: 10400 }],
+) {}
+
+// =============================================================================
 // Fraud
 // =============================================================================
 
@@ -21,10 +41,15 @@ export interface GetFraudRequest {
   zoneId: string;
 }
 
-export const GetFraudRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
-}).pipe(
-  T.Http({ method: "GET", path: "/zones/{zone_id}/fraud_detection/settings" }),
+export const GetFraudRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+  Schema.Struct({
+    zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
+  }).pipe(
+    T.Http({
+      method: "GET",
+      path: "/zones/{zone_id}/fraud_detection/settings",
+    }),
+  ),
 ) as unknown as Schema.Schema<GetFraudRequest>;
 
 export interface GetFraudResponse {
@@ -45,65 +70,73 @@ export interface GetFraudResponse {
   usernameExpressions?: string[] | null;
 }
 
-export const GetFraudResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  authenticationSettings: Schema.optional(
-    Schema.Union([
-      Schema.Struct({
-        failureCriteria: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              kind: Schema.Literal("status_code"),
-              statusCodes: Schema.optional(
-                Schema.Union([Schema.Array(Schema.Number), Schema.Null]),
+export const GetFraudResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+  Schema.Struct({
+    authenticationSettings: Schema.optional(
+      Schema.Union([
+        Schema.Struct({
+          failureCriteria: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                kind: Schema.Literal("status_code"),
+                statusCodes: Schema.optional(
+                  Schema.Union([Schema.Array(Schema.Number), Schema.Null]),
+                ),
+              }).pipe(
+                Schema.encodeKeys({
+                  kind: "kind",
+                  statusCodes: "status_codes",
+                }),
               ),
-            }).pipe(
-              Schema.encodeKeys({ kind: "kind", statusCodes: "status_codes" }),
-            ),
-            Schema.Null,
-          ]),
-        ),
-        successCriteria: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              kind: Schema.Literal("status_code"),
-              statusCodes: Schema.optional(
-                Schema.Union([Schema.Array(Schema.Number), Schema.Null]),
+              Schema.Null,
+            ]),
+          ),
+          successCriteria: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                kind: Schema.Literal("status_code"),
+                statusCodes: Schema.optional(
+                  Schema.Union([Schema.Array(Schema.Number), Schema.Null]),
+                ),
+              }).pipe(
+                Schema.encodeKeys({
+                  kind: "kind",
+                  statusCodes: "status_codes",
+                }),
               ),
-            }).pipe(
-              Schema.encodeKeys({ kind: "kind", statusCodes: "status_codes" }),
-            ),
-            Schema.Null,
-          ]),
+              Schema.Null,
+            ]),
+          ),
+        }).pipe(
+          Schema.encodeKeys({
+            failureCriteria: "failure_criteria",
+            successCriteria: "success_criteria",
+          }),
         ),
-      }).pipe(
-        Schema.encodeKeys({
-          failureCriteria: "failure_criteria",
-          successCriteria: "success_criteria",
-        }),
-      ),
-      Schema.Null,
-    ]),
-  ),
-  userProfiles: Schema.optional(
-    Schema.Union([
-      Schema.Union([Schema.Literals(["enabled", "disabled"]), Schema.String]),
-      Schema.Null,
-    ]),
-  ),
-  usernameExpressions: Schema.optional(
-    Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-  ),
-})
-  .pipe(
-    Schema.encodeKeys({
-      authenticationSettings: "authentication_settings",
-      userProfiles: "user_profiles",
-      usernameExpressions: "username_expressions",
-    }),
-  )
-  .pipe(T.ResponsePath("result")) as unknown as Schema.Schema<GetFraudResponse>;
+        Schema.Null,
+      ]),
+    ),
+    userProfiles: Schema.optional(
+      Schema.Union([
+        Schema.Union([Schema.Literals(["enabled", "disabled"]), Schema.String]),
+        Schema.Null,
+      ]),
+    ),
+    usernameExpressions: Schema.optional(
+      Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+    ),
+  })
+    .pipe(
+      Schema.encodeKeys({
+        authenticationSettings: "authentication_settings",
+        userProfiles: "user_profiles",
+        usernameExpressions: "username_expressions",
+      }),
+    )
+    .pipe(T.ResponsePath("result")),
+) as unknown as Schema.Schema<GetFraudResponse>;
 
-export type GetFraudError = DefaultErrors;
+export type GetFraudError = DefaultErrors | Forbidden;
 
 export const getFraud: API.OperationMethod<
   GetFraudRequest,
@@ -113,7 +146,7 @@ export const getFraud: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: GetFraudRequest,
   output: GetFraudResponse,
-  errors: [],
+  errors: [Forbidden],
 }));
 
 export interface PutFraudRequest {
@@ -130,44 +163,49 @@ export interface PutFraudRequest {
   usernameExpressions?: string[];
 }
 
-export const PutFraudRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
-  authenticationSettings: Schema.optional(
-    Schema.Struct({
-      failureCriteria: Schema.optional(
-        Schema.Struct({
-          kind: Schema.Literal("status_code"),
-          statusCodes: Schema.optional(Schema.Array(Schema.Number)),
-        }).pipe(
-          Schema.encodeKeys({ kind: "kind", statusCodes: "status_codes" }),
+export const PutFraudRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+  Schema.Struct({
+    zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
+    authenticationSettings: Schema.optional(
+      Schema.Struct({
+        failureCriteria: Schema.optional(
+          Schema.Struct({
+            kind: Schema.Literal("status_code"),
+            statusCodes: Schema.optional(Schema.Array(Schema.Number)),
+          }).pipe(
+            Schema.encodeKeys({ kind: "kind", statusCodes: "status_codes" }),
+          ),
         ),
-      ),
-      successCriteria: Schema.optional(
-        Schema.Struct({
-          kind: Schema.Literal("status_code"),
-          statusCodes: Schema.optional(Schema.Array(Schema.Number)),
-        }).pipe(
-          Schema.encodeKeys({ kind: "kind", statusCodes: "status_codes" }),
+        successCriteria: Schema.optional(
+          Schema.Struct({
+            kind: Schema.Literal("status_code"),
+            statusCodes: Schema.optional(Schema.Array(Schema.Number)),
+          }).pipe(
+            Schema.encodeKeys({ kind: "kind", statusCodes: "status_codes" }),
+          ),
         ),
+      }).pipe(
+        Schema.encodeKeys({
+          failureCriteria: "failure_criteria",
+          successCriteria: "success_criteria",
+        }),
       ),
-    }).pipe(
-      Schema.encodeKeys({
-        failureCriteria: "failure_criteria",
-        successCriteria: "success_criteria",
-      }),
     ),
+    userProfiles: Schema.optional(
+      Schema.Union([Schema.Literals(["enabled", "disabled"]), Schema.String]),
+    ),
+    usernameExpressions: Schema.optional(Schema.Array(Schema.String)),
+  }).pipe(
+    Schema.encodeKeys({
+      authenticationSettings: "authentication_settings",
+      userProfiles: "user_profiles",
+      usernameExpressions: "username_expressions",
+    }),
+    T.Http({
+      method: "PUT",
+      path: "/zones/{zone_id}/fraud_detection/settings",
+    }),
   ),
-  userProfiles: Schema.optional(
-    Schema.Union([Schema.Literals(["enabled", "disabled"]), Schema.String]),
-  ),
-  usernameExpressions: Schema.optional(Schema.Array(Schema.String)),
-}).pipe(
-  Schema.encodeKeys({
-    authenticationSettings: "authentication_settings",
-    userProfiles: "user_profiles",
-    usernameExpressions: "username_expressions",
-  }),
-  T.Http({ method: "PUT", path: "/zones/{zone_id}/fraud_detection/settings" }),
 ) as unknown as Schema.Schema<PutFraudRequest>;
 
 export interface PutFraudResponse {
@@ -188,65 +226,76 @@ export interface PutFraudResponse {
   usernameExpressions?: string[] | null;
 }
 
-export const PutFraudResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  authenticationSettings: Schema.optional(
-    Schema.Union([
-      Schema.Struct({
-        failureCriteria: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              kind: Schema.Literal("status_code"),
-              statusCodes: Schema.optional(
-                Schema.Union([Schema.Array(Schema.Number), Schema.Null]),
+export const PutFraudResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+  Schema.Struct({
+    authenticationSettings: Schema.optional(
+      Schema.Union([
+        Schema.Struct({
+          failureCriteria: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                kind: Schema.Literal("status_code"),
+                statusCodes: Schema.optional(
+                  Schema.Union([Schema.Array(Schema.Number), Schema.Null]),
+                ),
+              }).pipe(
+                Schema.encodeKeys({
+                  kind: "kind",
+                  statusCodes: "status_codes",
+                }),
               ),
-            }).pipe(
-              Schema.encodeKeys({ kind: "kind", statusCodes: "status_codes" }),
-            ),
-            Schema.Null,
-          ]),
-        ),
-        successCriteria: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              kind: Schema.Literal("status_code"),
-              statusCodes: Schema.optional(
-                Schema.Union([Schema.Array(Schema.Number), Schema.Null]),
+              Schema.Null,
+            ]),
+          ),
+          successCriteria: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                kind: Schema.Literal("status_code"),
+                statusCodes: Schema.optional(
+                  Schema.Union([Schema.Array(Schema.Number), Schema.Null]),
+                ),
+              }).pipe(
+                Schema.encodeKeys({
+                  kind: "kind",
+                  statusCodes: "status_codes",
+                }),
               ),
-            }).pipe(
-              Schema.encodeKeys({ kind: "kind", statusCodes: "status_codes" }),
-            ),
-            Schema.Null,
-          ]),
+              Schema.Null,
+            ]),
+          ),
+        }).pipe(
+          Schema.encodeKeys({
+            failureCriteria: "failure_criteria",
+            successCriteria: "success_criteria",
+          }),
         ),
-      }).pipe(
-        Schema.encodeKeys({
-          failureCriteria: "failure_criteria",
-          successCriteria: "success_criteria",
-        }),
-      ),
-      Schema.Null,
-    ]),
-  ),
-  userProfiles: Schema.optional(
-    Schema.Union([
-      Schema.Union([Schema.Literals(["enabled", "disabled"]), Schema.String]),
-      Schema.Null,
-    ]),
-  ),
-  usernameExpressions: Schema.optional(
-    Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-  ),
-})
-  .pipe(
-    Schema.encodeKeys({
-      authenticationSettings: "authentication_settings",
-      userProfiles: "user_profiles",
-      usernameExpressions: "username_expressions",
-    }),
-  )
-  .pipe(T.ResponsePath("result")) as unknown as Schema.Schema<PutFraudResponse>;
+        Schema.Null,
+      ]),
+    ),
+    userProfiles: Schema.optional(
+      Schema.Union([
+        Schema.Union([Schema.Literals(["enabled", "disabled"]), Schema.String]),
+        Schema.Null,
+      ]),
+    ),
+    usernameExpressions: Schema.optional(
+      Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+    ),
+  })
+    .pipe(
+      Schema.encodeKeys({
+        authenticationSettings: "authentication_settings",
+        userProfiles: "user_profiles",
+        usernameExpressions: "username_expressions",
+      }),
+    )
+    .pipe(T.ResponsePath("result")),
+) as unknown as Schema.Schema<PutFraudResponse>;
 
-export type PutFraudError = DefaultErrors;
+export type PutFraudError =
+  | DefaultErrors
+  | Forbidden
+  | FraudDetectionNotEntitled;
 
 export const putFraud: API.OperationMethod<
   PutFraudRequest,
@@ -256,5 +305,5 @@ export const putFraud: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: PutFraudRequest,
   output: PutFraudResponse,
-  errors: [],
+  errors: [Forbidden, FraudDetectionNotEntitled],
 }));

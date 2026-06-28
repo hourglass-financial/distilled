@@ -16,41 +16,61 @@ import { type DefaultErrors } from "../errors.ts";
 // Errors
 // =============================================================================
 
-export class InvalidCredential extends Schema.TaggedErrorClass<InvalidCredential>()(
-  "InvalidCredential",
-  { code: Schema.Number, message: Schema.String },
+export class Forbidden extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<Forbidden>()("Forbidden", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ status: 403 }],
 ) {}
-T.applyErrorMatchers(InvalidCredential, [{ code: 30004 }, { code: 30005 }]);
 
-export class InvalidRoute extends Schema.TaggedErrorClass<InvalidRoute>()(
-  "InvalidRoute",
-  { code: Schema.Number, message: Schema.String },
+export class InvalidCredential extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<InvalidCredential>()("InvalidCredential", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ code: 30004 }, { code: 30005 }],
 ) {}
-T.applyErrorMatchers(InvalidRoute, [{ code: 7003 }]);
 
-export class NoSuchBucket extends Schema.TaggedErrorClass<NoSuchBucket>()(
-  "NoSuchBucket",
-  { code: Schema.Number, message: Schema.String },
+export class InvalidRoute extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<InvalidRoute>()("InvalidRoute", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ code: 7003 }],
 ) {}
-T.applyErrorMatchers(NoSuchBucket, [{ code: 10006 }]);
 
-export class TableNotFound extends Schema.TaggedErrorClass<TableNotFound>()(
-  "TableNotFound",
-  { code: Schema.Number, message: Schema.String },
+export class NoSuchBucket extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<NoSuchBucket>()("NoSuchBucket", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ code: 10006 }, { code: 40406 }],
 ) {}
-T.applyErrorMatchers(TableNotFound, [{ code: 10001 }, { code: 40403 }]);
 
-export class WarehouseInactive extends Schema.TaggedErrorClass<WarehouseInactive>()(
-  "WarehouseInactive",
-  { code: Schema.Number, message: Schema.String },
+export class TableNotFound extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<TableNotFound>()("TableNotFound", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ code: 10001 }, { code: 40403 }],
 ) {}
-T.applyErrorMatchers(WarehouseInactive, [{ code: 40402 }]);
 
-export class WarehouseNotFound extends Schema.TaggedErrorClass<WarehouseNotFound>()(
-  "WarehouseNotFound",
-  { code: Schema.Number, message: Schema.String },
+export class WarehouseInactive extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<WarehouseInactive>()("WarehouseInactive", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ code: 40402 }],
 ) {}
-T.applyErrorMatchers(WarehouseNotFound, [{ code: 40401 }]);
+
+export class WarehouseNotFound extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<WarehouseNotFound>()("WarehouseNotFound", {
+    code: Schema.Number,
+    message: Schema.String,
+  }),
+  [{ code: 40401 }],
+) {}
 
 // =============================================================================
 // Credential
@@ -65,22 +85,24 @@ export interface CreateCredentialRequest {
 }
 
 export const CreateCredentialRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    bucketName: Schema.String.pipe(T.HttpPath("bucketName")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    token: Schema.String,
-  }).pipe(
-    T.Http({
-      method: "POST",
-      path: "/accounts/{account_id}/r2-catalog/{bucketName}/credential",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      bucketName: Schema.String.pipe(T.HttpPath("bucketName")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      token: Schema.String,
+    }).pipe(
+      T.Http({
+        method: "POST",
+        path: "/accounts/{account_id}/r2-catalog/{bucketName}/credential",
+      }),
+    ),
   ) as unknown as Schema.Schema<CreateCredentialRequest>;
 
 export type CreateCredentialResponse = unknown;
 
 export const CreateCredentialResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Unknown.pipe(
-    T.ResponsePath("result"),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Unknown.pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<CreateCredentialResponse>;
 
 export type CreateCredentialError =
@@ -110,14 +132,16 @@ export interface GetMaintenanceConfigRequest {
 }
 
 export const GetMaintenanceConfigRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    bucketName: Schema.String.pipe(T.HttpPath("bucketName")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  }).pipe(
-    T.Http({
-      method: "GET",
-      path: "/accounts/{account_id}/r2-catalog/{bucketName}/maintenance-configs",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      bucketName: Schema.String.pipe(T.HttpPath("bucketName")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/r2-catalog/{bucketName}/maintenance-configs",
+      }),
+    ),
   ) as unknown as Schema.Schema<GetMaintenanceConfigRequest>;
 
 export interface GetMaintenanceConfigResponse {
@@ -138,12 +162,172 @@ export interface GetMaintenanceConfigResponse {
 }
 
 export const GetMaintenanceConfigResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    credentialStatus: Schema.Union([
-      Schema.Literals(["present", "absent"]),
-      Schema.String,
-    ]),
-    maintenanceConfig: Schema.Struct({
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      credentialStatus: Schema.Union([
+        Schema.Literals(["present", "absent"]),
+        Schema.String,
+      ]),
+      maintenanceConfig: Schema.Struct({
+        compaction: Schema.optional(
+          Schema.Union([
+            Schema.Struct({
+              state: Schema.Union([
+                Schema.Literals(["enabled", "disabled"]),
+                Schema.String,
+              ]),
+              targetSizeMb: Schema.Union([
+                Schema.Literals(["64", "128", "256", "512"]),
+                Schema.String,
+              ]),
+            }).pipe(
+              Schema.encodeKeys({
+                state: "state",
+                targetSizeMb: "target_size_mb",
+              }),
+            ),
+            Schema.Null,
+          ]),
+        ),
+        snapshotExpiration: Schema.optional(
+          Schema.Union([
+            Schema.Struct({
+              maxSnapshotAge: Schema.String,
+              minSnapshotsToKeep: Schema.Number,
+              state: Schema.Union([
+                Schema.Literals(["enabled", "disabled"]),
+                Schema.String,
+              ]),
+            }).pipe(
+              Schema.encodeKeys({
+                maxSnapshotAge: "max_snapshot_age",
+                minSnapshotsToKeep: "min_snapshots_to_keep",
+                state: "state",
+              }),
+            ),
+            Schema.Null,
+          ]),
+        ),
+      }).pipe(
+        Schema.encodeKeys({
+          compaction: "compaction",
+          snapshotExpiration: "snapshot_expiration",
+        }),
+      ),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          credentialStatus: "credential_status",
+          maintenanceConfig: "maintenance_config",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<GetMaintenanceConfigResponse>;
+
+export type GetMaintenanceConfigError =
+  | DefaultErrors
+  | InvalidRoute
+  | WarehouseInactive
+  | WarehouseNotFound;
+
+export const getMaintenanceConfig: API.OperationMethod<
+  GetMaintenanceConfigRequest,
+  GetMaintenanceConfigResponse,
+  GetMaintenanceConfigError,
+  Credentials | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: GetMaintenanceConfigRequest,
+  output: GetMaintenanceConfigResponse,
+  errors: [InvalidRoute, WarehouseInactive, WarehouseNotFound],
+}));
+
+export interface UpdateMaintenanceConfigRequest {
+  bucketName: string;
+  /** Path param: Use this to identify the account. */
+  accountId: string;
+  /** Body param: Updates compaction configuration (all fields optional). */
+  compaction?: {
+    state?: "enabled" | "disabled" | (string & {});
+    targetSizeMb?: "64" | "128" | "256" | "512" | (string & {});
+  };
+  /** Body param: Updates snapshot expiration configuration (all fields optional). */
+  snapshotExpiration?: {
+    maxSnapshotAge?: string;
+    minSnapshotsToKeep?: number;
+    state?: "enabled" | "disabled" | (string & {});
+  };
+}
+
+export const UpdateMaintenanceConfigRequest =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      bucketName: Schema.String.pipe(T.HttpPath("bucketName")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      compaction: Schema.optional(
+        Schema.Struct({
+          state: Schema.optional(
+            Schema.Union([
+              Schema.Literals(["enabled", "disabled"]),
+              Schema.String,
+            ]),
+          ),
+          targetSizeMb: Schema.optional(
+            Schema.Union([
+              Schema.Literals(["64", "128", "256", "512"]),
+              Schema.String,
+            ]),
+          ),
+        }).pipe(
+          Schema.encodeKeys({ state: "state", targetSizeMb: "target_size_mb" }),
+        ),
+      ),
+      snapshotExpiration: Schema.optional(
+        Schema.Struct({
+          maxSnapshotAge: Schema.optional(Schema.String),
+          minSnapshotsToKeep: Schema.optional(Schema.Number),
+          state: Schema.optional(
+            Schema.Union([
+              Schema.Literals(["enabled", "disabled"]),
+              Schema.String,
+            ]),
+          ),
+        }).pipe(
+          Schema.encodeKeys({
+            maxSnapshotAge: "max_snapshot_age",
+            minSnapshotsToKeep: "min_snapshots_to_keep",
+            state: "state",
+          }),
+        ),
+      ),
+    }).pipe(
+      Schema.encodeKeys({
+        compaction: "compaction",
+        snapshotExpiration: "snapshot_expiration",
+      }),
+      T.Http({
+        method: "POST",
+        path: "/accounts/{account_id}/r2-catalog/{bucketName}/maintenance-configs",
+      }),
+    ),
+  ) as unknown as Schema.Schema<UpdateMaintenanceConfigRequest>;
+
+export interface UpdateMaintenanceConfigResponse {
+  /** Configures compaction for catalog maintenance. */
+  compaction?: {
+    state: "enabled" | "disabled" | (string & {});
+    targetSizeMb: "64" | "128" | "256" | "512" | (string & {});
+  } | null;
+  /** Configures snapshot expiration settings. */
+  snapshotExpiration?: {
+    maxSnapshotAge: string;
+    minSnapshotsToKeep: number;
+    state: "enabled" | "disabled" | (string & {});
+  } | null;
+}
+
+export const UpdateMaintenanceConfigResponse =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
       compaction: Schema.optional(
         Schema.Union([
           Schema.Struct({
@@ -183,170 +367,15 @@ export const GetMaintenanceConfigResponse =
           Schema.Null,
         ]),
       ),
-    }).pipe(
-      Schema.encodeKeys({
-        compaction: "compaction",
-        snapshotExpiration: "snapshot_expiration",
-      }),
-    ),
-  })
-    .pipe(
-      Schema.encodeKeys({
-        credentialStatus: "credential_status",
-        maintenanceConfig: "maintenance_config",
-      }),
-    )
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<GetMaintenanceConfigResponse>;
-
-export type GetMaintenanceConfigError =
-  | DefaultErrors
-  | InvalidRoute
-  | WarehouseInactive
-  | WarehouseNotFound;
-
-export const getMaintenanceConfig: API.OperationMethod<
-  GetMaintenanceConfigRequest,
-  GetMaintenanceConfigResponse,
-  GetMaintenanceConfigError,
-  Credentials | HttpClient.HttpClient
-> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
-  input: GetMaintenanceConfigRequest,
-  output: GetMaintenanceConfigResponse,
-  errors: [InvalidRoute, WarehouseInactive, WarehouseNotFound],
-}));
-
-export interface UpdateMaintenanceConfigRequest {
-  bucketName: string;
-  /** Path param: Use this to identify the account. */
-  accountId: string;
-  /** Body param: Updates compaction configuration (all fields optional). */
-  compaction?: {
-    state?: "enabled" | "disabled" | (string & {});
-    targetSizeMb?: "64" | "128" | "256" | "512" | (string & {});
-  };
-  /** Body param: Updates snapshot expiration configuration (all fields optional). */
-  snapshotExpiration?: {
-    maxSnapshotAge?: string;
-    minSnapshotsToKeep?: number;
-    state?: "enabled" | "disabled" | (string & {});
-  };
-}
-
-export const UpdateMaintenanceConfigRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    bucketName: Schema.String.pipe(T.HttpPath("bucketName")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    compaction: Schema.optional(
-      Schema.Struct({
-        state: Schema.optional(
-          Schema.Union([
-            Schema.Literals(["enabled", "disabled"]),
-            Schema.String,
-          ]),
-        ),
-        targetSizeMb: Schema.optional(
-          Schema.Union([
-            Schema.Literals(["64", "128", "256", "512"]),
-            Schema.String,
-          ]),
-        ),
-      }).pipe(
-        Schema.encodeKeys({ state: "state", targetSizeMb: "target_size_mb" }),
-      ),
-    ),
-    snapshotExpiration: Schema.optional(
-      Schema.Struct({
-        maxSnapshotAge: Schema.optional(Schema.String),
-        minSnapshotsToKeep: Schema.optional(Schema.Number),
-        state: Schema.optional(
-          Schema.Union([
-            Schema.Literals(["enabled", "disabled"]),
-            Schema.String,
-          ]),
-        ),
-      }).pipe(
+    })
+      .pipe(
         Schema.encodeKeys({
-          maxSnapshotAge: "max_snapshot_age",
-          minSnapshotsToKeep: "min_snapshots_to_keep",
-          state: "state",
+          compaction: "compaction",
+          snapshotExpiration: "snapshot_expiration",
         }),
-      ),
-    ),
-  }).pipe(
-    Schema.encodeKeys({
-      compaction: "compaction",
-      snapshotExpiration: "snapshot_expiration",
-    }),
-    T.Http({
-      method: "POST",
-      path: "/accounts/{account_id}/r2-catalog/{bucketName}/maintenance-configs",
-    }),
-  ) as unknown as Schema.Schema<UpdateMaintenanceConfigRequest>;
-
-export interface UpdateMaintenanceConfigResponse {
-  /** Configures compaction for catalog maintenance. */
-  compaction?: {
-    state: "enabled" | "disabled" | (string & {});
-    targetSizeMb: "64" | "128" | "256" | "512" | (string & {});
-  } | null;
-  /** Configures snapshot expiration settings. */
-  snapshotExpiration?: {
-    maxSnapshotAge: string;
-    minSnapshotsToKeep: number;
-    state: "enabled" | "disabled" | (string & {});
-  } | null;
-}
-
-export const UpdateMaintenanceConfigResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    compaction: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          state: Schema.Union([
-            Schema.Literals(["enabled", "disabled"]),
-            Schema.String,
-          ]),
-          targetSizeMb: Schema.Union([
-            Schema.Literals(["64", "128", "256", "512"]),
-            Schema.String,
-          ]),
-        }).pipe(
-          Schema.encodeKeys({ state: "state", targetSizeMb: "target_size_mb" }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    snapshotExpiration: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          maxSnapshotAge: Schema.String,
-          minSnapshotsToKeep: Schema.Number,
-          state: Schema.Union([
-            Schema.Literals(["enabled", "disabled"]),
-            Schema.String,
-          ]),
-        }).pipe(
-          Schema.encodeKeys({
-            maxSnapshotAge: "max_snapshot_age",
-            minSnapshotsToKeep: "min_snapshots_to_keep",
-            state: "state",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-  })
-    .pipe(
-      Schema.encodeKeys({
-        compaction: "compaction",
-        snapshotExpiration: "snapshot_expiration",
-      }),
-    )
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<UpdateMaintenanceConfigResponse>;
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<UpdateMaintenanceConfigResponse>;
 
 export type UpdateMaintenanceConfigError =
   | DefaultErrors
@@ -384,23 +413,26 @@ export interface ListNamespacesRequest {
   returnUuids?: boolean;
 }
 
-export const ListNamespacesRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  bucketName: Schema.String.pipe(T.HttpPath("bucketName")),
-  accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  pageSize: Schema.optional(Schema.Number).pipe(T.HttpQuery("page_size")),
-  pageToken: Schema.optional(Schema.String).pipe(T.HttpQuery("page_token")),
-  parent: Schema.optional(Schema.String).pipe(T.HttpQuery("parent")),
-  returnDetails: Schema.optional(Schema.Boolean).pipe(
-    T.HttpQuery("return_details"),
-  ),
-  returnUuids: Schema.optional(Schema.Boolean).pipe(
-    T.HttpQuery("return_uuids"),
-  ),
-}).pipe(
-  T.Http({
-    method: "GET",
-    path: "/accounts/{account_id}/r2-catalog/{bucketName}/namespaces",
-  }),
+export const ListNamespacesRequest = /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+  () =>
+    Schema.Struct({
+      bucketName: Schema.String.pipe(T.HttpPath("bucketName")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      pageSize: Schema.optional(Schema.Number).pipe(T.HttpQuery("page_size")),
+      pageToken: Schema.optional(Schema.String).pipe(T.HttpQuery("page_token")),
+      parent: Schema.optional(Schema.String).pipe(T.HttpQuery("parent")),
+      returnDetails: Schema.optional(Schema.Boolean).pipe(
+        T.HttpQuery("return_details"),
+      ),
+      returnUuids: Schema.optional(Schema.Boolean).pipe(
+        T.HttpQuery("return_uuids"),
+      ),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/r2-catalog/{bucketName}/namespaces",
+      }),
+    ),
 ) as unknown as Schema.Schema<ListNamespacesRequest>;
 
 export interface ListNamespacesResponse {
@@ -421,49 +453,50 @@ export interface ListNamespacesResponse {
   nextPageToken?: string | null;
 }
 
-export const ListNamespacesResponse = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
-  {
-    namespaces: Schema.Array(Schema.Array(Schema.String)),
-    details: Schema.optional(
-      Schema.Union([
-        Schema.Array(
-          Schema.Struct({
-            namespace: Schema.Array(Schema.String),
-            namespaceUuid: Schema.String,
-            createdAt: Schema.optional(
-              Schema.Union([Schema.String, Schema.Null]),
+export const ListNamespacesResponse =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      namespaces: Schema.Array(Schema.Array(Schema.String)),
+      details: Schema.optional(
+        Schema.Union([
+          Schema.Array(
+            Schema.Struct({
+              namespace: Schema.Array(Schema.String),
+              namespaceUuid: Schema.String,
+              createdAt: Schema.optional(
+                Schema.Union([Schema.String, Schema.Null]),
+              ),
+              updatedAt: Schema.optional(
+                Schema.Union([Schema.String, Schema.Null]),
+              ),
+            }).pipe(
+              Schema.encodeKeys({
+                namespace: "namespace",
+                namespaceUuid: "namespace_uuid",
+                createdAt: "created_at",
+                updatedAt: "updated_at",
+              }),
             ),
-            updatedAt: Schema.optional(
-              Schema.Union([Schema.String, Schema.Null]),
-            ),
-          }).pipe(
-            Schema.encodeKeys({
-              namespace: "namespace",
-              namespaceUuid: "namespace_uuid",
-              createdAt: "created_at",
-              updatedAt: "updated_at",
-            }),
           ),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    namespaceUuids: Schema.optional(
-      Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-    ),
-    nextPageToken: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-  },
-)
-  .pipe(
-    Schema.encodeKeys({
-      namespaces: "namespaces",
-      details: "details",
-      namespaceUuids: "namespace_uuids",
-      nextPageToken: "next_page_token",
-    }),
-  )
-  .pipe(
-    T.ResponsePath("result"),
+          Schema.Null,
+        ]),
+      ),
+      namespaceUuids: Schema.optional(
+        Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+      ),
+      nextPageToken: Schema.optional(
+        Schema.Union([Schema.String, Schema.Null]),
+      ),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          namespaces: "namespaces",
+          details: "details",
+          namespaceUuids: "namespace_uuids",
+          nextPageToken: "next_page_token",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<ListNamespacesResponse>;
 
 export type ListNamespacesError =
@@ -503,23 +536,25 @@ export interface ListNamespaceTablesRequest {
 }
 
 export const ListNamespaceTablesRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    bucketName: Schema.String.pipe(T.HttpPath("bucketName")),
-    namespace: Schema.String.pipe(T.HttpPath("namespace")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    pageSize: Schema.optional(Schema.Number).pipe(T.HttpQuery("page_size")),
-    pageToken: Schema.optional(Schema.String).pipe(T.HttpQuery("page_token")),
-    returnDetails: Schema.optional(Schema.Boolean).pipe(
-      T.HttpQuery("return_details"),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      bucketName: Schema.String.pipe(T.HttpPath("bucketName")),
+      namespace: Schema.String.pipe(T.HttpPath("namespace")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      pageSize: Schema.optional(Schema.Number).pipe(T.HttpQuery("page_size")),
+      pageToken: Schema.optional(Schema.String).pipe(T.HttpQuery("page_token")),
+      returnDetails: Schema.optional(Schema.Boolean).pipe(
+        T.HttpQuery("return_details"),
+      ),
+      returnUuids: Schema.optional(Schema.Boolean).pipe(
+        T.HttpQuery("return_uuids"),
+      ),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/r2-catalog/{bucketName}/namespaces/{namespace}/tables",
+      }),
     ),
-    returnUuids: Schema.optional(Schema.Boolean).pipe(
-      T.HttpQuery("return_uuids"),
-    ),
-  }).pipe(
-    T.Http({
-      method: "GET",
-      path: "/accounts/{account_id}/r2-catalog/{bucketName}/namespaces/{namespace}/tables",
-    }),
   ) as unknown as Schema.Schema<ListNamespaceTablesRequest>;
 
 export interface ListNamespaceTablesResponse {
@@ -543,64 +578,66 @@ export interface ListNamespaceTablesResponse {
 }
 
 export const ListNamespaceTablesResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    identifiers: Schema.Array(
-      Schema.Struct({
-        name: Schema.String,
-        namespace: Schema.Array(Schema.String),
-      }),
-    ),
-    details: Schema.optional(
-      Schema.Union([
-        Schema.Array(
-          Schema.Struct({
-            identifier: Schema.Struct({
-              name: Schema.String,
-              namespace: Schema.Array(Schema.String),
-            }),
-            tableUuid: Schema.String,
-            createdAt: Schema.optional(
-              Schema.Union([Schema.String, Schema.Null]),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      identifiers: Schema.Array(
+        Schema.Struct({
+          name: Schema.String,
+          namespace: Schema.Array(Schema.String),
+        }),
+      ),
+      details: Schema.optional(
+        Schema.Union([
+          Schema.Array(
+            Schema.Struct({
+              identifier: Schema.Struct({
+                name: Schema.String,
+                namespace: Schema.Array(Schema.String),
+              }),
+              tableUuid: Schema.String,
+              createdAt: Schema.optional(
+                Schema.Union([Schema.String, Schema.Null]),
+              ),
+              location: Schema.optional(
+                Schema.Union([Schema.String, Schema.Null]),
+              ),
+              metadataLocation: Schema.optional(
+                Schema.Union([Schema.String, Schema.Null]),
+              ),
+              updatedAt: Schema.optional(
+                Schema.Union([Schema.String, Schema.Null]),
+              ),
+            }).pipe(
+              Schema.encodeKeys({
+                identifier: "identifier",
+                tableUuid: "table_uuid",
+                createdAt: "created_at",
+                location: "location",
+                metadataLocation: "metadata_location",
+                updatedAt: "updated_at",
+              }),
             ),
-            location: Schema.optional(
-              Schema.Union([Schema.String, Schema.Null]),
-            ),
-            metadataLocation: Schema.optional(
-              Schema.Union([Schema.String, Schema.Null]),
-            ),
-            updatedAt: Schema.optional(
-              Schema.Union([Schema.String, Schema.Null]),
-            ),
-          }).pipe(
-            Schema.encodeKeys({
-              identifier: "identifier",
-              tableUuid: "table_uuid",
-              createdAt: "created_at",
-              location: "location",
-              metadataLocation: "metadata_location",
-              updatedAt: "updated_at",
-            }),
           ),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    nextPageToken: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    tableUuids: Schema.optional(
-      Schema.Union([Schema.Array(Schema.String), Schema.Null]),
-    ),
-  })
-    .pipe(
-      Schema.encodeKeys({
-        identifiers: "identifiers",
-        details: "details",
-        nextPageToken: "next_page_token",
-        tableUuids: "table_uuids",
-      }),
-    )
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<ListNamespaceTablesResponse>;
+          Schema.Null,
+        ]),
+      ),
+      nextPageToken: Schema.optional(
+        Schema.Union([Schema.String, Schema.Null]),
+      ),
+      tableUuids: Schema.optional(
+        Schema.Union([Schema.Array(Schema.String), Schema.Null]),
+      ),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          identifiers: "identifiers",
+          details: "details",
+          nextPageToken: "next_page_token",
+          tableUuids: "table_uuids",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<ListNamespaceTablesResponse>;
 
 export type ListNamespaceTablesError =
   | DefaultErrors
@@ -631,16 +668,18 @@ export interface GetNamespaceTableMaintenanceConfigRequest {
 }
 
 export const GetNamespaceTableMaintenanceConfigRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    bucketName: Schema.String.pipe(T.HttpPath("bucketName")),
-    namespace: Schema.String.pipe(T.HttpPath("namespace")),
-    tableName: Schema.String.pipe(T.HttpPath("tableName")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  }).pipe(
-    T.Http({
-      method: "GET",
-      path: "/accounts/{account_id}/r2-catalog/{bucketName}/namespaces/{namespace}/tables/{tableName}/maintenance-configs",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      bucketName: Schema.String.pipe(T.HttpPath("bucketName")),
+      namespace: Schema.String.pipe(T.HttpPath("namespace")),
+      tableName: Schema.String.pipe(T.HttpPath("tableName")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/r2-catalog/{bucketName}/namespaces/{namespace}/tables/{tableName}/maintenance-configs",
+      }),
+    ),
   ) as unknown as Schema.Schema<GetNamespaceTableMaintenanceConfigRequest>;
 
 export interface GetNamespaceTableMaintenanceConfigResponse {
@@ -659,8 +698,167 @@ export interface GetNamespaceTableMaintenanceConfigResponse {
 }
 
 export const GetNamespaceTableMaintenanceConfigResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    maintenanceConfig: Schema.Struct({
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      maintenanceConfig: Schema.Struct({
+        compaction: Schema.optional(
+          Schema.Union([
+            Schema.Struct({
+              state: Schema.Union([
+                Schema.Literals(["enabled", "disabled"]),
+                Schema.String,
+              ]),
+              targetSizeMb: Schema.Union([
+                Schema.Literals(["64", "128", "256", "512"]),
+                Schema.String,
+              ]),
+            }).pipe(
+              Schema.encodeKeys({
+                state: "state",
+                targetSizeMb: "target_size_mb",
+              }),
+            ),
+            Schema.Null,
+          ]),
+        ),
+        snapshotExpiration: Schema.optional(
+          Schema.Union([
+            Schema.Struct({
+              maxSnapshotAge: Schema.String,
+              minSnapshotsToKeep: Schema.Number,
+              state: Schema.Union([
+                Schema.Literals(["enabled", "disabled"]),
+                Schema.String,
+              ]),
+            }).pipe(
+              Schema.encodeKeys({
+                maxSnapshotAge: "max_snapshot_age",
+                minSnapshotsToKeep: "min_snapshots_to_keep",
+                state: "state",
+              }),
+            ),
+            Schema.Null,
+          ]),
+        ),
+      }).pipe(
+        Schema.encodeKeys({
+          compaction: "compaction",
+          snapshotExpiration: "snapshot_expiration",
+        }),
+      ),
+    })
+      .pipe(Schema.encodeKeys({ maintenanceConfig: "maintenance_config" }))
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<GetNamespaceTableMaintenanceConfigResponse>;
+
+export type GetNamespaceTableMaintenanceConfigError =
+  | DefaultErrors
+  | TableNotFound
+  | InvalidRoute
+  | WarehouseInactive;
+
+export const getNamespaceTableMaintenanceConfig: API.OperationMethod<
+  GetNamespaceTableMaintenanceConfigRequest,
+  GetNamespaceTableMaintenanceConfigResponse,
+  GetNamespaceTableMaintenanceConfigError,
+  Credentials | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: GetNamespaceTableMaintenanceConfigRequest,
+  output: GetNamespaceTableMaintenanceConfigResponse,
+  errors: [TableNotFound, InvalidRoute, WarehouseInactive],
+}));
+
+export interface UpdateNamespaceTableMaintenanceConfigRequest {
+  bucketName: string;
+  namespace: string;
+  tableName: string;
+  /** Path param: Use this to identify the account. */
+  accountId: string;
+  /** Body param: Updates compaction configuration (all fields optional). */
+  compaction?: {
+    state?: "enabled" | "disabled" | (string & {});
+    targetSizeMb?: "64" | "128" | "256" | "512" | (string & {});
+  };
+  /** Body param: Updates snapshot expiration configuration (all fields optional). */
+  snapshotExpiration?: {
+    maxSnapshotAge?: string;
+    minSnapshotsToKeep?: number;
+    state?: "enabled" | "disabled" | (string & {});
+  };
+}
+
+export const UpdateNamespaceTableMaintenanceConfigRequest =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      bucketName: Schema.String.pipe(T.HttpPath("bucketName")),
+      namespace: Schema.String.pipe(T.HttpPath("namespace")),
+      tableName: Schema.String.pipe(T.HttpPath("tableName")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+      compaction: Schema.optional(
+        Schema.Struct({
+          state: Schema.optional(
+            Schema.Union([
+              Schema.Literals(["enabled", "disabled"]),
+              Schema.String,
+            ]),
+          ),
+          targetSizeMb: Schema.optional(
+            Schema.Union([
+              Schema.Literals(["64", "128", "256", "512"]),
+              Schema.String,
+            ]),
+          ),
+        }).pipe(
+          Schema.encodeKeys({ state: "state", targetSizeMb: "target_size_mb" }),
+        ),
+      ),
+      snapshotExpiration: Schema.optional(
+        Schema.Struct({
+          maxSnapshotAge: Schema.optional(Schema.String),
+          minSnapshotsToKeep: Schema.optional(Schema.Number),
+          state: Schema.optional(
+            Schema.Union([
+              Schema.Literals(["enabled", "disabled"]),
+              Schema.String,
+            ]),
+          ),
+        }).pipe(
+          Schema.encodeKeys({
+            maxSnapshotAge: "max_snapshot_age",
+            minSnapshotsToKeep: "min_snapshots_to_keep",
+            state: "state",
+          }),
+        ),
+      ),
+    }).pipe(
+      Schema.encodeKeys({
+        compaction: "compaction",
+        snapshotExpiration: "snapshot_expiration",
+      }),
+      T.Http({
+        method: "POST",
+        path: "/accounts/{account_id}/r2-catalog/{bucketName}/namespaces/{namespace}/tables/{tableName}/maintenance-configs",
+      }),
+    ),
+  ) as unknown as Schema.Schema<UpdateNamespaceTableMaintenanceConfigRequest>;
+
+export interface UpdateNamespaceTableMaintenanceConfigResponse {
+  /** Configures compaction settings for table optimization. */
+  compaction?: {
+    state: "enabled" | "disabled" | (string & {});
+    targetSizeMb: "64" | "128" | "256" | "512" | (string & {});
+  } | null;
+  /** Configures snapshot expiration settings. */
+  snapshotExpiration?: {
+    maxSnapshotAge: string;
+    minSnapshotsToKeep: number;
+    state: "enabled" | "disabled" | (string & {});
+  } | null;
+}
+
+export const UpdateNamespaceTableMaintenanceConfigResponse =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
       compaction: Schema.optional(
         Schema.Union([
           Schema.Struct({
@@ -700,169 +898,15 @@ export const GetNamespaceTableMaintenanceConfigResponse =
           Schema.Null,
         ]),
       ),
-    }).pipe(
-      Schema.encodeKeys({
-        compaction: "compaction",
-        snapshotExpiration: "snapshot_expiration",
-      }),
-    ),
-  })
-    .pipe(Schema.encodeKeys({ maintenanceConfig: "maintenance_config" }))
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<GetNamespaceTableMaintenanceConfigResponse>;
-
-export type GetNamespaceTableMaintenanceConfigError =
-  | DefaultErrors
-  | TableNotFound
-  | InvalidRoute
-  | WarehouseInactive;
-
-export const getNamespaceTableMaintenanceConfig: API.OperationMethod<
-  GetNamespaceTableMaintenanceConfigRequest,
-  GetNamespaceTableMaintenanceConfigResponse,
-  GetNamespaceTableMaintenanceConfigError,
-  Credentials | HttpClient.HttpClient
-> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
-  input: GetNamespaceTableMaintenanceConfigRequest,
-  output: GetNamespaceTableMaintenanceConfigResponse,
-  errors: [TableNotFound, InvalidRoute, WarehouseInactive],
-}));
-
-export interface UpdateNamespaceTableMaintenanceConfigRequest {
-  bucketName: string;
-  namespace: string;
-  tableName: string;
-  /** Path param: Use this to identify the account. */
-  accountId: string;
-  /** Body param: Updates compaction configuration (all fields optional). */
-  compaction?: {
-    state?: "enabled" | "disabled" | (string & {});
-    targetSizeMb?: "64" | "128" | "256" | "512" | (string & {});
-  };
-  /** Body param: Updates snapshot expiration configuration (all fields optional). */
-  snapshotExpiration?: {
-    maxSnapshotAge?: string;
-    minSnapshotsToKeep?: number;
-    state?: "enabled" | "disabled" | (string & {});
-  };
-}
-
-export const UpdateNamespaceTableMaintenanceConfigRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    bucketName: Schema.String.pipe(T.HttpPath("bucketName")),
-    namespace: Schema.String.pipe(T.HttpPath("namespace")),
-    tableName: Schema.String.pipe(T.HttpPath("tableName")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-    compaction: Schema.optional(
-      Schema.Struct({
-        state: Schema.optional(
-          Schema.Union([
-            Schema.Literals(["enabled", "disabled"]),
-            Schema.String,
-          ]),
-        ),
-        targetSizeMb: Schema.optional(
-          Schema.Union([
-            Schema.Literals(["64", "128", "256", "512"]),
-            Schema.String,
-          ]),
-        ),
-      }).pipe(
-        Schema.encodeKeys({ state: "state", targetSizeMb: "target_size_mb" }),
-      ),
-    ),
-    snapshotExpiration: Schema.optional(
-      Schema.Struct({
-        maxSnapshotAge: Schema.optional(Schema.String),
-        minSnapshotsToKeep: Schema.optional(Schema.Number),
-        state: Schema.optional(
-          Schema.Union([
-            Schema.Literals(["enabled", "disabled"]),
-            Schema.String,
-          ]),
-        ),
-      }).pipe(
+    })
+      .pipe(
         Schema.encodeKeys({
-          maxSnapshotAge: "max_snapshot_age",
-          minSnapshotsToKeep: "min_snapshots_to_keep",
-          state: "state",
+          compaction: "compaction",
+          snapshotExpiration: "snapshot_expiration",
         }),
-      ),
-    ),
-  }).pipe(
-    Schema.encodeKeys({
-      compaction: "compaction",
-      snapshotExpiration: "snapshot_expiration",
-    }),
-    T.Http({
-      method: "POST",
-      path: "/accounts/{account_id}/r2-catalog/{bucketName}/namespaces/{namespace}/tables/{tableName}/maintenance-configs",
-    }),
-  ) as unknown as Schema.Schema<UpdateNamespaceTableMaintenanceConfigRequest>;
-
-export interface UpdateNamespaceTableMaintenanceConfigResponse {
-  /** Configures compaction settings for table optimization. */
-  compaction?: {
-    state: "enabled" | "disabled" | (string & {});
-    targetSizeMb: "64" | "128" | "256" | "512" | (string & {});
-  } | null;
-  /** Configures snapshot expiration settings. */
-  snapshotExpiration?: {
-    maxSnapshotAge: string;
-    minSnapshotsToKeep: number;
-    state: "enabled" | "disabled" | (string & {});
-  } | null;
-}
-
-export const UpdateNamespaceTableMaintenanceConfigResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    compaction: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          state: Schema.Union([
-            Schema.Literals(["enabled", "disabled"]),
-            Schema.String,
-          ]),
-          targetSizeMb: Schema.Union([
-            Schema.Literals(["64", "128", "256", "512"]),
-            Schema.String,
-          ]),
-        }).pipe(
-          Schema.encodeKeys({ state: "state", targetSizeMb: "target_size_mb" }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-    snapshotExpiration: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          maxSnapshotAge: Schema.String,
-          minSnapshotsToKeep: Schema.Number,
-          state: Schema.Union([
-            Schema.Literals(["enabled", "disabled"]),
-            Schema.String,
-          ]),
-        }).pipe(
-          Schema.encodeKeys({
-            maxSnapshotAge: "max_snapshot_age",
-            minSnapshotsToKeep: "min_snapshots_to_keep",
-            state: "state",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-  })
-    .pipe(
-      Schema.encodeKeys({
-        compaction: "compaction",
-        snapshotExpiration: "snapshot_expiration",
-      }),
-    )
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<UpdateNamespaceTableMaintenanceConfigResponse>;
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<UpdateNamespaceTableMaintenanceConfigResponse>;
 
 export type UpdateNamespaceTableMaintenanceConfigError =
   | DefaultErrors
@@ -892,14 +936,16 @@ export interface GetR2DataCatalogRequest {
 }
 
 export const GetR2DataCatalogRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    bucketName: Schema.String.pipe(T.HttpPath("bucketName")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  }).pipe(
-    T.Http({
-      method: "GET",
-      path: "/accounts/{account_id}/r2-catalog/{bucketName}",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      bucketName: Schema.String.pipe(T.HttpPath("bucketName")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "GET",
+        path: "/accounts/{account_id}/r2-catalog/{bucketName}",
+      }),
+    ),
   ) as unknown as Schema.Schema<GetR2DataCatalogRequest>;
 
 export interface GetR2DataCatalogResponse {
@@ -928,88 +974,93 @@ export interface GetR2DataCatalogResponse {
 }
 
 export const GetR2DataCatalogResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    id: Schema.String,
-    bucket: Schema.String,
-    name: Schema.String,
-    status: Schema.Union([
-      Schema.Literals(["active", "inactive"]),
-      Schema.String,
-    ]),
-    credentialStatus: Schema.optional(
-      Schema.Union([
-        Schema.Literal("present"),
-        Schema.Literal("absent"),
-        Schema.Null,
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      id: Schema.String,
+      bucket: Schema.String,
+      name: Schema.String,
+      status: Schema.Union([
+        Schema.Literals(["active", "inactive"]),
+        Schema.String,
       ]),
-    ),
-    maintenanceConfig: Schema.optional(
-      Schema.Union([
-        Schema.Struct({
-          compaction: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                state: Schema.Union([
-                  Schema.Literals(["enabled", "disabled"]),
-                  Schema.String,
-                ]),
-                targetSizeMb: Schema.Union([
-                  Schema.Literals(["64", "128", "256", "512"]),
-                  Schema.String,
-                ]),
-              }).pipe(
-                Schema.encodeKeys({
-                  state: "state",
-                  targetSizeMb: "target_size_mb",
-                }),
-              ),
-              Schema.Null,
-            ]),
+      credentialStatus: Schema.optional(
+        Schema.Union([
+          Schema.Literal("present"),
+          Schema.Literal("absent"),
+          Schema.Null,
+        ]),
+      ),
+      maintenanceConfig: Schema.optional(
+        Schema.Union([
+          Schema.Struct({
+            compaction: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  state: Schema.Union([
+                    Schema.Literals(["enabled", "disabled"]),
+                    Schema.String,
+                  ]),
+                  targetSizeMb: Schema.Union([
+                    Schema.Literals(["64", "128", "256", "512"]),
+                    Schema.String,
+                  ]),
+                }).pipe(
+                  Schema.encodeKeys({
+                    state: "state",
+                    targetSizeMb: "target_size_mb",
+                  }),
+                ),
+                Schema.Null,
+              ]),
+            ),
+            snapshotExpiration: Schema.optional(
+              Schema.Union([
+                Schema.Struct({
+                  maxSnapshotAge: Schema.String,
+                  minSnapshotsToKeep: Schema.Number,
+                  state: Schema.Union([
+                    Schema.Literals(["enabled", "disabled"]),
+                    Schema.String,
+                  ]),
+                }).pipe(
+                  Schema.encodeKeys({
+                    maxSnapshotAge: "max_snapshot_age",
+                    minSnapshotsToKeep: "min_snapshots_to_keep",
+                    state: "state",
+                  }),
+                ),
+                Schema.Null,
+              ]),
+            ),
+          }).pipe(
+            Schema.encodeKeys({
+              compaction: "compaction",
+              snapshotExpiration: "snapshot_expiration",
+            }),
           ),
-          snapshotExpiration: Schema.optional(
-            Schema.Union([
-              Schema.Struct({
-                maxSnapshotAge: Schema.String,
-                minSnapshotsToKeep: Schema.Number,
-                state: Schema.Union([
-                  Schema.Literals(["enabled", "disabled"]),
-                  Schema.String,
-                ]),
-              }).pipe(
-                Schema.encodeKeys({
-                  maxSnapshotAge: "max_snapshot_age",
-                  minSnapshotsToKeep: "min_snapshots_to_keep",
-                  state: "state",
-                }),
-              ),
-              Schema.Null,
-            ]),
-          ),
-        }).pipe(
-          Schema.encodeKeys({
-            compaction: "compaction",
-            snapshotExpiration: "snapshot_expiration",
-          }),
-        ),
-        Schema.Null,
-      ]),
-    ),
-  })
-    .pipe(
-      Schema.encodeKeys({
-        id: "id",
-        bucket: "bucket",
-        name: "name",
-        status: "status",
-        credentialStatus: "credential_status",
-        maintenanceConfig: "maintenance_config",
-      }),
-    )
-    .pipe(
-      T.ResponsePath("result"),
-    ) as unknown as Schema.Schema<GetR2DataCatalogResponse>;
+          Schema.Null,
+        ]),
+      ),
+    })
+      .pipe(
+        Schema.encodeKeys({
+          id: "id",
+          bucket: "bucket",
+          name: "name",
+          status: "status",
+          credentialStatus: "credential_status",
+          maintenanceConfig: "maintenance_config",
+        }),
+      )
+      .pipe(T.ResponsePath("result")),
+  ) as unknown as Schema.Schema<GetR2DataCatalogResponse>;
 
-export type GetR2DataCatalogError = DefaultErrors | NoSuchBucket | InvalidRoute;
+export type GetR2DataCatalogError =
+  | DefaultErrors
+  | NoSuchBucket
+  | InvalidRoute
+  | WarehouseNotFound
+  | Forbidden;
 
 export const getR2DataCatalog: API.OperationMethod<
   GetR2DataCatalogRequest,
@@ -1019,7 +1070,7 @@ export const getR2DataCatalog: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: GetR2DataCatalogRequest,
   output: GetR2DataCatalogResponse,
-  errors: [NoSuchBucket, InvalidRoute],
+  errors: [NoSuchBucket, InvalidRoute, WarehouseNotFound, Forbidden],
 }));
 
 export interface ListR2DataCatalogsRequest {
@@ -1028,10 +1079,12 @@ export interface ListR2DataCatalogsRequest {
 }
 
 export const ListR2DataCatalogsRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  }).pipe(
-    T.Http({ method: "GET", path: "/accounts/{account_id}/r2-catalog" }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({ method: "GET", path: "/accounts/{account_id}/r2-catalog" }),
+    ),
   ) as unknown as Schema.Schema<ListR2DataCatalogsRequest>;
 
 export interface ListR2DataCatalogsResponse {
@@ -1057,87 +1110,87 @@ export interface ListR2DataCatalogsResponse {
 }
 
 export const ListR2DataCatalogsResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    warehouses: Schema.Array(
-      Schema.Struct({
-        id: Schema.String,
-        bucket: Schema.String,
-        name: Schema.String,
-        status: Schema.Union([
-          Schema.Literals(["active", "inactive"]),
-          Schema.String,
-        ]),
-        credentialStatus: Schema.optional(
-          Schema.Union([
-            Schema.Literal("present"),
-            Schema.Literal("absent"),
-            Schema.Null,
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      warehouses: Schema.Array(
+        Schema.Struct({
+          id: Schema.String,
+          bucket: Schema.String,
+          name: Schema.String,
+          status: Schema.Union([
+            Schema.Literals(["active", "inactive"]),
+            Schema.String,
           ]),
-        ),
-        maintenanceConfig: Schema.optional(
-          Schema.Union([
-            Schema.Struct({
-              compaction: Schema.optional(
-                Schema.Union([
-                  Schema.Struct({
-                    state: Schema.Union([
-                      Schema.Literals(["enabled", "disabled"]),
-                      Schema.String,
-                    ]),
-                    targetSizeMb: Schema.Union([
-                      Schema.Literals(["64", "128", "256", "512"]),
-                      Schema.String,
-                    ]),
-                  }).pipe(
-                    Schema.encodeKeys({
-                      state: "state",
-                      targetSizeMb: "target_size_mb",
-                    }),
-                  ),
-                  Schema.Null,
-                ]),
+          credentialStatus: Schema.optional(
+            Schema.Union([
+              Schema.Literal("present"),
+              Schema.Literal("absent"),
+              Schema.Null,
+            ]),
+          ),
+          maintenanceConfig: Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                compaction: Schema.optional(
+                  Schema.Union([
+                    Schema.Struct({
+                      state: Schema.Union([
+                        Schema.Literals(["enabled", "disabled"]),
+                        Schema.String,
+                      ]),
+                      targetSizeMb: Schema.Union([
+                        Schema.Literals(["64", "128", "256", "512"]),
+                        Schema.String,
+                      ]),
+                    }).pipe(
+                      Schema.encodeKeys({
+                        state: "state",
+                        targetSizeMb: "target_size_mb",
+                      }),
+                    ),
+                    Schema.Null,
+                  ]),
+                ),
+                snapshotExpiration: Schema.optional(
+                  Schema.Union([
+                    Schema.Struct({
+                      maxSnapshotAge: Schema.String,
+                      minSnapshotsToKeep: Schema.Number,
+                      state: Schema.Union([
+                        Schema.Literals(["enabled", "disabled"]),
+                        Schema.String,
+                      ]),
+                    }).pipe(
+                      Schema.encodeKeys({
+                        maxSnapshotAge: "max_snapshot_age",
+                        minSnapshotsToKeep: "min_snapshots_to_keep",
+                        state: "state",
+                      }),
+                    ),
+                    Schema.Null,
+                  ]),
+                ),
+              }).pipe(
+                Schema.encodeKeys({
+                  compaction: "compaction",
+                  snapshotExpiration: "snapshot_expiration",
+                }),
               ),
-              snapshotExpiration: Schema.optional(
-                Schema.Union([
-                  Schema.Struct({
-                    maxSnapshotAge: Schema.String,
-                    minSnapshotsToKeep: Schema.Number,
-                    state: Schema.Union([
-                      Schema.Literals(["enabled", "disabled"]),
-                      Schema.String,
-                    ]),
-                  }).pipe(
-                    Schema.encodeKeys({
-                      maxSnapshotAge: "max_snapshot_age",
-                      minSnapshotsToKeep: "min_snapshots_to_keep",
-                      state: "state",
-                    }),
-                  ),
-                  Schema.Null,
-                ]),
-              ),
-            }).pipe(
-              Schema.encodeKeys({
-                compaction: "compaction",
-                snapshotExpiration: "snapshot_expiration",
-              }),
-            ),
-            Schema.Null,
-          ]),
+              Schema.Null,
+            ]),
+          ),
+        }).pipe(
+          Schema.encodeKeys({
+            id: "id",
+            bucket: "bucket",
+            name: "name",
+            status: "status",
+            credentialStatus: "credential_status",
+            maintenanceConfig: "maintenance_config",
+          }),
         ),
-      }).pipe(
-        Schema.encodeKeys({
-          id: "id",
-          bucket: "bucket",
-          name: "name",
-          status: "status",
-          credentialStatus: "credential_status",
-          maintenanceConfig: "maintenance_config",
-        }),
       ),
-    ),
-  }).pipe(
-    T.ResponsePath("result"),
+    }).pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<ListR2DataCatalogsResponse>;
 
 export type ListR2DataCatalogsError = DefaultErrors | InvalidRoute;
@@ -1160,14 +1213,16 @@ export interface EnableR2DataCatalogRequest {
 }
 
 export const EnableR2DataCatalogRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    bucketName: Schema.String.pipe(T.HttpPath("bucketName")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  }).pipe(
-    T.Http({
-      method: "POST",
-      path: "/accounts/{account_id}/r2-catalog/{bucketName}/enable",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      bucketName: Schema.String.pipe(T.HttpPath("bucketName")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "POST",
+        path: "/accounts/{account_id}/r2-catalog/{bucketName}/enable",
+      }),
+    ),
   ) as unknown as Schema.Schema<EnableR2DataCatalogRequest>;
 
 export interface EnableR2DataCatalogResponse {
@@ -1178,11 +1233,11 @@ export interface EnableR2DataCatalogResponse {
 }
 
 export const EnableR2DataCatalogResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    id: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
-    name: Schema.String,
-  }).pipe(
-    T.ResponsePath("result"),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      id: Schema.optional(Schema.Union([Schema.String, Schema.Null])),
+      name: Schema.String,
+    }).pipe(T.ResponsePath("result")),
   ) as unknown as Schema.Schema<EnableR2DataCatalogResponse>;
 
 export type EnableR2DataCatalogError =
@@ -1208,25 +1263,31 @@ export interface DisableR2DataCatalogRequest {
 }
 
 export const DisableR2DataCatalogRequest =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    bucketName: Schema.String.pipe(T.HttpPath("bucketName")),
-    accountId: Schema.String.pipe(T.HttpPath("account_id")),
-  }).pipe(
-    T.Http({
-      method: "POST",
-      path: "/accounts/{account_id}/r2-catalog/{bucketName}/disable",
-    }),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(() =>
+    Schema.Struct({
+      bucketName: Schema.String.pipe(T.HttpPath("bucketName")),
+      accountId: Schema.String.pipe(T.HttpPath("account_id")),
+    }).pipe(
+      T.Http({
+        method: "POST",
+        path: "/accounts/{account_id}/r2-catalog/{bucketName}/disable",
+      }),
+    ),
   ) as unknown as Schema.Schema<DisableR2DataCatalogRequest>;
 
 export type DisableR2DataCatalogResponse = unknown;
 
 export const DisableR2DataCatalogResponse =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Unknown as unknown as Schema.Schema<DisableR2DataCatalogResponse>;
+  /*@__PURE__*/ /*#__PURE__*/ Schema.suspend(
+    () => Schema.Unknown,
+  ) as unknown as Schema.Schema<DisableR2DataCatalogResponse>;
 
 export type DisableR2DataCatalogError =
   | DefaultErrors
   | NoSuchBucket
-  | InvalidRoute;
+  | InvalidRoute
+  | WarehouseNotFound
+  | Forbidden;
 
 export const disableR2DataCatalog: API.OperationMethod<
   DisableR2DataCatalogRequest,
@@ -1236,5 +1297,5 @@ export const disableR2DataCatalog: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: DisableR2DataCatalogRequest,
   output: DisableR2DataCatalogResponse,
-  errors: [NoSuchBucket, InvalidRoute],
+  errors: [NoSuchBucket, InvalidRoute, WarehouseNotFound, Forbidden],
 }));

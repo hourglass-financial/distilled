@@ -19,7 +19,7 @@ export type DeleteTerminalReadersReaderInput =
 // Output Schema
 export const DeleteTerminalReadersReaderOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    deleted: Schema.Literals(["true"]),
+    deleted: Schema.Literals([true]),
     device_type: Schema.Literals([
       "bbpos_chipper2x",
       "bbpos_wisepad3",

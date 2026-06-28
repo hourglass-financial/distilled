@@ -72,14 +72,14 @@ paths:
                     properties:
                       private_ip:
                         type: string
-                        description: Private IP of the Key Server Host
+                        description: Private IP of the Key Server Host.
                       vnet_id:
                         type: string
-                        description: Cloudflare Tunnel Virtual Network ID
+                        description: Cloudflare Tunnel Virtual Network ID.
                     required:
                       - private_ip
                       - vnet_id
-                    description: Configuration for using Keyless SSL through a Cloudflare Tunnel
+                    description: Configuration for using Keyless SSL through a Cloudflare Tunnel.
                 required:
                   - id
                   - created_on
@@ -91,6 +91,13 @@ paths:
                   - port
                   - status
       x-distilled-response-path: result
+      x-distilled-errors:
+        KeylessCertificateNotFound:
+          - code: 1005
+            message:
+              includes: Invalid or missing Keyless SSL
+        Forbidden:
+          - status: 403
     patch:
       operationId: patchKeylessCertificate
       description: "This will update attributes of a Keyless SSL. Consists of one or
@@ -136,15 +143,15 @@ paths:
                   properties:
                     private_ip:
                       type: string
-                      description: Private IP of the Key Server Host
+                      description: Private IP of the Key Server Host.
                     vnet_id:
                       type: string
-                      description: Cloudflare Tunnel Virtual Network ID
+                      description: Cloudflare Tunnel Virtual Network ID.
                   required:
                     - private_ip
                     - vnet_id
                   description: "Body param: Configuration for using Keyless SSL through a
-                    Cloudflare Tunnel"
+                    Cloudflare Tunnel."
       responses:
         "200":
           description: Success
@@ -192,14 +199,14 @@ paths:
                     properties:
                       private_ip:
                         type: string
-                        description: Private IP of the Key Server Host
+                        description: Private IP of the Key Server Host.
                       vnet_id:
                         type: string
-                        description: Cloudflare Tunnel Virtual Network ID
+                        description: Cloudflare Tunnel Virtual Network ID.
                     required:
                       - private_ip
                       - vnet_id
-                    description: Configuration for using Keyless SSL through a Cloudflare Tunnel
+                    description: Configuration for using Keyless SSL through a Cloudflare Tunnel.
                 required:
                   - id
                   - created_on
@@ -211,6 +218,13 @@ paths:
                   - port
                   - status
       x-distilled-response-path: result
+      x-distilled-errors:
+        KeylessCertificateNotFound:
+          - code: 1005
+            message:
+              includes: Invalid or missing Keyless SSL
+        Forbidden:
+          - status: 403
     delete:
       operationId: deleteKeylessCertificate
       description: "Removes a Keyless SSL configuration. SSL connections will no
@@ -242,6 +256,13 @@ paths:
                     type: string
                     description: Identifier.
       x-distilled-response-path: result
+      x-distilled-errors:
+        KeylessCertificateNotFound:
+          - code: 1005
+            message:
+              includes: Invalid or missing Keyless SSL
+        Forbidden:
+          - status: 403
   /zones/{zone_id}/keyless_certificates:
     get:
       operationId: listKeylessCertificates
@@ -303,14 +324,14 @@ paths:
                     properties:
                       private_ip:
                         type: string
-                        description: Private IP of the Key Server Host
+                        description: Private IP of the Key Server Host.
                       vnet_id:
                         type: string
-                        description: Cloudflare Tunnel Virtual Network ID
+                        description: Cloudflare Tunnel Virtual Network ID.
                     required:
                       - private_ip
                       - vnet_id
-                    description: Configuration for using Keyless SSL through a Cloudflare Tunnel
+                    description: Configuration for using Keyless SSL through a Cloudflare Tunnel.
                 required:
                   - id
                   - created_on
@@ -322,6 +343,9 @@ paths:
                   - port
                   - status
       x-distilled-pagination-class: KeylessCertificatesSinglePage
+      x-distilled-errors:
+        Forbidden:
+          - status: 403
     post:
       operationId: createKeylessCertificate
       description: "Creates a Keyless SSL configuration that allows SSL/TLS
@@ -394,15 +418,15 @@ paths:
                   properties:
                     private_ip:
                       type: string
-                      description: Private IP of the Key Server Host
+                      description: Private IP of the Key Server Host.
                     vnet_id:
                       type: string
-                      description: Cloudflare Tunnel Virtual Network ID
+                      description: Cloudflare Tunnel Virtual Network ID.
                   required:
                     - private_ip
                     - vnet_id
                   description: "Body param: Configuration for using Keyless SSL through a
-                    Cloudflare Tunnel"
+                    Cloudflare Tunnel."
               required:
                 - certificate
                 - host
@@ -454,14 +478,14 @@ paths:
                     properties:
                       private_ip:
                         type: string
-                        description: Private IP of the Key Server Host
+                        description: Private IP of the Key Server Host.
                       vnet_id:
                         type: string
-                        description: Cloudflare Tunnel Virtual Network ID
+                        description: Cloudflare Tunnel Virtual Network ID.
                     required:
                       - private_ip
                       - vnet_id
-                    description: Configuration for using Keyless SSL through a Cloudflare Tunnel
+                    description: Configuration for using Keyless SSL through a Cloudflare Tunnel.
                 required:
                   - id
                   - created_on
@@ -473,3 +497,10 @@ paths:
                   - port
                   - status
       x-distilled-response-path: result
+      x-distilled-errors:
+        KeylessSslNotAvailable:
+          - code: 1067
+            message:
+              includes: Keyless SSL is not available
+        Forbidden:
+          - status: 403

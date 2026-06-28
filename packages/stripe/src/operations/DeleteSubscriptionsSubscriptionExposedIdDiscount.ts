@@ -22,7 +22,7 @@ export const DeleteSubscriptionsSubscriptionExposedIdDiscountOutput =
     checkout_session: Schema.NullOr(Schema.String),
     customer: Schema.Unknown,
     customer_account: Schema.NullOr(Schema.String),
-    deleted: Schema.Literals(["true"]),
+    deleted: Schema.Literals([true]),
     id: Schema.String,
     invoice: Schema.NullOr(Schema.String),
     invoice_item: Schema.NullOr(Schema.String),

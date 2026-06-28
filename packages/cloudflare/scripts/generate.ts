@@ -269,6 +269,31 @@ const loadServicePatches = (
       }
     }
 
+    // Orphan check: every patch file must correspond to a generated
+    // operation. A spec update that renames or removes an operation would
+    // otherwise silently drop the patch (and its typed errors) — and leave
+    // consumers compiled against an API surface that no longer exists.
+    const fs = yield* FileSystem.FileSystem;
+    const patchDir = path.join(PATCH_PATH, serviceName);
+    const patchFiles = yield* fs
+      .readDirectory(patchDir)
+      .pipe(Effect.catch(() => Effect.succeed([] as string[])));
+    const opNames = new Set(operations.map((op) => op.operationName));
+    const orphans = patchFiles
+      .filter((f) => f.endsWith(".json"))
+      .map((f) => f.slice(0, -".json".length))
+      .filter((name) => !opNames.has(name));
+    if (orphans.length > 0) {
+      return yield* Effect.die(
+        `Orphaned patch file(s) in ${patchDir}: ${orphans
+          .map((o) => `${o}.json`)
+          .join(", ")} — no matching operation in the regenerated '${serviceName}' service. ` +
+          `The upstream spec likely renamed or removed the operation; ` +
+          `re-key the patch to the new operation name (available: ${[...opNames].sort().join(", ")}) ` +
+          `or delete it, and migrate consumers in packages/alchemy.`,
+      );
+    }
+
     return patches;
   });
 
@@ -360,13 +385,16 @@ const parseArgs = (): { service: string | undefined; debug: boolean } => {
  * - "location" → top-level field
  * - "settings.abuse_contact_email" → nested field inside settings
  * - "buckets[].location" → field inside array elements
+ * - "$" → the root type itself (e.g. union the whole response with another
+ *   shape when the API returns a sentinel like `""` for "not configured")
  *
  * Supported patch operations:
  * - nullable: wrap type in union with null
  * - optional: make field not required
  * - type: replace type entirely
  * - addValues: add literal values to existing enum
- * - appendUnion: append TypeInfo variants to a union
+ * - appendUnion: append TypeInfo variants to a union (via "$" on a non-union
+ *   root, wraps the root in a union with the appended variants)
  */
 function applyResponsePatch(
   typeInfo: TypeInfo,
@@ -376,6 +404,29 @@ function applyResponsePatch(
   const cloned = JSON.parse(JSON.stringify(typeInfo)) as TypeInfo;
 
   for (const [path, propPatch] of Object.entries(patch.properties)) {
+    if (path === "$") {
+      // Root-level patch — target the response/request type itself.
+      if (
+        !propPatch.type &&
+        propPatch.appendUnion &&
+        propPatch.appendUnion.length > 0 &&
+        cloned.kind !== "union"
+      ) {
+        // Wrap the non-union root in a union with the appended variants.
+        const currentCopy = JSON.parse(JSON.stringify(cloned)) as TypeInfo;
+        for (const key of Object.keys(cloned)) {
+          delete (cloned as unknown as Record<string, unknown>)[key];
+        }
+        cloned.kind = "union";
+        cloned.values = [
+          currentCopy,
+          ...(JSON.parse(JSON.stringify(propPatch.appendUnion)) as TypeInfo[]),
+        ];
+      } else {
+        applyPatchToTypeInfo(cloned, propPatch);
+      }
+      continue;
+    }
     applyPropertyPatch(cloned, path.split("."), propPatch);
   }
 
@@ -476,6 +527,21 @@ function applyPropertyPatch(
         variant.properties?.some((p) => p.name === current)
       ) {
         applyPropertyPatch(variant, pathSegments, patch);
+      }
+    }
+    // Adding a property (via `definition`): also add it to every object
+    // variant that lacks it. This fixes ambiguous unions whose variants all
+    // match the same payload — decoding picks the first variant and would
+    // otherwise silently drop fields it doesn't declare.
+    if (pathSegments.length === 1 && patch.definition) {
+      for (const variant of typeInfo.values) {
+        if (
+          variant.kind === "object" &&
+          variant.properties &&
+          !variant.properties.some((p) => p.name === current)
+        ) {
+          applyPropertyPatch(variant, pathSegments, patch);
+        }
       }
     }
     return;
@@ -701,6 +767,20 @@ function resolveOperationModel(
           param.type = patchedProp.type;
           param.required = patchedProp.required;
           param.wireKey = patchedProp.wireKey;
+        } else {
+          // Property added by a patch `definition` that doesn't exist in the
+          // vendor spec (e.g. multipart file parts the OpenAPI spec omits).
+          // Surface it as a body param.
+          const added = {
+            name: patchedProp.name,
+            type: patchedProp.type,
+            location: "body" as const,
+            required: patchedProp.required,
+            wireKey: patchedProp.wireKey,
+          };
+          allParams.push(added);
+          resolvedBodyParams.push(added);
+          continue;
         }
         for (const arr of [
           resolvedPathParams,
@@ -778,6 +858,11 @@ function resolveOperationModel(
       resolvedResponseType,
       patch.response,
     );
+    // A root-level patch ("$") can change the response's kind (e.g. wrap an
+    // object in a union) — recompute whether it's emitted as a type alias.
+    isTypeAlias =
+      resolvedResponseType.kind !== "object" ||
+      !resolvedResponseType.properties;
   }
 
   return {
@@ -1273,9 +1358,7 @@ function typeInfoToTsType(
         values.length > 0 &&
         values.every(
           (v) =>
-            v.kind === "literal" &&
-            v.value !== "true" &&
-            v.value !== "false",
+            v.kind === "literal" && v.value !== "true" && v.value !== "false",
         );
       if (allStringLiterals) {
         uniqueTsTypes.push("(string & {})");
@@ -1435,6 +1518,20 @@ function generateOperationSchemaAst(
           param.type = patchedProp.type;
           param.required = patchedProp.required;
           param.wireKey = patchedProp.wireKey;
+        } else {
+          // Property added by a patch `definition` that doesn't exist in the
+          // vendor spec (e.g. multipart file parts the OpenAPI spec omits).
+          // Surface it as a body param.
+          const added = {
+            name: patchedProp.name,
+            type: patchedProp.type,
+            location: "body" as const,
+            required: patchedProp.required,
+            wireKey: patchedProp.wireKey,
+          };
+          allParams.push(added);
+          resolvedBodyParams.push(added);
+          continue;
         }
         for (const arr of [
           resolvedPathParams,
@@ -1636,6 +1733,11 @@ function generateOperationSchemaAst(
       resolvedResponseType,
       patch.response,
     );
+    // A root-level patch ("$") can change the response's kind (e.g. wrap an
+    // object in a union) — recompute whether it's emitted as a type alias.
+    isTypeAlias =
+      resolvedResponseType.kind !== "object" ||
+      !resolvedResponseType.properties;
   }
 
   if (op.responseContentType === "binary") {
@@ -1842,7 +1944,10 @@ function generateAccountOrZoneOperationSchema(
   const nonScopePathParams = resolved.pathParams.filter(
     (p) => !isScopeParam(p),
   );
-  const queryParams = resolved.queryParams;
+  // Stainless also emits `account_id`/`zone_id` as mutually-exclusive query
+  // params on accountOrZone operations — the per-variant scope path param
+  // replaces them, so strip them here too to avoid duplicate struct keys.
+  const queryParams = resolved.queryParams.filter((p) => !isScopeParam(p));
   const headerParams = resolved.headerParams;
   const bodyParams = resolved.bodyParams.filter((p) => !isScopeParam(p));
 
@@ -3013,8 +3118,15 @@ function generateServiceFile(
 ): string {
   const lines: string[] = [];
 
-  // Check if any operation has file uploads
-  const hasFileUploads = service.operations.some(operationHasFiles);
+  // Check if any operation has file uploads (including file params added by
+  // a request patch `definition`, e.g. multipart parts the vendor spec omits)
+  const hasFileUploads = service.operations.some(
+    (op) =>
+      operationHasFiles(op) ||
+      Object.values(
+        patches.get(op.operationName)?.request?.properties ?? {},
+      ).some((p) => p.definition !== undefined && hasFileType(p.definition)),
+  );
   // Whether any operation has a raw octet-stream request body (e.g. R2 PutObject)
   // — drives the `BinaryBodySchema` import.
   const hasBinaryRequestBodies = service.operations.some(
@@ -3107,11 +3219,19 @@ function generateServiceFile(
           `T.applyErrorMatchers(${tag}, ${JSON.stringify(matchers)});`,
         );
       } else {
-        lines.push(`export class ${tag} extends Schema.TaggedErrorClass<${tag}>()(
-  "${tag}",
-  { code: Schema.Number, message: Schema.String },
-) {}
-T.applyErrorMatchers(${tag}, ${JSON.stringify(matchers)});`);
+        // Wrap the base class with `applyErrorMatchers` inside the `extends`
+        // clause rather than emitting a separate top-level
+        // `applyErrorMatchers(Tag, ...)` statement. A bare top-level call is a
+        // module side effect that keeps the whole service module (and its
+        // distilled imports) alive in Worker bundles even when none of its
+        // exports are used; wrapping keeps the module tree-shakeable.
+        lines.push(`export class ${tag} extends T.applyErrorMatchers(
+  Schema.TaggedErrorClass<${tag}>()(
+    "${tag}",
+    { code: Schema.Number, message: Schema.String },
+  ),
+  ${JSON.stringify(matchers)},
+) {}`);
       }
       lines.push("");
     }
@@ -3144,6 +3264,24 @@ T.applyErrorMatchers(${tag}, ${JSON.stringify(matchers)});`);
   }
 
   let code = lines.join("\n");
+
+  // Defer schema construction. Each generated request/response schema is a
+  // large eager `Schema.Struct({...})` — a service like zero-trust builds
+  // >11k of them at module-eval time, which dominates import cost even when
+  // the consumer only calls a couple of operations. Wrap every schema const
+  // in `Schema.suspend(() => ...)` so construction is deferred until the
+  // operation is first invoked (the shared `API.make` client forces + memoizes
+  // it lazily). Each schema const is uniquely identified by its
+  // `... as unknown as Schema.Schema<Name>;` cast tail; operation consts
+  // (`API.make(...)`) and error classes don't carry it. The tempered
+  // `(?!export const )` body guard prevents a cast-less const from swallowing
+  // the next const's tail.
+  code = code.replace(
+    /(export const \w+ = \/\*@__PURE__\*\/ \/\*#__PURE__\*\/ )((?:(?!export const )[\s\S])*?)( as unknown as Schema\.Schema<\w+>;)/g,
+    (_m, head: string, body: string, tail: string) =>
+      `${head}Schema.suspend(() => ${body})${tail}`,
+  );
+
   // Only include the Effect import if it's actually used in the generated code
   if (code.includes("Effect.")) {
     code = code.replace(

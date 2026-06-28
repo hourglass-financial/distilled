@@ -1,3 +1,155 @@
+## v0.27.0
+
+### &nbsp;&nbsp;&nbsp;🐞 Bug Fixes
+
+- **cloudflare**:
+  - NoSuchKey for getObject &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(6b29c)</samp>](https://github.com/alchemy-run/distilled/commit/6b29c4104)
+  - AiGatewaySpendingLimitDeprecated, MissingSitemap, WorkerHasNoVersions &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(24a0b)</samp>](https://github.com/alchemy-run/distilled/commit/24a0b1cc5)
+  - Map non-500 internal server error to InternalServerError &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(ba06b)</samp>](https://github.com/alchemy-run/distilled/commit/ba06b9345)
+  - ZonePurged error for api-gateway listUserSchemas &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(1520a)</samp>](https://github.com/alchemy-run/distilled/commit/1520aa14d)
+  - PolicyValidationFailed iam.listUserGroupMembership &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(ede85)</samp>](https://github.com/alchemy-run/distilled/commit/ede85fe1b)
+  - Throw TransportError when null body is received &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(e54dd)</samp>](https://github.com/alchemy-run/distilled/commit/e54dd8d6b)
+  - AccessReferenceNotFound for zero-trust apis &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(b294a)</samp>](https://github.com/alchemy-run/distilled/commit/b294a8dc7)
+  - Handle null result in pagination apis as empty list &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(3f354)</samp>](https://github.com/alchemy-run/distilled/commit/3f354f33e)
+- **core**:
+  - Emit boolean OpenAPI enum literals &nbsp;-&nbsp; by **Lukas Steiner** in https://github.com/alchemy-run/distilled/issues/356 [<samp>(1adb4)</samp>](https://github.com/alchemy-run/distilled/commit/1adb42113)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/alchemy-run/distilled/compare/v0.26.1...HEAD)
+
+---
+
+## v0.26.1
+
+### &nbsp;&nbsp;&nbsp;🐞 Bug Fixes
+
+- **cloudflare**: Patch page-rules, pages and schema-validaton &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(90b60)</samp>](https://github.com/alchemy-run/distilled/commit/90b6028d0)
+- **coinbase**: Type errors &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(72aab)</samp>](https://github.com/alchemy-run/distilled/commit/72aab01f5)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/alchemy-run/distilled/compare/v0.26.0...HEAD)
+
+---
+
+## v0.26.0
+
+### &nbsp;&nbsp;&nbsp;🚀 Features
+
+- **cloudflare**: Namespace-scoped AI Search instance operations &nbsp;-&nbsp; by **Sam Goodwin** and **Cursor** [<samp>(6fc19)</samp>](https://github.com/alchemy-run/distilled/commit/6fc191fa6)
+
+### &nbsp;&nbsp;&nbsp;🐞 Bug Fixes
+
+- **aws**:
+  - Make Route53 + CloudFront list-response members optional &nbsp;-&nbsp; by **Sam Goodwin** in https://github.com/alchemy-run/distilled/issues/351 [<samp>(88cec)</samp>](https://github.com/alchemy-run/distilled/commit/88cec23de)
+  - Override COMMON_ERRORS with operation errors &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(3a982)</samp>](https://github.com/alchemy-run/distilled/commit/3a9822f4c)
+- **cloudflare**:
+  - Make error classes tree-shakeable out of Worker bundles &nbsp;-&nbsp; by **Michael K** in https://github.com/alchemy-run/distilled/issues/352 [<samp>(61a84)</samp>](https://github.com/alchemy-run/distilled/commit/61a84be97)
+  - Type AI Search web-crawler domain-ownership error &nbsp;-&nbsp; by **Sam Goodwin** and **Cursor** [<samp>(f68ba)</samp>](https://github.com/alchemy-run/distilled/commit/f68bae75d)
+- **coinbase**:
+  - Sign CDP requests with URI &nbsp;-&nbsp; by **Harry Solovay** in https://github.com/alchemy-run/distilled/issues/353 [<samp>(6cbea)</samp>](https://github.com/alchemy-run/distilled/commit/6cbea6e8a)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/alchemy-run/distilled/compare/v0.25.2...HEAD)
+
+---
+
+## v0.25.2
+
+### &nbsp;&nbsp;&nbsp;🚀 Features
+
+- **stripe**:
+  - Add per-call request options &nbsp;-&nbsp; by **Alex** in https://github.com/alchemy-run/distilled/issues/349 [<samp>(9babf)</samp>](https://github.com/alchemy-run/distilled/commit/9babfe727)
+  - Add webhook signature verification &nbsp;-&nbsp; by **Alex** in https://github.com/alchemy-run/distilled/issues/350 [<samp>(a06f8)</samp>](https://github.com/alchemy-run/distilled/commit/a06f8f867)
+
+### &nbsp;&nbsp;&nbsp;🐞 Bug Fixes
+
+- **aws,cloudflare**:
+  - Patch broken list envelopes &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(cf48b)</samp>](https://github.com/alchemy-run/distilled/commit/cf48bb59c)
+- **cloudflare**:
+  - Patch listRegionalHostnames, listPipelines, getPhase, listWorkflows &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(d44c9)</samp>](https://github.com/alchemy-run/distilled/commit/d44c93ae1)
+  - EmailRoutingRuleNotFound &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(5d3b6)</samp>](https://github.com/alchemy-run/distilled/commit/5d3b6849b)
+  - Patch errors and core matcher logic &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(1c5fe)</samp>](https://github.com/alchemy-run/distilled/commit/1c5fec993)
+
+### &nbsp;&nbsp;&nbsp;🏎 Performance
+
+- **cloudflare,core**: Defer schema construction with Schema.suspend &nbsp;-&nbsp; by **Sam Goodwin** in https://github.com/alchemy-run/distilled/issues/348 [<samp>(d9471)</samp>](https://github.com/alchemy-run/distilled/commit/d9471f66d)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/alchemy-run/distilled/compare/v0.25.1...HEAD)
+
+---
+
+## v0.25.1
+
+### &nbsp;&nbsp;&nbsp;🐞 Bug Fixes
+
+- **cloudflare**: Allow missing edge preview tail url &nbsp;-&nbsp; by **Ryan Brown** in https://github.com/alchemy-run/distilled/issues/347 [<samp>(74404)</samp>](https://github.com/alchemy-run/distilled/commit/7440428ac)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/alchemy-run/distilled/compare/v0.25.0...HEAD)
+
+---
+
+## v0.25.0
+
+### &nbsp;&nbsp;&nbsp;🚀 Features
+
+- **cloudflare**: Update to latest spec bringing in flagship &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(55374)</samp>](https://github.com/alchemy-run/distilled/commit/5537406b)
+
+### &nbsp;&nbsp;&nbsp;🐞 Bug Fixes
+
+- **aws**:
+  - Resolve legacy inline-SSO profiles &nbsp;-&nbsp; by **yehudacohen** in https://github.com/alchemy-run/distilled/issues/337 [<samp>(40ff6)</samp>](https://github.com/alchemy-run/distilled/commit/40ff67c2)
+- **cloudflare**:
+  - Patch Cloudflare errors discovered in Alchemy &nbsp;-&nbsp; by **Sam Goodwin** in https://github.com/alchemy-run/distilled/issues/339 [<samp>(b1a37)</samp>](https://github.com/alchemy-run/distilled/commit/b1a3756c)
+  - Patch flagship errors &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(d5c08)</samp>](https://github.com/alchemy-run/distilled/commit/d5c0883d)
+  - Fix regressions and stale patches &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(12827)</samp>](https://github.com/alchemy-run/distilled/commit/12827408)
+  - Patch ai-gateway, ai-search and zero trust apis &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(fc388)</samp>](https://github.com/alchemy-run/distilled/commit/fc388f48)
+  - Type member-exists/cert-deleted errors, drop orphaned discovery patch &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(e7083)</samp>](https://github.com/alchemy-run/distilled/commit/e7083913)
+- **core**:
+  - Resolve $ref parameters in the Swagger 2.0 generator &nbsp;-&nbsp; by **Andrew Jefferson** and **Claude Opus 4.8** in https://github.com/alchemy-run/distilled/issues/345 [<samp>(99d11)</samp>](https://github.com/alchemy-run/distilled/commit/99d1163a)
+- **core,cloudflare**:
+  - Page-mode pagination loops forever on current-page echoes and dropped page params &nbsp;-&nbsp; by **Andrew Jefferson** in https://github.com/alchemy-run/distilled/issues/342 [<samp>(adfc1)</samp>](https://github.com/alchemy-run/distilled/commit/adfc1a58)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/alchemy-run/distilled/compare/v0.24.9...HEAD)
+
+---
+
+## v0.24.9
+
+### &nbsp;&nbsp;&nbsp;🐞 Bug Fixes
+
+- **core**: Serialize struct query params as deepObject dot-notation &nbsp;-&nbsp; by **sam** in https://github.com/alchemy-run/distilled/issues/334 [<samp>(e392f)</samp>](https://github.com/alchemy-run/distilled/commit/e392f446)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/alchemy-run/distilled/compare/v0.24.8...HEAD)
+
+---
+
+## v0.24.8
+
+### &nbsp;&nbsp;&nbsp;🐞 Bug Fixes
+
+- **cloudflare**: Patch optional properties on getBillingTopupConfig &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(e199c)</samp>](https://github.com/alchemy-run/distilled/commit/e199ca5a)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/alchemy-run/distilled/compare/v0.24.7...HEAD)
+
+---
+
+## v0.24.7
+
+### &nbsp;&nbsp;&nbsp;🐞 Bug Fixes
+
+- **cloudflare**: Patch ai gateway creditBalanceBilling topupConfig &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(1e84a)</samp>](https://github.com/alchemy-run/distilled/commit/1e84a9f3)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/alchemy-run/distilled/compare/v0.24.6...HEAD)
+
+---
+
+## v0.24.6
+
+### &nbsp;&nbsp;&nbsp;🐞 Bug Fixes
+
+- **cloudflare**: Add NO_MANUAL_TOPUP error for createBillingSpendingLimit &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(9be77)</samp>](https://github.com/alchemy-run/distilled/commit/9be77343)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/alchemy-run/distilled/compare/v0.24.5...HEAD)
+
+---
+
 ## v0.24.5
 
 ### &nbsp;&nbsp;&nbsp;🐞 Bug Fixes
