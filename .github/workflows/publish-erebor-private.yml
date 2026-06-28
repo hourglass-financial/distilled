@@ -1,5 +1,6 @@
 name: Publish Private Erebor Packages
 
+# HOURGLASS PATCH: Publish fork-only Erebor packages to GitHub Packages.
 on:
   workflow_dispatch:
     inputs:
@@ -18,9 +19,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/checkout@v6
 
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+      - uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
