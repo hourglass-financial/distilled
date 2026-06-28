@@ -17,9 +17,7 @@ permissions:
 
 jobs:
   pr-package:
-    # This private fork does not have the pkg.ing/App secrets required by the
-    # upstream preview-package workflow. Enable with a repo variable only after
-    # those credentials are configured.
+    # HOURGLASS PATCH: Gate upstream preview packaging until fork secrets exist.
     if: vars.PR_PACKAGE_ENABLED == 'true'
     uses: alchemy-run/actions/.github/workflows/pr-package.yml@67b1515cf5774c16a0666f4480d21b03443e6091 # main
     with:

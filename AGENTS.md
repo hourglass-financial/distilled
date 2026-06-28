@@ -369,3 +369,27 @@ Example PR description (BAD — do not do this):
 ### Summary                  ← no, summary needs no heading
 Persist the user's theme...
 ```
+
+# Hourglass Fork
+
+This repository is a private fork of `alchemy-run/distilled` for the private
+Erebor client SDK. Keep shared code as close to upstream as possible.
+
+When a shared file intentionally diverges from upstream, mark the nearby change
+with a `HOURGLASS PATCH:` comment and a short reason:
+
+```typescript
+// HOURGLASS PATCH: <description>
+```
+
+Use the host file's valid comment syntax while preserving the marker text. For
+example, YAML workflows should use:
+
+```yaml
+# HOURGLASS PATCH: <description>
+```
+
+Do not add invalid comments to JSON or lockfiles. For non-commentable shared
+files such as `package.json` and `bun.lock`, keep the explanation in the nearest
+commentable file that owns the behavior. Use `rg "HOURGLASS PATCH"` to discover
+the current set of intentional fork patches.

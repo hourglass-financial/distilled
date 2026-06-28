@@ -255,11 +255,13 @@ function renderEnumLiterals(
   return `Schema.Literals([${literals}])`;
 }
 
+// HOURGLASS PATCH: Convert OpenAPI header names into usable input field names.
 function toParameterFieldName(name: string): string {
   const camel = toCamelCase(name);
   return camel.charAt(0).toLowerCase() + camel.slice(1);
 }
 
+// HOURGLASS PATCH: Reuse generic schema rendering for OpenAPI header params.
 function renderParameterSchema(
   param: {
     type?: string;
@@ -828,7 +830,7 @@ function generateInputSchemaSwagger(
     fields.push(`  ${param.name}: ${schema},`);
   }
 
-  // Header parameters
+  // HOURGLASS PATCH: Emit Swagger 2.0 header params via T.HttpHeader.
   for (const param of headerParams) {
     const fieldName = toParameterFieldName(param.name);
     if (usedNames.has(fieldName)) continue;
@@ -1020,7 +1022,7 @@ function generateInputSchema3(
     fields.push(`  ${param.name}: ${schemaStr},`);
   }
 
-  // Header parameters
+  // HOURGLASS PATCH: Emit OpenAPI 3.x header params via T.HttpHeader.
   for (const param of headerParams) {
     const fieldName = toParameterFieldName(param.name);
     if (usedNames.has(fieldName)) continue;
