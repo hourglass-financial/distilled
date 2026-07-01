@@ -2,12 +2,9 @@
 /**
  * Generate Tests Agent
  *
- * Uses the Claude Agent SDK to generate tests for all operations (or a specific
- * one) in an SDK package. For each operation, generates at least 1 happy path
- * test and at least 1 error test for every non-generic (operation-specific) error.
- *
- * Authentication: uses your Claude Max plan via the Claude Code CLI auth.
- * Make sure you're logged in with `claude` before running.
+ * Delegates to the Smithers sdk-generate-tests workflow to generate tests for
+ * all operations (or a specific one) in an SDK package. For each operation, the
+ * workflow asks for at least 1 happy path test and at least 1 typed error test.
  *
  * Usage:
  *   bun scripts/generate-tests.ts <provider>
@@ -20,27 +17,24 @@
  */
 
 import { BunRuntime, BunServices } from "@effect/platform-bun";
-import { Console, Effect, Option } from "effect";
+import { Console, Data, Effect, Option } from "effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import { Argument, Command, Flag } from "effect/unstable/cli";
-import {
-  AgentError,
-  AgentStatsAccumulator,
-  BOLD,
-  CYAN,
-  DIM,
-  GREEN,
-  RED,
-  RESET,
-  YELLOW,
-  runAgent,
-} from "./lib/agent.ts";
+import { BOLD, CYAN, DIM, GREEN, RED, RESET, YELLOW } from "./lib/console.ts";
 import {
   ensureMetadataDir,
   metadataPromptSection,
   metadataRelPath,
 } from "./lib/metadata.ts";
+import {
+  assertSmithersFinalReport,
+  runSmithersWorkflow,
+} from "./lib/smithers.ts";
+
+class ScriptError extends Data.TaggedError("ScriptError")<{
+  readonly message: string;
+}> {}
 
 // ============================================================================
 // Prompt Construction
@@ -757,7 +751,7 @@ const validatePackage = (root: string, name: string) =>
       const entries = yield* fs
         .readDirectory(packagesDir)
         .pipe(Effect.catch(() => Effect.succeed([] as string[])));
-      return yield* new AgentError({
+      return yield* new ScriptError({
         message: `Package "${name}" not found at ${pkgDir}. Available packages: ${entries.join(", ")}`,
       });
     }
@@ -765,7 +759,7 @@ const validatePackage = (root: string, name: string) =>
     const srcDir = path.join(pkgDir, "src");
     const srcExists = yield* fs.exists(srcDir);
     if (!srcExists) {
-      return yield* new AgentError({
+      return yield* new ScriptError({
         message: `Package "${name}" has no src/ directory — is it scaffolded?`,
       });
     }
@@ -797,7 +791,6 @@ const generateTests = Command.make(
   (config) =>
     Effect.gen(function* () {
       const path = yield* Path.Path;
-      const fs = yield* FileSystem.FileSystem;
       const root = path.resolve(import.meta.dir, "..");
       const op = Option.getOrUndefined(config.operation);
 
@@ -806,214 +799,24 @@ const generateTests = Command.make(
         `\n${BOLD}Generate Tests: ${config.provider} / ${scope}${RESET}`,
       );
 
-      yield* validatePackage(root, config.provider);
-
-      // Handle --reset: delete existing test files
-      if (config.reset) {
-        const testsDir = path.join(root, "packages", config.provider, "tests");
-        const testDir = path.join(root, "packages", config.provider, "test");
-        const dir = (yield* fs.exists(testsDir))
-          ? testsDir
-          : (yield* fs.exists(testDir))
-            ? testDir
-            : undefined;
-
-        if (dir) {
-          if (op) {
-            // Single operation: delete its specific test file
-            const testFile = path.join(dir, `${op}.test.ts`);
-            if (yield* fs.exists(testFile)) {
-              yield* fs.remove(testFile);
-              yield* Console.log(
-                `${YELLOW}Removed ${op}.test.ts (--reset)${RESET}`,
-              );
-            }
-          } else {
-            // All operations: delete all *.test.ts files (keep setup.ts / test.ts)
-            const entries = yield* fs.readDirectory(dir);
-            let removed = 0;
-            for (const entry of entries) {
-              if (entry.endsWith(".test.ts")) {
-                yield* fs.remove(path.join(dir, entry));
-                removed++;
-              }
-            }
-            if (removed > 0) {
-              yield* Console.log(
-                `${YELLOW}Removed ${removed} test file(s) (--reset)${RESET}`,
-              );
-            }
-          }
-        }
-      }
-
-      const systemPromptAppend =
-        "You are a test generation agent. Your job is to write thorough tests — " +
-        "BOTH happy path AND error tests for every operation. A test file with only " +
-        "happy paths is INCOMPLETE. You must read errors.ts and client.ts to understand " +
-        "what error classes exist, then trigger real API errors (non-existent IDs, " +
-        "invalid input, duplicates) and assert the SDK maps them to typed error classes. " +
-        "The word 'Unknown' must NEVER appear in any test file — not in assertions, " +
-        "not in arrays, not in catchTag. If you encounter UnknownXxxError, STOP and fix " +
-        "the matchError function in client.ts (common cause: non-JSON 401/403 responses " +
-        "that need status-code-based matching), then test the properly typed error. " +
-        "NEVER use Effect.catchTag + Effect.succeed(undefined) to swallow errors in test " +
-        "bodies. Happy path tests must let errors propagate. Error tests use Effect.flip. " +
-        "Transient errors use Effect.retry. Effect.ignore is only for cleanup in Effect.ensuring. " +
-        "All tests run on TEST data — destructive operations (delete, restore, overwrite) " +
-        "are fine and MUST be tested. Never skip a happy path because it's 'destructive'. " +
-        "If an operation needs a prerequisite resource, create it in the test setup. " +
-        "ALWAYS read existing test files first to match the exact patterns. " +
-        "When looking for files, prefer direct file reads over broad searches. " +
-        "Always start by reading files at the package root directly.";
-
-      const stats = new AgentStatsAccumulator();
-
-      if (op) {
-        // Single operation mode — one agent call
-        yield* Console.log(`${DIM}Generating tests for ${op}...${RESET}\n`);
-
-        yield* runAgent(
-          {
-            prompt: buildPrompt(config.provider, root, op, config.reset),
-            cwd: root,
-            systemPromptAppend,
-          },
-          stats,
-        );
-      } else {
-        // All operations mode — two phases:
-        // Phase 1: research & populate shared metadata file
-        // Phase 2: resume session per-operation
-        const pkgDir = `packages/${config.provider}`;
-        yield* ensureMetadataDir(root);
-        const manifestPath = metadataRelPath(config.provider);
-
-        yield* Console.log(
-          `${DIM}Phase 1: Researching SDK and building operation manifest...${RESET}\n`,
-        );
-
-        const researchResult = yield* runAgent(
-          {
-            prompt: buildResearchPrompt(config.provider),
-            cwd: root,
-            systemPromptAppend,
-          },
-          stats,
-        );
-
-        const sessionId = researchResult.sessionId;
-
-        // Read the metadata file
-        const manifestRaw = yield* fs
-          .readFileString(path.join(root, manifestPath))
-          .pipe(Effect.catch(() => Effect.succeed("[]")));
-
-        let operations: Array<{
-          name: string;
-          file: string;
-          errors: string[];
-          httpMethod: string;
-          testFile: string;
-        }>;
-        try {
-          const parsed = JSON.parse(manifestRaw);
-          operations = Array.isArray(parsed)
-            ? parsed
-            : (parsed.operations ?? []);
-        } catch {
-          yield* Console.log(
-            `${RED}Failed to parse manifest — falling back to single agent call${RESET}\n`,
-          );
-          yield* runAgent(
-            {
-              prompt: buildPrompt(
-                config.provider,
-                root,
-                undefined,
-                config.reset,
-              ),
-              cwd: root,
-              systemPromptAppend,
-            },
-            stats,
-          );
-          yield* Console.log(
-            `\n${GREEN}${BOLD}Test generation complete for ${config.provider} / ${scope}.${RESET}`,
-          );
-          stats.print();
-          return;
-        }
-
-        // Filter out operations whose test files already exist (unless --reset)
-        let skipped = 0;
-        const toGenerate: typeof operations = [];
-        for (const operation of operations) {
-          const testFilePath = path.join(
-            root,
-            "packages",
-            config.provider,
-            operation.testFile,
-          );
-          const testExists = yield* fs.exists(testFilePath);
-          if (testExists && !config.reset) {
-            skipped++;
-          } else {
-            toGenerate.push(operation);
-          }
-        }
-
-        yield* Console.log(
-          `\n${BOLD}Found ${operations.length} operations:${RESET} ` +
-            `${toGenerate.length} to generate` +
-            (skipped > 0
-              ? `, ${DIM}${skipped} skipped (test file exists)${RESET}`
-              : ""),
-        );
-
-        // Phase 2: generate tests per operation, resuming the same session
-        let completed = 0;
-        for (const operation of toGenerate) {
-          completed++;
-          yield* Console.log(
-            `\n${CYAN}[${completed}/${toGenerate.length}]${RESET} ${BOLD}${operation.name}${RESET} ${DIM}→ ${operation.testFile}${RESET}`,
-          );
-
-          yield* runAgent(
-            {
-              prompt: buildOperationPrompt(
-                config.provider,
-                root,
-                operation,
-                config.reset,
-              ),
-              cwd: root,
-              resume: sessionId,
-              systemPromptAppend,
-            },
-            stats,
-          );
-        }
-
-        // Phase 3: run the full test suite
-        yield* Console.log(
-          `\n${DIM}Running full test suite to verify...${RESET}\n`,
-        );
-        yield* runAgent(
-          {
-            prompt: `Run the full test suite for ${pkgDir}/ with \`bun run test\` from that directory. If any tests fail, fix them and re-run until they pass. Report a summary of total tests, passed, and failed.`,
-            cwd: root,
-            resume: sessionId,
-            systemPromptAppend,
-          },
-          stats,
-        );
-      }
+      yield* runSmithersWorkflow(
+        "sdk-generate-tests",
+        {
+          provider: config.provider,
+          operation: op,
+          reset: config.reset,
+        },
+        root,
+      );
+      yield* assertSmithersFinalReport(
+        root,
+        "sdk-generate-tests",
+        config.provider,
+      );
 
       yield* Console.log(
         `\n${GREEN}${BOLD}Test generation complete for ${config.provider} / ${scope}.${RESET}`,
       );
-      stats.print();
     }),
 ).pipe(
   Command.withDescription(

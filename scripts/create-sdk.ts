@@ -27,8 +27,11 @@ import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { Argument, Command, Flag } from "effect/unstable/cli";
-import { AgentStatsAccumulator, runAgent } from "./lib/agent.ts";
-import { initMetadata, metadataPromptSection } from "./lib/metadata.ts";
+import { initMetadata } from "./lib/metadata.ts";
+import {
+  assertSmithersFinalReport,
+  runSmithersWorkflow,
+} from "./lib/smithers.ts";
 
 // ============================================================================
 // Error Types
@@ -1430,10 +1433,10 @@ const updateTestYml = (
   });
 
 // ============================================================================
-// Post-agent: Wire test env vars
+// Post-refinement: Wire test env vars
 // ============================================================================
 //
-// After the Claude agent finishes credentials.ts, we know which environment
+// After the Smithers refinement task finishes credentials.ts, we know which environment
 // variables the SDK reads. Append a `bun run test` step + matching `env:`
 // block to the ci-{name} job so CI runs the integration tests with the
 // secrets piped in.
@@ -1743,7 +1746,7 @@ const updateNukeYml = (
   });
 
 // ============================================================================
-// Step 5: Run Generation & Claude Agent for SDK Refinement
+// Step 5: Run Generation & Smithers Refinement Prep
 // ============================================================================
 
 const installAndGenerate = (
@@ -1783,244 +1786,7 @@ const installAndGenerate = (
       yield* Console.log("  ✅ Operations generated successfully");
     } else {
       yield* Console.log(
-        "  ⚠️  Operations directory is empty (only index.ts) — the Claude agent will write the generator for the spec format found in the submodule",
-      );
-    }
-  });
-
-const refineWithClaude = (
-  root: string,
-  name: string,
-  specInfo: SpecInfo,
-  stats: AgentStatsAccumulator,
-  userNote?: string,
-): Effect.Effect<
-  void,
-  PlatformError.PlatformError,
-  FileSystem.FileSystem | Path.Path
-> =>
-  Effect.gen(function* () {
-    const capitalName = capitalize(name);
-    const operationsEmpty = !(yield* hasGeneratedOperations(root, name));
-
-    yield* Console.log(
-      `\n🤖 Calling Claude agent to refine ${capitalName} SDK...`,
-    );
-
-    const specLocations =
-      specInfo.submodulePaths.length > 0
-        ? specInfo.submodulePaths.map((p) => `  - ${p}`).join("\n")
-        : "  (no spec submodules)";
-
-    const envVarName = `${name.toUpperCase().replace(/-/g, "_")}_API_KEY`;
-
-    const note = userNote?.trim() ?? "";
-    const userNoteSection = note
-      ? `
-## ⚡ USER NOTE — HIGHEST PRIORITY
-
-The human who ran the pipeline left this guidance. Treat it as directive; it
-often resolves ambiguity the spec alone can't (spec path inside the submodule,
-scope restrictions, preferred auth, etc.):
-
-> ${note.split("\n").join("\n> ")}
-
-`
-      : "";
-
-    const initialPrompt = `
-You are refining a newly scaffolded SDK package for ${capitalName} at packages/${name}/.
-
-The package has been scaffolded with boilerplate files and the code generator has been run.
-
-${userNoteSection}${metadataPromptSection(name)}
-
-## Step 0: Understand the spec source
-
-The spec submodules are at:
-${specLocations}
-
-Each submodule is a cloned git repo that IS the authoritative source for this SDK's API definition. **The submodule content is what you must work with — do NOT go fetch a spec from somewhere else.**
-
-The submodule could contain ANY of these formats:
-- An OpenAPI 3.x or Swagger 2.0 spec (JSON or YAML)
-- A GraphQL schema — either an introspection JSON (the result of \`__schema\` query, has top-level \`data.__schema\` or \`__schema\`) OR an SDL file (.graphql / .gql)
-- A TypeScript SDK source (like packages/cloudflare/ uses)
-- Smithy models (like packages/aws/ uses)
-- Go types, protobuf definitions, or other IDL formats
-- API documentation in Markdown, HTML, or other formats
-- A combination of the above
-
-**CRITICAL: Do NOT assume OpenAPI. Do NOT try to fetch an OpenAPI spec from the internet.** The submodule IS the spec source. Your job is to figure out what format it's in and write a generator that works with THAT format.
-
-Your FIRST action must be to recursively list the contents of every submodule directory under packages/${name}/specs/ to understand the structure. Use \`find\` or \`ls -R\` on each submodule. Look for .json, .yaml, .yml, .ts, .go, .proto, .graphql, .gql, .smithy, and .md files. Read the first few lines of candidates to understand what they contain.
-
-After you understand the format:
-- If it's OpenAPI → use \`generateFromOpenAPI\` from \`@distilled.cloud/core/openapi/generate\`
-- If it's a GraphQL introspection JSON or live endpoint → use \`generateFromGraphQL\` from \`@distilled.cloud/core/graphql/generate\` (one operation per Query field + one per Mutation field). If the submodule only has SDL (.graphql), use \`introspectEndpoint\` from the same module against a live endpoint to produce introspection JSON, OR pre-convert SDL to introspection JSON via any GraphQL tool — the generator only consumes introspection JSON.
-- If it's a TypeScript SDK → study packages/cloudflare/scripts/generate.ts for how to extract types from TS source
-- If it's Smithy models → study packages/aws/scripts/generate.ts
-- If it's something else → write a custom generator that parses the format and generates Effect operations
-
-The scaffolded generate.ts is a **placeholder that throws an error**. You MUST replace it with a working generator for whatever format you find.
-${
-  operationsEmpty
-    ? `
-## ⚠️  GENERATION NOT YET CONFIGURED — operations directory is EMPTY
-
-packages/${name}/src/operations/ only has a placeholder index.ts. The scaffolded generate.ts is a placeholder that needs to be replaced with a working generator.
-
-After you figure out the spec format in Step 0:
-1. Rewrite packages/${name}/scripts/generate.ts to work with whatever spec format you found in the submodule
-2. Run \`bun run generate\` from packages/${name}/
-3. List packages/${name}/src/operations/ — it MUST have more than just index.ts
-4. If still empty, debug the generator and fix it.
-`
-    : ""
-}
-## Step 1: Write generate.ts
-
-The scaffolded generate.ts is a placeholder that throws an error. Based on what you found in Step 0, **rewrite it entirely** with a working generator for the spec format you found.
-
-- If OpenAPI: use \`generateFromOpenAPI\` from \`@distilled.cloud/core/openapi/generate\` (see packages/neon/scripts/generate.ts for an example)
-- If GraphQL: use \`generateFromGraphQL\` from \`@distilled.cloud/core/graphql/generate\`. Pass \`schemaPath\` pointing to an introspection JSON file. The generator emits one operation file per Query field and per Mutation field, baking the GraphQL document into the input schema via the \`T.GraphQLOp\` trait — the runtime client wraps variables and unwraps \`data.<operationName>\` automatically.
-- If TypeScript SDK: study packages/cloudflare/scripts/generate.ts
-- If Smithy: study packages/aws/scripts/generate.ts
-- If something else: write a custom generator
-
-Run \`bun run generate\` from packages/${name}/ and confirm operations were generated (more than just index.ts in src/operations/).
-
-## Step 2: Update credentials.ts
-
-Based on the API spec/documentation you found, determine:
-- The base URL for the API → set \`DEFAULT_API_BASE_URL\`
-- The authentication scheme (Bearer token, API key header, OAuth, etc.) → update the \`Config\` interface and env var names
-
-Update packages/${name}/src/credentials.ts accordingly.
-
-## Step 3: Update client.ts
-
-Based on the API spec/documentation, update:
-- \`ApiErrorResponse\` schema to match the API's actual error shape
-- \`getAuthHeaders\` — use the correct header (Bearer, X-API-Key, etc.)
-- \`matchError\` — parse errors according to the actual format
-
-Examples of error shapes:
-\`\`\`typescript
-// Simple: { message: "..." }
-Schema.Struct({ message: Schema.String })
-
-// With code: { code: "not_found", message: "..." }
-Schema.Struct({ code: Schema.optional(Schema.String), message: Schema.String })
-
-// Nested: { error: { type: "...", message: "..." } }
-Schema.Struct({ error: Schema.Struct({ type: Schema.String, message: Schema.String }) })
-\`\`\`
-
-## Step 4: Update errors.ts
-
-If the spec defines custom error types beyond standard HTTP status codes, add them as \`Schema.TaggedErrorClass\` entries following the existing Unknown${capitalName}Error pattern. Use \`Category.withServerError\`, \`Category.withParseError\`, etc.
-
-## Step 5: Create README.md
-
-Create a README.md at packages/${name}/README.md following the pattern of other SDKs (see packages/neon/README.md for a good example). The README must include:
-
-1. **Title & description** — \`# @distilled.cloud/${name}\` followed by a one-line description of what the SDK covers and where the spec comes from
-2. **Installation** — \`npm install @distilled.cloud/${name} effect\`
-3. **Quick Start** — a working example using \`Effect.gen\`, importing an operation from \`@distilled.cloud/${name}/operations\`, using \`CredentialsFromEnv\`, and providing \`FetchHttpClient.layer\`
-4. **Configuration** — list the environment variable(s) from credentials.ts (e.g. \`${envVarName}\`)
-5. **Error Handling** — a code example showing \`Effect.catchTags\` with a typed error (e.g. \`NotFound\`) and the Unknown error class
-6. **Services** — a bullet list of the key operation areas (group related operations, e.g. "Machines — create, start, stop, delete")
-7. **License** — MIT
-
-Use REAL operation names from the generated src/operations/ files. Read the operations/index.ts to see what's exported, then pick a representative "list" or "get" operation for the Quick Start example.
-
-## Step 6: Final verification
-
-Run these commands from packages/${name}/ and they MUST all pass:
-1. \`bun run generate\` — must exit 0
-2. \`ls src/operations/\` — must show MORE than just index.ts
-3. \`bun run typecheck\` — must exit 0
-
-If any fail, fix and retry until all pass.
-
-## Rules
-
-- Only modify files within packages/${name}/
-- Do NOT create tests
-- Do NOT modify packages/core/ or CI/workflow files
-- Follow patterns from other SDKs (neon, planetscale, supabase)
-- Use .ai-workspace/ for scratch files
-`.trim();
-
-    const systemPromptAppend =
-      "You are refining a newly scaffolded SDK package. Your job is to study the " +
-      "vendor spec in the submodule, write a working generator, and update the " +
-      "credentials/client/errors files to match the real API. Only modify files " +
-      "within the target package. Do not create tests. Do not modify packages/core/ " +
-      "or CI workflow files.";
-
-    let attempt = 0;
-    let sessionId: string | undefined;
-
-    while (true) {
-      attempt++;
-
-      const isRetry = sessionId !== undefined;
-      const hasOps = yield* hasGeneratedOperations(root, name);
-      const prompt = isRetry
-        ? `Continue where you left off.${
-            !hasOps
-              ? ` The operations directory at packages/${name}/src/operations/ is still empty (only index.ts). You MUST get operations generated before you're done.`
-              : ""
-          } Pick up from whatever step you were on and finish all remaining steps through Step 6 (final verification).`
-        : initialPrompt;
-
-      const result = yield* runAgent(
-        {
-          prompt,
-          cwd: root,
-          systemPromptAppend,
-          ...(sessionId ? { resume: sessionId } : {}),
-        },
-        stats,
-      ).pipe(
-        Effect.catch((err) =>
-          Effect.gen(function* () {
-            yield* Console.error(`\n⚠️  Claude agent failed: ${err.message}`);
-            return {
-              sessionId: sessionId ?? "",
-              durationMs: 0,
-              costUsd: 0,
-              turns: 0,
-              stalled: false,
-            };
-          }),
-        ),
-      );
-
-      if (result.sessionId) {
-        sessionId = result.sessionId;
-      }
-
-      const hasOpsNow = yield* hasGeneratedOperations(root, name);
-      if (hasOpsNow) {
-        yield* Console.log(
-          `✅ Claude refinement complete — operations generated successfully`,
-        );
-        return;
-      }
-
-      if (!sessionId) {
-        yield* Console.log(
-          `\n⚠️  Claude agent failed before a session was created — aborting refinement`,
-        );
-        return;
-      }
-
-      const stalledSuffix = result.stalled ? " (stalled)" : "";
-      yield* Console.log(
-        `\n🔄 Operations directory still empty after attempt ${attempt}${stalledSuffix}, resuming session ${sessionId}...`,
+        "  ⚠️  Operations directory is empty (only index.ts) — the Smithers refinement task will write the generator for the spec format found in the submodule",
       );
     }
   });
@@ -2050,7 +1816,19 @@ const createSdk = Command.make(
     note: Flag.string("note").pipe(
       Flag.withDefault(""),
       Flag.withDescription(
-        "Free-form guidance for the Claude agent — e.g. the path to the spec within the submodule, scope restrictions, or any context the spec itself doesn't make obvious. Saved to metadata.json and injected into the refinement prompt.",
+        "Free-form guidance for the Smithers refinement task — e.g. the path to the spec within the submodule, scope restrictions, or any context the spec itself doesn't make obvious. Saved to metadata.json and injected into the refinement prompt.",
+      ),
+    ),
+    referencePackage: Flag.string("reference-package").pipe(
+      Flag.withDefault(""),
+      Flag.withDescription(
+        "Existing SDK package to use as a deterministic reference for patches and refinement context (e.g. erebor).",
+      ),
+    ),
+    liveSmoke: Flag.boolean("live-smoke").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "Run an optional read-only live smoke after generation/typecheck. Requires the package credential env vars.",
       ),
     ),
   },
@@ -2059,6 +1837,29 @@ const createSdk = Command.make(
       const path = yield* Path.Path;
       const root = path.resolve(import.meta.dir, "..");
       const note = config.note.trim();
+      const smithersMode = process.env.DISTILLED_SMITHERS_CREATE_MODE;
+
+      if (!smithersMode) {
+        yield* runSmithersWorkflow(
+          "sdk-create",
+          {
+            name: config.name,
+            specs: Array.from(config.specs),
+            registerPackage: config.registerPackage,
+            note,
+            referencePackage: config.referencePackage.trim() || undefined,
+            liveSmoke: config.liveSmoke,
+          },
+          root,
+        );
+        yield* assertSmithersFinalReport(root, "sdk-create", config.name);
+        return;
+      }
+
+      if (smithersMode === "wire-test-env") {
+        yield* wireTestEnvVars(root, config.name);
+        return;
+      }
 
       yield* Console.log(`\n🚀 Creating SDK: @distilled.cloud/${config.name}`);
       yield* Console.log(
@@ -2091,28 +1892,15 @@ const createSdk = Command.make(
       // Step 5: Install dependencies and run generator
       yield* installAndGenerate(root, config.name);
 
-      // Step 6: Refine with Claude agent
-      const stats = new AgentStatsAccumulator();
-      yield* refineWithClaude(root, config.name, specInfo, stats, note);
-
-      // Step 7: Wire test env vars into test.yml now that credentials.ts is final
-      yield* wireTestEnvVars(root, config.name);
-
       yield* Console.log(`
-✨ SDK package created successfully!
+✨ SDK package scaffolded successfully!
 
   Package: @distilled.cloud/${config.name}
   Location: packages/${config.name}/
   ${config.registerPackage ? `NPM: https://www.npmjs.com/package/@distilled.cloud/${config.name}` : ""}
 
-Next steps:
-  1. Review the generated code in packages/${config.name}/src/
-  2. Update credentials.ts with correct API base URL and auth scheme
-  3. Add API key secrets to GitHub repository settings
-  4. Run tests: cd packages/${config.name} && bun run test
-  5. Update the website: add the new SDK card to www/distilled.cloud/index.html (SDK section)
+Smithers will refine the generator, credentials, client, errors, and README next.
 `);
-      stats.print();
     }),
 ).pipe(
   Command.withDescription(

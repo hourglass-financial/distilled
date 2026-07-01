@@ -2,14 +2,12 @@
 /**
  * Generate Nuke Script
  *
- * Uses the Claude Agent SDK to generate a reusable nuke script for a cloud
- * provider. The generated script lives at packages/<provider>/scripts/nuke.ts
- * and can list or delete all resources in the account.
+ * Delegates to the Smithers sdk-generate-nuke workflow to generate a reusable
+ * nuke script for a cloud provider. The generated script lives at
+ * packages/<provider>/scripts/nuke.ts and can list or delete all resources in
+ * the account.
  *
  * If the nuke script already exists, this is a no-op.
- *
- * Authentication: uses your Claude Max plan via the Claude Code CLI auth.
- * Make sure you're logged in with `claude` before running.
  *
  * Usage:
  *   bun scripts/generate-nuke.ts <provider>
@@ -25,21 +23,20 @@
  */
 
 import { BunRuntime, BunServices } from "@effect/platform-bun";
-import { Console, Effect } from "effect";
+import { Console, Data, Effect } from "effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import { Argument, Command, Flag } from "effect/unstable/cli";
-import {
-  AgentError,
-  AgentStatsAccumulator,
-  BOLD,
-  DIM,
-  GREEN,
-  RESET,
-  YELLOW,
-  runAgent,
-} from "./lib/agent.ts";
+import { BOLD, DIM, GREEN, RESET, YELLOW } from "./lib/console.ts";
 import { metadataPromptSection } from "./lib/metadata.ts";
+import {
+  assertSmithersFinalReport,
+  runSmithersWorkflow,
+} from "./lib/smithers.ts";
+
+class ScriptError extends Data.TaggedError("ScriptError")<{
+  readonly message: string;
+}> {}
 
 // ============================================================================
 // Prompt Construction
@@ -314,7 +311,7 @@ const validateProvider = (root: string, provider: string) =>
         .readDirectory(packagesDir)
         .pipe(Effect.catch(() => Effect.succeed([] as string[])));
       const providers = entries.filter((e: string) => e !== "core");
-      return yield* new AgentError({
+      return yield* new ScriptError({
         message: `Provider "${provider}" not found. Available providers: ${providers.join(", ")}`,
       });
     }
@@ -322,7 +319,7 @@ const validateProvider = (root: string, provider: string) =>
     const srcDir = path.join(pkgDir, "src");
     const srcExists = yield* fs.exists(srcDir);
     if (!srcExists) {
-      return yield* new AgentError({
+      return yield* new ScriptError({
         message: `Provider "${provider}" has no src/ directory — is it scaffolded?`,
       });
     }
@@ -348,76 +345,27 @@ const generateNuke = Command.make(
   (config) =>
     Effect.gen(function* () {
       const path = yield* Path.Path;
-      const fs = yield* FileSystem.FileSystem;
       const root = path.resolve(import.meta.dir, "..");
-      const nukeScript = path.join(
-        root,
-        "packages",
-        config.provider,
-        "scripts",
-        "nuke.ts",
-      );
 
       yield* Console.log(`\n${BOLD}Generate Nuke: ${config.provider}${RESET}`);
 
-      // Handle existing script
-      const exists = yield* fs.exists(nukeScript);
-      if (exists && config.reset) {
-        yield* fs.remove(nukeScript);
-        yield* Console.log(
-          `${YELLOW}Removed existing nuke script (--reset)${RESET}`,
-        );
-      } else if (exists) {
-        yield* Console.log(
-          `\n${YELLOW}Nuke script already exists at packages/${config.provider}/scripts/nuke.ts${RESET}`,
-        );
-        yield* Console.log(
-          `${DIM}Run it with: bun packages/${config.provider}/scripts/nuke.ts --dry-run${RESET}`,
-        );
-        yield* Console.log(`${DIM}Use --reset to regenerate${RESET}`);
-        return;
-      }
-
-      yield* validateProvider(root, config.provider);
-
-      const stats = new AgentStatsAccumulator();
-
-      yield* runAgent(
+      yield* runSmithersWorkflow(
+        "sdk-generate-nuke",
         {
-          prompt: buildPrompt(config.provider, root),
-          cwd: root,
-          systemPromptAppend:
-            "You are generating a nuke script for a cloud provider SDK. " +
-            "Study the SDK's operations, credentials, and test files thoroughly " +
-            "before writing the script. The script must be complete and runnable. " +
-            "When looking for files, prefer direct file reads over broad searches. " +
-            "Always start by reading files at the package root directly.",
+          provider: config.provider,
+          reset: config.reset,
         },
-        stats,
+        root,
+      );
+      yield* assertSmithersFinalReport(
+        root,
+        "sdk-generate-nuke",
+        config.provider,
       );
 
-      // Verify it was created
-      const created = yield* fs.exists(nukeScript);
-      if (created) {
-        yield* Console.log(
-          `\n${GREEN}${BOLD}Nuke script generated at packages/${config.provider}/scripts/nuke.ts${RESET}`,
-        );
-        yield* Console.log(`\n${DIM}Usage:${RESET}`);
-        yield* Console.log(
-          `  bun packages/${config.provider}/scripts/nuke.ts --dry-run  ${DIM}# List all resources${RESET}`,
-        );
-        yield* Console.log(
-          `  bun packages/${config.provider}/scripts/nuke.ts            ${DIM}# Delete everything${RESET}`,
-        );
-      } else {
-        yield* Console.log(
-          `\n${YELLOW}Warning: nuke script was not created at the expected path.${RESET}`,
-        );
-        yield* Console.log(
-          `${DIM}Check .ai-workspace/ or the agent output for what was generated.${RESET}`,
-        );
-      }
-      stats.print();
+      yield* Console.log(
+        `\n${GREEN}${BOLD}Generate nuke workflow complete for ${config.provider}.${RESET}`,
+      );
     }),
 ).pipe(
   Command.withDescription(
