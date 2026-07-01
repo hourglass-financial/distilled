@@ -46,6 +46,27 @@ Credentials: the sandbox API key lives in `packages/erebor/.env`
 `scripts/fetch-erebor-docs.py`. You need nothing else to run this against the
 sandbox. All commands below run from `packages/erebor/` unless noted.
 
+### Deterministic Smithers workflow
+
+For agent-run updates, prefer the repo-local Smithers workflow:
+
+```bash
+bunx smithers-orchestrator workflow run erebor-sdk-update --input '{"updateSpecs":true,"runLiveTests":true}'
+```
+
+The workflow keeps the runbook deterministic by persisting each artifact and
+running machine checks before any agent edit:
+
+- `bun run specs:diff` compares the refreshed `openapi.json` against `HEAD`.
+- `bun run patches:audit` classifies every RFC 6902 patch as still needed,
+  redundant, stale, conflicting, or unsupported.
+- `bun run tests:audit` verifies exported operations and live tests stay paired.
+- `bun run tests:classify` buckets live-test failures into the triage categories
+  below before any scoped edit is attempted.
+
+If a classifier cannot explain the evidence, the workflow should stop with a
+report instead of guessing.
+
 ### 1. Pull the latest spec
 
 ```bash

@@ -1,0 +1,6 @@
+node_modules/
+package-lock.json
+smithers.db
+smithers.db-*
+executions/
+*.log
