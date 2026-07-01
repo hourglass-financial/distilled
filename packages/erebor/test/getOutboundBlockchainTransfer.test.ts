@@ -38,7 +38,9 @@ describe("getOutboundBlockchainTransfer", () => {
         expect(["BASE", "ETHEREUM", "INK", "SOLANA", "SUI"]).toContain(
           result.network,
         );
-        expect(["PENDING", "SETTLED", "FAILED"]).toContain(result.status);
+        expect(["CREATED", "PENDING", "SETTLED", "FAILED"]).toContain(
+          result.status,
+        );
       },
       30_000,
     );

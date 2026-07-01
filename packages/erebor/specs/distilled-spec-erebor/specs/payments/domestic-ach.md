@@ -120,5 +120,6 @@ Subscribe to ACH transfer events to get real-time status updates:
 * `ACH_OUT.RETURNED` — Outbound ACH returned
 * `ACH_IN.PENDING` — Inbound ACH received
 * `ACH_IN.SETTLED` — Inbound ACH settled
+* `ACH_IN.RETURNED` — Inbound ACH returned
 
 See [Supported Events](/api-reference/events/supported-events) for the full list.

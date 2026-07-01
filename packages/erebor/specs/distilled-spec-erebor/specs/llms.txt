@@ -193,6 +193,7 @@
 - API Reference > Events [Retrieve Event](https://docs.erebor.bank/api-reference/events/get-event.md)
 - API Reference > Simulation > Simulation Endpoints [Simulate Inbound Wire Transfer](https://docs.erebor.bank/api-reference/simulation/simulation-endpoints/simulate-wire-in.md)
 - API Reference > Simulation > Simulation Endpoints [Simulate Inbound ACH Transfer](https://docs.erebor.bank/api-reference/simulation/simulation-endpoints/simulate-ach-in.md)
+- API Reference > Simulation > Simulation Endpoints [Simulate Inbound ACH Transfer Return](https://docs.erebor.bank/api-reference/simulation/simulation-endpoints/simulate-ach-in-return.md)
 - API Reference > Simulation > Simulation Endpoints [Simulate Outbound ACH Transfer Return](https://docs.erebor.bank/api-reference/simulation/simulation-endpoints/simulate-ach-out-return.md)
 - API Reference > Simulation > Simulation Endpoints [Simulate Outbound Wire Transfer Return](https://docs.erebor.bank/api-reference/simulation/simulation-endpoints/simulate-wire-out-return.md)
 - API Reference > Simulation > Simulation Endpoints [Simulate Inbound International Wire Transfer](https://docs.erebor.bank/api-reference/simulation/simulation-endpoints/simulate-international-wire-in.md)

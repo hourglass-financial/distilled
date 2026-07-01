@@ -1,19 +1,19 @@
 > For a complete page index, fetch https://docs.erebor.bank/llms.txt
 
-# Simulate Outbound ACH Transfer Return
+# Simulate Inbound ACH Transfer Return
 
-POST https://api.erebor.bank/simulation/ach_out/{id}/return
+POST https://api.erebor.bank/simulation/ach_in/{id}/return
 
-Force a settled outbound ACH transfer to `RETURNED` for testing. This endpoint is only available in the sandbox environment.
+Force a settled inbound ACH transfer to `RETURNED` for testing. This endpoint is only available in the sandbox environment.
 
 The transfer must be in `SETTLED` status when this endpoint is called; non-`SETTLED` transfers return `409 Conflict`.
 
-The endpoint returns immediately before the status flips — the transfer is still `SETTLED` at this point. The flip to `RETURNED` is asynchronous, usually within a minute. Poll `GET /ach_out/{id}` or listen for the `ACH_OUT.RETURNED` webhook to observe the transition.
+The endpoint returns immediately before the status flips — the transfer is still `SETTLED` at this point. The flip to `RETURNED` is asynchronous, usually within a minute. Poll `GET /ach_in/{id}` or listen for the `ACH_IN.RETURNED` webhook to observe the transition.
 
 Pass an optional `return_code` query parameter to control the return reason code; defaults to `R01` (Insufficient Funds).
 
 
-Reference: https://docs.erebor.bank/api-reference/simulation/simulation-endpoints/simulate-ach-out-return
+Reference: https://docs.erebor.bank/api-reference/simulation/simulation-endpoints/simulate-ach-in-return
 
 ## OpenAPI Specification
 
@@ -23,12 +23,12 @@ info:
   title: Erebor Banking API
   version: 1.0.0
 paths:
-  /simulation/ach_out/{id}/return:
+  /simulation/ach_in/{id}/return:
     post:
-      operationId: simulate-ach-out-return
-      summary: Simulate Outbound ACH Transfer Return
+      operationId: simulate-ach-in-return
+      summary: Simulate Inbound ACH Transfer Return
       description: >
-        Force a settled outbound ACH transfer to `RETURNED` for testing. This
+        Force a settled inbound ACH transfer to `RETURNED` for testing. This
         endpoint is only available in the sandbox environment.
 
 
@@ -38,8 +38,8 @@ paths:
 
         The endpoint returns immediately before the status flips — the transfer
         is still `SETTLED` at this point. The flip to `RETURNED` is
-        asynchronous, usually within a minute. Poll `GET /ach_out/{id}` or
-        listen for the `ACH_OUT.RETURNED` webhook to observe the transition.
+        asynchronous, usually within a minute. Poll `GET /ach_in/{id}` or listen
+        for the `ACH_IN.RETURNED` webhook to observe the transition.
 
 
         Pass an optional `return_code` query parameter to control the return
@@ -50,7 +50,7 @@ paths:
         - name: id
           in: path
           description: >-
-            ID of the outbound ACH transfer to return. Must be in `SETTLED`
+            ID of the inbound ACH transfer to return. Must be in `SETTLED`
             status.
           required: true
           schema:
@@ -86,12 +86,12 @@ paths:
         '200':
           description: >
             Return accepted. The transfer is still `SETTLED` at response time;
-            poll `GET /ach_out/{id}` or listen for the `ACH_OUT.RETURNED`
-            webhook for the flip to `RETURNED`.
+            poll `GET /ach_in/{id}` or listen for the `ACH_IN.RETURNED` webhook
+            for the flip to `RETURNED`.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SimulateAchOutReturnResponse'
+                $ref: '#/components/schemas/SimulateAchInReturnResponse'
         '400':
           description: Bad Request
           content:
@@ -127,15 +127,15 @@ servers:
     description: API server (environment determined by API key)
 components:
   schemas:
-    SimulateAchOutReturnResponse:
+    SimulateAchInReturnResponse:
       type: object
       properties:
         id:
           type: string
           description: >
-            ID of outbound ACH. The transfer is still `SETTLED` at response
-            time; poll `GET /ach_out/{id}` or listen for the `ACH_OUT.RETURNED`
-            webhook for the final state.
+            ID of inbound ACH. The transfer is still `SETTLED` at response time;
+            poll `GET /ach_in/{id}` or listen for the `ACH_IN.RETURNED` webhook
+            for the final state.
         return_code:
           type: string
           description: >-
@@ -145,10 +145,10 @@ components:
         - id
         - return_code
       description: >
-        Response from forcing a settled outbound ACH transfer to `RETURNED`. The
+        Response from forcing a settled inbound ACH transfer to `RETURNED`. The
         transfer is still `SETTLED` at response time; the flip to `RETURNED` is
         asynchronous.
-      title: SimulateAchOutReturnResponse
+      title: SimulateAchInReturnResponse
     ErrorDetail:
       oneOf:
         - type: object
@@ -228,17 +228,17 @@ components:
 
 ```json
 {
-  "id": "ach_out_01kasd1tthf1ns1pjn1kncctwd",
+  "id": "ach_in_01kasd1tthf1ns1pjn1kncctwd",
   "return_code": "R01"
 }
 ```
 
 **SDK Code**
 
-```python SIMULATION_simulateACHOutReturn_example
+```python SIMULATION_simulateACHInReturn_example
 import requests
 
-url = "https://api.erebor.bank/simulation/ach_out/ach_out_01kasd1tthf1ns1pjn1kncctwd/return"
+url = "https://api.erebor.bank/simulation/ach_in/ach_in_01kasd1tthf1ns1pjn1kncctwd/return"
 
 headers = {"Authorization": "<apiKey>"}
 
@@ -247,8 +247,8 @@ response = requests.post(url, headers=headers)
 print(response.json())
 ```
 
-```javascript SIMULATION_simulateACHOutReturn_example
-const url = 'https://api.erebor.bank/simulation/ach_out/ach_out_01kasd1tthf1ns1pjn1kncctwd/return';
+```javascript SIMULATION_simulateACHInReturn_example
+const url = 'https://api.erebor.bank/simulation/ach_in/ach_in_01kasd1tthf1ns1pjn1kncctwd/return';
 const options = {method: 'POST', headers: {Authorization: '<apiKey>'}};
 
 try {
@@ -260,7 +260,7 @@ try {
 }
 ```
 
-```go SIMULATION_simulateACHOutReturn_example
+```go SIMULATION_simulateACHInReturn_example
 package main
 
 import (
@@ -271,7 +271,7 @@ import (
 
 func main() {
 
-	url := "https://api.erebor.bank/simulation/ach_out/ach_out_01kasd1tthf1ns1pjn1kncctwd/return"
+	url := "https://api.erebor.bank/simulation/ach_in/ach_in_01kasd1tthf1ns1pjn1kncctwd/return"
 
 	req, _ := http.NewRequest("POST", url, nil)
 
@@ -288,11 +288,11 @@ func main() {
 }
 ```
 
-```ruby SIMULATION_simulateACHOutReturn_example
+```ruby SIMULATION_simulateACHInReturn_example
 require 'uri'
 require 'net/http'
 
-url = URI("https://api.erebor.bank/simulation/ach_out/ach_out_01kasd1tthf1ns1pjn1kncctwd/return")
+url = URI("https://api.erebor.bank/simulation/ach_in/ach_in_01kasd1tthf1ns1pjn1kncctwd/return")
 
 http = Net::HTTP.new(url.host, url.port)
 http.use_ssl = true
@@ -304,22 +304,22 @@ response = http.request(request)
 puts response.read_body
 ```
 
-```java SIMULATION_simulateACHOutReturn_example
+```java SIMULATION_simulateACHInReturn_example
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 
-HttpResponse<String> response = Unirest.post("https://api.erebor.bank/simulation/ach_out/ach_out_01kasd1tthf1ns1pjn1kncctwd/return")
+HttpResponse<String> response = Unirest.post("https://api.erebor.bank/simulation/ach_in/ach_in_01kasd1tthf1ns1pjn1kncctwd/return")
   .header("Authorization", "<apiKey>")
   .asString();
 ```
 
-```php SIMULATION_simulateACHOutReturn_example
+```php SIMULATION_simulateACHInReturn_example
 <?php
 require_once('vendor/autoload.php');
 
 $client = new \GuzzleHttp\Client();
 
-$response = $client->request('POST', 'https://api.erebor.bank/simulation/ach_out/ach_out_01kasd1tthf1ns1pjn1kncctwd/return', [
+$response = $client->request('POST', 'https://api.erebor.bank/simulation/ach_in/ach_in_01kasd1tthf1ns1pjn1kncctwd/return', [
   'headers' => [
     'Authorization' => '<apiKey>',
   ],
@@ -328,21 +328,21 @@ $response = $client->request('POST', 'https://api.erebor.bank/simulation/ach_out
 echo $response->getBody();
 ```
 
-```csharp SIMULATION_simulateACHOutReturn_example
+```csharp SIMULATION_simulateACHInReturn_example
 using RestSharp;
 
-var client = new RestClient("https://api.erebor.bank/simulation/ach_out/ach_out_01kasd1tthf1ns1pjn1kncctwd/return");
+var client = new RestClient("https://api.erebor.bank/simulation/ach_in/ach_in_01kasd1tthf1ns1pjn1kncctwd/return");
 var request = new RestRequest(Method.POST);
 request.AddHeader("Authorization", "<apiKey>");
 IRestResponse response = client.Execute(request);
 ```
 
-```swift SIMULATION_simulateACHOutReturn_example
+```swift SIMULATION_simulateACHInReturn_example
 import Foundation
 
 let headers = ["Authorization": "<apiKey>"]
 
-let request = NSMutableURLRequest(url: NSURL(string: "https://api.erebor.bank/simulation/ach_out/ach_out_01kasd1tthf1ns1pjn1kncctwd/return")! as URL,
+let request = NSMutableURLRequest(url: NSURL(string: "https://api.erebor.bank/simulation/ach_in/ach_in_01kasd1tthf1ns1pjn1kncctwd/return")! as URL,
                                         cachePolicy: .useProtocolCachePolicy,
                                     timeoutInterval: 10.0)
 request.httpMethod = "POST"

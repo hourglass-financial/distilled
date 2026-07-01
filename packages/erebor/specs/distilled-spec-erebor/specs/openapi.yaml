@@ -7060,6 +7060,100 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/SimulateACHInRequest'
+  /simulation/ach_in/{id}/return:
+    post:
+      operationId: simulate-ach-in-return
+      summary: Simulate Inbound ACH Transfer Return
+      description: >
+        Force a settled inbound ACH transfer to `RETURNED` for testing. This endpoint is only available in the sandbox
+        environment.
+
+
+        The transfer must be in `SETTLED` status when this endpoint is called; non-`SETTLED` transfers return `409
+        Conflict`.
+
+
+        The endpoint returns immediately before the status flips — the transfer is still `SETTLED` at this point. The
+        flip to `RETURNED` is asynchronous, usually within a minute. Poll `GET /ach_in/{id}` or listen for the
+        `ACH_IN.RETURNED` webhook to observe the transition.
+
+
+        Pass an optional `return_code` query parameter to control the return reason code; defaults to `R01`
+        (Insufficient Funds).
+      tags:
+        - subpackage_simulation
+      parameters:
+        - name: id
+          in: path
+          description: ID of the inbound ACH transfer to return. Must be in `SETTLED` status.
+          required: true
+          schema:
+            type: string
+        - name: return_code
+          in: query
+          description: >
+            NACHA return reason code to apply to the returned transfer. Defaults to `R01` (Insufficient Funds) when
+            omitted. Must be a NACHA return reason code matching `^R[0-9]{2}$` (R01-R85). Codes that match the pattern
+            but are not in the NACHA set return `400`.
+          required: false
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          description: |
+            Use your API key in the Authorization header.
+
+            Example: `Authorization: your_api_key_here`
+          required: true
+          schema:
+            type: string
+        - name: Erebor-Version
+          in: header
+          description: >
+            Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default
+            version is used.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: >
+            Return accepted. The transfer is still `SETTLED` at response time; poll `GET /ach_in/{id}` or listen for the
+            `ACH_IN.RETURNED` webhook for the flip to `RETURNED`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulateAchInReturnResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /simulation/ach_out/{id}/return:
     post:
       operationId: simulate-ach-out-return
@@ -7073,8 +7167,8 @@ paths:
         Conflict`.
 
 
-        The response returns immediately with the transfer's CURRENT status (still `SETTLED` at this point). The flip to
-        `RETURNED` is asynchronous — usually within a minute. Poll `GET /ach_out/{id}` or listen for the
+        The endpoint returns immediately before the status flips — the transfer is still `SETTLED` at this point. The
+        flip to `RETURNED` is asynchronous, usually within a minute. Poll `GET /ach_out/{id}` or listen for the
         `ACH_OUT.RETURNED` webhook to observe the transition.
 
 
@@ -14055,6 +14149,26 @@ components:
         - amount
       description: Response from simulating an inbound ACH transfer
       title: SimulateInboundAchResponse
+    SimulateAchInReturnResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: >
+            ID of inbound ACH. The transfer is still `SETTLED` at response time; poll `GET /ach_in/{id}` or listen for
+            the `ACH_IN.RETURNED` webhook for the final state.
+        return_code:
+          type: string
+          description: >-
+            NACHA return reason code applied to the return. Echoes the `R01` default when `return_code` is omitted from
+            the request.
+      required:
+        - id
+        - return_code
+      description: >
+        Response from forcing a settled inbound ACH transfer to `RETURNED`. The transfer is still `SETTLED` at response
+        time; the flip to `RETURNED` is asynchronous.
+      title: SimulateAchInReturnResponse
     SimulateAchOutReturnResponse:
       type: object
       properties:
@@ -14065,7 +14179,9 @@ components:
             the `ACH_OUT.RETURNED` webhook for the final state.
         return_code:
           type: string
-          description: NACHA return reason code specified in the request.
+          description: >-
+            NACHA return reason code applied to the return. Echoes the `R01` default when `return_code` is omitted from
+            the request.
       required:
         - id
         - return_code

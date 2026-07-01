@@ -107,6 +107,7 @@ export * from "./listEvents.ts";
 export * from "./getEvent.ts";
 export * from "./simulateWireIn.ts";
 export * from "./simulateAchIn.ts";
+export * from "./simulateAchInReturn.ts";
 export * from "./simulateAchOutReturn.ts";
 export * from "./simulateWireOutReturn.ts";
 export * from "./simulateInternationalWireIn.ts";
