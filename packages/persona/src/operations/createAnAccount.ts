@@ -1,0 +1,286 @@
+import * as Schema from "effect/Schema";
+import { API } from "../client.ts";
+import * as T from "../traits.ts";
+import {
+  BadRequest,
+  Forbidden,
+  NotFound,
+  Conflict,
+  UnprocessableEntity,
+} from "../errors.ts";
+
+// Input Schema
+export const CreateAnAccountInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
+  include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
+  fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
+    T.HttpQuery("fields"),
+  ),
+  keyInflection: Schema.optional(
+    Schema.Literals(["camel", "kebab", "snake"]),
+  ).pipe(T.HttpHeader("Key-Inflection")),
+  idempotencyKey: Schema.optional(Schema.String).pipe(
+    T.HttpHeader("Idempotency-Key"),
+  ),
+  personaVersion: Schema.optional(
+    Schema.Literals([
+      "2025-12-08",
+      "2025-10-27",
+      "2023-01-05",
+      "2022-09-01",
+      "2021-08-18",
+      "2021-07-05",
+      "2021-02-21",
+      "2020-05-18",
+    ]),
+  ).pipe(T.HttpHeader("Persona-Version")),
+  data: Schema.optional(
+    Schema.Struct({
+      attributes: Schema.optional(
+        Schema.Struct({
+          "account-type-id": Schema.optional(Schema.String),
+          "account-status": Schema.optional(Schema.String),
+          "reference-id": Schema.optional(Schema.String),
+          "selfie-photo": Schema.optional(
+            Schema.Struct({
+              data: Schema.optional(
+                Schema.Struct({
+                  data: Schema.optional(Schema.String),
+                  filename: Schema.optional(Schema.String),
+                }),
+              ),
+            }),
+          ),
+          tags: Schema.optional(Schema.NullOr(Schema.Array(Schema.String))),
+          "country-code": Schema.optional(Schema.String),
+          "social-security-number": Schema.optional(Schema.String),
+          fields: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
+          birthdate: Schema.optional(Schema.String),
+          "name-first": Schema.optional(Schema.String),
+          "name-middle": Schema.optional(Schema.String),
+          "name-last": Schema.optional(Schema.String),
+          "phone-number": Schema.optional(Schema.String),
+          "email-address": Schema.optional(Schema.String),
+          "address-street-1": Schema.optional(Schema.String),
+          "address-street-2": Schema.optional(Schema.String),
+          "address-city": Schema.optional(Schema.String),
+          "address-subdivision": Schema.optional(Schema.String),
+          "address-postal-code": Schema.optional(Schema.String),
+        }),
+      ),
+    }),
+  ),
+  meta: Schema.optional(
+    Schema.Struct({
+      "upsert-by": Schema.optional(Schema.NullOr(Schema.String)),
+    }),
+  ),
+}).pipe(T.Http({ method: "POST", path: "/accounts" }));
+export type CreateAnAccountInput = typeof CreateAnAccountInput.Type;
+
+// Output Schema
+export const CreateAnAccountOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
+  data: Schema.Struct({
+    type: Schema.optional(Schema.String),
+    id: Schema.optional(Schema.String),
+    attributes: Schema.optional(
+      Schema.Struct({
+        "reference-id": Schema.optional(Schema.NullOr(Schema.String)),
+        "account-type-name": Schema.optional(Schema.String),
+        "created-at": Schema.optional(Schema.String),
+        "updated-at": Schema.optional(Schema.String),
+        "redacted-at": Schema.optional(Schema.NullOr(Schema.String)),
+        fields: Schema.optional(
+          Schema.Struct({
+            name: Schema.optional(
+              Schema.Struct({
+                type: Schema.optional(Schema.String),
+                value: Schema.optional(
+                  Schema.Struct({
+                    first: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        value: Schema.optional(Schema.NullOr(Schema.String)),
+                      }),
+                    ),
+                    middle: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        value: Schema.optional(Schema.NullOr(Schema.String)),
+                      }),
+                    ),
+                    last: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        value: Schema.optional(Schema.NullOr(Schema.String)),
+                      }),
+                    ),
+                  }),
+                ),
+              }),
+            ),
+            address: Schema.optional(
+              Schema.Struct({
+                type: Schema.optional(Schema.String),
+                value: Schema.optional(
+                  Schema.Struct({
+                    street_1: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        value: Schema.optional(Schema.NullOr(Schema.String)),
+                      }),
+                    ),
+                    street_2: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        value: Schema.optional(Schema.NullOr(Schema.String)),
+                      }),
+                    ),
+                    subdivision: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        value: Schema.optional(Schema.NullOr(Schema.String)),
+                      }),
+                    ),
+                    city: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        value: Schema.optional(Schema.NullOr(Schema.String)),
+                      }),
+                    ),
+                    postal_code: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        value: Schema.optional(Schema.NullOr(Schema.String)),
+                      }),
+                    ),
+                    country_code: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        value: Schema.optional(Schema.NullOr(Schema.String)),
+                      }),
+                    ),
+                  }),
+                ),
+              }),
+            ),
+            identification_numbers: Schema.optional(
+              Schema.Struct({
+                type: Schema.optional(Schema.String),
+                value: Schema.optional(
+                  Schema.Array(
+                    Schema.Struct({
+                      type: Schema.optional(Schema.String),
+                      value: Schema.optional(
+                        Schema.Struct({
+                          identification_class: Schema.optional(
+                            Schema.Struct({
+                              type: Schema.optional(Schema.String),
+                              value: Schema.optional(Schema.String),
+                            }),
+                          ),
+                          identification_number: Schema.optional(
+                            Schema.Struct({
+                              type: Schema.optional(Schema.String),
+                              value: Schema.optional(Schema.String),
+                            }),
+                          ),
+                          issuing_country: Schema.optional(
+                            Schema.Struct({
+                              type: Schema.optional(Schema.String),
+                              value: Schema.optional(Schema.String),
+                            }),
+                          ),
+                          hashed_identification_number: Schema.optional(
+                            Schema.Struct({
+                              type: Schema.optional(Schema.String),
+                              value: Schema.optional(
+                                Schema.NullOr(Schema.String),
+                              ),
+                            }),
+                          ),
+                        }),
+                      ),
+                    }),
+                  ),
+                ),
+              }),
+            ),
+            birthdate: Schema.optional(
+              Schema.Struct({
+                type: Schema.optional(Schema.String),
+                value: Schema.optional(Schema.NullOr(Schema.String)),
+              }),
+            ),
+            phone_number: Schema.optional(
+              Schema.Struct({
+                type: Schema.optional(Schema.String),
+                value: Schema.optional(Schema.NullOr(Schema.String)),
+              }),
+            ),
+            email_address: Schema.optional(
+              Schema.Struct({
+                type: Schema.optional(Schema.String),
+                value: Schema.optional(Schema.NullOr(Schema.String)),
+              }),
+            ),
+            selfie_photo: Schema.optional(
+              Schema.Struct({
+                type: Schema.optional(Schema.String),
+                value: Schema.optional(
+                  Schema.NullOr(
+                    Schema.Struct({
+                      filename: Schema.optional(Schema.String),
+                      url: Schema.optional(Schema.String),
+                      "byte-size": Schema.optional(Schema.Number),
+                    }),
+                  ),
+                ),
+              }),
+            ),
+          }),
+        ),
+        tags: Schema.optional(Schema.Array(Schema.Unknown)),
+        "account-status": Schema.optional(Schema.String),
+      }),
+    ),
+    relationships: Schema.optional(
+      Schema.Struct({
+        "account-type": Schema.optional(
+          Schema.Struct({
+            data: Schema.optional(
+              Schema.Struct({
+                id: Schema.optional(Schema.String),
+                type: Schema.optional(Schema.String),
+              }),
+            ),
+          }),
+        ),
+      }),
+    ),
+  }),
+  included: Schema.optional(Schema.Array(Schema.Unknown)),
+});
+export type CreateAnAccountOutput = typeof CreateAnAccountOutput.Type;
+
+// The operation
+/**
+ * Create an Account
+ *
+ * Creates a new Account for your organization.
+ *
+ * @param Key-Inflection - Determines casing for the API response.
+ * @param Idempotency-Key - Ensures the request is idempotent.
+ * @param include - A comma-separated list of relationship paths. This can be used to customize which related resources will be fully serialized in the `included` key in the response. See [Serialization](https://docs.withpersona.com/serialization#inclusion-of-related-resources) for more details.
+ * @param fields - Comma-separated list(s) of attributes to include in the response. This can be used to customize which attributes will be serialized in the response. See [Serialization](https://docs.withpersona.com/serialization#sparse-fieldsets) for more details.
+ */
+export const createAnAccount = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  inputSchema: CreateAnAccountInput,
+  outputSchema: CreateAnAccountOutput,
+  errors: [
+    BadRequest,
+    Forbidden,
+    NotFound,
+    Conflict,
+    UnprocessableEntity,
+  ] as const,
+}));

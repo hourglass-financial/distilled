@@ -245,6 +245,23 @@
         "effect": "catalog:",
       },
     },
+    "packages/persona": {
+      "name": "@distilled.cloud/persona",
+      "version": "0.2.0-alpha",
+      "dependencies": {
+        "@distilled.cloud/core": "workspace:*",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@types/bun": "catalog:",
+        "@types/node": "catalog:",
+        "dotenv": "catalog:",
+        "vitest": "catalog:",
+      },
+      "peerDependencies": {
+        "effect": "catalog:",
+      },
+    },
     "packages/planetscale": {
       "name": "@distilled.cloud/planetscale",
       "version": "0.27.0",
@@ -507,6 +524,8 @@
     "@distilled.cloud/mongodb-atlas": ["@distilled.cloud/mongodb-atlas@workspace:packages/mongodb-atlas"],
 
     "@distilled.cloud/neon": ["@distilled.cloud/neon@workspace:packages/neon"],
+
+    "@distilled.cloud/persona": ["@distilled.cloud/persona@workspace:packages/persona"],
 
     "@distilled.cloud/planetscale": ["@distilled.cloud/planetscale@workspace:packages/planetscale"],
 
