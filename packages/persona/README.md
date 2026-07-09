@@ -9,6 +9,28 @@ Effect-native SDK for the Persona API generated from Persona OpenAPI version
 bun add @distilled.cloud/persona effect
 ```
 
+### Private GitHub Packages Preview
+
+This fork can publish a private branch-built package for other
+`hourglass-financial` repositories:
+
+```bash
+bun add @hourglass-financial/persona@persona-sdk effect
+```
+
+Consumers must route the `@hourglass-financial` scope to GitHub Packages:
+
+```ini
+@hourglass-financial:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+```
+
+GitHub Actions consumers can use `GITHUB_TOKEN` as `NODE_AUTH_TOKEN` after the
+package grants read access to the consuming repository. Local developers need a
+GitHub token with package read access. See
+[`docs/github-persona-package-publishing.md`](../../docs/github-persona-package-publishing.md)
+for publishing and consumer setup details.
+
 ## Quick Start
 
 ```typescript

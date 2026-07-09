@@ -1,0 +1,87 @@
+name: Publish Private Persona Packages
+
+# HOURGLASS PATCH: Publish fork-only Persona packages to GitHub Packages.
+# HOURGLASS PATCH: GitHub Actions pinned to full commit SHAs (org policy requires it).
+on:
+  workflow_dispatch:
+    inputs:
+      dist-tag:
+        description: Dist tag to move after publishing
+        required: true
+        type: string
+        default: persona-sdk
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build private package inputs
+        run: |
+          bun --filter '@distilled.cloud/core' build
+          bun --filter '@distilled.cloud/persona' build
+
+      - name: Compute package version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          base_version="$(node -p "require('./packages/persona/package.json').version")"
+          short_sha="${GITHUB_SHA::7}"
+
+          if [[ "$base_version" == *-* ]]; then
+            version="${base_version}.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}.g${short_sha}"
+          else
+            version="${base_version}-branch.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}.g${short_sha}"
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Publishing version $version"
+
+      - name: Stage package manifests
+        run: |
+          bun run prepare:github-persona-packages \
+            --version "${{ steps.version.outputs.version }}" \
+            --stage-dir .ai-workspace/github-persona-packages
+
+      - name: Configure GitHub Packages auth
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "@hourglass-financial:registry=https://npm.pkg.github.com" >> ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
+
+      - name: Publish private core
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DIST_TAG: ${{ inputs['dist-tag'] }}
+        working-directory: .ai-workspace/github-persona-packages/@hourglass-financial__distilled-core
+        run: npm publish --tag "$DIST_TAG" --registry=https://npm.pkg.github.com
+
+      - name: Publish private Persona
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DIST_TAG: ${{ inputs['dist-tag'] }}
+        working-directory: .ai-workspace/github-persona-packages/@hourglass-financial__persona
+        run: npm publish --tag "$DIST_TAG" --registry=https://npm.pkg.github.com
+
+      - name: Update dist tags
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          DIST_TAG: ${{ inputs['dist-tag'] }}
+        run: |
+          npm dist-tag add "@hourglass-financial/distilled-core@${VERSION}" "${DIST_TAG}" --registry=https://npm.pkg.github.com
+          npm dist-tag add "@hourglass-financial/persona@${VERSION}" "${DIST_TAG}" --registry=https://npm.pkg.github.com
+
