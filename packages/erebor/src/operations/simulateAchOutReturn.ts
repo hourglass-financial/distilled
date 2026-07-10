@@ -28,7 +28,7 @@ export type SimulateAchOutReturnOutput = typeof SimulateAchOutReturnOutput.Type;
  *
  * Force a settled outbound ACH transfer to `RETURNED` for testing. This endpoint is only available in the sandbox environment.
  * The transfer must be in `SETTLED` status when this endpoint is called; non-`SETTLED` transfers return `409 Conflict`.
- * The response returns immediately with the transfer's CURRENT status (still `SETTLED` at this point). The flip to `RETURNED` is asynchronous — usually within a minute. Poll `GET /ach_out/{id}` or listen for the `ACH_OUT.RETURNED` webhook to observe the transition.
+ * The endpoint returns immediately before the status flips — the transfer is still `SETTLED` at this point. The flip to `RETURNED` is asynchronous, usually within a minute. Poll `GET /ach_out/{id}` or listen for the `ACH_OUT.RETURNED` webhook to observe the transition.
  * Pass an optional `return_code` query parameter to control the return reason code; defaults to `R01` (Insufficient Funds).
  *
  * @param id - ID of the outbound ACH transfer to return. Must be in `SETTLED` status.

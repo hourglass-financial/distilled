@@ -111,7 +111,10 @@ bun run create-sdk stripe --specs https://github.com/stripe/openapi.git
 bun run create-sdk foo --specs https://api.foo.com/openapi.json --register-package
 ```
 
-After scaffolding, the `create-sdk` script automatically calls Claude to review the OpenAPI spec and update credentials, client error handling, and auth to match the actual API.
+After scaffolding, the `create-sdk` command delegates to the `sdk-create`
+Smithers workflow. The workflow runs deterministic scaffold/check steps and a
+scoped Codex refinement task to update credentials, client error handling, auth,
+generator behavior, and README content to match the actual API.
 
 ## Submodules and Specs
 

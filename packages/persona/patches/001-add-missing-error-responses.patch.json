@@ -1,0 +1,12 @@
+{
+  "description": "Add observed Persona error responses missing from the 2025-12-08 OpenAPI snapshot. Live sandbox evidence: POST /accounts with a non-existent account-type-id returned HTTP 404 with errors[0].title `Record not found`, so create-an-account can fail with NotFound.",
+  "patches": [
+    {
+      "op": "add",
+      "path": "/paths/~1accounts/post/responses/404",
+      "value": {
+        "$ref": "#/components/responses/not-found"
+      }
+    }
+  ]
+}

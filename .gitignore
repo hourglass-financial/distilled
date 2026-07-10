@@ -12,3 +12,7 @@ vendor/
 .worktrees
 .azure-np/
 **/.azure-np/
+
+# HOURGLASS PATCH: Ignore repo-local Smithers runtime state.
+smithers.db
+smithers.db-*

@@ -24,6 +24,8 @@
     "error-discovery": "bun ./scripts/error-discovery.ts",
     "prepare:github-erebor-packages": "bun ./scripts/prepare-github-erebor-packages.ts",
     "smoke:github-erebor-install": "bun ./scripts/smoke-github-erebor-install.ts",
+    "prepare:github-persona-packages": "bun ./scripts/prepare-github-persona-packages.ts",
+    "smoke:github-persona-install": "bun ./scripts/smoke-github-persona-install.ts",
     "prepare": "husky"
   },
   "workspaces": {
@@ -67,7 +69,6 @@
     "undici": "7.10.0"
   },
   "devDependencies": {
-    "@anthropic-ai/claude-agent-sdk": "^0.2.81",
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
     "@typescript/native-preview": "catalog:",

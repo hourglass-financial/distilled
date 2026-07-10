@@ -2,12 +2,9 @@
 /**
  * Error Discovery Agent
  *
- * Uses the Claude Agent SDK to autonomously discover undocumented API errors
- * by making real requests to production APIs, then patches the SDK specs
- * to add the newly discovered error types.
- *
- * Authentication: uses your Claude Max plan via the Claude Code CLI auth.
- * Make sure you're logged in with `claude` before running.
+ * Delegates to the Smithers sdk-error-discovery workflow, which uses a scoped
+ * Codex task to make real API requests, patch SDK specs, and add newly
+ * discovered error types.
  *
  * Usage:
  *   bun scripts/error-discovery.ts <package-name>
@@ -19,19 +16,20 @@
  */
 
 import { BunRuntime, BunServices } from "@effect/platform-bun";
-import { Console, Effect } from "effect";
+import { Console, Data, Effect } from "effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import { Argument, Command, Flag } from "effect/unstable/cli";
-import {
-  AgentError,
-  AgentStatsAccumulator,
-  BOLD,
-  GREEN,
-  RESET,
-  runAgent,
-} from "./lib/agent.ts";
+import { BOLD, GREEN, RESET } from "./lib/console.ts";
 import { metadataPromptSection } from "./lib/metadata.ts";
+import {
+  assertSmithersFinalReport,
+  runSmithersWorkflow,
+} from "./lib/smithers.ts";
+
+class ScriptError extends Data.TaggedError("ScriptError")<{
+  readonly message: string;
+}> {}
 
 // ============================================================================
 // Prompt Construction
@@ -208,7 +206,7 @@ const validatePackage = (
       const entries = yield* fs
         .readDirectory(packagesDir)
         .pipe(Effect.catch(() => Effect.succeed([] as string[])));
-      return yield* new AgentError({
+      return yield* new ScriptError({
         message: `Package "${name}" not found at ${pkgDir}. Available packages: ${entries.join(", ")}`,
       });
     }
@@ -216,7 +214,7 @@ const validatePackage = (
     const srcDir = path.join(pkgDir, "src");
     const srcExists = yield* fs.exists(srcDir);
     if (!srcExists) {
-      return yield* new AgentError({
+      return yield* new ScriptError({
         message: `Package "${name}" has no src/ directory — is it scaffolded?`,
       });
     }
@@ -226,14 +224,14 @@ const validatePackage = (
     const hasOps = yield* fs.exists(opsDir);
     const hasServices = yield* fs.exists(servicesDir);
     if (!hasOps && !hasServices) {
-      return yield* new AgentError({
+      return yield* new ScriptError({
         message: `Package "${name}" has no operations/ or services/ directory — run code generation first.`,
       });
     }
 
     if (services.length > 0) {
       if (!hasServices) {
-        return yield* new AgentError({
+        return yield* new ScriptError({
           message: `--service filter is only supported for SDKs with a src/services/ directory; package "${name}" has none.`,
         });
       }
@@ -245,7 +243,7 @@ const validatePackage = (
       );
       const missing = services.filter((s) => !available.has(s));
       if (missing.length > 0) {
-        return yield* new AgentError({
+        return yield* new ScriptError({
           message: `Unknown service(s) for "${name}": ${missing.join(", ")}. Available: ${[...available].sort().join(", ")}`,
         });
       }
@@ -283,27 +281,23 @@ const errorDiscovery = Command.make(
         }`,
       );
 
-      yield* validatePackage(root, config.name, services);
-
-      const stats = new AgentStatsAccumulator();
-
-      yield* runAgent(
+      yield* runSmithersWorkflow(
+        "sdk-error-discovery",
         {
-          prompt: buildPrompt(config.name, root, services),
-          cwd: root,
-          systemPromptAppend:
-            "You are an error discovery agent. Your job is to find undocumented API errors " +
-            "and add typed error classes to the SDK. Be methodical and thorough. " +
-            "When looking for files, prefer direct file reads over broad searches. " +
-            "Always start by reading files at the repo root or package root directly.",
+          name: config.name,
+          services: Array.from(services),
         },
-        stats,
+        root,
+      );
+      yield* assertSmithersFinalReport(
+        root,
+        "sdk-error-discovery",
+        config.name,
       );
 
       yield* Console.log(
         `\n${GREEN}${BOLD}Error discovery complete for ${config.name}.${RESET}`,
       );
-      stats.print();
     }),
 ).pipe(
   Command.withDescription(

@@ -8,7 +8,7 @@ Force a settled outbound ACH transfer to `RETURNED` for testing. This endpoint i
 
 The transfer must be in `SETTLED` status when this endpoint is called; non-`SETTLED` transfers return `409 Conflict`.
 
-The response returns immediately with the transfer's CURRENT status (still `SETTLED` at this point). The flip to `RETURNED` is asynchronous — usually within a minute. Poll `GET /ach_out/{id}` or listen for the `ACH_OUT.RETURNED` webhook to observe the transition.
+The endpoint returns immediately before the status flips — the transfer is still `SETTLED` at this point. The flip to `RETURNED` is asynchronous, usually within a minute. Poll `GET /ach_out/{id}` or listen for the `ACH_OUT.RETURNED` webhook to observe the transition.
 
 Pass an optional `return_code` query parameter to control the return reason code; defaults to `R01` (Insufficient Funds).
 
@@ -36,10 +36,10 @@ paths:
         non-`SETTLED` transfers return `409 Conflict`.
 
 
-        The response returns immediately with the transfer's CURRENT status
-        (still `SETTLED` at this point). The flip to `RETURNED` is asynchronous
-        — usually within a minute. Poll `GET /ach_out/{id}` or listen for the
-        `ACH_OUT.RETURNED` webhook to observe the transition.
+        The endpoint returns immediately before the status flips — the transfer
+        is still `SETTLED` at this point. The flip to `RETURNED` is
+        asynchronous, usually within a minute. Poll `GET /ach_out/{id}` or
+        listen for the `ACH_OUT.RETURNED` webhook to observe the transition.
 
 
         Pass an optional `return_code` query parameter to control the return
@@ -138,7 +138,9 @@ components:
             webhook for the final state.
         return_code:
           type: string
-          description: NACHA return reason code specified in the request.
+          description: >-
+            NACHA return reason code applied to the return. Echoes the `R01`
+            default when `return_code` is omitted from the request.
       required:
         - id
         - return_code
