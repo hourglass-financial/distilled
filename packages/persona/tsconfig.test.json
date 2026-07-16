@@ -2,7 +2,8 @@
   "extends": "../../tsconfig.base.json",
   "include": [
     "src/**/*.ts",
-    "test/**/*.ts"
+    "test/**/*.ts",
+    "scripts/cleanup-test-run.ts"
   ],
   "compilerOptions": {
     "rootDir": ".",

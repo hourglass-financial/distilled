@@ -29,7 +29,7 @@ export const RetrieveAConnectConnectionInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     connectionId: Schema.String.pipe(T.PathParam()),
     fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
-      T.HttpQuery("fields"),
+      T.HttpQuery("fields", { style: "deepObject", explode: true }),
     ),
     keyInflection: Schema.optional(
       Schema.Literals(["camel", "kebab", "snake"]),

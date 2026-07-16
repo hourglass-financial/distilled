@@ -1,0 +1,54 @@
+{
+  "description": "Preserve template-defined inquiry request fields. Persona models inquiry-fields through allOf with additionalProperties: true, which does not carry a value schema into the generated input contract. The request accepts JSON values, while the response returns the separately patched typed field envelopes.",
+  "patches": [
+    {
+      "op": "add",
+      "path": "/components/schemas/inquiry-field-input-value",
+      "value": {
+        "oneOf": [
+          { "type": "null" },
+          { "type": "string" },
+          { "type": "number" },
+          { "type": "boolean" },
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/inquiry-field-input-value"
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/inquiry-field-input-value"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "replace",
+      "path": "/components/schemas/inquiry-fields",
+      "value": {
+        "description": "JSON key-value pairs of field name to field value. Exact keys and value shapes depend on the Inquiry template and are not key inflected.",
+        "type": "object",
+        "properties": {
+          "birthdate": { "type": ["string", "null"], "format": "date" },
+          "email-address": { "type": ["string", "null"] },
+          "name-first": { "type": ["string", "null"] },
+          "name-last": { "type": ["string", "null"] },
+          "name-middle": { "type": ["string", "null"] },
+          "phone-number": { "type": ["string", "null"] },
+          "address-city": { "type": ["string", "null"] },
+          "address-country-code": { "type": ["string", "null"] },
+          "address-postal-code": { "type": ["string", "null"] },
+          "address-street-1": { "type": ["string", "null"] },
+          "address-street-2": { "type": ["string", "null"] },
+          "address-subdivision": { "type": ["string", "null"] }
+        },
+        "additionalProperties": {
+          "$ref": "#/components/schemas/inquiry-field-input-value"
+        }
+      }
+    }
+  ]
+}

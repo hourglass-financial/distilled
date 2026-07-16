@@ -133,6 +133,9 @@ interface ParameterObject3 {
   in: "path" | "query" | "header" | "cookie";
   required?: boolean;
   description?: string;
+  // HOURGLASS PATCH: Model OpenAPI query serialization keywords.
+  style?: "form" | "spaceDelimited" | "pipeDelimited" | "deepObject";
+  explode?: boolean;
   schema?: SchemaObject;
   $ref?: string;
 }
@@ -304,6 +307,22 @@ function renderParameterSchema3(
     return renderEnumLiterals(schema.enum, getBaseType(schema));
   }
   return openApiTypeToEffectSchema(schema, spec, "", new Set(), ctx);
+}
+
+// HOURGLASS PATCH: Preserve OpenAPI query wire names and serialization metadata.
+function renderHttpQueryAnnotation(param: ParameterObject3): string {
+  const options: string[] = [];
+  if (param.style !== undefined) {
+    options.push(`style: "${escapeStringLiteral(param.style)}"`);
+  }
+  if (param.explode !== undefined) {
+    options.push(`explode: ${param.explode}`);
+  }
+
+  const wireName = `"${escapeStringLiteral(param.name)}"`;
+  return options.length === 0
+    ? `T.HttpQuery(${wireName})`
+    : `T.HttpQuery(${wireName}, { ${options.join(", ")} })`;
 }
 
 // ============================================================================
@@ -1258,7 +1277,10 @@ function generateJsDoc(
     lines.push(" *");
     for (const param of documentedParams) {
       const desc = escapeJsDoc(param.description || "");
-      lines.push(` * @param ${param.name} - ${desc}`);
+      // HOURGLASS PATCH: Query docs name the normalized TypeScript input field.
+      const fieldName =
+        param.in === "query" ? toParameterFieldName(param.name) : param.name;
+      lines.push(` * @param ${fieldName} - ${desc}`);
     }
   }
 
@@ -1456,10 +1478,11 @@ function generateInputSchemaSwagger(
     tsFields.push(`${quotePropKey(param.name)}: ${tsBase}`);
   }
 
-  // Query parameters
+  // HOURGLASS PATCH: Keep Swagger query wire names when field names are normalized.
   for (const param of queryParams) {
-    if (usedNames.has(param.name)) continue;
-    usedNames.add(param.name);
+    const fieldName = toParameterFieldName(param.name);
+    if (usedNames.has(fieldName)) continue;
+    usedNames.add(fieldName);
     let schema = param.enum
       ? renderEnumLiterals(param.enum, param.type)
       : param.type === "integer" || param.type === "number"
@@ -1471,7 +1494,9 @@ function generateInputSchemaSwagger(
     if (!param.required) {
       schema = `Schema.optional(${schema})`;
     }
-    fields.push(`  ${param.name}: ${schema},`);
+    fields.push(
+      `  ${quotePropKey(fieldName)}: ${schema}.pipe(T.HttpQuery("${escapeStringLiteral(param.name)}")),`,
+    );
     const tsBase = param.enum
       ? paramEnumTs(param.enum, param.type)
       : param.type === "integer" || param.type === "number"
@@ -1480,7 +1505,7 @@ function generateInputSchemaSwagger(
           ? "boolean"
           : "string";
     tsFields.push(
-      `${quotePropKey(param.name)}${param.required ? "" : "?"}: ${tsBase}`,
+      `${quotePropKey(fieldName)}${param.required ? "" : "?"}: ${tsBase}`,
     );
   }
 
@@ -1644,19 +1669,22 @@ function generateInputSchema3(
     tsFields.push(`${quotePropKey(param.name)}: ${paramSchemaTs(schema)}`);
   }
 
-  // Query parameters
+  // HOURGLASS PATCH: Emit named OpenAPI query traits, including serialization metadata.
   for (const param of queryParams) {
-    if (usedNames.has(param.name)) continue;
-    usedNames.add(param.name);
+    const fieldName = toParameterFieldName(param.name);
+    if (usedNames.has(fieldName)) continue;
+    usedNames.add(fieldName);
     const schema = param.schema;
     let schemaStr = renderParameterSchema3(schema, spec, ctx);
 
     if (!param.required) {
       schemaStr = `Schema.optional(${schemaStr})`;
     }
-    fields.push(`  ${param.name}: ${schemaStr},`);
+    fields.push(
+      `  ${quotePropKey(fieldName)}: ${schemaStr}.pipe(${renderHttpQueryAnnotation(param)}),`,
+    );
     tsFields.push(
-      `${quotePropKey(param.name)}${param.required ? "" : "?"}: ${paramSchemaTs(schema)}`,
+      `${quotePropKey(fieldName)}${param.required ? "" : "?"}: ${paramSchemaTs(schema)}`,
     );
   }
 

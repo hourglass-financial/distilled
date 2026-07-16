@@ -8,6 +8,12 @@ export default {
   test: {
     include: ["test/**/*.test.ts"],
     testTimeout: 120000,
+    pool: "forks",
+    poolOptions: {
+      forks: {
+        singleFork: true,
+      },
+    },
   },
   resolve: {
     alias: {

@@ -27,9 +27,9 @@ export const ListAllEventsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       before: Schema.optional(Schema.String),
       size: Schema.optional(Schema.Number),
     }),
-  ),
+  ).pipe(T.HttpQuery("page", { style: "deepObject", explode: true })),
   fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
-    T.HttpQuery("fields"),
+    T.HttpQuery("fields", { style: "deepObject", explode: true }),
   ),
   filter: Schema.optional(
     Schema.Struct({
@@ -37,7 +37,7 @@ export const ListAllEventsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "object-id": Schema.optional(Schema.String),
       id: Schema.optional(Schema.String),
     }),
-  ),
+  ).pipe(T.HttpQuery("filter", { style: "deepObject", explode: true })),
   keyInflection: Schema.optional(
     Schema.Literals(["camel", "kebab", "snake"]),
   ).pipe(T.HttpHeader("Key-Inflection")),

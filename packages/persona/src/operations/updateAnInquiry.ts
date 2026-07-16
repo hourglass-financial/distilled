@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import { StructWithAdditionalProperties } from "@distilled.cloud/core/openapi/additional-properties";
 import {
   BadRequest,
   Forbidden,
@@ -28,7 +29,32 @@ export interface UpdateAnInquiryInput {
   data?: {
     attributes?: {
       note?: string | null;
-      fields?: { "address-country-code"?: string } | null;
+      fields?:
+        | ({
+            birthdate?: string | null;
+            "email-address"?: string | null;
+            "name-first"?: string | null;
+            "name-last"?: string | null;
+            "name-middle"?: string | null;
+            "phone-number"?: string | null;
+            "address-city"?: string | null;
+            "address-country-code"?: string | null;
+            "address-postal-code"?: string | null;
+            "address-street-1"?: string | null;
+            "address-street-2"?: string | null;
+            "address-subdivision"?: string | null;
+          } & Record<
+            string,
+            | string
+            | number
+            | boolean
+            | ReadonlyArray<unknown>
+            | Record<string, unknown>
+            | null
+            | string
+            | null
+          >)
+        | null;
       tags?: ReadonlyArray<string>;
       "redirect-uri"?: string | null;
     };
@@ -38,7 +64,7 @@ export const UpdateAnInquiryInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   inquiryId: Schema.String.pipe(T.PathParam()),
   include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
   fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
-    T.HttpQuery("fields"),
+    T.HttpQuery("fields", { style: "deepObject", explode: true }),
   ),
   keyInflection: Schema.optional(
     Schema.Literals(["camel", "kebab", "snake"]),
@@ -65,9 +91,43 @@ export const UpdateAnInquiryInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
           note: Schema.optional(Schema.NullOr(Schema.String)),
           fields: Schema.optional(
             Schema.NullOr(
-              Schema.Struct({
-                "address-country-code": Schema.optional(Schema.String),
-              }),
+              StructWithAdditionalProperties(
+                Schema.Struct({
+                  birthdate: Schema.optional(Schema.NullOr(Schema.String)),
+                  "email-address": Schema.optional(
+                    Schema.NullOr(Schema.String),
+                  ),
+                  "name-first": Schema.optional(Schema.NullOr(Schema.String)),
+                  "name-last": Schema.optional(Schema.NullOr(Schema.String)),
+                  "name-middle": Schema.optional(Schema.NullOr(Schema.String)),
+                  "phone-number": Schema.optional(Schema.NullOr(Schema.String)),
+                  "address-city": Schema.optional(Schema.NullOr(Schema.String)),
+                  "address-country-code": Schema.optional(
+                    Schema.NullOr(Schema.String),
+                  ),
+                  "address-postal-code": Schema.optional(
+                    Schema.NullOr(Schema.String),
+                  ),
+                  "address-street-1": Schema.optional(
+                    Schema.NullOr(Schema.String),
+                  ),
+                  "address-street-2": Schema.optional(
+                    Schema.NullOr(Schema.String),
+                  ),
+                  "address-subdivision": Schema.optional(
+                    Schema.NullOr(Schema.String),
+                  ),
+                }),
+                Schema.NullOr(
+                  Schema.Union([
+                    Schema.String,
+                    Schema.Number,
+                    Schema.Boolean,
+                    Schema.Array(Schema.Unknown),
+                    Schema.Record(Schema.String, Schema.Unknown),
+                  ]),
+                ),
+              ),
             ),
           ),
           tags: Schema.optional(Schema.Array(Schema.String)),

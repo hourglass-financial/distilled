@@ -2,6 +2,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import * as Schema from "effect/Schema";
+import * as T from "../src/traits.ts";
 import {
   afterAll,
   beforeAll,
@@ -146,6 +147,32 @@ describe("OpenAPI mixed object generation", () => {
     expect(decoded).toEqual({ xRequiredCount: 2, xMode: "fast" });
     expect(generatedSource).toMatch(/xRequiredCount:\s*number/);
     expect(generatedSource).toMatch(/xMode\?:\s*"fast"\s*\|\s*"safe"/);
+  });
+
+  it("preserves query wire names and deepObject serialization metadata", () => {
+    const decoded = Schema.decodeUnknownSync(inputSchema)({
+      xRequiredCount: 2,
+      filterOptions: { status: "active", tags: ["one", "two"] },
+      pageSize: 25,
+    }) as any;
+    const parts = T.buildRequestParts(
+      inputSchema.ast,
+      T.getHttpTrait(inputSchema.ast)!,
+      decoded,
+      inputSchema,
+    );
+
+    expect(parts.query).toEqual({
+      "filter-options[status]": "active",
+      "filter-options[tags]": ["one", "two"],
+      "page-size": "25",
+    });
+    expect(generatedSource).toContain(
+      'T.HttpQuery("filter-options", { style: "deepObject", explode: true })',
+    );
+    expect(generatedSource).toContain('T.HttpQuery("page-size")');
+    expect(generatedSource).toMatch(/filterOptions\?:/);
+    expect(generatedSource).toMatch(/pageSize\?:\s*number/);
   });
 
   it("preserves and validates schema-valued additional properties", () => {

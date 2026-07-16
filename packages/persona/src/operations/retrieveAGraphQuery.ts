@@ -14,7 +14,7 @@ export const RetrieveAGraphQueryInput =
     graphQueryId: Schema.String.pipe(T.PathParam()),
     include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
     fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
-      T.HttpQuery("fields"),
+      T.HttpQuery("fields", { style: "deepObject", explode: true }),
     ),
   }).pipe(
     T.Http({ method: "GET", path: "/graph-queries/{graphQueryId}" }),
