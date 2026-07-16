@@ -29,9 +29,9 @@ export const ListAllShareTokensInput =
         before: Schema.optional(Schema.String),
         size: Schema.optional(Schema.Number),
       }),
-    ).pipe(T.HttpQuery("page")),
+    ).pipe(T.HttpQuery("page", { style: "deepObject", explode: true })),
     fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
-      T.HttpQuery("fields"),
+      T.HttpQuery("fields", { style: "deepObject", explode: true }),
     ),
     filter: Schema.optional(
       Schema.Struct({
@@ -39,7 +39,7 @@ export const ListAllShareTokensInput =
         status: Schema.optional(Schema.String),
         direction: Schema.optional(Schema.String),
       }),
-    ).pipe(T.HttpQuery("filter")),
+    ).pipe(T.HttpQuery("filter", { style: "deepObject", explode: true })),
     keyInflection: Schema.optional(
       Schema.Literals(["camel", "kebab", "snake"]),
     ).pipe(T.HttpHeader("Key-Inflection")),

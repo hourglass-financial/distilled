@@ -25,7 +25,7 @@ export const RetrieveATransactionTypeInput =
     transactionTypeId: Schema.String.pipe(T.PathParam()),
     include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
     fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
-      T.HttpQuery("fields"),
+      T.HttpQuery("fields", { style: "deepObject", explode: true }),
     ),
     keyInflection: Schema.optional(
       Schema.Literals(["camel", "kebab", "snake"]),

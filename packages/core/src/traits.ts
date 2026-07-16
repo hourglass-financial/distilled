@@ -201,6 +201,11 @@ export const PathParam = () => makeAnnotation(pathParamSymbol, true);
 /** Symbol for query parameter annotation */
 export const queryParamSymbol = Symbol.for("@distilled.cloud/query-param");
 
+/** Symbol for OpenAPI query serialization metadata. */
+export const queryParamSerializationSymbol = Symbol.for(
+  "@distilled.cloud/query-param-serialization",
+);
+
 /**
  * QueryParam trait - marks a field as a query parameter.
  * Optionally specify a different wire name.
@@ -214,6 +219,20 @@ export const queryParamSymbol = Symbol.for("@distilled.cloud/query-param");
  */
 export const QueryParam = (name?: string) =>
   makeAnnotation(queryParamSymbol, name ?? true);
+
+// HOURGLASS PATCH: Carry OpenAPI query serialization metadata to the runtime.
+/** OpenAPI serialization styles supported for query parameters. */
+export type HttpQueryStyle =
+  | "form"
+  | "spaceDelimited"
+  | "pipeDelimited"
+  | "deepObject";
+
+/** OpenAPI serialization metadata for a named query parameter. */
+export interface HttpQueryOptions {
+  readonly style?: HttpQueryStyle;
+  readonly explode?: boolean;
+}
 
 // =============================================================================
 // Header Parameter Traits
@@ -247,11 +266,17 @@ export const HeaderParam = (name: string) =>
 export const HttpPath = (name: string) => makeAnnotation(pathParamSymbol, name);
 
 /**
- * HttpQuery - alias for QueryParam with an explicit wire name.
+ * HttpQuery - alias for QueryParam with an explicit wire name and optional
+ * OpenAPI serialization metadata.
  * Used in generated code: `Schema.optional(Schema.String).pipe(T.HttpQuery("per_page"))`
  */
-export const HttpQuery = (name: string) =>
-  makeAnnotation(queryParamSymbol, name);
+export const HttpQuery = (name: string, options?: HttpQueryOptions) =>
+  options === undefined
+    ? makeAnnotation(queryParamSymbol, name)
+    : all(
+        makeAnnotation(queryParamSymbol, name),
+        makeAnnotation(queryParamSerializationSymbol, options),
+      );
 
 /**
  * HttpHeader - alias for HeaderParam.
@@ -536,9 +561,14 @@ export const isPathParam = (prop: AST.PropertySignature): boolean => {
  */
 export const getQueryParam = (
   prop: AST.PropertySignature,
-): string | boolean | undefined => {
-  return getAnnotation<string | boolean>(prop.type, queryParamSymbol);
-};
+): string | boolean | undefined =>
+  getAnnotation<string | boolean>(prop.type, queryParamSymbol);
+
+/** Get OpenAPI query serialization metadata from a PropertySignature. */
+export const getQueryParamOptions = (
+  prop: AST.PropertySignature,
+): HttpQueryOptions | undefined =>
+  getAnnotation<HttpQueryOptions>(prop.type, queryParamSerializationSymbol);
 
 /**
  * Get header param name from a PropertySignature.
@@ -714,8 +744,8 @@ const isPlainObject = (v: unknown): v is Record<string, unknown> => {
 };
 
 /**
- * Serialize a query-param value onto `query`, flattening plain objects
- * using OpenAPI `deepObject`-style dot notation.
+ * Serialize a query-param value onto `query`, flattening plain objects with
+ * the requested key notation.
  *
  * Several Cloudflare list endpoints model their filters as nested structs
  * (e.g. DNS `listRecords` takes `name: { exact, contains, ... }`) that must
@@ -724,23 +754,55 @@ const isPlainObject = (v: unknown): v is Record<string, unknown> => {
  * happily treats as a filter that matches nothing — the call "succeeds"
  * with zero results and the bug is invisible to the caller.
  *
- * Scalars and arrays keep their existing serialization (`k=v` /
- * repeated `k=v` pairs). Nested plain objects recurse, so deeper filter
- * shapes flatten to `a.b.c=value`. `undefined`/`null` members are skipped
- * like top-level params. Non-plain objects (class instances, `Date`, …)
- * keep the legacy `String(value)` behavior.
+ * Scalars keep their existing serialization (`k=v`). Legacy query traits
+ * preserve repeated array values and flatten nested objects to `a.b.c=value`.
+ * Explicit OpenAPI metadata additionally supports comma-, space-, and
+ * pipe-delimited arrays, form-style objects, and `deepObject` bracket keys.
+ * `undefined`/`null` members are skipped like top-level params. Non-plain
+ * objects (class instances, `Date`, …) keep the legacy `String(value)`
+ * behavior.
  */
+// HOURGLASS PATCH: Honor OpenAPI query styles without changing legacy traits.
 const setQueryValue = (
   query: Record<string, string | string[]>,
   wireName: string,
   value: unknown,
+  options?: HttpQueryOptions,
 ): void => {
+  const style = options === undefined ? undefined : (options.style ?? "form");
   if (Array.isArray(value)) {
-    query[wireName] = value.map(String);
+    const values = value.map(String);
+    switch (style) {
+      case "spaceDelimited":
+        query[wireName] = values.join(" ");
+        break;
+      case "pipeDelimited":
+        query[wireName] = values.join("|");
+        break;
+      case "form":
+        query[wireName] =
+          options?.explode === false ? values.join(",") : values;
+        break;
+      default:
+        query[wireName] = values;
+    }
   } else if (isPlainObject(value)) {
+    if (style === "form" && options?.explode === false) {
+      query[wireName] = Object.entries(value)
+        .filter(([, member]) => member !== undefined && member !== null)
+        .flatMap(([key, member]) => [key, String(member)])
+        .join(",");
+      return;
+    }
     for (const [key, member] of Object.entries(value)) {
       if (member === undefined || member === null) continue;
-      setQueryValue(query, `${wireName}.${key}`, member);
+      const nestedName =
+        style === "deepObject"
+          ? `${wireName}[${key}]`
+          : style === "form"
+            ? key
+            : `${wireName}.${key}`;
+      setQueryValue(query, nestedName, member, options);
     }
   } else {
     query[wireName] = String(value);
@@ -799,7 +861,8 @@ export const buildRequestParts = (
     if (queryParam !== undefined) {
       nonBodyKeys.add(tsName);
       const wireName = typeof queryParam === "string" ? queryParam : tsName;
-      setQueryValue(query, wireName, value);
+      const options = getQueryParamOptions(prop);
+      setQueryValue(query, wireName, value, options);
       continue;
     }
 

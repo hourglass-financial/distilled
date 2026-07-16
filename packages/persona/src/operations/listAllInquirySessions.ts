@@ -24,7 +24,7 @@ export const ListAllInquirySessionsInput =
       Schema.Struct({
         "inquiry-id": Schema.optional(Schema.String),
       }),
-    ).pipe(T.HttpQuery("filter")),
+    ).pipe(T.HttpQuery("filter", { style: "deepObject", explode: true })),
     keyInflection: Schema.optional(
       Schema.Literals(["camel", "kebab", "snake"]),
     ).pipe(T.HttpHeader("Key-Inflection")),

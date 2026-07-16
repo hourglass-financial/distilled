@@ -26,7 +26,7 @@ export const RetrieveAShareTokenInput =
     shareTokenId: Schema.String.pipe(T.PathParam()),
     include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
     fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
-      T.HttpQuery("fields"),
+      T.HttpQuery("fields", { style: "deepObject", explode: true }),
     ),
     peekSourceData: Schema.optional(Schema.Boolean).pipe(
       T.HttpQuery("peek-source-data"),

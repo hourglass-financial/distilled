@@ -21,7 +21,7 @@ export interface ListAllDevicesInput {
 export const ListAllDevicesInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   filter: Schema.Struct({
     "inquiry-session-id": Schema.String,
-  }).pipe(T.HttpQuery("filter")),
+  }).pipe(T.HttpQuery("filter", { style: "deepObject", explode: true })),
   keyInflection: Schema.optional(
     Schema.Literals(["camel", "kebab", "snake"]),
   ).pipe(T.HttpHeader("Key-Inflection")),

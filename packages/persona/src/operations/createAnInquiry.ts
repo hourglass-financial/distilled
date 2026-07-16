@@ -84,7 +84,7 @@ export interface CreateAnInquiryInput {
 export const CreateAnInquiryInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
   fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
-    T.HttpQuery("fields"),
+    T.HttpQuery("fields", { style: "deepObject", explode: true }),
   ),
   keyInflection: Schema.optional(
     Schema.Literals(["camel", "kebab", "snake"]),

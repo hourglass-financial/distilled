@@ -33,7 +33,7 @@ export interface SearchCasesInput {
 }
 export const SearchCasesInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
-    T.HttpQuery("fields"),
+    T.HttpQuery("fields", { style: "deepObject", explode: true }),
   ),
   page: Schema.optional(
     Schema.Struct({
@@ -41,7 +41,7 @@ export const SearchCasesInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       before: Schema.optional(Schema.String),
       size: Schema.optional(Schema.Number),
     }),
-  ).pipe(T.HttpQuery("page")),
+  ).pipe(T.HttpQuery("page", { style: "deepObject", explode: true })),
   keyInflection: Schema.optional(
     Schema.Literals(["camel", "kebab", "snake"]),
   ).pipe(T.HttpHeader("Key-Inflection")),

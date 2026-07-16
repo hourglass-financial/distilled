@@ -74,7 +74,7 @@ describe("buildRequestParts — RFC 6570 path expansion", () => {
 // must serialize as `name.exact=value` — NOT `name=[object Object]`, which
 // the server treats as a filter that matches nothing.
 
-describe("buildRequestParts — deepObject query params", () => {
+describe("buildRequestParts — structured query params", () => {
   const Input = Schema.Struct({
     zoneId: Schema.String.pipe(T.HttpPath("zone_id")),
     name: Schema.optional(
@@ -148,5 +148,99 @@ describe("buildRequestParts — deepObject query params", () => {
     );
 
     expect(parts.query).toEqual({ type: "A", id: ["1", "2"] });
+  });
+
+  it("uses bracket notation for explicit OpenAPI deepObject parameters", () => {
+    const DeepObjectInput = Schema.Struct({
+      filter: Schema.optional(
+        Schema.Struct({
+          status: Schema.optional(Schema.String),
+          nested: Schema.optional(
+            Schema.Struct({ exact: Schema.optional(Schema.String) }),
+          ),
+        }),
+      ).pipe(
+        T.HttpQuery("filter-options", {
+          style: "deepObject",
+          explode: true,
+        }),
+      ),
+    }).pipe(T.Http({ method: "GET", path: "/things" }));
+
+    const parts = T.buildRequestParts(
+      DeepObjectInput.ast,
+      T.getHttpTrait(DeepObjectInput.ast)!,
+      { filter: { status: "active", nested: { exact: "match" } } },
+      DeepObjectInput,
+    );
+
+    expect(parts.query).toEqual({
+      "filter-options[status]": "active",
+      "filter-options[nested][exact]": "match",
+    });
+  });
+
+  it("honors OpenAPI array styles and explode metadata", () => {
+    const StyledInput = Schema.Struct({
+      repeated: Schema.Array(Schema.String).pipe(
+        T.HttpQuery("repeated", { style: "form", explode: true }),
+      ),
+      comma: Schema.Array(Schema.String).pipe(
+        T.HttpQuery("comma", { style: "form", explode: false }),
+      ),
+      spaced: Schema.Array(Schema.String).pipe(
+        T.HttpQuery("spaced", { style: "spaceDelimited", explode: false }),
+      ),
+      piped: Schema.Array(Schema.String).pipe(
+        T.HttpQuery("piped", { style: "pipeDelimited", explode: false }),
+      ),
+    }).pipe(T.Http({ method: "GET", path: "/things" }));
+
+    const parts = T.buildRequestParts(
+      StyledInput.ast,
+      T.getHttpTrait(StyledInput.ast)!,
+      {
+        repeated: ["one", "two"],
+        comma: ["one", "two"],
+        spaced: ["one", "two"],
+        piped: ["one", "two"],
+      },
+      StyledInput,
+    );
+
+    expect(parts.query).toEqual({
+      repeated: ["one", "two"],
+      comma: "one,two",
+      spaced: "one two",
+      piped: "one|two",
+    });
+  });
+
+  it("honors OpenAPI form object explode metadata", () => {
+    const StyledInput = Schema.Struct({
+      exploded: Schema.Struct({
+        red: Schema.Number,
+        green: Schema.Number,
+      }).pipe(T.HttpQuery("color", { style: "form", explode: true })),
+      compact: Schema.Struct({ red: Schema.Number, green: Schema.Number }).pipe(
+        T.HttpQuery("compact", { explode: false }),
+      ),
+    }).pipe(T.Http({ method: "GET", path: "/things" }));
+
+    const parts = T.buildRequestParts(
+      StyledInput.ast,
+      T.getHttpTrait(StyledInput.ast)!,
+      {
+        exploded: { red: 100, green: 200 },
+        compact: { red: 100, green: 200 },
+      },
+      StyledInput,
+    );
+
+    expect(parts.query).toEqual({
+      red: "100",
+      green: "200",
+      compact: "red,100,green,200",
+    });
   });
 });
