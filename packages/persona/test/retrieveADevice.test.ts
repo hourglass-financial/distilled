@@ -1,22 +1,20 @@
-import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { retrieveADevice } from "../src/operations/retrieveADevice.ts";
-import { runEffectWithInvalidCredentials } from "./setup.ts";
+import { missingId, PERSONA_VERSION } from "./fixtures.ts";
+import { runFailure } from "./safe-run.ts";
+import { beginLiveTestRun } from "./setup.ts";
 
-const input = {
-  deviceId: "deviceid_distilled_missing",
-  personaVersion: "2025-12-08",
-  idempotencyKey: "distilled-persona-retrieveADevice",
-} as any;
-
+// Coverage: error-only
 describe("retrieveADevice", () => {
-  describe("errors", () => {
-    it("invalid API key -> Unauthorized", async () => {
-      const error = await runEffectWithInvalidCredentials(
-        retrieveADevice(input).pipe(Effect.flip),
-      );
+  beforeAll(beginLiveTestRun);
 
-      expect(error._tag).toBe("Unauthorized");
-    }, 30_000);
-  });
+  it("returns typed NotFound for a valid-format missing device id", async () => {
+    const failure = await runFailure(
+      retrieveADevice({
+        deviceId: missingId("dev"),
+        personaVersion: PERSONA_VERSION,
+      }),
+    );
+    expect(failure.tag).toBe("NotFound");
+  }, 30_000);
 });

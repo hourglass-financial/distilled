@@ -12,6 +12,20 @@ export const testRunId: string = crypto
   .replace(/-/g, "")
   .slice(0, 8);
 
+let announcedRun = false;
+
+export const beginLiveTestRun = (): void => {
+  if (!process.env.PERSONA_API_KEY) {
+    throw new Error(
+      "PERSONA_API_KEY is required to run the Persona live sandbox tests",
+    );
+  }
+  if (!announcedRun) {
+    announcedRun = true;
+    console.info(`Persona live-test run: ${testRunId}`);
+  }
+};
+
 export const TestLayer = Layer.merge(CredentialsFromEnv, FetchHttpClient.layer);
 
 export const InvalidCredentialsLayer = Layer.merge(

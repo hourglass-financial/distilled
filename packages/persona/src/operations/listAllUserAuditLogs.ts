@@ -28,7 +28,7 @@ export const ListAllUserAuditLogsInput =
         before: Schema.optional(Schema.String),
         size: Schema.optional(Schema.Number),
       }),
-    ),
+    ).pipe(T.HttpQuery("page")),
     fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
       T.HttpQuery("fields"),
     ),

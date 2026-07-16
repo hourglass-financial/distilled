@@ -1,22 +1,8 @@
-import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
-import { rotateAWebhookSecret } from "../src/operations/rotateAWebhookSecret.ts";
-import { runEffectWithInvalidCredentials } from "./setup.ts";
+import { describe, it } from "vitest";
 
-const input = {
-  webhookId: "webhookid_distilled_missing",
-  personaVersion: "2025-12-08",
-  idempotencyKey: "distilled-persona-rotateAWebhookSecret",
-} as any;
-
+// Coverage: environment-dependent
 describe("rotateAWebhookSecret", () => {
-  describe("errors", () => {
-    it("invalid API key -> Unauthorized", async () => {
-      const error = await runEffectWithInvalidCredentials(
-        rotateAWebhookSecret(input).pipe(Effect.flip),
-      );
-
-      expect(error._tag).toBe("Unauthorized");
-    }, 30_000);
-  });
+  it.todo(
+    "live success requires an isolated sandbox entitlement, connection, or secret-safe fixture",
+  );
 });

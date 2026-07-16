@@ -69,6 +69,55 @@ const quoteString = (value: string): string =>
 const quotePropKey = (name: string): string =>
   /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(name) ? name : `"${quoteString(name)}"`;
 
+const replaceTopLevelInputField = (
+  content: string,
+  fieldName: string,
+  replacement: string,
+): string => {
+  const marker = `\n  ${quotePropKey(fieldName)}:`;
+  const inputSchemaStart = content.indexOf("\nexport const ");
+  const outputSchemaStart = content.indexOf("\n// Output Schema");
+  const markerIndex = content.indexOf(marker, inputSchemaStart);
+  if (
+    inputSchemaStart < 0 ||
+    outputSchemaStart < 0 ||
+    markerIndex < inputSchemaStart ||
+    markerIndex >= outputSchemaStart
+  ) {
+    throw new Error(`Could not replace generated query field: ${fieldName}`);
+  }
+  const start = markerIndex + 1;
+  const valueStart = content.indexOf(":", start) + 1;
+  let depth = 0;
+  let quote: '"' | "'" | "`" | undefined;
+  let escaped = false;
+
+  for (let index = valueStart; index < content.length; index++) {
+    const character = content[index];
+    if (quote) {
+      if (escaped) {
+        escaped = false;
+      } else if (character === "\\") {
+        escaped = true;
+      } else if (character === quote) {
+        quote = undefined;
+      }
+      continue;
+    }
+    if (character === '"' || character === "'" || character === "`") {
+      quote = character;
+    } else if (character === "(" || character === "[" || character === "{") {
+      depth++;
+    } else if (character === ")" || character === "]" || character === "}") {
+      depth--;
+    } else if (character === "," && depth === 0) {
+      return `${content.slice(0, start)}${replacement}${content.slice(index + 1)}`;
+    }
+  }
+
+  throw new Error(`Could not find end of generated query field: ${fieldName}`);
+};
+
 const spec = JSON.parse(fs.readFileSync(sourceSpecPath, "utf-8"));
 
 const resolveParameter = (param: ParameterObject): ParameterObject => {
@@ -196,11 +245,14 @@ const pathRename = new Map<string, string>();
 for (const [pathTemplate, pathItem] of Object.entries(
   spec.paths ?? {},
 ) as Array<[string, any]>) {
-  const normalizedPath = pathTemplate.replace(/\{([^}]+)\}/g, (_match, name) => {
-    const fieldName = toFieldName(name);
-    pathRename.set(name, fieldName);
-    return `{${fieldName}}`;
-  });
+  const normalizedPath = pathTemplate.replace(
+    /\{([^}]+)\}/g,
+    (_match, name) => {
+      const fieldName = toFieldName(name);
+      pathRename.set(name, fieldName);
+      return `{${fieldName}}`;
+    },
+  );
 
   if (normalizedPath !== pathTemplate) {
     delete spec.paths[pathTemplate];
@@ -279,11 +331,11 @@ for (const [functionName, queryParams] of operationQueries) {
     )}: ${wrappedSchema}.pipe(T.HttpQuery("${quoteString(
       queryParam.wireName,
     )}")),`;
-    const fieldPattern = new RegExp(
-      `^  ${queryParam.fieldName}: .*,$`,
-      "m",
+    content = replaceTopLevelInputField(
+      content,
+      queryParam.fieldName,
+      replacement,
     );
-    content = content.replace(fieldPattern, replacement);
   }
 
   fs.writeFileSync(filePath, content);

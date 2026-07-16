@@ -32,7 +32,7 @@ export const ListAllTransactionsInput =
         before: Schema.optional(Schema.String),
         size: Schema.optional(Schema.Number),
       }),
-    ),
+    ).pipe(T.HttpQuery("page")),
     fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
       T.HttpQuery("fields"),
     ),
@@ -47,7 +47,7 @@ export const ListAllTransactionsInput =
           }),
         ),
       }),
-    ),
+    ).pipe(T.HttpQuery("filter")),
     keyInflection: Schema.optional(
       Schema.Literals(["camel", "kebab", "snake"]),
     ).pipe(T.HttpHeader("Key-Inflection")),

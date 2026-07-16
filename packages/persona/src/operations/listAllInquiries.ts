@@ -37,7 +37,7 @@ export const ListAllInquiriesInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       before: Schema.optional(Schema.String),
       size: Schema.optional(Schema.Number),
     }),
-  ),
+  ).pipe(T.HttpQuery("page")),
   fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
     T.HttpQuery("fields"),
   ),
@@ -53,7 +53,7 @@ export const ListAllInquiriesInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "created-at-start": Schema.optional(Schema.String),
       "created-at-end": Schema.optional(Schema.String),
     }),
-  ),
+  ).pipe(T.HttpQuery("filter")),
   keyInflection: Schema.optional(
     Schema.Literals(["camel", "kebab", "snake"]),
   ).pipe(T.HttpHeader("Key-Inflection")),

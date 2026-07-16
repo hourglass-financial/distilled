@@ -1,21 +1,24 @@
-import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { listAllInquiries } from "../src/operations/listAllInquiries.ts";
-import { runEffectWithInvalidCredentials } from "./setup.ts";
+import { PERSONA_VERSION } from "./fixtures.ts";
+import { withOwnedInquiry } from "./inquiry-fixture.ts";
+import { runLiveEffect } from "./safe-run.ts";
+import { beginLiveTestRun } from "./setup.ts";
 
-const input = {
-  personaVersion: "2025-12-08",
-  idempotencyKey: "distilled-persona-listAllInquiries",
-} as any;
-
+// Coverage: live-data
 describe("listAllInquiries", () => {
-  describe("errors", () => {
-    it("invalid API key -> Unauthorized", async () => {
-      const error = await runEffectWithInvalidCredentials(
-        listAllInquiries(input).pipe(Effect.flip),
-      );
+  beforeAll(beginLiveTestRun);
 
-      expect(error._tag).toBe("Unauthorized");
-    }, 30_000);
-  });
+  it("filters the authenticated collection to an owned inquiry", async () => {
+    await withOwnedInquiry("list", async ({ id }) => {
+      const result = await runLiveEffect(
+        listAllInquiries({
+          filter: { "inquiry-id": id },
+          page: { size: 10 },
+          personaVersion: PERSONA_VERSION,
+        }),
+      );
+      expect(result.data.map((inquiry) => inquiry.id)).toContain(id);
+    });
+  }, 60_000);
 });

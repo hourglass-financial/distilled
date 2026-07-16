@@ -1,22 +1,26 @@
-import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { redactAnAccount } from "../src/operations/redactAnAccount.ts";
-import { runEffectWithInvalidCredentials } from "./setup.ts";
+import { withOwnedAccount } from "./account-fixture.ts";
+import { idempotencyKey, PERSONA_VERSION } from "./fixtures.ts";
+import { runLiveEffect } from "./safe-run.ts";
+import { beginLiveTestRun } from "./setup.ts";
 
-const input = {
-  accountId: "accountid_distilled_missing",
-  personaVersion: "2025-12-08",
-  idempotencyKey: "distilled-persona-redactAnAccount",
-} as any;
-
+// Coverage: live-lifecycle
 describe("redactAnAccount", () => {
-  describe("errors", () => {
-    it("invalid API key -> Unauthorized", async () => {
-      const error = await runEffectWithInvalidCredentials(
-        redactAnAccount(input).pipe(Effect.flip),
-      );
+  beforeAll(beginLiveTestRun);
 
-      expect(error._tag).toBe("Unauthorized");
-    }, 30_000);
-  });
+  it("redacts an owned account", async () => {
+    await withOwnedAccount("redact", async ({ id, markTerminal }) => {
+      const result = await runLiveEffect(
+        redactAnAccount({
+          accountId: id,
+          idempotencyKey: idempotencyKey("redact-account", "terminal"),
+          personaVersion: PERSONA_VERSION,
+        }),
+      );
+      markTerminal();
+      expect(result.data.id).toBe(id);
+      expect(result.data.attributes?.["redacted-at"]).toBeTruthy();
+    });
+  }, 30_000);
 });

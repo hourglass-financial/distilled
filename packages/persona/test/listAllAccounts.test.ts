@@ -1,76 +1,25 @@
-import { config } from "dotenv";
-import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
-import * as Redacted from "effect/Redacted";
-import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
-import { describe, expect, it } from "vitest";
-import {
-  Credentials,
-  CredentialsFromEnv,
-  DEFAULT_API_BASE_URL,
-} from "../src/credentials.ts";
+import { beforeAll, describe, expect, it } from "vitest";
 import { listAllAccounts } from "../src/operations/listAllAccounts.ts";
+import { withOwnedAccount } from "./account-fixture.ts";
+import { PERSONA_VERSION } from "./fixtures.ts";
+import { runLiveEffect } from "./safe-run.ts";
+import { beginLiveTestRun } from "./setup.ts";
 
-config();
-
-const TestLayer = Layer.merge(CredentialsFromEnv, FetchHttpClient.layer);
-
-const runEffect = <A, E, R>(effect: Effect.Effect<A, E, R>): Promise<A> =>
-  Effect.runPromise(
-    effect.pipe(Effect.provide(TestLayer)) as Effect.Effect<A, E, never>,
-  );
-
-const testRunId = crypto.randomUUID().replace(/-/g, "").slice(0, 8);
-
-const missingRouteLayer = () => {
-  const apiKey = process.env.PERSONA_API_KEY;
-  if (!apiKey) {
-    throw new Error("PERSONA_API_KEY environment variable is required");
-  }
-  return Layer.merge(
-    Layer.succeed(Credentials, {
-      apiKey: Redacted.make(apiKey),
-      apiBaseUrl: `${DEFAULT_API_BASE_URL}/distilled-persona-missing-${testRunId}`,
-    }),
-    FetchHttpClient.layer,
-  );
-};
-
+// Coverage: live-data
 describe("listAllAccounts", () => {
-  it("happy path - lists accounts", async () => {
-    const result = await runEffect(
-      listAllAccounts({
-        page: { size: 1 },
-        personaVersion: "2025-12-08",
-      }),
-    );
+  beforeAll(beginLiveTestRun);
 
-    expect(Array.isArray(result.data)).toBe(true);
-    expect(result.links).toBeDefined();
-    expect(
-      result.links.prev === null || typeof result.links.prev === "string",
-    ).toBe(true);
-    expect(
-      result.links.next === null || typeof result.links.next === "string",
-    ).toBe(true);
-
-    for (const account of result.data) {
-      expect(account.type).toBe("account");
-      expect(account.id).toMatch(/^act_/);
-    }
-  }, 30_000);
-
-  it("error - NotFound for a missing accounts route", async () => {
-    await Effect.runPromise(
-      listAllAccounts({
-        personaVersion: "2025-12-08",
-      }).pipe(
-        Effect.flip,
-        Effect.map((e) => {
-          expect(e._tag).toBe("NotFound");
+  it("filters the authenticated collection to an owned account", async () => {
+    await withOwnedAccount("list", async ({ id, referenceId }) => {
+      const result = await runLiveEffect(
+        listAllAccounts({
+          filter: { "reference-id": referenceId },
+          page: { size: 10 },
+          personaVersion: PERSONA_VERSION,
         }),
-        Effect.provide(missingRouteLayer()),
-      ),
-    );
+      );
+      expect(result.data.map((account) => account.id)).toContain(id);
+      expect(result.links).toBeDefined();
+    });
   }, 30_000);
 });

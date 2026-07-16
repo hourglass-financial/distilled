@@ -1,22 +1,20 @@
-import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { retrieveAList } from "../src/operations/retrieveAList.ts";
-import { runEffectWithInvalidCredentials } from "./setup.ts";
+import { missingId, PERSONA_VERSION } from "./fixtures.ts";
+import { runFailure } from "./safe-run.ts";
+import { beginLiveTestRun } from "./setup.ts";
 
-const input = {
-  listId: "listid_distilled_missing",
-  personaVersion: "2025-12-08",
-  idempotencyKey: "distilled-persona-retrieveAList",
-} as any;
-
+// Coverage: error-only
 describe("retrieveAList", () => {
-  describe("errors", () => {
-    it("invalid API key -> Unauthorized", async () => {
-      const error = await runEffectWithInvalidCredentials(
-        retrieveAList(input).pipe(Effect.flip),
-      );
+  beforeAll(beginLiveTestRun);
 
-      expect(error._tag).toBe("Unauthorized");
-    }, 30_000);
-  });
+  it("returns NotFound for a valid-format missing id", async () => {
+    const failure = await runFailure(
+      retrieveAList({
+        listId: missingId("lst"),
+        personaVersion: PERSONA_VERSION,
+      }),
+    );
+    expect(failure.tag).toBe("NotFound");
+  }, 30_000);
 });

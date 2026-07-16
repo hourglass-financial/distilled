@@ -1,22 +1,24 @@
-import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { expireAnInquiry } from "../src/operations/expireAnInquiry.ts";
-import { runEffectWithInvalidCredentials } from "./setup.ts";
+import { idempotencyKey, PERSONA_VERSION } from "./fixtures.ts";
+import { withOwnedInquiry } from "./inquiry-fixture.ts";
+import { runLiveEffect } from "./safe-run.ts";
+import { beginLiveTestRun } from "./setup.ts";
 
-const input = {
-  inquiryId: "inquiryid_distilled_missing",
-  personaVersion: "2025-12-08",
-  idempotencyKey: "distilled-persona-expireAnInquiry",
-} as any;
-
+// Coverage: live-lifecycle
 describe("expireAnInquiry", () => {
-  describe("errors", () => {
-    it("invalid API key -> Unauthorized", async () => {
-      const error = await runEffectWithInvalidCredentials(
-        expireAnInquiry(input).pipe(Effect.flip),
-      );
+  beforeAll(beginLiveTestRun);
 
-      expect(error._tag).toBe("Unauthorized");
-    }, 30_000);
-  });
+  it("expires an owned inquiry", async () => {
+    await withOwnedInquiry("expire", async ({ id }) => {
+      const result = await runLiveEffect(
+        expireAnInquiry({
+          inquiryId: id,
+          idempotencyKey: idempotencyKey("expire-inquiry", "expire"),
+          personaVersion: PERSONA_VERSION,
+        }),
+      );
+      expect(result.data.attributes.status).toBe("expired");
+    });
+  }, 60_000);
 });

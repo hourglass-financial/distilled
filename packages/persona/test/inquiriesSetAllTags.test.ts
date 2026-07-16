@@ -1,22 +1,41 @@
-import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
+import { inquiriesAddTag } from "../src/operations/inquiriesAddTag.ts";
 import { inquiriesSetAllTags } from "../src/operations/inquiriesSetAllTags.ts";
-import { runEffectWithInvalidCredentials } from "./setup.ts";
+import { retrieveAnInquiry } from "../src/operations/retrieveAnInquiry.ts";
+import { idempotencyKey, ownedName, PERSONA_VERSION } from "./fixtures.ts";
+import { withOwnedInquiry } from "./inquiry-fixture.ts";
+import { runLiveEffect } from "./safe-run.ts";
+import { beginLiveTestRun } from "./setup.ts";
 
-const input = {
-  inquiryId: "inquiryid_distilled_missing",
-  personaVersion: "2025-12-08",
-  idempotencyKey: "distilled-persona-inquiriesSetAllTags",
-} as any;
-
+// Coverage: live-lifecycle
 describe("inquiriesSetAllTags", () => {
-  describe("errors", () => {
-    it("invalid API key -> Unauthorized", async () => {
-      const error = await runEffectWithInvalidCredentials(
-        inquiriesSetAllTags(input).pipe(Effect.flip),
-      );
+  beforeAll(beginLiveTestRun);
 
-      expect(error._tag).toBe("Unauthorized");
-    }, 30_000);
-  });
+  it("replaces all tags on an owned inquiry", async () => {
+    await withOwnedInquiry("set-tags", async ({ id }) => {
+      const tag = ownedName("tag", "inquiry-set");
+      await runLiveEffect(
+        inquiriesAddTag({
+          inquiryId: id,
+          idempotencyKey: idempotencyKey("inquiry-add-tag", "set"),
+          personaVersion: PERSONA_VERSION,
+          meta: { "tag-name": tag },
+        }),
+      );
+      await runLiveEffect(
+        inquiriesSetAllTags({
+          inquiryId: id,
+          idempotencyKey: idempotencyKey("inquiry-set-tags", "set"),
+          personaVersion: PERSONA_VERSION,
+          meta: { "tag-name": [tag] },
+        }),
+      );
+      const retrieved = await runLiveEffect(
+        retrieveAnInquiry({ inquiryId: id, personaVersion: PERSONA_VERSION }),
+      );
+      expect(retrieved.data.attributes.tags.map(String)).toEqual([
+        tag.toUpperCase(),
+      ]);
+    });
+  }, 60_000);
 });

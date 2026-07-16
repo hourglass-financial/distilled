@@ -1,21 +1,18 @@
-import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { listAllWebhooks } from "../src/operations/listAllWebhooks.ts";
-import { runEffectWithInvalidCredentials } from "./setup.ts";
+import { PERSONA_VERSION } from "./fixtures.ts";
+import { runLiveEffect } from "./safe-run.ts";
+import { beginLiveTestRun } from "./setup.ts";
 
-const input = {
-  personaVersion: "2025-12-08",
-  idempotencyKey: "distilled-persona-listAllWebhooks",
-} as any;
-
+// Coverage: live-data
 describe("listAllWebhooks", () => {
-  describe("errors", () => {
-    it("invalid API key -> Unauthorized", async () => {
-      const error = await runEffectWithInvalidCredentials(
-        listAllWebhooks(input).pipe(Effect.flip),
-      );
+  beforeAll(beginLiveTestRun);
 
-      expect(error._tag).toBe("Unauthorized");
-    }, 30_000);
-  });
+  it("decodes the populated authenticated collection", async () => {
+    const result = await runLiveEffect(
+      listAllWebhooks({ page: { size: 1 }, personaVersion: PERSONA_VERSION }),
+    );
+    expect(result.data.length).toBeGreaterThan(0);
+    expect(result.data[0]).toBeDefined();
+  }, 30_000);
 });

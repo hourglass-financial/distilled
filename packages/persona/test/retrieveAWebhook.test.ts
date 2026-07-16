@@ -1,22 +1,27 @@
-import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
+import { listAllWebhooks } from "../src/operations/listAllWebhooks.ts";
 import { retrieveAWebhook } from "../src/operations/retrieveAWebhook.ts";
-import { runEffectWithInvalidCredentials } from "./setup.ts";
+import { PERSONA_VERSION } from "./fixtures.ts";
+import { runLiveEffect } from "./safe-run.ts";
+import { beginLiveTestRun } from "./setup.ts";
 
-const input = {
-  webhookId: "webhookid_distilled_missing",
-  personaVersion: "2025-12-08",
-  idempotencyKey: "distilled-persona-retrieveAWebhook",
-} as any;
-
+// Coverage: live-data
 describe("retrieveAWebhook", () => {
-  describe("errors", () => {
-    it("invalid API key -> Unauthorized", async () => {
-      const error = await runEffectWithInvalidCredentials(
-        retrieveAWebhook(input).pipe(Effect.flip),
+  beforeAll(beginLiveTestRun);
+
+  it("retrieves and decodes a resource exposed by the sandbox", async () => {
+    const listed = await runLiveEffect(
+      listAllWebhooks({ page: { size: 1 }, personaVersion: PERSONA_VERSION }),
+    );
+    const id = listed.data[0]?.id;
+    if (!id)
+      throw new Error(
+        "Persona sandbox fixture is missing for retrieveAWebhook",
       );
 
-      expect(error._tag).toBe("Unauthorized");
-    }, 30_000);
-  });
+    const result = await runLiveEffect(
+      retrieveAWebhook({ webhookId: id, personaVersion: PERSONA_VERSION }),
+    );
+    expect(result.data.id).toBe(id);
+  }, 30_000);
 });

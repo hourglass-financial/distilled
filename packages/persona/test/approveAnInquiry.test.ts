@@ -1,22 +1,25 @@
-import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { approveAnInquiry } from "../src/operations/approveAnInquiry.ts";
-import { runEffectWithInvalidCredentials } from "./setup.ts";
+import { idempotencyKey, PERSONA_VERSION } from "./fixtures.ts";
+import { withOwnedInquiry } from "./inquiry-fixture.ts";
+import { runLiveEffect } from "./safe-run.ts";
+import { beginLiveTestRun } from "./setup.ts";
 
-const input = {
-  inquiryId: "inquiryid_distilled_missing",
-  personaVersion: "2025-12-08",
-  idempotencyKey: "distilled-persona-approveAnInquiry",
-} as any;
-
+// Coverage: live-lifecycle
 describe("approveAnInquiry", () => {
-  describe("errors", () => {
-    it("invalid API key -> Unauthorized", async () => {
-      const error = await runEffectWithInvalidCredentials(
-        approveAnInquiry(input).pipe(Effect.flip),
-      );
+  beforeAll(beginLiveTestRun);
 
-      expect(error._tag).toBe("Unauthorized");
-    }, 30_000);
-  });
+  it("approves an owned inquiry", async () => {
+    await withOwnedInquiry("approve", async ({ id }) => {
+      const result = await runLiveEffect(
+        approveAnInquiry({
+          inquiryId: id,
+          idempotencyKey: idempotencyKey("approve-inquiry", "approve"),
+          personaVersion: PERSONA_VERSION,
+          meta: { comment: "Distilled live test" },
+        }),
+      );
+      expect(result.data.attributes.status).toBe("approved");
+    });
+  }, 60_000);
 });

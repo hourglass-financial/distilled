@@ -1,21 +1,17 @@
-import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { listAllImporters } from "../src/operations/listAllImporters.ts";
-import { runEffectWithInvalidCredentials } from "./setup.ts";
+import { PERSONA_VERSION } from "./fixtures.ts";
+import { runLiveEffect } from "./safe-run.ts";
+import { beginLiveTestRun } from "./setup.ts";
 
-const input = {
-  personaVersion: "2025-12-08",
-  idempotencyKey: "distilled-persona-listAllImporters",
-} as any;
-
+// Coverage: live-envelope
 describe("listAllImporters", () => {
-  describe("errors", () => {
-    it("invalid API key -> Unauthorized", async () => {
-      const error = await runEffectWithInvalidCredentials(
-        listAllImporters(input).pipe(Effect.flip),
-      );
+  beforeAll(beginLiveTestRun);
 
-      expect(error._tag).toBe("Unauthorized");
-    }, 30_000);
-  });
+  it("decodes the authenticated collection envelope", async () => {
+    const result = await runLiveEffect(
+      listAllImporters({ page: { size: 1 }, personaVersion: PERSONA_VERSION }),
+    );
+    expect(Array.isArray(result.data)).toBe(true);
+  }, 30_000);
 });

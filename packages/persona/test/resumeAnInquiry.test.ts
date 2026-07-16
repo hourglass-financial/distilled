@@ -1,22 +1,33 @@
-import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
+import { expireAnInquiry } from "../src/operations/expireAnInquiry.ts";
 import { resumeAnInquiry } from "../src/operations/resumeAnInquiry.ts";
-import { runEffectWithInvalidCredentials } from "./setup.ts";
+import { idempotencyKey, PERSONA_VERSION } from "./fixtures.ts";
+import { withOwnedInquiry } from "./inquiry-fixture.ts";
+import { runLiveEffect } from "./safe-run.ts";
+import { beginLiveTestRun } from "./setup.ts";
 
-const input = {
-  inquiryId: "inquiryid_distilled_missing",
-  personaVersion: "2025-12-08",
-  idempotencyKey: "distilled-persona-resumeAnInquiry",
-} as any;
-
+// Coverage: live-lifecycle
 describe("resumeAnInquiry", () => {
-  describe("errors", () => {
-    it("invalid API key -> Unauthorized", async () => {
-      const error = await runEffectWithInvalidCredentials(
-        resumeAnInquiry(input).pipe(Effect.flip),
-      );
+  beforeAll(beginLiveTestRun);
 
-      expect(error._tag).toBe("Unauthorized");
-    }, 30_000);
-  });
+  it("resumes an owned expired inquiry and returns a protected session token", async () => {
+    await withOwnedInquiry("resume", async ({ id }) => {
+      await runLiveEffect(
+        expireAnInquiry({
+          inquiryId: id,
+          idempotencyKey: idempotencyKey("expire-inquiry", "resume"),
+          personaVersion: PERSONA_VERSION,
+        }),
+      );
+      const result = await runLiveEffect(
+        resumeAnInquiry({
+          inquiryId: id,
+          idempotencyKey: idempotencyKey("resume-inquiry", "resume"),
+          personaVersion: PERSONA_VERSION,
+        }),
+      );
+      expect(result.data.attributes.status).toBe("pending");
+      expect(result.meta["session-token"]).toBeDefined();
+    });
+  }, 60_000);
 });

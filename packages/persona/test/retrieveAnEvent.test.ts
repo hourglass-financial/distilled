@@ -1,22 +1,25 @@
-import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
+import { listAllEvents } from "../src/operations/listAllEvents.ts";
 import { retrieveAnEvent } from "../src/operations/retrieveAnEvent.ts";
-import { runEffectWithInvalidCredentials } from "./setup.ts";
+import { PERSONA_VERSION } from "./fixtures.ts";
+import { runLiveEffect } from "./safe-run.ts";
+import { beginLiveTestRun } from "./setup.ts";
 
-const input = {
-  eventId: "eventid_distilled_missing",
-  personaVersion: "2025-12-08",
-  idempotencyKey: "distilled-persona-retrieveAnEvent",
-} as any;
-
+// Coverage: live-data
 describe("retrieveAnEvent", () => {
-  describe("errors", () => {
-    it("invalid API key -> Unauthorized", async () => {
-      const error = await runEffectWithInvalidCredentials(
-        retrieveAnEvent(input).pipe(Effect.flip),
-      );
+  beforeAll(beginLiveTestRun);
 
-      expect(error._tag).toBe("Unauthorized");
-    }, 30_000);
-  });
+  it("retrieves and decodes a resource exposed by the sandbox", async () => {
+    const listed = await runLiveEffect(
+      listAllEvents({ page: { size: 1 }, personaVersion: PERSONA_VERSION }),
+    );
+    const id = listed.data[0]?.id;
+    if (!id)
+      throw new Error("Persona sandbox fixture is missing for retrieveAnEvent");
+
+    const result = await runLiveEffect(
+      retrieveAnEvent({ eventId: id, personaVersion: PERSONA_VERSION }),
+    );
+    expect(result.data.id).toBe(id);
+  }, 30_000);
 });

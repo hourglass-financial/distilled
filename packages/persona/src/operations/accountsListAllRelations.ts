@@ -42,7 +42,7 @@ export const AccountsListAllRelationsInput =
       key: Schema.String,
       "created-at-start": Schema.optional(Schema.String),
       "created-at-end": Schema.optional(Schema.String),
-    }),
+    }).pipe(T.HttpQuery("filter")),
     keyInflection: Schema.optional(
       Schema.Literals(["camel", "kebab", "snake"]),
     ).pipe(T.HttpHeader("Key-Inflection")),

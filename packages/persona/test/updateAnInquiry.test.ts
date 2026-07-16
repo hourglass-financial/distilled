@@ -1,22 +1,35 @@
-import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
+import { retrieveAnInquiry } from "../src/operations/retrieveAnInquiry.ts";
 import { updateAnInquiry } from "../src/operations/updateAnInquiry.ts";
-import { runEffectWithInvalidCredentials } from "./setup.ts";
+import { idempotencyKey, ownedName, PERSONA_VERSION } from "./fixtures.ts";
+import { withOwnedInquiry } from "./inquiry-fixture.ts";
+import { runLiveEffect } from "./safe-run.ts";
+import { beginLiveTestRun } from "./setup.ts";
 
-const input = {
-  inquiryId: "inquiryid_distilled_missing",
-  personaVersion: "2025-12-08",
-  idempotencyKey: "distilled-persona-updateAnInquiry",
-} as any;
-
+// Coverage: live-lifecycle
 describe("updateAnInquiry", () => {
-  describe("errors", () => {
-    it("invalid API key -> Unauthorized", async () => {
-      const error = await runEffectWithInvalidCredentials(
-        updateAnInquiry(input).pipe(Effect.flip),
-      );
+  beforeAll(beginLiveTestRun);
 
-      expect(error._tag).toBe("Unauthorized");
-    }, 30_000);
-  });
+  it("updates an owned inquiry and preserves its custom field", async () => {
+    await withOwnedInquiry("update", async ({ id, fixture }) => {
+      const value = ownedName("field", "updated");
+      await runLiveEffect(
+        updateAnInquiry({
+          inquiryId: id,
+          idempotencyKey: idempotencyKey("update-inquiry", "update"),
+          personaVersion: PERSONA_VERSION,
+          data: { attributes: { fields: { [fixture.fieldName]: value } } },
+        }),
+      );
+      const retrieved = await runLiveEffect(
+        retrieveAnInquiry({ inquiryId: id, personaVersion: PERSONA_VERSION }),
+      );
+      expect(retrieved.data.attributes.fields[fixture.fieldName]).toMatchObject(
+        {
+          type: "string",
+          value,
+        },
+      );
+    });
+  }, 60_000);
 });

@@ -33,6 +33,13 @@ const ApiErrorResponse = Schema.Struct({
 
 const RETRYABLE_HTTP_STATUSES = new Set([408, 423, 429, 500, 502, 503, 504]);
 
+const toDeepObjectKey = (key: string): string => {
+  const [head, ...tail] = key.split(".");
+  return tail.length === 0
+    ? head
+    : `${head}${tail.map((part) => `[${part}]`).join("")}`;
+};
+
 const getMessage = (parsed: typeof ApiErrorResponse.Type): string => {
   const first = parsed.errors[0];
   return first?.details ?? first?.title ?? "";
@@ -85,6 +92,15 @@ export const API = makeAPI<Credentials>({
   getBaseUrl: (creds: any) => creds.apiBaseUrl,
   getAuthHeaders: (creds: any): Record<string, string> => ({
     Authorization: `Bearer ${Redacted.value(creds.apiKey)}`,
+  }),
+  transformRequestParts: ({ parts }) => ({
+    ...parts,
+    query: Object.fromEntries(
+      Object.entries(parts.query).map(([key, value]) => [
+        toDeepObjectKey(key),
+        value,
+      ]),
+    ),
   }),
   matchError,
   ParseError: PersonaParseError as any,

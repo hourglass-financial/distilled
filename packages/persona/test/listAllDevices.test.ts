@@ -1,24 +1,31 @@
-import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { listAllDevices } from "../src/operations/listAllDevices.ts";
-import { runEffectWithInvalidCredentials } from "./setup.ts";
+import { listAllInquirySessions } from "../src/operations/listAllInquirySessions.ts";
+import { PERSONA_VERSION } from "./fixtures.ts";
+import { runLiveEffect } from "./safe-run.ts";
+import { beginLiveTestRun } from "./setup.ts";
 
-const input = {
-  filter: {
-    "inquiry-session-id": "inquiry_session_id_distilled_missing",
-  },
-  personaVersion: "2025-12-08",
-  idempotencyKey: "distilled-persona-listAllDevices",
-} as any;
-
+// Coverage: live-envelope
 describe("listAllDevices", () => {
-  describe("errors", () => {
-    it("invalid API key -> Unauthorized", async () => {
-      const error = await runEffectWithInvalidCredentials(
-        listAllDevices(input).pipe(Effect.flip),
-      );
+  beforeAll(beginLiveTestRun);
 
-      expect(error._tag).toBe("Unauthorized");
-    }, 30_000);
-  });
+  it("filters by an existing inquiry session and decodes the collection envelope", async () => {
+    const sessions = await runLiveEffect(
+      listAllInquirySessions({ personaVersion: PERSONA_VERSION }),
+    );
+    const inquirySessionId = sessions.data[0]?.id;
+    if (!inquirySessionId) {
+      throw new Error("Persona sandbox fixture is missing for listAllDevices");
+    }
+
+    const result = await runLiveEffect(
+      listAllDevices({
+        filter: { "inquiry-session-id": inquirySessionId },
+        personaVersion: PERSONA_VERSION,
+      }),
+    );
+    expect(Array.isArray(result.data)).toBe(true);
+    expect(result.links).toHaveProperty("prev");
+    expect(result.links).toHaveProperty("next");
+  }, 30_000);
 });

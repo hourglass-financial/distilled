@@ -1,21 +1,35 @@
-import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { createAnInquirySession } from "../src/operations/createAnInquirySession.ts";
-import { runEffectWithInvalidCredentials } from "./setup.ts";
+import { expireAnInquirySession } from "../src/operations/expireAnInquirySession.ts";
+import { idempotencyKey, PERSONA_VERSION } from "./fixtures.ts";
+import { withOwnedInquiry } from "./inquiry-fixture.ts";
+import { runLiveEffect } from "./safe-run.ts";
+import { beginLiveTestRun } from "./setup.ts";
 
-const input = {
-  personaVersion: "2025-12-08",
-  idempotencyKey: "distilled-persona-createAnInquirySession",
-} as any;
-
+// Coverage: live-lifecycle
 describe("createAnInquirySession", () => {
-  describe("errors", () => {
-    it("invalid API key -> Unauthorized", async () => {
-      const error = await runEffectWithInvalidCredentials(
-        createAnInquirySession(input).pipe(Effect.flip),
-      );
+  beforeAll(beginLiveTestRun);
 
-      expect(error._tag).toBe("Unauthorized");
-    }, 30_000);
-  });
+  it("creates and expires a session for an owned inquiry", async () => {
+    await withOwnedInquiry("create-session", async ({ id }) => {
+      const result = await runLiveEffect(
+        createAnInquirySession({
+          idempotencyKey: idempotencyKey("create-session", "create"),
+          personaVersion: PERSONA_VERSION,
+          data: { attributes: { "inquiry-id": id } },
+        }),
+      );
+      const sessionId = result.data.id;
+      if (!sessionId)
+        throw new Error("Persona created a session without an id");
+      expect(sessionId).toMatch(/^iqse_/);
+      await runLiveEffect(
+        expireAnInquirySession({
+          inquirySessionId: sessionId,
+          idempotencyKey: idempotencyKey("expire-session", "create"),
+          personaVersion: PERSONA_VERSION,
+        }),
+      );
+    });
+  }, 60_000);
 });

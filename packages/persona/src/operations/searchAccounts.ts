@@ -42,7 +42,7 @@ export const SearchAccountsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       before: Schema.optional(Schema.String),
       size: Schema.optional(Schema.Number),
     }),
-  ),
+  ).pipe(T.HttpQuery("page")),
   keyInflection: Schema.optional(
     Schema.Literals(["camel", "kebab", "snake"]),
   ).pipe(T.HttpHeader("Key-Inflection")),
