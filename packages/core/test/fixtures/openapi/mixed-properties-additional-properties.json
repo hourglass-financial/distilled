@@ -1,0 +1,146 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Mixed object fixture",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/mixed": {
+      "get": {
+        "operationId": "getMixedObject",
+        "responses": {
+          "200": {
+            "description": "Mixed object response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "untyped",
+                    "typed",
+                    "closed",
+                    "omitted",
+                    "referenced",
+                    "strictValues",
+                    "nullableStrictValue",
+                    "unsupportedAnyOf",
+                    "emptyUnion",
+                    "unsupportedOneOf"
+                  ],
+                  "properties": {
+                    "untyped": {
+                      "type": "object",
+                      "required": ["known"],
+                      "properties": {
+                        "known": { "type": "string" }
+                      },
+                      "additionalProperties": true
+                    },
+                    "typed": {
+                      "type": "object",
+                      "required": ["known"],
+                      "properties": {
+                        "known": { "type": "number" }
+                      },
+                      "additionalProperties": { "type": "string" }
+                    },
+                    "closed": {
+                      "type": "object",
+                      "required": ["known"],
+                      "properties": {
+                        "known": { "type": "string" }
+                      },
+                      "additionalProperties": false
+                    },
+                    "omitted": {
+                      "type": "object",
+                      "required": ["known"],
+                      "properties": {
+                        "known": { "type": "string" }
+                      }
+                    },
+                    "referenced": {
+                      "$ref": "#/components/schemas/ReferencedMixedObject"
+                    },
+                    "strictValues": {
+                      "type": "object",
+                      "required": ["known"],
+                      "properties": {
+                        "known": {
+                          "$ref": "#/components/schemas/StrictFieldValue"
+                        }
+                      },
+                      "additionalProperties": {
+                        "$ref": "#/components/schemas/StrictFieldValue"
+                      }
+                    },
+                    "nullableStrictValue": {
+                      "type": ["object", "null"],
+                      "oneOf": [
+                        { "$ref": "#/components/schemas/TextFieldValue" },
+                        { "$ref": "#/components/schemas/BooleanFieldValue" }
+                      ]
+                    },
+                    "unsupportedAnyOf": {
+                      "anyOf": [{ "type": "string" }, { "type": "number" }]
+                    },
+                    "emptyUnion": { "oneOf": [] },
+                    "unsupportedOneOf": {
+                      "oneOf": [{ "type": "string" }, { "type": "number" }]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ReferencedMixedObject": {
+        "type": "object",
+        "required": ["known"],
+        "properties": {
+          "known": { "type": "number" }
+        },
+        "additionalProperties": { "type": "string" }
+      },
+      "StrictFieldValue": {
+        "oneOf": [
+          { "$ref": "#/components/schemas/TextFieldValue" },
+          { "$ref": "#/components/schemas/BooleanFieldValue" },
+          { "$ref": "#/components/schemas/EmptyFieldValue" }
+        ]
+      },
+      "TextFieldValue": {
+        "type": "object",
+        "required": ["type", "value"],
+        "additionalProperties": false,
+        "properties": {
+          "type": { "type": "string", "enum": ["text"] },
+          "value": { "type": "string" }
+        }
+      },
+      "BooleanFieldValue": {
+        "type": "object",
+        "required": ["type", "value"],
+        "additionalProperties": false,
+        "properties": {
+          "type": { "type": "string", "enum": ["boolean"] },
+          "value": { "type": "boolean" }
+        }
+      },
+      "EmptyFieldValue": {
+        "type": "object",
+        "required": ["type", "value"],
+        "additionalProperties": false,
+        "properties": {
+          "type": { "type": "string", "enum": ["empty"] },
+          "value": { "type": "null" }
+        }
+      }
+    }
+  }
+}

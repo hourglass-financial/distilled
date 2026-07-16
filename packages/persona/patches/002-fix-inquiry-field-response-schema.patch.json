@@ -1,0 +1,147 @@
+{
+  "description": "Preserve and strictly decode dynamic inquiry fields. A read-only 2025-12-08 sandbox scan of 166 inquiries verified string, choices, multi_choices, boolean, number, date, generic document, government ID, selfie, and empty JSON field values without retaining provider IDs or customer data. Persona's bundled field-schema-json contract identifies stored JSON values as free-form JSON documents.",
+  "patches": [
+    {
+      "op": "add",
+      "path": "/components/schemas/inquiry-field-value",
+      "value": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type", "value"],
+            "properties": {
+              "type": { "type": "string", "enum": ["string"] },
+              "value": { "type": ["string", "null"] }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type", "value"],
+            "properties": {
+              "type": { "type": "string", "enum": ["choices"] },
+              "value": { "type": ["string", "null"] }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type", "value"],
+            "properties": {
+              "type": { "type": "string", "enum": ["multi_choices"] },
+              "value": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type", "value"],
+            "properties": {
+              "type": { "type": "string", "enum": ["boolean"] },
+              "value": { "type": ["boolean", "null"] }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type", "value"],
+            "properties": {
+              "type": { "type": "string", "enum": ["number"] },
+              "value": { "type": ["number", "null"] }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type", "value"],
+            "properties": {
+              "type": { "type": "string", "enum": ["date"] },
+              "value": { "type": ["string", "null"], "format": "date" }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type", "value"],
+            "properties": {
+              "type": { "type": "string", "enum": ["generic"] },
+              "value": {
+                "type": ["object", "null"],
+                "additionalProperties": false,
+                "required": ["id", "type"],
+                "properties": {
+                  "id": { "type": "string" },
+                  "type": { "type": "string", "enum": ["Document::Generic"] }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type", "value"],
+            "properties": {
+              "type": { "type": "string", "enum": ["government_id"] },
+              "value": {
+                "type": ["object", "null"],
+                "additionalProperties": false,
+                "required": ["id", "type"],
+                "properties": {
+                  "id": { "type": "string" },
+                  "type": {
+                    "type": "string",
+                    "enum": ["Document::GovernmentId"]
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type", "value"],
+            "properties": {
+              "type": { "type": "string", "enum": ["selfie"] },
+              "value": {
+                "type": ["object", "null"],
+                "additionalProperties": false,
+                "required": ["id", "type"],
+                "properties": {
+                  "id": { "type": "string" },
+                  "type": {
+                    "type": "string",
+                    "enum": ["Selfie::ProfileAndCenter"]
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type", "value"],
+            "properties": {
+              "type": { "type": "string", "enum": ["json"] },
+              "value": {}
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "replace",
+      "path": "/components/schemas/inquiry/properties/attributes/properties/fields",
+      "value": {
+        "description": "JSON key-value pairs of field name to typed field value. Exact keys depend on the Inquiry template and are not key inflected.",
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/components/schemas/inquiry-field-value"
+        }
+      }
+    }
+  ]
+}

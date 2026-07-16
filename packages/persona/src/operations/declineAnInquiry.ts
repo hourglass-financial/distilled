@@ -68,86 +68,69 @@ export const DeclineAnInquiryOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
         "redacted-at": Schema.NullOr(Schema.String),
         "previous-step-name": Schema.NullOr(Schema.String),
         "next-step-name": Schema.NullOr(Schema.String),
-        fields: Schema.Struct({
-          "name-first": Schema.optional(
-            Schema.Struct({
-              type: Schema.optional(Schema.String),
-              value: Schema.optional(Schema.NullOr(Schema.String)),
-            }),
+        fields: Schema.Record(
+          Schema.String,
+          Schema.Union(
+            [
+              Schema.Struct({
+                type: Schema.Literals(["string"]),
+                value: Schema.NullOr(Schema.String),
+              }),
+              Schema.Struct({
+                type: Schema.Literals(["choices"]),
+                value: Schema.NullOr(Schema.String),
+              }),
+              Schema.Struct({
+                type: Schema.Literals(["multi_choices"]),
+                value: Schema.Array(Schema.String),
+              }),
+              Schema.Struct({
+                type: Schema.Literals(["boolean"]),
+                value: Schema.NullOr(Schema.Boolean),
+              }),
+              Schema.Struct({
+                type: Schema.Literals(["number"]),
+                value: Schema.NullOr(Schema.Number),
+              }),
+              Schema.Struct({
+                type: Schema.Literals(["date"]),
+                value: Schema.NullOr(Schema.String),
+              }),
+              Schema.Struct({
+                type: Schema.Literals(["generic"]),
+                value: Schema.NullOr(
+                  Schema.Struct({
+                    id: Schema.String,
+                    type: Schema.Literals(["Document::Generic"]),
+                  }),
+                ),
+              }),
+              Schema.Struct({
+                type: Schema.Literals(["government_id"]),
+                value: Schema.NullOr(
+                  Schema.Struct({
+                    id: Schema.String,
+                    type: Schema.Literals(["Document::GovernmentId"]),
+                  }),
+                ),
+              }),
+              Schema.Struct({
+                type: Schema.Literals(["selfie"]),
+                value: Schema.NullOr(
+                  Schema.Struct({
+                    id: Schema.String,
+                    type: Schema.Literals(["Selfie::ProfileAndCenter"]),
+                  }),
+                ),
+              }),
+              Schema.Struct({
+                type: Schema.Literals(["json"]),
+                value: Schema.Unknown,
+              }),
+            ],
+            { mode: "oneOf" },
           ),
-          "name-middle": Schema.optional(
-            Schema.Struct({
-              type: Schema.optional(Schema.String),
-              value: Schema.optional(Schema.NullOr(Schema.String)),
-            }),
-          ),
-          "name-last": Schema.optional(
-            Schema.Struct({
-              type: Schema.optional(Schema.String),
-              value: Schema.optional(Schema.NullOr(Schema.String)),
-            }),
-          ),
-          "address-street-1": Schema.optional(
-            Schema.Struct({
-              type: Schema.optional(Schema.String),
-              value: Schema.optional(Schema.NullOr(Schema.String)),
-            }),
-          ),
-          "address-street-2": Schema.optional(
-            Schema.Struct({
-              type: Schema.optional(Schema.String),
-              value: Schema.optional(Schema.NullOr(Schema.String)),
-            }),
-          ),
-          "address-city": Schema.optional(
-            Schema.Struct({
-              type: Schema.optional(Schema.String),
-              value: Schema.optional(Schema.NullOr(Schema.String)),
-            }),
-          ),
-          "address-subdivision": Schema.optional(
-            Schema.Struct({
-              type: Schema.optional(Schema.String),
-              value: Schema.optional(Schema.NullOr(Schema.String)),
-            }),
-          ),
-          "address-postal-code": Schema.optional(
-            Schema.Struct({
-              type: Schema.optional(Schema.String),
-              value: Schema.optional(Schema.NullOr(Schema.String)),
-            }),
-          ),
-          "address-country-code": Schema.optional(
-            Schema.Struct({
-              type: Schema.optional(Schema.String),
-              value: Schema.optional(Schema.NullOr(Schema.String)),
-            }),
-          ),
-          birthdate: Schema.optional(
-            Schema.Struct({
-              type: Schema.optional(Schema.String),
-              value: Schema.optional(Schema.NullOr(Schema.String)),
-            }),
-          ),
-          "email-address": Schema.optional(
-            Schema.Struct({
-              type: Schema.optional(Schema.String),
-              value: Schema.optional(Schema.NullOr(Schema.String)),
-            }),
-          ),
-          "phone-number": Schema.optional(
-            Schema.Struct({
-              type: Schema.optional(Schema.String),
-              value: Schema.optional(Schema.NullOr(Schema.String)),
-            }),
-          ),
-          "identification-number": Schema.optional(
-            Schema.Struct({
-              type: Schema.optional(Schema.String),
-              value: Schema.optional(Schema.NullOr(Schema.String)),
-            }),
-          ),
-        }),
+        ),
       }),
       relationships: Schema.Struct({
         account: Schema.optional(

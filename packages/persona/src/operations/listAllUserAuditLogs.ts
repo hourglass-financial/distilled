@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import { StructWithAdditionalProperties } from "@distilled.cloud/core/openapi/additional-properties";
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -62,9 +63,12 @@ export const ListAllUserAuditLogsOutput =
               Schema.NullOr(Schema.String),
             ),
             context: Schema.optional(
-              Schema.Struct({
-                "inquiry-id": Schema.optional(Schema.String),
-              }),
+              StructWithAdditionalProperties(
+                Schema.Struct({
+                  "inquiry-id": Schema.optional(Schema.String),
+                }),
+                Schema.Unknown,
+              ),
             ),
           }),
         ),

@@ -68,6 +68,11 @@
       "bun": "./scripts/generate-openapi.ts",
       "default": "./scripts/generate-openapi.ts"
     },
+    "./openapi/additional-properties": {
+      "types": "./lib/openapi-additional-properties.d.ts",
+      "bun": "./src/openapi-additional-properties.ts",
+      "default": "./lib/openapi-additional-properties.js"
+    },
     "./graphql/generate": {
       "bun": "./scripts/generate-graphql.ts",
       "default": "./scripts/generate-graphql.ts"
