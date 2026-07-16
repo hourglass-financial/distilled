@@ -9,8 +9,52 @@ import {
   UnprocessableEntity,
 } from "../errors.ts";
 import { SensitiveOutputNullableString } from "../sensitive.ts";
+import * as Redacted from "effect/Redacted";
 
 // Input Schema
+export interface CreateAnInquiryInput {
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  data: {
+    attributes: {
+      "template-id"?: string | null;
+      "inquiry-template-id"?: string | null;
+      "inquiry-template-version-id"?: string | null;
+      "reference-id"?: string | null;
+      "account-id"?: string | null;
+      "creator-email-address"?: string | null;
+      "theme-id"?: string | null;
+      "theme-set-id"?: string | null;
+      "redirect-uri"?: string | null;
+      note?: string | null;
+      fields?: { "address-country-code"?: string } | null;
+      tags?: ReadonlyArray<string> | null;
+      "initial-step-name"?: string | null;
+    };
+  };
+  meta?: {
+    "auto-create-account"?: boolean;
+    "auto-create-account-type-id"?: string;
+    "auto-create-account-reference-id"?: string;
+    "auto-create-inquiry-session"?: boolean;
+    "auto-create-one-time-link"?: boolean;
+    "expiration-after-create-interval-seconds"?: number | null;
+    "expiration-after-start-interval-seconds"?: number | null;
+    "expiration-after-resume-interval-seconds"?: number | null;
+    "one-time-link-expiration-seconds"?: number | null;
+  };
+}
 export const CreateAnInquiryInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
   fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
@@ -48,7 +92,13 @@ export const CreateAnInquiryInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "theme-set-id": Schema.optional(Schema.NullOr(Schema.String)),
       "redirect-uri": Schema.optional(Schema.NullOr(Schema.String)),
       note: Schema.optional(Schema.NullOr(Schema.String)),
-      fields: Schema.optional(Schema.Unknown),
+      fields: Schema.optional(
+        Schema.NullOr(
+          Schema.Struct({
+            "address-country-code": Schema.optional(Schema.String),
+          }),
+        ),
+      ),
       tags: Schema.optional(Schema.NullOr(Schema.Array(Schema.String))),
       "initial-step-name": Schema.optional(Schema.NullOr(Schema.String)),
     }),
@@ -74,10 +124,81 @@ export const CreateAnInquiryInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       ),
     }),
   ),
-}).pipe(T.Http({ method: "POST", path: "/inquiries" }));
-export type CreateAnInquiryInput = typeof CreateAnInquiryInput.Type;
+}).pipe(
+  T.Http({ method: "POST", path: "/inquiries" }),
+) as unknown as Schema.Codec<CreateAnInquiryInput>;
 
 // Output Schema
+export interface CreateAnInquiryOutput {
+  data: {
+    type: string;
+    id: string;
+    attributes: {
+      status: string;
+      "reference-id": string | null;
+      note: string | null;
+      behaviors: Record<string, unknown> | null;
+      tags: ReadonlyArray<string | null>;
+      creator: string;
+      "reviewer-comment": string | null;
+      "created-at": string;
+      "updated-at": string;
+      "started-at": string | null;
+      "expires-at": string | null;
+      "completed-at": string | null;
+      "failed-at": string | null;
+      "marked-for-review-at": string | null;
+      "decisioned-at": string | null;
+      "expired-at": string | null;
+      "redacted-at": string | null;
+      "previous-step-name": string | null;
+      "next-step-name": string | null;
+      fields: Record<
+        string,
+        | { type: "string"; value: string | null }
+        | { type: "choices"; value: string | null }
+        | { type: "multi_choices"; value: ReadonlyArray<string> }
+        | { type: "boolean"; value: boolean | null }
+        | { type: "number"; value: number | null }
+        | { type: "date"; value: string | null }
+        | {
+            type: "generic";
+            value: { id: string; type: "Document::Generic" } | null;
+          }
+        | {
+            type: "government_id";
+            value: { id: string; type: "Document::GovernmentId" } | null;
+          }
+        | {
+            type: "selfie";
+            value: { id: string; type: "Selfie::ProfileAndCenter" } | null;
+          }
+        | { type: "json"; value: unknown }
+      >;
+    };
+    relationships: {
+      account?: { data?: { id?: string; type?: string } | null };
+      documents?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      template?: { data?: { id?: string; type?: string } | null };
+      "inquiry-template"?: { data?: { id?: string; type?: string } | null };
+      "inquiry-template-version"?: {
+        data?: { id?: string; type?: string } | null;
+      };
+      reports?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      transaction?: { data?: { id?: string; type?: string } | null };
+      reviewer?: { data?: { id?: string; type?: string } | null };
+      selfies?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      sessions?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      verifications?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+    };
+  };
+  included?: ReadonlyArray<unknown>;
+  meta: {
+    "session-token": Redacted.Redacted<string> | null;
+    "one-time-link": string | null;
+    "one-time-link-short": string | null;
+  };
+}
 export const CreateAnInquiryOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Struct({
     type: Schema.String,
@@ -307,8 +428,7 @@ export const CreateAnInquiryOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     "one-time-link": Schema.NullOr(Schema.String),
     "one-time-link-short": Schema.NullOr(Schema.String),
   }),
-});
-export type CreateAnInquiryOutput = typeof CreateAnInquiryOutput.Type;
+}) as unknown as Schema.Codec<CreateAnInquiryOutput>;
 
 // The operation
 /**

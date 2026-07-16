@@ -9,6 +9,22 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface CreateACountryListInput {
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  data?: { attributes?: { name?: string } };
+}
 export const CreateACountryListInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
@@ -42,10 +58,25 @@ export const CreateACountryListInput =
         ),
       }),
     ),
-  }).pipe(T.Http({ method: "POST", path: "/list/countries" }));
-export type CreateACountryListInput = typeof CreateACountryListInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/list/countries" }),
+  ) as unknown as Schema.Codec<CreateACountryListInput>;
 
 // Output Schema
+export interface CreateACountryListOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      name?: string;
+      status?: string;
+      "archived-at"?: string | null;
+      "created-at"?: string;
+      "updated-at"?: string;
+    };
+    relationships?: { "list-items"?: { data?: ReadonlyArray<unknown> } };
+  };
+}
 export const CreateACountryListOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -70,8 +101,7 @@ export const CreateACountryListOutput =
         }),
       ),
     }),
-  });
-export type CreateACountryListOutput = typeof CreateACountryListOutput.Type;
+  }) as unknown as Schema.Codec<CreateACountryListOutput>;
 
 // The operation
 /**

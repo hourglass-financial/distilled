@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -220,6 +220,7 @@ export interface CreateInvoiceUnitRequest {
   TaxInheritanceDisabled?: boolean;
   Rule: InvoiceUnitRule;
   ResourceTags?: ResourceTag[];
+  ClientToken?: string;
 }
 export const CreateInvoiceUnitRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -230,6 +231,7 @@ export const CreateInvoiceUnitRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       TaxInheritanceDisabled: S.optional(S.Boolean),
       Rule: InvoiceUnitRule,
       ResourceTags: S.optional(ResourceTagList),
+      ClientToken: S.optional(S.String).pipe(T.IdempotencyToken()),
     }).pipe(
       T.all(T.Http({ method: "POST", uri: "/" }), svc, auth, proto, ver, rules),
     ),
@@ -427,10 +429,14 @@ export const CreateProcurementPortalPreferenceResponse =
   }) as any as S.Schema<CreateProcurementPortalPreferenceResponse>;
 export interface DeleteInvoiceUnitRequest {
   InvoiceUnitArn: string;
+  ClientToken?: string;
 }
 export const DeleteInvoiceUnitRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
-    S.Struct({ InvoiceUnitArn: S.String }).pipe(
+    S.Struct({
+      InvoiceUnitArn: S.String,
+      ClientToken: S.optional(S.String).pipe(T.IdempotencyToken()),
+    }).pipe(
       T.all(T.Http({ method: "POST", uri: "/" }), svc, auth, proto, ver, rules),
     ),
 ).annotate({
@@ -446,10 +452,14 @@ export const DeleteInvoiceUnitResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 }) as any as S.Schema<DeleteInvoiceUnitResponse>;
 export interface DeleteProcurementPortalPreferenceRequest {
   ProcurementPortalPreferenceArn: string;
+  ClientToken?: string;
 }
 export const DeleteProcurementPortalPreferenceRequest =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-    S.Struct({ ProcurementPortalPreferenceArn: S.String }).pipe(
+    S.Struct({
+      ProcurementPortalPreferenceArn: S.String,
+      ClientToken: S.optional(S.String).pipe(T.IdempotencyToken()),
+    }).pipe(
       T.all(T.Http({ method: "POST", uri: "/" }), svc, auth, proto, ver, rules),
     ),
   ).annotate({
@@ -474,12 +484,23 @@ export const GetInvoicePDFRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "GetInvoicePDFRequest",
 }) as any as S.Schema<GetInvoicePDFRequest>;
+export type SupplementalDocumentType =
+  | "GOVERNMENT_INVOICE"
+  | "TAX_E_INVOICE"
+  | "PAYMENT_RECEIPT"
+  | "SUPPLEMENT"
+  | (string & {});
+export const SupplementalDocumentType = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface SupplementalDocument {
+  DocumentType?: SupplementalDocumentType;
+  DocumentId?: string;
   DocumentUrl?: string;
   DocumentUrlExpirationDate?: Date;
 }
 export const SupplementalDocument = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
+    DocumentType: S.optional(SupplementalDocumentType),
+    DocumentId: S.optional(S.String),
     DocumentUrl: S.optional(S.String),
     DocumentUrlExpirationDate: S.optional(
       S.Date.pipe(T.TimestampFormat("epoch-seconds")),
@@ -699,10 +720,13 @@ export interface BillingPeriod {
 export const BillingPeriod = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({ Month: S.Number, Year: S.Number }),
 ).annotate({ identifier: "BillingPeriod" }) as any as S.Schema<BillingPeriod>;
+export type ReceiverRole = "SELLER" | "RESELLER" | "BUYER" | (string & {});
+export const ReceiverRole = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface InvoiceSummariesFilter {
   TimeInterval?: DateInterval;
   BillingPeriod?: BillingPeriod;
   InvoicingEntity?: string;
+  ReceiverRole?: ReceiverRole;
 }
 export const InvoiceSummariesFilter = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -710,6 +734,7 @@ export const InvoiceSummariesFilter = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       TimeInterval: S.optional(DateInterval),
       BillingPeriod: S.optional(BillingPeriod),
       InvoicingEntity: S.optional(S.String),
+      ReceiverRole: S.optional(ReceiverRole),
     }),
 ).annotate({
   identifier: "InvoiceSummariesFilter",
@@ -733,14 +758,39 @@ export const ListInvoiceSummariesRequest =
   ).annotate({
     identifier: "ListInvoiceSummariesRequest",
   }) as any as S.Schema<ListInvoiceSummariesRequest>;
+export type BillSourceAccountList = string[];
+export const BillSourceAccountList = /*@__PURE__*/ /*#__PURE__*/ S.Array(
+  S.String,
+);
+export type BillingEntity = "AWS" | "AWS_MARKETPLACE" | (string & {});
+export const BillingEntity = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface Entity {
   InvoicingEntity?: string;
+  BillingEntity?: BillingEntity;
 }
 export const Entity = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-  S.Struct({ InvoicingEntity: S.optional(S.String) }),
+  S.Struct({
+    InvoicingEntity: S.optional(S.String),
+    BillingEntity: S.optional(BillingEntity),
+  }),
 ).annotate({ identifier: "Entity" }) as any as S.Schema<Entity>;
-export type InvoiceType = "INVOICE" | "CREDIT_MEMO" | (string & {});
+export type InvoiceFrequency = "ONE_TIME" | "RECURRING" | (string & {});
+export const InvoiceFrequency = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export type BillType = "ANNIVERSARY" | "PURCHASE" | "REFUND" | (string & {});
+export const BillType = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export type InvoiceType =
+  | "INVOICE"
+  | "CREDIT_MEMO"
+  | "PAYMENT_RECEIPT"
+  | (string & {});
 export const InvoiceType = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export type EinvoiceDeliveryStatus =
+  | "DELIVERED"
+  | "NOT_DELIVERED"
+  | (string & {});
+export const EinvoiceDeliveryStatus = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export type TaxAuthorityStatus = "ISSUED" | "CANCELLED" | (string & {});
+export const TaxAuthorityStatus = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface DiscountsBreakdownAmount {
   Description?: string;
   Amount?: string;
@@ -880,11 +930,19 @@ export interface InvoiceSummary {
   InvoiceId?: string;
   IssuedDate?: Date;
   DueDate?: Date;
+  BillSourceAccounts?: string[];
+  BillSourceAccountsTotalCount?: number;
+  ReceiverRole?: ReceiverRole;
   Entity?: Entity;
   BillingPeriod?: BillingPeriod;
+  InvoiceFrequency?: InvoiceFrequency;
+  BillType?: BillType;
   InvoiceType?: InvoiceType;
+  CommercialInvoiceId?: string;
   OriginalInvoiceId?: string;
   PurchaseOrderNumber?: string;
+  EinvoiceDeliveryStatus?: EinvoiceDeliveryStatus;
+  TaxAuthorityStatus?: TaxAuthorityStatus;
   BaseCurrencyAmount?: InvoiceCurrencyAmount;
   TaxCurrencyAmount?: InvoiceCurrencyAmount;
   PaymentCurrencyAmount?: InvoiceCurrencyAmount;
@@ -895,11 +953,19 @@ export const InvoiceSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     InvoiceId: S.optional(S.String),
     IssuedDate: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
     DueDate: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    BillSourceAccounts: S.optional(BillSourceAccountList),
+    BillSourceAccountsTotalCount: S.optional(S.Number),
+    ReceiverRole: S.optional(ReceiverRole),
     Entity: S.optional(Entity),
     BillingPeriod: S.optional(BillingPeriod),
+    InvoiceFrequency: S.optional(InvoiceFrequency),
+    BillType: S.optional(BillType),
     InvoiceType: S.optional(InvoiceType),
+    CommercialInvoiceId: S.optional(S.String),
     OriginalInvoiceId: S.optional(S.String),
     PurchaseOrderNumber: S.optional(S.String),
+    EinvoiceDeliveryStatus: S.optional(EinvoiceDeliveryStatus),
+    TaxAuthorityStatus: S.optional(TaxAuthorityStatus),
     BaseCurrencyAmount: S.optional(InvoiceCurrencyAmount),
     TaxCurrencyAmount: S.optional(InvoiceCurrencyAmount),
     PaymentCurrencyAmount: S.optional(InvoiceCurrencyAmount),
@@ -1102,6 +1168,7 @@ export interface PutProcurementPortalPreferenceRequest {
   EinvoiceDeliveryPreference?: EinvoiceDeliveryPreference;
   PurchaseOrderRetrievalEnabled: boolean;
   Contacts: Contact[];
+  ClientToken?: string;
 }
 export const PutProcurementPortalPreferenceRequest =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -1115,6 +1182,7 @@ export const PutProcurementPortalPreferenceRequest =
       EinvoiceDeliveryPreference: S.optional(EinvoiceDeliveryPreference),
       PurchaseOrderRetrievalEnabled: S.Boolean,
       Contacts: Contacts,
+      ClientToken: S.optional(S.String).pipe(T.IdempotencyToken()),
     }).pipe(
       T.all(T.Http({ method: "POST", uri: "/" }), svc, auth, proto, ver, rules),
     ),
@@ -1171,6 +1239,7 @@ export interface UpdateInvoiceUnitRequest {
   Description?: string;
   TaxInheritanceDisabled?: boolean;
   Rule?: InvoiceUnitRule;
+  ClientToken?: string;
 }
 export const UpdateInvoiceUnitRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -1179,6 +1248,7 @@ export const UpdateInvoiceUnitRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       Description: S.optional(S.String),
       TaxInheritanceDisabled: S.optional(S.Boolean),
       Rule: S.optional(InvoiceUnitRule),
+      ClientToken: S.optional(S.String).pipe(T.IdempotencyToken()),
     }).pipe(
       T.all(T.Http({ method: "POST", uri: "/" }), svc, auth, proto, ver, rules),
     ),
@@ -1199,6 +1269,7 @@ export interface UpdateProcurementPortalPreferenceStatusRequest {
   EinvoiceDeliveryPreferenceStatusReason?: string;
   PurchaseOrderRetrievalPreferenceStatus?: ProcurementPortalPreferenceStatus;
   PurchaseOrderRetrievalPreferenceStatusReason?: string;
+  ClientToken?: string;
 }
 export const UpdateProcurementPortalPreferenceStatusRequest =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -1212,6 +1283,7 @@ export const UpdateProcurementPortalPreferenceStatusRequest =
         ProcurementPortalPreferenceStatus,
       ),
       PurchaseOrderRetrievalPreferenceStatusReason: S.optional(S.String),
+      ClientToken: S.optional(S.String).pipe(T.IdempotencyToken()),
     }).pipe(
       T.all(T.Http({ method: "POST", uri: "/" }), svc, auth, proto, ver, rules),
     ),
@@ -1306,6 +1378,7 @@ export const batchGetInvoiceProfile: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchGetInvoiceProfile",
 }));
 export type CreateInvoiceUnitError =
   | AccessDeniedException
@@ -1330,6 +1403,7 @@ export const createInvoiceUnit: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateInvoiceUnit",
 }));
 export type CreateProcurementPortalPreferenceError =
   | AccessDeniedException
@@ -1340,6 +1414,8 @@ export type CreateProcurementPortalPreferenceError =
   | ValidationException
   | CommonErrors;
 /**
+ * * **This feature API is subject to changing at any time. For more information, see the Amazon Web Services Service Terms (Betas and Previews).** *
+ *
  * Creates a procurement portal preference configuration for e-invoice delivery and purchase order retrieval. This preference defines how invoices are delivered to a procurement portal and how purchase orders are retrieved.
  */
 export const createProcurementPortalPreference: API.OperationMethod<
@@ -1358,6 +1434,7 @@ export const createProcurementPortalPreference: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateProcurementPortalPreference",
 }));
 export type DeleteInvoiceUnitError =
   | AccessDeniedException
@@ -1384,6 +1461,7 @@ export const deleteInvoiceUnit: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteInvoiceUnit",
 }));
 export type DeleteProcurementPortalPreferenceError =
   | AccessDeniedException
@@ -1394,6 +1472,8 @@ export type DeleteProcurementPortalPreferenceError =
   | ValidationException
   | CommonErrors;
 /**
+ * * **This feature API is subject to changing at any time. For more information, see the Amazon Web Services Service Terms (Betas and Previews).** *
+ *
  * Deletes an existing procurement portal preference. This action cannot be undone. Active e-invoice delivery and PO retrieval configurations will be terminated.
  */
 export const deleteProcurementPortalPreference: API.OperationMethod<
@@ -1412,6 +1492,7 @@ export const deleteProcurementPortalPreference: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteProcurementPortalPreference",
 }));
 export type GetInvoicePDFError =
   | AccessDeniedException
@@ -1438,6 +1519,7 @@ export const getInvoicePDF: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetInvoicePDF",
 }));
 export type GetInvoiceUnitError =
   | AccessDeniedException
@@ -1464,6 +1546,7 @@ export const getInvoiceUnit: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetInvoiceUnit",
 }));
 export type GetProcurementPortalPreferenceError =
   | AccessDeniedException
@@ -1475,6 +1558,8 @@ export type GetProcurementPortalPreferenceError =
   | ValidationException
   | CommonErrors;
 /**
+ * * **This feature API is subject to changing at any time. For more information, see the Amazon Web Services Service Terms (Betas and Previews).** *
+ *
  * Retrieves the details of a specific procurement portal preference configuration.
  */
 export const getProcurementPortalPreference: API.OperationMethod<
@@ -1494,6 +1579,7 @@ export const getProcurementPortalPreference: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetProcurementPortalPreference",
 }));
 export type ListInvoiceSummariesError =
   | AccessDeniedException
@@ -1535,6 +1621,7 @@ export const listInvoiceSummaries: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListInvoiceSummaries",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -1580,6 +1667,7 @@ export const listInvoiceUnits: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListInvoiceUnits",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -1596,6 +1684,8 @@ export type ListProcurementPortalPreferencesError =
   | ValidationException
   | CommonErrors;
 /**
+ * * **This feature API is subject to changing at any time. For more information, see the Amazon Web Services Service Terms (Betas and Previews).** *
+ *
  * Retrieves a list of procurement portal preferences associated with the Amazon Web Services account.
  */
 export const listProcurementPortalPreferences: API.OperationMethod<
@@ -1629,6 +1719,7 @@ export const listProcurementPortalPreferences: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListProcurementPortalPreferences",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -1661,6 +1752,7 @@ export const listTagsForResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type PutProcurementPortalPreferenceError =
   | AccessDeniedException
@@ -1672,6 +1764,8 @@ export type PutProcurementPortalPreferenceError =
   | ValidationException
   | CommonErrors;
 /**
+ * * **This feature API is subject to changing at any time. For more information, see the Amazon Web Services Service Terms (Betas and Previews).** *
+ *
  * Updates an existing procurement portal preference configuration. This operation can modify settings for e-invoice delivery and purchase order retrieval.
  */
 export const putProcurementPortalPreference: API.OperationMethod<
@@ -1691,6 +1785,7 @@ export const putProcurementPortalPreference: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutProcurementPortalPreference",
 }));
 export type TagResourceError =
   | AccessDeniedException
@@ -1719,6 +1814,7 @@ export const tagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | AccessDeniedException
@@ -1745,6 +1841,7 @@ export const untagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UntagResource",
 }));
 export type UpdateInvoiceUnitError =
   | AccessDeniedException
@@ -1771,6 +1868,7 @@ export const updateInvoiceUnit: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateInvoiceUnit",
 }));
 export type UpdateProcurementPortalPreferenceStatusError =
   | AccessDeniedException
@@ -1782,6 +1880,8 @@ export type UpdateProcurementPortalPreferenceStatusError =
   | ValidationException
   | CommonErrors;
 /**
+ * * **This feature API is subject to changing at any time. For more information, see the Amazon Web Services Service Terms (Betas and Previews).** *
+ *
  * Updates the status of a procurement portal preference, including the activation state of e-invoice delivery and purchase order retrieval features.
  */
 export const updateProcurementPortalPreferenceStatus: API.OperationMethod<
@@ -1801,4 +1901,5 @@ export const updateProcurementPortalPreferenceStatus: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateProcurementPortalPreferenceStatus",
 }));

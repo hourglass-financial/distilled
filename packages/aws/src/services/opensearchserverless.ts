@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -89,13 +89,18 @@ export type CollectionName = string;
 export type CollectionStatus = string;
 export type CollectionType = string;
 export type StandbyReplicas = string;
+export type DeletionProtection = string;
 export type ServerlessVectorAccelerationStatus = string;
 export type CollectionGroupName = string;
 export type CollectionGroupId = string;
 export type TagKey = string;
 export type TagValue = string;
-export type CollectionGroupIndexingCapacityValue = number;
-export type CollectionGroupSearchCapacityValue = number;
+export type CollectionGroupMaxIndexingCapacityValue = number;
+export type CollectionGroupMaxSearchCapacityValue = number;
+export type CollectionGroupMinIndexingCapacityValue = number;
+export type CollectionGroupMinSearchCapacityValue = number;
+export type AutoscalingStatus = string;
+export type ServerlessGeneration = string;
 export type LifecyclePolicyType = string;
 export type ResourceName = string;
 export type Resource = string;
@@ -179,6 +184,7 @@ export interface CollectionDetail {
   arn?: string;
   kmsKeyArn?: string;
   standbyReplicas?: string;
+  deletionProtection?: string;
   vectorOptions?: VectorOptions;
   createdDate?: number;
   lastModifiedDate?: number;
@@ -199,6 +205,7 @@ export const CollectionDetail = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     arn: S.optional(S.String),
     kmsKeyArn: S.optional(S.String),
     standbyReplicas: S.optional(S.String),
+    deletionProtection: S.optional(S.String),
     vectorOptions: S.optional(VectorOptions),
     createdDate: S.optional(S.Number),
     lastModifiedDate: S.optional(S.Number),
@@ -295,6 +302,30 @@ export const CollectionGroupCapacityLimits =
   ).annotate({
     identifier: "CollectionGroupCapacityLimits",
   }) as any as S.Schema<CollectionGroupCapacityLimits>;
+export interface CapacityDetails {
+  capacityInOcu?: number;
+  autoscalingStatus?: string;
+}
+export const CapacityDetails = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    capacityInOcu: S.optional(S.Number),
+    autoscalingStatus: S.optional(S.String),
+  }),
+).annotate({
+  identifier: "CapacityDetails",
+}) as any as S.Schema<CapacityDetails>;
+export interface CurrentCapacity {
+  search?: CapacityDetails;
+  indexing?: CapacityDetails;
+}
+export const CurrentCapacity = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    search: S.optional(CapacityDetails),
+    indexing: S.optional(CapacityDetails),
+  }),
+).annotate({
+  identifier: "CurrentCapacity",
+}) as any as S.Schema<CurrentCapacity>;
 export interface CollectionGroupDetail {
   id?: string;
   arn?: string;
@@ -304,7 +335,9 @@ export interface CollectionGroupDetail {
   tags?: Tag[];
   createdDate?: number;
   capacityLimits?: CollectionGroupCapacityLimits;
+  currentCapacity?: CurrentCapacity;
   numberOfCollections?: number;
+  generation?: string;
 }
 export const CollectionGroupDetail = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -316,7 +349,9 @@ export const CollectionGroupDetail = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     tags: S.optional(Tags),
     createdDate: S.optional(S.Number),
     capacityLimits: S.optional(CollectionGroupCapacityLimits),
+    currentCapacity: S.optional(CurrentCapacity),
     numberOfCollections: S.optional(S.Number),
+    generation: S.optional(S.String),
   }),
 ).annotate({
   identifier: "CollectionGroupDetail",
@@ -1121,6 +1156,7 @@ export interface CreateCollectionRequest {
   vectorOptions?: VectorOptions;
   collectionGroupName?: string;
   encryptionConfig?: EncryptionConfig;
+  deletionProtection?: string;
   clientToken?: string;
 }
 export const CreateCollectionRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
@@ -1134,6 +1170,7 @@ export const CreateCollectionRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       vectorOptions: S.optional(VectorOptions),
       collectionGroupName: S.optional(S.String),
       encryptionConfig: S.optional(EncryptionConfig),
+      deletionProtection: S.optional(S.String),
       clientToken: S.optional(S.String).pipe(T.IdempotencyToken()),
     }).pipe(
       T.all(T.Http({ method: "POST", uri: "/" }), svc, auth, proto, ver, rules),
@@ -1150,6 +1187,7 @@ export interface CreateCollectionDetail {
   arn?: string;
   kmsKeyArn?: string;
   standbyReplicas?: string;
+  deletionProtection?: string;
   vectorOptions?: VectorOptions;
   createdDate?: number;
   lastModifiedDate?: number;
@@ -1166,6 +1204,7 @@ export const CreateCollectionDetail = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       arn: S.optional(S.String),
       kmsKeyArn: S.optional(S.String),
       standbyReplicas: S.optional(S.String),
+      deletionProtection: S.optional(S.String),
       vectorOptions: S.optional(VectorOptions),
       createdDate: S.optional(S.Number),
       lastModifiedDate: S.optional(S.Number),
@@ -1187,6 +1226,7 @@ export interface UpdateCollectionRequest {
   id: string;
   description?: string;
   vectorOptions?: VectorOptions;
+  deletionProtection?: string;
   clientToken?: string;
 }
 export const UpdateCollectionRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
@@ -1195,6 +1235,7 @@ export const UpdateCollectionRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       id: S.String,
       description: S.optional(S.String),
       vectorOptions: S.optional(VectorOptions),
+      deletionProtection: S.optional(S.String),
       clientToken: S.optional(S.String).pipe(T.IdempotencyToken()),
     }).pipe(
       T.all(T.Http({ method: "POST", uri: "/" }), svc, auth, proto, ver, rules),
@@ -1212,6 +1253,7 @@ export interface UpdateCollectionDetail {
   arn?: string;
   createdDate?: number;
   lastModifiedDate?: number;
+  deletionProtection?: string;
 }
 export const UpdateCollectionDetail = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -1225,6 +1267,7 @@ export const UpdateCollectionDetail = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       arn: S.optional(S.String),
       createdDate: S.optional(S.Number),
       lastModifiedDate: S.optional(S.Number),
+      deletionProtection: S.optional(S.String),
     }),
 ).annotate({
   identifier: "UpdateCollectionDetail",
@@ -1257,6 +1300,7 @@ export interface DeleteCollectionDetail {
   id?: string;
   name?: string;
   status?: string;
+  deletionProtection?: string;
 }
 export const DeleteCollectionDetail = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -1264,6 +1308,7 @@ export const DeleteCollectionDetail = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       id: S.optional(S.String),
       name: S.optional(S.String),
       status: S.optional(S.String),
+      deletionProtection: S.optional(S.String),
     }),
 ).annotate({
   identifier: "DeleteCollectionDetail",
@@ -1350,6 +1395,7 @@ export interface CreateCollectionGroupRequest {
   description?: string;
   tags?: Tag[];
   capacityLimits?: CollectionGroupCapacityLimits;
+  generation?: string;
   clientToken?: string;
 }
 export const CreateCollectionGroupRequest =
@@ -1360,6 +1406,7 @@ export const CreateCollectionGroupRequest =
       description: S.optional(S.String),
       tags: S.optional(Tags),
       capacityLimits: S.optional(CollectionGroupCapacityLimits),
+      generation: S.optional(S.String),
       clientToken: S.optional(S.String).pipe(T.IdempotencyToken()),
     }).pipe(
       T.all(T.Http({ method: "POST", uri: "/" }), svc, auth, proto, ver, rules),
@@ -1376,6 +1423,7 @@ export interface CreateCollectionGroupDetail {
   tags?: Tag[];
   createdDate?: number;
   capacityLimits?: CollectionGroupCapacityLimits;
+  generation?: string;
 }
 export const CreateCollectionGroupDetail =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -1388,6 +1436,7 @@ export const CreateCollectionGroupDetail =
       tags: S.optional(Tags),
       createdDate: S.optional(S.Number),
       capacityLimits: S.optional(CollectionGroupCapacityLimits),
+      generation: S.optional(S.String),
     }),
   ).annotate({
     identifier: "CreateCollectionGroupDetail",
@@ -1430,6 +1479,7 @@ export interface UpdateCollectionGroupDetail {
   capacityLimits?: CollectionGroupCapacityLimits;
   createdDate?: number;
   lastModifiedDate?: number;
+  generation?: string;
 }
 export const UpdateCollectionGroupDetail =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -1441,6 +1491,7 @@ export const UpdateCollectionGroupDetail =
       capacityLimits: S.optional(CollectionGroupCapacityLimits),
       createdDate: S.optional(S.Number),
       lastModifiedDate: S.optional(S.Number),
+      generation: S.optional(S.String),
     }),
   ).annotate({
     identifier: "UpdateCollectionGroupDetail",
@@ -1498,6 +1549,7 @@ export interface CollectionGroupSummary {
   numberOfCollections?: number;
   createdDate?: number;
   capacityLimits?: CollectionGroupCapacityLimits;
+  generation?: string;
 }
 export const CollectionGroupSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -1508,6 +1560,7 @@ export const CollectionGroupSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       numberOfCollections: S.optional(S.Number),
       createdDate: S.optional(S.Number),
       capacityLimits: S.optional(CollectionGroupCapacityLimits),
+      generation: S.optional(S.String),
     }),
 ).annotate({
   identifier: "CollectionGroupSummary",
@@ -2314,6 +2367,7 @@ export const batchGetCollection: API.OperationMethod<
   input: BatchGetCollectionRequest,
   output: BatchGetCollectionResponse,
   errors: [InternalServerException, ValidationException],
+  operationName: "BatchGetCollection",
 }));
 export type BatchGetCollectionGroupError =
   | InternalServerException
@@ -2331,6 +2385,7 @@ export const batchGetCollectionGroup: API.OperationMethod<
   input: BatchGetCollectionGroupRequest,
   output: BatchGetCollectionGroupResponse,
   errors: [InternalServerException, ValidationException],
+  operationName: "BatchGetCollectionGroup",
 }));
 export type BatchGetEffectiveLifecyclePolicyError =
   | InternalServerException
@@ -2348,6 +2403,7 @@ export const batchGetEffectiveLifecyclePolicy: API.OperationMethod<
   input: BatchGetEffectiveLifecyclePolicyRequest,
   output: BatchGetEffectiveLifecyclePolicyResponse,
   errors: [InternalServerException, ValidationException],
+  operationName: "BatchGetEffectiveLifecyclePolicy",
 }));
 export type BatchGetLifecyclePolicyError =
   | InternalServerException
@@ -2365,6 +2421,7 @@ export const batchGetLifecyclePolicy: API.OperationMethod<
   input: BatchGetLifecyclePolicyRequest,
   output: BatchGetLifecyclePolicyResponse,
   errors: [InternalServerException, ValidationException],
+  operationName: "BatchGetLifecyclePolicy",
 }));
 export type BatchGetVpcEndpointError =
   | InternalServerException
@@ -2382,6 +2439,7 @@ export const batchGetVpcEndpoint: API.OperationMethod<
   input: BatchGetVpcEndpointRequest,
   output: BatchGetVpcEndpointResponse,
   errors: [InternalServerException, ValidationException],
+  operationName: "BatchGetVpcEndpoint",
 }));
 export type CreateLifecyclePolicyError =
   | ConflictException
@@ -2406,6 +2464,7 @@ export const createLifecyclePolicy: API.OperationMethod<
     ServiceQuotaExceededException,
     ValidationException,
   ],
+  operationName: "CreateLifecyclePolicy",
 }));
 export type CreateSecurityPolicyError =
   | ConflictException
@@ -2430,6 +2489,7 @@ export const createSecurityPolicy: API.OperationMethod<
     ServiceQuotaExceededException,
     ValidationException,
   ],
+  operationName: "CreateSecurityPolicy",
 }));
 export type GetAccountSettingsError =
   | InternalServerException
@@ -2447,6 +2507,7 @@ export const getAccountSettings: API.OperationMethod<
   input: GetAccountSettingsRequest,
   output: GetAccountSettingsResponse,
   errors: [InternalServerException, ValidationException],
+  operationName: "GetAccountSettings",
 }));
 export type GetPoliciesStatsError = InternalServerException | CommonErrors;
 /**
@@ -2461,6 +2522,7 @@ export const getPoliciesStats: API.OperationMethod<
   input: GetPoliciesStatsRequest,
   output: GetPoliciesStatsResponse,
   errors: [InternalServerException],
+  operationName: "GetPoliciesStats",
 }));
 export type ListTagsForResourceError =
   | InternalServerException
@@ -2483,6 +2545,7 @@ export const listTagsForResource: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type TagResourceError =
   | ConflictException
@@ -2509,6 +2572,7 @@ export const tagResource: API.OperationMethod<
     ServiceQuotaExceededException,
     ValidationException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | ConflictException
@@ -2533,6 +2597,7 @@ export const untagResource: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UntagResource",
 }));
 export type UpdateAccountSettingsError =
   | InternalServerException
@@ -2555,6 +2620,7 @@ export const updateAccountSettings: API.OperationMethod<
     ServiceQuotaExceededException,
     ValidationException,
   ],
+  operationName: "UpdateAccountSettings",
 }));
 export type UpdateVpcEndpointError =
   | ConflictException
@@ -2573,6 +2639,7 @@ export const updateVpcEndpoint: API.OperationMethod<
   input: UpdateVpcEndpointRequest,
   output: UpdateVpcEndpointResponse,
   errors: [ConflictException, InternalServerException, ValidationException],
+  operationName: "UpdateVpcEndpoint",
 }));
 export type CreateAccessPolicyError =
   | ConflictException
@@ -2597,6 +2664,7 @@ export const createAccessPolicy: API.OperationMethod<
     ServiceQuotaExceededException,
     ValidationException,
   ],
+  operationName: "CreateAccessPolicy",
 }));
 export type GetAccessPolicyError =
   | InternalServerException
@@ -2619,6 +2687,7 @@ export const getAccessPolicy: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetAccessPolicy",
 }));
 export type UpdateAccessPolicyError =
   | ConflictException
@@ -2643,6 +2712,7 @@ export const updateAccessPolicy: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpdateAccessPolicy",
 }));
 export type DeleteAccessPolicyError =
   | ConflictException
@@ -2667,6 +2737,7 @@ export const deleteAccessPolicy: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteAccessPolicy",
 }));
 export type ListAccessPoliciesError =
   | InternalServerException
@@ -2699,6 +2770,7 @@ export const listAccessPolicies: API.OperationMethod<
   input: ListAccessPoliciesRequest,
   output: ListAccessPoliciesResponse,
   errors: [InternalServerException, ValidationException],
+  operationName: "ListAccessPolicies",
   pagination: { inputToken: "nextToken", outputToken: "nextToken" } as const,
 }));
 export type CreateCollectionError =
@@ -2726,6 +2798,7 @@ export const createCollection: API.OperationMethod<
     ServiceQuotaExceededException,
     ValidationException,
   ],
+  operationName: "CreateCollection",
 }));
 export type UpdateCollectionError =
   | ConflictException
@@ -2744,6 +2817,7 @@ export const updateCollection: API.OperationMethod<
   input: UpdateCollectionRequest,
   output: UpdateCollectionResponse,
   errors: [ConflictException, InternalServerException, ValidationException],
+  operationName: "UpdateCollection",
 }));
 export type DeleteCollectionError =
   | ConflictException
@@ -2768,6 +2842,7 @@ export const deleteCollection: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteCollection",
 }));
 export type ListCollectionsError =
   | InternalServerException
@@ -2802,6 +2877,7 @@ export const listCollections: API.OperationMethod<
   input: ListCollectionsRequest,
   output: ListCollectionsResponse,
   errors: [InternalServerException, ValidationException],
+  operationName: "ListCollections",
   pagination: { inputToken: "nextToken", outputToken: "nextToken" } as const,
 }));
 export type CreateCollectionGroupError =
@@ -2829,6 +2905,7 @@ export const createCollectionGroup: API.OperationMethod<
     ServiceQuotaExceededException,
     ValidationException,
   ],
+  operationName: "CreateCollectionGroup",
 }));
 export type UpdateCollectionGroupError =
   | ConflictException
@@ -2853,6 +2930,7 @@ export const updateCollectionGroup: API.OperationMethod<
     ServiceQuotaExceededException,
     ValidationException,
   ],
+  operationName: "UpdateCollectionGroup",
 }));
 export type DeleteCollectionGroupError =
   | ConflictException
@@ -2877,6 +2955,7 @@ export const deleteCollectionGroup: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteCollectionGroup",
 }));
 export type ListCollectionGroupsError =
   | InternalServerException
@@ -2909,6 +2988,7 @@ export const listCollectionGroups: API.OperationMethod<
   input: ListCollectionGroupsRequest,
   output: ListCollectionGroupsResponse,
   errors: [InternalServerException, ValidationException],
+  operationName: "ListCollectionGroups",
   pagination: { inputToken: "nextToken", outputToken: "nextToken" } as const,
 }));
 export type CreateIndexError =
@@ -2934,6 +3014,7 @@ export const createIndex: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "CreateIndex",
 }));
 export type GetIndexError =
   | InternalServerException
@@ -2956,6 +3037,7 @@ export const getIndex: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetIndex",
 }));
 export type UpdateIndexError =
   | InternalServerException
@@ -2978,6 +3060,7 @@ export const updateIndex: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpdateIndex",
 }));
 export type DeleteIndexError =
   | InternalServerException
@@ -3000,6 +3083,7 @@ export const deleteIndex: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteIndex",
 }));
 export type UpdateLifecyclePolicyError =
   | ConflictException
@@ -3026,6 +3110,7 @@ export const updateLifecyclePolicy: API.OperationMethod<
     ServiceQuotaExceededException,
     ValidationException,
   ],
+  operationName: "UpdateLifecyclePolicy",
 }));
 export type DeleteLifecyclePolicyError =
   | ConflictException
@@ -3050,6 +3135,7 @@ export const deleteLifecyclePolicy: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteLifecyclePolicy",
 }));
 export type ListLifecyclePoliciesError =
   | InternalServerException
@@ -3082,6 +3168,7 @@ export const listLifecyclePolicies: API.OperationMethod<
   input: ListLifecyclePoliciesRequest,
   output: ListLifecyclePoliciesResponse,
   errors: [InternalServerException, ValidationException],
+  operationName: "ListLifecyclePolicies",
   pagination: { inputToken: "nextToken", outputToken: "nextToken" } as const,
 }));
 export type CreateSecurityConfigError =
@@ -3107,6 +3194,7 @@ export const createSecurityConfig: API.OperationMethod<
     ServiceQuotaExceededException,
     ValidationException,
   ],
+  operationName: "CreateSecurityConfig",
 }));
 export type GetSecurityConfigError =
   | InternalServerException
@@ -3129,6 +3217,7 @@ export const getSecurityConfig: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetSecurityConfig",
 }));
 export type UpdateSecurityConfigError =
   | ConflictException
@@ -3153,6 +3242,7 @@ export const updateSecurityConfig: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpdateSecurityConfig",
 }));
 export type DeleteSecurityConfigError =
   | ConflictException
@@ -3177,6 +3267,7 @@ export const deleteSecurityConfig: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteSecurityConfig",
 }));
 export type ListSecurityConfigsError =
   | InternalServerException
@@ -3209,6 +3300,7 @@ export const listSecurityConfigs: API.OperationMethod<
   input: ListSecurityConfigsRequest,
   output: ListSecurityConfigsResponse,
   errors: [InternalServerException, ValidationException],
+  operationName: "ListSecurityConfigs",
   pagination: { inputToken: "nextToken", outputToken: "nextToken" } as const,
 }));
 export type GetSecurityPolicyError =
@@ -3232,6 +3324,7 @@ export const getSecurityPolicy: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetSecurityPolicy",
 }));
 export type UpdateSecurityPolicyError =
   | ConflictException
@@ -3258,6 +3351,7 @@ export const updateSecurityPolicy: API.OperationMethod<
     ServiceQuotaExceededException,
     ValidationException,
   ],
+  operationName: "UpdateSecurityPolicy",
 }));
 export type DeleteSecurityPolicyError =
   | ConflictException
@@ -3282,6 +3376,7 @@ export const deleteSecurityPolicy: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteSecurityPolicy",
 }));
 export type ListSecurityPoliciesError =
   | InternalServerException
@@ -3314,6 +3409,7 @@ export const listSecurityPolicies: API.OperationMethod<
   input: ListSecurityPoliciesRequest,
   output: ListSecurityPoliciesResponse,
   errors: [InternalServerException, ValidationException],
+  operationName: "ListSecurityPolicies",
   pagination: { inputToken: "nextToken", outputToken: "nextToken" } as const,
 }));
 export type CreateVpcEndpointError =
@@ -3339,6 +3435,7 @@ export const createVpcEndpoint: API.OperationMethod<
     ServiceQuotaExceededException,
     ValidationException,
   ],
+  operationName: "CreateVpcEndpoint",
 }));
 export type DeleteVpcEndpointError =
   | ConflictException
@@ -3363,6 +3460,7 @@ export const deleteVpcEndpoint: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteVpcEndpoint",
 }));
 export type ListVpcEndpointsError =
   | InternalServerException
@@ -3395,5 +3493,6 @@ export const listVpcEndpoints: API.OperationMethod<
   input: ListVpcEndpointsRequest,
   output: ListVpcEndpointsResponse,
   errors: [InternalServerException, ValidationException],
+  operationName: "ListVpcEndpoints",
   pagination: { inputToken: "nextToken", outputToken: "nextToken" } as const,
 }));

@@ -4,16 +4,75 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface GetInboundAchTransferInput {
+  id: string;
+  ereborVersion?: string;
+}
 export const GetInboundAchTransferInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
-  }).pipe(T.Http({ method: "GET", path: "/ach_in/{id}" }));
-export type GetInboundAchTransferInput = typeof GetInboundAchTransferInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/ach_in/{id}" }),
+  ) as unknown as Schema.Codec<GetInboundAchTransferInput>;
 
 // Output Schema
+export interface GetInboundAchTransferOutput {
+  id: string;
+  type: "ACH_IN";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id?: string | null;
+  status: "CREATED" | "PENDING" | "SETTLED" | "FAILED" | "RETURNED";
+  deposit_account_id: string;
+  amount: {
+    currency: "USD";
+    exponent: number;
+    value: string;
+    display_value: string;
+  };
+  direction: "CREDIT" | "DEBIT";
+  sec_code:
+    | "PPD"
+    | "CCD"
+    | "WEB"
+    | "TEL"
+    | "CTX"
+    | "IAT"
+    | "ARC"
+    | "BOC"
+    | "POP"
+    | "RCK"
+    | "POS"
+    | "SHR"
+    | "MTE"
+    | "COR"
+    | "CIE"
+    | "DNE"
+    | "ENR"
+    | "ADV"
+    | "ACK"
+    | "ATX"
+    | "PBR"
+    | "TRC"
+    | "TRX"
+    | "XCK";
+  company_entry_description: string;
+  originating_company_id: string;
+  originating_company_name: string;
+  effective_entry_date: string;
+  addenda: ReadonlyArray<string>;
+  company_descriptive_date?: string | null;
+  company_discretionary_data?: string | null;
+  return_code?: string | null;
+  returned_at?: string | null;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const GetInboundAchTransferOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -73,11 +132,11 @@ export const GetInboundAchTransferOutput =
     company_discretionary_data: Schema.optional(Schema.NullOr(Schema.String)),
     return_code: Schema.optional(Schema.NullOr(Schema.String)),
     returned_at: Schema.optional(Schema.NullOr(Schema.String)),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type GetInboundAchTransferOutput =
-  typeof GetInboundAchTransferOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<GetInboundAchTransferOutput>;
 
 // The operation
 /**

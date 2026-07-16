@@ -3,6 +3,15 @@ import { API } from "../client.ts";
 import * as T from "../traits.ts";
 
 // Input Schema
+export interface ListBlockchainAddressesInput {
+  page_size?: number;
+  starting_after?: string;
+  ending_before?: string;
+  deposit_account_id?: string;
+  address?: string;
+  custom_ref?: string;
+  ereborVersion?: string;
+}
 export const ListBlockchainAddressesInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     page_size: Schema.optional(Schema.Number),
@@ -14,11 +23,33 @@ export const ListBlockchainAddressesInput =
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
-  }).pipe(T.Http({ method: "GET", path: "/blockchain_addresses" }));
-export type ListBlockchainAddressesInput =
-  typeof ListBlockchainAddressesInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/blockchain_addresses" }),
+  ) as unknown as Schema.Codec<ListBlockchainAddressesInput>;
 
 // Output Schema
+export interface ListBlockchainAddressesOutput {
+  data: ReadonlyArray<{
+    id: string;
+    type: "BLOCKCHAIN_ADDRESS";
+    url: string;
+    created_at: string;
+    updated_at: string;
+    archived_at?: string | null;
+    deposit_account_id: string;
+    name?: string | null;
+    address: string;
+    address_type: "ETHEREUM" | "SOLANA" | "SUI";
+    network: ReadonlyArray<"BASE" | "ETHEREUM" | "INK" | "SOLANA" | "SUI">;
+    custom_ref?: string | null;
+    custom_fields?: Record<string, unknown> | null;
+  }>;
+  has_more: boolean;
+  page_size: number;
+  page_next?: string | null;
+  page_prev?: string | null;
+  url: string;
+}
 export const ListBlockchainAddressesOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Array(
@@ -36,8 +67,10 @@ export const ListBlockchainAddressesOutput =
         network: Schema.Array(
           Schema.Literals(["BASE", "ETHEREUM", "INK", "SOLANA", "SUI"]),
         ),
-        custom_ref: Schema.optional(Schema.Unknown),
-        custom_fields: Schema.optional(Schema.Unknown),
+        custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+        custom_fields: Schema.optional(
+          Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+        ),
       }),
     ),
     has_more: Schema.Boolean,
@@ -45,9 +78,7 @@ export const ListBlockchainAddressesOutput =
     page_next: Schema.optional(Schema.NullOr(Schema.String)),
     page_prev: Schema.optional(Schema.NullOr(Schema.String)),
     url: Schema.String,
-  });
-export type ListBlockchainAddressesOutput =
-  typeof ListBlockchainAddressesOutput.Type;
+  }) as unknown as Schema.Codec<ListBlockchainAddressesOutput>;
 
 // The operation
 /**

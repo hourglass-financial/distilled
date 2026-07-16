@@ -10,6 +10,21 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface GenerateARelayClaimInput {
+  relayToken: string;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  personaRelaySecret: string;
+}
 export const GenerateARelayClaimInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     relayToken: Schema.String.pipe(T.PathParam()),
@@ -36,16 +51,18 @@ export const GenerateARelayClaimInput =
     ),
   }).pipe(
     T.Http({ method: "POST", path: "/relays/{relayToken}/generate-claim" }),
-  );
-export type GenerateARelayClaimInput = typeof GenerateARelayClaimInput.Type;
+  ) as unknown as Schema.Codec<GenerateARelayClaimInput>;
 
 // Output Schema
+export interface GenerateARelayClaimOutput {
+  "claim-payload": string;
+  "token-consumed": boolean;
+}
 export const GenerateARelayClaimOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     "claim-payload": Schema.String,
     "token-consumed": Schema.Boolean,
-  });
-export type GenerateARelayClaimOutput = typeof GenerateARelayClaimOutput.Type;
+  }) as unknown as Schema.Codec<GenerateARelayClaimOutput>;
 
 // The operation
 /**

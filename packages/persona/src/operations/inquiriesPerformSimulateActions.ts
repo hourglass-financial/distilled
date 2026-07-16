@@ -10,6 +10,40 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface InquiriesPerformSimulateActionsInput {
+  inquiryId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  meta: {
+    "simulate-actions": ReadonlyArray<
+      | {
+          type:
+            | "start_inquiry"
+            | "complete_inquiry"
+            | "fail_inquiry"
+            | "expire_inquiry"
+            | "mark_for_review_inquiry"
+            | "approve_inquiry"
+            | "decline_inquiry";
+        }
+      | {
+          type: "create_passed_verification" | "create_failed_verification";
+          data: { "verification-template-id": string };
+        }
+    >;
+  };
+}
 export const InquiriesPerformSimulateActionsInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     inquiryId: Schema.String.pipe(T.PathParam()),
@@ -36,18 +70,104 @@ export const InquiriesPerformSimulateActionsInput =
       ]),
     ).pipe(T.HttpHeader("Persona-Version")),
     meta: Schema.Struct({
-      "simulate-actions": Schema.Array(Schema.Unknown),
+      "simulate-actions": Schema.Array(
+        Schema.Union([
+          Schema.Struct({
+            type: Schema.Literals([
+              "start_inquiry",
+              "complete_inquiry",
+              "fail_inquiry",
+              "expire_inquiry",
+              "mark_for_review_inquiry",
+              "approve_inquiry",
+              "decline_inquiry",
+            ]),
+          }),
+          Schema.Struct({
+            type: Schema.Literals([
+              "create_passed_verification",
+              "create_failed_verification",
+            ]),
+            data: Schema.Struct({
+              "verification-template-id": Schema.String,
+            }),
+          }),
+        ]),
+      ),
     }),
   }).pipe(
     T.Http({
       method: "POST",
       path: "/inquiries/{inquiryId}/perform-simulate-actions",
     }),
-  );
-export type InquiriesPerformSimulateActionsInput =
-  typeof InquiriesPerformSimulateActionsInput.Type;
+  ) as unknown as Schema.Codec<InquiriesPerformSimulateActionsInput>;
 
 // Output Schema
+export interface InquiriesPerformSimulateActionsOutput {
+  data: {
+    type: string;
+    id: string;
+    attributes: {
+      status: string;
+      "reference-id": string | null;
+      note: string | null;
+      behaviors: Record<string, unknown> | null;
+      tags: ReadonlyArray<string | null>;
+      creator: string;
+      "reviewer-comment": string | null;
+      "created-at": string;
+      "updated-at": string;
+      "started-at": string | null;
+      "expires-at": string | null;
+      "completed-at": string | null;
+      "failed-at": string | null;
+      "marked-for-review-at": string | null;
+      "decisioned-at": string | null;
+      "expired-at": string | null;
+      "redacted-at": string | null;
+      "previous-step-name": string | null;
+      "next-step-name": string | null;
+      fields: Record<
+        string,
+        | { type: "string"; value: string | null }
+        | { type: "choices"; value: string | null }
+        | { type: "multi_choices"; value: ReadonlyArray<string> }
+        | { type: "boolean"; value: boolean | null }
+        | { type: "number"; value: number | null }
+        | { type: "date"; value: string | null }
+        | {
+            type: "generic";
+            value: { id: string; type: "Document::Generic" } | null;
+          }
+        | {
+            type: "government_id";
+            value: { id: string; type: "Document::GovernmentId" } | null;
+          }
+        | {
+            type: "selfie";
+            value: { id: string; type: "Selfie::ProfileAndCenter" } | null;
+          }
+        | { type: "json"; value: unknown }
+      >;
+    };
+    relationships: {
+      account?: { data?: { id?: string; type?: string } | null };
+      documents?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      template?: { data?: { id?: string; type?: string } | null };
+      "inquiry-template"?: { data?: { id?: string; type?: string } | null };
+      "inquiry-template-version"?: {
+        data?: { id?: string; type?: string } | null;
+      };
+      reports?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      transaction?: { data?: { id?: string; type?: string } | null };
+      reviewer?: { data?: { id?: string; type?: string } | null };
+      selfies?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      sessions?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      verifications?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+    };
+  };
+  included?: ReadonlyArray<unknown>;
+}
 export const InquiriesPerformSimulateActionsOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -273,9 +393,7 @@ export const InquiriesPerformSimulateActionsOutput =
       }),
     }),
     included: Schema.optional(Schema.Array(Schema.Unknown)),
-  });
-export type InquiriesPerformSimulateActionsOutput =
-  typeof InquiriesPerformSimulateActionsOutput.Type;
+  }) as unknown as Schema.Codec<InquiriesPerformSimulateActionsOutput>;
 
 // The operation
 /**

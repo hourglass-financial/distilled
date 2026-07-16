@@ -10,6 +10,29 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface DismissMatchesInput {
+  reportId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  data: {
+    attributes?: {
+      "dismiss-type"?: string;
+      "entity-id"?: string;
+      reason?: string;
+    };
+  };
+}
 export const DismissMatchesInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   reportId: Schema.String.pipe(T.PathParam()),
   include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
@@ -43,15 +66,19 @@ export const DismissMatchesInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       }),
     ),
   }),
-}).pipe(T.Http({ method: "POST", path: "/reports/{reportId}/dismiss" }));
-export type DismissMatchesInput = typeof DismissMatchesInput.Type;
+}).pipe(
+  T.Http({ method: "POST", path: "/reports/{reportId}/dismiss" }),
+) as unknown as Schema.Codec<DismissMatchesInput>;
 
 // Output Schema
+export interface DismissMatchesOutput {
+  data: unknown;
+  included?: ReadonlyArray<unknown>;
+}
 export const DismissMatchesOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Unknown,
   included: Schema.optional(Schema.Array(Schema.Unknown)),
-});
-export type DismissMatchesOutput = typeof DismissMatchesOutput.Type;
+}) as unknown as Schema.Codec<DismissMatchesOutput>;
 
 // The operation
 /**

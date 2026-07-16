@@ -4,15 +4,43 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface GetDocumentInput {
+  id: string;
+  ereborVersion?: string;
+}
 export const GetDocumentInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String.pipe(T.PathParam()),
   ereborVersion: Schema.optional(Schema.String).pipe(
     T.HttpHeader("Erebor-Version"),
   ),
-}).pipe(T.Http({ method: "GET", path: "/documents/{id}" }));
-export type GetDocumentInput = typeof GetDocumentInput.Type;
+}).pipe(
+  T.Http({ method: "GET", path: "/documents/{id}" }),
+) as unknown as Schema.Codec<GetDocumentInput>;
 
 // Output Schema
+export interface GetDocumentOutput {
+  id: string;
+  type: "DOCUMENT";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id: string;
+  name: string;
+  description?: string | null;
+  document_type:
+    | "US_DRIVERS_LICENSE"
+    | "PASSPORT"
+    | "FORMATION_DOCUMENT"
+    | "IRS_EIN_CONFIRMATION"
+    | "OTHER";
+  content_hash: string;
+  content_size: number;
+  content_type: string;
+  content_url: string;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const GetDocumentOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String,
   type: Schema.Literals(["DOCUMENT"]),
@@ -34,10 +62,11 @@ export const GetDocumentOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   content_size: Schema.Number,
   content_type: Schema.String,
   content_url: Schema.String,
-  custom_ref: Schema.optional(Schema.Unknown),
-  custom_fields: Schema.optional(Schema.Unknown),
-});
-export type GetDocumentOutput = typeof GetDocumentOutput.Type;
+  custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+  custom_fields: Schema.optional(
+    Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+  ),
+}) as unknown as Schema.Codec<GetDocumentOutput>;
 
 // The operation
 /**

@@ -10,6 +10,23 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface ReportsRemoveTagInput {
+  reportId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  meta?: { "tag-name"?: string; "tag-id"?: string };
+}
 export const ReportsRemoveTagInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   reportId: Schema.String.pipe(T.PathParam()),
   include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
@@ -40,17 +57,21 @@ export const ReportsRemoveTagInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "tag-id": Schema.optional(Schema.String),
     }),
   ),
-}).pipe(T.Http({ method: "POST", path: "/reports/{reportId}/remove-tag" }));
-export type ReportsRemoveTagInput = typeof ReportsRemoveTagInput.Type;
+}).pipe(
+  T.Http({ method: "POST", path: "/reports/{reportId}/remove-tag" }),
+) as unknown as Schema.Codec<ReportsRemoveTagInput>;
 
 // Output Schema
+export interface ReportsRemoveTagOutput {
+  data: unknown;
+  included?: ReadonlyArray<unknown>;
+}
 export const ReportsRemoveTagOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
   {
     data: Schema.Unknown,
     included: Schema.optional(Schema.Array(Schema.Unknown)),
   },
-);
-export type ReportsRemoveTagOutput = typeof ReportsRemoveTagOutput.Type;
+) as unknown as Schema.Codec<ReportsRemoveTagOutput>;
 
 // The operation
 /**

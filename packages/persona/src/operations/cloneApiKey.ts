@@ -10,6 +10,22 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface CloneApiKeyInput {
+  apiKeyId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const CloneApiKeyInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   apiKeyId: Schema.String.pipe(T.PathParam()),
   include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
@@ -34,10 +50,40 @@ export const CloneApiKeyInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "2020-05-18",
     ]),
   ).pipe(T.HttpHeader("Persona-Version")),
-}).pipe(T.Http({ method: "POST", path: "/api-keys/{apiKeyId}/clone" }));
-export type CloneApiKeyInput = typeof CloneApiKeyInput.Type;
+}).pipe(
+  T.Http({ method: "POST", path: "/api-keys/{apiKeyId}/clone" }),
+) as unknown as Schema.Codec<CloneApiKeyInput>;
 
 // Output Schema
+export interface CloneApiKeyOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      name?: string;
+      note?: string | null;
+      "api-version"?:
+        | "2025-12-08"
+        | "2025-10-27"
+        | "2023-01-05"
+        | "2022-09-01"
+        | "2021-08-18"
+        | "2021-07-05"
+        | "2021-02-21"
+        | "2020-05-18";
+      "api-key-inflection"?: string;
+      "api-attributes-blocklist"?: ReadonlyArray<string | null>;
+      permissions?: ReadonlyArray<string>;
+      "ip-address-allowlist"?: ReadonlyArray<string>;
+      "file-access-token-expires-in"?: number;
+      "last-used-at"?: string | null;
+      "expires-at"?: string | null;
+      "created-at"?: string;
+      value?: string;
+    };
+  };
+  included?: ReadonlyArray<unknown>;
+}
 export const CloneApiKeyOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Struct({
     type: Schema.optional(Schema.String),
@@ -73,8 +119,7 @@ export const CloneApiKeyOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     ),
   }),
   included: Schema.optional(Schema.Array(Schema.Unknown)),
-});
-export type CloneApiKeyOutput = typeof CloneApiKeyOutput.Type;
+}) as unknown as Schema.Codec<CloneApiKeyOutput>;
 
 // The operation
 /**

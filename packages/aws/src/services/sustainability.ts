@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -378,6 +378,7 @@ export const getEstimatedCarbonEmissions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetEstimatedCarbonEmissions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -423,6 +424,7 @@ export const getEstimatedCarbonEmissionsDimensionValues: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetEstimatedCarbonEmissionsDimensionValues",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",

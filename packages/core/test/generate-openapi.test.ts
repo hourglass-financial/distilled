@@ -27,6 +27,7 @@ const patchesDir = join(outputDir, "patches");
 const generatedDir = join(outputDir, "operations");
 
 let generatedSource: string;
+let inputSchema: Schema.Top;
 let outputSchema: Schema.Top;
 
 beforeAll(async () => {
@@ -51,6 +52,7 @@ beforeAll(async () => {
   const generated = await import(
     /* @vite-ignore */ `${pathToFileURL(generatedPath).href}?test=${Date.now()}`
   );
+  inputSchema = generated.GetMixedObjectInput;
   outputSchema = generated.GetMixedObjectOutput;
 });
 
@@ -61,6 +63,7 @@ afterAll(() => {
 const validInput = {
   untyped: { known: "declared", arbitrary: { nested: true } },
   typed: { known: 42, arbitrary: "additional" },
+  implicitTyped: { known: 42, arbitrary: "additional" },
   closed: { known: "declared", stripped: "closed" },
   omitted: { known: "declared", stripped: "omitted" },
   referenced: { known: 42, arbitrary: "additional" },
@@ -70,9 +73,8 @@ const validInput = {
     empty: { type: "empty", value: null },
   },
   nullableStrictValue: null,
-  unsupportedAnyOf: { remains: "unknown" },
-  emptyUnion: { remains: "unknown" },
-  unsupportedOneOf: { remains: "unknown" },
+  genericAnyOf: "supported",
+  genericOneOf: 42,
 };
 
 describe("OpenAPI mixed object generation", () => {
@@ -95,6 +97,23 @@ describe("OpenAPI mixed object generation", () => {
     expect(generatedSource).toContain(
       "StructWithAdditionalProperties",
     );
+    expect(generatedSource).toMatch(
+      /typed:\s*\{\s*known:\s*number\s*\}\s*&\s*Record<string,\s*string\s*\|\s*number>/,
+    );
+    expect(generatedSource).toMatch(
+      /untyped:\s*\{\s*known:\s*string\s*\}\s*&\s*Record<string,\s*unknown>/,
+    );
+  });
+
+  it("includes header parameters in the runtime schema and explicit input type", () => {
+    const decoded = Schema.decodeUnknownSync(inputSchema)({
+      xRequiredCount: 2,
+      xMode: "fast",
+    }) as any;
+
+    expect(decoded).toEqual({ xRequiredCount: 2, xMode: "fast" });
+    expect(generatedSource).toMatch(/xRequiredCount:\s*number/);
+    expect(generatedSource).toMatch(/xMode\?:\s*"fast"\s*\|\s*"safe"/);
   });
 
   it("preserves and validates schema-valued additional properties", () => {
@@ -102,8 +121,10 @@ describe("OpenAPI mixed object generation", () => {
     const encoded = Schema.encodeSync(outputSchema)(decoded) as any;
 
     expect(decoded.typed).toEqual(validInput.typed);
+    expect(decoded.implicitTyped).toEqual(validInput.implicitTyped);
     expect(decoded.referenced).toEqual(validInput.referenced);
     expect(encoded.typed).toEqual(validInput.typed);
+    expect(encoded.implicitTyped).toEqual(validInput.implicitTyped);
     expect(() =>
       Schema.decodeUnknownSync(outputSchema)({
         ...validInput,
@@ -119,14 +140,20 @@ describe("OpenAPI mixed object generation", () => {
     expect(decoded.omitted).toEqual({ known: "declared" });
   });
 
-  it("renders standard discriminated oneOf unions, including in rest values", () => {
+  it("renders discriminated and generic OpenAPI unions", () => {
     const decoded = Schema.decodeUnknownSync(outputSchema)(validInput) as any;
 
     expect(decoded.strictValues).toEqual(validInput.strictValues);
     expect(decoded.nullableStrictValue).toBeNull();
-    expect(decoded.unsupportedAnyOf).toEqual(validInput.unsupportedAnyOf);
-    expect(decoded.emptyUnion).toEqual(validInput.emptyUnion);
-    expect(decoded.unsupportedOneOf).toEqual(validInput.unsupportedOneOf);
+    expect(decoded.genericAnyOf).toBe("supported");
+    expect(decoded.genericOneOf).toBe(42);
+    expect(generatedSource).toMatch(/emptyUnion\?:\s*never/);
+    expect(() =>
+      Schema.decodeUnknownSync(outputSchema)({
+        ...validInput,
+        emptyUnion: null,
+      }),
+    ).toThrow();
     const nullableValue = Schema.decodeUnknownSync(outputSchema)({
       ...validInput,
       nullableStrictValue: { type: "text", value: "not-null" },
@@ -135,6 +162,12 @@ describe("OpenAPI mixed object generation", () => {
       type: "text",
       value: "not-null",
     });
+    expect(() =>
+      Schema.decodeUnknownSync(outputSchema)({
+        ...validInput,
+        genericAnyOf: { noLonger: "unknown" },
+      }),
+    ).toThrow();
     expect(() =>
       Schema.decodeUnknownSync(outputSchema)({
         ...validInput,

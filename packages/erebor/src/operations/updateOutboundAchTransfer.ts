@@ -4,6 +4,13 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface UpdateOutboundAchTransferInput {
+  id: string;
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const UpdateOutboundAchTransferInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
@@ -17,11 +24,40 @@ export const UpdateOutboundAchTransferInput =
     custom_fields: Schema.optional(
       Schema.Record(Schema.String, Schema.Unknown),
     ),
-  }).pipe(T.Http({ method: "PATCH", path: "/ach_out/{id}" }));
-export type UpdateOutboundAchTransferInput =
-  typeof UpdateOutboundAchTransferInput.Type;
+  }).pipe(
+    T.Http({ method: "PATCH", path: "/ach_out/{id}" }),
+  ) as unknown as Schema.Codec<UpdateOutboundAchTransferInput>;
 
 // Output Schema
+export interface UpdateOutboundAchTransferOutput {
+  id: string;
+  type: "ACH_OUT";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id?: string | null;
+  status: "CREATED" | "PENDING" | "SETTLED" | "FAILED" | "RETURNED";
+  deposit_account_id: string;
+  counterparty_us_bank_account_id: string;
+  amount: {
+    currency: "USD";
+    exponent: number;
+    value: string;
+    display_value: string;
+  };
+  direction: "CREDIT" | "DEBIT";
+  sec_code: "CCD" | "PPD" | "WEB";
+  company_entry_description: string;
+  effective_entry_date?: string | null;
+  addenda: ReadonlyArray<string>;
+  company_discretionary_data?: string | null;
+  service: "SAME_DAY" | "STANDARD";
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+  return_code?: string | null;
+  returned_at?: string | null;
+}
 export const UpdateOutboundAchTransferOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -53,13 +89,13 @@ export const UpdateOutboundAchTransferOutput =
     addenda: Schema.Array(Schema.String),
     company_discretionary_data: Schema.optional(Schema.NullOr(Schema.String)),
     service: Schema.Literals(["SAME_DAY", "STANDARD"]),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
     return_code: Schema.optional(Schema.NullOr(Schema.String)),
     returned_at: Schema.optional(Schema.NullOr(Schema.String)),
-  });
-export type UpdateOutboundAchTransferOutput =
-  typeof UpdateOutboundAchTransferOutput.Type;
+  }) as unknown as Schema.Codec<UpdateOutboundAchTransferOutput>;
 
 // The operation
 /**

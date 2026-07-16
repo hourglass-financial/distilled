@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -321,6 +321,7 @@ export const getExport: API.OperationMethod<
   input: GetExportRequest,
   output: GetExportResponse,
   errors: [InvalidParameterValueException, NoSuchExportException],
+  operationName: "GetExport",
 }));
 export type ListExportsError =
   | InvalidNextTokenException
@@ -358,6 +359,7 @@ export const listExports: API.OperationMethod<
     InvalidParameterValueException,
     NoSuchDomainException,
   ],
+  operationName: "ListExports",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -390,4 +392,5 @@ export const startDomainExport: API.OperationMethod<
     NoSuchDomainException,
     NumberExportsLimitExceeded,
   ],
+  operationName: "StartDomainExport",
 }));

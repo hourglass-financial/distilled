@@ -1,3 +1,73 @@
+## v0.29.0
+
+### &nbsp;&nbsp;&nbsp;🐞 Bug Fixes
+
+- Migrate to effect 4.0.0-beta.97 Schedule/Config APIs &nbsp;-&nbsp; by **sam** in https://github.com/alchemy-run/distilled/issues/370 [<samp>(da355)</samp>](https://github.com/alchemy-run/distilled/commit/da355daac)
+- **stripe**: Encode Stripe wire shapes &nbsp;-&nbsp; by **Alex** in https://github.com/alchemy-run/distilled/issues/359 [<samp>(61d0f)</samp>](https://github.com/alchemy-run/distilled/commit/61d0fc3b2)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/alchemy-run/distilled/compare/v0.28.2...HEAD)
+
+---
+
+## v0.28.2
+
+### &nbsp;&nbsp;&nbsp;🚀 Features
+
+- **cloudflare**:
+  - **workers**: Add cache to script + version upload metadata &nbsp;-&nbsp; by **Matthew Aylward** in https://github.com/alchemy-run/distilled/issues/366 [<samp>(3be17)</samp>](https://github.com/alchemy-run/distilled/commit/3be177e81)
+
+### &nbsp;&nbsp;&nbsp;🐞 Bug Fixes
+
+- **cloudflare**:
+  - **workers**:
+    - Type WorkerHasNoVersions and SecretsStoreBindingNotFound &nbsp;-&nbsp; by **sam** in https://github.com/alchemy-run/distilled/issues/363 [<samp>(d5796)</samp>](https://github.com/alchemy-run/distilled/commit/d5796413c)
+    - Type every binding-target-not-found error on script upload &nbsp;-&nbsp; by **sam** in https://github.com/alchemy-run/distilled/issues/365 [<samp>(15c5c)</samp>](https://github.com/alchemy-run/distilled/commit/15c5cf763)
+    - Serialize metadata.cache as cache_options on the wire &nbsp;-&nbsp; by **sam** in https://github.com/alchemy-run/distilled/issues/367 [<samp>(bb548)</samp>](https://github.com/alchemy-run/distilled/commit/bb54823f2)
+    - Type createRoute code 10019 as RouteScriptNotFound &nbsp;-&nbsp; by **sam** in https://github.com/alchemy-run/distilled/issues/368 [<samp>(b8d02)</samp>](https://github.com/alchemy-run/distilled/commit/b8d025d28)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/alchemy-run/distilled/compare/v0.28.1...HEAD)
+
+---
+
+## v0.28.1
+
+### &nbsp;&nbsp;&nbsp;🐞 Bug Fixes
+
+- **cloudflare**: Patch WebhookTestFailed &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(b0be6)</samp>](https://github.com/alchemy-run/distilled/commit/b0be63817)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/alchemy-run/distilled/compare/v0.28.0...HEAD)
+
+---
+
+## v0.28.0
+
+### &nbsp;&nbsp;&nbsp;🚨 Breaking Changes
+
+- Update all specs and fix generate scripts and optimize compile &nbsp;-&nbsp; by **Sam Goodwin** in https://github.com/alchemy-run/distilled/issues/360 [<samp>(313cc)</samp>](https://github.com/alchemy-run/distilled/commit/313cc9854)
+
+### &nbsp;&nbsp;&nbsp;🚀 Features
+
+- **aws**: Update AWS SDKs, inclding lambda micro vms &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(06001)</samp>](https://github.com/alchemy-run/distilled/commit/06001ee8e)
+
+### &nbsp;&nbsp;&nbsp;🐞 Bug Fixes
+
+- Update workos specs &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(3c2f2)</samp>](https://github.com/alchemy-run/distilled/commit/3c2f29fae)
+- **aws**:
+  - Patch ec2 InvalidSubnetConflict &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(67841)</samp>](https://github.com/alchemy-run/distilled/commit/678411100)
+  - Remove RetryableError from BucketNotEmpty &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(c00f1)</samp>](https://github.com/alchemy-run/distilled/commit/c00f16122)
+  - Encode operation name &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(e2a9a)</samp>](https://github.com/alchemy-run/distilled/commit/e2a9a01f6)
+  - Add PreconditionFailed + ConditionalRequestConflict to s3 putObject &nbsp;-&nbsp; by **Sam Goodwin** and **Claude Fable 5** [<samp>(78457)</samp>](https://github.com/alchemy-run/distilled/commit/7845750d6)
+- **cloudflare**:
+  - DurableObjectCheckError for containers &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(6fc3c)</samp>](https://github.com/alchemy-run/distilled/commit/6fc3c0e53)
+  - Patch TokenManagedByCloudflare for AccountApiToken &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(4bb79)</samp>](https://github.com/alchemy-run/distilled/commit/4bb792f63)
+  - Patch ZoneCreationBlocked &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(2bf71)</samp>](https://github.com/alchemy-run/distilled/commit/2bf713d45)
+  - Surface null-body 429 as retryable TooManyRequests &nbsp;-&nbsp; by **Michael K** in https://github.com/alchemy-run/distilled/issues/362 [<samp>(718f8)</samp>](https://github.com/alchemy-run/distilled/commit/718f8b7e2)
+  - **workers-for-platforms**: Type getDispatchNamespaceScriptSetting errors + loosen placement &nbsp;-&nbsp; by **Sam Goodwin** in https://github.com/alchemy-run/distilled/issues/361 [<samp>(645c7)</samp>](https://github.com/alchemy-run/distilled/commit/645c7141a)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/alchemy-run/distilled/compare/v0.27.0...HEAD)
+
+---
+
 ## v0.27.0
 
 ### &nbsp;&nbsp;&nbsp;🐞 Bug Fixes

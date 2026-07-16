@@ -4,6 +4,14 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface UpdateDepositAccountInput {
+  id: string;
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  name?: string | null;
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const UpdateDepositAccountInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
@@ -18,10 +26,103 @@ export const UpdateDepositAccountInput =
     custom_fields: Schema.optional(
       Schema.Record(Schema.String, Schema.Unknown),
     ),
-  }).pipe(T.Http({ method: "PATCH", path: "/deposit_accounts/{id}" }));
-export type UpdateDepositAccountInput = typeof UpdateDepositAccountInput.Type;
+  }).pipe(
+    T.Http({ method: "PATCH", path: "/deposit_accounts/{id}" }),
+  ) as unknown as Schema.Codec<UpdateDepositAccountInput>;
 
 // Output Schema
+export interface UpdateDepositAccountOutput {
+  id: string;
+  type: "DEPOSIT_ACCOUNT";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id?: string | null;
+  customer_id: string;
+  name?: string | null;
+  status?: "PENDING" | "OPEN" | "CLOSED" | "FROZEN";
+  deposit_account_template_id: string;
+  deposit_account_type: "DDA" | "FBO" | "OMNIBUS" | "VIRTUAL_DDA";
+  ownership_type: "BUSINESS" | "INDIVIDUAL";
+  balances: {
+    current: {
+      currency: "USD" | "USDC";
+      exponent: number;
+      value: string;
+      display_value: string;
+    };
+    available: {
+      currency: "USD" | "USDC";
+      exponent: number;
+      value: string;
+      display_value: string;
+    };
+    pending_in: {
+      currency: "USD" | "USDC";
+      exponent: number;
+      value: string;
+      display_value: string;
+    };
+    pending_out: {
+      currency: "USD" | "USDC";
+      exponent: number;
+      value: string;
+      display_value: string;
+    };
+  };
+  account_numbers?: ReadonlyArray<{
+    id: string;
+    type: "ACCOUNT_NUMBER";
+    url: string;
+    created_at: string;
+    updated_at: string;
+    archived_at?: string | null;
+    program_id?: string | null;
+    deposit_account_id: string;
+    name?: string | null;
+    account_number: string;
+    routing_number: string;
+    default: boolean;
+    custom_ref?: string | null;
+    custom_fields?: Record<string, unknown> | null;
+  }>;
+  default_account_number?: {
+    id: string;
+    type: "ACCOUNT_NUMBER";
+    url: string;
+    created_at: string;
+    updated_at: string;
+    archived_at?: string | null;
+    program_id?: string | null;
+    deposit_account_id: string;
+    name?: string | null;
+    account_number: string;
+    routing_number: string;
+    default: boolean;
+    custom_ref?: string | null;
+    custom_fields?: Record<string, unknown> | null;
+  } | null;
+  blockchain_addresses?: ReadonlyArray<{
+    id: string;
+    type: "BLOCKCHAIN_ADDRESS";
+    url: string;
+    created_at: string;
+    updated_at: string;
+    archived_at?: string | null;
+    deposit_account_id: string;
+    name?: string | null;
+    address: string;
+    address_type: "ETHEREUM" | "SOLANA" | "SUI";
+    network: ReadonlyArray<"BASE" | "ETHEREUM" | "INK" | "SOLANA" | "SUI">;
+    custom_ref?: string | null;
+    custom_fields?: Record<string, unknown> | null;
+  }>;
+  parent_account_id?: string | null;
+  disclosures: { disclosures_signed_externally: boolean };
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const UpdateDepositAccountOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -85,12 +186,35 @@ export const UpdateDepositAccountOutput =
           account_number: Schema.String,
           routing_number: Schema.String,
           default: Schema.Boolean,
-          custom_ref: Schema.optional(Schema.Unknown),
-          custom_fields: Schema.optional(Schema.Unknown),
+          custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+          custom_fields: Schema.optional(
+            Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+          ),
         }),
       ),
     ),
-    default_account_number: Schema.optional(Schema.Unknown),
+    default_account_number: Schema.optional(
+      Schema.NullOr(
+        Schema.Struct({
+          id: Schema.String,
+          type: Schema.Literals(["ACCOUNT_NUMBER"]),
+          url: Schema.String,
+          created_at: Schema.String,
+          updated_at: Schema.String,
+          archived_at: Schema.optional(Schema.NullOr(Schema.String)),
+          program_id: Schema.optional(Schema.NullOr(Schema.String)),
+          deposit_account_id: Schema.String,
+          name: Schema.optional(Schema.NullOr(Schema.String)),
+          account_number: Schema.String,
+          routing_number: Schema.String,
+          default: Schema.Boolean,
+          custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+          custom_fields: Schema.optional(
+            Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+          ),
+        }),
+      ),
+    ),
     blockchain_addresses: Schema.optional(
       Schema.Array(
         Schema.Struct({
@@ -107,8 +231,10 @@ export const UpdateDepositAccountOutput =
           network: Schema.Array(
             Schema.Literals(["BASE", "ETHEREUM", "INK", "SOLANA", "SUI"]),
           ),
-          custom_ref: Schema.optional(Schema.Unknown),
-          custom_fields: Schema.optional(Schema.Unknown),
+          custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+          custom_fields: Schema.optional(
+            Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+          ),
         }),
       ),
     ),
@@ -116,10 +242,11 @@ export const UpdateDepositAccountOutput =
     disclosures: Schema.Struct({
       disclosures_signed_externally: Schema.Boolean,
     }),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type UpdateDepositAccountOutput = typeof UpdateDepositAccountOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<UpdateDepositAccountOutput>;
 
 // The operation
 /**

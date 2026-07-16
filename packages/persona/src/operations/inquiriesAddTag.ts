@@ -10,6 +10,23 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface InquiriesAddTagInput {
+  inquiryId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  meta?: { "tag-name"?: string; "tag-id"?: string };
+}
 export const InquiriesAddTagInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   inquiryId: Schema.String.pipe(T.PathParam()),
   include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
@@ -40,10 +57,76 @@ export const InquiriesAddTagInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "tag-id": Schema.optional(Schema.String),
     }),
   ),
-}).pipe(T.Http({ method: "POST", path: "/inquiries/{inquiryId}/add-tag" }));
-export type InquiriesAddTagInput = typeof InquiriesAddTagInput.Type;
+}).pipe(
+  T.Http({ method: "POST", path: "/inquiries/{inquiryId}/add-tag" }),
+) as unknown as Schema.Codec<InquiriesAddTagInput>;
 
 // Output Schema
+export interface InquiriesAddTagOutput {
+  data: {
+    type: string;
+    id: string;
+    attributes: {
+      status: string;
+      "reference-id": string | null;
+      note: string | null;
+      behaviors: Record<string, unknown> | null;
+      tags: ReadonlyArray<string | null>;
+      creator: string;
+      "reviewer-comment": string | null;
+      "created-at": string;
+      "updated-at": string;
+      "started-at": string | null;
+      "expires-at": string | null;
+      "completed-at": string | null;
+      "failed-at": string | null;
+      "marked-for-review-at": string | null;
+      "decisioned-at": string | null;
+      "expired-at": string | null;
+      "redacted-at": string | null;
+      "previous-step-name": string | null;
+      "next-step-name": string | null;
+      fields: Record<
+        string,
+        | { type: "string"; value: string | null }
+        | { type: "choices"; value: string | null }
+        | { type: "multi_choices"; value: ReadonlyArray<string> }
+        | { type: "boolean"; value: boolean | null }
+        | { type: "number"; value: number | null }
+        | { type: "date"; value: string | null }
+        | {
+            type: "generic";
+            value: { id: string; type: "Document::Generic" } | null;
+          }
+        | {
+            type: "government_id";
+            value: { id: string; type: "Document::GovernmentId" } | null;
+          }
+        | {
+            type: "selfie";
+            value: { id: string; type: "Selfie::ProfileAndCenter" } | null;
+          }
+        | { type: "json"; value: unknown }
+      >;
+    };
+    relationships: {
+      account?: { data?: { id?: string; type?: string } | null };
+      documents?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      template?: { data?: { id?: string; type?: string } | null };
+      "inquiry-template"?: { data?: { id?: string; type?: string } | null };
+      "inquiry-template-version"?: {
+        data?: { id?: string; type?: string } | null;
+      };
+      reports?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      transaction?: { data?: { id?: string; type?: string } | null };
+      reviewer?: { data?: { id?: string; type?: string } | null };
+      selfies?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      sessions?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      verifications?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+    };
+  };
+  included?: ReadonlyArray<unknown>;
+}
 export const InquiriesAddTagOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Struct({
     type: Schema.String,
@@ -268,8 +351,7 @@ export const InquiriesAddTagOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     }),
   }),
   included: Schema.optional(Schema.Array(Schema.Unknown)),
-});
-export type InquiriesAddTagOutput = typeof InquiriesAddTagOutput.Type;
+}) as unknown as Schema.Codec<InquiriesAddTagOutput>;
 
 // The operation
 /**

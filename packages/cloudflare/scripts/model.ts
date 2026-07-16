@@ -376,6 +376,13 @@ export interface TypeInfo {
   elementType?: TypeInfo; // For arrays
   properties?: PropertyInfo[]; // For objects
   name?: string; // For named types/interfaces
+  /**
+   * When set, this node is a *reference* to a hoisted top-level named schema
+   * (an `interface`/`const` emitted once at file scope). The schema and TS-type
+   * emitters short-circuit to this identifier instead of inlining the shape.
+   * Populated by the nested-schema hoisting pass in `generate.ts`.
+   */
+  ref?: string;
 }
 
 export interface PropertyInfo {
@@ -439,6 +446,13 @@ export interface ParsedOperation {
   urlPathParams: string[]; // Path parameters from URL, e.g., ["account_id", "bucketName"]
   /** True when the SDK method uses Core.multipartFormRequestOptions */
   isMultipart?: boolean;
+  /**
+   * Explicit request `Content-Type` for a raw binary body when the API needs a
+   * specific media type instead of `application/octet-stream` (e.g.
+   * `application/x-ndjson` for Vectorize insert/upsert). Emitted as
+   * `bodyMediaType` on the `T.Http` trait.
+   */
+  requestMediaType?: string;
   /**
    * When set to `"binary"`, the operation's response body is a raw
    * `application/octet-stream` download surfaced as an object of the shape

@@ -3,6 +3,16 @@ import { API } from "../client.ts";
 import * as T from "../traits.ts";
 
 // Input Schema
+export interface ListCounterpartyRailAddressesInput {
+  page_size?: number;
+  starting_after?: string;
+  ending_before?: string;
+  counterparty_id?: string;
+  customer_id?: string;
+  program_id?: string;
+  custom_ref?: string;
+  ereborVersion?: string;
+}
 export const ListCounterpartyRailAddressesInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     page_size: Schema.optional(Schema.Number),
@@ -15,11 +25,33 @@ export const ListCounterpartyRailAddressesInput =
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
-  }).pipe(T.Http({ method: "GET", path: "/counterparty_rail_addresses" }));
-export type ListCounterpartyRailAddressesInput =
-  typeof ListCounterpartyRailAddressesInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/counterparty_rail_addresses" }),
+  ) as unknown as Schema.Codec<ListCounterpartyRailAddressesInput>;
 
 // Output Schema
+export interface ListCounterpartyRailAddressesOutput {
+  data: ReadonlyArray<{
+    id: string;
+    type: "COUNTERPARTY_RAIL_ADDRESS";
+    url: string;
+    created_at: string;
+    updated_at: string;
+    archived_at?: string | null;
+    customer_id?: string | null;
+    program_id?: string | null;
+    counterparty_id?: string | null;
+    description?: string | null;
+    address: string;
+    custom_ref?: string | null;
+    custom_fields?: Record<string, unknown> | null;
+  }>;
+  has_more: boolean;
+  page_size: number;
+  page_next?: string | null;
+  page_prev?: string | null;
+  url: string;
+}
 export const ListCounterpartyRailAddressesOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Array(
@@ -35,8 +67,10 @@ export const ListCounterpartyRailAddressesOutput =
         counterparty_id: Schema.optional(Schema.NullOr(Schema.String)),
         description: Schema.optional(Schema.NullOr(Schema.String)),
         address: Schema.String,
-        custom_ref: Schema.optional(Schema.Unknown),
-        custom_fields: Schema.optional(Schema.Unknown),
+        custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+        custom_fields: Schema.optional(
+          Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+        ),
       }),
     ),
     has_more: Schema.Boolean,
@@ -44,9 +78,7 @@ export const ListCounterpartyRailAddressesOutput =
     page_next: Schema.optional(Schema.NullOr(Schema.String)),
     page_prev: Schema.optional(Schema.NullOr(Schema.String)),
     url: Schema.String,
-  });
-export type ListCounterpartyRailAddressesOutput =
-  typeof ListCounterpartyRailAddressesOutput.Type;
+  }) as unknown as Schema.Codec<ListCounterpartyRailAddressesOutput>;
 
 // The operation
 /**

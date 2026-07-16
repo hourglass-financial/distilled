@@ -4,6 +4,22 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface RetrieveAGovernmentIdNfcVerificationInput {
+  verificationId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const RetrieveAGovernmentIdNfcVerificationInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     verificationId: Schema.String.pipe(T.PathParam()),
@@ -34,11 +50,64 @@ export const RetrieveAGovernmentIdNfcVerificationInput =
       method: "GET",
       path: "/verification/government-id-nfcs/{verificationId}",
     }),
-  );
-export type RetrieveAGovernmentIdNfcVerificationInput =
-  typeof RetrieveAGovernmentIdNfcVerificationInput.Type;
+  ) as unknown as Schema.Codec<RetrieveAGovernmentIdNfcVerificationInput>;
 
 // Output Schema
+export interface RetrieveAGovernmentIdNfcVerificationOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      status?: string;
+      "created-at"?: string;
+      "created-at-ts"?: number;
+      "submitted-at"?: string | null;
+      "submitted-at-ts"?: number | null;
+      "completed-at"?: string | null;
+      "completed-at-ts"?: number | null;
+      "redacted-at"?: string | null;
+      "country-code"?: string | null;
+      tags?: ReadonlyArray<string>;
+      checks?: ReadonlyArray<{
+        metadata?: Record<string, unknown>;
+        name?: string;
+        reasons?: ReadonlyArray<string>;
+        status?: string;
+      }>;
+      birthdate?: string | null;
+      "expiration-date"?: string | null;
+      "id-class"?: string | null;
+      "identification-number"?: string | null;
+      "name-first"?: string;
+      "name-last"?: string;
+      "selfie-photo"?: { "byte-size"?: number; url?: string } | null;
+      "selfie-photo-url"?: string | null;
+      sex?: string | null;
+      "address-street-1"?: string | null;
+      "address-street-2"?: string | null;
+      "address-city"?: string | null;
+      "address-subdivision"?: string | null;
+      "address-postal-code"?: string | null;
+    };
+    relationships?: {
+      inquiry?: { data?: { id?: string; type?: string } | null };
+      template?: { data?: { type?: string; id?: string } | null };
+      "inquiry-template-version"?: {
+        data?: { type?: string; id?: string } | null;
+      };
+      "inquiry-template"?: { data?: { type?: string; id?: string } | null };
+      transaction?: { data?: { type?: string; id?: string } | null };
+      "verification-template"?: {
+        data?: { type?: string; id?: string } | null;
+      };
+      "verification-template-version"?: {
+        data?: { type?: string; id?: string } | null;
+      };
+      accounts?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      document?: { data?: { id?: string; type?: string } };
+    };
+  };
+}
 export const RetrieveAGovernmentIdNfcVerificationOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -204,9 +273,7 @@ export const RetrieveAGovernmentIdNfcVerificationOutput =
         }),
       ),
     }),
-  });
-export type RetrieveAGovernmentIdNfcVerificationOutput =
-  typeof RetrieveAGovernmentIdNfcVerificationOutput.Type;
+  }) as unknown as Schema.Codec<RetrieveAGovernmentIdNfcVerificationOutput>;
 
 // The operation
 /**

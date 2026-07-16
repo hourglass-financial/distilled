@@ -4,6 +4,21 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface ListReportHistoryInput {
+  reportId: string;
+  page?: { after?: string; before?: string; size?: number };
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const ListReportHistoryInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
   {
     reportId: Schema.String.pipe(T.PathParam()),
@@ -13,7 +28,7 @@ export const ListReportHistoryInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
         before: Schema.optional(Schema.String),
         size: Schema.optional(Schema.Number),
       }),
-    ).pipe(T.HttpQuery("page")),
+    ),
     keyInflection: Schema.optional(
       Schema.Literals(["camel", "kebab", "snake"]),
     ).pipe(T.HttpHeader("Key-Inflection")),
@@ -33,21 +48,57 @@ export const ListReportHistoryInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
       ]),
     ).pipe(T.HttpHeader("Persona-Version")),
   },
-).pipe(T.Http({ method: "GET", path: "/reports/{reportId}/history" }));
-export type ListReportHistoryInput = typeof ListReportHistoryInput.Type;
+).pipe(
+  T.Http({ method: "GET", path: "/reports/{reportId}/history" }),
+) as unknown as Schema.Codec<ListReportHistoryInput>;
 
 // Output Schema
+export interface ListReportHistoryOutput {
+  data: ReadonlyArray<
+    | {
+        id?: string;
+        type: string;
+        "created-at": string;
+        "creator-name": string;
+      }
+    | {
+        id?: string;
+        type: string;
+        "run-type": string;
+        "scheduled-date"?: string;
+        "completed-at"?: string | null;
+        matches?: number | null;
+      }
+  >;
+  links: { prev: string | null; next: string | null } | null;
+}
 export const ListReportHistoryOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    data: Schema.Array(Schema.Unknown),
+    data: Schema.Array(
+      Schema.Union([
+        Schema.Struct({
+          id: Schema.optional(Schema.String),
+          type: Schema.String,
+          "created-at": Schema.String,
+          "creator-name": Schema.String,
+        }),
+        Schema.Struct({
+          id: Schema.optional(Schema.String),
+          type: Schema.String,
+          "run-type": Schema.String,
+          "scheduled-date": Schema.optional(Schema.String),
+          "completed-at": Schema.optional(Schema.NullOr(Schema.String)),
+          matches: Schema.optional(Schema.NullOr(Schema.Number)),
+        }),
+      ]),
+    ),
     links: Schema.NullOr(
       Schema.Struct({
         prev: Schema.NullOr(Schema.String),
         next: Schema.NullOr(Schema.String),
       }),
     ),
-  });
-export type ListReportHistoryOutput = typeof ListReportHistoryOutput.Type;
+  }) as unknown as Schema.Codec<ListReportHistoryOutput>;
 
 // The operation
 /**

@@ -4,13 +4,27 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden } from "../errors.ts";
 
 // Input Schema
+export interface ListAllInquirySessionsInput {
+  filter?: { "inquiry-id"?: string };
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const ListAllInquirySessionsInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     filter: Schema.optional(
       Schema.Struct({
         "inquiry-id": Schema.optional(Schema.String),
       }),
-    ).pipe(T.HttpQuery("filter")),
+    ),
     keyInflection: Schema.optional(
       Schema.Literals(["camel", "kebab", "snake"]),
     ).pipe(T.HttpHeader("Key-Inflection")),
@@ -29,11 +43,57 @@ export const ListAllInquirySessionsInput =
         "2020-05-18",
       ]),
     ).pipe(T.HttpHeader("Persona-Version")),
-  }).pipe(T.Http({ method: "GET", path: "/inquiry-sessions" }));
-export type ListAllInquirySessionsInput =
-  typeof ListAllInquirySessionsInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/inquiry-sessions" }),
+  ) as unknown as Schema.Codec<ListAllInquirySessionsInput>;
 
 // Output Schema
+export interface ListAllInquirySessionsOutput {
+  data: ReadonlyArray<{
+    type?: string;
+    id?: string;
+    attributes?: {
+      status?: string;
+      "created-at"?: string;
+      "started-at"?: string | null;
+      "expired-at"?: string | null;
+      "ip-address"?: string | null;
+      "user-agent"?: string | null;
+      "os-name"?: string | null;
+      "os-full-version"?: string | null;
+      "device-type"?: string | null;
+      "device-name"?: string | null;
+      "browser-name"?: string | null;
+      "browser-full-version"?: string | null;
+      "mobile-sdk-name"?: string | null;
+      "mobile-sdk-full-version"?: string | null;
+      "device-handoff-method"?: string | null;
+      "is-proxy"?: boolean | null;
+      "is-tor"?: boolean | null;
+      "is-datacenter"?: boolean | null;
+      "is-vpn"?: boolean | null;
+      "threat-level"?: string | null;
+      "country-code"?: string | null;
+      "country-name"?: string | null;
+      "region-code"?: string | null;
+      "region-name"?: string | null;
+      latitude?: number | null;
+      longitude?: number | null;
+      "gps-latitude"?: number | null;
+      "gps-longitude"?: number | null;
+      "gps-precision"?: string | null;
+      "ip-connection-type"?: string | null;
+      "ip-isp"?: string | null;
+      "network-organization"?: string | null;
+    };
+    relationships?: {
+      inquiry?: { data?: { type?: string; id?: string } };
+      device?: { data?: { type?: string; id?: string } | null };
+      network?: { data?: { type?: string; id?: string } | null };
+    };
+  }>;
+  links: { prev: string | null; next: string | null };
+}
 export const ListAllInquirySessionsOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Array(
@@ -128,9 +188,7 @@ export const ListAllInquirySessionsOutput =
       prev: Schema.NullOr(Schema.String),
       next: Schema.NullOr(Schema.String),
     }),
-  });
-export type ListAllInquirySessionsOutput =
-  typeof ListAllInquirySessionsOutput.Type;
+  }) as unknown as Schema.Codec<ListAllInquirySessionsOutput>;
 
 // The operation
 /**

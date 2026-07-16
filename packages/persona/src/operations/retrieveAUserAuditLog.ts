@@ -5,6 +5,22 @@ import { StructWithAdditionalProperties } from "@distilled.cloud/core/openapi/ad
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface RetrieveAUserAuditLogInput {
+  userAuditLogId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const RetrieveAUserAuditLogInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     userAuditLogId: Schema.String.pipe(T.PathParam()),
@@ -30,10 +46,42 @@ export const RetrieveAUserAuditLogInput =
         "2020-05-18",
       ]),
     ).pipe(T.HttpHeader("Persona-Version")),
-  }).pipe(T.Http({ method: "GET", path: "/user-audit-logs/{userAuditLogId}" }));
-export type RetrieveAUserAuditLogInput = typeof RetrieveAUserAuditLogInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/user-audit-logs/{userAuditLogId}" }),
+  ) as unknown as Schema.Codec<RetrieveAUserAuditLogInput>;
 
 // Output Schema
+export interface RetrieveAUserAuditLogOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      path?: string;
+      method?: string;
+      "get-params"?: Record<string, unknown>;
+      "post-params"?: Record<string, unknown>;
+      "ip-address"?: string;
+      "user-agent"?: string;
+      "response-status"?: number;
+      "created-at"?: string;
+      "impersonator-email-address"?: string | null;
+      context?: { "inquiry-id"?: string } & Record<string, unknown>;
+    };
+    relationships?: {
+      user?: { data?: { type?: string; id?: string } };
+      "user-session"?: { data?: { type?: string; id?: string } };
+    };
+  };
+  included?: ReadonlyArray<{
+    type?: string;
+    id?: string;
+    attributes?: {
+      "email-address"?: string;
+      "name-first"?: string;
+      "name-last"?: string;
+    };
+  }>;
+}
 export const RetrieveAUserAuditLogOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -106,9 +154,7 @@ export const RetrieveAUserAuditLogOutput =
         }),
       ),
     ),
-  });
-export type RetrieveAUserAuditLogOutput =
-  typeof RetrieveAUserAuditLogOutput.Type;
+  }) as unknown as Schema.Codec<RetrieveAUserAuditLogOutput>;
 
 // The operation
 /**

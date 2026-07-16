@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import { StructWithAdditionalProperties } from "@distilled.cloud/core/openapi/additional-properties";
 import {
   BadRequest,
   Forbidden,
@@ -9,6 +10,28 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface CreateAShareTokenInput {
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  data: {
+    attributes: {
+      "connection-id": string;
+      "source-id": string;
+      "expires-in-seconds"?: number;
+    };
+  };
+}
 export const CreateAShareTokenInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
   {
     include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
@@ -41,10 +64,99 @@ export const CreateAShareTokenInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
       }),
     }),
   },
-).pipe(T.Http({ method: "POST", path: "/connect/share-tokens" }));
-export type CreateAShareTokenInput = typeof CreateAShareTokenInput.Type;
+).pipe(
+  T.Http({ method: "POST", path: "/connect/share-tokens" }),
+) as unknown as Schema.Codec<CreateAShareTokenInput>;
 
 // Output Schema
+export interface CreateAShareTokenOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      status?: string;
+      direction?: string;
+      "created-at"?: string;
+      "updated-at"?: string;
+      "pending-at"?: string | null;
+      "redeemed-at"?: string | null;
+      "expires-at"?: string | null;
+      "failed-at"?: string | null;
+      "failure-reason"?: string | null;
+      "source-data"?:
+        | {
+            type: string;
+            id: string;
+            "peekable-attributes": {
+              fields?: Record<
+                string,
+                | { visibility: string; value: Record<string, unknown> }
+                | { visibility: string; value: boolean }
+              >;
+            } & Record<
+              string,
+              | { visibility: string; value: Record<string, unknown> }
+              | { visibility: string; value: boolean }
+              | Record<
+                  string,
+                  | { visibility: string; value: Record<string, unknown> }
+                  | { visibility: string; value: boolean }
+                >
+            >;
+            "related-objects"?: ReadonlyArray<
+              | {
+                  type: string;
+                  id: string;
+                  "peekable-attributes": Record<string, unknown>;
+                }
+              | {
+                  type: string;
+                  id: string;
+                  "peekable-attributes": {
+                    fields?: Record<string, unknown>;
+                  } & Record<string, unknown | Record<string, unknown>>;
+                }
+            >;
+          }
+        | {
+            type: string;
+            id: string;
+            "peekable-attributes": Record<
+              string,
+              | { visibility: string; value: Record<string, unknown> }
+              | { visibility: string; value: boolean }
+            >;
+          }
+        | {
+            type: string;
+            id: string;
+            "peekable-attributes": {
+              fields?: Record<
+                string,
+                | { visibility: string; value: Record<string, unknown> }
+                | { visibility: string; value: boolean }
+              >;
+            } & Record<
+              string,
+              | { visibility: string; value: Record<string, unknown> }
+              | { visibility: string; value: boolean }
+              | Record<
+                  string,
+                  | { visibility: string; value: Record<string, unknown> }
+                  | { visibility: string; value: boolean }
+                >
+            >;
+          };
+    };
+    relationships?: {
+      connection?: { data?: { type?: string; id?: string } };
+      creator?: { data?: { type?: string; id?: string } };
+      source?: { data?: { type?: string; id?: string } };
+      destination?: { data?: { type?: string; id?: string } | null };
+    };
+  };
+  included?: ReadonlyArray<unknown>;
+}
 export const CreateAShareTokenOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -61,7 +173,119 @@ export const CreateAShareTokenOutput =
           "expires-at": Schema.optional(Schema.NullOr(Schema.String)),
           "failed-at": Schema.optional(Schema.NullOr(Schema.String)),
           "failure-reason": Schema.optional(Schema.NullOr(Schema.String)),
-          "source-data": Schema.optional(Schema.Unknown),
+          "source-data": Schema.optional(
+            Schema.Union([
+              Schema.Struct({
+                type: Schema.String,
+                id: Schema.String,
+                "peekable-attributes": StructWithAdditionalProperties(
+                  Schema.Struct({
+                    fields: Schema.optional(
+                      Schema.Record(
+                        Schema.String,
+                        Schema.Union([
+                          Schema.Struct({
+                            visibility: Schema.String,
+                            value: Schema.Record(Schema.String, Schema.Unknown),
+                          }),
+                          Schema.Struct({
+                            visibility: Schema.String,
+                            value: Schema.Boolean,
+                          }),
+                        ]),
+                      ),
+                    ),
+                  }),
+                  Schema.Union([
+                    Schema.Struct({
+                      visibility: Schema.String,
+                      value: Schema.Record(Schema.String, Schema.Unknown),
+                    }),
+                    Schema.Struct({
+                      visibility: Schema.String,
+                      value: Schema.Boolean,
+                    }),
+                  ]),
+                ),
+                "related-objects": Schema.optional(
+                  Schema.Array(
+                    Schema.Union([
+                      Schema.Struct({
+                        type: Schema.String,
+                        id: Schema.String,
+                        "peekable-attributes": Schema.Record(
+                          Schema.String,
+                          Schema.Unknown,
+                        ),
+                      }),
+                      Schema.Struct({
+                        type: Schema.String,
+                        id: Schema.String,
+                        "peekable-attributes": StructWithAdditionalProperties(
+                          Schema.Struct({
+                            fields: Schema.optional(
+                              Schema.Record(Schema.String, Schema.Unknown),
+                            ),
+                          }),
+                          Schema.Unknown,
+                        ),
+                      }),
+                    ]),
+                  ),
+                ),
+              }),
+              Schema.Struct({
+                type: Schema.String,
+                id: Schema.String,
+                "peekable-attributes": Schema.Record(
+                  Schema.String,
+                  Schema.Union([
+                    Schema.Struct({
+                      visibility: Schema.String,
+                      value: Schema.Record(Schema.String, Schema.Unknown),
+                    }),
+                    Schema.Struct({
+                      visibility: Schema.String,
+                      value: Schema.Boolean,
+                    }),
+                  ]),
+                ),
+              }),
+              Schema.Struct({
+                type: Schema.String,
+                id: Schema.String,
+                "peekable-attributes": StructWithAdditionalProperties(
+                  Schema.Struct({
+                    fields: Schema.optional(
+                      Schema.Record(
+                        Schema.String,
+                        Schema.Union([
+                          Schema.Struct({
+                            visibility: Schema.String,
+                            value: Schema.Record(Schema.String, Schema.Unknown),
+                          }),
+                          Schema.Struct({
+                            visibility: Schema.String,
+                            value: Schema.Boolean,
+                          }),
+                        ]),
+                      ),
+                    ),
+                  }),
+                  Schema.Union([
+                    Schema.Struct({
+                      visibility: Schema.String,
+                      value: Schema.Record(Schema.String, Schema.Unknown),
+                    }),
+                    Schema.Struct({
+                      visibility: Schema.String,
+                      value: Schema.Boolean,
+                    }),
+                  ]),
+                ),
+              }),
+            ]),
+          ),
         }),
       ),
       relationships: Schema.optional(
@@ -112,8 +336,7 @@ export const CreateAShareTokenOutput =
       ),
     }),
     included: Schema.optional(Schema.Array(Schema.Unknown)),
-  });
-export type CreateAShareTokenOutput = typeof CreateAShareTokenOutput.Type;
+  }) as unknown as Schema.Codec<CreateAShareTokenOutput>;
 
 // The operation
 /**

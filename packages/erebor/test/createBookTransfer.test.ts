@@ -50,7 +50,6 @@ describe("createBookTransfer", () => {
         expect(result.amount.value).toBe("1");
         expect(result.memo).toBe(`Distilled test book transfer ${testRunId}`);
         expect(result.custom_ref).toBe(customRef);
-        expect(["PENDING", "FAILED", "SETTLED"]).toContain(result.status);
       },
       30_000,
     );

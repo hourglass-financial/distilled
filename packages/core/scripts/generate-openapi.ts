@@ -292,6 +292,18 @@ function renderParameterSchema(
   }
 }
 
+function renderParameterSchema3(
+  schema: SchemaObject | undefined,
+  spec: OpenAPI3Spec,
+  ctx: SchemaGenerationContext,
+): string {
+  if (!schema) return "Schema.String";
+  if (schema.enum && schema.enum.length > 0) {
+    return renderEnumLiterals(schema.enum, schema.type);
+  }
+  return openApiTypeToEffectSchema(schema, spec, "", new Set(), ctx);
+}
+
 // ============================================================================
 // Version Detection
 // ============================================================================
@@ -387,6 +399,63 @@ function getBaseType(prop: SchemaObject): string | undefined {
   return prop.type;
 }
 
+/**
+ * Guards against combinatorial blow-up when inlining `oneOf`/`anyOf` unions.
+ * Large recursive union graphs (e.g. PostHog's HogQL query AST) otherwise
+ * expand into hundreds of MB of generated types. A union collapses to
+ * `unknown` once it nests past `MAX_UNION_INLINE_DEPTH` `$ref` hops (bounds
+ * build cost) or its rendered text exceeds `MAX_UNION_INLINE_CHARS` (bounds
+ * the breadth of any single union node).
+ */
+const MAX_UNION_INLINE_DEPTH = 4;
+const MAX_UNION_INLINE_CHARS = 4000;
+
+/**
+ * Whether every branch of a `oneOf`/`anyOf` is a scalar — a primitive,
+ * an enum, or a pure-null branch — with no `$ref`, nested union, object, or
+ * array. Such unions (e.g. `boolean | string`, `string | number`) are tiny
+ * and finite, so the `MAX_UNION_INLINE_DEPTH` cutoff (which exists to bound
+ * combinatorial blow-up of recursive *object* union graphs) must not collapse
+ * them to `unknown`. Collapsing a `boolean | string` leaf just because it sits
+ * deep in a response tree is what dropped Axiom's `showChart`/`chartHeight`.
+ */
+function isScalarUnion(branches: SchemaObject[], spec: OpenAPISpec): boolean {
+  return branches.every((branch) => {
+    if (isNullBranch(branch, spec)) return true;
+    if (branch.$ref || branch.oneOf || branch.anyOf || branch.allOf) {
+      return false;
+    }
+    if (branch.enum && branch.enum.length > 0) return true;
+    const t = branch.type;
+    return (
+      t === "string" || t === "number" || t === "integer" || t === "boolean"
+    );
+  });
+}
+
+/**
+ * A `oneOf`/`anyOf` branch that contributes only nullability — an explicit
+ * `{ "type": "null" }` branch or a `$ref` to a null-only enum (PostHog's
+ * `NullEnum` is `{ "enum": [null] }`). Such branches collapse into a
+ * `Schema.NullOr` / `| null` wrapper rather than becoming a union member.
+ */
+function isNullBranch(branch: SchemaObject, spec: any): boolean {
+  let b = branch;
+  if (b.$ref) {
+    b = resolveRef(spec, b.$ref);
+  }
+  if (b.type === "null") return true;
+  if (Array.isArray(b.type) && b.type.every((t) => t === "null")) return true;
+  if (
+    Array.isArray(b.enum) &&
+    b.enum.length > 0 &&
+    b.enum.every((v) => v === null)
+  ) {
+    return true;
+  }
+  return false;
+}
+
 // ============================================================================
 // Sensitive Field Detection
 // ============================================================================
@@ -435,7 +504,6 @@ interface SchemaGenerationContext {
   // never have to coerce. Defaults to "input" for backwards-compat callers
   // that don't pass a direction.
   direction?: "input" | "output";
-  usesAdditionalPropertiesSchema: boolean;
   usesSensitiveString: boolean;
   usesSensitiveNullableString: boolean;
   usesSensitiveOutputString: boolean;
@@ -462,19 +530,63 @@ function generateAdditionalPropertiesValueSchema(
   return valueSchema;
 }
 
+function generateObjectEffectSchema(
+  prop: SchemaObject,
+  spec: any,
+  indent: string,
+  seenRefs: Set<string>,
+  ctx?: SchemaGenerationContext,
+): string {
+  if (prop.properties) {
+    const structSchema = generateStructSchema(
+      prop,
+      spec,
+      indent,
+      seenRefs,
+      ctx,
+    );
+    // HOURGLASS PATCH: Preserve explicit and inferred OpenAPI mixed-object
+    // index signatures during decoding.
+    if (prop.additionalProperties) {
+      const additionalPropertiesSchema =
+        generateAdditionalPropertiesValueSchema(
+          prop.additionalProperties,
+          spec,
+          indent,
+          seenRefs,
+          ctx,
+        );
+      return `StructWithAdditionalProperties(${structSchema}, ${additionalPropertiesSchema})`;
+    }
+    return structSchema;
+  }
+
+  if (prop.additionalProperties) {
+    const additionalPropertiesSchema =
+      generateAdditionalPropertiesValueSchema(
+        prop.additionalProperties,
+        spec,
+        indent,
+        seenRefs,
+        ctx,
+      );
+    return `Schema.Record(Schema.String, ${additionalPropertiesSchema})`;
+  }
+
+  return "Schema.Unknown";
+}
+
 /**
- * Returns the members of a `oneOf` when each member is an object with the same
- * required, single-value enum property and every discriminator value is
- * unique. This is the subset the generator can render without changing the
- * legacy `Schema.Unknown` fallback for ambiguous or otherwise unsupported
- * unions.
+ * Whether every `oneOf` member has the same required, single-value enum
+ * property with a distinct value. Only this unambiguous shape is safe to
+ * decode using Effect's exclusive `oneOf` mode.
  */
-function getDiscriminatedOneOfMembers(
+function isUnambiguousDiscriminatedOneOf(
   prop: SchemaObject,
   spec: any,
   seenRefs: Set<string>,
-): SchemaObject[] | undefined {
-  if (!prop.oneOf || prop.oneOf.length === 0) return undefined;
+): boolean {
+  if (!prop.oneOf || prop.oneOf.length === 0) return false;
 
   const resolvedMembers: SchemaObject[] = [];
   for (const member of prop.oneOf) {
@@ -482,7 +594,7 @@ function getDiscriminatedOneOfMembers(
     const memberRefs = new Set(seenRefs);
 
     while (resolved.$ref) {
-      if (memberRefs.has(resolved.$ref)) return undefined;
+      if (memberRefs.has(resolved.$ref)) return false;
       memberRefs.add(resolved.$ref);
       resolved = resolveRef(spec, resolved.$ref);
     }
@@ -491,7 +603,7 @@ function getDiscriminatedOneOfMembers(
   }
 
   if (resolvedMembers.some((member) => member.properties === undefined)) {
-    return undefined;
+    return false;
   }
 
   const first = resolvedMembers[0];
@@ -514,15 +626,11 @@ function getDiscriminatedOneOfMembers(
 
     if (discriminatorValues.some((value) => value === undefined)) continue;
 
-    const uniqueValues = new Set(
-      discriminatorValues.map(
-        (value) => `${typeof value}:${JSON.stringify(value)}`,
-      ),
-    );
-    if (uniqueValues.size === resolvedMembers.length) return prop.oneOf;
+    const uniqueValues = new Set(discriminatorValues);
+    if (uniqueValues.size === resolvedMembers.length) return true;
   }
 
-  return undefined;
+  return false;
 }
 
 function openApiTypeToEffectSchema(
@@ -605,17 +713,48 @@ function openApiTypeToEffectSchema(
     return generateStructSchema(mergedSchema, spec, indent, seenRefs, ctx);
   }
 
-  // HOURGLASS PATCH: Render unambiguous standard OpenAPI discriminated unions.
+  // Handle oneOf/anyOf — emit a union of the branch schemas. Branches that
+  // only express nullability (`{type:"null"}`, PostHog's `NullEnum`) collapse
+  // into a `Schema.NullOr` wrapper instead of becoming a `Schema.Null` member.
   if (prop.oneOf || prop.anyOf) {
-    const unionMembers = getDiscriminatedOneOfMembers(prop, spec, seenRefs);
-    if (unionMembers) {
-      const members = unionMembers.map((member) =>
-        openApiTypeToEffectSchema(member, spec, `${indent}  `, seenRefs, ctx),
-      );
-      const unionSchema = `Schema.Union([${members.join(", ")}], { mode: "oneOf" })`;
-      return isNullable(prop) ? `Schema.NullOr(${unionSchema})` : unionSchema;
+    // Bail out of deeply-nested unions. Inlining recursive union graphs (e.g.
+    // PostHog's HogQL `query` AST) expands combinatorially into multi-hundred-MB
+    // files; beyond a few `$ref` hops the precise shape isn't useful anyway.
+    const unionBranches = (prop.oneOf ?? prop.anyOf)!;
+    if (
+      seenRefs.size > MAX_UNION_INLINE_DEPTH &&
+      !isScalarUnion(unionBranches, spec)
+    ) {
+      return "Schema.Unknown";
     }
-    return "Schema.Unknown";
+    const branches = unionBranches;
+    let nullable = isNullable(prop);
+    const members: string[] = [];
+    for (const branch of branches) {
+      if (isNullBranch(branch, spec)) {
+        nullable = true;
+        continue;
+      }
+      members.push(
+        openApiTypeToEffectSchema(branch, spec, indent, seenRefs, ctx),
+      );
+    }
+    const uniq = [...new Set(members)];
+    if (uniq.length === 0) return nullable ? "Schema.Null" : "Schema.Never";
+    // HOURGLASS PATCH: Preserve exclusive decoding for unambiguous OpenAPI
+    // oneOf object unions while retaining upstream's generic union support.
+    const isDiscriminatedOneOf =
+      uniq.length > 1 &&
+      prop.oneOf !== undefined &&
+      isUnambiguousDiscriminatedOneOf(prop, spec, seenRefs);
+    const base =
+      uniq.length === 1
+        ? uniq[0]
+        : isDiscriminatedOneOf
+          ? `Schema.Union([${uniq.join(", ")}], { mode: "oneOf" })`
+          : `Schema.Union([${uniq.join(", ")}])`;
+    const result = nullable ? `Schema.NullOr(${base})` : base;
+    return result.length > MAX_UNION_INLINE_CHARS ? "Schema.Unknown" : result;
   }
 
   // Handle enum
@@ -683,46 +822,23 @@ function openApiTypeToEffectSchema(
       }
       break;
     case "object":
-      if (prop.properties) {
-        const structSchema = generateStructSchema(
+      baseSchema = generateObjectEffectSchema(
+        prop,
+        spec,
+        indent,
+        seenRefs,
+        ctx,
+      );
+      break;
+    default:
+      if (prop.properties || prop.additionalProperties) {
+        baseSchema = generateObjectEffectSchema(
           prop,
           spec,
           indent,
           seenRefs,
           ctx,
         );
-        // HOURGLASS PATCH: Preserve explicit OpenAPI mixed-object index signatures.
-        if (prop.additionalProperties) {
-          if (ctx) ctx.usesAdditionalPropertiesSchema = true;
-          const additionalPropertiesSchema =
-            generateAdditionalPropertiesValueSchema(
-              prop.additionalProperties,
-              spec,
-              indent,
-              seenRefs,
-              ctx,
-            );
-          baseSchema = `StructWithAdditionalProperties(${structSchema}, ${additionalPropertiesSchema})`;
-        } else {
-          baseSchema = structSchema;
-        }
-      } else if (prop.additionalProperties) {
-        const additionalPropertiesSchema =
-          generateAdditionalPropertiesValueSchema(
-            prop.additionalProperties,
-            spec,
-            indent,
-            seenRefs,
-            ctx,
-          );
-        baseSchema = `Schema.Record(Schema.String, ${additionalPropertiesSchema})`;
-      } else {
-        baseSchema = "Schema.Unknown";
-      }
-      break;
-    default:
-      if (prop.properties) {
-        baseSchema = generateStructSchema(prop, spec, indent, seenRefs, ctx);
       } else {
         baseSchema = "Schema.Unknown";
       }
@@ -773,6 +889,296 @@ function generateStructSchema(
   }
 
   return `Schema.Struct({\n${lines.join("\n")}\n${indent}})`;
+}
+
+// ============================================================================
+// TypeScript type printer
+//
+// Mirrors `openApiTypeToEffectSchema` but emits a TS *type* string instead of a
+// runtime schema. Used to emit an explicit `interface`/`type` for every
+// Input/Output schema so the generated const can be cast
+// `... as unknown as Schema.Codec<Name>` instead of relying on the expensive
+// `export type X = typeof X.Type` inference (which serializes the full
+// `Schema.Struct<{...}>` into every `.d.ts` and forces consumers to
+// re-instantiate `.Type`). Keeps the public type fully inlined and
+// self-contained.
+// ============================================================================
+
+/** Sensitive decoded `.Type` mapping, kept in sync with `core/src/sensitive.ts`. */
+function sensitiveTsType(
+  direction: "input" | "output",
+  nullable: boolean,
+): string {
+  if (direction === "output") {
+    return nullable
+      ? "Redacted.Redacted<string> | null"
+      : "Redacted.Redacted<string>";
+  }
+  return nullable
+    ? "string | Redacted.Redacted<string> | null"
+    : "string | Redacted.Redacted<string>";
+}
+
+function openApiTypeToTsType(
+  prop: SchemaObject,
+  spec: any,
+  seenRefs: Set<string> = new Set(),
+  ctx?: SchemaGenerationContext,
+): string {
+  // $ref — resolve and inline (self-contained type, no private-name references).
+  if (prop.$ref) {
+    if (seenRefs.has(prop.$ref)) return "unknown";
+    const resolved = resolveRef(spec, prop.$ref);
+    return openApiTypeToTsType(
+      resolved,
+      spec,
+      new Set([...seenRefs, prop.$ref]),
+      ctx,
+    );
+  }
+
+  // allOf — single passes through; multiple merge into one object.
+  if (prop.allOf && prop.allOf.length > 0) {
+    if (prop.allOf.length === 1) {
+      let resolved = prop.allOf[0];
+      if (resolved.$ref) {
+        if (seenRefs.has(resolved.$ref)) return "unknown";
+        const refKey = resolved.$ref;
+        resolved = resolveRef(spec, refKey);
+        const mergedProp: SchemaObject = {
+          ...resolved,
+          ...(prop.nullable !== undefined ? { nullable: prop.nullable } : {}),
+          ...(prop["x-nullable"] !== undefined
+            ? { "x-nullable": prop["x-nullable"] }
+            : {}),
+          ...(prop["x-sensitive"] !== undefined
+            ? { "x-sensitive": prop["x-sensitive"] }
+            : {}),
+        };
+        return openApiTypeToTsType(
+          mergedProp,
+          spec,
+          new Set([...seenRefs, refKey]),
+          ctx,
+        );
+      }
+      return openApiTypeToTsType(resolved, spec, seenRefs, ctx);
+    }
+    const mergedProps: Record<string, SchemaObject> = {};
+    const mergedRequired: string[] = [];
+    for (const subSchema of prop.allOf) {
+      let resolved = subSchema;
+      if (subSchema.$ref) resolved = resolveRef(spec, subSchema.$ref);
+      if (resolved.properties) Object.assign(mergedProps, resolved.properties);
+      if (resolved.required) mergedRequired.push(...resolved.required);
+    }
+    return structObjectToTsType(
+      {
+        type: "object",
+        properties: mergedProps,
+        required: [...new Set(mergedRequired)],
+      },
+      spec,
+      seenRefs,
+      ctx,
+    );
+  }
+
+  if (prop.oneOf || prop.anyOf) {
+    const unionBranches = (prop.oneOf ?? prop.anyOf)!;
+    if (
+      seenRefs.size > MAX_UNION_INLINE_DEPTH &&
+      !isScalarUnion(unionBranches, spec)
+    ) {
+      return "unknown";
+    }
+    const branches = unionBranches;
+    let nullable = isNullable(prop);
+    const members: string[] = [];
+    for (const branch of branches) {
+      if (isNullBranch(branch, spec)) {
+        nullable = true;
+        continue;
+      }
+      members.push(openApiTypeToTsType(branch, spec, seenRefs, ctx));
+    }
+    const uniq = [...new Set(members)];
+    if (uniq.length === 0) return nullable ? "null" : "never";
+    const base = uniq.join(" | ");
+    const result = nullable ? `${base} | null` : base;
+    return result.length > MAX_UNION_INLINE_CHARS ? "unknown" : result;
+  }
+
+  if (prop.enum && prop.enum.length > 0) {
+    const base = prop.enum
+      .map((v) => (typeof v === "string" ? JSON.stringify(v) : String(v)))
+      .join(" | ");
+    return isNullable(prop) ? `${base} | null` : base;
+  }
+
+  const baseType = getBaseType(prop);
+  let ts: string;
+  switch (baseType) {
+    case "string":
+      if (prop["x-sensitive"]) {
+        return sensitiveTsType(
+          ctx?.direction === "output" ? "output" : "input",
+          isNullable(prop),
+        );
+      }
+      ts = "string";
+      break;
+    case "integer":
+    case "number":
+      ts = "number";
+      break;
+    case "boolean":
+      ts = "boolean";
+      break;
+    case "array": {
+      const item = prop.items
+        ? openApiTypeToTsType(prop.items, spec, seenRefs, ctx)
+        : "unknown";
+      // Effect's `Schema.Array` decodes to `ReadonlyArray<T>`; mirror that in
+      // the hand-written interface so consumers can pass `readonly T[]` values.
+      ts = `ReadonlyArray<${item}>`;
+      break;
+    }
+    case "object":
+      ts = objectToTsType(prop, spec, seenRefs, ctx);
+      break;
+    default:
+      ts =
+        prop.properties || prop.additionalProperties
+          ? objectToTsType(prop, spec, seenRefs, ctx)
+          : "unknown";
+      break;
+  }
+  return isNullable(prop) ? `${ts} | null` : ts;
+}
+
+function objectToTsType(
+  prop: SchemaObject,
+  spec: any,
+  seenRefs: Set<string>,
+  ctx?: SchemaGenerationContext,
+): string {
+  if (prop.properties) {
+    return structObjectToTsType(prop, spec, seenRefs, ctx);
+  }
+  if (prop.additionalProperties) {
+    const valueType =
+      typeof prop.additionalProperties === "boolean"
+        ? "unknown"
+        : openApiTypeToTsType(
+            prop.additionalProperties,
+            spec,
+            seenRefs,
+            ctx,
+          );
+    return `Record<string, ${valueType}>`;
+  }
+  return "unknown";
+}
+
+/** Emit an inline `{ k: T; k2?: T2 }` object type for a struct schema. */
+function structObjectToTsType(
+  schema: SchemaObject,
+  spec: any,
+  seenRefs: Set<string>,
+  ctx?: SchemaGenerationContext,
+): string {
+  if (!schema.properties) return "Record<string, unknown>";
+  const required = new Set(schema.required || []);
+  const parts: string[] = [];
+  const propertyTypes: string[] = [];
+  for (const [key, value] of Object.entries(schema.properties)) {
+    const baseType = getBaseType(value);
+    const isSensitiveByName =
+      baseType === "string" &&
+      !value["x-sensitive"] &&
+      !value.enum &&
+      isSensitiveFieldName(key);
+    const effectiveValue = isSensitiveByName
+      ? { ...value, "x-sensitive": true }
+      : value;
+    const tsType = openApiTypeToTsType(effectiveValue, spec, seenRefs, ctx);
+    propertyTypes.push(tsType);
+    const opt = required.has(key) ? "" : "?";
+    parts.push(`${quotePropKey(key)}${opt}: ${tsType}`);
+  }
+  const structType = `{ ${parts.join("; ")} }`;
+  if (!schema.additionalProperties) return structType;
+
+  if (schema.additionalProperties === true) {
+    return `${structType} & Record<string, unknown>`;
+  }
+
+  const additionalType = openApiTypeToTsType(
+    schema.additionalProperties,
+    spec,
+    seenRefs,
+    ctx,
+  );
+  const indexValueType = [...new Set([additionalType, ...propertyTypes])].join(
+    " | ",
+  );
+  return `${structType} & Record<string, ${indexValueType}>`;
+}
+
+/**
+ * Build an explicit `export interface`/`export type` declaration plus a
+ * `Schema.Codec<Name>` cast appended to the schema const. The const code passed
+ * in must NOT include the trailing `export type X = typeof X.Type` line.
+ */
+function emitTypedSchema(
+  name: string,
+  tsType: string,
+  constCode: string,
+): string {
+  // Append the explicit cast to the schema const (before its terminating `;`).
+  const castedConst = constCode.replace(
+    /;\s*$/,
+    ` as unknown as Schema.Codec<${name}>;`,
+  );
+  // Prefer an `interface` for *pure* object types (cheap, named) and a `type`
+  // alias otherwise. A pure object literal both starts with `{` and ends with
+  // `}` — this deliberately excludes array (`{...}[]`) and nullable
+  // (`{...} | null`) shapes, which must stay `type` aliases.
+  const decl = isSingleObjectLiteral(tsType)
+    ? `export interface ${name} ${tsType}`
+    : `export type ${name} = ${tsType};`;
+  return `${decl}\n${castedConst}`;
+}
+
+/**
+ * True only when `s` is a single object literal — i.e. its leading `{` closes
+ * exactly at the trailing `}`. Excludes arrays (`{...}[]`), nullable shapes
+ * (`{...} | null`) and unions of objects (`{...} | {...}`), all of which must
+ * be emitted as `type` aliases rather than `interface` declarations.
+ */
+function isSingleObjectLiteral(s: string): boolean {
+  const t = s.trim();
+  if (!t.startsWith("{") || !t.endsWith("}")) return false;
+  let depth = 0;
+  let inStr: string | null = null;
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i];
+    if (inStr) {
+      if (c === inStr && t[i - 1] !== "\\") inStr = null;
+      continue;
+    }
+    if (c === '"' || c === "'") {
+      inStr = c;
+    } else if (c === "{") {
+      depth++;
+    } else if (c === "}") {
+      depth--;
+      // The outermost object closed before the end → not a single literal.
+      if (depth === 0 && i !== t.length - 1) return false;
+    }
+  }
+  return true;
 }
 
 // ============================================================================
@@ -909,6 +1315,19 @@ function generateInputSchemaSwagger(
   const bodyParam = parameters.find((p) => p.in === "body");
 
   const fields: string[] = [];
+  // Parallel TS-type fields for the explicit input interface.
+  const tsFields: string[] = [];
+  const paramEnumTs = (
+    values: (string | number | boolean)[],
+    type: string | undefined,
+  ): string =>
+    values
+      .map((v) =>
+        type === "integer" || type === "number" || type === "boolean"
+          ? String(v)
+          : JSON.stringify(v),
+      )
+      .join(" | ");
   // Track emitted field names so later groups (query, body) don't redeclare a
   // name already taken by an earlier group. Path params win — without this, a
   // body field sharing a path param's name (e.g. `billingAccountId`) would be
@@ -925,6 +1344,12 @@ function generateInputSchemaSwagger(
         ? "Schema.Number"
         : "Schema.String";
     fields.push(`  ${param.name}: ${baseSchema}.pipe(T.PathParam()),`);
+    const tsBase = param.enum
+      ? paramEnumTs(param.enum, param.type)
+      : param.type === "integer"
+        ? "number"
+        : "string";
+    tsFields.push(`${quotePropKey(param.name)}: ${tsBase}`);
   }
 
   // Query parameters
@@ -943,6 +1368,16 @@ function generateInputSchemaSwagger(
       schema = `Schema.optional(${schema})`;
     }
     fields.push(`  ${param.name}: ${schema},`);
+    const tsBase = param.enum
+      ? paramEnumTs(param.enum, param.type)
+      : param.type === "integer" || param.type === "number"
+        ? "number"
+        : param.type === "boolean"
+          ? "boolean"
+          : "string";
+    tsFields.push(
+      `${quotePropKey(param.name)}${param.required ? "" : "?"}: ${tsBase}`,
+    );
   }
 
   // HOURGLASS PATCH: Emit Swagger 2.0 header params via T.HttpHeader.
@@ -958,6 +1393,16 @@ function generateInputSchemaSwagger(
 
     fields.push(
       `  ${quotePropKey(fieldName)}: ${schema}.pipe(T.HttpHeader("${escapeStringLiteral(param.name)}")),`,
+    );
+    const tsBase = param.enum
+      ? paramEnumTs(param.enum, param.type)
+      : param.type === "integer" || param.type === "number"
+        ? "number"
+        : param.type === "boolean"
+          ? "boolean"
+          : "string";
+    tsFields.push(
+      `${quotePropKey(fieldName)}${param.required ? "" : "?"}: ${tsBase}`,
     );
   }
 
@@ -1017,10 +1462,19 @@ function generateInputSchemaSwagger(
           new Set(),
           ctx,
         );
+        const fieldTs = openApiTypeToTsType(
+          effectiveValue,
+          spec,
+          new Set(),
+          ctx,
+        );
         if (!required.has(key)) {
           fieldSchema = `Schema.optional(${fieldSchema})`;
         }
         fields.push(`  ${quotePropKey(key)}: ${fieldSchema},`);
+        tsFields.push(
+          `${quotePropKey(key)}${required.has(key) ? "" : "?"}: ${fieldTs}`,
+        );
       }
     }
   }
@@ -1032,12 +1486,13 @@ function generateInputSchemaSwagger(
   if (apiVersion) {
     swaggerHttpTraitParts.push(`apiVersion: "${apiVersion}"`);
   }
-  const inputSchemaCode =
+  const inputSchemaCode = emitTypedSchema(
+    inputSchemaName,
+    `{ ${tsFields.join("; ")} }`,
     annotatePureExportConst(`export const ${inputSchemaName} = Schema.Struct({
 ${fields.join("\n")}
-}).pipe(T.Http({ ${swaggerHttpTraitParts.join(", ")} }));`) +
-    `
-export type ${inputSchemaName} = typeof ${inputSchemaName}.Type;`;
+}).pipe(T.Http({ ${swaggerHttpTraitParts.join(", ")} }));`),
+  );
 
   return { inputSchemaCode, inputSchemaName };
 }
@@ -1101,6 +1556,11 @@ function generateInputSchema3(
   const headerParams = parameters.filter((p) => p.in === "header");
 
   const fields: string[] = [];
+  const tsFields: string[] = [];
+  const paramSchemaTs = (schema: SchemaObject | undefined): string => {
+    if (!schema) return "string";
+    return openApiTypeToTsType(schema, spec, new Set(), ctx);
+  };
   const usedNames = new Set<string>();
 
   // Path parameters
@@ -1115,6 +1575,7 @@ function generateInputSchema3(
           ? "Schema.Number"
           : "Schema.String";
     fields.push(`  ${param.name}: ${baseSchema}.pipe(T.PathParam()),`);
+    tsFields.push(`${quotePropKey(param.name)}: ${paramSchemaTs(schema)}`);
   }
 
   // Query parameters
@@ -1122,19 +1583,15 @@ function generateInputSchema3(
     if (usedNames.has(param.name)) continue;
     usedNames.add(param.name);
     const schema = param.schema;
-    let schemaStr =
-      schema?.enum && schema.enum.length > 0
-        ? renderEnumLiterals(schema.enum, schema.type)
-        : schema?.type === "integer" || schema?.type === "number"
-          ? "Schema.Number"
-          : schema?.type === "boolean"
-            ? "Schema.Boolean"
-            : "Schema.String";
+    let schemaStr = renderParameterSchema3(schema, spec, ctx);
 
     if (!param.required) {
       schemaStr = `Schema.optional(${schemaStr})`;
     }
     fields.push(`  ${param.name}: ${schemaStr},`);
+    tsFields.push(
+      `${quotePropKey(param.name)}${param.required ? "" : "?"}: ${paramSchemaTs(schema)}`,
+    );
   }
 
   // HOURGLASS PATCH: Emit OpenAPI 3.x header params via T.HttpHeader.
@@ -1150,6 +1607,9 @@ function generateInputSchema3(
 
     fields.push(
       `  ${quotePropKey(fieldName)}: ${schema}.pipe(T.HttpHeader("${escapeStringLiteral(param.name)}")),`,
+    );
+    tsFields.push(
+      `${quotePropKey(fieldName)}${param.required ? "" : "?"}: ${paramSchemaTs(param.schema)}`,
     );
   }
 
@@ -1177,7 +1637,7 @@ function generateInputSchema3(
       // properties as fields, instead of degenerating to an empty body.
       if (bodySchema.allOf && bodySchema.allOf.length > 0) {
         const mergedProps: Record<string, SchemaObject> = {
-          ...(bodySchema.properties ?? {}),
+          ...bodySchema.properties,
         };
         const mergedRequired: string[] = [...(bodySchema.required ?? [])];
         for (const subSchema of bodySchema.allOf) {
@@ -1222,10 +1682,19 @@ function generateInputSchema3(
             new Set(),
             ctx,
           );
+          const fieldTs = openApiTypeToTsType(
+            effectiveValue,
+            spec,
+            new Set(),
+            ctx,
+          );
           if (!required.has(key)) {
             fieldSchema = `Schema.optional(${fieldSchema})`;
           }
           fields.push(`  ${quotePropKey(key)}: ${fieldSchema},`);
+          tsFields.push(
+            `${quotePropKey(key)}${required.has(key) ? "" : "?"}: ${fieldTs}`,
+          );
         }
       }
     }
@@ -1251,12 +1720,13 @@ function generateInputSchema3(
     traitChain.push(`T.NoFollowRedirect()`);
   }
 
-  const inputSchemaCode =
+  const inputSchemaCode = emitTypedSchema(
+    inputSchemaName,
+    `{ ${tsFields.join("; ")} }`,
     annotatePureExportConst(`export const ${inputSchemaName} = Schema.Struct({
 ${fields.join("\n")}
-}).pipe(${traitChain.join(", ")});`) +
-    `
-export type ${inputSchemaName} = typeof ${inputSchemaName}.Type;`;
+}).pipe(${traitChain.join(", ")});`),
+  );
 
   return { inputSchemaCode, inputSchemaName };
 }
@@ -1306,7 +1776,6 @@ function generateOutputSchema(
   outputSchemaCode: string;
   outputSchemaName: string;
   sensitiveImports: {
-    usesAdditionalPropertiesSchema: boolean;
     usesSensitiveString: boolean;
     usesSensitiveNullableString: boolean;
     usesSensitiveOutputString: boolean;
@@ -1316,7 +1785,6 @@ function generateOutputSchema(
   const outputSchemaName = toPascalCase(operationId) + "Output";
   const ctx: SchemaGenerationContext = {
     direction: "output",
-    usesAdditionalPropertiesSchema: false,
     usesSensitiveString: false,
     usesSensitiveNullableString: false,
     usesSensitiveOutputString: false,
@@ -1325,11 +1793,13 @@ function generateOutputSchema(
 
   if (!responseSchema) {
     return {
-      outputSchemaCode: `export const ${outputSchemaName} = /*@__PURE__*/ /*#__PURE__*/ Schema.Void;
-export type ${outputSchemaName} = typeof ${outputSchemaName}.Type;`,
+      outputSchemaCode: emitTypedSchema(
+        outputSchemaName,
+        "void",
+        `export const ${outputSchemaName} = /*@__PURE__*/ /*#__PURE__*/ Schema.Void;`,
+      ),
       outputSchemaName,
       sensitiveImports: {
-        usesAdditionalPropertiesSchema: false,
         usesSensitiveString: false,
         usesSensitiveNullableString: false,
         usesSensitiveOutputString: false,
@@ -1352,12 +1822,20 @@ export type ${outputSchemaName} = typeof ${outputSchemaName}.Type;`,
       new Set(),
       ctx,
     );
+    const itemTs = openApiTypeToTsType(
+      responseSchema.items,
+      spec,
+      new Set(),
+      ctx,
+    );
     return {
-      outputSchemaCode: `export const ${outputSchemaName} = /*@__PURE__*/ /*#__PURE__*/ Schema.Array(${itemSchema});
-export type ${outputSchemaName} = typeof ${outputSchemaName}.Type;`,
+      outputSchemaCode: emitTypedSchema(
+        outputSchemaName,
+        `ReadonlyArray<${itemTs}>`,
+        `export const ${outputSchemaName} = /*@__PURE__*/ /*#__PURE__*/ Schema.Array(${itemSchema});`,
+      ),
       outputSchemaName,
       sensitiveImports: {
-        usesAdditionalPropertiesSchema: ctx.usesAdditionalPropertiesSchema,
         usesSensitiveString: ctx.usesSensitiveString,
         usesSensitiveNullableString: ctx.usesSensitiveNullableString,
         usesSensitiveOutputString: ctx.usesSensitiveOutputString,
@@ -1374,12 +1852,15 @@ export type ${outputSchemaName} = typeof ${outputSchemaName}.Type;`,
     new Set(),
     ctx,
   );
+  const responseTs = openApiTypeToTsType(responseSchema, spec, new Set(), ctx);
   return {
-    outputSchemaCode: `export const ${outputSchemaName} = /*@__PURE__*/ /*#__PURE__*/ ${schemaCode};
-export type ${outputSchemaName} = typeof ${outputSchemaName}.Type;`,
+    outputSchemaCode: emitTypedSchema(
+      outputSchemaName,
+      responseTs,
+      `export const ${outputSchemaName} = /*@__PURE__*/ /*#__PURE__*/ ${schemaCode};`,
+    ),
     outputSchemaName,
     sensitiveImports: {
-      usesAdditionalPropertiesSchema: ctx.usesAdditionalPropertiesSchema,
       usesSensitiveString: ctx.usesSensitiveString,
       usesSensitiveNullableString: ctx.usesSensitiveNullableString,
       usesSensitiveOutputString: ctx.usesSensitiveOutputString,
@@ -1452,6 +1933,9 @@ import * as T from "${traitsImport}.ts";`;
   }
   if (sensitiveTypesToImport.length > 0) {
     imports += `\nimport { ${sensitiveTypesToImport.join(", ")} } from "${sensitiveImportPath}.ts";`;
+    // The explicit Input/Output type aliases reference `Redacted.Redacted<...>`
+    // for sensitive fields (see openApiTypeToTsType / sensitiveTsType).
+    imports += `\nimport * as Redacted from "effect/Redacted";`;
   }
 
   return [
@@ -1486,7 +1970,17 @@ export function generateFromOpenAPI(config: GeneratorConfig): void {
   const version = detectVersion(spec);
 
   // Apply patches
-  const { applied, errors: patchErrors } = applyAllPatches(spec, patchDir);
+  const {
+    applied,
+    skipped: patchSkipped,
+    errors: patchErrors,
+  } = applyAllPatches(spec, patchDir);
+  if (patchSkipped.length > 0) {
+    console.warn("Skipped stale patch operations (target no longer in spec):");
+    for (const msg of patchSkipped) {
+      console.warn(`  ⚠ ${msg}`);
+    }
+  }
   if (patchErrors.length > 0) {
     console.error("Patch errors:");
     for (const msg of patchErrors) {
@@ -1554,7 +2048,6 @@ export function generateFromOpenAPI(config: GeneratorConfig): void {
 
           const sensitiveCtx: SchemaGenerationContext = {
             direction: "input",
-            usesAdditionalPropertiesSchema: false,
             usesSensitiveString: false,
             usesSensitiveNullableString: false,
             usesSensitiveOutputString: false,
@@ -1587,9 +2080,6 @@ export function generateFromOpenAPI(config: GeneratorConfig): void {
             swagger,
           );
           const sensitiveImports = {
-            usesAdditionalPropertiesSchema:
-              sensitiveCtx.usesAdditionalPropertiesSchema ||
-              outputSensitiveImports.usesAdditionalPropertiesSchema,
             usesSensitiveString:
               sensitiveCtx.usesSensitiveString ||
               outputSensitiveImports.usesSensitiveString,
@@ -1681,7 +2171,6 @@ export function generateFromOpenAPI(config: GeneratorConfig): void {
 
           const sensitiveCtx: SchemaGenerationContext = {
             direction: "input",
-            usesAdditionalPropertiesSchema: false,
             usesSensitiveString: false,
             usesSensitiveNullableString: false,
             usesSensitiveOutputString: false,
@@ -1732,9 +2221,6 @@ export function generateFromOpenAPI(config: GeneratorConfig): void {
             sensitiveImports: outputSensitiveImports,
           } = generateOutputSchema(operation.operationId, responseSchema, oas);
           const sensitiveImports = {
-            usesAdditionalPropertiesSchema:
-              sensitiveCtx.usesAdditionalPropertiesSchema ||
-              outputSensitiveImports.usesAdditionalPropertiesSchema,
             usesSensitiveString:
               sensitiveCtx.usesSensitiveString ||
               outputSensitiveImports.usesSensitiveString,
@@ -1941,7 +2427,6 @@ function buildOperationFile(
   jsDoc: string,
   operationErrors: string[],
   sensitiveImports: {
-    usesAdditionalPropertiesSchema: boolean;
     usesSensitiveString: boolean;
     usesSensitiveNullableString: boolean;
     usesSensitiveOutputString: boolean;
@@ -1992,7 +2477,10 @@ export const ${functionName} = /*@__PURE__*/ /*#__PURE__*/ API.${factory}(() => 
 import { API } from "${clientImport}.ts";
 import * as T from "${traitsImport}.ts";`;
 
-  if (sensitiveImports.usesAdditionalPropertiesSchema) {
+  if (
+    inputSchemaCode.includes("StructWithAdditionalProperties(") ||
+    outputSchemaCode.includes("StructWithAdditionalProperties(")
+  ) {
     imports += `\nimport { StructWithAdditionalProperties } from "${additionalPropertiesImportPath}";`;
   }
 
@@ -2015,6 +2503,9 @@ import * as T from "${traitsImport}.ts";`;
   }
   if (sensitiveTypesToImport.length > 0) {
     imports += `\nimport { ${sensitiveTypesToImport.join(", ")} } from "${sensitiveImportPath}.ts";`;
+    // The explicit Input/Output type aliases reference `Redacted.Redacted<...>`
+    // for sensitive fields (see openApiTypeToTsType / sensitiveTsType).
+    imports += `\nimport * as Redacted from "effect/Redacted";`;
   }
 
   return [

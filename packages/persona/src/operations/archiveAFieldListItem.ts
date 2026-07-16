@@ -10,6 +10,22 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface ArchiveAFieldListItemInput {
+  listItemId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const ArchiveAFieldListItemInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     listItemId: Schema.String.pipe(T.PathParam()),
@@ -35,10 +51,29 @@ export const ArchiveAFieldListItemInput =
         "2020-05-18",
       ]),
     ).pipe(T.HttpHeader("Persona-Version")),
-  }).pipe(T.Http({ method: "DELETE", path: "/list-item/fields/{listItemId}" }));
-export type ArchiveAFieldListItemInput = typeof ArchiveAFieldListItemInput.Type;
+  }).pipe(
+    T.Http({ method: "DELETE", path: "/list-item/fields/{listItemId}" }),
+  ) as unknown as Schema.Codec<ArchiveAFieldListItemInput>;
 
 // Output Schema
+export interface ArchiveAFieldListItemOutput {
+  data: {
+    id?: string;
+    type?: string;
+    attributes?: {
+      status?: string;
+      "archived-at"?: string | null;
+      "updated-at"?: string | null;
+      "created-at"?: string;
+      "redacted-at"?: string | null;
+      "match-count"?: number;
+      "field-value"?: string;
+    };
+    relationships?: {
+      creator?: { data?: { type?: string; id?: string } | null };
+    };
+  };
+}
 export const ArchiveAFieldListItemOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -59,15 +94,20 @@ export const ArchiveAFieldListItemOutput =
         Schema.Struct({
           creator: Schema.optional(
             Schema.Struct({
-              data: Schema.optional(Schema.Unknown),
+              data: Schema.optional(
+                Schema.NullOr(
+                  Schema.Struct({
+                    type: Schema.optional(Schema.String),
+                    id: Schema.optional(Schema.String),
+                  }),
+                ),
+              ),
             }),
           ),
         }),
       ),
     }),
-  });
-export type ArchiveAFieldListItemOutput =
-  typeof ArchiveAFieldListItemOutput.Type;
+  }) as unknown as Schema.Codec<ArchiveAFieldListItemOutput>;
 
 // The operation
 /**

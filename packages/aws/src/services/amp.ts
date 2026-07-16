@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -2124,6 +2124,8 @@ export interface WorkspaceConfigurationDescription {
   status: WorkspaceConfigurationStatus;
   limitsPerLabelSet?: LimitsPerLabelSet[];
   retentionPeriodInDays?: number;
+  outOfOrderTimeWindowInSeconds?: number;
+  ruleQueryOffsetInSeconds?: number;
 }
 export const WorkspaceConfigurationDescription =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -2131,6 +2133,8 @@ export const WorkspaceConfigurationDescription =
       status: WorkspaceConfigurationStatus,
       limitsPerLabelSet: S.optional(LimitsPerLabelSetList),
       retentionPeriodInDays: S.optional(S.Number),
+      outOfOrderTimeWindowInSeconds: S.optional(S.Number),
+      ruleQueryOffsetInSeconds: S.optional(S.Number),
     }),
   ).annotate({
     identifier: "WorkspaceConfigurationDescription",
@@ -2149,6 +2153,8 @@ export interface UpdateWorkspaceConfigurationRequest {
   clientToken?: string;
   limitsPerLabelSet?: LimitsPerLabelSet[];
   retentionPeriodInDays?: number;
+  outOfOrderTimeWindowInSeconds?: number;
+  ruleQueryOffsetInSeconds?: number;
 }
 export const UpdateWorkspaceConfigurationRequest =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -2157,6 +2163,8 @@ export const UpdateWorkspaceConfigurationRequest =
       clientToken: S.optional(S.String).pipe(T.IdempotencyToken()),
       limitsPerLabelSet: S.optional(LimitsPerLabelSetList),
       retentionPeriodInDays: S.optional(S.Number),
+      outOfOrderTimeWindowInSeconds: S.optional(S.Number),
+      ruleQueryOffsetInSeconds: S.optional(S.Number),
     }).pipe(
       T.all(
         T.Http({
@@ -2351,6 +2359,7 @@ export const getDefaultScraperConfiguration: API.OperationMethod<
   input: GetDefaultScraperConfigurationRequest,
   output: GetDefaultScraperConfigurationResponse,
   errors: [AccessDeniedException, InternalServerException, ThrottlingException],
+  operationName: "GetDefaultScraperConfiguration",
 }));
 export type ListTagsForResourceError =
   | AccessDeniedException
@@ -2377,6 +2386,7 @@ export const listTagsForResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type TagResourceError =
   | AccessDeniedException
@@ -2405,6 +2415,7 @@ export const tagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | AccessDeniedException
@@ -2431,6 +2442,7 @@ export const untagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UntagResource",
 }));
 export type CreateScraperError =
   | AccessDeniedException
@@ -2469,6 +2481,7 @@ export const createScraper: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateScraper",
 }));
 export type DescribeScraperError =
   | AccessDeniedException
@@ -2495,6 +2508,7 @@ export const describeScraper: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeScraper",
 }));
 export type UpdateScraperError =
   | AccessDeniedException
@@ -2527,6 +2541,7 @@ export const updateScraper: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateScraper",
 }));
 export type DeleteScraperError =
   | AccessDeniedException
@@ -2555,6 +2570,7 @@ export const deleteScraper: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteScraper",
 }));
 export type ListScrapersError =
   | AccessDeniedException
@@ -2594,6 +2610,7 @@ export const listScrapers: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListScrapers",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -2626,6 +2643,7 @@ export const updateScraperLoggingConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpdateScraperLoggingConfiguration",
 }));
 export type DescribeScraperLoggingConfigurationError =
   | AccessDeniedException
@@ -2650,6 +2668,7 @@ export const describeScraperLoggingConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DescribeScraperLoggingConfiguration",
 }));
 export type DeleteScraperLoggingConfigurationError =
   | AccessDeniedException
@@ -2676,6 +2695,7 @@ export const deleteScraperLoggingConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteScraperLoggingConfiguration",
 }));
 export type CreateWorkspaceError =
   | AccessDeniedException
@@ -2704,6 +2724,7 @@ export const createWorkspace: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateWorkspace",
 }));
 export type DescribeWorkspaceError =
   | AccessDeniedException
@@ -2730,6 +2751,7 @@ export const describeWorkspace: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeWorkspace",
 }));
 export type UpdateWorkspaceAliasError =
   | AccessDeniedException
@@ -2760,6 +2782,7 @@ export const updateWorkspaceAlias: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateWorkspaceAlias",
 }));
 export type DeleteWorkspaceError =
   | AccessDeniedException
@@ -2790,6 +2813,7 @@ export const deleteWorkspace: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteWorkspace",
 }));
 export type ListWorkspacesError =
   | AccessDeniedException
@@ -2829,6 +2853,7 @@ export const listWorkspaces: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListWorkspaces",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -2865,6 +2890,7 @@ export const createAlertManagerDefinition: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateAlertManagerDefinition",
 }));
 export type DescribeAlertManagerDefinitionError =
   | AccessDeniedException
@@ -2891,6 +2917,7 @@ export const describeAlertManagerDefinition: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeAlertManagerDefinition",
 }));
 export type PutAlertManagerDefinitionError =
   | AccessDeniedException
@@ -2921,6 +2948,7 @@ export const putAlertManagerDefinition: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutAlertManagerDefinition",
 }));
 export type DeleteAlertManagerDefinitionError =
   | AccessDeniedException
@@ -2949,6 +2977,7 @@ export const deleteAlertManagerDefinition: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteAlertManagerDefinition",
 }));
 export type CreateAnomalyDetectorError =
   | AccessDeniedException
@@ -2977,6 +3006,7 @@ export const createAnomalyDetector: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateAnomalyDetector",
 }));
 export type PutAnomalyDetectorError =
   | AccessDeniedException
@@ -3005,6 +3035,7 @@ export const putAnomalyDetector: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutAnomalyDetector",
 }));
 export type DescribeAnomalyDetectorError =
   | AccessDeniedException
@@ -3031,6 +3062,7 @@ export const describeAnomalyDetector: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeAnomalyDetector",
 }));
 export type DeleteAnomalyDetectorError =
   | AccessDeniedException
@@ -3059,6 +3091,7 @@ export const deleteAnomalyDetector: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteAnomalyDetector",
 }));
 export type ListAnomalyDetectorsError =
   | AccessDeniedException
@@ -3100,6 +3133,7 @@ export const listAnomalyDetectors: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListAnomalyDetectors",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3132,6 +3166,7 @@ export const createLoggingConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "CreateLoggingConfiguration",
 }));
 export type DescribeLoggingConfigurationError =
   | AccessDeniedException
@@ -3158,6 +3193,7 @@ export const describeLoggingConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DescribeLoggingConfiguration",
 }));
 export type UpdateLoggingConfigurationError =
   | AccessDeniedException
@@ -3186,6 +3222,7 @@ export const updateLoggingConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpdateLoggingConfiguration",
 }));
 export type DeleteLoggingConfigurationError =
   | AccessDeniedException
@@ -3214,6 +3251,7 @@ export const deleteLoggingConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteLoggingConfiguration",
 }));
 export type CreateQueryLoggingConfigurationError =
   | AccessDeniedException
@@ -3238,6 +3276,7 @@ export const createQueryLoggingConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "CreateQueryLoggingConfiguration",
 }));
 export type DescribeQueryLoggingConfigurationError =
   | AccessDeniedException
@@ -3262,6 +3301,7 @@ export const describeQueryLoggingConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DescribeQueryLoggingConfiguration",
 }));
 export type UpdateQueryLoggingConfigurationError =
   | AccessDeniedException
@@ -3288,6 +3328,7 @@ export const updateQueryLoggingConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpdateQueryLoggingConfiguration",
 }));
 export type DeleteQueryLoggingConfigurationError =
   | AccessDeniedException
@@ -3314,6 +3355,7 @@ export const deleteQueryLoggingConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteQueryLoggingConfiguration",
 }));
 export type CreateRuleGroupsNamespaceError =
   | AccessDeniedException
@@ -3348,6 +3390,7 @@ export const createRuleGroupsNamespace: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateRuleGroupsNamespace",
 }));
 export type DescribeRuleGroupsNamespaceError =
   | AccessDeniedException
@@ -3374,6 +3417,7 @@ export const describeRuleGroupsNamespace: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeRuleGroupsNamespace",
 }));
 export type PutRuleGroupsNamespaceError =
   | AccessDeniedException
@@ -3410,6 +3454,7 @@ export const putRuleGroupsNamespace: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutRuleGroupsNamespace",
 }));
 export type DeleteRuleGroupsNamespaceError =
   | AccessDeniedException
@@ -3438,6 +3483,7 @@ export const deleteRuleGroupsNamespace: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteRuleGroupsNamespace",
 }));
 export type ListRuleGroupsNamespacesError =
   | AccessDeniedException
@@ -3479,6 +3525,7 @@ export const listRuleGroupsNamespaces: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListRuleGroupsNamespaces",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3511,6 +3558,7 @@ export const describeWorkspaceConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeWorkspaceConfiguration",
 }));
 export type UpdateWorkspaceConfigurationError =
   | AccessDeniedException
@@ -3543,6 +3591,7 @@ export const updateWorkspaceConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateWorkspaceConfiguration",
 }));
 export type PutResourcePolicyError =
   | AccessDeniedException
@@ -3577,6 +3626,7 @@ export const putResourcePolicy: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutResourcePolicy",
 }));
 export type DescribeResourcePolicyError =
   | AccessDeniedException
@@ -3603,6 +3653,7 @@ export const describeResourcePolicy: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeResourcePolicy",
 }));
 export type DeleteResourcePolicyError =
   | AccessDeniedException
@@ -3631,4 +3682,5 @@ export const deleteResourcePolicy: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteResourcePolicy",
 }));

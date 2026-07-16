@@ -37,10 +37,7 @@ describe("getFieldForDataset", () => {
               e !== null &&
               "_tag" in e &&
               (e as { _tag: string })._tag === "NoFieldsYet",
-            schedule: Schedule.both(
-              Schedule.recurs(15),
-              Schedule.spaced("2 seconds"),
-            ),
+            schedule: Schedule.max([Schedule.recurs(15), Schedule.spaced("2 seconds")]),
           },
         );
 
@@ -60,7 +57,7 @@ describe("getFieldForDataset", () => {
 
       await runEffect(effect);
     },
-    { timeout: 120_000 },
+    120_000,
   );
 
   it(
@@ -89,10 +86,7 @@ describe("getFieldForDataset", () => {
               : Effect.succeed(e),
           ),
           Effect.retry({
-            schedule: Schedule.both(
-              Schedule.spaced("2 seconds"),
-              Schedule.recurs(5),
-            ),
+            schedule: Schedule.max([Schedule.spaced("2 seconds"), Schedule.recurs(5)]),
           }),
         );
 
@@ -105,7 +99,7 @@ describe("getFieldForDataset", () => {
 
       await runEffect(effect);
     },
-    { timeout: 60_000 },
+    60_000,
   );
 
   it(
@@ -120,6 +114,6 @@ describe("getFieldForDataset", () => {
 
       expect((error as { _tag: string })._tag).toBe("NotFound");
     },
-    { timeout: 30_000 },
+    30_000,
   );
 });

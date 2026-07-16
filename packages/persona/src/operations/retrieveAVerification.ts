@@ -4,6 +4,22 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface RetrieveAVerificationInput {
+  verificationId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const RetrieveAVerificationInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     verificationId: Schema.String.pipe(T.PathParam()),
@@ -29,17 +45,20 @@ export const RetrieveAVerificationInput =
         "2020-05-18",
       ]),
     ).pipe(T.HttpHeader("Persona-Version")),
-  }).pipe(T.Http({ method: "GET", path: "/verifications/{verificationId}" }));
-export type RetrieveAVerificationInput = typeof RetrieveAVerificationInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/verifications/{verificationId}" }),
+  ) as unknown as Schema.Codec<RetrieveAVerificationInput>;
 
 // Output Schema
+export interface RetrieveAVerificationOutput {
+  data: unknown;
+  included?: ReadonlyArray<unknown>;
+}
 export const RetrieveAVerificationOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Unknown,
     included: Schema.optional(Schema.Array(Schema.Unknown)),
-  });
-export type RetrieveAVerificationOutput =
-  typeof RetrieveAVerificationOutput.Type;
+  }) as unknown as Schema.Codec<RetrieveAVerificationOutput>;
 
 // The operation
 /**

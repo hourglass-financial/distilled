@@ -4,15 +4,68 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface GetTransactionInput {
+  id: string;
+  ereborVersion?: string;
+}
 export const GetTransactionInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String.pipe(T.PathParam()),
   ereborVersion: Schema.optional(Schema.String).pipe(
     T.HttpHeader("Erebor-Version"),
   ),
-}).pipe(T.Http({ method: "GET", path: "/transactions/{id}" }));
-export type GetTransactionInput = typeof GetTransactionInput.Type;
+}).pipe(
+  T.Http({ method: "GET", path: "/transactions/{id}" }),
+) as unknown as Schema.Codec<GetTransactionInput>;
 
 // Output Schema
+export interface GetTransactionOutput {
+  id: string;
+  type: "TRANSACTION";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  status: "CREATED" | "PENDING" | "SETTLED" | "FAILED" | "REVERSED";
+  transaction_type:
+    | "ACH_IN"
+    | "ACH_OUT"
+    | "WIRE_IN"
+    | "WIRE_OUT"
+    | "INTERNATIONAL_WIRE_IN"
+    | "INTERNATIONAL_WIRE_OUT"
+    | "BLOCKCHAIN_IN"
+    | "BLOCKCHAIN_OUT"
+    | "RAIL_IN"
+    | "RAIL_OUT"
+    | "BOOK_TRANSFER"
+    | "INTEREST"
+    | "FEE"
+    | "ADJUSTMENT";
+  amount: {
+    currency: string;
+    exponent?: number;
+    value: string;
+    display_value?: string;
+  };
+  description: string | null;
+  associated_payments?: ReadonlyArray<{
+    type: string;
+    id: string;
+    url: string;
+  }> | null;
+  from?: {
+    type: string;
+    id: string;
+    url?: string;
+    description?: string | null;
+  } | null;
+  to?: {
+    type: string;
+    id: string;
+    url: string;
+    description?: string | null;
+  } | null;
+}
 export const GetTransactionOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String,
   type: Schema.Literals(["TRANSACTION"]),
@@ -61,10 +114,27 @@ export const GetTransactionOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       ),
     ),
   ),
-  from: Schema.optional(Schema.Unknown),
-  to: Schema.optional(Schema.Unknown),
-});
-export type GetTransactionOutput = typeof GetTransactionOutput.Type;
+  from: Schema.optional(
+    Schema.NullOr(
+      Schema.Struct({
+        type: Schema.String,
+        id: Schema.String,
+        url: Schema.optional(Schema.String),
+        description: Schema.optional(Schema.NullOr(Schema.String)),
+      }),
+    ),
+  ),
+  to: Schema.optional(
+    Schema.NullOr(
+      Schema.Struct({
+        type: Schema.String,
+        id: Schema.String,
+        url: Schema.String,
+        description: Schema.optional(Schema.NullOr(Schema.String)),
+      }),
+    ),
+  ),
+}) as unknown as Schema.Codec<GetTransactionOutput>;
 
 // The operation
 /**

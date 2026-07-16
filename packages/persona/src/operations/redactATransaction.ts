@@ -10,6 +10,22 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface RedactATransactionInput {
+  transactionId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const RedactATransactionInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     transactionId: Schema.String.pipe(T.PathParam()),
@@ -35,10 +51,33 @@ export const RedactATransactionInput =
         "2020-05-18",
       ]),
     ).pipe(T.HttpHeader("Persona-Version")),
-  }).pipe(T.Http({ method: "DELETE", path: "/transactions/{transactionId}" }));
-export type RedactATransactionInput = typeof RedactATransactionInput.Type;
+  }).pipe(
+    T.Http({ method: "DELETE", path: "/transactions/{transactionId}" }),
+  ) as unknown as Schema.Codec<RedactATransactionInput>;
 
 // Output Schema
+export interface RedactATransactionOutput {
+  data: {
+    id?: string;
+    type?: string;
+    attributes?: {
+      status?: string;
+      "reference-id"?: string | null;
+      fields?: Record<string, unknown>;
+      tags?: ReadonlyArray<string>;
+      "created-at"?: string;
+      "updated-at"?: string | null;
+    };
+    relationships?: {
+      reviewer?: { data?: { type?: string; id?: string } | null };
+      "transaction-label"?: { data?: { type?: string; id?: string } | null };
+      "transaction-type"?: { data?: { type?: string; id?: string } };
+      "related-objects"?: {
+        data?: ReadonlyArray<{ type?: string; id?: string }>;
+      };
+    };
+  };
+}
 export const RedactATransactionOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -105,8 +144,7 @@ export const RedactATransactionOutput =
         }),
       ),
     }),
-  });
-export type RedactATransactionOutput = typeof RedactATransactionOutput.Type;
+  }) as unknown as Schema.Codec<RedactATransactionOutput>;
 
 // The operation
 /**

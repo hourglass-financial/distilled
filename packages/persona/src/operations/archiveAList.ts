@@ -10,6 +10,22 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface ArchiveAListInput {
+  listId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const ArchiveAListInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   listId: Schema.String.pipe(T.PathParam()),
   include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
@@ -34,14 +50,88 @@ export const ArchiveAListInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "2020-05-18",
     ]),
   ).pipe(T.HttpHeader("Persona-Version")),
-}).pipe(T.Http({ method: "DELETE", path: "/lists/{listId}" }));
-export type ArchiveAListInput = typeof ArchiveAListInput.Type;
+}).pipe(
+  T.Http({ method: "DELETE", path: "/lists/{listId}" }),
+) as unknown as Schema.Codec<ArchiveAListInput>;
 
 // Output Schema
+export interface ArchiveAListOutput {
+  data:
+    | {
+        type?: string;
+        id?: string;
+        attributes?: {
+          name?: string;
+          status?: string;
+          "archived-at"?: string | null;
+          "created-at"?: string;
+          "updated-at"?: string;
+        };
+        relationships?: { "list-items"?: { data?: ReadonlyArray<unknown> } };
+      }
+    | {
+        type?: string;
+        id?: string;
+        attributes?: {
+          name?: string;
+          status?: string;
+          "archived-at"?: string | null;
+          "created-at"?: string;
+          "updated-at"?: string;
+          "allow-fuzzy-name-first"?: boolean;
+        };
+        relationships?: { "list-items"?: { data?: ReadonlyArray<unknown> } };
+      };
+}
 export const ArchiveAListOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  data: Schema.Unknown,
-});
-export type ArchiveAListOutput = typeof ArchiveAListOutput.Type;
+  data: Schema.Union([
+    Schema.Struct({
+      type: Schema.optional(Schema.String),
+      id: Schema.optional(Schema.String),
+      attributes: Schema.optional(
+        Schema.Struct({
+          name: Schema.optional(Schema.String),
+          status: Schema.optional(Schema.String),
+          "archived-at": Schema.optional(Schema.NullOr(Schema.String)),
+          "created-at": Schema.optional(Schema.String),
+          "updated-at": Schema.optional(Schema.String),
+        }),
+      ),
+      relationships: Schema.optional(
+        Schema.Struct({
+          "list-items": Schema.optional(
+            Schema.Struct({
+              data: Schema.optional(Schema.Array(Schema.Unknown)),
+            }),
+          ),
+        }),
+      ),
+    }),
+    Schema.Struct({
+      type: Schema.optional(Schema.String),
+      id: Schema.optional(Schema.String),
+      attributes: Schema.optional(
+        Schema.Struct({
+          name: Schema.optional(Schema.String),
+          status: Schema.optional(Schema.String),
+          "archived-at": Schema.optional(Schema.NullOr(Schema.String)),
+          "created-at": Schema.optional(Schema.String),
+          "updated-at": Schema.optional(Schema.String),
+          "allow-fuzzy-name-first": Schema.optional(Schema.Boolean),
+        }),
+      ),
+      relationships: Schema.optional(
+        Schema.Struct({
+          "list-items": Schema.optional(
+            Schema.Struct({
+              data: Schema.optional(Schema.Array(Schema.Unknown)),
+            }),
+          ),
+        }),
+      ),
+    }),
+  ]),
+}) as unknown as Schema.Codec<ArchiveAListOutput>;
 
 // The operation
 /**

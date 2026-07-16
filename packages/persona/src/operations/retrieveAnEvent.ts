@@ -4,6 +4,22 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface RetrieveAnEventInput {
+  eventId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const RetrieveAnEventInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   eventId: Schema.String.pipe(T.PathParam()),
   include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
@@ -28,10 +44,31 @@ export const RetrieveAnEventInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "2020-05-18",
     ]),
   ).pipe(T.HttpHeader("Persona-Version")),
-}).pipe(T.Http({ method: "GET", path: "/events/{eventId}" }));
-export type RetrieveAnEventInput = typeof RetrieveAnEventInput.Type;
+}).pipe(
+  T.Http({ method: "GET", path: "/events/{eventId}" }),
+) as unknown as Schema.Codec<RetrieveAnEventInput>;
 
 // Output Schema
+export interface RetrieveAnEventOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      name?: string;
+      payload?: {
+        data?: {
+          type?: string;
+          id?: string;
+          attributes?: Record<string, unknown>;
+          relationships?: Record<string, unknown>;
+        };
+      };
+      "created-at"?: string;
+      context?: Record<string, unknown>;
+    };
+  };
+  included?: ReadonlyArray<unknown>;
+}
 export const RetrieveAnEventOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Struct({
     type: Schema.optional(Schema.String),
@@ -61,8 +98,7 @@ export const RetrieveAnEventOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     ),
   }),
   included: Schema.optional(Schema.Array(Schema.Unknown)),
-});
-export type RetrieveAnEventOutput = typeof RetrieveAnEventOutput.Type;
+}) as unknown as Schema.Codec<RetrieveAnEventOutput>;
 
 // The operation
 /**

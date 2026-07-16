@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -162,6 +162,7 @@ export type EcrPullDateRescanDuration = string;
 export type EcrPullDateRescanMode = string;
 export type Ec2ScanMode = string;
 export type Ec2ScanModeStatus = string;
+export type VMScannerStatus = string;
 export type RelationshipStatus = string;
 export type Path = string;
 export type ScanType = string;
@@ -2588,11 +2589,27 @@ export const Ec2ScanModeState = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "Ec2ScanModeState",
 }) as any as S.Schema<Ec2ScanModeState>;
+export interface VMScannerState {
+  activated?: boolean;
+  activatedAt?: Date;
+  status?: string;
+}
+export const VMScannerState = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    activated: S.optional(S.Boolean),
+    activatedAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    status: S.optional(S.String),
+  }),
+).annotate({ identifier: "VMScannerState" }) as any as S.Schema<VMScannerState>;
 export interface Ec2ConfigurationState {
   scanModeState?: Ec2ScanModeState;
+  vmScannerState?: VMScannerState;
 }
 export const Ec2ConfigurationState = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-  S.Struct({ scanModeState: S.optional(Ec2ScanModeState) }),
+  S.Struct({
+    scanModeState: S.optional(Ec2ScanModeState),
+    vmScannerState: S.optional(VMScannerState),
+  }),
 ).annotate({
   identifier: "Ec2ConfigurationState",
 }) as any as S.Schema<Ec2ConfigurationState>;
@@ -6304,9 +6321,10 @@ export const EcrConfiguration = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 }) as any as S.Schema<EcrConfiguration>;
 export interface Ec2Configuration {
   scanMode: string;
+  activateVMScanner?: boolean;
 }
 export const Ec2Configuration = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-  S.Struct({ scanMode: S.String }),
+  S.Struct({ scanMode: S.String, activateVMScanner: S.optional(S.Boolean) }),
 ).annotate({
   identifier: "Ec2Configuration",
 }) as any as S.Schema<Ec2Configuration>;
@@ -6574,6 +6592,7 @@ export const associateMember: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssociateMember",
 }));
 export type BatchAssociateCodeSecurityScanConfigurationError =
   | AccessDeniedException
@@ -6603,6 +6622,7 @@ export const batchAssociateCodeSecurityScanConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchAssociateCodeSecurityScanConfiguration",
 }));
 export type BatchDisassociateCodeSecurityScanConfigurationError =
   | AccessDeniedException
@@ -6632,6 +6652,7 @@ export const batchDisassociateCodeSecurityScanConfiguration: API.OperationMethod
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchDisassociateCodeSecurityScanConfiguration",
 }));
 export type BatchGetAccountStatusError =
   | AccessDeniedException
@@ -6658,6 +6679,7 @@ export const batchGetAccountStatus: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchGetAccountStatus",
 }));
 export type BatchGetCodeSnippetError =
   | AccessDeniedException
@@ -6683,6 +6705,7 @@ export const batchGetCodeSnippet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchGetCodeSnippet",
 }));
 export type BatchGetFindingDetailsError =
   | AccessDeniedException
@@ -6707,6 +6730,7 @@ export const batchGetFindingDetails: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchGetFindingDetails",
 }));
 export type BatchGetFreeTrialInfoError =
   | AccessDeniedException
@@ -6731,6 +6755,7 @@ export const batchGetFreeTrialInfo: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchGetFreeTrialInfo",
 }));
 export type BatchGetMemberEc2DeepInspectionStatusError =
   | AccessDeniedException
@@ -6757,6 +6782,7 @@ export const batchGetMemberEc2DeepInspectionStatus: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchGetMemberEc2DeepInspectionStatus",
 }));
 export type BatchUpdateMemberEc2DeepInspectionStatusError =
   | AccessDeniedException
@@ -6783,6 +6809,7 @@ export const batchUpdateMemberEc2DeepInspectionStatus: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchUpdateMemberEc2DeepInspectionStatus",
 }));
 export type CancelFindingsReportError =
   | AccessDeniedException
@@ -6809,6 +6836,7 @@ export const cancelFindingsReport: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CancelFindingsReport",
 }));
 export type CancelSbomExportError =
   | AccessDeniedException
@@ -6835,6 +6863,7 @@ export const cancelSbomExport: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CancelSbomExport",
 }));
 export type CreateCisScanConfigurationError =
   | AccessDeniedException
@@ -6859,6 +6888,7 @@ export const createCisScanConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateCisScanConfiguration",
 }));
 export type CreateCodeSecurityIntegrationError =
   | AccessDeniedException
@@ -6892,6 +6922,7 @@ export const createCodeSecurityIntegration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateCodeSecurityIntegration",
 }));
 export type CreateCodeSecurityScanConfigurationError =
   | AccessDeniedException
@@ -6920,6 +6951,7 @@ export const createCodeSecurityScanConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateCodeSecurityScanConfiguration",
 }));
 export type CreateFilterError =
   | AccessDeniedException
@@ -6949,6 +6981,7 @@ export const createFilter: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateFilter",
 }));
 export type CreateFindingsReportError =
   | AccessDeniedException
@@ -6977,6 +7010,7 @@ export const createFindingsReport: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateFindingsReport",
 }));
 export type CreateSbomExportError =
   | AccessDeniedException
@@ -7003,6 +7037,7 @@ export const createSbomExport: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateSbomExport",
 }));
 export type DeleteCisScanConfigurationError =
   | AccessDeniedException
@@ -7029,6 +7064,7 @@ export const deleteCisScanConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteCisScanConfiguration",
 }));
 export type DeleteCodeSecurityIntegrationError =
   | AccessDeniedException
@@ -7055,6 +7091,7 @@ export const deleteCodeSecurityIntegration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteCodeSecurityIntegration",
 }));
 export type DeleteCodeSecurityScanConfigurationError =
   | AccessDeniedException
@@ -7081,6 +7118,7 @@ export const deleteCodeSecurityScanConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteCodeSecurityScanConfiguration",
 }));
 export type DeleteFilterError =
   | AccessDeniedException
@@ -7107,6 +7145,7 @@ export const deleteFilter: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteFilter",
 }));
 export type DescribeOrganizationConfigurationError =
   | AccessDeniedException
@@ -7131,6 +7170,7 @@ export const describeOrganizationConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeOrganizationConfiguration",
 }));
 export type DisableError =
   | AccessDeniedException
@@ -7158,6 +7198,7 @@ export const disable: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "Disable",
 }));
 export type DisableDelegatedAdminAccountError =
   | AccessDeniedException
@@ -7186,6 +7227,7 @@ export const disableDelegatedAdminAccount: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DisableDelegatedAdminAccount",
 }));
 export type DisassociateMemberError =
   | AccessDeniedException
@@ -7210,6 +7252,7 @@ export const disassociateMember: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DisassociateMember",
 }));
 export type EnableError =
   | AccessDeniedException
@@ -7236,6 +7279,7 @@ export const enable: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "Enable",
 }));
 export type EnableDelegatedAdminAccountError =
   | AccessDeniedException
@@ -7264,6 +7308,7 @@ export const enableDelegatedAdminAccount: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "EnableDelegatedAdminAccount",
 }));
 export type GetCisScanReportError =
   | AccessDeniedException
@@ -7290,6 +7335,7 @@ export const getCisScanReport: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetCisScanReport",
 }));
 export type GetCisScanResultDetailsError =
   | AccessDeniedException
@@ -7329,6 +7375,7 @@ export const getCisScanResultDetails: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetCisScanResultDetails",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -7374,6 +7421,7 @@ export const getClustersForImage: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetClustersForImage",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -7406,6 +7454,7 @@ export const getCodeSecurityIntegration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetCodeSecurityIntegration",
 }));
 export type GetCodeSecurityScanError =
   | AccessDeniedException
@@ -7434,6 +7483,7 @@ export const getCodeSecurityScan: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetCodeSecurityScan",
 }));
 export type GetCodeSecurityScanConfigurationError =
   | AccessDeniedException
@@ -7460,6 +7510,7 @@ export const getCodeSecurityScanConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetCodeSecurityScanConfiguration",
 }));
 export type GetConfigurationError =
   | InternalServerException
@@ -7482,6 +7533,7 @@ export const getConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "GetConfiguration",
 }));
 export type GetDelegatedAdminAccountError =
   | AccessDeniedException
@@ -7509,6 +7561,7 @@ export const getDelegatedAdminAccount: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetDelegatedAdminAccount",
 }));
 export type GetEc2DeepInspectionConfigurationError =
   | AccessDeniedException
@@ -7534,6 +7587,7 @@ export const getEc2DeepInspectionConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "GetEc2DeepInspectionConfiguration",
 }));
 export type GetEncryptionKeyError =
   | AccessDeniedException
@@ -7560,6 +7614,7 @@ export const getEncryptionKey: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetEncryptionKey",
 }));
 export type GetFindingsReportStatusError =
   | AccessDeniedException
@@ -7586,6 +7641,7 @@ export const getFindingsReportStatus: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetFindingsReportStatus",
 }));
 export type GetMemberError =
   | AccessDeniedException
@@ -7612,6 +7668,7 @@ export const getMember: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetMember",
 }));
 export type GetSbomExportError =
   | AccessDeniedException
@@ -7638,6 +7695,7 @@ export const getSbomExport: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetSbomExport",
 }));
 export type ListAccountPermissionsError =
   | AccessDeniedException
@@ -7678,6 +7736,7 @@ export const listAccountPermissions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListAccountPermissions",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -7723,6 +7782,7 @@ export const listCisScanConfigurations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListCisScanConfigurations",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -7768,6 +7828,7 @@ export const listCisScanResultsAggregatedByChecks: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListCisScanResultsAggregatedByChecks",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -7813,6 +7874,7 @@ export const listCisScanResultsAggregatedByTargetResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListCisScanResultsAggregatedByTargetResource",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -7858,6 +7920,7 @@ export const listCisScans: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListCisScans",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -7888,6 +7951,7 @@ export const listCodeSecurityIntegrations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListCodeSecurityIntegrations",
 }));
 export type ListCodeSecurityScanConfigurationAssociationsError =
   | AccessDeniedException
@@ -7915,6 +7979,7 @@ export const listCodeSecurityScanConfigurationAssociations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListCodeSecurityScanConfigurationAssociations",
 }));
 export type ListCodeSecurityScanConfigurationsError =
   | AccessDeniedException
@@ -7941,6 +8006,7 @@ export const listCodeSecurityScanConfigurations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListCodeSecurityScanConfigurations",
 }));
 export type ListCoverageError =
   | InternalServerException
@@ -7974,6 +8040,7 @@ export const listCoverage: API.OperationMethod<
   input: ListCoverageRequest,
   output: ListCoverageResponse,
   errors: [InternalServerException, ThrottlingException, ValidationException],
+  operationName: "ListCoverage",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -8013,6 +8080,7 @@ export const listCoverageStatistics: API.OperationMethod<
   input: ListCoverageStatisticsRequest,
   output: ListCoverageStatisticsResponse,
   errors: [InternalServerException, ThrottlingException, ValidationException],
+  operationName: "ListCoverageStatistics",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -8057,6 +8125,7 @@ export const listDelegatedAdminAccounts: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListDelegatedAdminAccounts",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -8102,6 +8171,7 @@ export const listFilters: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListFilters",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -8141,6 +8211,7 @@ export const listFindingAggregations: API.OperationMethod<
   input: ListFindingAggregationsRequest,
   output: ListFindingAggregationsResponse,
   errors: [InternalServerException, ThrottlingException, ValidationException],
+  operationName: "ListFindingAggregations",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -8180,6 +8251,7 @@ export const listFindings: API.OperationMethod<
   input: ListFindingsRequest,
   output: ListFindingsResponse,
   errors: [InternalServerException, ThrottlingException, ValidationException],
+  operationName: "ListFindings",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -8226,6 +8298,7 @@ export const listMembers: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListMembers",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -8256,6 +8329,7 @@ export const listTagsForResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type ListUsageTotalsError =
   | AccessDeniedException
@@ -8295,6 +8369,7 @@ export const listUsageTotals: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListUsageTotals",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -8328,6 +8403,7 @@ export const resetEncryptionKey: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ResetEncryptionKey",
 }));
 export type SearchVulnerabilitiesError =
   | AccessDeniedException
@@ -8367,6 +8443,7 @@ export const searchVulnerabilities: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SearchVulnerabilities",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -8400,6 +8477,7 @@ export const sendCisSessionHealth: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SendCisSessionHealth",
 }));
 export type SendCisSessionTelemetryError =
   | AccessDeniedException
@@ -8428,6 +8506,7 @@ export const sendCisSessionTelemetry: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SendCisSessionTelemetry",
 }));
 export type StartCisSessionError =
   | AccessDeniedException
@@ -8456,6 +8535,7 @@ export const startCisSession: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartCisSession",
 }));
 export type StartCodeSecurityScanError =
   | AccessDeniedException
@@ -8484,6 +8564,7 @@ export const startCodeSecurityScan: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartCodeSecurityScan",
 }));
 export type StopCisSessionError =
   | AccessDeniedException
@@ -8512,6 +8593,7 @@ export const stopCisSession: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StopCisSession",
 }));
 export type TagResourceError =
   | BadRequestException
@@ -8538,6 +8620,7 @@ export const tagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | InternalServerException
@@ -8562,6 +8645,7 @@ export const untagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UntagResource",
 }));
 export type UpdateCisScanConfigurationError =
   | AccessDeniedException
@@ -8588,6 +8672,7 @@ export const updateCisScanConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateCisScanConfiguration",
 }));
 export type UpdateCodeSecurityIntegrationError =
   | AccessDeniedException
@@ -8621,6 +8706,7 @@ export const updateCodeSecurityIntegration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateCodeSecurityIntegration",
 }));
 export type UpdateCodeSecurityScanConfigurationError =
   | AccessDeniedException
@@ -8649,6 +8735,7 @@ export const updateCodeSecurityScanConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateCodeSecurityScanConfiguration",
 }));
 export type UpdateConfigurationError =
   | AccessDeniedException
@@ -8675,6 +8762,7 @@ export const updateConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateConfiguration",
 }));
 export type UpdateEc2DeepInspectionConfigurationError =
   | AccessDeniedException
@@ -8699,6 +8787,7 @@ export const updateEc2DeepInspectionConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateEc2DeepInspectionConfiguration",
 }));
 export type UpdateEncryptionKeyError =
   | AccessDeniedException
@@ -8726,6 +8815,7 @@ export const updateEncryptionKey: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateEncryptionKey",
 }));
 export type UpdateFilterError =
   | AccessDeniedException
@@ -8752,6 +8842,7 @@ export const updateFilter: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateFilter",
 }));
 export type UpdateOrganizationConfigurationError =
   | AccessDeniedException
@@ -8776,6 +8867,7 @@ export const updateOrganizationConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateOrganizationConfiguration",
 }));
 export type UpdateOrgEc2DeepInspectionConfigurationError =
   | AccessDeniedException
@@ -8801,4 +8893,5 @@ export const updateOrgEc2DeepInspectionConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateOrgEc2DeepInspectionConfiguration",
 }));

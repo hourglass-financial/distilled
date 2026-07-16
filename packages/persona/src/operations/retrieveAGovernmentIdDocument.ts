@@ -4,6 +4,22 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface RetrieveAGovernmentIdDocumentInput {
+  documentId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const RetrieveAGovernmentIdDocumentInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     documentId: Schema.String.pipe(T.PathParam()),
@@ -31,11 +47,79 @@ export const RetrieveAGovernmentIdDocumentInput =
     ).pipe(T.HttpHeader("Persona-Version")),
   }).pipe(
     T.Http({ method: "GET", path: "/document/government-ids/{documentId}" }),
-  );
-export type RetrieveAGovernmentIdDocumentInput =
-  typeof RetrieveAGovernmentIdDocumentInput.Type;
+  ) as unknown as Schema.Codec<RetrieveAGovernmentIdDocumentInput>;
 
 // Output Schema
+export interface RetrieveAGovernmentIdDocumentOutput {
+  data: {
+    id?: string;
+    type?: string;
+    attributes?: {
+      status?: string;
+      "created-at"?: string;
+      "processed-at"?: string | null;
+      "processed-at-ts"?: number | null;
+      "front-photo"?: {
+        filename?: string;
+        url?: string;
+        "byte-size"?: number;
+      } | null;
+      "back-photo"?: {
+        filename?: string;
+        url?: string;
+        "byte-size"?: number;
+      } | null;
+      "selfie-photo"?: {
+        filename?: string;
+        url?: string;
+        "byte-size"?: number;
+      } | null;
+      "id-class"?: string | null;
+      "name-first"?: string | null;
+      "name-middle"?: string | null;
+      "name-last"?: string | null;
+      "name-suffix"?: string | null;
+      "native-name-first"?: string | null;
+      "native-name-middle"?: string | null;
+      "native-name-last"?: string | null;
+      "native-name-title"?: string | null;
+      birthdate?: string | null;
+      "issuing-authority"?: string | null;
+      "issuing-subdivision"?: string | null;
+      nationality?: string | null;
+      "document-number"?: string | null;
+      "visa-status"?: string | null;
+      "issue-date"?: string | null;
+      "expiration-date"?: string | null;
+      designations?: ReadonlyArray<string> | null;
+      birthplace?: string | null;
+      height?: string | null;
+      sex?: string | null;
+      endorsements?: string | null;
+      restrictions?: string | null;
+      "vehicle-class"?: string | null;
+      "identification-number"?: string | null;
+      "address-street-1"?: string | null;
+      "address-street-2"?: string | null;
+      "address-city"?: string | null;
+      "address-subdivision"?: string | null;
+      "address-postal-code"?: string | null;
+    };
+    relationships?: {
+      inquiry?: { data?: { id?: string; type?: string } | null };
+      template?: { data?: { id?: string; type?: string } | null };
+      "inquiry-template-version"?: {
+        data?: { id?: string; type?: string } | null;
+      };
+      "inquiry-template"?: { data?: { id?: string; type?: string } | null };
+      transaction?: { data?: { type?: string; id?: string } | null };
+      "document-files"?: {
+        data?: ReadonlyArray<{ id?: string; type?: string }>;
+      };
+    };
+  };
+  included?: ReadonlyArray<unknown>;
+}
 export const RetrieveAGovernmentIdDocumentOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -188,9 +272,7 @@ export const RetrieveAGovernmentIdDocumentOutput =
       ),
     }),
     included: Schema.optional(Schema.Array(Schema.Unknown)),
-  });
-export type RetrieveAGovernmentIdDocumentOutput =
-  typeof RetrieveAGovernmentIdDocumentOutput.Type;
+  }) as unknown as Schema.Codec<RetrieveAGovernmentIdDocumentOutput>;
 
 // The operation
 /**

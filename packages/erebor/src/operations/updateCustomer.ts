@@ -4,6 +4,13 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface UpdateCustomerInput {
+  id: string;
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const UpdateCustomerInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String.pipe(T.PathParam()),
   ereborVersion: Schema.optional(Schema.String).pipe(
@@ -14,10 +21,25 @@ export const UpdateCustomerInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   ),
   custom_ref: Schema.optional(Schema.String),
   custom_fields: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
-}).pipe(T.Http({ method: "PATCH", path: "/customers/{id}" }));
-export type UpdateCustomerInput = typeof UpdateCustomerInput.Type;
+}).pipe(
+  T.Http({ method: "PATCH", path: "/customers/{id}" }),
+) as unknown as Schema.Codec<UpdateCustomerInput>;
 
 // Output Schema
+export interface UpdateCustomerOutput {
+  id: string;
+  type: "CUSTOMER";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id?: string | null;
+  status: "ACTIVE" | "OFFBOARDED";
+  name: string;
+  onboarding_id?: string | null;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const UpdateCustomerOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String,
   type: Schema.Literals(["CUSTOMER"]),
@@ -29,10 +51,11 @@ export const UpdateCustomerOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   status: Schema.Literals(["ACTIVE", "OFFBOARDED"]),
   name: Schema.String,
   onboarding_id: Schema.optional(Schema.NullOr(Schema.String)),
-  custom_ref: Schema.optional(Schema.Unknown),
-  custom_fields: Schema.optional(Schema.Unknown),
-});
-export type UpdateCustomerOutput = typeof UpdateCustomerOutput.Type;
+  custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+  custom_fields: Schema.optional(
+    Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+  ),
+}) as unknown as Schema.Codec<UpdateCustomerOutput>;
 
 // The operation
 /**

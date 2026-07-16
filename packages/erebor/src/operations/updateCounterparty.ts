@@ -4,6 +4,21 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface UpdateCounterpartyInput {
+  id: string;
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  name?: string | null;
+  address?: {
+    street_address: string;
+    city: string;
+    country_area?: string | null;
+    postal_code: string;
+    country: string;
+  } | null;
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const UpdateCounterpartyInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
@@ -14,15 +29,46 @@ export const UpdateCounterpartyInput =
       T.HttpHeader("Erebor-Idempotency-Key"),
     ),
     name: Schema.optional(Schema.NullOr(Schema.String)),
-    address: Schema.optional(Schema.Unknown),
+    address: Schema.optional(
+      Schema.NullOr(
+        Schema.Struct({
+          street_address: Schema.String,
+          city: Schema.String,
+          country_area: Schema.optional(Schema.NullOr(Schema.String)),
+          postal_code: Schema.String,
+          country: Schema.String,
+        }),
+      ),
+    ),
     custom_ref: Schema.optional(Schema.String),
     custom_fields: Schema.optional(
       Schema.Record(Schema.String, Schema.Unknown),
     ),
-  }).pipe(T.Http({ method: "PATCH", path: "/counterparties/{id}" }));
-export type UpdateCounterpartyInput = typeof UpdateCounterpartyInput.Type;
+  }).pipe(
+    T.Http({ method: "PATCH", path: "/counterparties/{id}" }),
+  ) as unknown as Schema.Codec<UpdateCounterpartyInput>;
 
 // Output Schema
+export interface UpdateCounterpartyOutput {
+  id: string;
+  type: "COUNTERPARTY";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  customer_id?: string | null;
+  program_id?: string | null;
+  name: string;
+  address: {
+    street_address: string;
+    city: string;
+    country_area?: string | null;
+    postal_code: string;
+    country: string;
+  };
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const UpdateCounterpartyOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -41,10 +87,11 @@ export const UpdateCounterpartyOutput =
       postal_code: Schema.String,
       country: Schema.String,
     }),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type UpdateCounterpartyOutput = typeof UpdateCounterpartyOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<UpdateCounterpartyOutput>;
 
 // The operation
 /**

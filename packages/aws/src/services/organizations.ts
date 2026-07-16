@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -3215,6 +3215,16 @@ export type AcceptHandshakeError =
  * - Approve all features request (`ENABLE_ALL_FEATURES`)
  *
  * For more information, see Responding to invitations and Enabling all features in the *Organizations User Guide*.
+ *
+ * When a handshake is accepted, Organizations logs membership events in CloudTrail, available
+ * only in the management account's event history. If the account was standalone and joined
+ * a new organization, an `AccountJoinedOrganization` event is logged with
+ * `joinedMethod:Invited` and `joinedTime` fields. If the account
+ * departed one organization and joined another, both an
+ * `AccountDepartedOrganization` event with `departedMethod:Left`
+ * and `departedTime` and an `AccountJoinedOrganization` event with
+ * `joinedMethod:Invited` and `joinedTime` are logged in their
+ * respective management accounts.
  */
 export const acceptHandshake: API.OperationMethod<
   AcceptHandshakeRequest,
@@ -3239,6 +3249,7 @@ export const acceptHandshake: API.OperationMethod<
     ServiceException,
     TooManyRequestsException,
   ],
+  operationName: "AcceptHandshake",
 }));
 export type AttachPolicyError =
   | AccessDeniedException
@@ -3311,6 +3322,7 @@ export const attachPolicy: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "AttachPolicy",
 }));
 export type CancelHandshakeError =
   | AccessDeniedException
@@ -3349,6 +3361,7 @@ export const cancelHandshake: API.OperationMethod<
     ServiceException,
     TooManyRequestsException,
   ],
+  operationName: "CancelHandshake",
 }));
 export type CloseAccountError =
   | AccessDeniedException
@@ -3405,6 +3418,12 @@ export type CloseAccountError =
  * accounts. To learn important pre-closure details, see
  * Closing an Amazon Web Services GovCloud (US) account in the
  * Amazon Web Services GovCloud User Guide.
+ *
+ * After the permanent termination of the account after the 90-day waiting period,
+ * Organizations logs a membership event in CloudTrail. The event is an
+ * `AccountDepartedOrganization` event with
+ * `departedMethod:Cleaned` and `departedTime`. This event is
+ * available only in the management account's event history.
  */
 export const closeAccount: API.OperationMethod<
   CloseAccountRequest,
@@ -3427,6 +3446,7 @@ export const closeAccount: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "CloseAccount",
 }));
 export type CreateAccountError =
   | AccessDeniedException
@@ -3453,6 +3473,11 @@ export type CreateAccountError =
  * - Check the CloudTrail log for the `CreateAccountResult` event. For
  * information on using CloudTrail with Organizations, see Logging and monitoring in Organizations in the
  * *Organizations User Guide*.
+ *
+ * Additionally, the `AccountJoinedOrganization` event is logged in CloudTrail and
+ * is available only in the management account's event history. This event includes
+ * `joinedMethod:Created` and `joinedTime` fields to provide context
+ * on how and when the account joined the organization.
  *
  * The user who calls the API to create an account must have the
  * `organizations:CreateAccount` permission. If you enabled all features in
@@ -3525,6 +3550,7 @@ export const createAccount: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "CreateAccount",
 }));
 export type CreateGovCloudAccountError =
   | AccessDeniedException
@@ -3596,6 +3622,12 @@ export type CreateGovCloudAccountError =
  * monitoring in Organizations in the
  * *Organizations User Guide*.
  *
+ * Additionally, the `AccountJoinedOrganization` event is logged in CloudTrail and
+ * is available only in the management account's event history only for the linked
+ * commercial account. This event includes `joinedMethod:Created` and
+ * `joinedTime` fields to provide context on how and when the account joined
+ * the organization.
+ *
  * When you call the `CreateGovCloudAccount` action, you create two accounts:
  * a standalone account in the Amazon Web Services GovCloud (US) Region and an associated account in the
  * commercial Region for billing and support purposes. The account in the commercial Region
@@ -3666,6 +3698,7 @@ export const createGovCloudAccount: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "CreateGovCloudAccount",
 }));
 export type CreateOrganizationError =
   | AccessDeniedException
@@ -3691,6 +3724,11 @@ export type CreateOrganizationError =
  * supporting only the consolidated billing features by setting the `FeatureSet`
  * parameter to `CONSOLIDATED_BILLING`, no policy types are enabled by default
  * and you can't use organization policies.
+ *
+ * The `AccountJoinedOrganization` event is logged in CloudTrail and
+ * is available only in the management account's event history. This event includes
+ * `joinedMethod:Invited` and `joinedTime` fields to provide
+ * context on how and when the account joined the organization.
  */
 export const createOrganization: API.OperationMethod<
   CreateOrganizationRequest,
@@ -3710,6 +3748,7 @@ export const createOrganization: API.OperationMethod<
     ServiceException,
     TooManyRequestsException,
   ],
+  operationName: "CreateOrganization",
 }));
 export type CreateOrganizationalUnitError =
   | AccessDeniedException
@@ -3756,6 +3795,7 @@ export const createOrganizationalUnit: API.OperationMethod<
     ServiceException,
     TooManyRequestsException,
   ],
+  operationName: "CreateOrganizationalUnit",
 }));
 export type CreatePolicyError =
   | AccessDeniedException
@@ -3803,6 +3843,7 @@ export const createPolicy: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "CreatePolicy",
 }));
 export type DeclineHandshakeError =
   | AccessDeniedException
@@ -3841,6 +3882,7 @@ export const declineHandshake: API.OperationMethod<
     ServiceException,
     TooManyRequestsException,
   ],
+  operationName: "DeclineHandshake",
 }));
 export type DeleteOrganizationError =
   | AccessDeniedException
@@ -3855,6 +3897,11 @@ export type DeleteOrganizationError =
 /**
  * Deletes the organization. You can delete an organization only by using credentials
  * from the management account. The organization must be empty of member accounts.
+ *
+ * When an organization is deleted, Organizations logs a membership event in CloudTrail. The
+ * event is an `AccountDepartedOrganization` event with
+ * `departedMethod:Left` and `departedTime`. This event is available
+ * only in the management account's event history.
  */
 export const deleteOrganization: API.OperationMethod<
   DeleteOrganizationRequest,
@@ -3874,6 +3921,7 @@ export const deleteOrganization: API.OperationMethod<
     ServiceException,
     TooManyRequestsException,
   ],
+  operationName: "DeleteOrganization",
 }));
 export type DeleteOrganizationalUnitError =
   | AccessDeniedException
@@ -3909,6 +3957,7 @@ export const deleteOrganizationalUnit: API.OperationMethod<
     ServiceException,
     TooManyRequestsException,
   ],
+  operationName: "DeleteOrganizationalUnit",
 }));
 export type DeletePolicyError =
   | AccessDeniedException
@@ -3947,6 +3996,7 @@ export const deletePolicy: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "DeletePolicy",
 }));
 export type DeleteResourcePolicyError =
   | AccessDeniedException
@@ -3981,6 +4031,7 @@ export const deleteResourcePolicy: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "DeleteResourcePolicy",
 }));
 export type DeregisterDelegatedAdministratorError =
   | AccessDeniedException
@@ -4030,6 +4081,7 @@ export const deregisterDelegatedAdministrator: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "DeregisterDelegatedAdministrator",
 }));
 export type DescribeAccountError =
   | AccessDeniedException
@@ -4060,6 +4112,7 @@ export const describeAccount: API.OperationMethod<
     ServiceException,
     TooManyRequestsException,
   ],
+  operationName: "DescribeAccount",
 }));
 export type DescribeCreateAccountStatusError =
   | AccessDeniedException
@@ -4092,6 +4145,7 @@ export const describeCreateAccountStatus: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "DescribeCreateAccountStatus",
 }));
 export type DescribeEffectivePolicyError =
   | AccessDeniedException
@@ -4138,6 +4192,7 @@ export const describeEffectivePolicy: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "DescribeEffectivePolicy",
 }));
 export type DescribeHandshakeError =
   | AccessDeniedException
@@ -4172,6 +4227,7 @@ export const describeHandshake: API.OperationMethod<
     ServiceException,
     TooManyRequestsException,
   ],
+  operationName: "DescribeHandshake",
 }));
 export type DescribeOrganizationError =
   | AccessDeniedException
@@ -4205,6 +4261,7 @@ export const describeOrganization: API.OperationMethod<
     ServiceException,
     TooManyRequestsException,
   ],
+  operationName: "DescribeOrganization",
 }));
 export type DescribeOrganizationalUnitError =
   | AccessDeniedException
@@ -4235,6 +4292,7 @@ export const describeOrganizationalUnit: API.OperationMethod<
     ServiceException,
     TooManyRequestsException,
   ],
+  operationName: "DescribeOrganizationalUnit",
 }));
 export type DescribePolicyError =
   | AccessDeniedException
@@ -4267,6 +4325,7 @@ export const describePolicy: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "DescribePolicy",
 }));
 export type DescribeResourcePolicyError =
   | AccessDeniedException
@@ -4299,6 +4358,7 @@ export const describeResourcePolicy: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "DescribeResourcePolicy",
 }));
 export type DescribeResponsibilityTransferError =
   | AccessDeniedException
@@ -4331,6 +4391,7 @@ export const describeResponsibilityTransfer: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "DescribeResponsibilityTransfer",
 }));
 export type DetachPolicyError =
   | AccessDeniedException
@@ -4386,6 +4447,7 @@ export const detachPolicy: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "DetachPolicy",
 }));
 export type DisableAWSServiceAccessError =
   | AccessDeniedException
@@ -4472,6 +4534,7 @@ export const disableAWSServiceAccess: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "DisableAWSServiceAccess",
 }));
 export type DisablePolicyTypeError =
   | AccessDeniedException
@@ -4523,6 +4586,7 @@ export const disablePolicyType: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "DisablePolicyType",
 }));
 export type EnableAllFeaturesError =
   | AccessDeniedException
@@ -4582,6 +4646,7 @@ export const enableAllFeatures: API.OperationMethod<
     ServiceException,
     TooManyRequestsException,
   ],
+  operationName: "EnableAllFeatures",
 }));
 export type EnableAWSServiceAccessError =
   | AccessDeniedException
@@ -4632,6 +4697,7 @@ export const enableAWSServiceAccess: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "EnableAWSServiceAccess",
 }));
 export type EnablePolicyTypeError =
   | AccessDeniedException
@@ -4685,6 +4751,7 @@ export const enablePolicyType: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "EnablePolicyType",
 }));
 export type InviteAccountToOrganizationError =
   | AccessDeniedException
@@ -4737,6 +4804,7 @@ export const inviteAccountToOrganization: API.OperationMethod<
     ServiceException,
     TooManyRequestsException,
   ],
+  operationName: "InviteAccountToOrganization",
 }));
 export type InviteOrganizationToTransferResponsibilityError =
   | AccessDeniedException
@@ -4777,6 +4845,7 @@ export const inviteOrganizationToTransferResponsibility: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "InviteOrganizationToTransferResponsibility",
 }));
 export type LeaveOrganizationError =
   | AccessDeniedException
@@ -4796,6 +4865,11 @@ export type LeaveOrganizationError =
  * instead.
  *
  * You can only call from operation from a member account.
+ *
+ * When an account leaves an organization, Organizations logs a membership event in
+ * CloudTrail. The event is an `AccountDepartedOrganization` event with
+ * `departedMethod:Left` and `departedTime`. This event is available
+ * only in the management account's event history.
  *
  * - The management account in an organization with all features enabled can
  * set service control policies (SCPs) that can restrict what administrators of
@@ -4859,6 +4933,7 @@ export const leaveOrganization: API.OperationMethod<
     ServiceException,
     TooManyRequestsException,
   ],
+  operationName: "LeaveOrganization",
 }));
 export type ListAccountsError =
   | AccessDeniedException
@@ -4907,6 +4982,7 @@ export const listAccounts: API.OperationMethod<
     ServiceException,
     TooManyRequestsException,
   ],
+  operationName: "ListAccounts",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4965,6 +5041,7 @@ export const listAccountsForParent: API.OperationMethod<
     ServiceException,
     TooManyRequestsException,
   ],
+  operationName: "ListAccountsForParent",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5022,6 +5099,7 @@ export const listAccountsWithInvalidEffectivePolicy: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "ListAccountsWithInvalidEffectivePolicy",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5081,6 +5159,7 @@ export const listAWSServiceAccessForOrganization: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "ListAWSServiceAccessForOrganization",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5137,6 +5216,7 @@ export const listChildren: API.OperationMethod<
     ServiceException,
     TooManyRequestsException,
   ],
+  operationName: "ListChildren",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5192,6 +5272,7 @@ export const listCreateAccountStatus: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "ListCreateAccountStatus",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5245,6 +5326,7 @@ export const listDelegatedAdministrators: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "ListDelegatedAdministrators",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5303,6 +5385,7 @@ export const listDelegatedServicesForAccount: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "ListDelegatedServicesForAccount",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5361,6 +5444,7 @@ export const listEffectivePolicyValidationErrors: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "ListEffectivePolicyValidationErrors",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5418,6 +5502,7 @@ export const listHandshakesForAccount: API.OperationMethod<
     ServiceException,
     TooManyRequestsException,
   ],
+  operationName: "ListHandshakesForAccount",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5476,6 +5561,7 @@ export const listHandshakesForOrganization: API.OperationMethod<
     ServiceException,
     TooManyRequestsException,
   ],
+  operationName: "ListHandshakesForOrganization",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5518,6 +5604,7 @@ export const listInboundResponsibilityTransfers: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "ListInboundResponsibilityTransfers",
 }));
 export type ListOrganizationalUnitsForParentError =
   | AccessDeniedException
@@ -5567,6 +5654,7 @@ export const listOrganizationalUnitsForParent: API.OperationMethod<
     ServiceException,
     TooManyRequestsException,
   ],
+  operationName: "ListOrganizationalUnitsForParent",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5608,6 +5696,7 @@ export const listOutboundResponsibilityTransfers: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "ListOutboundResponsibilityTransfers",
 }));
 export type ListParentsError =
   | AccessDeniedException
@@ -5661,6 +5750,7 @@ export const listParents: API.OperationMethod<
     ServiceException,
     TooManyRequestsException,
   ],
+  operationName: "ListParents",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5715,6 +5805,7 @@ export const listPolicies: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "ListPolicies",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5773,6 +5864,7 @@ export const listPoliciesForTarget: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "ListPoliciesForTarget",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5831,6 +5923,7 @@ export const listRoots: API.OperationMethod<
     ServiceException,
     TooManyRequestsException,
   ],
+  operationName: "ListRoots",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5891,6 +5984,7 @@ export const listTagsForResource: API.OperationMethod<
     TargetNotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "ListTagsForResource",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5948,6 +6042,7 @@ export const listTargetsForPolicy: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "ListTargetsForPolicy",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5992,6 +6087,7 @@ export const moveAccount: API.OperationMethod<
     SourceParentNotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "MoveAccount",
 }));
 export type PutResourcePolicyError =
   | AccessDeniedException
@@ -6026,6 +6122,7 @@ export const putResourcePolicy: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "PutResourcePolicy",
 }));
 export type RegisterDelegatedAdministratorError =
   | AccessDeniedException
@@ -6071,6 +6168,7 @@ export const registerDelegatedAdministrator: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "RegisterDelegatedAdministrator",
 }));
 export type RemoveAccountFromOrganizationError =
   | AccessDeniedException
@@ -6092,6 +6190,12 @@ export type RemoveAccountFromOrganizationError =
  * accrued by the member account after it's removed from the organization.
  *
  * You can only call this operation from the management account. Member accounts can remove themselves with LeaveOrganization instead.
+ *
+ * When an account is removed from an organization, Organizations logs a membership
+ * event in CloudTrail. The event is an
+ * `AccountDepartedOrganization` event with
+ * `departedMethod:Removed` and `departedTime`. This event is
+ * available only in the management account's event history.
  *
  * - You can remove an account from your organization only if the account is
  * configured with the information required to operate as a standalone account.
@@ -6130,6 +6234,7 @@ export const removeAccountFromOrganization: API.OperationMethod<
     ServiceException,
     TooManyRequestsException,
   ],
+  operationName: "RemoveAccountFromOrganization",
 }));
 export type TagResourceError =
   | AccessDeniedException
@@ -6174,6 +6279,7 @@ export const tagResource: API.OperationMethod<
     TargetNotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "TagResource",
 }));
 export type TerminateResponsibilityTransferError =
   | AccessDeniedException
@@ -6214,6 +6320,7 @@ export const terminateResponsibilityTransfer: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "TerminateResponsibilityTransfer",
 }));
 export type UntagResourceError =
   | AccessDeniedException
@@ -6258,6 +6365,7 @@ export const untagResource: API.OperationMethod<
     TargetNotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "UntagResource",
 }));
 export type UpdateOrganizationalUnitError =
   | AccessDeniedException
@@ -6294,6 +6402,7 @@ export const updateOrganizationalUnit: API.OperationMethod<
     ServiceException,
     TooManyRequestsException,
   ],
+  operationName: "UpdateOrganizationalUnit",
 }));
 export type UpdatePolicyError =
   | AccessDeniedException
@@ -6338,6 +6447,7 @@ export const updatePolicy: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "UpdatePolicy",
 }));
 export type UpdateResponsibilityTransferError =
   | AccessDeniedException
@@ -6374,4 +6484,5 @@ export const updateResponsibilityTransfer: API.OperationMethod<
     TooManyRequestsException,
     UnsupportedAPIEndpointException,
   ],
+  operationName: "UpdateResponsibilityTransfer",
 }));

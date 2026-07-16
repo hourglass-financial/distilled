@@ -10,6 +10,20 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface ReactivateAConnectConnectionInput {
+  connectionId: string;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const ReactivateAConnectConnectionInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     connectionId: Schema.String.pipe(T.PathParam()),
@@ -36,11 +50,23 @@ export const ReactivateAConnectConnectionInput =
       method: "POST",
       path: "/connect/connections/{connectionId}/reactivate",
     }),
-  );
-export type ReactivateAConnectConnectionInput =
-  typeof ReactivateAConnectConnectionInput.Type;
+  ) as unknown as Schema.Codec<ReactivateAConnectConnectionInput>;
 
 // Output Schema
+export interface ReactivateAConnectConnectionOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      status?: string;
+      "destination-organization-id"?: string;
+      "source-organization-id"?: string;
+      "created-at"?: string;
+      "updated-at"?: string;
+    };
+    relationships?: { creator?: { data: { id: string; type: string } } };
+  };
+}
 export const ReactivateAConnectConnectionOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -68,9 +94,7 @@ export const ReactivateAConnectConnectionOutput =
         }),
       ),
     }),
-  });
-export type ReactivateAConnectConnectionOutput =
-  typeof ReactivateAConnectConnectionOutput.Type;
+  }) as unknown as Schema.Codec<ReactivateAConnectConnectionOutput>;
 
 // The operation
 /**

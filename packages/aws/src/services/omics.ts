@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -165,6 +165,9 @@ export type StorageType = string;
 export type WorkflowOwnerId = string;
 export type AwsAccountId = string;
 export type WorkflowVersionName = string;
+export type NetworkingMode = string;
+export type EngineSettings = unknown;
+export type ScratchStorageMode = string;
 export type RunSettingId = string;
 export type S3UriSettings = string;
 export type BatchId = string;
@@ -193,7 +196,6 @@ export type RunGroupArn = string;
 export type RunGroupTimestamp = Date;
 export type RunGroupListToken = string;
 export type RunRequestId = string;
-export type NetworkingMode = string;
 export type RunStatus = string;
 export type RunExport = string;
 export type EngineVersion = string;
@@ -210,6 +212,7 @@ export type EngineLogStream = string;
 export type RunLogStream = string;
 export type WorkflowUuid = string;
 export type RunListToken = string;
+export type WorkflowName = string;
 export type TaskId = string;
 export type TaskStatus = string;
 export type TaskName = string;
@@ -260,7 +263,6 @@ export type ShareStatus = string;
 export type ResourceOwner = string;
 export type ShareResourceType = string;
 export type TagArn = string;
-export type WorkflowName = string;
 export type WorkflowDescription = string;
 export type WorkflowEngine = string;
 export type WorkflowMain = string;
@@ -286,6 +288,7 @@ export type WorkflowStatusMessage = string;
 export type WorkflowMetadataKey = string;
 export type WorkflowMetadataValue = string;
 export type ReadmeS3PresignedUrl = string;
+export type WorkflowProfileName = string;
 export type WorkflowListToken = string;
 export type WorkflowVersionDescription = string;
 export type WorkflowVersionArn = string;
@@ -2232,6 +2235,10 @@ export interface DefaultRunSetting {
   workflowOwnerId?: string;
   outputBucketOwnerId?: string;
   workflowVersionName?: string;
+  networkingMode?: string;
+  configurationName?: string;
+  engineSettings?: any;
+  scratchStorageMode?: string;
 }
 export const DefaultRunSetting = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -2253,6 +2260,10 @@ export const DefaultRunSetting = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     workflowOwnerId: S.optional(S.String),
     outputBucketOwnerId: S.optional(S.String),
     workflowVersionName: S.optional(S.String),
+    networkingMode: S.optional(S.String),
+    configurationName: S.optional(S.String),
+    engineSettings: S.optional(S.Any),
+    scratchStorageMode: S.optional(S.String),
   }),
 ).annotate({
   identifier: "DefaultRunSetting",
@@ -2265,6 +2276,7 @@ export interface InlineSetting {
   parameters?: any;
   outputBucketOwnerId?: string;
   runTags?: { [key: string]: string | undefined };
+  engineSettings?: any;
 }
 export const InlineSetting = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -2275,6 +2287,7 @@ export const InlineSetting = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     parameters: S.optional(S.Any),
     outputBucketOwnerId: S.optional(S.String),
     runTags: S.optional(TagMap),
+    engineSettings: S.optional(S.Any),
   }),
 ).annotate({ identifier: "InlineSetting" }) as any as S.Schema<InlineSetting>;
 export type InlineSettings = InlineSetting[];
@@ -3079,7 +3092,9 @@ export interface StartRunRequest {
   workflowOwnerId?: string;
   workflowVersionName?: string;
   networkingMode?: string;
+  scratchStorageMode?: string;
   configurationName?: string;
+  engineSettings?: any;
 }
 export const StartRunRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -3103,7 +3118,9 @@ export const StartRunRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     workflowOwnerId: S.optional(S.String),
     workflowVersionName: S.optional(S.String),
     networkingMode: S.optional(S.String),
+    scratchStorageMode: S.optional(S.String),
     configurationName: S.optional(S.String),
+    engineSettings: S.optional(S.Any),
   }).pipe(
     T.all(
       T.Http({ method: "POST", uri: "/run" }),
@@ -3230,8 +3247,10 @@ export interface GetRunResponse {
   workflowVersionName?: string;
   workflowUuid?: string;
   networkingMode?: string;
+  scratchStorageMode?: string;
   configuration?: ConfigurationDetails;
   vpcConfig?: VpcConfigResponse;
+  engineSettings?: any;
 }
 export const GetRunResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -3277,8 +3296,10 @@ export const GetRunResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     workflowVersionName: S.optional(S.String),
     workflowUuid: S.optional(S.String),
     networkingMode: S.optional(S.String),
+    scratchStorageMode: S.optional(S.String),
     configuration: S.optional(ConfigurationDetails),
     vpcConfig: S.optional(VpcConfigResponse),
+    engineSettings: S.optional(S.Any),
   }),
 ).annotate({ identifier: "GetRunResponse" }) as any as S.Schema<GetRunResponse>;
 export interface DeleteRunRequest {
@@ -3340,6 +3361,7 @@ export interface RunListItem {
   stopTime?: Date;
   storageType?: string;
   workflowVersionName?: string;
+  workflowName?: string;
 }
 export const RunListItem = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -3360,6 +3382,7 @@ export const RunListItem = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     stopTime: S.optional(T.DateFromString.pipe(T.TimestampFormat("date-time"))),
     storageType: S.optional(S.String),
     workflowVersionName: S.optional(S.String),
+    workflowName: S.optional(S.String),
   }),
 ).annotate({ identifier: "RunListItem" }) as any as S.Schema<RunListItem>;
 export type RunList = RunListItem[];
@@ -6200,6 +6223,18 @@ export const DefinitionRepositoryDetails =
   ).annotate({
     identifier: "DefinitionRepositoryDetails",
   }) as any as S.Schema<DefinitionRepositoryDetails>;
+export type WorkflowProfileList = string[];
+export const WorkflowProfileList = /*@__PURE__*/ /*#__PURE__*/ S.Array(
+  S.String,
+);
+export type WorkflowProfileParameterTemplates = {
+  [key: string]: { [key: string]: WorkflowParameter | undefined } | undefined;
+};
+export const WorkflowProfileParameterTemplates =
+  /*@__PURE__*/ /*#__PURE__*/ S.Record(
+    S.String,
+    WorkflowParameterTemplate.pipe(S.optional),
+  );
 export interface GetWorkflowResponse {
   arn?: string;
   id?: string;
@@ -6224,6 +6259,10 @@ export interface GetWorkflowResponse {
   readme?: string;
   definitionRepositoryDetails?: DefinitionRepositoryDetails;
   readmePath?: string;
+  profiles?: string[];
+  profileParameterTemplates?: {
+    [key: string]: { [key: string]: WorkflowParameter | undefined } | undefined;
+  };
 }
 export const GetWorkflowResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -6252,6 +6291,8 @@ export const GetWorkflowResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     readme: S.optional(S.String),
     definitionRepositoryDetails: S.optional(DefinitionRepositoryDetails),
     readmePath: S.optional(S.String),
+    profiles: S.optional(WorkflowProfileList),
+    profileParameterTemplates: S.optional(WorkflowProfileParameterTemplates),
   }),
 ).annotate({
   identifier: "GetWorkflowResponse",
@@ -6519,6 +6560,10 @@ export interface GetWorkflowVersionResponse {
   readme?: string;
   definitionRepositoryDetails?: DefinitionRepositoryDetails;
   readmePath?: string;
+  profiles?: string[];
+  profileParameterTemplates?: {
+    [key: string]: { [key: string]: WorkflowParameter | undefined } | undefined;
+  };
 }
 export const GetWorkflowVersionResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -6549,6 +6594,8 @@ export const GetWorkflowVersionResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       readme: S.optional(S.String),
       definitionRepositoryDetails: S.optional(DefinitionRepositoryDetails),
       readmePath: S.optional(S.String),
+      profiles: S.optional(WorkflowProfileList),
+      profileParameterTemplates: S.optional(WorkflowProfileParameterTemplates),
     }),
 ).annotate({
   identifier: "GetWorkflowVersionResponse",
@@ -6773,6 +6820,7 @@ export const deleteS3AccessPolicy: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteS3AccessPolicy",
 }));
 export type GetS3AccessPolicyError =
   | AccessDeniedException
@@ -6805,6 +6853,7 @@ export const getS3AccessPolicy: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetS3AccessPolicy",
 }));
 export type PutS3AccessPolicyError =
   | AccessDeniedException
@@ -6835,6 +6884,7 @@ export const putS3AccessPolicy: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutS3AccessPolicy",
 }));
 export type StartAnnotationImportJobError =
   | AccessDeniedException
@@ -6865,6 +6915,7 @@ export const startAnnotationImportJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartAnnotationImportJob",
 }));
 export type GetAnnotationImportJobError =
   | AccessDeniedException
@@ -6893,6 +6944,7 @@ export const getAnnotationImportJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetAnnotationImportJob",
 }));
 export type CancelAnnotationImportJobError =
   | AccessDeniedException
@@ -6921,6 +6973,7 @@ export const cancelAnnotationImportJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CancelAnnotationImportJob",
 }));
 export type ListAnnotationImportJobsError =
   | AccessDeniedException
@@ -6964,6 +7017,7 @@ export const listAnnotationImportJobs: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListAnnotationImportJobs",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -7002,6 +7056,7 @@ export const createAnnotationStore: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateAnnotationStore",
 }));
 export type GetAnnotationStoreError =
   | AccessDeniedException
@@ -7030,6 +7085,7 @@ export const getAnnotationStore: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetAnnotationStore",
 }));
 export type UpdateAnnotationStoreError =
   | AccessDeniedException
@@ -7058,6 +7114,7 @@ export const updateAnnotationStore: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateAnnotationStore",
 }));
 export type DeleteAnnotationStoreError =
   | AccessDeniedException
@@ -7088,6 +7145,7 @@ export const deleteAnnotationStore: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteAnnotationStore",
 }));
 export type ListAnnotationStoresError =
   | AccessDeniedException
@@ -7131,6 +7189,7 @@ export const listAnnotationStores: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListAnnotationStores",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -7167,6 +7226,7 @@ export const createAnnotationStoreVersion: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateAnnotationStoreVersion",
 }));
 export type GetAnnotationStoreVersionError =
   | AccessDeniedException
@@ -7193,6 +7253,7 @@ export const getAnnotationStoreVersion: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetAnnotationStoreVersion",
 }));
 export type UpdateAnnotationStoreVersionError =
   | AccessDeniedException
@@ -7219,6 +7280,7 @@ export const updateAnnotationStoreVersion: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateAnnotationStoreVersion",
 }));
 export type ListAnnotationStoreVersionsError =
   | AccessDeniedException
@@ -7260,6 +7322,7 @@ export const listAnnotationStoreVersions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListAnnotationStoreVersions",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -7294,6 +7357,7 @@ export const deleteAnnotationStoreVersions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteAnnotationStoreVersions",
 }));
 export type CreateConfigurationError =
   | AccessDeniedException
@@ -7326,6 +7390,7 @@ export const createConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateConfiguration",
 }));
 export type GetConfigurationError =
   | AccessDeniedException
@@ -7358,6 +7423,7 @@ export const getConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetConfiguration",
 }));
 export type DeleteConfigurationError =
   | AccessDeniedException
@@ -7390,6 +7456,7 @@ export const deleteConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteConfiguration",
 }));
 export type ListConfigurationsError =
   | AccessDeniedException
@@ -7437,6 +7504,7 @@ export const listConfigurations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListConfigurations",
   pagination: {
     inputToken: "startingToken",
     outputToken: "nextToken",
@@ -7473,6 +7541,7 @@ export const createReferenceStore: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateReferenceStore",
 }));
 export type GetReferenceStoreError =
   | AccessDeniedException
@@ -7501,6 +7570,7 @@ export const getReferenceStore: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetReferenceStore",
 }));
 export type DeleteReferenceStoreError =
   | AccessDeniedException
@@ -7533,6 +7603,7 @@ export const deleteReferenceStore: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteReferenceStore",
 }));
 export type ListReferenceStoresError =
   | AccessDeniedException
@@ -7576,6 +7647,7 @@ export const listReferenceStores: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListReferenceStores",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -7610,6 +7682,7 @@ export const getReferenceImportJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetReferenceImportJob",
 }));
 export type ListReferenceImportJobsError =
   | AccessDeniedException
@@ -7653,6 +7726,7 @@ export const listReferenceImportJobs: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListReferenceImportJobs",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -7689,6 +7763,7 @@ export const startReferenceImportJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartReferenceImportJob",
 }));
 export type GetReferenceMetadataError =
   | AccessDeniedException
@@ -7717,6 +7792,7 @@ export const getReferenceMetadata: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetReferenceMetadata",
 }));
 export type DeleteReferenceError =
   | AccessDeniedException
@@ -7749,6 +7825,7 @@ export const deleteReference: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteReference",
 }));
 export type ListReferencesError =
   | AccessDeniedException
@@ -7794,6 +7871,7 @@ export const listReferences: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListReferences",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -7832,6 +7910,7 @@ export const getReference: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetReference",
 }));
 export type StartRunBatchError =
   | AccessDeniedException
@@ -7846,7 +7925,7 @@ export type StartRunBatchError =
 /**
  * Starts a batch of workflow runs. You can group up to 100,000 runs into a single batch that share a common configuration defined in `defaultRunSetting`. Per-run overrides can be provided either inline via `inlineSettings` (up to 100 runs) or via a JSON file stored in Amazon S3 via `s3UriSettings` (up to 100,000 runs).
  *
- * `StartRunBatch` validates common fields synchronously and returns immediately with a batch ID and status `PENDING`. Runs are submitted gradually and asynchronously at a rate governed by your `StartRun` throughput quota.
+ * `StartRunBatch` validates common fields synchronously and returns immediately with a batch ID and status `CREATING`. The batch transitions to `PENDING` once initial setup completes. Runs are then submitted gradually and asynchronously at a rate governed by your `StartRun` throughput quota.
  */
 export const startRunBatch: API.OperationMethod<
   StartRunBatchRequest,
@@ -7866,6 +7945,7 @@ export const startRunBatch: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartRunBatch",
 }));
 export type GetBatchError =
   | AccessDeniedException
@@ -7894,6 +7974,7 @@ export const getBatch: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetBatch",
 }));
 export type DeleteBatchError =
   | AccessDeniedException
@@ -7928,6 +8009,7 @@ export const deleteBatch: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteBatch",
 }));
 export type ListBatchError =
   | AccessDeniedException
@@ -7969,6 +8051,7 @@ export const listBatch: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListBatch",
   pagination: {
     inputToken: "startingToken",
     outputToken: "nextToken",
@@ -8009,6 +8092,7 @@ export const cancelRunBatch: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CancelRunBatch",
 }));
 export type DeleteRunBatchError =
   | AccessDeniedException
@@ -8043,6 +8127,7 @@ export const deleteRunBatch: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteRunBatch",
 }));
 export type ListRunsInBatchError =
   | AccessDeniedException
@@ -8090,6 +8175,7 @@ export const listRunsInBatch: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListRunsInBatch",
   pagination: {
     inputToken: "startingToken",
     outputToken: "nextToken",
@@ -8130,6 +8216,7 @@ export const createRunCache: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateRunCache",
 }));
 export type GetRunCacheError =
   | AccessDeniedException
@@ -8164,6 +8251,7 @@ export const getRunCache: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetRunCache",
 }));
 export type UpdateRunCacheError =
   | AccessDeniedException
@@ -8198,6 +8286,7 @@ export const updateRunCache: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateRunCache",
 }));
 export type DeleteRunCacheError =
   | AccessDeniedException
@@ -8232,6 +8321,7 @@ export const deleteRunCache: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteRunCache",
 }));
 export type ListRunCachesError =
   | AccessDeniedException
@@ -8279,6 +8369,7 @@ export const listRunCaches: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListRunCaches",
   pagination: {
     inputToken: "startingToken",
     outputToken: "nextToken",
@@ -8317,6 +8408,7 @@ export const createRunGroup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateRunGroup",
 }));
 export type GetRunGroupError =
   | AccessDeniedException
@@ -8349,6 +8441,7 @@ export const getRunGroup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetRunGroup",
 }));
 export type UpdateRunGroupError =
   | AccessDeniedException
@@ -8395,6 +8488,7 @@ export const updateRunGroup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateRunGroup",
 }));
 export type DeleteRunGroupError =
   | AccessDeniedException
@@ -8433,6 +8527,7 @@ export const deleteRunGroup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteRunGroup",
 }));
 export type ListRunGroupsError =
   | AccessDeniedException
@@ -8480,6 +8575,7 @@ export const listRunGroups: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListRunGroups",
   pagination: {
     inputToken: "startingToken",
     outputToken: "nextToken",
@@ -8550,6 +8646,7 @@ export const startRun: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartRun",
 }));
 export type GetRunError =
   | AccessDeniedException
@@ -8584,6 +8681,7 @@ export const getRun: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetRun",
 }));
 export type DeleteRunError =
   | AccessDeniedException
@@ -8622,6 +8720,7 @@ export const deleteRun: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteRun",
 }));
 export type ListRunsError =
   | AccessDeniedException
@@ -8671,6 +8770,7 @@ export const listRuns: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListRuns",
   pagination: {
     inputToken: "startingToken",
     outputToken: "nextToken",
@@ -8709,6 +8809,7 @@ export const cancelRun: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CancelRun",
 }));
 export type GetRunTaskError =
   | AccessDeniedException
@@ -8741,6 +8842,7 @@ export const getRunTask: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetRunTask",
 }));
 export type ListRunTasksError =
   | AccessDeniedException
@@ -8788,6 +8890,7 @@ export const listRunTasks: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListRunTasks",
   pagination: {
     inputToken: "startingToken",
     outputToken: "nextToken",
@@ -8836,6 +8939,7 @@ export const createSequenceStore: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateSequenceStore",
 }));
 export type GetSequenceStoreError =
   | AccessDeniedException
@@ -8864,6 +8968,7 @@ export const getSequenceStore: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetSequenceStore",
 }));
 export type UpdateSequenceStoreError =
   | AccessDeniedException
@@ -8894,6 +8999,7 @@ export const updateSequenceStore: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateSequenceStore",
 }));
 export type DeleteSequenceStoreError =
   | AccessDeniedException
@@ -8928,6 +9034,7 @@ export const deleteSequenceStore: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteSequenceStore",
 }));
 export type ListSequenceStoresError =
   | AccessDeniedException
@@ -8971,6 +9078,7 @@ export const listSequenceStores: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListSequenceStores",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -9009,6 +9117,7 @@ export const abortMultipartReadSetUpload: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AbortMultipartReadSetUpload",
 }));
 export type CompleteMultipartReadSetUploadError =
   | AccessDeniedException
@@ -9043,6 +9152,7 @@ export const completeMultipartReadSetUpload: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CompleteMultipartReadSetUpload",
 }));
 export type CreateMultipartReadSetUploadError =
   | AccessDeniedException
@@ -9085,6 +9195,7 @@ export const createMultipartReadSetUpload: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateMultipartReadSetUpload",
 }));
 export type GetReadSetActivationJobError =
   | AccessDeniedException
@@ -9113,6 +9224,7 @@ export const getReadSetActivationJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetReadSetActivationJob",
 }));
 export type GetReadSetExportJobError =
   | AccessDeniedException
@@ -9141,6 +9253,7 @@ export const getReadSetExportJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetReadSetExportJob",
 }));
 export type GetReadSetImportJobError =
   | AccessDeniedException
@@ -9169,6 +9282,7 @@ export const getReadSetImportJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetReadSetImportJob",
 }));
 export type ListMultipartReadSetUploadsError =
   | AccessDeniedException
@@ -9216,6 +9330,7 @@ export const listMultipartReadSetUploads: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListMultipartReadSetUploads",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -9265,6 +9380,7 @@ export const listReadSetActivationJobs: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListReadSetActivationJobs",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -9314,6 +9430,7 @@ export const listReadSetExportJobs: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListReadSetExportJobs",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -9363,6 +9480,7 @@ export const listReadSetImportJobs: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListReadSetImportJobs",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -9416,6 +9534,7 @@ export const listReadSetUploadParts: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListReadSetUploadParts",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -9454,6 +9573,7 @@ export const startReadSetActivationJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartReadSetActivationJob",
 }));
 export type StartReadSetExportJobError =
   | AccessDeniedException
@@ -9486,6 +9606,7 @@ export const startReadSetExportJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartReadSetExportJob",
 }));
 export type StartReadSetImportJobError =
   | AccessDeniedException
@@ -9516,6 +9637,7 @@ export const startReadSetImportJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartReadSetImportJob",
 }));
 export type UploadReadSetPartError =
   | AccessDeniedException
@@ -9550,6 +9672,7 @@ export const uploadReadSetPart: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UploadReadSetPart",
 }));
 export type GetReadSetMetadataError =
   | AccessDeniedException
@@ -9578,6 +9701,7 @@ export const getReadSetMetadata: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetReadSetMetadata",
 }));
 export type ListReadSetsError =
   | AccessDeniedException
@@ -9621,6 +9745,7 @@ export const listReadSets: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListReadSets",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -9659,6 +9784,7 @@ export const getReadSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetReadSet",
 }));
 export type BatchDeleteReadSetError =
   | AccessDeniedException
@@ -9687,6 +9813,7 @@ export const batchDeleteReadSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchDeleteReadSet",
 }));
 export type CreateShareError =
   | AccessDeniedException
@@ -9725,6 +9852,7 @@ export const createShare: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateShare",
 }));
 export type GetShareError =
   | AccessDeniedException
@@ -9755,6 +9883,7 @@ export const getShare: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetShare",
 }));
 export type AcceptShareError =
   | AccessDeniedException
@@ -9785,6 +9914,7 @@ export const acceptShare: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AcceptShare",
 }));
 export type DeleteShareError =
   | AccessDeniedException
@@ -9815,6 +9945,7 @@ export const deleteShare: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteShare",
 }));
 export type ListSharesError =
   | AccessDeniedException
@@ -9860,6 +9991,7 @@ export const listShares: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListShares",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -9898,6 +10030,7 @@ export const listTagsForResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type TagResourceError =
   | AccessDeniedException
@@ -9930,6 +10063,7 @@ export const tagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | AccessDeniedException
@@ -9962,6 +10096,7 @@ export const untagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UntagResource",
 }));
 export type StartVariantImportJobError =
   | AccessDeniedException
@@ -9992,6 +10127,7 @@ export const startVariantImportJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartVariantImportJob",
 }));
 export type GetVariantImportJobError =
   | AccessDeniedException
@@ -10020,6 +10156,7 @@ export const getVariantImportJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetVariantImportJob",
 }));
 export type CancelVariantImportJobError =
   | AccessDeniedException
@@ -10048,6 +10185,7 @@ export const cancelVariantImportJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CancelVariantImportJob",
 }));
 export type ListVariantImportJobsError =
   | AccessDeniedException
@@ -10091,6 +10229,7 @@ export const listVariantImportJobs: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListVariantImportJobs",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -10129,6 +10268,7 @@ export const createVariantStore: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateVariantStore",
 }));
 export type GetVariantStoreError =
   | AccessDeniedException
@@ -10157,6 +10297,7 @@ export const getVariantStore: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetVariantStore",
 }));
 export type UpdateVariantStoreError =
   | AccessDeniedException
@@ -10185,6 +10326,7 @@ export const updateVariantStore: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateVariantStore",
 }));
 export type DeleteVariantStoreError =
   | AccessDeniedException
@@ -10215,6 +10357,7 @@ export const deleteVariantStore: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteVariantStore",
 }));
 export type ListVariantStoresError =
   | AccessDeniedException
@@ -10258,6 +10401,7 @@ export const listVariantStores: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListVariantStores",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -10308,6 +10452,7 @@ export const createWorkflow: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateWorkflow",
 }));
 export type GetWorkflowError =
   | AccessDeniedException
@@ -10344,6 +10489,7 @@ export const getWorkflow: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetWorkflow",
 }));
 export type UpdateWorkflowError =
   | AccessDeniedException
@@ -10390,6 +10536,7 @@ export const updateWorkflow: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateWorkflow",
 }));
 export type DeleteWorkflowError =
   | AccessDeniedException
@@ -10428,6 +10575,7 @@ export const deleteWorkflow: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteWorkflow",
 }));
 export type ListWorkflowsError =
   | AccessDeniedException
@@ -10475,6 +10623,7 @@ export const listWorkflows: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListWorkflows",
   pagination: {
     inputToken: "startingToken",
     outputToken: "nextToken",
@@ -10521,6 +10670,7 @@ export const createWorkflowVersion: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateWorkflowVersion",
 }));
 export type GetWorkflowVersionError =
   | AccessDeniedException
@@ -10553,6 +10703,7 @@ export const getWorkflowVersion: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetWorkflowVersion",
 }));
 export type UpdateWorkflowVersionError =
   | AccessDeniedException
@@ -10585,6 +10736,7 @@ export const updateWorkflowVersion: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateWorkflowVersion",
 }));
 export type DeleteWorkflowVersionError =
   | AccessDeniedException
@@ -10619,6 +10771,7 @@ export const deleteWorkflowVersion: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteWorkflowVersion",
 }));
 export type ListWorkflowVersionsError =
   | AccessDeniedException
@@ -10666,6 +10819,7 @@ export const listWorkflowVersions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListWorkflowVersions",
   pagination: {
     inputToken: "startingToken",
     outputToken: "nextToken",

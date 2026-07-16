@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -313,6 +313,7 @@ export const getRoleCredentials: API.OperationMethod<
     TooManyRequestsException,
     UnauthorizedException,
   ],
+  operationName: "GetRoleCredentials",
 }));
 export type ListAccountRolesError =
   | InvalidRequestException
@@ -352,6 +353,7 @@ export const listAccountRoles: API.OperationMethod<
     TooManyRequestsException,
     UnauthorizedException,
   ],
+  operationName: "ListAccountRoles",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -399,6 +401,7 @@ export const listAccounts: API.OperationMethod<
     TooManyRequestsException,
     UnauthorizedException,
   ],
+  operationName: "ListAccounts",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -440,4 +443,5 @@ export const logout: API.OperationMethod<
     TooManyRequestsException,
     UnauthorizedException,
   ],
+  operationName: "Logout",
 }));

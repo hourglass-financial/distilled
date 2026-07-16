@@ -4,6 +4,15 @@ import * as T from "../traits.ts";
 import { BadRequest, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface CreateCounterpartyRailAddressInput {
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  counterparty_id: string;
+  description?: string;
+  address: string;
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const CreateCounterpartyRailAddressInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     ereborVersion: Schema.optional(Schema.String).pipe(
@@ -19,11 +28,26 @@ export const CreateCounterpartyRailAddressInput =
     custom_fields: Schema.optional(
       Schema.Record(Schema.String, Schema.Unknown),
     ),
-  }).pipe(T.Http({ method: "POST", path: "/counterparty_rail_addresses" }));
-export type CreateCounterpartyRailAddressInput =
-  typeof CreateCounterpartyRailAddressInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/counterparty_rail_addresses" }),
+  ) as unknown as Schema.Codec<CreateCounterpartyRailAddressInput>;
 
 // Output Schema
+export interface CreateCounterpartyRailAddressOutput {
+  id: string;
+  type: "COUNTERPARTY_RAIL_ADDRESS";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  customer_id?: string | null;
+  program_id?: string | null;
+  counterparty_id?: string | null;
+  description?: string | null;
+  address: string;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const CreateCounterpartyRailAddressOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -37,11 +61,11 @@ export const CreateCounterpartyRailAddressOutput =
     counterparty_id: Schema.optional(Schema.NullOr(Schema.String)),
     description: Schema.optional(Schema.NullOr(Schema.String)),
     address: Schema.String,
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type CreateCounterpartyRailAddressOutput =
-  typeof CreateCounterpartyRailAddressOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<CreateCounterpartyRailAddressOutput>;
 
 // The operation
 /**

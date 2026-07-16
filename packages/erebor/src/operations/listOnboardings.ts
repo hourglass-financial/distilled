@@ -3,6 +3,14 @@ import { API } from "../client.ts";
 import * as T from "../traits.ts";
 
 // Input Schema
+export interface ListOnboardingsInput {
+  page_size?: number;
+  starting_after?: string;
+  ending_before?: string;
+  program_id?: string;
+  custom_ref?: string;
+  ereborVersion?: string;
+}
 export const ListOnboardingsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   page_size: Schema.optional(Schema.Number),
   starting_after: Schema.optional(Schema.String),
@@ -12,10 +20,38 @@ export const ListOnboardingsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   ereborVersion: Schema.optional(Schema.String).pipe(
     T.HttpHeader("Erebor-Version"),
   ),
-}).pipe(T.Http({ method: "GET", path: "/onboardings" }));
-export type ListOnboardingsInput = typeof ListOnboardingsInput.Type;
+}).pipe(
+  T.Http({ method: "GET", path: "/onboardings" }),
+) as unknown as Schema.Codec<ListOnboardingsInput>;
 
 // Output Schema
+export interface ListOnboardingsOutput {
+  data: ReadonlyArray<{
+    id: string;
+    type: "ONBOARDING";
+    url: string;
+    created_at: string;
+    updated_at: string;
+    archived_at?: string | null;
+    program_id: string;
+    status: "SUBMITTED" | "UNDER_REVIEW" | "APPROVED" | "REJECTED";
+    applicant_type: "PERSON" | "BUSINESS";
+    person_applicant_id?: string | null;
+    business_applicant_id?: string | null;
+    deposit_account_template_id?: string | null;
+    disclosures?: { disclosures_signed_externally: boolean };
+    customer_id?: string | null;
+    deposit_account_id?: string | null;
+    custom_ref?: string | null;
+    custom_fields?: Record<string, unknown> | null;
+    rejection_reason?: string | null;
+  }>;
+  has_more: boolean;
+  page_size: number;
+  page_next?: string | null;
+  page_prev?: string | null;
+  url: string;
+}
 export const ListOnboardingsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Array(
     Schema.Struct({
@@ -45,8 +81,10 @@ export const ListOnboardingsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       ),
       customer_id: Schema.optional(Schema.NullOr(Schema.String)),
       deposit_account_id: Schema.optional(Schema.NullOr(Schema.String)),
-      custom_ref: Schema.optional(Schema.Unknown),
-      custom_fields: Schema.optional(Schema.Unknown),
+      custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+      custom_fields: Schema.optional(
+        Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+      ),
       rejection_reason: Schema.optional(Schema.NullOr(Schema.String)),
     }),
   ),
@@ -55,8 +93,7 @@ export const ListOnboardingsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   page_next: Schema.optional(Schema.NullOr(Schema.String)),
   page_prev: Schema.optional(Schema.NullOr(Schema.String)),
   url: Schema.String,
-});
-export type ListOnboardingsOutput = typeof ListOnboardingsOutput.Type;
+}) as unknown as Schema.Codec<ListOnboardingsOutput>;
 
 // The operation
 /**

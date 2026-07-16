@@ -5,6 +5,22 @@ import { StructWithAdditionalProperties } from "@distilled.cloud/core/openapi/ad
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface RetrieveAnAccountInput {
+  accountId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const RetrieveAnAccountInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
   {
     accountId: Schema.String.pipe(T.PathParam()),
@@ -31,10 +47,77 @@ export const RetrieveAnAccountInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
       ]),
     ).pipe(T.HttpHeader("Persona-Version")),
   },
-).pipe(T.Http({ method: "GET", path: "/accounts/{accountId}" }));
-export type RetrieveAnAccountInput = typeof RetrieveAnAccountInput.Type;
+).pipe(
+  T.Http({ method: "GET", path: "/accounts/{accountId}" }),
+) as unknown as Schema.Codec<RetrieveAnAccountInput>;
 
 // Output Schema
+export interface RetrieveAnAccountOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      "reference-id"?: string | null;
+      "account-type-name"?: string;
+      "created-at"?: string;
+      "updated-at"?: string;
+      "redacted-at"?: string | null;
+      fields?: {
+        name?: {
+          type?: string;
+          value?: {
+            first?: { type?: string; value?: string | null };
+            middle?: { type?: string; value?: string | null };
+            last?: { type?: string; value?: string | null };
+          };
+        };
+        address?: {
+          type?: string;
+          value?: {
+            street_1?: { type?: string; value?: string | null };
+            street_2?: { type?: string; value?: string | null };
+            subdivision?: { type?: string; value?: string | null };
+            city?: { type?: string; value?: string | null };
+            postal_code?: { type?: string; value?: string | null };
+            country_code?: { type?: string; value?: string | null };
+          };
+        };
+        identification_numbers?: {
+          type?: string;
+          value?: ReadonlyArray<{
+            type?: string;
+            value?: {
+              identification_class?: { type?: string; value?: string };
+              identification_number?: { type?: string; value?: string };
+              issuing_country?: { type?: string; value?: string };
+              hashed_identification_number?: {
+                type?: string;
+                value?: string | null;
+              };
+            };
+          }>;
+        };
+        birthdate?: { type?: string; value?: string | null };
+        phone_number?: { type?: string; value?: string | null };
+        email_address?: { type?: string; value?: string | null };
+        selfie_photo?: {
+          type?: string;
+          value?: {
+            filename?: string;
+            url?: string;
+            "byte-size"?: number;
+          } | null;
+        };
+      } & Record<string, unknown>;
+      tags?: ReadonlyArray<unknown>;
+      "account-status"?: string;
+    };
+    relationships?: {
+      "account-type"?: { data?: { id?: string; type?: string } };
+    };
+  };
+  included?: ReadonlyArray<unknown>;
+}
 export const RetrieveAnAccountOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -237,9 +320,51 @@ export const RetrieveAnAccountOutput =
         }),
       ),
     }),
-    included: Schema.optional(Schema.Array(Schema.Unknown)),
-  });
-export type RetrieveAnAccountOutput = typeof RetrieveAnAccountOutput.Type;
+    included: Schema.optional(
+      Schema.Array(
+        Schema.Struct({
+          type: Schema.optional(Schema.String),
+          id: Schema.optional(Schema.String),
+          attributes: Schema.optional(
+            Schema.Struct({
+              name: Schema.optional(Schema.String),
+              "created-at": Schema.optional(Schema.String),
+              "updated-at": Schema.optional(Schema.NullOr(Schema.String)),
+              "field-schemas": Schema.optional(Schema.Array(Schema.Unknown)),
+            }),
+          ),
+          relationships: Schema.optional(
+            Schema.Struct({
+              "account-statuses": Schema.optional(
+                Schema.Struct({
+                  data: Schema.optional(
+                    Schema.Array(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        id: Schema.optional(Schema.String),
+                      }),
+                    ),
+                  ),
+                }),
+              ),
+              "default-account-status": Schema.optional(
+                Schema.Struct({
+                  data: Schema.optional(
+                    Schema.NullOr(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        id: Schema.optional(Schema.String),
+                      }),
+                    ),
+                  ),
+                }),
+              ),
+            }),
+          ),
+        }),
+      ),
+    ),
+  }) as unknown as Schema.Codec<RetrieveAnAccountOutput>;
 
 // The operation
 /**

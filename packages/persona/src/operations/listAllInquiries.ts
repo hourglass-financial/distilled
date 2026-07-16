@@ -4,6 +4,32 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden } from "../errors.ts";
 
 // Input Schema
+export interface ListAllInquiriesInput {
+  page?: { after?: string; before?: string; size?: number };
+  fields?: Record<string, string>;
+  filter?: {
+    "inquiry-id"?: string;
+    "account-id"?: string;
+    note?: string;
+    "reference-id"?: string;
+    "inquiry-template-id"?: string;
+    "template-id"?: string;
+    status?: string;
+    "created-at-start"?: string;
+    "created-at-end"?: string;
+  };
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const ListAllInquiriesInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   page: Schema.optional(
     Schema.Struct({
@@ -11,7 +37,7 @@ export const ListAllInquiriesInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       before: Schema.optional(Schema.String),
       size: Schema.optional(Schema.Number),
     }),
-  ).pipe(T.HttpQuery("page")),
+  ),
   fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
     T.HttpQuery("fields"),
   ),
@@ -27,7 +53,7 @@ export const ListAllInquiriesInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "created-at-start": Schema.optional(Schema.String),
       "created-at-end": Schema.optional(Schema.String),
     }),
-  ).pipe(T.HttpQuery("filter")),
+  ),
   keyInflection: Schema.optional(
     Schema.Literals(["camel", "kebab", "snake"]),
   ).pipe(T.HttpHeader("Key-Inflection")),
@@ -46,10 +72,76 @@ export const ListAllInquiriesInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "2020-05-18",
     ]),
   ).pipe(T.HttpHeader("Persona-Version")),
-}).pipe(T.Http({ method: "GET", path: "/inquiries" }));
-export type ListAllInquiriesInput = typeof ListAllInquiriesInput.Type;
+}).pipe(
+  T.Http({ method: "GET", path: "/inquiries" }),
+) as unknown as Schema.Codec<ListAllInquiriesInput>;
 
 // Output Schema
+export interface ListAllInquiriesOutput {
+  data: ReadonlyArray<{
+    type: string;
+    id: string;
+    attributes: {
+      status: string;
+      "reference-id": string | null;
+      note: string | null;
+      behaviors: Record<string, unknown> | null;
+      tags: ReadonlyArray<string | null>;
+      creator: string;
+      "reviewer-comment": string | null;
+      "created-at": string;
+      "updated-at": string;
+      "started-at": string | null;
+      "expires-at": string | null;
+      "completed-at": string | null;
+      "failed-at": string | null;
+      "marked-for-review-at": string | null;
+      "decisioned-at": string | null;
+      "expired-at": string | null;
+      "redacted-at": string | null;
+      "previous-step-name": string | null;
+      "next-step-name": string | null;
+      fields: Record<
+        string,
+        | { type: "string"; value: string | null }
+        | { type: "choices"; value: string | null }
+        | { type: "multi_choices"; value: ReadonlyArray<string> }
+        | { type: "boolean"; value: boolean | null }
+        | { type: "number"; value: number | null }
+        | { type: "date"; value: string | null }
+        | {
+            type: "generic";
+            value: { id: string; type: "Document::Generic" } | null;
+          }
+        | {
+            type: "government_id";
+            value: { id: string; type: "Document::GovernmentId" } | null;
+          }
+        | {
+            type: "selfie";
+            value: { id: string; type: "Selfie::ProfileAndCenter" } | null;
+          }
+        | { type: "json"; value: unknown }
+      >;
+    };
+    relationships: {
+      account?: { data?: { id?: string; type?: string } | null };
+      documents?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      template?: { data?: { id?: string; type?: string } | null };
+      "inquiry-template"?: { data?: { id?: string; type?: string } | null };
+      "inquiry-template-version"?: {
+        data?: { id?: string; type?: string } | null;
+      };
+      reports?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      transaction?: { data?: { id?: string; type?: string } | null };
+      reviewer?: { data?: { id?: string; type?: string } | null };
+      selfies?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      sessions?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      verifications?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+    };
+  }>;
+  links: { prev: string | null; next: string | null };
+}
 export const ListAllInquiriesOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
   {
     data: Schema.Array(
@@ -283,8 +375,7 @@ export const ListAllInquiriesOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
       next: Schema.NullOr(Schema.String),
     }),
   },
-);
-export type ListAllInquiriesOutput = typeof ListAllInquiriesOutput.Type;
+) as unknown as Schema.Codec<ListAllInquiriesOutput>;
 
 // The operation
 /**

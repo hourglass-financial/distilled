@@ -4,6 +4,22 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface RetrieveAGovernmentIdVerificationInput {
+  verificationId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const RetrieveAGovernmentIdVerificationInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     verificationId: Schema.String.pipe(T.PathParam()),
@@ -34,11 +50,97 @@ export const RetrieveAGovernmentIdVerificationInput =
       method: "GET",
       path: "/verification/government-ids/{verificationId}",
     }),
-  );
-export type RetrieveAGovernmentIdVerificationInput =
-  typeof RetrieveAGovernmentIdVerificationInput.Type;
+  ) as unknown as Schema.Codec<RetrieveAGovernmentIdVerificationInput>;
 
 // Output Schema
+export interface RetrieveAGovernmentIdVerificationOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      status?: string;
+      "created-at"?: string;
+      "created-at-ts"?: number;
+      "submitted-at"?: string | null;
+      "submitted-at-ts"?: number | null;
+      "completed-at"?: string | null;
+      "completed-at-ts"?: number | null;
+      "redacted-at"?: string | null;
+      "country-code"?: string | null;
+      tags?: ReadonlyArray<string>;
+      checks?: ReadonlyArray<{
+        name?: string;
+        status?: string;
+        reasons?: ReadonlyArray<string | null>;
+        requirement?: string;
+        metadata?: Record<string, unknown>;
+      }>;
+      "entity-confidence-reasons"?: ReadonlyArray<string>;
+      "entity-confidence-score"?: number | null;
+      "front-photo-url"?: string | null;
+      "back-photo-url"?: string | null;
+      "photo-urls"?: ReadonlyArray<{
+        "byte-size"?: number;
+        "normalized-url"?: string;
+        "original-urls"?: ReadonlyArray<string>;
+        page?: string;
+        url?: string;
+      }> | null;
+      "selfie-photo"?: { "byte-size"?: number; url?: string } | null;
+      "selfie-photo-url"?: string | null;
+      "video-url"?: string | null;
+      "id-class"?: string | null;
+      "capture-method"?: string | null;
+      "name-first"?: string | null;
+      "name-middle"?: string | null;
+      "name-last"?: string | null;
+      "name-suffix"?: string | null;
+      "native-name-first"?: string | null;
+      "native-name-middle"?: string | null;
+      "native-name-last"?: string | null;
+      "native-name-title"?: string | null;
+      birthdate?: string | null;
+      "issuing-authority"?: string | null;
+      "issuing-subdivision"?: string | null;
+      nationality?: string | null;
+      "document-number"?: string | null;
+      "visa-status"?: string | null;
+      "issue-date"?: string | null;
+      "expiration-date"?: string | null;
+      designations?: ReadonlyArray<unknown> | null;
+      birthplace?: string | null;
+      endorsements?: string | null;
+      height?: string | null;
+      sex?: string | null;
+      restrictions?: string | null;
+      "vehicle-class"?: string | null;
+      "identification-number"?: string | null;
+      "from-reusable-persona"?: boolean;
+      "address-street-1"?: string | null;
+      "address-street-2"?: string | null;
+      "address-city"?: string | null;
+      "address-subdivision"?: string | null;
+      "address-postal-code"?: string | null;
+    };
+    relationships?: {
+      inquiry?: { data?: { id?: string; type?: string } | null };
+      template?: { data?: { type?: string; id?: string } | null };
+      "inquiry-template-version"?: {
+        data?: { type?: string; id?: string } | null;
+      };
+      "inquiry-template"?: { data?: { type?: string; id?: string } | null };
+      transaction?: { data?: { type?: string; id?: string } | null };
+      "verification-template"?: {
+        data?: { type?: string; id?: string } | null;
+      };
+      "verification-template-version"?: {
+        data?: { type?: string; id?: string } | null;
+      };
+      accounts?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      document?: { data?: { id?: string; type?: string } };
+    };
+  };
+}
 export const RetrieveAGovernmentIdVerificationOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -251,9 +353,7 @@ export const RetrieveAGovernmentIdVerificationOutput =
         }),
       ),
     }),
-  });
-export type RetrieveAGovernmentIdVerificationOutput =
-  typeof RetrieveAGovernmentIdVerificationOutput.Type;
+  }) as unknown as Schema.Codec<RetrieveAGovernmentIdVerificationOutput>;
 
 // The operation
 /**

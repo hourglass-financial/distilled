@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -971,14 +971,26 @@ export const Record = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({ identifier: "Record" }) as any as S.Schema<Record>;
 export type RecordList = Record[];
 export const RecordList = /*@__PURE__*/ /*#__PURE__*/ S.Array(Record);
+export type IteratorPosition = "AT_TIP" | "BEHIND_TIP" | (string & {});
+export const IteratorPosition = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface IteratorDescription {
+  iteratorPosition?: IteratorPosition;
+}
+export const IteratorDescription = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ iteratorPosition: S.optional(IteratorPosition) }),
+).annotate({
+  identifier: "IteratorDescription",
+}) as any as S.Schema<IteratorDescription>;
 export interface GetRecordsOutput {
   changeRecords?: Record[];
   nextShardIterator?: string;
+  iteratorDescription?: IteratorDescription;
 }
 export const GetRecordsOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     changeRecords: S.optional(RecordList),
     nextShardIterator: S.optional(S.String),
+    iteratorDescription: S.optional(IteratorDescription),
   }),
 ).annotate({
   identifier: "GetRecordsOutput",
@@ -1222,6 +1234,7 @@ export const getRecords: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetRecords",
 }));
 export type GetShardIteratorError =
   | AccessDeniedException
@@ -1248,6 +1261,7 @@ export const getShardIterator: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetShardIterator",
 }));
 export type GetStreamError =
   | AccessDeniedException
@@ -1289,6 +1303,7 @@ export const getStream: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetStream",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -1336,6 +1351,7 @@ export const listStreams: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListStreams",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",

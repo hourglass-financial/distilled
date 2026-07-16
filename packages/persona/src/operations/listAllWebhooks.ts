@@ -4,6 +4,21 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden } from "../errors.ts";
 
 // Input Schema
+export interface ListAllWebhooksInput {
+  page?: { after?: string; before?: string; size?: number };
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const ListAllWebhooksInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   page: Schema.optional(
     Schema.Struct({
@@ -11,7 +26,7 @@ export const ListAllWebhooksInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       before: Schema.optional(Schema.String),
       size: Schema.optional(Schema.Number),
     }),
-  ).pipe(T.HttpQuery("page")),
+  ),
   fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
     T.HttpQuery("fields"),
   ),
@@ -33,10 +48,50 @@ export const ListAllWebhooksInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "2020-05-18",
     ]),
   ).pipe(T.HttpHeader("Persona-Version")),
-}).pipe(T.Http({ method: "GET", path: "/webhooks" }));
-export type ListAllWebhooksInput = typeof ListAllWebhooksInput.Type;
+}).pipe(
+  T.Http({ method: "GET", path: "/webhooks" }),
+) as unknown as Schema.Codec<ListAllWebhooksInput>;
 
 // Output Schema
+export interface ListAllWebhooksOutput {
+  data: ReadonlyArray<{
+    type?: string;
+    id?: string;
+    attributes?: {
+      status?: string;
+      url?: string;
+      name?: string | null;
+      description?: string | null;
+      "api-version"?:
+        | "2025-12-08"
+        | "2025-10-27"
+        | "2023-01-05"
+        | "2022-09-01"
+        | "2021-08-18"
+        | "2021-07-05"
+        | "2021-02-21"
+        | "2020-05-18";
+      "api-key-inflection"?: string;
+      "api-attributes-blocklist"?: ReadonlyArray<string | null>;
+      "file-access-token-expires-in"?: number;
+      "enabled-events"?: ReadonlyArray<string>;
+      "payload-filter"?: unknown | null;
+      "included-allowlist"?:
+        | { state: string }
+        | {
+            state: string;
+            "event-types": ReadonlyArray<{
+              "event-type": string;
+              relationships: ReadonlyArray<string>;
+            }>;
+          }
+        | null;
+      "relationship-allowlist"?: { state: string };
+      "created-at"?: string;
+    };
+  }>;
+  links: { next: string | null; prev: string | null };
+}
 export const ListAllWebhooksOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Array(
     Schema.Struct({
@@ -67,8 +122,29 @@ export const ListAllWebhooksOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
           "file-access-token-expires-in": Schema.optional(Schema.Number),
           "enabled-events": Schema.optional(Schema.Array(Schema.String)),
           "payload-filter": Schema.optional(Schema.NullOr(Schema.Unknown)),
-          "included-allowlist": Schema.optional(Schema.Unknown),
-          "relationship-allowlist": Schema.optional(Schema.Unknown),
+          "included-allowlist": Schema.optional(
+            Schema.NullOr(
+              Schema.Union([
+                Schema.Struct({
+                  state: Schema.String,
+                }),
+                Schema.Struct({
+                  state: Schema.String,
+                  "event-types": Schema.Array(
+                    Schema.Struct({
+                      "event-type": Schema.String,
+                      relationships: Schema.Array(Schema.String),
+                    }),
+                  ),
+                }),
+              ]),
+            ),
+          ),
+          "relationship-allowlist": Schema.optional(
+            Schema.Struct({
+              state: Schema.String,
+            }),
+          ),
           "created-at": Schema.optional(Schema.String),
         }),
       ),
@@ -78,8 +154,7 @@ export const ListAllWebhooksOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     next: Schema.NullOr(Schema.String),
     prev: Schema.NullOr(Schema.String),
   }),
-});
-export type ListAllWebhooksOutput = typeof ListAllWebhooksOutput.Type;
+}) as unknown as Schema.Codec<ListAllWebhooksOutput>;
 
 // The operation
 /**

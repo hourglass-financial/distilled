@@ -4,6 +4,26 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface ListAllTransactionsInput {
+  page?: { after?: string; before?: string; size?: number };
+  fields?: Record<string, string>;
+  filter?: {
+    "reference-id"?: string;
+    "transaction-type-id"?: string;
+    identifier?: { key?: string; value?: string };
+  };
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const ListAllTransactionsInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     page: Schema.optional(
@@ -12,7 +32,7 @@ export const ListAllTransactionsInput =
         before: Schema.optional(Schema.String),
         size: Schema.optional(Schema.Number),
       }),
-    ).pipe(T.HttpQuery("page")),
+    ),
     fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
       T.HttpQuery("fields"),
     ),
@@ -27,7 +47,7 @@ export const ListAllTransactionsInput =
           }),
         ),
       }),
-    ).pipe(T.HttpQuery("filter")),
+    ),
     keyInflection: Schema.optional(
       Schema.Literals(["camel", "kebab", "snake"]),
     ).pipe(T.HttpHeader("Key-Inflection")),
@@ -46,10 +66,34 @@ export const ListAllTransactionsInput =
         "2020-05-18",
       ]),
     ).pipe(T.HttpHeader("Persona-Version")),
-  }).pipe(T.Http({ method: "GET", path: "/transactions" }));
-export type ListAllTransactionsInput = typeof ListAllTransactionsInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/transactions" }),
+  ) as unknown as Schema.Codec<ListAllTransactionsInput>;
 
 // Output Schema
+export interface ListAllTransactionsOutput {
+  data: ReadonlyArray<{
+    id?: string;
+    type?: string;
+    attributes?: {
+      status?: string;
+      "reference-id"?: string | null;
+      fields?: Record<string, unknown>;
+      tags?: ReadonlyArray<string>;
+      "created-at"?: string;
+      "updated-at"?: string | null;
+    };
+    relationships?: {
+      reviewer?: { data?: { type?: string; id?: string } | null };
+      "transaction-label"?: { data?: { type?: string; id?: string } | null };
+      "transaction-type"?: { data?: { type?: string; id?: string } };
+      "related-objects"?: {
+        data?: ReadonlyArray<{ type?: string; id?: string }>;
+      };
+    };
+  }>;
+  links: { prev: string | null; next: string | null };
+}
 export const ListAllTransactionsOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Array(
@@ -124,8 +168,7 @@ export const ListAllTransactionsOutput =
       prev: Schema.NullOr(Schema.String),
       next: Schema.NullOr(Schema.String),
     }),
-  });
-export type ListAllTransactionsOutput = typeof ListAllTransactionsOutput.Type;
+  }) as unknown as Schema.Codec<ListAllTransactionsOutput>;
 
 // The operation
 /**

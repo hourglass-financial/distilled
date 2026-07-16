@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
 import * as C from "../category.ts";
@@ -147,4 +147,5 @@ export const getRevocationStatus: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "GetRevocationStatus",
 }));

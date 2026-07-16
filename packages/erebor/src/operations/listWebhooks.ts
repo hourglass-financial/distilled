@@ -3,22 +3,146 @@ import { API } from "../client.ts";
 import * as T from "../traits.ts";
 import { BadRequest, NotFound } from "../errors.ts";
 import { SensitiveOutputNullableString } from "../sensitive.ts";
+import * as Redacted from "effect/Redacted";
 
 // Input Schema
+export interface ListWebhooksInput {
+  page_size?: number;
+  starting_after?: string;
+  ending_before?: string;
+  status?: ReadonlyArray<"ENABLED" | "DISABLED" | "ARCHIVED">;
+  webhook_url?: ReadonlyArray<string>;
+  custom_ref?: string;
+  ereborVersion?: string;
+}
 export const ListWebhooksInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   page_size: Schema.optional(Schema.Number),
   starting_after: Schema.optional(Schema.String),
   ending_before: Schema.optional(Schema.String),
-  status: Schema.optional(Schema.String),
-  webhook_url: Schema.optional(Schema.String),
+  status: Schema.optional(
+    Schema.Array(Schema.Literals(["ENABLED", "DISABLED", "ARCHIVED"])),
+  ),
+  webhook_url: Schema.optional(Schema.Array(Schema.String)),
   custom_ref: Schema.optional(Schema.String),
   ereborVersion: Schema.optional(Schema.String).pipe(
     T.HttpHeader("Erebor-Version"),
   ),
-}).pipe(T.Http({ method: "GET", path: "/webhooks" }));
-export type ListWebhooksInput = typeof ListWebhooksInput.Type;
+}).pipe(
+  T.Http({ method: "GET", path: "/webhooks" }),
+) as unknown as Schema.Codec<ListWebhooksInput>;
 
 // Output Schema
+export interface ListWebhooksOutput {
+  data: ReadonlyArray<{
+    id: string;
+    type: "WEBHOOK";
+    url: string;
+    created_at: string;
+    updated_at: string;
+    archived_at?: string | null;
+    name: string;
+    status: "ENABLED" | "DISABLED" | "ARCHIVED";
+    webhook_url: string;
+    webhook_secret?: Redacted.Redacted<string> | null;
+    event_types?: ReadonlyArray<
+      | "DEPOSIT_ACCOUNT.CREATED"
+      | "DEPOSIT_ACCOUNT.PENDING"
+      | "DEPOSIT_ACCOUNT.OPEN"
+      | "DEPOSIT_ACCOUNT.UPDATED"
+      | "DEPOSIT_ACCOUNT.CLOSED"
+      | "DEPOSIT_ACCOUNT.FROZEN"
+      | "TRANSFER.PENDING"
+      | "TRANSFER.SETTLED"
+      | "TRANSFER.FAILED"
+      | "ACH_IN.CREATED"
+      | "ACH_IN.PENDING"
+      | "ACH_IN.SETTLED"
+      | "ACH_IN.FAILED"
+      | "ACH_IN.RETURNED"
+      | "ACH_OUT.CREATED"
+      | "ACH_OUT.PENDING"
+      | "ACH_OUT.SENT"
+      | "ACH_OUT.SETTLED"
+      | "ACH_OUT.FAILED"
+      | "ACH_OUT.RETURNED"
+      | "ACH_OUT.CANCELLED"
+      | "WIRE_IN.CREATED"
+      | "WIRE_IN.PENDING"
+      | "WIRE_IN.SETTLED"
+      | "WIRE_IN.FAILED"
+      | "WIRE_IN.RETURNED"
+      | "WIRE_IN.RESOLVING_FROM_SUSPENSE"
+      | "WIRE_OUT.CREATED"
+      | "WIRE_OUT.PENDING"
+      | "WIRE_OUT.SETTLED"
+      | "WIRE_OUT.FAILED"
+      | "WIRE_OUT.RETURNED"
+      | "INTERNATIONAL_WIRE_IN.PENDING"
+      | "INTERNATIONAL_WIRE_IN.SETTLED"
+      | "INTERNATIONAL_WIRE_IN.FAILED"
+      | "INTERNATIONAL_WIRE_IN.RETURNED"
+      | "INTERNATIONAL_WIRE_OUT.CREATED"
+      | "INTERNATIONAL_WIRE_OUT.PENDING"
+      | "INTERNATIONAL_WIRE_OUT.SETTLED"
+      | "INTERNATIONAL_WIRE_OUT.FAILED"
+      | "INTERNATIONAL_WIRE_OUT.RETURNED"
+      | "BLOCKCHAIN_IN.CREATED"
+      | "BLOCKCHAIN_IN.PENDING"
+      | "BLOCKCHAIN_IN.NEEDS_ATTRIBUTION"
+      | "BLOCKCHAIN_IN.SETTLED"
+      | "BLOCKCHAIN_IN.FAILED"
+      | "BLOCKCHAIN_OUT.CREATED"
+      | "BLOCKCHAIN_OUT.PENDING"
+      | "BLOCKCHAIN_OUT.SETTLED"
+      | "BLOCKCHAIN_OUT.FAILED"
+      | "BOOK_TRANSFER.CREATED"
+      | "BOOK_TRANSFER.PENDING"
+      | "BOOK_TRANSFER.SETTLED"
+      | "BOOK_TRANSFER.FAILED"
+      | "RAIL_IN.CREATED"
+      | "RAIL_IN.PENDING"
+      | "RAIL_IN.SETTLED"
+      | "RAIL_IN.FAILED"
+      | "RAIL_OUT.CREATED"
+      | "RAIL_OUT.PENDING"
+      | "RAIL_OUT.SETTLED"
+      | "RAIL_OUT.FAILED"
+      | "TRANSACTION.CREATED"
+      | "TRANSACTION.PENDING"
+      | "TRANSACTION.POSTED"
+      | "TRANSACTION.SETTLED"
+      | "TRANSACTION.FAILED"
+      | "TRANSACTION.REVERSED"
+      | "ONBOARDING.SUBMITTED"
+      | "ONBOARDING.UNDER_REVIEW"
+      | "ONBOARDING.APPROVED"
+      | "ONBOARDING.REJECTED"
+      | "COUNTERPARTY.CREATED"
+      | "COUNTERPARTY.UPDATED"
+      | "COUNTERPARTY.ARCHIVED"
+      | "COUNTERPARTY_BANK_ACCOUNT.CREATED"
+      | "COUNTERPARTY_BANK_ACCOUNT.ARCHIVED"
+      | "COUNTERPARTY_BLOCKCHAIN_ADDRESS.CREATED"
+      | "COUNTERPARTY_BLOCKCHAIN_ADDRESS.ARCHIVED"
+      | "COUNTERPARTY_BLOCKCHAIN_ADDRESS.ATTRIBUTED.SELF_HOSTED"
+      | "COUNTERPARTY_BLOCKCHAIN_ADDRESS.ATTRIBUTED.CUSTODIAN"
+      | "COUNTERPARTY_BLOCKCHAIN_ADDRESS.ATTRIBUTED.CUSTODIAN_OTHER"
+      | "COUNTERPARTY_INTERNATIONAL_BANK_ACCOUNT.ARCHIVED"
+      | "COUNTERPARTY_RAIL_ADDRESS.ARCHIVED"
+      | "CUSTOMER.CREATED"
+      | "CUSTOMER.UPDATED"
+      | "*"
+    > | null;
+    idempotency_key: string;
+    custom_ref?: string | null;
+    custom_fields?: Record<string, unknown> | null;
+  }>;
+  has_more: boolean;
+  page_size: number;
+  page_next?: string | null;
+  page_prev?: string | null;
+  url: string;
+}
 export const ListWebhooksOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Array(
     Schema.Struct({
@@ -128,8 +252,10 @@ export const ListWebhooksOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
         ),
       ),
       idempotency_key: Schema.String,
-      custom_ref: Schema.optional(Schema.Unknown),
-      custom_fields: Schema.optional(Schema.Unknown),
+      custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+      custom_fields: Schema.optional(
+        Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+      ),
     }),
   ),
   has_more: Schema.Boolean,
@@ -137,8 +263,7 @@ export const ListWebhooksOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   page_next: Schema.optional(Schema.NullOr(Schema.String)),
   page_prev: Schema.optional(Schema.NullOr(Schema.String)),
   url: Schema.String,
-});
-export type ListWebhooksOutput = typeof ListWebhooksOutput.Type;
+}) as unknown as Schema.Codec<ListWebhooksOutput>;
 
 // The operation
 /**

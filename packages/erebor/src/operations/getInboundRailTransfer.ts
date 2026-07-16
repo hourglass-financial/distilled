@@ -4,17 +4,43 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface GetInboundRailTransferInput {
+  id: string;
+  ereborVersion?: string;
+}
 export const GetInboundRailTransferInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
-  }).pipe(T.Http({ method: "GET", path: "/rail_in/{id}" }));
-export type GetInboundRailTransferInput =
-  typeof GetInboundRailTransferInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/rail_in/{id}" }),
+  ) as unknown as Schema.Codec<GetInboundRailTransferInput>;
 
 // Output Schema
+export interface GetInboundRailTransferOutput {
+  id: string;
+  type: "RAIL_IN";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id?: string | null;
+  status: "CREATED" | "PENDING" | "SETTLED" | "FAILED";
+  to_deposit_account_id: string;
+  from_deposit_account_id?: string | null;
+  counterparty_rail_address_id?: string | null;
+  amount: {
+    currency: "USD";
+    exponent: number;
+    value: string;
+    display_value: string;
+  };
+  memo?: string | null;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const GetInboundRailTransferOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -35,11 +61,11 @@ export const GetInboundRailTransferOutput =
       display_value: Schema.String,
     }),
     memo: Schema.optional(Schema.NullOr(Schema.String)),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type GetInboundRailTransferOutput =
-  typeof GetInboundRailTransferOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<GetInboundRailTransferOutput>;
 
 // The operation
 /**

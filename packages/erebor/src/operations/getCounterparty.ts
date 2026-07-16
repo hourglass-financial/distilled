@@ -4,15 +4,40 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface GetCounterpartyInput {
+  id: string;
+  ereborVersion?: string;
+}
 export const GetCounterpartyInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String.pipe(T.PathParam()),
   ereborVersion: Schema.optional(Schema.String).pipe(
     T.HttpHeader("Erebor-Version"),
   ),
-}).pipe(T.Http({ method: "GET", path: "/counterparties/{id}" }));
-export type GetCounterpartyInput = typeof GetCounterpartyInput.Type;
+}).pipe(
+  T.Http({ method: "GET", path: "/counterparties/{id}" }),
+) as unknown as Schema.Codec<GetCounterpartyInput>;
 
 // Output Schema
+export interface GetCounterpartyOutput {
+  id: string;
+  type: "COUNTERPARTY";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  customer_id?: string | null;
+  program_id?: string | null;
+  name: string;
+  address: {
+    street_address: string;
+    city: string;
+    country_area?: string | null;
+    postal_code: string;
+    country: string;
+  };
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const GetCounterpartyOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String,
   type: Schema.Literals(["COUNTERPARTY"]),
@@ -30,10 +55,11 @@ export const GetCounterpartyOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     postal_code: Schema.String,
     country: Schema.String,
   }),
-  custom_ref: Schema.optional(Schema.Unknown),
-  custom_fields: Schema.optional(Schema.Unknown),
-});
-export type GetCounterpartyOutput = typeof GetCounterpartyOutput.Type;
+  custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+  custom_fields: Schema.optional(
+    Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+  ),
+}) as unknown as Schema.Codec<GetCounterpartyOutput>;
 
 // The operation
 /**

@@ -3,6 +3,16 @@ import { API } from "../client.ts";
 import * as T from "../traits.ts";
 
 // Input Schema
+export interface ListBookTransfersInput {
+  page_size?: number;
+  starting_after?: string;
+  ending_before?: string;
+  from_deposit_account_id?: string;
+  to_deposit_account_id?: string;
+  status?: "PENDING" | "FAILED" | "SETTLED" | "CREATED";
+  custom_ref?: string;
+  ereborVersion?: string;
+}
 export const ListBookTransfersInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
   {
     page_size: Schema.optional(Schema.Number),
@@ -10,16 +20,47 @@ export const ListBookTransfersInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
     ending_before: Schema.optional(Schema.String),
     from_deposit_account_id: Schema.optional(Schema.String),
     to_deposit_account_id: Schema.optional(Schema.String),
-    status: Schema.optional(Schema.String),
+    status: Schema.optional(
+      Schema.Literals(["PENDING", "FAILED", "SETTLED", "CREATED"]),
+    ),
     custom_ref: Schema.optional(Schema.String),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
   },
-).pipe(T.Http({ method: "GET", path: "/book_transfers" }));
-export type ListBookTransfersInput = typeof ListBookTransfersInput.Type;
+).pipe(
+  T.Http({ method: "GET", path: "/book_transfers" }),
+) as unknown as Schema.Codec<ListBookTransfersInput>;
 
 // Output Schema
+export interface ListBookTransfersOutput {
+  data: ReadonlyArray<{
+    id: string;
+    type: "BOOK_TRANSFER";
+    url: string;
+    created_at: string;
+    updated_at: string;
+    archived_at?: string | null;
+    program_id?: string | null;
+    status: "PENDING" | "FAILED" | "SETTLED" | "CREATED";
+    from_deposit_account_id: string;
+    to_deposit_account_id: string;
+    amount: {
+      currency: "USD";
+      exponent: number;
+      value: string;
+      display_value: string;
+    };
+    memo?: string | null;
+    custom_ref?: string | null;
+    custom_fields?: Record<string, unknown> | null;
+  }>;
+  has_more: boolean;
+  page_size: number;
+  page_next?: string | null;
+  page_prev?: string | null;
+  url: string;
+}
 export const ListBookTransfersOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Array(
@@ -31,7 +72,7 @@ export const ListBookTransfersOutput =
         updated_at: Schema.String,
         archived_at: Schema.optional(Schema.NullOr(Schema.String)),
         program_id: Schema.optional(Schema.NullOr(Schema.String)),
-        status: Schema.Literals(["PENDING", "FAILED", "SETTLED"]),
+        status: Schema.Literals(["PENDING", "FAILED", "SETTLED", "CREATED"]),
         from_deposit_account_id: Schema.String,
         to_deposit_account_id: Schema.String,
         amount: Schema.Struct({
@@ -41,8 +82,10 @@ export const ListBookTransfersOutput =
           display_value: Schema.String,
         }),
         memo: Schema.optional(Schema.NullOr(Schema.String)),
-        custom_ref: Schema.optional(Schema.Unknown),
-        custom_fields: Schema.optional(Schema.Unknown),
+        custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+        custom_fields: Schema.optional(
+          Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+        ),
       }),
     ),
     has_more: Schema.Boolean,
@@ -50,8 +93,7 @@ export const ListBookTransfersOutput =
     page_next: Schema.optional(Schema.NullOr(Schema.String)),
     page_prev: Schema.optional(Schema.NullOr(Schema.String)),
     url: Schema.String,
-  });
-export type ListBookTransfersOutput = typeof ListBookTransfersOutput.Type;
+  }) as unknown as Schema.Codec<ListBookTransfersOutput>;
 
 // The operation
 /**

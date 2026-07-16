@@ -4,6 +4,14 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface UpdateCounterpartyInternationalBankAccountInput {
+  id: string;
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  description?: string;
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const UpdateCounterpartyInternationalBankAccountInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
@@ -23,11 +31,33 @@ export const UpdateCounterpartyInternationalBankAccountInput =
       method: "PATCH",
       path: "/counterparty_international_bank_accounts/{id}",
     }),
-  );
-export type UpdateCounterpartyInternationalBankAccountInput =
-  typeof UpdateCounterpartyInternationalBankAccountInput.Type;
+  ) as unknown as Schema.Codec<UpdateCounterpartyInternationalBankAccountInput>;
 
 // Output Schema
+export interface UpdateCounterpartyInternationalBankAccountOutput {
+  id: string;
+  type: "COUNTERPARTY_INTERNATIONAL_BANK_ACCOUNT";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  customer_id?: string | null;
+  program_id?: string | null;
+  counterparty_id?: string | null;
+  description: string | null;
+  account_number: string;
+  bic: string;
+  country_code: string;
+  additional_account_number_data?: {
+    canada?: {
+      institution_number: string;
+      transit_number: string;
+      account_number?: string;
+    } | null;
+  } | null;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const UpdateCounterpartyInternationalBankAccountOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -43,12 +73,26 @@ export const UpdateCounterpartyInternationalBankAccountOutput =
     account_number: Schema.String,
     bic: Schema.String,
     country_code: Schema.String,
-    additional_account_number_data: Schema.optional(Schema.Unknown),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type UpdateCounterpartyInternationalBankAccountOutput =
-  typeof UpdateCounterpartyInternationalBankAccountOutput.Type;
+    additional_account_number_data: Schema.optional(
+      Schema.NullOr(
+        Schema.Struct({
+          canada: Schema.optional(
+            Schema.NullOr(
+              Schema.Struct({
+                institution_number: Schema.String,
+                transit_number: Schema.String,
+                account_number: Schema.optional(Schema.String),
+              }),
+            ),
+          ),
+        }),
+      ),
+    ),
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<UpdateCounterpartyInternationalBankAccountOutput>;
 
 // The operation
 /**

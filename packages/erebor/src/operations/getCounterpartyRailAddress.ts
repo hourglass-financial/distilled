@@ -4,17 +4,36 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface GetCounterpartyRailAddressInput {
+  id: string;
+  ereborVersion?: string;
+}
 export const GetCounterpartyRailAddressInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
-  }).pipe(T.Http({ method: "GET", path: "/counterparty_rail_addresses/{id}" }));
-export type GetCounterpartyRailAddressInput =
-  typeof GetCounterpartyRailAddressInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/counterparty_rail_addresses/{id}" }),
+  ) as unknown as Schema.Codec<GetCounterpartyRailAddressInput>;
 
 // Output Schema
+export interface GetCounterpartyRailAddressOutput {
+  id: string;
+  type: "COUNTERPARTY_RAIL_ADDRESS";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  customer_id?: string | null;
+  program_id?: string | null;
+  counterparty_id?: string | null;
+  description?: string | null;
+  address: string;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const GetCounterpartyRailAddressOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -28,11 +47,11 @@ export const GetCounterpartyRailAddressOutput =
     counterparty_id: Schema.optional(Schema.NullOr(Schema.String)),
     description: Schema.optional(Schema.NullOr(Schema.String)),
     address: Schema.String,
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type GetCounterpartyRailAddressOutput =
-  typeof GetCounterpartyRailAddressOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<GetCounterpartyRailAddressOutput>;
 
 // The operation
 /**

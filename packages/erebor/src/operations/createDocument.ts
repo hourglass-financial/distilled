@@ -4,6 +4,22 @@ import * as T from "../traits.ts";
 import { BadRequest, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface CreateDocumentInput {
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  file: string;
+  document_type:
+    | "US_DRIVERS_LICENSE"
+    | "PASSPORT"
+    | "FORMATION_DOCUMENT"
+    | "IRS_EIN_CONFIRMATION"
+    | "OTHER";
+  name: string;
+  description?: string;
+  program_id: string;
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const CreateDocumentInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   ereborVersion: Schema.optional(Schema.String).pipe(
     T.HttpHeader("Erebor-Version"),
@@ -26,10 +42,32 @@ export const CreateDocumentInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   custom_fields: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
 }).pipe(
   T.Http({ method: "POST", path: "/documents", contentType: "multipart" }),
-);
-export type CreateDocumentInput = typeof CreateDocumentInput.Type;
+) as unknown as Schema.Codec<CreateDocumentInput>;
 
 // Output Schema
+export interface CreateDocumentOutput {
+  id: string;
+  type: "DOCUMENT";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id: string;
+  name: string;
+  description?: string | null;
+  document_type:
+    | "US_DRIVERS_LICENSE"
+    | "PASSPORT"
+    | "FORMATION_DOCUMENT"
+    | "IRS_EIN_CONFIRMATION"
+    | "OTHER";
+  content_hash: string;
+  content_size: number;
+  content_type: string;
+  content_url: string;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const CreateDocumentOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String,
   type: Schema.Literals(["DOCUMENT"]),
@@ -51,10 +89,11 @@ export const CreateDocumentOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   content_size: Schema.Number,
   content_type: Schema.String,
   content_url: Schema.String,
-  custom_ref: Schema.optional(Schema.Unknown),
-  custom_fields: Schema.optional(Schema.Unknown),
-});
-export type CreateDocumentOutput = typeof CreateDocumentOutput.Type;
+  custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+  custom_fields: Schema.optional(
+    Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+  ),
+}) as unknown as Schema.Codec<CreateDocumentOutput>;
 
 // The operation
 /**

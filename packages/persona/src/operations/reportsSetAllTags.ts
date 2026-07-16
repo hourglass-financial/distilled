@@ -10,6 +10,26 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface ReportsSetAllTagsInput {
+  reportId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  meta?: {
+    "tag-name"?: ReadonlyArray<string>;
+    "tag-id"?: ReadonlyArray<string>;
+  };
+}
 export const ReportsSetAllTagsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
   {
     reportId: Schema.String.pipe(T.PathParam()),
@@ -42,16 +62,20 @@ export const ReportsSetAllTagsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
       }),
     ),
   },
-).pipe(T.Http({ method: "POST", path: "/reports/{reportId}/set-tags" }));
-export type ReportsSetAllTagsInput = typeof ReportsSetAllTagsInput.Type;
+).pipe(
+  T.Http({ method: "POST", path: "/reports/{reportId}/set-tags" }),
+) as unknown as Schema.Codec<ReportsSetAllTagsInput>;
 
 // Output Schema
+export interface ReportsSetAllTagsOutput {
+  data: unknown;
+  included?: ReadonlyArray<unknown>;
+}
 export const ReportsSetAllTagsOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Unknown,
     included: Schema.optional(Schema.Array(Schema.Unknown)),
-  });
-export type ReportsSetAllTagsOutput = typeof ReportsSetAllTagsOutput.Type;
+  }) as unknown as Schema.Codec<ReportsSetAllTagsOutput>;
 
 // The operation
 /**

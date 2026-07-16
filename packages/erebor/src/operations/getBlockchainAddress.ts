@@ -4,16 +4,36 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface GetBlockchainAddressInput {
+  id: string;
+  ereborVersion?: string;
+}
 export const GetBlockchainAddressInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
-  }).pipe(T.Http({ method: "GET", path: "/blockchain_addresses/{id}" }));
-export type GetBlockchainAddressInput = typeof GetBlockchainAddressInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/blockchain_addresses/{id}" }),
+  ) as unknown as Schema.Codec<GetBlockchainAddressInput>;
 
 // Output Schema
+export interface GetBlockchainAddressOutput {
+  id: string;
+  type: "BLOCKCHAIN_ADDRESS";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  deposit_account_id: string;
+  name?: string | null;
+  address: string;
+  address_type: "ETHEREUM" | "SOLANA" | "SUI";
+  network: ReadonlyArray<"BASE" | "ETHEREUM" | "INK" | "SOLANA" | "SUI">;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const GetBlockchainAddressOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -29,10 +49,11 @@ export const GetBlockchainAddressOutput =
     network: Schema.Array(
       Schema.Literals(["BASE", "ETHEREUM", "INK", "SOLANA", "SUI"]),
     ),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type GetBlockchainAddressOutput = typeof GetBlockchainAddressOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<GetBlockchainAddressOutput>;
 
 // The operation
 /**

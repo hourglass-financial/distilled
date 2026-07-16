@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
 import * as C from "../category.ts";
@@ -469,6 +469,7 @@ export const createToken: API.OperationMethod<
     UnauthorizedClientException,
     UnsupportedGrantTypeException,
   ],
+  operationName: "CreateToken",
 }));
 export type CreateTokenWithIAMError =
   | AccessDeniedException
@@ -515,6 +516,7 @@ export const createTokenWithIAM: API.OperationMethod<
     UnauthorizedClientException,
     UnsupportedGrantTypeException,
   ],
+  operationName: "CreateTokenWithIAM",
 }));
 export type RegisterClientError =
   | InternalServerException
@@ -547,6 +549,7 @@ export const registerClient: API.OperationMethod<
     SlowDownException,
     UnsupportedGrantTypeException,
   ],
+  operationName: "RegisterClient",
 }));
 export type StartDeviceAuthorizationError =
   | InternalServerException
@@ -574,4 +577,5 @@ export const startDeviceAuthorization: API.OperationMethod<
     SlowDownException,
     UnauthorizedClientException,
   ],
+  operationName: "StartDeviceAuthorization",
 }));

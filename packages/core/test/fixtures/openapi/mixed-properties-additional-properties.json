@@ -8,6 +8,22 @@
     "/mixed": {
       "get": {
         "operationId": "getMixedObject",
+        "parameters": [
+          {
+            "name": "X-Required-Count",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "X-Mode",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "enum": ["fast", "safe"]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Mixed object response",
@@ -18,14 +34,14 @@
                   "required": [
                     "untyped",
                     "typed",
+                    "implicitTyped",
                     "closed",
                     "omitted",
                     "referenced",
                     "strictValues",
                     "nullableStrictValue",
-                    "unsupportedAnyOf",
-                    "emptyUnion",
-                    "unsupportedOneOf"
+                    "genericAnyOf",
+                    "genericOneOf"
                   ],
                   "properties": {
                     "untyped": {
@@ -38,6 +54,13 @@
                     },
                     "typed": {
                       "type": "object",
+                      "required": ["known"],
+                      "properties": {
+                        "known": { "type": "number" }
+                      },
+                      "additionalProperties": { "type": "string" }
+                    },
+                    "implicitTyped": {
                       "required": ["known"],
                       "properties": {
                         "known": { "type": "number" }
@@ -81,11 +104,11 @@
                         { "$ref": "#/components/schemas/BooleanFieldValue" }
                       ]
                     },
-                    "unsupportedAnyOf": {
+                    "genericAnyOf": {
                       "anyOf": [{ "type": "string" }, { "type": "number" }]
                     },
                     "emptyUnion": { "oneOf": [] },
-                    "unsupportedOneOf": {
+                    "genericOneOf": {
                       "oneOf": [{ "type": "string" }, { "type": "number" }]
                     }
                   }

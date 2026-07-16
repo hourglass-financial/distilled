@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -96,6 +96,9 @@ export type JobName = string;
 export type RoleArn = string;
 export type S3Uri = string;
 export type Message = string;
+export type DICOMStudyInstanceUID = string | redacted.Redacted<string>;
+export type DICOMSeriesInstanceUID = string | redacted.Redacted<string>;
+export type MetadataFilePath = string;
 export type ImageFrameId = string;
 export type NextToken = string;
 export type TagKey = string;
@@ -103,8 +106,6 @@ export type TagValue = string;
 export type DICOMPatientId = string | redacted.Redacted<string>;
 export type DICOMAccessionNumber = string | redacted.Redacted<string>;
 export type DICOMStudyId = string | redacted.Redacted<string>;
-export type DICOMStudyInstanceUID = string | redacted.Redacted<string>;
-export type DICOMSeriesInstanceUID = string | redacted.Redacted<string>;
 export type DICOMStudyDate = string | redacted.Redacted<string>;
 export type DICOMStudyTime = string | redacted.Redacted<string>;
 export type DICOMPatientName = string | redacted.Redacted<string>;
@@ -351,6 +352,40 @@ export type JobStatus =
   | "FAILED"
   | (string & {});
 export const JobStatus = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface DicomMetadataMapping {
+  studyInstanceUID: string | redacted.Redacted<string>;
+  seriesInstanceUID?: string | redacted.Redacted<string>;
+  metadataFilePath: string;
+}
+export const DicomMetadataMapping = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    studyInstanceUID: SensitiveString,
+    seriesInstanceUID: S.optional(SensitiveString),
+    metadataFilePath: S.String,
+  }),
+).annotate({
+  identifier: "DicomMetadataMapping",
+}) as any as S.Schema<DicomMetadataMapping>;
+export type DicomMetadataMappings = DicomMetadataMapping[];
+export const DicomMetadataMappings =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(DicomMetadataMapping);
+export interface DicomJsonMetadataImportConfiguration {
+  dicomMetadataMappings: DicomMetadataMapping[];
+}
+export const DicomJsonMetadataImportConfiguration =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ dicomMetadataMappings: DicomMetadataMappings }),
+  ).annotate({
+    identifier: "DicomJsonMetadataImportConfiguration",
+  }) as any as S.Schema<DicomJsonMetadataImportConfiguration>;
+export type ImportConfiguration = {
+  dicomJsonMetadataImportConfiguration: DicomJsonMetadataImportConfiguration;
+};
+export const ImportConfiguration = /*@__PURE__*/ /*#__PURE__*/ S.Union([
+  S.Struct({
+    dicomJsonMetadataImportConfiguration: DicomJsonMetadataImportConfiguration,
+  }),
+]);
 export interface DICOMImportJobProperties {
   jobId: string;
   jobName: string;
@@ -362,6 +397,7 @@ export interface DICOMImportJobProperties {
   inputS3Uri: string;
   outputS3Uri: string;
   message?: string;
+  importConfiguration?: ImportConfiguration;
 }
 export const DICOMImportJobProperties = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -376,6 +412,7 @@ export const DICOMImportJobProperties = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       inputS3Uri: S.String,
       outputS3Uri: S.String,
       message: S.optional(S.String),
+      importConfiguration: S.optional(ImportConfiguration),
     }),
 ).annotate({
   identifier: "DICOMImportJobProperties",
@@ -1011,6 +1048,7 @@ export interface StartDICOMImportJobRequest {
   inputS3Uri: string;
   outputS3Uri: string;
   inputOwnerAccountId?: string;
+  importConfiguration?: ImportConfiguration;
 }
 export const StartDICOMImportJobRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -1022,6 +1060,7 @@ export const StartDICOMImportJobRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       inputS3Uri: S.String,
       outputS3Uri: S.String,
       inputOwnerAccountId: S.optional(S.String),
+      importConfiguration: S.optional(ImportConfiguration),
     }).pipe(
       T.all(
         T.Http({
@@ -1448,6 +1487,7 @@ export const copyImageSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CopyImageSet",
 }));
 export type DeleteImageSetError =
   | AccessDeniedException
@@ -1476,6 +1516,7 @@ export const deleteImageSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteImageSet",
 }));
 export type GetDICOMImportJobError =
   | AccessDeniedException
@@ -1506,6 +1547,7 @@ export const getDICOMImportJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetDICOMImportJob",
 }));
 export type GetImageFrameError =
   | AccessDeniedException
@@ -1538,6 +1580,7 @@ export const getImageFrame: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetImageFrame",
 }));
 export type GetImageSetError =
   | AccessDeniedException
@@ -1566,6 +1609,7 @@ export const getImageSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetImageSet",
 }));
 export type GetImageSetMetadataError =
   | AccessDeniedException
@@ -1594,6 +1638,7 @@ export const getImageSetMetadata: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetImageSetMetadata",
 }));
 export type ListDICOMImportJobsError =
   | AccessDeniedException
@@ -1637,6 +1682,7 @@ export const listDICOMImportJobs: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListDICOMImportJobs",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -1686,6 +1732,7 @@ export const listImageSetVersions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListImageSetVersions",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -1718,6 +1765,7 @@ export const listTagsForResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type SearchImageSetsError =
   | AccessDeniedException
@@ -1765,6 +1813,7 @@ export const searchImageSets: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SearchImageSets",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -1782,7 +1831,7 @@ export type StartDICOMImportJobError =
   | ValidationException
   | CommonErrors;
 /**
- * Start importing bulk data into an `ACTIVE` data store. The import job imports DICOM P10 files found in the S3 prefix specified by the `inputS3Uri` parameter. The import job stores processing results in the file specified by the `outputS3Uri` parameter.
+ * Start importing bulk data into an `ACTIVE` data store. The import job imports DICOM P10 files or enhances existing DICOM files with JSON metadata. The `importConfiguration` parameter specifies the import type. The data is found in the S3 prefix specified by the `inputS3Uri` parameter. The import job stores processing results in the file specified by the `outputS3Uri` parameter.
  */
 export const startDICOMImportJob: API.OperationMethod<
   StartDICOMImportJobRequest,
@@ -1801,6 +1850,7 @@ export const startDICOMImportJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartDICOMImportJob",
 }));
 export type TagResourceError =
   | AccessDeniedException
@@ -1827,6 +1877,7 @@ export const tagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | AccessDeniedException
@@ -1853,6 +1904,7 @@ export const untagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UntagResource",
 }));
 export type UpdateImageSetMetadataError =
   | AccessDeniedException
@@ -1883,6 +1935,7 @@ export const updateImageSetMetadata: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateImageSetMetadata",
 }));
 export type CreateDatastoreError =
   | AccessDeniedException
@@ -1913,6 +1966,7 @@ export const createDatastore: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateDatastore",
 }));
 export type GetDatastoreError =
   | AccessDeniedException
@@ -1939,6 +1993,7 @@ export const getDatastore: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetDatastore",
 }));
 export type DeleteDatastoreError =
   | AccessDeniedException
@@ -1969,6 +2024,7 @@ export const deleteDatastore: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteDatastore",
 }));
 export type ListDatastoresError =
   | AccessDeniedException
@@ -2008,6 +2064,7 @@ export const listDatastores: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListDatastores",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",

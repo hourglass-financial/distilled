@@ -3,6 +3,32 @@ import { API } from "../client.ts";
 import * as T from "../traits.ts";
 
 // Input Schema
+export interface ListTransactionsInput {
+  page_size?: number;
+  starting_after?: string;
+  ending_before?: string;
+  account_id?: string;
+  from_id?: string;
+  to_id?: string;
+  transaction_type?:
+    | "ACH_IN"
+    | "ACH_OUT"
+    | "WIRE_IN"
+    | "WIRE_OUT"
+    | "INTERNATIONAL_WIRE_IN"
+    | "INTERNATIONAL_WIRE_OUT"
+    | "BLOCKCHAIN_IN"
+    | "BLOCKCHAIN_OUT"
+    | "RAIL_IN"
+    | "RAIL_OUT"
+    | "BOOK_TRANSFER"
+    | "INTEREST"
+    | "FEE"
+    | "ADJUSTMENT";
+  status?: "CREATED" | "PENDING" | "SETTLED" | "FAILED" | "REVERSED";
+  associated_payment_id?: string;
+  ereborVersion?: string;
+}
 export const ListTransactionsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   page_size: Schema.optional(Schema.Number),
   starting_after: Schema.optional(Schema.String),
@@ -10,16 +36,91 @@ export const ListTransactionsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   account_id: Schema.optional(Schema.String),
   from_id: Schema.optional(Schema.String),
   to_id: Schema.optional(Schema.String),
-  transaction_type: Schema.optional(Schema.String),
-  status: Schema.optional(Schema.String),
+  transaction_type: Schema.optional(
+    Schema.Literals([
+      "ACH_IN",
+      "ACH_OUT",
+      "WIRE_IN",
+      "WIRE_OUT",
+      "INTERNATIONAL_WIRE_IN",
+      "INTERNATIONAL_WIRE_OUT",
+      "BLOCKCHAIN_IN",
+      "BLOCKCHAIN_OUT",
+      "RAIL_IN",
+      "RAIL_OUT",
+      "BOOK_TRANSFER",
+      "INTEREST",
+      "FEE",
+      "ADJUSTMENT",
+    ]),
+  ),
+  status: Schema.optional(
+    Schema.Literals(["CREATED", "PENDING", "SETTLED", "FAILED", "REVERSED"]),
+  ),
   associated_payment_id: Schema.optional(Schema.String),
   ereborVersion: Schema.optional(Schema.String).pipe(
     T.HttpHeader("Erebor-Version"),
   ),
-}).pipe(T.Http({ method: "GET", path: "/transactions" }));
-export type ListTransactionsInput = typeof ListTransactionsInput.Type;
+}).pipe(
+  T.Http({ method: "GET", path: "/transactions" }),
+) as unknown as Schema.Codec<ListTransactionsInput>;
 
 // Output Schema
+export interface ListTransactionsOutput {
+  data: ReadonlyArray<{
+    id: string;
+    type: "TRANSACTION";
+    url: string;
+    created_at: string;
+    updated_at: string;
+    archived_at?: string | null;
+    status: "CREATED" | "PENDING" | "SETTLED" | "FAILED" | "REVERSED";
+    transaction_type:
+      | "ACH_IN"
+      | "ACH_OUT"
+      | "WIRE_IN"
+      | "WIRE_OUT"
+      | "INTERNATIONAL_WIRE_IN"
+      | "INTERNATIONAL_WIRE_OUT"
+      | "BLOCKCHAIN_IN"
+      | "BLOCKCHAIN_OUT"
+      | "RAIL_IN"
+      | "RAIL_OUT"
+      | "BOOK_TRANSFER"
+      | "INTEREST"
+      | "FEE"
+      | "ADJUSTMENT";
+    amount: {
+      currency: string;
+      exponent?: number;
+      value: string;
+      display_value?: string;
+    };
+    description: string | null;
+    associated_payments?: ReadonlyArray<{
+      type: string;
+      id: string;
+      url: string;
+    }> | null;
+    from?: {
+      type: string;
+      id: string;
+      url?: string;
+      description?: string | null;
+    } | null;
+    to?: {
+      type: string;
+      id: string;
+      url: string;
+      description?: string | null;
+    } | null;
+  }>;
+  has_more: boolean;
+  page_size: number;
+  page_next?: string | null;
+  page_prev?: string | null;
+  url: string;
+}
 export const ListTransactionsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
   {
     data: Schema.Array(
@@ -71,8 +172,26 @@ export const ListTransactionsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
             ),
           ),
         ),
-        from: Schema.optional(Schema.Unknown),
-        to: Schema.optional(Schema.Unknown),
+        from: Schema.optional(
+          Schema.NullOr(
+            Schema.Struct({
+              type: Schema.String,
+              id: Schema.String,
+              url: Schema.optional(Schema.String),
+              description: Schema.optional(Schema.NullOr(Schema.String)),
+            }),
+          ),
+        ),
+        to: Schema.optional(
+          Schema.NullOr(
+            Schema.Struct({
+              type: Schema.String,
+              id: Schema.String,
+              url: Schema.String,
+              description: Schema.optional(Schema.NullOr(Schema.String)),
+            }),
+          ),
+        ),
       }),
     ),
     has_more: Schema.Boolean,
@@ -81,8 +200,7 @@ export const ListTransactionsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
     page_prev: Schema.optional(Schema.NullOr(Schema.String)),
     url: Schema.String,
   },
-);
-export type ListTransactionsOutput = typeof ListTransactionsOutput.Type;
+) as unknown as Schema.Codec<ListTransactionsOutput>;
 
 // The operation
 /**

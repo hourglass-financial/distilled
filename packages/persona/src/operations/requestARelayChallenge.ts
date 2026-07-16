@@ -10,6 +10,19 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface RequestARelayChallengeInput {
+  keyInflection?: "camel" | "kebab" | "snake";
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  "claim-type": string;
+}
 export const RequestARelayChallengeInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     keyInflection: Schema.optional(
@@ -28,19 +41,22 @@ export const RequestARelayChallengeInput =
       ]),
     ).pipe(T.HttpHeader("Persona-Version")),
     "claim-type": Schema.String,
-  }).pipe(T.Http({ method: "POST", path: "/relays/challenge" }));
-export type RequestARelayChallengeInput =
-  typeof RequestARelayChallengeInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/relays/challenge" }),
+  ) as unknown as Schema.Codec<RequestARelayChallengeInput>;
 
 // Output Schema
+export interface RequestARelayChallengeOutput {
+  challenge: string;
+  "token-key": string;
+  "token-key-id": string;
+}
 export const RequestARelayChallengeOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     challenge: Schema.String,
     "token-key": Schema.String,
     "token-key-id": Schema.String,
-  });
-export type RequestARelayChallengeOutput =
-  typeof RequestARelayChallengeOutput.Type;
+  }) as unknown as Schema.Codec<RequestARelayChallengeOutput>;
 
 // The operation
 /**

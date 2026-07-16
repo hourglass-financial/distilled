@@ -7,43 +7,6 @@ import { listOutboundAchTransfers } from "../src/operations/listOutboundAchTrans
 import { simulateAchOutReturn } from "../src/operations/simulateAchOutReturn.ts";
 import { runEffect, unknownId } from "./setup.ts";
 
-// The simulate sandbox only recognises transfers in the caller's program/customer
-// scope, so we iterate through the listed transfers (filtered by status) to find
-// one the simulate API actually accepts (i.e. does not respond with NotFound).
-const findSimulatable = async (
-  status: "SETTLED" | "OTHER",
-  returnCode: string,
-): Promise<{ id: string; tag?: string } | undefined> => {
-  const list = await runEffect(listOutboundAchTransfers({ page_size: 100 }));
-  const candidates = list.data.filter((t) =>
-    status === "SETTLED" ? t.status === "SETTLED" : t.status !== "SETTLED",
-  );
-  for (const t of candidates) {
-    const result = await Effect.runPromise(
-      simulateAchOutReturn({ id: t.id, return_code: returnCode }).pipe(
-        Effect.provide(
-          Layer.merge(
-            Layer.succeed(Credentials, {
-              apiKey: Redacted.make(process.env.EREBOR_API_KEY ?? ""),
-              apiBaseUrl: DEFAULT_API_BASE_URL,
-            }),
-            FetchHttpClient.layer,
-          ),
-        ),
-        Effect.match({
-          onSuccess: (r) => ({ id: r.id, tag: undefined as string | undefined }),
-          onFailure: (e: { _tag: string }) =>
-            e._tag === "NotFound"
-              ? undefined
-              : { id: t.id, tag: e._tag },
-        }),
-      ),
-    );
-    if (result) return result;
-  }
-  return undefined;
-};
-
 describe("simulateAchOutReturn", () => {
   describe("happy path", () => {
     it("simulates a return on a settled outbound ACH transfer", async () => {
@@ -108,14 +71,6 @@ describe("simulateAchOutReturn", () => {
     }, 30_000);
 
     it("returns BadRequest for an invalid return_code on a reachable transfer", async (ctx) => {
-      // Need a transfer the simulate endpoint actually recognises so that
-      // validation reaches the return_code check rather than short-circuiting
-      // on NotFound.
-      const reachable = await findSimulatable("SETTLED", "R01");
-      if (!reachable) {
-        ctx.skip("No simulate-reachable SETTLED transfer in sandbox scope.");
-        return;
-      }
       // `R99` matches the NACHA pattern `^R[0-9]{2}$` but is not a real return
       // reason code, so a validating endpoint rejects it with 400. The live
       // sandbox, however, currently accepts any return_code and responds 200
@@ -123,21 +78,34 @@ describe("simulateAchOutReturn", () => {
       // inspect the outcome without throwing, assert BadRequest when the
       // endpoint does validate, and skip (rather than assert an error the API
       // no longer returns) when it accepts the invalid code.
-      const outcome = await runEffect(
-        simulateAchOutReturn({ id: reachable.id, return_code: "R99" }).pipe(
-          Effect.match({
-            onFailure: (e: { _tag: string }) => ({ ok: false as const, e }),
-            onSuccess: (r) => ({ ok: true as const, r }),
-          }),
-        ),
+      const list = await runEffect(
+        listOutboundAchTransfers({ page_size: 100, status: "SETTLED" }),
       );
-      if (outcome.ok) {
-        ctx.skip(
-          "Simulate endpoint accepts invalid return_code (returns 200 with the existing code) instead of returning BadRequest.",
+      for (const transfer of list.data.filter((t) => t.status === "SETTLED")) {
+        const outcome = await runEffect(
+          simulateAchOutReturn({ id: transfer.id, return_code: "R99" }).pipe(
+            Effect.match({
+              onFailure: (e: { _tag: string }) => ({ ok: false as const, e }),
+              onSuccess: (r) => ({ ok: true as const, r }),
+            }),
+          ),
         );
+        if (outcome.ok) {
+          ctx.skip(
+            "Simulate endpoint accepts invalid return_code instead of returning BadRequest.",
+          );
+          return;
+        }
+        if (
+          outcome.e._tag === "NotFound" ||
+          outcome.e._tag === "Conflict"
+        ) {
+          continue;
+        }
+        expect(outcome.e._tag).toBe("BadRequest");
         return;
       }
-      expect(outcome.e._tag).toBe("BadRequest");
+      ctx.skip("No simulate-reachable SETTLED transfer in sandbox scope.");
     }, 60_000);
 
     it("returns Conflict when the transfer is not in SETTLED status", async () => {

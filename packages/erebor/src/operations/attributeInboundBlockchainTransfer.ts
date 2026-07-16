@@ -4,6 +4,51 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface AttributeInboundBlockchainTransferInput {
+  id: string;
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  counterparty_id: string;
+  custodian:
+    | "ANCHORAGE_SG"
+    | "ANCHORAGE_US"
+    | "AQUANOW_CA"
+    | "B2C2_UK"
+    | "B2C2_US"
+    | "BITGO_SG"
+    | "BITGO_US"
+    | "BITSTAMP_US"
+    | "BVNK_US"
+    | "CIRCLE_FR"
+    | "CIRCLE_US"
+    | "CITIBANK_US"
+    | "COINBASE_US"
+    | "COINSMART_CA"
+    | "COPPER_CH"
+    | "COPPER_UK"
+    | "CUMBERLAND_DRW_LLC_US"
+    | "CUMBERLAND_SG"
+    | "EREBOR_BANK_US"
+    | "FALCONX_US"
+    | "FIDELITY_UK"
+    | "FIDELITY_US"
+    | "FIREBLOCKS_APAC"
+    | "FIREBLOCKS_US"
+    | "GALAXY_KY"
+    | "GEMINI_US"
+    | "KRAKEN_BVI"
+    | "KRAKEN_EU_IE"
+    | "KRAKEN_UK"
+    | "KRAKEN_US"
+    | "NUBANK_BR"
+    | "PAXOS_US"
+    | "RAMP_NETWORK_US"
+    | "ROBINHOOD_US"
+    | "WINTERMUTE_GB"
+    | "SELF_HOSTED"
+    | "OTHER";
+  custodian_other?: string | null;
+}
 export const AttributeInboundBlockchainTransferInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
@@ -54,11 +99,35 @@ export const AttributeInboundBlockchainTransferInput =
       "OTHER",
     ]),
     custodian_other: Schema.optional(Schema.NullOr(Schema.String)),
-  }).pipe(T.Http({ method: "POST", path: "/blockchain_in/{id}/attribute" }));
-export type AttributeInboundBlockchainTransferInput =
-  typeof AttributeInboundBlockchainTransferInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/blockchain_in/{id}/attribute" }),
+  ) as unknown as Schema.Codec<AttributeInboundBlockchainTransferInput>;
 
 // Output Schema
+export interface AttributeInboundBlockchainTransferOutput {
+  id: string;
+  type: "BLOCKCHAIN_IN";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id?: string | null;
+  status: "CREATED" | "PENDING" | "NEEDS_ATTRIBUTION" | "SETTLED" | "FAILED";
+  deposit_account_id: string;
+  counterparty_blockchain_address_id?: string | null;
+  amount: {
+    currency: "USAT" | "USDC" | "USDT";
+    exponent: number;
+    value: string;
+    display_value: string;
+  };
+  network: "BASE" | "ETHEREUM" | "INK" | "SOLANA" | "SUI";
+  transaction_hash?: string | null;
+  from_address?: string | null;
+  to_address?: string | null;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const AttributeInboundBlockchainTransferOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -89,11 +158,11 @@ export const AttributeInboundBlockchainTransferOutput =
     transaction_hash: Schema.optional(Schema.NullOr(Schema.String)),
     from_address: Schema.optional(Schema.NullOr(Schema.String)),
     to_address: Schema.optional(Schema.NullOr(Schema.String)),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type AttributeInboundBlockchainTransferOutput =
-  typeof AttributeInboundBlockchainTransferOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<AttributeInboundBlockchainTransferOutput>;
 
 // The operation
 /**

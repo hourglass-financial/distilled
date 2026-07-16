@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -3009,16 +3009,24 @@ export const WebAppUnits = /*@__PURE__*/ /*#__PURE__*/ S.Union([
 ]);
 export type WebAppEndpointPolicy = "FIPS" | "STANDARD" | (string & {});
 export const WebAppEndpointPolicy = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export type WebAppVpcEndpointIpAddressType =
+  | "IPV4"
+  | "DUALSTACK"
+  | (string & {});
+export const WebAppVpcEndpointIpAddressType =
+  /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface WebAppVpcConfig {
   SubnetIds?: string[];
   VpcId?: string;
   SecurityGroupIds?: string[];
+  IpAddressType?: WebAppVpcEndpointIpAddressType;
 }
 export const WebAppVpcConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     SubnetIds: S.optional(SubnetIds),
     VpcId: S.optional(S.String),
     SecurityGroupIds: S.optional(SecurityGroupIds),
+    IpAddressType: S.optional(WebAppVpcEndpointIpAddressType),
   }),
 ).annotate({
   identifier: "WebAppVpcConfig",
@@ -3181,9 +3189,13 @@ export const UpdateWebAppIdentityProviderDetails =
   ]);
 export interface UpdateWebAppVpcConfig {
   SubnetIds?: string[];
+  IpAddressType?: WebAppVpcEndpointIpAddressType;
 }
 export const UpdateWebAppVpcConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-  S.Struct({ SubnetIds: S.optional(SubnetIds) }),
+  S.Struct({
+    SubnetIds: S.optional(SubnetIds),
+    IpAddressType: S.optional(WebAppVpcEndpointIpAddressType),
+  }),
 ).annotate({
   identifier: "UpdateWebAppVpcConfig",
 }) as any as S.Schema<UpdateWebAppVpcConfig>;
@@ -3611,6 +3623,7 @@ export const createAccess: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "CreateAccess",
 }));
 export type DeleteAccessError =
   | InternalServiceError
@@ -3635,6 +3648,7 @@ export const deleteAccess: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DeleteAccess",
 }));
 export type DeleteHostKeyError =
   | InternalServiceError
@@ -3661,6 +3675,7 @@ export const deleteHostKey: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "DeleteHostKey",
 }));
 export type DeleteSshPublicKeyError =
   | InternalServiceError
@@ -3687,6 +3702,7 @@ export const deleteSshPublicKey: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "DeleteSshPublicKey",
 }));
 export type DescribeAccessError =
   | InternalServiceError
@@ -3713,6 +3729,7 @@ export const describeAccess: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DescribeAccess",
 }));
 export type DescribeExecutionError =
   | InternalServiceError
@@ -3741,6 +3758,7 @@ export const describeExecution: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DescribeExecution",
 }));
 export type DescribeHostKeyError =
   | InternalServiceError
@@ -3765,6 +3783,7 @@ export const describeHostKey: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DescribeHostKey",
 }));
 export type DescribeSecurityPolicyError =
   | InternalServiceError
@@ -3789,6 +3808,7 @@ export const describeSecurityPolicy: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DescribeSecurityPolicy",
 }));
 export type ImportHostKeyError =
   | InternalServiceError
@@ -3817,6 +3837,7 @@ export const importHostKey: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "ImportHostKey",
 }));
 export type ImportSshPublicKeyError =
   | InternalServiceError
@@ -3847,6 +3868,7 @@ export const importSshPublicKey: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "ImportSshPublicKey",
 }));
 export type ListAccessesError =
   | InternalServiceError
@@ -3888,6 +3910,7 @@ export const listAccesses: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListAccesses",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -3937,6 +3960,7 @@ export const listExecutions: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListExecutions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -3984,6 +4008,7 @@ export const listFileTransferResults: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListFileTransferResults",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4016,6 +4041,7 @@ export const listHostKeys: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListHostKeys",
 }));
 export type ListSecurityPoliciesError =
   | InternalServiceError
@@ -4055,6 +4081,7 @@ export const listSecurityPolicies: API.OperationMethod<
     InvalidRequestException,
     ServiceUnavailableException,
   ],
+  operationName: "ListSecurityPolicies",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4100,6 +4127,7 @@ export const listTagsForResource: API.OperationMethod<
     InvalidRequestException,
     ServiceUnavailableException,
   ],
+  operationName: "ListTagsForResource",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4136,6 +4164,7 @@ export const sendWorkflowStepState: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "SendWorkflowStepState",
 }));
 export type StartDirectoryListingError =
   | InternalServiceError
@@ -4159,7 +4188,7 @@ export type StartDirectoryListingError =
  *
  * - `path`: the complete path of a remote directory, relative to the directory of the listing request for your SFTP connector on the remote server.
  *
- * - `truncated`: a flag indicating whether the list output contains all of the items contained in the remote directory or not. If your `Truncated` output value is true, you can increase the value provided in the optional `max-items` input attribute to be able to list more items (up to the maximum allowed list size of 10,000 items).
+ * - `truncated`: a flag indicating whether the list output contains all of the items contained in the remote directory or not. If your `Truncated` output value is true, you can increase the value provided in the optional `max-items` input attribute to be able to list more items (up to the maximum allowed list size of 200,000 items).
  */
 export const startDirectoryListing: API.OperationMethod<
   StartDirectoryListingRequest,
@@ -4176,6 +4205,7 @@ export const startDirectoryListing: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "StartDirectoryListing",
 }));
 export type StartFileTransferError =
   | InternalServiceError
@@ -4210,6 +4240,7 @@ export const startFileTransfer: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "StartFileTransfer",
 }));
 export type StartRemoteDeleteError =
   | InternalServiceError
@@ -4236,6 +4267,7 @@ export const startRemoteDelete: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "StartRemoteDelete",
 }));
 export type StartRemoteMoveError =
   | InternalServiceError
@@ -4262,6 +4294,7 @@ export const startRemoteMove: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "StartRemoteMove",
 }));
 export type StartServerError =
   | InternalServiceError
@@ -4292,6 +4325,7 @@ export const startServer: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "StartServer",
 }));
 export type StopServerError =
   | InternalServiceError
@@ -4324,6 +4358,7 @@ export const stopServer: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "StopServer",
 }));
 export type TagResourceError =
   | InternalServiceError
@@ -4350,6 +4385,7 @@ export const tagResource: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "TagResource",
 }));
 export type TestConnectionError =
   | InternalServiceError
@@ -4374,6 +4410,7 @@ export const testConnection: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "TestConnection",
 }));
 export type TestIdentityProviderError =
   | InternalServiceError
@@ -4420,6 +4457,7 @@ export const testIdentityProvider: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "TestIdentityProvider",
 }));
 export type UntagResourceError =
   | InternalServiceError
@@ -4446,6 +4484,7 @@ export const untagResource: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "UntagResource",
 }));
 export type UpdateAccessError =
   | InternalServiceError
@@ -4474,6 +4513,7 @@ export const updateAccess: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "UpdateAccess",
 }));
 export type UpdateHostKeyError =
   | InternalServiceError
@@ -4500,6 +4540,7 @@ export const updateHostKey: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "UpdateHostKey",
 }));
 export type CreateAgreementError =
   | InternalServiceError
@@ -4532,6 +4573,7 @@ export const createAgreement: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "CreateAgreement",
 }));
 export type DescribeAgreementError =
   | InternalServiceError
@@ -4556,6 +4598,7 @@ export const describeAgreement: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DescribeAgreement",
 }));
 export type UpdateAgreementError =
   | InternalServiceError
@@ -4588,6 +4631,7 @@ export const updateAgreement: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "UpdateAgreement",
 }));
 export type DeleteAgreementError =
   | InternalServiceError
@@ -4612,6 +4656,7 @@ export const deleteAgreement: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DeleteAgreement",
 }));
 export type ListAgreementsError =
   | InternalServiceError
@@ -4653,6 +4698,7 @@ export const listAgreements: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListAgreements",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4703,6 +4749,7 @@ export const importCertificate: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ImportCertificate",
 }));
 export type DescribeCertificateError =
   | InternalServiceError
@@ -4729,6 +4776,7 @@ export const describeCertificate: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DescribeCertificate",
 }));
 export type UpdateCertificateError =
   | InternalServiceError
@@ -4755,6 +4803,7 @@ export const updateCertificate: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "UpdateCertificate",
 }));
 export type DeleteCertificateError =
   | InternalServiceError
@@ -4779,6 +4828,7 @@ export const deleteCertificate: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DeleteCertificate",
 }));
 export type ListCertificatesError =
   | InternalServiceError
@@ -4820,6 +4870,7 @@ export const listCertificates: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListCertificates",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4856,6 +4907,7 @@ export const createConnector: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "CreateConnector",
 }));
 export type DescribeConnectorError =
   | InternalServiceError
@@ -4880,6 +4932,7 @@ export const describeConnector: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DescribeConnector",
 }));
 export type UpdateConnectorError =
   | InternalServiceError
@@ -4908,6 +4961,7 @@ export const updateConnector: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "UpdateConnector",
 }));
 export type DeleteConnectorError =
   | InternalServiceError
@@ -4932,6 +4986,7 @@ export const deleteConnector: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DeleteConnector",
 }));
 export type ListConnectorsError =
   | InternalServiceError
@@ -4973,6 +5028,7 @@ export const listConnectors: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListConnectors",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5005,6 +5061,7 @@ export const createProfile: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "CreateProfile",
 }));
 export type DescribeProfileError =
   | InternalServiceError
@@ -5029,6 +5086,7 @@ export const describeProfile: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DescribeProfile",
 }));
 export type UpdateProfileError =
   | InternalServiceError
@@ -5055,6 +5113,7 @@ export const updateProfile: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "UpdateProfile",
 }));
 export type DeleteProfileError =
   | InternalServiceError
@@ -5079,6 +5138,7 @@ export const deleteProfile: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DeleteProfile",
 }));
 export type ListProfilesError =
   | InternalServiceError
@@ -5120,6 +5180,7 @@ export const listProfiles: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListProfiles",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5156,6 +5217,7 @@ export const createServer: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "CreateServer",
 }));
 export type DescribeServerError =
   | InternalServiceError
@@ -5182,6 +5244,7 @@ export const describeServer: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DescribeServer",
 }));
 export type UpdateServerError =
   | AccessDeniedException
@@ -5216,6 +5279,7 @@ export const updateServer: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "UpdateServer",
 }));
 export type DeleteServerError =
   | AccessDeniedException
@@ -5244,6 +5308,7 @@ export const deleteServer: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DeleteServer",
 }));
 export type ListServersError =
   | InternalServiceError
@@ -5283,6 +5348,7 @@ export const listServers: API.OperationMethod<
     InvalidRequestException,
     ServiceUnavailableException,
   ],
+  operationName: "ListServers",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5315,6 +5381,7 @@ export const createUser: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "CreateUser",
 }));
 export type DescribeUserError =
   | InternalServiceError
@@ -5341,6 +5408,7 @@ export const describeUser: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DescribeUser",
 }));
 export type UpdateUserError =
   | InternalServiceError
@@ -5375,6 +5443,7 @@ export const updateUser: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "UpdateUser",
 }));
 export type DeleteUserError =
   | InternalServiceError
@@ -5403,6 +5472,7 @@ export const deleteUser: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DeleteUser",
 }));
 export type ListUsersError =
   | InternalServiceError
@@ -5444,6 +5514,7 @@ export const listUsers: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListUsers",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5476,6 +5547,7 @@ export const describeWebAppCustomization: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeWebAppCustomization",
 }));
 export type UpdateWebAppCustomizationError =
   | AccessDeniedException
@@ -5504,6 +5576,7 @@ export const updateWebAppCustomization: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "UpdateWebAppCustomization",
 }));
 export type DeleteWebAppCustomizationError =
   | AccessDeniedException
@@ -5532,6 +5605,7 @@ export const deleteWebAppCustomization: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DeleteWebAppCustomization",
 }));
 export type CreateWebAppError =
   | AccessDeniedException
@@ -5560,6 +5634,7 @@ export const createWebApp: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "CreateWebApp",
 }));
 export type DescribeWebAppError =
   | AccessDeniedException
@@ -5588,6 +5663,7 @@ export const describeWebApp: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeWebApp",
 }));
 export type UpdateWebAppError =
   | AccessDeniedException
@@ -5618,6 +5694,7 @@ export const updateWebApp: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "UpdateWebApp",
 }));
 export type DeleteWebAppError =
   | AccessDeniedException
@@ -5644,6 +5721,7 @@ export const deleteWebApp: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DeleteWebApp",
 }));
 export type ListWebAppsError =
   | InternalServiceError
@@ -5685,6 +5763,7 @@ export const listWebApps: API.OperationMethod<
     InvalidRequestException,
     ThrottlingException,
   ],
+  operationName: "ListWebApps",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5719,6 +5798,7 @@ export const createWorkflow: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "CreateWorkflow",
 }));
 export type DescribeWorkflowError =
   | InternalServiceError
@@ -5743,6 +5823,7 @@ export const describeWorkflow: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DescribeWorkflow",
 }));
 export type DeleteWorkflowError =
   | AccessDeniedException
@@ -5769,6 +5850,7 @@ export const deleteWorkflow: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DeleteWorkflow",
 }));
 export type ListWorkflowsError =
   | InternalServiceError
@@ -5808,6 +5890,7 @@ export const listWorkflows: API.OperationMethod<
     InvalidRequestException,
     ServiceUnavailableException,
   ],
+  operationName: "ListWorkflows",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",

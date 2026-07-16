@@ -9,6 +9,22 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface CreateAnEmailAddressListInput {
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  data?: { attributes?: { name?: string } };
+}
 export const CreateAnEmailAddressListInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
@@ -42,11 +58,25 @@ export const CreateAnEmailAddressListInput =
         ),
       }),
     ),
-  }).pipe(T.Http({ method: "POST", path: "/list/email-addresses" }));
-export type CreateAnEmailAddressListInput =
-  typeof CreateAnEmailAddressListInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/list/email-addresses" }),
+  ) as unknown as Schema.Codec<CreateAnEmailAddressListInput>;
 
 // Output Schema
+export interface CreateAnEmailAddressListOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      name?: string;
+      status?: string;
+      "archived-at"?: string | null;
+      "created-at"?: string;
+      "updated-at"?: string;
+    };
+    relationships?: { "list-items"?: { data?: ReadonlyArray<unknown> } };
+  };
+}
 export const CreateAnEmailAddressListOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -71,9 +101,7 @@ export const CreateAnEmailAddressListOutput =
         }),
       ),
     }),
-  });
-export type CreateAnEmailAddressListOutput =
-  typeof CreateAnEmailAddressListOutput.Type;
+  }) as unknown as Schema.Codec<CreateAnEmailAddressListOutput>;
 
 // The operation
 /**

@@ -4,17 +4,50 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface GetOutboundAchTransferInput {
+  id: string;
+  ereborVersion?: string;
+}
 export const GetOutboundAchTransferInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
-  }).pipe(T.Http({ method: "GET", path: "/ach_out/{id}" }));
-export type GetOutboundAchTransferInput =
-  typeof GetOutboundAchTransferInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/ach_out/{id}" }),
+  ) as unknown as Schema.Codec<GetOutboundAchTransferInput>;
 
 // Output Schema
+export interface GetOutboundAchTransferOutput {
+  id: string;
+  type: "ACH_OUT";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id?: string | null;
+  status: "CREATED" | "PENDING" | "SETTLED" | "FAILED" | "RETURNED";
+  deposit_account_id: string;
+  counterparty_us_bank_account_id: string;
+  amount: {
+    currency: "USD";
+    exponent: number;
+    value: string;
+    display_value: string;
+  };
+  direction: "CREDIT" | "DEBIT";
+  sec_code: "CCD" | "PPD" | "WEB";
+  company_entry_description: string;
+  effective_entry_date?: string | null;
+  addenda: ReadonlyArray<string>;
+  company_discretionary_data?: string | null;
+  service: "SAME_DAY" | "STANDARD";
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+  return_code?: string | null;
+  returned_at?: string | null;
+}
 export const GetOutboundAchTransferOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -46,13 +79,13 @@ export const GetOutboundAchTransferOutput =
     addenda: Schema.Array(Schema.String),
     company_discretionary_data: Schema.optional(Schema.NullOr(Schema.String)),
     service: Schema.Literals(["SAME_DAY", "STANDARD"]),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
     return_code: Schema.optional(Schema.NullOr(Schema.String)),
     returned_at: Schema.optional(Schema.NullOr(Schema.String)),
-  });
-export type GetOutboundAchTransferOutput =
-  typeof GetOutboundAchTransferOutput.Type;
+  }) as unknown as Schema.Codec<GetOutboundAchTransferOutput>;
 
 // The operation
 /**

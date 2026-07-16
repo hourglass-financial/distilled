@@ -9,8 +9,25 @@ import {
   UnprocessableEntity,
 } from "../errors.ts";
 import { SensitiveOutputString } from "../sensitive.ts";
+import * as Redacted from "effect/Redacted";
 
 // Input Schema
+export interface CloneAWebhookInput {
+  webhookId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const CloneAWebhookInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   webhookId: Schema.String.pipe(T.PathParam()),
   include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
@@ -35,10 +52,52 @@ export const CloneAWebhookInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "2020-05-18",
     ]),
   ).pipe(T.HttpHeader("Persona-Version")),
-}).pipe(T.Http({ method: "POST", path: "/webhooks/{webhookId}/clone" }));
-export type CloneAWebhookInput = typeof CloneAWebhookInput.Type;
+}).pipe(
+  T.Http({ method: "POST", path: "/webhooks/{webhookId}/clone" }),
+) as unknown as Schema.Codec<CloneAWebhookInput>;
 
 // Output Schema
+export interface CloneAWebhookOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      status?: string;
+      url?: string;
+      name?: string | null;
+      description?: string | null;
+      secret?: Redacted.Redacted<string>;
+      secrets?: ReadonlyArray<{ value?: string; "expires-at"?: string | null }>;
+      "api-version"?:
+        | "2025-12-08"
+        | "2025-10-27"
+        | "2023-01-05"
+        | "2022-09-01"
+        | "2021-08-18"
+        | "2021-07-05"
+        | "2021-02-21"
+        | "2020-05-18";
+      "api-key-inflection"?: string;
+      "api-attributes-blocklist"?: ReadonlyArray<string | null>;
+      "file-access-token-expires-in"?: number;
+      "enabled-events"?: ReadonlyArray<string>;
+      "payload-filter"?: unknown | null;
+      "included-allowlist"?:
+        | { state: string }
+        | {
+            state: string;
+            "event-types": ReadonlyArray<{
+              "event-type": string;
+              relationships: ReadonlyArray<string>;
+            }>;
+          }
+        | null;
+      "relationship-allowlist"?: { state: string };
+      "created-at"?: string;
+    };
+  };
+  included?: ReadonlyArray<unknown>;
+}
 export const CloneAWebhookOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Struct({
     type: Schema.optional(Schema.String),
@@ -77,15 +136,35 @@ export const CloneAWebhookOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
         "file-access-token-expires-in": Schema.optional(Schema.Number),
         "enabled-events": Schema.optional(Schema.Array(Schema.String)),
         "payload-filter": Schema.optional(Schema.NullOr(Schema.Unknown)),
-        "included-allowlist": Schema.optional(Schema.Unknown),
-        "relationship-allowlist": Schema.optional(Schema.Unknown),
+        "included-allowlist": Schema.optional(
+          Schema.NullOr(
+            Schema.Union([
+              Schema.Struct({
+                state: Schema.String,
+              }),
+              Schema.Struct({
+                state: Schema.String,
+                "event-types": Schema.Array(
+                  Schema.Struct({
+                    "event-type": Schema.String,
+                    relationships: Schema.Array(Schema.String),
+                  }),
+                ),
+              }),
+            ]),
+          ),
+        ),
+        "relationship-allowlist": Schema.optional(
+          Schema.Struct({
+            state: Schema.String,
+          }),
+        ),
         "created-at": Schema.optional(Schema.String),
       }),
     ),
   }),
   included: Schema.optional(Schema.Array(Schema.Unknown)),
-});
-export type CloneAWebhookOutput = typeof CloneAWebhookOutput.Type;
+}) as unknown as Schema.Codec<CloneAWebhookOutput>;
 
 // The operation
 /**

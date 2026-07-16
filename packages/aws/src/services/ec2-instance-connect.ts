@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
 import * as C from "../category.ts";
@@ -272,6 +272,7 @@ export const sendSerialConsoleSSHPublicKey: API.OperationMethod<
     ServiceException,
     ThrottlingException,
   ],
+  operationName: "SendSerialConsoleSSHPublicKey",
 }));
 export type SendSSHPublicKeyError =
   | AuthException
@@ -305,4 +306,5 @@ export const sendSSHPublicKey: API.OperationMethod<
     ServiceException,
     ThrottlingException,
   ],
+  operationName: "SendSSHPublicKey",
 }));

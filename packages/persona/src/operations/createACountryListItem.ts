@@ -10,6 +10,22 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface CreateACountryListItemInput {
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  data?: { attributes?: { "country-code"?: string; "list-id"?: string } };
+}
 export const CreateACountryListItemInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
@@ -44,11 +60,29 @@ export const CreateACountryListItemInput =
         ),
       }),
     ),
-  }).pipe(T.Http({ method: "POST", path: "/list-item/countries" }));
-export type CreateACountryListItemInput =
-  typeof CreateACountryListItemInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/list-item/countries" }),
+  ) as unknown as Schema.Codec<CreateACountryListItemInput>;
 
 // Output Schema
+export interface CreateACountryListItemOutput {
+  data: {
+    id?: string;
+    type?: string;
+    attributes?: {
+      status?: string;
+      "archived-at"?: string | null;
+      "updated-at"?: string | null;
+      "created-at"?: string;
+      "redacted-at"?: string | null;
+      "match-count"?: number;
+      "country-code"?: string;
+    };
+    relationships?: {
+      creator?: { data?: { type?: string; id?: string } | null };
+    };
+  };
+}
 export const CreateACountryListItemOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -69,15 +103,20 @@ export const CreateACountryListItemOutput =
         Schema.Struct({
           creator: Schema.optional(
             Schema.Struct({
-              data: Schema.optional(Schema.Unknown),
+              data: Schema.optional(
+                Schema.NullOr(
+                  Schema.Struct({
+                    type: Schema.optional(Schema.String),
+                    id: Schema.optional(Schema.String),
+                  }),
+                ),
+              ),
             }),
           ),
         }),
       ),
     }),
-  });
-export type CreateACountryListItemOutput =
-  typeof CreateACountryListItemOutput.Type;
+  }) as unknown as Schema.Codec<CreateACountryListItemOutput>;
 
 // The operation
 /**

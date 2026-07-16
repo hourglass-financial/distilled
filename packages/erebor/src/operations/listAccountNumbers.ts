@@ -3,6 +3,14 @@ import { API } from "../client.ts";
 import * as T from "../traits.ts";
 
 // Input Schema
+export interface ListAccountNumbersInput {
+  page_size?: number;
+  starting_after?: string;
+  ending_before?: string;
+  deposit_account_id?: string;
+  custom_ref?: string;
+  ereborVersion?: string;
+}
 export const ListAccountNumbersInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     page_size: Schema.optional(Schema.Number),
@@ -13,10 +21,34 @@ export const ListAccountNumbersInput =
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
-  }).pipe(T.Http({ method: "GET", path: "/account_numbers" }));
-export type ListAccountNumbersInput = typeof ListAccountNumbersInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/account_numbers" }),
+  ) as unknown as Schema.Codec<ListAccountNumbersInput>;
 
 // Output Schema
+export interface ListAccountNumbersOutput {
+  data: ReadonlyArray<{
+    id: string;
+    type: "ACCOUNT_NUMBER";
+    url: string;
+    created_at: string;
+    updated_at: string;
+    archived_at?: string | null;
+    program_id?: string | null;
+    deposit_account_id: string;
+    name?: string | null;
+    account_number: string;
+    routing_number: string;
+    default: boolean;
+    custom_ref?: string | null;
+    custom_fields?: Record<string, unknown> | null;
+  }>;
+  has_more: boolean;
+  page_size: number;
+  page_next?: string | null;
+  page_prev?: string | null;
+  url: string;
+}
 export const ListAccountNumbersOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Array(
@@ -33,8 +65,10 @@ export const ListAccountNumbersOutput =
         account_number: Schema.String,
         routing_number: Schema.String,
         default: Schema.Boolean,
-        custom_ref: Schema.optional(Schema.Unknown),
-        custom_fields: Schema.optional(Schema.Unknown),
+        custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+        custom_fields: Schema.optional(
+          Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+        ),
       }),
     ),
     has_more: Schema.Boolean,
@@ -42,8 +76,7 @@ export const ListAccountNumbersOutput =
     page_next: Schema.optional(Schema.NullOr(Schema.String)),
     page_prev: Schema.optional(Schema.NullOr(Schema.String)),
     url: Schema.String,
-  });
-export type ListAccountNumbersOutput = typeof ListAccountNumbersOutput.Type;
+  }) as unknown as Schema.Codec<ListAccountNumbersOutput>;
 
 // The operation
 /**

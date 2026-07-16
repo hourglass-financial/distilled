@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -290,12 +290,14 @@ export const TagKeyList = /*@__PURE__*/ /*#__PURE__*/ S.Array(S.String);
 export interface ComplianceDetails {
   NoncompliantKeys?: string[];
   KeysWithNoncompliantValues?: string[];
+  MissingTagKeys?: string[];
   ComplianceStatus?: boolean;
 }
 export const ComplianceDetails = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     NoncompliantKeys: S.optional(TagKeyList),
     KeysWithNoncompliantValues: S.optional(TagKeyList),
+    MissingTagKeys: S.optional(TagKeyList),
     ComplianceStatus: S.optional(S.Boolean),
   }),
 ).annotate({
@@ -614,6 +616,7 @@ export const describeReportCreation: API.OperationMethod<
     InvalidParameterException,
     ThrottledException,
   ],
+  operationName: "DescribeReportCreation",
 }));
 export type GetComplianceSummaryError =
   | ConstraintViolationException
@@ -667,6 +670,7 @@ export const getComplianceSummary: API.OperationMethod<
     InvalidParameterException,
     ThrottledException,
   ],
+  operationName: "GetComplianceSummary",
   pagination: {
     inputToken: "PaginationToken",
     outputToken: "PaginationToken",
@@ -736,6 +740,7 @@ export const getResources: API.OperationMethod<
     PaginationTokenExpiredException,
     ThrottledException,
   ],
+  operationName: "GetResources",
   pagination: {
     inputToken: "PaginationToken",
     outputToken: "PaginationToken",
@@ -789,6 +794,7 @@ export const getTagKeys: API.OperationMethod<
     PaginationTokenExpiredException,
     ThrottledException,
   ],
+  operationName: "GetTagKeys",
   pagination: {
     inputToken: "PaginationToken",
     outputToken: "PaginationToken",
@@ -841,6 +847,7 @@ export const getTagValues: API.OperationMethod<
     PaginationTokenExpiredException,
     ThrottledException,
   ],
+  operationName: "GetTagValues",
   pagination: {
     inputToken: "PaginationToken",
     outputToken: "PaginationToken",
@@ -885,6 +892,7 @@ export const listRequiredTags: API.OperationMethod<
     PaginationTokenExpiredException,
     ThrottledException,
   ],
+  operationName: "ListRequiredTags",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -937,6 +945,7 @@ export const startReportCreation: API.OperationMethod<
     InvalidParameterException,
     ThrottledException,
   ],
+  operationName: "StartReportCreation",
 }));
 export type TagResourcesError =
   | InternalServiceException
@@ -1008,6 +1017,7 @@ export const tagResources: API.OperationMethod<
     InvalidParameterException,
     ThrottledException,
   ],
+  operationName: "TagResources",
 }));
 export type UntagResourcesError =
   | InternalServiceException
@@ -1059,4 +1069,5 @@ export const untagResources: API.OperationMethod<
     InvalidParameterException,
     ThrottledException,
   ],
+  operationName: "UntagResources",
 }));

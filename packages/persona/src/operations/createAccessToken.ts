@@ -9,8 +9,22 @@ import {
   UnprocessableEntity,
 } from "../errors.ts";
 import { SensitiveOutputString } from "../sensitive.ts";
+import * as Redacted from "effect/Redacted";
 
 // Input Schema
+export interface CreateAccessTokenInput {
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const CreateAccessTokenInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
   {
     keyInflection: Schema.optional(
@@ -38,18 +52,22 @@ export const CreateAccessTokenInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
     path: "/oauth/token",
     contentType: "form-urlencoded",
   }),
-);
-export type CreateAccessTokenInput = typeof CreateAccessTokenInput.Type;
+) as unknown as Schema.Codec<CreateAccessTokenInput>;
 
 // Output Schema
+export interface CreateAccessTokenOutput {
+  "access-token": Redacted.Redacted<string>;
+  "expires-in": number;
+  scope: string;
+  "token-type": "bearer" | "Bearer";
+}
 export const CreateAccessTokenOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     "access-token": SensitiveOutputString,
     "expires-in": Schema.Number,
     scope: Schema.String,
     "token-type": Schema.Literals(["bearer", "Bearer"]),
-  });
-export type CreateAccessTokenOutput = typeof CreateAccessTokenOutput.Type;
+  }) as unknown as Schema.Codec<CreateAccessTokenOutput>;
 
 // The operation
 /**

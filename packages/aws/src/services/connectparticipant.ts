@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -879,6 +879,7 @@ export const cancelParticipantAuthentication: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CancelParticipantAuthentication",
 }));
 export type CompleteAttachmentUploadError =
   | AccessDeniedException
@@ -893,7 +894,7 @@ export type CompleteAttachmentUploadError =
  * provided in StartAttachmentUpload API. A conflict exception is thrown when an attachment
  * with that identifier is already being uploaded.
  *
- * For security recommendations, see Amazon Connect Chat security best practices.
+ * For security recommendations, see Connect Customer Chat security best practices.
  *
  * `ConnectionToken` is used for invoking this API instead of
  * `ParticipantToken`.
@@ -917,6 +918,7 @@ export const completeAttachmentUpload: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CompleteAttachmentUpload",
 }));
 export type CreateParticipantConnectionError =
   | AccessDeniedException
@@ -927,9 +929,9 @@ export type CreateParticipantConnectionError =
 /**
  * Creates the participant's connection.
  *
- * For security recommendations, see Amazon Connect Chat security best practices.
+ * For security recommendations, see Connect Customer Chat security best practices.
  *
- * For WebRTC security recommendations, see Amazon Connect WebRTC security best practices.
+ * For WebRTC security recommendations, see Connect Customer WebRTC security best practices.
  *
  * `ParticipantToken` is used for invoking this API instead of
  * `ConnectionToken`.
@@ -1004,6 +1006,7 @@ export const createParticipantConnection: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateParticipantConnection",
 }));
 export type DescribeViewError =
   | AccessDeniedException
@@ -1015,7 +1018,7 @@ export type DescribeViewError =
 /**
  * Retrieves the view for the specified view token.
  *
- * For security recommendations, see Amazon Connect Chat security best practices.
+ * For security recommendations, see Connect Customer Chat security best practices.
  */
 export const describeView: API.OperationMethod<
   DescribeViewRequest,
@@ -1032,6 +1035,7 @@ export const describeView: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeView",
 }));
 export type DisconnectParticipantError =
   | AccessDeniedException
@@ -1042,7 +1046,7 @@ export type DisconnectParticipantError =
 /**
  * Disconnects a participant.
  *
- * For security recommendations, see Amazon Connect Chat security best practices.
+ * For security recommendations, see Connect Customer Chat security best practices.
  *
  * `ConnectionToken` is used for invoking this API instead of
  * `ParticipantToken`.
@@ -1064,6 +1068,7 @@ export const disconnectParticipant: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DisconnectParticipant",
 }));
 export type GetAttachmentError =
   | AccessDeniedException
@@ -1075,7 +1080,7 @@ export type GetAttachmentError =
  * Provides a pre-signed URL for download of a completed attachment. This is an
  * asynchronous API for use with active contacts.
  *
- * For security recommendations, see Amazon Connect Chat security best practices.
+ * For security recommendations, see Connect Customer Chat security best practices.
  *
  * - The participant role `CUSTOM_BOT` is not permitted to access
  * attachments customers may upload. An `AccessDeniedException` can
@@ -1102,6 +1107,7 @@ export const getAttachment: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetAttachment",
 }));
 export type GetAuthenticationUrlError =
   | AccessDeniedException
@@ -1113,7 +1119,7 @@ export type GetAuthenticationUrlError =
  * Retrieves the AuthenticationUrl for the current authentication session for the
  * AuthenticateCustomer flow block.
  *
- * For security recommendations, see Amazon Connect Chat security best practices.
+ * For security recommendations, see Connect Customer Chat security best practices.
  *
  * - This API can only be called within one minute of receiving the
  * authenticationInitiated event.
@@ -1141,6 +1147,7 @@ export const getAuthenticationUrl: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetAuthenticationUrl",
 }));
 export type GetTranscriptError =
   | AccessDeniedException
@@ -1153,7 +1160,7 @@ export type GetTranscriptError =
  * information about accessing past chat contact transcripts for a persistent chat, see
  * Enable persistent chat.
  *
- * For security recommendations, see Amazon Connect Chat security best practices.
+ * For security recommendations, see Connect Customer Chat security best practices.
  *
  * If you have a process that consumes events in the transcript of an chat that has
  * ended, note that chat transcripts contain the following event content types if the event
@@ -1206,6 +1213,7 @@ export const getTranscript: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetTranscript",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -1229,7 +1237,7 @@ export type SendEventError =
  * participants in the chat. Using the SendEvent API for message receipts when a supervisor
  * is barged-in will result in a conflict exception.
  *
- * For security recommendations, see Amazon Connect Chat security best practices.
+ * For security recommendations, see Connect Customer Chat security best practices.
  *
  * `ConnectionToken` is used for invoking this API instead of
  * `ParticipantToken`.
@@ -1252,6 +1260,7 @@ export const sendEvent: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SendEvent",
 }));
 export type SendMessageError =
   | AccessDeniedException
@@ -1262,7 +1271,7 @@ export type SendMessageError =
 /**
  * Sends a message.
  *
- * For security recommendations, see Amazon Connect Chat security best practices.
+ * For security recommendations, see Connect Customer Chat security best practices.
  *
  * `ConnectionToken` is used for invoking this API instead of
  * `ParticipantToken`.
@@ -1284,6 +1293,7 @@ export const sendMessage: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SendMessage",
 }));
 export type StartAttachmentUploadError =
   | AccessDeniedException
@@ -1296,7 +1306,7 @@ export type StartAttachmentUploadError =
  * Provides a pre-signed Amazon S3 URL in response for uploading the file directly to
  * S3.
  *
- * For security recommendations, see Amazon Connect Chat security best practices.
+ * For security recommendations, see Connect Customer Chat security best practices.
  *
  * `ConnectionToken` is used for invoking this API instead of
  * `ParticipantToken`.
@@ -1319,4 +1329,5 @@ export const startAttachmentUpload: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartAttachmentUpload",
 }));

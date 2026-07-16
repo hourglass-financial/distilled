@@ -5,6 +5,22 @@ import { StructWithAdditionalProperties } from "@distilled.cloud/core/openapi/ad
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface RetrieveATransactionInput {
+  transactionId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const RetrieveATransactionInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     transactionId: Schema.String.pipe(T.PathParam()),
@@ -30,10 +46,36 @@ export const RetrieveATransactionInput =
         "2020-05-18",
       ]),
     ).pipe(T.HttpHeader("Persona-Version")),
-  }).pipe(T.Http({ method: "GET", path: "/transactions/{transactionId}" }));
-export type RetrieveATransactionInput = typeof RetrieveATransactionInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/transactions/{transactionId}" }),
+  ) as unknown as Schema.Codec<RetrieveATransactionInput>;
 
 // Output Schema
+export interface RetrieveATransactionOutput {
+  data: {
+    id?: string;
+    type?: string;
+    attributes?: {
+      status?: string;
+      "reference-id"?: string | null;
+      fields?: Record<string, unknown>;
+      tags?: ReadonlyArray<string>;
+      "created-at"?: string;
+      "updated-at"?: string | null;
+    };
+    relationships?: {
+      reviewer?: { data?: { type?: string; id?: string } | null };
+      "transaction-label"?: { data?: { type?: string; id?: string } | null };
+      "transaction-type"?: { data?: { type?: string; id?: string } };
+      "related-objects"?: {
+        data?: ReadonlyArray<{ type?: string; id?: string }>;
+      };
+    };
+  };
+  included?: ReadonlyArray<
+    { type: string; id: string } & Record<string, unknown>
+  >;
+}
 export const RetrieveATransactionOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -111,8 +153,7 @@ export const RetrieveATransactionOutput =
         ),
       ),
     ),
-  });
-export type RetrieveATransactionOutput = typeof RetrieveATransactionOutput.Type;
+  }) as unknown as Schema.Codec<RetrieveATransactionOutput>;
 
 // The operation
 /**

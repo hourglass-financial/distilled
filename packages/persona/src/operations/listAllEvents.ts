@@ -4,6 +4,22 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden } from "../errors.ts";
 
 // Input Schema
+export interface ListAllEventsInput {
+  page?: { after?: string; before?: string; size?: number };
+  fields?: Record<string, string>;
+  filter?: { name?: string; "object-id"?: string; id?: string };
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const ListAllEventsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   page: Schema.optional(
     Schema.Struct({
@@ -11,7 +27,7 @@ export const ListAllEventsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       before: Schema.optional(Schema.String),
       size: Schema.optional(Schema.Number),
     }),
-  ).pipe(T.HttpQuery("page")),
+  ),
   fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
     T.HttpQuery("fields"),
   ),
@@ -21,7 +37,7 @@ export const ListAllEventsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "object-id": Schema.optional(Schema.String),
       id: Schema.optional(Schema.String),
     }),
-  ).pipe(T.HttpQuery("filter")),
+  ),
   keyInflection: Schema.optional(
     Schema.Literals(["camel", "kebab", "snake"]),
   ).pipe(T.HttpHeader("Key-Inflection")),
@@ -40,10 +56,31 @@ export const ListAllEventsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "2020-05-18",
     ]),
   ).pipe(T.HttpHeader("Persona-Version")),
-}).pipe(T.Http({ method: "GET", path: "/events" }));
-export type ListAllEventsInput = typeof ListAllEventsInput.Type;
+}).pipe(
+  T.Http({ method: "GET", path: "/events" }),
+) as unknown as Schema.Codec<ListAllEventsInput>;
 
 // Output Schema
+export interface ListAllEventsOutput {
+  data: ReadonlyArray<{
+    type?: string;
+    id?: string;
+    attributes?: {
+      name?: string;
+      payload?: {
+        data?: {
+          type?: string;
+          id?: string;
+          attributes?: Record<string, unknown>;
+          relationships?: Record<string, unknown>;
+        };
+      };
+      "created-at"?: string;
+      context?: Record<string, unknown>;
+    };
+  }>;
+  links: { prev: string | null; next: string | null };
+}
 export const ListAllEventsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Array(
     Schema.Struct({
@@ -80,8 +117,7 @@ export const ListAllEventsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     prev: Schema.NullOr(Schema.String),
     next: Schema.NullOr(Schema.String),
   }),
-});
-export type ListAllEventsOutput = typeof ListAllEventsOutput.Type;
+}) as unknown as Schema.Codec<ListAllEventsOutput>;
 
 // The operation
 /**

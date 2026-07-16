@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -2439,6 +2439,7 @@ export const ScanResourceType = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export type ScanResultStatus =
   | "NO_THREATS_FOUND"
   | "THREATS_FOUND"
+  | "UNKNOWN"
   | (string & {});
 export const ScanResultStatus = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface ScanResultInfo {
@@ -2461,6 +2462,8 @@ export interface DescribeScanJobOutput {
   BackupVaultArn: string;
   BackupVaultName: string;
   CompletionDate?: Date;
+  ContinuousScanEndTime?: Date;
+  ContinuousScanStartTime?: Date;
   CreatedBy: ScanJobCreator;
   CreationDate: Date;
   IamRoleArn: string;
@@ -2484,6 +2487,12 @@ export const DescribeScanJobOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     BackupVaultArn: S.String,
     BackupVaultName: S.String,
     CompletionDate: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    ContinuousScanEndTime: S.optional(
+      S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+    ),
+    ContinuousScanStartTime: S.optional(
+      S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+    ),
     CreatedBy: ScanJobCreator,
     CreationDate: S.Date.pipe(T.TimestampFormat("epoch-seconds")),
     IamRoleArn: S.String,
@@ -3016,6 +3025,55 @@ export const GetLegalHoldOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "GetLegalHoldOutput",
 }) as any as S.Schema<GetLegalHoldOutput>;
+export interface GetPITRMalwareScanResultsInput {
+  RecoveryPointArn: string;
+  BackupVaultName: string;
+  ScanEndTime: Date;
+  MalwareScanner: MalwareScanner;
+}
+export const GetPITRMalwareScanResultsInput =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      RecoveryPointArn: S.String.pipe(T.HttpQuery("RecoveryPointArn")),
+      BackupVaultName: S.String.pipe(T.HttpQuery("BackupVaultName")),
+      ScanEndTime: S.Date.pipe(T.TimestampFormat("epoch-seconds")).pipe(
+        T.HttpQuery("ScanEndTime"),
+      ),
+      MalwareScanner: MalwareScanner.pipe(T.HttpQuery("MalwareScanner")),
+    }).pipe(
+      T.all(
+        T.Http({ method: "GET", uri: "/scan/pitr-malware-scan-results" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "GetPITRMalwareScanResultsInput",
+  }) as any as S.Schema<GetPITRMalwareScanResultsInput>;
+export interface GetPITRMalwareScanResultsOutput {
+  ScanEndTime: Date;
+  ScanResult: ScanResultInfo;
+  LastScanJobTime?: Date;
+  ScanId?: string;
+  ScanMode?: ScanMode;
+}
+export const GetPITRMalwareScanResultsOutput =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      ScanEndTime: S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+      ScanResult: ScanResultInfo,
+      LastScanJobTime: S.optional(
+        S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+      ),
+      ScanId: S.optional(S.String),
+      ScanMode: S.optional(ScanMode),
+    }),
+  ).annotate({
+    identifier: "GetPITRMalwareScanResultsOutput",
+  }) as any as S.Schema<GetPITRMalwareScanResultsOutput>;
 export interface GetRecoveryPointIndexDetailsInput {
   BackupVaultName: string;
   RecoveryPointArn: string;
@@ -5303,6 +5361,8 @@ export interface ScanJob {
   BackupVaultArn: string;
   BackupVaultName: string;
   CompletionDate?: Date;
+  ContinuousScanEndTime?: Date;
+  ContinuousScanStartTime?: Date;
   CreatedBy: ScanJobCreator;
   CreationDate: Date;
   IamRoleArn: string;
@@ -5326,6 +5386,12 @@ export const ScanJob = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     BackupVaultArn: S.String,
     BackupVaultName: S.String,
     CompletionDate: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    ContinuousScanEndTime: S.optional(
+      S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+    ),
+    ContinuousScanStartTime: S.optional(
+      S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+    ),
     CreatedBy: ScanJobCreator,
     CreationDate: S.Date.pipe(T.TimestampFormat("epoch-seconds")),
     IamRoleArn: S.String,
@@ -5868,6 +5934,7 @@ export const StartRestoreJobOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 }) as any as S.Schema<StartRestoreJobOutput>;
 export interface StartScanJobInput {
   BackupVaultName: string;
+  ContinuousScanEndTime?: Date;
   IamRoleArn: string;
   IdempotencyToken?: string;
   MalwareScanner: MalwareScanner;
@@ -5879,6 +5946,9 @@ export interface StartScanJobInput {
 export const StartScanJobInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     BackupVaultName: S.String,
+    ContinuousScanEndTime: S.optional(
+      S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+    ),
     IamRoleArn: S.String,
     IdempotencyToken: S.optional(S.String),
     MalwareScanner: MalwareScanner,
@@ -6566,6 +6636,7 @@ export const associateBackupVaultMpaApprovalTeam: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "AssociateBackupVaultMpaApprovalTeam",
 }));
 export type CancelLegalHoldError =
   | InvalidParameterValueException
@@ -6593,6 +6664,7 @@ export const cancelLegalHold: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "CancelLegalHold",
 }));
 export type CreateBackupPlanError =
   | AlreadyExistsException
@@ -6624,6 +6696,7 @@ export const createBackupPlan: API.OperationMethod<
     MissingParameterValueException,
     ServiceUnavailableException,
   ],
+  operationName: "CreateBackupPlan",
 }));
 export type CreateBackupSelectionError =
   | AlreadyExistsException
@@ -6651,6 +6724,7 @@ export const createBackupSelection: API.OperationMethod<
     MissingParameterValueException,
     ServiceUnavailableException,
   ],
+  operationName: "CreateBackupSelection",
 }));
 export type CreateBackupVaultError =
   | AlreadyExistsException
@@ -6682,6 +6756,7 @@ export const createBackupVault: API.OperationMethod<
     MissingParameterValueException,
     ServiceUnavailableException,
   ],
+  operationName: "CreateBackupVault",
 }));
 export type CreateFrameworkError =
   | AlreadyExistsException
@@ -6711,6 +6786,7 @@ export const createFramework: API.OperationMethod<
     MissingParameterValueException,
     ServiceUnavailableException,
   ],
+  operationName: "CreateFramework",
 }));
 export type CreateLegalHoldError =
   | InvalidParameterValueException
@@ -6738,6 +6814,7 @@ export const createLegalHold: API.OperationMethod<
     MissingParameterValueException,
     ServiceUnavailableException,
   ],
+  operationName: "CreateLegalHold",
 }));
 export type CreateLogicallyAirGappedBackupVaultError =
   | AlreadyExistsException
@@ -6773,6 +6850,7 @@ export const createLogicallyAirGappedBackupVault: API.OperationMethod<
     MissingParameterValueException,
     ServiceUnavailableException,
   ],
+  operationName: "CreateLogicallyAirGappedBackupVault",
 }));
 export type CreateReportPlanError =
   | AlreadyExistsException
@@ -6803,6 +6881,7 @@ export const createReportPlan: API.OperationMethod<
     MissingParameterValueException,
     ServiceUnavailableException,
   ],
+  operationName: "CreateReportPlan",
 }));
 export type CreateRestoreAccessBackupVaultError =
   | AlreadyExistsException
@@ -6833,6 +6912,7 @@ export const createRestoreAccessBackupVault: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "CreateRestoreAccessBackupVault",
 }));
 export type CreateRestoreTestingPlanError =
   | AlreadyExistsException
@@ -6865,6 +6945,7 @@ export const createRestoreTestingPlan: API.OperationMethod<
     MissingParameterValueException,
     ServiceUnavailableException,
   ],
+  operationName: "CreateRestoreTestingPlan",
 }));
 export type CreateRestoreTestingSelectionError =
   | AlreadyExistsException
@@ -6912,6 +6993,7 @@ export const createRestoreTestingSelection: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "CreateRestoreTestingSelection",
 }));
 export type CreateTieringConfigurationError =
   | AlreadyExistsException
@@ -6944,6 +7026,7 @@ export const createTieringConfiguration: API.OperationMethod<
     MissingParameterValueException,
     ServiceUnavailableException,
   ],
+  operationName: "CreateTieringConfiguration",
 }));
 export type DeleteBackupPlanError =
   | InvalidParameterValueException
@@ -6972,6 +7055,7 @@ export const deleteBackupPlan: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DeleteBackupPlan",
 }));
 export type DeleteBackupSelectionError =
   | InvalidParameterValueException
@@ -6997,6 +7081,7 @@ export const deleteBackupSelection: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DeleteBackupSelection",
 }));
 export type DeleteBackupVaultError =
   | InvalidParameterValueException
@@ -7024,6 +7109,7 @@ export const deleteBackupVault: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DeleteBackupVault",
 }));
 export type DeleteBackupVaultAccessPolicyError =
   | InvalidParameterValueException
@@ -7048,6 +7134,7 @@ export const deleteBackupVaultAccessPolicy: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DeleteBackupVaultAccessPolicy",
 }));
 export type DeleteBackupVaultLockConfigurationError =
   | InvalidParameterValueException
@@ -7080,6 +7167,7 @@ export const deleteBackupVaultLockConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DeleteBackupVaultLockConfiguration",
 }));
 export type DeleteBackupVaultNotificationsError =
   | InvalidParameterValueException
@@ -7104,6 +7192,7 @@ export const deleteBackupVaultNotifications: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DeleteBackupVaultNotifications",
 }));
 export type DeleteFrameworkError =
   | ConflictException
@@ -7130,6 +7219,7 @@ export const deleteFramework: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DeleteFramework",
 }));
 export type DeleteRecoveryPointError =
   | InvalidParameterValueException
@@ -7173,6 +7263,7 @@ export const deleteRecoveryPoint: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DeleteRecoveryPoint",
 }));
 export type DeleteReportPlanError =
   | ConflictException
@@ -7199,6 +7290,7 @@ export const deleteReportPlan: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DeleteReportPlan",
 }));
 export type DeleteRestoreTestingPlanError =
   | InvalidRequestException
@@ -7219,6 +7311,7 @@ export const deleteRestoreTestingPlan: API.OperationMethod<
   input: DeleteRestoreTestingPlanInput,
   output: DeleteRestoreTestingPlanResponse,
   errors: [InvalidRequestException, ServiceUnavailableException],
+  operationName: "DeleteRestoreTestingPlan",
 }));
 export type DeleteRestoreTestingSelectionError =
   | ResourceNotFoundException
@@ -7240,6 +7333,7 @@ export const deleteRestoreTestingSelection: API.OperationMethod<
   input: DeleteRestoreTestingSelectionInput,
   output: DeleteRestoreTestingSelectionResponse,
   errors: [ResourceNotFoundException, ServiceUnavailableException],
+  operationName: "DeleteRestoreTestingSelection",
 }));
 export type DeleteTieringConfigurationError =
   | InvalidParameterValueException
@@ -7264,6 +7358,7 @@ export const deleteTieringConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DeleteTieringConfiguration",
 }));
 export type DescribeBackupJobError =
   | DependencyFailureException
@@ -7290,6 +7385,7 @@ export const describeBackupJob: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DescribeBackupJob",
 }));
 export type DescribeBackupVaultError =
   | InvalidParameterValueException
@@ -7314,6 +7410,7 @@ export const describeBackupVault: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DescribeBackupVault",
 }));
 export type DescribeCopyJobError =
   | InvalidParameterValueException
@@ -7338,6 +7435,7 @@ export const describeCopyJob: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DescribeCopyJob",
 }));
 export type DescribeFrameworkError =
   | InvalidParameterValueException
@@ -7362,6 +7460,7 @@ export const describeFramework: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DescribeFramework",
 }));
 export type DescribeGlobalSettingsError =
   | InvalidRequestException
@@ -7379,6 +7478,7 @@ export const describeGlobalSettings: API.OperationMethod<
   input: DescribeGlobalSettingsInput,
   output: DescribeGlobalSettingsOutput,
   errors: [InvalidRequestException, ServiceUnavailableException],
+  operationName: "DescribeGlobalSettings",
 }));
 export type DescribeProtectedResourceError =
   | InvalidParameterValueException
@@ -7405,6 +7505,7 @@ export const describeProtectedResource: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DescribeProtectedResource",
 }));
 export type DescribeRecoveryPointError =
   | InvalidParameterValueException
@@ -7430,6 +7531,7 @@ export const describeRecoveryPoint: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DescribeRecoveryPoint",
 }));
 export type DescribeRegionSettingsError =
   | ServiceUnavailableException
@@ -7450,6 +7552,7 @@ export const describeRegionSettings: API.OperationMethod<
   input: DescribeRegionSettingsInput,
   output: DescribeRegionSettingsOutput,
   errors: [ServiceUnavailableException],
+  operationName: "DescribeRegionSettings",
 }));
 export type DescribeReportJobError =
   | MissingParameterValueException
@@ -7473,6 +7576,7 @@ export const describeReportJob: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DescribeReportJob",
 }));
 export type DescribeReportPlanError =
   | InvalidParameterValueException
@@ -7497,6 +7601,7 @@ export const describeReportPlan: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DescribeReportPlan",
 }));
 export type DescribeRestoreJobError =
   | DependencyFailureException
@@ -7523,6 +7628,7 @@ export const describeRestoreJob: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DescribeRestoreJob",
 }));
 export type DescribeScanJobError =
   | InvalidParameterValueException
@@ -7547,6 +7653,7 @@ export const describeScanJob: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DescribeScanJob",
 }));
 export type DisassociateBackupVaultMpaApprovalTeamError =
   | InvalidParameterValueException
@@ -7573,6 +7680,7 @@ export const disassociateBackupVaultMpaApprovalTeam: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DisassociateBackupVaultMpaApprovalTeam",
 }));
 export type DisassociateRecoveryPointError =
   | InvalidParameterValueException
@@ -7605,6 +7713,7 @@ export const disassociateRecoveryPoint: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DisassociateRecoveryPoint",
 }));
 export type DisassociateRecoveryPointFromParentError =
   | InvalidParameterValueException
@@ -7632,6 +7741,7 @@ export const disassociateRecoveryPointFromParent: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DisassociateRecoveryPointFromParent",
 }));
 export type ExportBackupPlanTemplateError =
   | InvalidParameterValueException
@@ -7656,6 +7766,7 @@ export const exportBackupPlanTemplate: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ExportBackupPlanTemplate",
 }));
 export type GetBackupPlanError =
   | InvalidParameterValueException
@@ -7681,6 +7792,7 @@ export const getBackupPlan: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "GetBackupPlan",
 }));
 export type GetBackupPlanFromJSONError =
   | InvalidParameterValueException
@@ -7707,6 +7819,7 @@ export const getBackupPlanFromJSON: API.OperationMethod<
     MissingParameterValueException,
     ServiceUnavailableException,
   ],
+  operationName: "GetBackupPlanFromJSON",
 }));
 export type GetBackupPlanFromTemplateError =
   | InvalidParameterValueException
@@ -7731,6 +7844,7 @@ export const getBackupPlanFromTemplate: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "GetBackupPlanFromTemplate",
 }));
 export type GetBackupSelectionError =
   | InvalidParameterValueException
@@ -7756,6 +7870,7 @@ export const getBackupSelection: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "GetBackupSelection",
 }));
 export type GetBackupVaultAccessPolicyError =
   | InvalidParameterValueException
@@ -7781,6 +7896,7 @@ export const getBackupVaultAccessPolicy: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "GetBackupVaultAccessPolicy",
 }));
 export type GetBackupVaultNotificationsError =
   | InvalidParameterValueException
@@ -7805,6 +7921,7 @@ export const getBackupVaultNotifications: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "GetBackupVaultNotifications",
 }));
 export type GetLegalHoldError =
   | InvalidParameterValueException
@@ -7830,6 +7947,32 @@ export const getLegalHold: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "GetLegalHold",
+}));
+export type GetPITRMalwareScanResultsError =
+  | InvalidParameterValueException
+  | MissingParameterValueException
+  | ResourceNotFoundException
+  | ServiceUnavailableException
+  | CommonErrors;
+/**
+ * Returns the malware scan results for a specified point in time within a continuous (point-in-time recovery) backup.
+ */
+export const getPITRMalwareScanResults: API.OperationMethod<
+  GetPITRMalwareScanResultsInput,
+  GetPITRMalwareScanResultsOutput,
+  GetPITRMalwareScanResultsError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: GetPITRMalwareScanResultsInput,
+  output: GetPITRMalwareScanResultsOutput,
+  errors: [
+    InvalidParameterValueException,
+    MissingParameterValueException,
+    ResourceNotFoundException,
+    ServiceUnavailableException,
+  ],
+  operationName: "GetPITRMalwareScanResults",
 }));
 export type GetRecoveryPointIndexDetailsError =
   | InvalidParameterValueException
@@ -7855,6 +7998,7 @@ export const getRecoveryPointIndexDetails: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "GetRecoveryPointIndexDetails",
 }));
 export type GetRecoveryPointRestoreMetadataError =
   | InvalidParameterValueException
@@ -7879,6 +8023,7 @@ export const getRecoveryPointRestoreMetadata: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "GetRecoveryPointRestoreMetadata",
 }));
 export type GetRestoreJobMetadataError =
   | InvalidParameterValueException
@@ -7903,6 +8048,7 @@ export const getRestoreJobMetadata: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "GetRestoreJobMetadata",
 }));
 export type GetRestoreTestingInferredMetadataError =
   | InvalidParameterValueException
@@ -7930,6 +8076,7 @@ export const getRestoreTestingInferredMetadata: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "GetRestoreTestingInferredMetadata",
 }));
 export type GetRestoreTestingPlanError =
   | ResourceNotFoundException
@@ -7949,6 +8096,7 @@ export const getRestoreTestingPlan: API.OperationMethod<
   input: GetRestoreTestingPlanInput,
   output: GetRestoreTestingPlanOutput,
   errors: [ResourceNotFoundException, ServiceUnavailableException],
+  operationName: "GetRestoreTestingPlan",
 }));
 export type GetRestoreTestingSelectionError =
   | ResourceNotFoundException
@@ -7967,6 +8115,7 @@ export const getRestoreTestingSelection: API.OperationMethod<
   input: GetRestoreTestingSelectionInput,
   output: GetRestoreTestingSelectionOutput,
   errors: [ResourceNotFoundException, ServiceUnavailableException],
+  operationName: "GetRestoreTestingSelection",
 }));
 export type GetSupportedResourceTypesError =
   | ServiceUnavailableException
@@ -7983,6 +8132,7 @@ export const getSupportedResourceTypes: API.OperationMethod<
   input: GetSupportedResourceTypesRequest,
   output: GetSupportedResourceTypesOutput,
   errors: [ServiceUnavailableException],
+  operationName: "GetSupportedResourceTypes",
 }));
 export type GetTieringConfigurationError =
   | InvalidParameterValueException
@@ -8009,6 +8159,7 @@ export const getTieringConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "GetTieringConfiguration",
 }));
 export type ListBackupJobsError =
   | InvalidParameterValueException
@@ -8042,6 +8193,7 @@ export const listBackupJobs: API.OperationMethod<
   input: ListBackupJobsInput,
   output: ListBackupJobsOutput,
   errors: [InvalidParameterValueException, ServiceUnavailableException],
+  operationName: "ListBackupJobs",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8088,6 +8240,7 @@ export const listBackupJobSummaries: API.OperationMethod<
   input: ListBackupJobSummariesInput,
   output: ListBackupJobSummariesOutput,
   errors: [InvalidParameterValueException, ServiceUnavailableException],
+  operationName: "ListBackupJobSummaries",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8132,6 +8285,7 @@ export const listBackupPlans: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListBackupPlans",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8177,6 +8331,7 @@ export const listBackupPlanTemplates: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListBackupPlanTemplates",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8223,6 +8378,7 @@ export const listBackupPlanVersions: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListBackupPlanVersions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8269,6 +8425,7 @@ export const listBackupSelections: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListBackupSelections",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8315,6 +8472,7 @@ export const listBackupVaults: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListBackupVaults",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8353,6 +8511,7 @@ export const listCopyJobs: API.OperationMethod<
   input: ListCopyJobsInput,
   output: ListCopyJobsOutput,
   errors: [InvalidParameterValueException, ServiceUnavailableException],
+  operationName: "ListCopyJobs",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8399,6 +8558,7 @@ export const listCopyJobSummaries: API.OperationMethod<
   input: ListCopyJobSummariesInput,
   output: ListCopyJobSummariesOutput,
   errors: [InvalidParameterValueException, ServiceUnavailableException],
+  operationName: "ListCopyJobSummaries",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8436,6 +8596,7 @@ export const listFrameworks: API.OperationMethod<
   input: ListFrameworksInput,
   output: ListFrameworksOutput,
   errors: [InvalidParameterValueException, ServiceUnavailableException],
+  operationName: "ListFrameworks",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8483,6 +8644,7 @@ export const listIndexedRecoveryPoints: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListIndexedRecoveryPoints",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8521,6 +8683,7 @@ export const listLegalHolds: API.OperationMethod<
   input: ListLegalHoldsInput,
   output: ListLegalHoldsOutput,
   errors: [InvalidParameterValueException, ServiceUnavailableException],
+  operationName: "ListLegalHolds",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8561,6 +8724,7 @@ export const listProtectedResources: API.OperationMethod<
   input: ListProtectedResourcesInput,
   output: ListProtectedResourcesOutput,
   errors: [InvalidParameterValueException, ServiceUnavailableException],
+  operationName: "ListProtectedResources",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8604,6 +8768,7 @@ export const listProtectedResourcesByBackupVault: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListProtectedResourcesByBackupVault",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8649,6 +8814,7 @@ export const listRecoveryPointsByBackupVault: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListRecoveryPointsByBackupVault",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8693,6 +8859,7 @@ export const listRecoveryPointsByLegalHold: API.OperationMethod<
     MissingParameterValueException,
     ServiceUnavailableException,
   ],
+  operationName: "ListRecoveryPointsByLegalHold",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8742,6 +8909,7 @@ export const listRecoveryPointsByResource: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListRecoveryPointsByResource",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8785,6 +8953,7 @@ export const listReportJobs: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListReportJobs",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8823,6 +8992,7 @@ export const listReportPlans: API.OperationMethod<
   input: ListReportPlansInput,
   output: ListReportPlansOutput,
   errors: [InvalidParameterValueException, ServiceUnavailableException],
+  operationName: "ListReportPlans",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8867,6 +9037,7 @@ export const listRestoreAccessBackupVaults: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListRestoreAccessBackupVaults",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8913,6 +9084,7 @@ export const listRestoreJobs: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListRestoreJobs",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8963,6 +9135,7 @@ export const listRestoreJobsByProtectedResource: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListRestoreJobsByProtectedResource",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -9009,6 +9182,7 @@ export const listRestoreJobSummaries: API.OperationMethod<
   input: ListRestoreJobSummariesInput,
   output: ListRestoreJobSummariesOutput,
   errors: [InvalidParameterValueException, ServiceUnavailableException],
+  operationName: "ListRestoreJobSummaries",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -9046,6 +9220,7 @@ export const listRestoreTestingPlans: API.OperationMethod<
   input: ListRestoreTestingPlansInput,
   output: ListRestoreTestingPlansOutput,
   errors: [InvalidParameterValueException, ServiceUnavailableException],
+  operationName: "ListRestoreTestingPlans",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -9090,6 +9265,7 @@ export const listRestoreTestingSelections: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListRestoreTestingSelections",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -9128,6 +9304,7 @@ export const listScanJobs: API.OperationMethod<
   input: ListScanJobsInput,
   output: ListScanJobsOutput,
   errors: [InvalidParameterValueException, ServiceUnavailableException],
+  operationName: "ListScanJobs",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -9166,6 +9343,7 @@ export const listScanJobSummaries: API.OperationMethod<
   input: ListScanJobSummariesInput,
   output: ListScanJobSummariesOutput,
   errors: [InvalidParameterValueException, ServiceUnavailableException],
+  operationName: "ListScanJobSummaries",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -9225,6 +9403,7 @@ export const listTags: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListTags",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -9262,6 +9441,7 @@ export const listTieringConfigurations: API.OperationMethod<
   input: ListTieringConfigurationsInput,
   output: ListTieringConfigurationsOutput,
   errors: [InvalidParameterValueException, ServiceUnavailableException],
+  operationName: "ListTieringConfigurations",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -9294,6 +9474,7 @@ export const putBackupVaultAccessPolicy: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "PutBackupVaultAccessPolicy",
 }));
 export type PutBackupVaultLockConfigurationError =
   | InvalidParameterValueException
@@ -9332,6 +9513,7 @@ export const putBackupVaultLockConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "PutBackupVaultLockConfiguration",
 }));
 export type PutBackupVaultNotificationsError =
   | InvalidParameterValueException
@@ -9356,6 +9538,7 @@ export const putBackupVaultNotifications: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "PutBackupVaultNotifications",
 }));
 export type PutRestoreValidationResultError =
   | InvalidParameterValueException
@@ -9386,6 +9569,7 @@ export const putRestoreValidationResult: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "PutRestoreValidationResult",
 }));
 export type RevokeRestoreAccessBackupVaultError =
   | InvalidParameterValueException
@@ -9412,6 +9596,7 @@ export const revokeRestoreAccessBackupVault: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "RevokeRestoreAccessBackupVault",
 }));
 export type StartBackupJobError =
   | InvalidParameterValueException
@@ -9440,6 +9625,7 @@ export const startBackupJob: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "StartBackupJob",
 }));
 export type StartCopyJobError =
   | InvalidParameterValueException
@@ -9474,6 +9660,7 @@ export const startCopyJob: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "StartCopyJob",
 }));
 export type StartReportJobError =
   | InvalidParameterValueException
@@ -9498,6 +9685,7 @@ export const startReportJob: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "StartReportJob",
 }));
 export type StartRestoreJobError =
   | InvalidParameterValueException
@@ -9524,6 +9712,7 @@ export const startRestoreJob: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "StartRestoreJob",
 }));
 export type StartScanJobError =
   | InvalidParameterValueException
@@ -9552,6 +9741,7 @@ export const startScanJob: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "StartScanJob",
 }));
 export type StopBackupJobError =
   | InvalidParameterValueException
@@ -9598,6 +9788,7 @@ export const stopBackupJob: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "StopBackupJob",
 }));
 export type TagResourceError =
   | InvalidParameterValueException
@@ -9624,6 +9815,7 @@ export const tagResource: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | InvalidParameterValueException
@@ -9653,6 +9845,7 @@ export const untagResource: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "UntagResource",
 }));
 export type UpdateBackupPlanError =
   | InvalidParameterValueException
@@ -9677,6 +9870,7 @@ export const updateBackupPlan: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "UpdateBackupPlan",
 }));
 export type UpdateFrameworkError =
   | AlreadyExistsException
@@ -9707,6 +9901,7 @@ export const updateFramework: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "UpdateFramework",
 }));
 export type UpdateGlobalSettingsError =
   | InvalidParameterValueException
@@ -9731,6 +9926,7 @@ export const updateGlobalSettings: API.OperationMethod<
     MissingParameterValueException,
     ServiceUnavailableException,
   ],
+  operationName: "UpdateGlobalSettings",
 }));
 export type UpdateRecoveryPointIndexSettingsError =
   | InvalidParameterValueException
@@ -9759,6 +9955,7 @@ export const updateRecoveryPointIndexSettings: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "UpdateRecoveryPointIndexSettings",
 }));
 export type UpdateRecoveryPointLifecycleError =
   | InvalidParameterValueException
@@ -9803,6 +10000,7 @@ export const updateRecoveryPointLifecycle: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "UpdateRecoveryPointLifecycle",
 }));
 export type UpdateRegionSettingsError =
   | InvalidParameterValueException
@@ -9829,6 +10027,7 @@ export const updateRegionSettings: API.OperationMethod<
     MissingParameterValueException,
     ServiceUnavailableException,
   ],
+  operationName: "UpdateRegionSettings",
 }));
 export type UpdateReportPlanError =
   | ConflictException
@@ -9855,6 +10054,7 @@ export const updateReportPlan: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "UpdateReportPlan",
 }));
 export type UpdateRestoreTestingPlanError =
   | ConflictException
@@ -9895,6 +10095,7 @@ export const updateRestoreTestingPlan: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "UpdateRestoreTestingPlan",
 }));
 export type UpdateRestoreTestingSelectionError =
   | ConflictException
@@ -9926,6 +10127,7 @@ export const updateRestoreTestingSelection: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "UpdateRestoreTestingSelection",
 }));
 export type UpdateTieringConfigurationError =
   | AlreadyExistsException
@@ -9966,4 +10168,5 @@ export const updateTieringConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "UpdateTieringConfiguration",
 }));

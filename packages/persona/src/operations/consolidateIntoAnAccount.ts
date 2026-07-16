@@ -10,6 +10,23 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface ConsolidateIntoAnAccountInput {
+  accountId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  meta: { "source-account-ids": ReadonlyArray<string> };
+}
 export const ConsolidateIntoAnAccountInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     accountId: Schema.String.pipe(T.PathParam()),
@@ -40,15 +57,12 @@ export const ConsolidateIntoAnAccountInput =
     }),
   }).pipe(
     T.Http({ method: "POST", path: "/accounts/{accountId}/consolidate" }),
-  );
-export type ConsolidateIntoAnAccountInput =
-  typeof ConsolidateIntoAnAccountInput.Type;
+  ) as unknown as Schema.Codec<ConsolidateIntoAnAccountInput>;
 
 // Output Schema
+export type ConsolidateIntoAnAccountOutput = void;
 export const ConsolidateIntoAnAccountOutput =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Void;
-export type ConsolidateIntoAnAccountOutput =
-  typeof ConsolidateIntoAnAccountOutput.Type;
+  /*@__PURE__*/ /*#__PURE__*/ Schema.Void as unknown as Schema.Codec<ConsolidateIntoAnAccountOutput>;
 
 // The operation
 /**

@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
 import type { Credentials } from "../credentials.ts";
@@ -229,6 +229,7 @@ export const generateDataSet: API.OperationMethod<
   input: GenerateDataSetRequest,
   output: GenerateDataSetResult,
   errors: [MarketplaceCommerceAnalyticsException],
+  operationName: "GenerateDataSet",
 }));
 export type StartSupportDataExportError =
   | MarketplaceCommerceAnalyticsException
@@ -252,4 +253,5 @@ export const startSupportDataExport: API.OperationMethod<
   input: StartSupportDataExportRequest,
   output: StartSupportDataExportResult,
   errors: [MarketplaceCommerceAnalyticsException],
+  operationName: "StartSupportDataExport",
 }));

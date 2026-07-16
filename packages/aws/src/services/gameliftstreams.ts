@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -1566,6 +1566,7 @@ export const addStreamGroupLocations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AddStreamGroupLocations",
 }));
 export type AssociateApplicationsError =
   | AccessDeniedException
@@ -1596,6 +1597,7 @@ export const associateApplications: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssociateApplications",
 }));
 export type CreateStreamSessionConnectionError =
   | AccessDeniedException
@@ -1650,6 +1652,7 @@ export const createStreamSessionConnection: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateStreamSessionConnection",
 }));
 export type DisassociateApplicationsError =
   | AccessDeniedException
@@ -1678,6 +1681,7 @@ export const disassociateApplications: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DisassociateApplications",
 }));
 export type ExportStreamSessionFilesError =
   | AccessDeniedException
@@ -1718,6 +1722,7 @@ export const exportStreamSessionFiles: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ExportStreamSessionFiles",
 }));
 export type GetStreamSessionError =
   | AccessDeniedException
@@ -1744,6 +1749,7 @@ export const getStreamSession: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetStreamSession",
 }));
 export type ListStreamSessionsError =
   | AccessDeniedException
@@ -1789,6 +1795,7 @@ export const listStreamSessions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListStreamSessions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -1838,6 +1845,7 @@ export const listStreamSessionsByAccount: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListStreamSessionsByAccount",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -1874,6 +1882,7 @@ export const listTagsForResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type RemoveStreamGroupLocationsError =
   | AccessDeniedException
@@ -1902,6 +1911,7 @@ export const removeStreamGroupLocations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "RemoveStreamGroupLocations",
 }));
 export type StartStreamSessionError =
   | AccessDeniedException
@@ -1960,8 +1970,6 @@ export type StartStreamSessionError =
  *
  * - **Connection timeout**: The amount of time that Amazon GameLift Streams waits for a client to connect to a stream session in `ACTIVE` status, or reconnect to a stream session in `PENDING_CLIENT_RECONNECTION` status, the latter of which occurs when a client disconnects or loses connection from a stream session. If no client connects before the timeout, Amazon GameLift Streams terminates the stream session. This value is specified by `ConnectionTimeoutSeconds` in the `StartStreamSession` parameters.
  *
- * - **Idle timeout**: A stream session will be terminated if no user input has been received for 60 minutes.
- *
  * - **Maximum session length**: A stream session will be terminated after this amount of time has elapsed since it started, regardless of any existing client connections. This value is specified by `SessionLengthSeconds` in the `StartStreamSession` parameters.
  *
  * To start a new stream session, specify a stream group ID and application ID, along with the transport protocol and signal request to use with the stream session.
@@ -1986,6 +1994,7 @@ export const startStreamSession: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartStreamSession",
 }));
 export type TagResourceError =
   | AccessDeniedException
@@ -2020,6 +2029,7 @@ export const tagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "TagResource",
 }));
 export type TerminateStreamSessionError =
   | AccessDeniedException
@@ -2046,6 +2056,7 @@ export const terminateStreamSession: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "TerminateStreamSession",
 }));
 export type UntagResourceError =
   | AccessDeniedException
@@ -2070,6 +2081,7 @@ export const untagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UntagResource",
 }));
 export type CreateApplicationError =
   | AccessDeniedException
@@ -2104,6 +2116,7 @@ export const createApplication: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateApplication",
 }));
 export type GetApplicationError =
   | AccessDeniedException
@@ -2130,6 +2143,7 @@ export const getApplication: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetApplication",
 }));
 export type UpdateApplicationError =
   | AccessDeniedException
@@ -2158,6 +2172,7 @@ export const updateApplication: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateApplication",
 }));
 export type DeleteApplicationError =
   | AccessDeniedException
@@ -2198,6 +2213,7 @@ export const deleteApplication: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteApplication",
 }));
 export type ListApplicationsError =
   | AccessDeniedException
@@ -2237,6 +2253,7 @@ export const listApplications: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListApplications",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -2289,6 +2306,7 @@ export const createStreamGroup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateStreamGroup",
 }));
 export type GetStreamGroupError =
   | AccessDeniedException
@@ -2315,6 +2333,7 @@ export const getStreamGroup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetStreamGroup",
 }));
 export type UpdateStreamGroupError =
   | AccessDeniedException
@@ -2357,6 +2376,7 @@ export const updateStreamGroup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateStreamGroup",
 }));
 export type DeleteStreamGroupError =
   | AccessDeniedException
@@ -2385,6 +2405,7 @@ export const deleteStreamGroup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteStreamGroup",
 }));
 export type ListStreamGroupsError =
   | AccessDeniedException
@@ -2424,6 +2445,7 @@ export const listStreamGroups: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListStreamGroups",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",

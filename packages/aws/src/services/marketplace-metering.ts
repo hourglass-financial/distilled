@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
 import * as C from "../category.ts";
@@ -458,6 +458,7 @@ export const batchMeterUsage: API.OperationMethod<
     ThrottlingException,
     TimestampOutOfBoundsException,
   ],
+  operationName: "BatchMeterUsage",
 }));
 export type MeterUsageError =
   | CustomerNotEntitledException
@@ -534,6 +535,7 @@ export const meterUsage: API.OperationMethod<
     ThrottlingException,
     TimestampOutOfBoundsException,
   ],
+  operationName: "MeterUsage",
 }));
 export type RegisterUsageError =
   | CustomerNotEntitledException
@@ -604,6 +606,7 @@ export const registerUsage: API.OperationMethod<
     PlatformNotSupportedException,
     ThrottlingException,
   ],
+  operationName: "RegisterUsage",
 }));
 export type ResolveCustomerError =
   | DisabledApiException
@@ -645,4 +648,5 @@ export const resolveCustomer: API.OperationMethod<
     InvalidTokenException,
     ThrottlingException,
   ],
+  operationName: "ResolveCustomer",
 }));

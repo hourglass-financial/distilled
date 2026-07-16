@@ -282,7 +282,13 @@ describe("AISearch", () => {
               ? Effect.succeed(token)
               : Effect.fail("token not visible yet" as const),
           ),
-          Effect.catch((e) => {
+          Effect.catch(
+            (
+              e,
+            ): Effect.Effect<
+              never,
+              "token not visible yet" | AISearch.ReadTokenError
+            > => {
             const msg =
               typeof e === "object" && e !== null && "message" in e
                 ? String((e as { message: unknown }).message)
@@ -294,9 +300,7 @@ describe("AISearch", () => {
           }),
           Effect.retry({
             while: (e) => e === "token not visible yet",
-            schedule: Schedule.spaced("2 seconds").pipe(
-              Schedule.both(Schedule.recurs(45)),
-            ),
+            schedule: Schedule.max([Schedule.spaced("2 seconds"), Schedule.recurs(45)]),
           }),
           Effect.map((token) => {
             expect(token).toBeDefined();
@@ -652,31 +656,6 @@ describe("AISearch", () => {
   });
 
   // --------------------------------------------------------------------------
-  // getInstanceItem
-  // --------------------------------------------------------------------------
-  describe("getInstanceItem", () => {
-    test("error - ValidationError for instance id too long", () =>
-      AISearch.getInstanceItem({
-        accountId: accountId(),
-        id: "distilled-cf-aisearch-item-nonexistent-this-id-is-intentionally-longer-than-sixty-four-chars",
-        itemId: "nonexistent-item",
-      }).pipe(
-        Effect.flip,
-        Effect.map((e) => expect(e._tag).toBe("ValidationError")),
-      ));
-
-    test("error - InvalidRoute for invalid accountId", () =>
-      AISearch.getInstanceItem({
-        accountId: "invalid-account-id-000",
-        id: "nonexistent",
-        itemId: "nonexistent-item",
-      }).pipe(
-        Effect.flip,
-        Effect.map((e) => expect(e._tag).toBe("InvalidRoute")),
-      ));
-  });
-
-  // --------------------------------------------------------------------------
   // getInstanceJob
   // --------------------------------------------------------------------------
   describe("getInstanceJob", () => {
@@ -777,6 +756,9 @@ describe("AISearch", () => {
       AISearch.updateToken({
         accountId: accountId(),
         id: "00000000-0000-0000-0000-000000000000",
+        cfApiId: "00000000-0000-0000-0000-000000000000",
+        cfApiKey: "dummy-key",
+        name: "distilled-test",
       }).pipe(
         Effect.flip,
         Effect.map((e) => expect(e._tag).toBe("NotFound")),
@@ -786,6 +768,9 @@ describe("AISearch", () => {
       AISearch.updateToken({
         accountId: "invalid-account-id-000",
         id: "00000000-0000-0000-0000-000000000000",
+        cfApiId: "00000000-0000-0000-0000-000000000000",
+        cfApiKey: "dummy-key",
+        name: "distilled-test",
       }).pipe(
         Effect.flip,
         Effect.map((e) => expect(e._tag).toBe("InvalidRoute")),

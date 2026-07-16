@@ -4,6 +4,16 @@ import * as T from "../traits.ts";
 import { BadRequest, Conflict, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
+export interface CreateOutboundWireTransferInput {
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  deposit_account_id: string;
+  counterparty_us_bank_account_id: string;
+  amount: { currency: "USD"; value: string };
+  memo?: string | null;
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const CreateOutboundWireTransferInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     ereborVersion: Schema.optional(Schema.String).pipe(
@@ -23,11 +33,40 @@ export const CreateOutboundWireTransferInput =
     custom_fields: Schema.optional(
       Schema.Record(Schema.String, Schema.Unknown),
     ),
-  }).pipe(T.Http({ method: "POST", path: "/wire_out" }));
-export type CreateOutboundWireTransferInput =
-  typeof CreateOutboundWireTransferInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/wire_out" }),
+  ) as unknown as Schema.Codec<CreateOutboundWireTransferInput>;
 
 // Output Schema
+export interface CreateOutboundWireTransferOutput {
+  id: string;
+  type: "WIRE_OUT";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id?: string | null;
+  status: "CREATED" | "PENDING" | "SETTLED" | "FAILED" | "RETURNED";
+  deposit_account_id: string;
+  counterparty_us_bank_account_id: string;
+  bank_name?: string | null;
+  creditor_routing_number?: string;
+  creditor_account_number?: string;
+  creditor_name?: string;
+  amount: {
+    currency: "USD";
+    exponent: number;
+    value: string;
+    display_value: string;
+  };
+  end_to_end_id: string;
+  imad: string;
+  instruction_id: string;
+  uetr: string;
+  memo?: string | null;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const CreateOutboundWireTransferOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -61,11 +100,11 @@ export const CreateOutboundWireTransferOutput =
     instruction_id: Schema.String,
     uetr: Schema.String,
     memo: Schema.optional(Schema.NullOr(Schema.String)),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type CreateOutboundWireTransferOutput =
-  typeof CreateOutboundWireTransferOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<CreateOutboundWireTransferOutput>;
 
 // The operation
 /**

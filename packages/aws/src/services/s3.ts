@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -2421,25 +2421,35 @@ const rules = T.EndpointResolver((p, _) => {
                                             accessPointName !== false
                                           ) {
                                             if (outpostType === "accesspoint") {
-                                              {
-                                                const url =
-                                                  _.parseURL(Endpoint);
-                                                if (
-                                                  Endpoint != null &&
-                                                  url != null &&
-                                                  url !== false
-                                                ) {
-                                                  return e(
-                                                    `https://${accessPointName}-${_.getAttr(bucketArn, "accountId")}.${outpostId}.${_.getAttr(url, "authority")}`,
-                                                    _p7(bucketArn),
-                                                    {},
-                                                  );
+                                              if (
+                                                _.isValidHostLabel(
+                                                  accessPointName,
+                                                  false,
+                                                )
+                                              ) {
+                                                {
+                                                  const url =
+                                                    _.parseURL(Endpoint);
+                                                  if (
+                                                    Endpoint != null &&
+                                                    url != null &&
+                                                    url !== false
+                                                  ) {
+                                                    return e(
+                                                      `https://${accessPointName}-${_.getAttr(bucketArn, "accountId")}.${outpostId}.${_.getAttr(url, "authority")}`,
+                                                      _p7(bucketArn),
+                                                      {},
+                                                    );
+                                                  }
                                                 }
+                                                return e(
+                                                  `https://${accessPointName}-${_.getAttr(bucketArn, "accountId")}.${outpostId}.s3-outposts.${_.getAttr(bucketArn, "region")}.${_.getAttr(bucketPartition, "dnsSuffix")}`,
+                                                  _p7(bucketArn),
+                                                  {},
+                                                );
                                               }
-                                              return e(
-                                                `https://${accessPointName}-${_.getAttr(bucketArn, "accountId")}.${outpostId}.s3-outposts.${_.getAttr(bucketArn, "region")}.${_.getAttr(bucketPartition, "dnsSuffix")}`,
-                                                _p7(bucketArn),
-                                                {},
+                                              return err(
+                                                `Invalid ARN: The access point name may only contain a-z, A-Z, 0-9 and \`-\`. Found: \`${accessPointName}\``,
                                               );
                                             }
                                             return err(
@@ -3019,6 +3029,11 @@ export type ChecksumCRC32C = string;
 export type ChecksumCRC64NVME = string;
 export type ChecksumSHA1 = string;
 export type ChecksumSHA256 = string;
+export type ChecksumSHA512 = string;
+export type ChecksumMD5 = string;
+export type ChecksumXXHASH64 = string;
+export type ChecksumXXHASH3 = string;
+export type ChecksumXXHASH128 = string;
 export type PartNumber = number;
 export type MpuObjectSize = number;
 export type IfMatch = string;
@@ -3065,6 +3080,7 @@ export type S3RegionalOrS3ExpressBucketArnString = string;
 export type ContentMD5 = string;
 export type RecordExpirationDays = number;
 export type KmsKeyArn = string;
+export type Role = string;
 export type S3TablesBucketArn = string;
 export type S3TablesName = string;
 export type AbortDate = Date;
@@ -3081,6 +3097,8 @@ export type BypassGovernanceRetention = boolean;
 export type IfMatchLastModifiedTime = Date;
 export type IfMatchSize = number;
 export type DeleteMarker = boolean;
+export type AnnotationName = string;
+export type ObjectIfMatch = string;
 export type LastModifiedTime = Date;
 export type Size = number;
 export type Quiet = boolean;
@@ -3120,7 +3138,6 @@ export type QueueArn = string;
 export type LambdaFunctionArn = string;
 export type Policy = string;
 export type IsPublic = boolean;
-export type Role = string;
 export type Priority = number;
 export type ReplicaKmsKeyID = string;
 export type Minutes = number;
@@ -3171,6 +3188,9 @@ export type UploadIdMarker = string;
 export type NextKeyMarker = string;
 export type NextUploadIdMarker = string;
 export type Initiated = Date;
+export type MaxAnnotationResults = number;
+export type AnnotationPrefix = string;
+export type AnnotationCount = number;
 export type Marker = string;
 export type MaxKeys = number;
 export type NextMarker = string;
@@ -3281,6 +3301,11 @@ export interface CompletedPart {
   ChecksumCRC64NVME?: string;
   ChecksumSHA1?: string;
   ChecksumSHA256?: string;
+  ChecksumSHA512?: string;
+  ChecksumMD5?: string;
+  ChecksumXXHASH64?: string;
+  ChecksumXXHASH3?: string;
+  ChecksumXXHASH128?: string;
   PartNumber?: number;
 }
 export const CompletedPart = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -3291,6 +3316,11 @@ export const CompletedPart = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     ChecksumCRC64NVME: S.optional(S.String),
     ChecksumSHA1: S.optional(S.String),
     ChecksumSHA256: S.optional(S.String),
+    ChecksumSHA512: S.optional(S.String),
+    ChecksumMD5: S.optional(S.String),
+    ChecksumXXHASH64: S.optional(S.String),
+    ChecksumXXHASH3: S.optional(S.String),
+    ChecksumXXHASH128: S.optional(S.String),
     PartNumber: S.optional(S.Number),
   }),
 ).annotate({ identifier: "CompletedPart" }) as any as S.Schema<CompletedPart>;
@@ -3323,6 +3353,11 @@ export interface CompleteMultipartUploadRequest {
   ChecksumCRC64NVME?: string;
   ChecksumSHA1?: string;
   ChecksumSHA256?: string;
+  ChecksumSHA512?: string;
+  ChecksumMD5?: string;
+  ChecksumXXHASH64?: string;
+  ChecksumXXHASH3?: string;
+  ChecksumXXHASH128?: string;
   ChecksumType?: ChecksumType;
   MpuObjectSize?: number;
   RequestPayer?: RequestPayer;
@@ -3356,6 +3391,21 @@ export const CompleteMultipartUploadRequest =
       ),
       ChecksumSHA256: S.optional(S.String).pipe(
         T.HttpHeader("x-amz-checksum-sha256"),
+      ),
+      ChecksumSHA512: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-sha512"),
+      ),
+      ChecksumMD5: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-md5"),
+      ),
+      ChecksumXXHASH64: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-xxhash64"),
+      ),
+      ChecksumXXHASH3: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-xxhash3"),
+      ),
+      ChecksumXXHASH128: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-xxhash128"),
       ),
       ChecksumType: S.optional(ChecksumType).pipe(
         T.HttpHeader("x-amz-checksum-type"),
@@ -3412,6 +3462,11 @@ export interface CompleteMultipartUploadOutput {
   ChecksumCRC64NVME?: string;
   ChecksumSHA1?: string;
   ChecksumSHA256?: string;
+  ChecksumSHA512?: string;
+  ChecksumMD5?: string;
+  ChecksumXXHASH64?: string;
+  ChecksumXXHASH3?: string;
+  ChecksumXXHASH128?: string;
   ChecksumType?: ChecksumType;
   ServerSideEncryption?: ServerSideEncryption;
   VersionId?: string;
@@ -3432,6 +3487,11 @@ export const CompleteMultipartUploadOutput =
       ChecksumCRC64NVME: S.optional(S.String),
       ChecksumSHA1: S.optional(S.String),
       ChecksumSHA256: S.optional(S.String),
+      ChecksumSHA512: S.optional(S.String),
+      ChecksumMD5: S.optional(S.String),
+      ChecksumXXHASH64: S.optional(S.String),
+      ChecksumXXHASH3: S.optional(S.String),
+      ChecksumXXHASH128: S.optional(S.String),
       ChecksumType: S.optional(ChecksumType),
       ServerSideEncryption: S.optional(ServerSideEncryption).pipe(
         T.HttpHeader("x-amz-server-side-encryption"),
@@ -3466,6 +3526,11 @@ export type ChecksumAlgorithm =
   | "SHA1"
   | "SHA256"
   | "CRC64NVME"
+  | "SHA512"
+  | "MD5"
+  | "XXHASH64"
+  | "XXHASH3"
+  | "XXHASH128"
   | (string & {});
 export const ChecksumAlgorithm = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export type Metadata = { [key: string]: string | undefined };
@@ -3477,6 +3542,8 @@ export type MetadataDirective = "COPY" | "REPLACE" | (string & {});
 export const MetadataDirective = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export type TaggingDirective = "COPY" | "REPLACE" | (string & {});
 export const TaggingDirective = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export type AnnotationDirective = "COPY" | "EXCLUDE" | (string & {});
+export const AnnotationDirective = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export type StorageClass =
   | "STANDARD"
   | "REDUCED_REDUNDANCY"
@@ -3522,6 +3589,7 @@ export interface CopyObjectRequest {
   Metadata?: { [key: string]: string | undefined };
   MetadataDirective?: MetadataDirective;
   TaggingDirective?: TaggingDirective;
+  AnnotationDirective?: AnnotationDirective;
   ServerSideEncryption?: ServerSideEncryption;
   StorageClass?: StorageClass;
   WebsiteRedirectLocation?: string;
@@ -3596,6 +3664,9 @@ export const CopyObjectRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     ),
     TaggingDirective: S.optional(TaggingDirective).pipe(
       T.HttpHeader("x-amz-tagging-directive"),
+    ),
+    AnnotationDirective: S.optional(AnnotationDirective).pipe(
+      T.HttpHeader("x-amz-object-annotation-directive"),
     ),
     ServerSideEncryption: S.optional(ServerSideEncryption).pipe(
       T.HttpHeader("x-amz-server-side-encryption"),
@@ -3678,6 +3749,11 @@ export interface CopyObjectResult {
   ChecksumCRC64NVME?: string;
   ChecksumSHA1?: string;
   ChecksumSHA256?: string;
+  ChecksumSHA512?: string;
+  ChecksumMD5?: string;
+  ChecksumXXHASH64?: string;
+  ChecksumXXHASH3?: string;
+  ChecksumXXHASH128?: string;
 }
 export const CopyObjectResult = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -3689,6 +3765,11 @@ export const CopyObjectResult = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     ChecksumCRC64NVME: S.optional(S.String),
     ChecksumSHA1: S.optional(S.String),
     ChecksumSHA256: S.optional(S.String),
+    ChecksumSHA512: S.optional(S.String),
+    ChecksumMD5: S.optional(S.String),
+    ChecksumXXHASH64: S.optional(S.String),
+    ChecksumXXHASH3: S.optional(S.String),
+    ChecksumXXHASH128: S.optional(S.String),
   }),
 ).annotate({
   identifier: "CopyObjectResult",
@@ -3978,14 +4059,37 @@ export const InventoryTableConfiguration =
   ).annotate({
     identifier: "InventoryTableConfiguration",
   }) as any as S.Schema<InventoryTableConfiguration>;
+export type AnnotationConfigurationState =
+  | "ENABLED"
+  | "DISABLED"
+  | (string & {});
+export const AnnotationConfigurationState =
+  /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface AnnotationTableConfiguration {
+  ConfigurationState: AnnotationConfigurationState;
+  EncryptionConfiguration?: MetadataTableEncryptionConfiguration;
+  Role?: string;
+}
+export const AnnotationTableConfiguration =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      ConfigurationState: AnnotationConfigurationState,
+      EncryptionConfiguration: S.optional(MetadataTableEncryptionConfiguration),
+      Role: S.optional(S.String),
+    }),
+  ).annotate({
+    identifier: "AnnotationTableConfiguration",
+  }) as any as S.Schema<AnnotationTableConfiguration>;
 export interface MetadataConfiguration {
   JournalTableConfiguration: JournalTableConfiguration;
   InventoryTableConfiguration?: InventoryTableConfiguration;
+  AnnotationTableConfiguration?: AnnotationTableConfiguration;
 }
 export const MetadataConfiguration = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     JournalTableConfiguration: JournalTableConfiguration,
     InventoryTableConfiguration: S.optional(InventoryTableConfiguration),
+    AnnotationTableConfiguration: S.optional(AnnotationTableConfiguration),
   }),
 ).annotate({
   identifier: "MetadataConfiguration",
@@ -4909,6 +5013,62 @@ export const DeleteObjectOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "DeleteObjectOutput",
 }) as any as S.Schema<DeleteObjectOutput>;
+export interface DeleteObjectAnnotationRequest {
+  Bucket: string;
+  Key: string;
+  AnnotationName: string;
+  VersionId?: string;
+  RequestPayer?: RequestPayer;
+  ExpectedBucketOwner?: string;
+  ObjectIfMatch?: string;
+}
+export const DeleteObjectAnnotationRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      Bucket: S.String.pipe(T.HttpLabel("Bucket"), T.ContextParam("Bucket")),
+      Key: S.String.pipe(T.HttpLabel("Key")),
+      AnnotationName: S.String.pipe(T.HttpQuery("annotationName")),
+      VersionId: S.optional(S.String).pipe(T.HttpQuery("versionId")),
+      RequestPayer: S.optional(RequestPayer).pipe(
+        T.HttpHeader("x-amz-request-payer"),
+      ),
+      ExpectedBucketOwner: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-expected-bucket-owner"),
+      ),
+      ObjectIfMatch: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-object-if-match"),
+      ),
+    }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "DELETE", uri: "/{Bucket}/{Key+}?annotation" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "DeleteObjectAnnotationRequest",
+  }) as any as S.Schema<DeleteObjectAnnotationRequest>;
+export interface DeleteObjectAnnotationOutput {
+  ObjectVersionId?: string;
+  RequestCharged?: RequestCharged;
+}
+export const DeleteObjectAnnotationOutput =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      ObjectVersionId: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-object-version-id"),
+      ),
+      RequestCharged: S.optional(RequestCharged).pipe(
+        T.HttpHeader("x-amz-request-charged"),
+      ),
+    }).pipe(ns),
+  ).annotate({
+    identifier: "DeleteObjectAnnotationOutput",
+  }) as any as S.Schema<DeleteObjectAnnotationOutput>;
 export interface ObjectIdentifier {
   Key: string;
   VersionId?: string;
@@ -6300,10 +6460,32 @@ export const InventoryTableConfigurationResult =
   ).annotate({
     identifier: "InventoryTableConfigurationResult",
   }) as any as S.Schema<InventoryTableConfigurationResult>;
+export interface AnnotationTableConfigurationResult {
+  ConfigurationState: AnnotationConfigurationState;
+  TableStatus?: string;
+  Error?: ErrorDetails;
+  TableName?: string;
+  TableArn?: string;
+  Role?: string;
+}
+export const AnnotationTableConfigurationResult =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      ConfigurationState: AnnotationConfigurationState,
+      TableStatus: S.optional(S.String),
+      Error: S.optional(ErrorDetails),
+      TableName: S.optional(S.String),
+      TableArn: S.optional(S.String),
+      Role: S.optional(S.String),
+    }),
+  ).annotate({
+    identifier: "AnnotationTableConfigurationResult",
+  }) as any as S.Schema<AnnotationTableConfigurationResult>;
 export interface MetadataConfigurationResult {
   DestinationResult: DestinationResult;
   JournalTableConfigurationResult?: JournalTableConfigurationResult;
   InventoryTableConfigurationResult?: InventoryTableConfigurationResult;
+  AnnotationTableConfigurationResult?: AnnotationTableConfigurationResult;
 }
 export const MetadataConfigurationResult =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -6314,6 +6496,9 @@ export const MetadataConfigurationResult =
       ),
       InventoryTableConfigurationResult: S.optional(
         InventoryTableConfigurationResult,
+      ),
+      AnnotationTableConfigurationResult: S.optional(
+        AnnotationTableConfigurationResult,
       ),
     }),
   ).annotate({
@@ -6562,6 +6747,9 @@ export type Event =
   | "s3:ObjectTagging:*"
   | "s3:ObjectTagging:Put"
   | "s3:ObjectTagging:Delete"
+  | "s3:ObjectAnnotation:*"
+  | "s3:ObjectAnnotation:Put"
+  | "s3:ObjectAnnotation:Delete"
   | (string & {});
 export const Event = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export type EventList = Event[];
@@ -7381,7 +7569,18 @@ export const GetObjectRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
       ver,
       rules,
       T.AwsProtocolsHttpChecksum({
-        responseAlgorithms: ["CRC64NVME", "CRC32", "CRC32C", "SHA256", "SHA1"],
+        responseAlgorithms: [
+          "CRC64NVME",
+          "CRC32",
+          "CRC32C",
+          "SHA256",
+          "SHA1",
+          "SHA512",
+          "MD5",
+          "XXHASH64",
+          "XXHASH3",
+          "XXHASH128",
+        ],
       }),
     ),
   ),
@@ -7410,6 +7609,11 @@ export interface GetObjectOutput {
   ChecksumCRC64NVME?: string;
   ChecksumSHA1?: string;
   ChecksumSHA256?: string;
+  ChecksumSHA512?: string;
+  ChecksumMD5?: string;
+  ChecksumXXHASH64?: string;
+  ChecksumXXHASH3?: string;
+  ChecksumXXHASH128?: string;
   ChecksumType?: ChecksumType;
   MissingMeta?: number;
   VersionId?: string;
@@ -7464,6 +7668,19 @@ export const GetObjectOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     ),
     ChecksumSHA256: S.optional(S.String).pipe(
       T.HttpHeader("x-amz-checksum-sha256"),
+    ),
+    ChecksumSHA512: S.optional(S.String).pipe(
+      T.HttpHeader("x-amz-checksum-sha512"),
+    ),
+    ChecksumMD5: S.optional(S.String).pipe(T.HttpHeader("x-amz-checksum-md5")),
+    ChecksumXXHASH64: S.optional(S.String).pipe(
+      T.HttpHeader("x-amz-checksum-xxhash64"),
+    ),
+    ChecksumXXHASH3: S.optional(S.String).pipe(
+      T.HttpHeader("x-amz-checksum-xxhash3"),
+    ),
+    ChecksumXXHASH128: S.optional(S.String).pipe(
+      T.HttpHeader("x-amz-checksum-xxhash128"),
     ),
     ChecksumType: S.optional(ChecksumType).pipe(
       T.HttpHeader("x-amz-checksum-type"),
@@ -7574,6 +7791,141 @@ export const GetObjectAclOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "GetObjectAclOutput",
 }) as any as S.Schema<GetObjectAclOutput>;
+export interface GetObjectAnnotationRequest {
+  Bucket: string;
+  Key: string;
+  AnnotationName: string;
+  VersionId?: string;
+  RequestPayer?: RequestPayer;
+  ExpectedBucketOwner?: string;
+  ChecksumMode?: ChecksumMode;
+}
+export const GetObjectAnnotationRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      Bucket: S.String.pipe(T.HttpLabel("Bucket"), T.ContextParam("Bucket")),
+      Key: S.String.pipe(T.HttpLabel("Key"), T.ContextParam("Key")),
+      AnnotationName: S.String.pipe(T.HttpQuery("annotationName")),
+      VersionId: S.optional(S.String).pipe(T.HttpQuery("versionId")),
+      RequestPayer: S.optional(RequestPayer).pipe(
+        T.HttpHeader("x-amz-request-payer"),
+      ),
+      ExpectedBucketOwner: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-expected-bucket-owner"),
+      ),
+      ChecksumMode: S.optional(ChecksumMode).pipe(
+        T.HttpHeader("x-amz-checksum-mode"),
+      ),
+    }).pipe(
+      T.all(
+        ns,
+        T.Http({
+          method: "GET",
+          uri: "/{Bucket}/{Key+}?annotation&x-id=GetObjectAnnotation",
+        }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+        T.AwsProtocolsHttpChecksum({
+          responseAlgorithms: [
+            "CRC64NVME",
+            "CRC32",
+            "CRC32C",
+            "SHA256",
+            "SHA1",
+            "SHA512",
+            "MD5",
+            "XXHASH64",
+            "XXHASH3",
+            "XXHASH128",
+          ],
+        }),
+      ),
+    ),
+).annotate({
+  identifier: "GetObjectAnnotationRequest",
+}) as any as S.Schema<GetObjectAnnotationRequest>;
+export interface GetObjectAnnotationOutput {
+  AnnotationPayload?: T.StreamingOutputBody;
+  ObjectVersionId?: string;
+  LastModified?: Date;
+  ContentLength?: number;
+  ETag?: string;
+  ChecksumCRC32?: string;
+  ChecksumCRC32C?: string;
+  ChecksumCRC64NVME?: string;
+  ChecksumSHA1?: string;
+  ChecksumSHA256?: string;
+  ChecksumSHA512?: string;
+  ChecksumMD5?: string;
+  ChecksumXXHASH64?: string;
+  ChecksumXXHASH3?: string;
+  ChecksumXXHASH128?: string;
+  ChecksumType?: ChecksumType;
+  ServerSideEncryption?: ServerSideEncryption;
+  RequestCharged?: RequestCharged;
+  ReplicationStatus?: ReplicationStatus;
+}
+export const GetObjectAnnotationOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      AnnotationPayload: S.optional(T.StreamingOutput).pipe(T.HttpPayload()),
+      ObjectVersionId: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-object-version-id"),
+      ),
+      LastModified: S.optional(
+        S.Date.pipe(T.TimestampFormat("http-date")),
+      ).pipe(T.HttpHeader("Last-Modified")),
+      ContentLength: S.optional(S.Number).pipe(T.HttpHeader("Content-Length")),
+      ETag: S.optional(S.String).pipe(T.HttpHeader("ETag")),
+      ChecksumCRC32: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-crc32"),
+      ),
+      ChecksumCRC32C: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-crc32c"),
+      ),
+      ChecksumCRC64NVME: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-crc64nvme"),
+      ),
+      ChecksumSHA1: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-sha1"),
+      ),
+      ChecksumSHA256: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-sha256"),
+      ),
+      ChecksumSHA512: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-sha512"),
+      ),
+      ChecksumMD5: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-md5"),
+      ),
+      ChecksumXXHASH64: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-xxhash64"),
+      ),
+      ChecksumXXHASH3: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-xxhash3"),
+      ),
+      ChecksumXXHASH128: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-xxhash128"),
+      ),
+      ChecksumType: S.optional(ChecksumType).pipe(
+        T.HttpHeader("x-amz-checksum-type"),
+      ),
+      ServerSideEncryption: S.optional(ServerSideEncryption).pipe(
+        T.HttpHeader("x-amz-server-side-encryption"),
+      ),
+      RequestCharged: S.optional(RequestCharged).pipe(
+        T.HttpHeader("x-amz-request-charged"),
+      ),
+      ReplicationStatus: S.optional(ReplicationStatus).pipe(
+        T.HttpHeader("x-amz-replication-status"),
+      ),
+    }).pipe(ns),
+).annotate({
+  identifier: "GetObjectAnnotationOutput",
+}) as any as S.Schema<GetObjectAnnotationOutput>;
 export type ObjectAttributes =
   | "ETag"
   | "Checksum"
@@ -7646,6 +7998,11 @@ export interface Checksum {
   ChecksumCRC64NVME?: string;
   ChecksumSHA1?: string;
   ChecksumSHA256?: string;
+  ChecksumSHA512?: string;
+  ChecksumMD5?: string;
+  ChecksumXXHASH64?: string;
+  ChecksumXXHASH3?: string;
+  ChecksumXXHASH128?: string;
   ChecksumType?: ChecksumType;
 }
 export const Checksum = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -7655,6 +8012,11 @@ export const Checksum = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     ChecksumCRC64NVME: S.optional(S.String),
     ChecksumSHA1: S.optional(S.String),
     ChecksumSHA256: S.optional(S.String),
+    ChecksumSHA512: S.optional(S.String),
+    ChecksumMD5: S.optional(S.String),
+    ChecksumXXHASH64: S.optional(S.String),
+    ChecksumXXHASH3: S.optional(S.String),
+    ChecksumXXHASH128: S.optional(S.String),
     ChecksumType: S.optional(ChecksumType),
   }),
 ).annotate({ identifier: "Checksum" }) as any as S.Schema<Checksum>;
@@ -7666,6 +8028,11 @@ export interface ObjectPart {
   ChecksumCRC64NVME?: string;
   ChecksumSHA1?: string;
   ChecksumSHA256?: string;
+  ChecksumSHA512?: string;
+  ChecksumMD5?: string;
+  ChecksumXXHASH64?: string;
+  ChecksumXXHASH3?: string;
+  ChecksumXXHASH128?: string;
 }
 export const ObjectPart = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -7676,6 +8043,11 @@ export const ObjectPart = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     ChecksumCRC64NVME: S.optional(S.String),
     ChecksumSHA1: S.optional(S.String),
     ChecksumSHA256: S.optional(S.String),
+    ChecksumSHA512: S.optional(S.String),
+    ChecksumMD5: S.optional(S.String),
+    ChecksumXXHASH64: S.optional(S.String),
+    ChecksumXXHASH3: S.optional(S.String),
+    ChecksumXXHASH128: S.optional(S.String),
   }),
 ).annotate({ identifier: "ObjectPart" }) as any as S.Schema<ObjectPart>;
 export type PartsList = ObjectPart[];
@@ -8236,6 +8608,11 @@ export interface HeadObjectOutput {
   ChecksumCRC64NVME?: string;
   ChecksumSHA1?: string;
   ChecksumSHA256?: string;
+  ChecksumSHA512?: string;
+  ChecksumMD5?: string;
+  ChecksumXXHASH64?: string;
+  ChecksumXXHASH3?: string;
+  ChecksumXXHASH128?: string;
   ChecksumType?: ChecksumType;
   ETag?: string;
   MissingMeta?: number;
@@ -8292,6 +8669,19 @@ export const HeadObjectOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     ),
     ChecksumSHA256: S.optional(S.String).pipe(
       T.HttpHeader("x-amz-checksum-sha256"),
+    ),
+    ChecksumSHA512: S.optional(S.String).pipe(
+      T.HttpHeader("x-amz-checksum-sha512"),
+    ),
+    ChecksumMD5: S.optional(S.String).pipe(T.HttpHeader("x-amz-checksum-md5")),
+    ChecksumXXHASH64: S.optional(S.String).pipe(
+      T.HttpHeader("x-amz-checksum-xxhash64"),
+    ),
+    ChecksumXXHASH3: S.optional(S.String).pipe(
+      T.HttpHeader("x-amz-checksum-xxhash3"),
+    ),
+    ChecksumXXHASH128: S.optional(S.String).pipe(
+      T.HttpHeader("x-amz-checksum-xxhash128"),
     ),
     ChecksumType: S.optional(ChecksumType).pipe(
       T.HttpHeader("x-amz-checksum-type"),
@@ -8815,6 +9205,116 @@ export const ListMultipartUploadsOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 ).annotate({
   identifier: "ListMultipartUploadsOutput",
 }) as any as S.Schema<ListMultipartUploadsOutput>;
+export interface ListObjectAnnotationsRequest {
+  Bucket: string;
+  Key: string;
+  VersionId?: string;
+  MaxAnnotationResults?: number;
+  AnnotationPrefix?: string;
+  ContinuationToken?: string;
+  RequestPayer?: RequestPayer;
+  ExpectedBucketOwner?: string;
+}
+export const ListObjectAnnotationsRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      Bucket: S.String.pipe(T.HttpLabel("Bucket"), T.ContextParam("Bucket")),
+      Key: S.String.pipe(T.HttpLabel("Key")),
+      VersionId: S.optional(S.String).pipe(T.HttpQuery("versionId")),
+      MaxAnnotationResults: S.optional(S.Number).pipe(
+        T.HttpQuery("max-annotation-results"),
+      ),
+      AnnotationPrefix: S.optional(S.String).pipe(
+        T.HttpQuery("annotation-prefix"),
+      ),
+      ContinuationToken: S.optional(S.String).pipe(
+        T.HttpQuery("continuation-token"),
+      ),
+      RequestPayer: S.optional(RequestPayer).pipe(
+        T.HttpHeader("x-amz-request-payer"),
+      ),
+      ExpectedBucketOwner: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-expected-bucket-owner"),
+      ),
+    }).pipe(
+      T.all(
+        ns,
+        T.Http({
+          method: "GET",
+          uri: "/{Bucket}/{Key+}?annotation&x-id=ListObjectAnnotations",
+        }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "ListObjectAnnotationsRequest",
+  }) as any as S.Schema<ListObjectAnnotationsRequest>;
+export type ChecksumAlgorithmList = ChecksumAlgorithm[];
+export const ChecksumAlgorithmList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(ChecksumAlgorithm);
+export interface AnnotationEntry {
+  AnnotationName: string;
+  LastModified: Date;
+  ETag?: string;
+  ChecksumAlgorithm?: ChecksumAlgorithm[];
+  Size: number;
+  ReplicationStatus?: ReplicationStatus;
+}
+export const AnnotationEntry = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    AnnotationName: S.String,
+    LastModified: T.DateFromString,
+    ETag: S.optional(S.String),
+    ChecksumAlgorithm: S.optional(ChecksumAlgorithmList).pipe(T.XmlFlattened()),
+    Size: S.Number,
+    ReplicationStatus: S.optional(ReplicationStatus),
+  }),
+).annotate({
+  identifier: "AnnotationEntry",
+}) as any as S.Schema<AnnotationEntry>;
+export type AnnotationList = AnnotationEntry[];
+export const AnnotationList = /*@__PURE__*/ /*#__PURE__*/ S.Array(
+  AnnotationEntry.pipe(T.XmlName("AnnotationEntry")).annotate({
+    identifier: "AnnotationEntry",
+  }),
+);
+export interface ListObjectAnnotationsOutput {
+  Annotations?: AnnotationEntry[];
+  Bucket?: string;
+  Key?: string;
+  ObjectVersionId?: string;
+  AnnotationPrefix?: string;
+  MaxAnnotationResults?: number;
+  AnnotationCount?: number;
+  ContinuationToken?: string;
+  NextContinuationToken?: string;
+  RequestCharged?: RequestCharged;
+}
+export const ListObjectAnnotationsOutput =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      Annotations: S.optional(AnnotationList),
+      Bucket: S.optional(S.String),
+      Key: S.optional(S.String),
+      ObjectVersionId: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-object-version-id"),
+      ),
+      AnnotationPrefix: S.optional(S.String),
+      MaxAnnotationResults: S.optional(S.Number),
+      AnnotationCount: S.optional(S.Number),
+      ContinuationToken: S.optional(S.String),
+      NextContinuationToken: S.optional(S.String),
+      RequestCharged: S.optional(RequestCharged).pipe(
+        T.HttpHeader("x-amz-request-charged"),
+      ),
+    }).pipe(ns),
+  ).annotate({
+    identifier: "ListObjectAnnotationsOutput",
+  }) as any as S.Schema<ListObjectAnnotationsOutput>;
 export type OptionalObjectAttributes = "RestoreStatus" | (string & {});
 export const OptionalObjectAttributes = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export type OptionalObjectAttributesList = OptionalObjectAttributes[];
@@ -8866,9 +9366,6 @@ export const ListObjectsRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "ListObjectsRequest",
 }) as any as S.Schema<ListObjectsRequest>;
-export type ChecksumAlgorithmList = ChecksumAlgorithm[];
-export const ChecksumAlgorithmList =
-  /*@__PURE__*/ /*#__PURE__*/ S.Array(ChecksumAlgorithm);
 export type ObjectStorageClass =
   | "STANDARD"
   | "REDUCED_REDUNDANCY"
@@ -9249,6 +9746,11 @@ export interface Part {
   ChecksumCRC64NVME?: string;
   ChecksumSHA1?: string;
   ChecksumSHA256?: string;
+  ChecksumSHA512?: string;
+  ChecksumMD5?: string;
+  ChecksumXXHASH64?: string;
+  ChecksumXXHASH3?: string;
+  ChecksumXXHASH128?: string;
 }
 export const Part = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -9261,6 +9763,11 @@ export const Part = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     ChecksumCRC64NVME: S.optional(S.String),
     ChecksumSHA1: S.optional(S.String),
     ChecksumSHA256: S.optional(S.String),
+    ChecksumSHA512: S.optional(S.String),
+    ChecksumMD5: S.optional(S.String),
+    ChecksumXXHASH64: S.optional(S.String),
+    ChecksumXXHASH3: S.optional(S.String),
+    ChecksumXXHASH128: S.optional(S.String),
   }),
 ).annotate({ identifier: "Part" }) as any as S.Schema<Part>;
 export type Parts = Part[];
@@ -10288,6 +10795,11 @@ export interface PutObjectRequest {
   ChecksumCRC64NVME?: string;
   ChecksumSHA1?: string;
   ChecksumSHA256?: string;
+  ChecksumSHA512?: string;
+  ChecksumMD5?: string;
+  ChecksumXXHASH64?: string;
+  ChecksumXXHASH3?: string;
+  ChecksumXXHASH128?: string;
   Expires?: string;
   IfMatch?: string;
   IfNoneMatch?: string;
@@ -10349,6 +10861,19 @@ export const PutObjectRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     ),
     ChecksumSHA256: S.optional(S.String).pipe(
       T.HttpHeader("x-amz-checksum-sha256"),
+    ),
+    ChecksumSHA512: S.optional(S.String).pipe(
+      T.HttpHeader("x-amz-checksum-sha512"),
+    ),
+    ChecksumMD5: S.optional(S.String).pipe(T.HttpHeader("x-amz-checksum-md5")),
+    ChecksumXXHASH64: S.optional(S.String).pipe(
+      T.HttpHeader("x-amz-checksum-xxhash64"),
+    ),
+    ChecksumXXHASH3: S.optional(S.String).pipe(
+      T.HttpHeader("x-amz-checksum-xxhash3"),
+    ),
+    ChecksumXXHASH128: S.optional(S.String).pipe(
+      T.HttpHeader("x-amz-checksum-xxhash128"),
     ),
     Expires: S.optional(S.String).pipe(T.HttpHeader("Expires")),
     IfMatch: S.optional(S.String).pipe(T.HttpHeader("If-Match")),
@@ -10436,6 +10961,11 @@ export interface PutObjectOutput {
   ChecksumCRC64NVME?: string;
   ChecksumSHA1?: string;
   ChecksumSHA256?: string;
+  ChecksumSHA512?: string;
+  ChecksumMD5?: string;
+  ChecksumXXHASH64?: string;
+  ChecksumXXHASH3?: string;
+  ChecksumXXHASH128?: string;
   ChecksumType?: ChecksumType;
   ServerSideEncryption?: ServerSideEncryption;
   VersionId?: string;
@@ -10465,6 +10995,19 @@ export const PutObjectOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     ),
     ChecksumSHA256: S.optional(S.String).pipe(
       T.HttpHeader("x-amz-checksum-sha256"),
+    ),
+    ChecksumSHA512: S.optional(S.String).pipe(
+      T.HttpHeader("x-amz-checksum-sha512"),
+    ),
+    ChecksumMD5: S.optional(S.String).pipe(T.HttpHeader("x-amz-checksum-md5")),
+    ChecksumXXHASH64: S.optional(S.String).pipe(
+      T.HttpHeader("x-amz-checksum-xxhash64"),
+    ),
+    ChecksumXXHASH3: S.optional(S.String).pipe(
+      T.HttpHeader("x-amz-checksum-xxhash3"),
+    ),
+    ChecksumXXHASH128: S.optional(S.String).pipe(
+      T.HttpHeader("x-amz-checksum-xxhash128"),
     ),
     ChecksumType: S.optional(ChecksumType).pipe(
       T.HttpHeader("x-amz-checksum-type"),
@@ -10572,6 +11115,167 @@ export const PutObjectAclOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "PutObjectAclOutput",
 }) as any as S.Schema<PutObjectAclOutput>;
+export interface PutObjectAnnotationRequest {
+  Bucket: string;
+  Key: string;
+  VersionId?: string;
+  AnnotationName: string;
+  AnnotationPayload: T.StreamingInputBody;
+  ObjectIfMatch?: string;
+  ChecksumAlgorithm?: ChecksumAlgorithm;
+  ChecksumCRC32?: string;
+  ChecksumCRC32C?: string;
+  ChecksumCRC64NVME?: string;
+  ChecksumSHA1?: string;
+  ChecksumSHA256?: string;
+  ChecksumSHA512?: string;
+  ChecksumMD5?: string;
+  ChecksumXXHASH64?: string;
+  ChecksumXXHASH3?: string;
+  ChecksumXXHASH128?: string;
+  ContentMD5?: string;
+  RequestPayer?: RequestPayer;
+  ExpectedBucketOwner?: string;
+}
+export const PutObjectAnnotationRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      Bucket: S.String.pipe(T.HttpLabel("Bucket"), T.ContextParam("Bucket")),
+      Key: S.String.pipe(T.HttpLabel("Key"), T.ContextParam("Key")),
+      VersionId: S.optional(S.String).pipe(T.HttpQuery("versionId")),
+      AnnotationName: S.String.pipe(T.HttpQuery("annotationName")),
+      AnnotationPayload: T.StreamingInput.pipe(T.HttpPayload()),
+      ObjectIfMatch: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-object-if-match"),
+      ),
+      ChecksumAlgorithm: S.optional(ChecksumAlgorithm).pipe(
+        T.HttpHeader("x-amz-sdk-checksum-algorithm"),
+      ),
+      ChecksumCRC32: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-crc32"),
+      ),
+      ChecksumCRC32C: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-crc32c"),
+      ),
+      ChecksumCRC64NVME: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-crc64nvme"),
+      ),
+      ChecksumSHA1: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-sha1"),
+      ),
+      ChecksumSHA256: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-sha256"),
+      ),
+      ChecksumSHA512: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-sha512"),
+      ),
+      ChecksumMD5: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-md5"),
+      ),
+      ChecksumXXHASH64: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-xxhash64"),
+      ),
+      ChecksumXXHASH3: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-xxhash3"),
+      ),
+      ChecksumXXHASH128: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-xxhash128"),
+      ),
+      ContentMD5: S.optional(S.String).pipe(T.HttpHeader("Content-MD5")),
+      RequestPayer: S.optional(RequestPayer).pipe(
+        T.HttpHeader("x-amz-request-payer"),
+      ),
+      ExpectedBucketOwner: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-expected-bucket-owner"),
+      ),
+    }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "PUT", uri: "/{Bucket}/{Key+}?annotation" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+        T.AwsProtocolsHttpChecksum({
+          requestAlgorithmMember: "ChecksumAlgorithm",
+        }),
+      ),
+    ),
+).annotate({
+  identifier: "PutObjectAnnotationRequest",
+}) as any as S.Schema<PutObjectAnnotationRequest>;
+export interface PutObjectAnnotationOutput {
+  Key?: string;
+  AnnotationName?: string;
+  ObjectVersionId?: string;
+  ETag?: string;
+  ChecksumCRC32?: string;
+  ChecksumCRC32C?: string;
+  ChecksumCRC64NVME?: string;
+  ChecksumSHA1?: string;
+  ChecksumSHA256?: string;
+  ChecksumSHA512?: string;
+  ChecksumMD5?: string;
+  ChecksumXXHASH64?: string;
+  ChecksumXXHASH3?: string;
+  ChecksumXXHASH128?: string;
+  ChecksumType?: ChecksumType;
+  ServerSideEncryption?: ServerSideEncryption;
+  RequestCharged?: RequestCharged;
+}
+export const PutObjectAnnotationOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      Key: S.optional(S.String),
+      AnnotationName: S.optional(S.String),
+      ObjectVersionId: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-object-version-id"),
+      ),
+      ETag: S.optional(S.String).pipe(T.HttpHeader("ETag")),
+      ChecksumCRC32: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-crc32"),
+      ),
+      ChecksumCRC32C: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-crc32c"),
+      ),
+      ChecksumCRC64NVME: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-crc64nvme"),
+      ),
+      ChecksumSHA1: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-sha1"),
+      ),
+      ChecksumSHA256: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-sha256"),
+      ),
+      ChecksumSHA512: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-sha512"),
+      ),
+      ChecksumMD5: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-md5"),
+      ),
+      ChecksumXXHASH64: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-xxhash64"),
+      ),
+      ChecksumXXHASH3: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-xxhash3"),
+      ),
+      ChecksumXXHASH128: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-checksum-xxhash128"),
+      ),
+      ChecksumType: S.optional(ChecksumType).pipe(
+        T.HttpHeader("x-amz-checksum-type"),
+      ),
+      ServerSideEncryption: S.optional(ServerSideEncryption).pipe(
+        T.HttpHeader("x-amz-server-side-encryption"),
+      ),
+      RequestCharged: S.optional(RequestCharged).pipe(
+        T.HttpHeader("x-amz-request-charged"),
+      ),
+    }).pipe(ns),
+).annotate({
+  identifier: "PutObjectAnnotationOutput",
+}) as any as S.Schema<PutObjectAnnotationOutput>;
 export interface PutObjectLegalHoldRequest {
   Bucket: string;
   Key: string;
@@ -11360,6 +12064,67 @@ export const SelectObjectContentOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 ).annotate({
   identifier: "SelectObjectContentOutput",
 }) as any as S.Schema<SelectObjectContentOutput>;
+export interface AnnotationTableConfigurationUpdates {
+  ConfigurationState: AnnotationConfigurationState;
+  EncryptionConfiguration?: MetadataTableEncryptionConfiguration;
+  Role?: string;
+}
+export const AnnotationTableConfigurationUpdates =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      ConfigurationState: AnnotationConfigurationState,
+      EncryptionConfiguration: S.optional(MetadataTableEncryptionConfiguration),
+      Role: S.optional(S.String),
+    }),
+  ).annotate({
+    identifier: "AnnotationTableConfigurationUpdates",
+  }) as any as S.Schema<AnnotationTableConfigurationUpdates>;
+export interface UpdateBucketMetadataAnnotationTableConfigurationRequest {
+  Bucket: string;
+  ContentMD5?: string;
+  ChecksumAlgorithm?: ChecksumAlgorithm;
+  AnnotationTableConfiguration: AnnotationTableConfigurationUpdates;
+  ExpectedBucketOwner?: string;
+}
+export const UpdateBucketMetadataAnnotationTableConfigurationRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      Bucket: S.String.pipe(T.HttpLabel("Bucket"), T.ContextParam("Bucket")),
+      ContentMD5: S.optional(S.String).pipe(T.HttpHeader("Content-MD5")),
+      ChecksumAlgorithm: S.optional(ChecksumAlgorithm).pipe(
+        T.HttpHeader("x-amz-sdk-checksum-algorithm"),
+      ),
+      AnnotationTableConfiguration: AnnotationTableConfigurationUpdates.pipe(
+        T.HttpPayload(),
+        T.XmlName("AnnotationTableConfiguration"),
+      ).annotate({ identifier: "AnnotationTableConfigurationUpdates" }),
+      ExpectedBucketOwner: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-expected-bucket-owner"),
+      ),
+    }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "PUT", uri: "/{Bucket}?metadataAnnotationTable" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+        T.AwsProtocolsHttpChecksum({
+          requestAlgorithmMember: "ChecksumAlgorithm",
+          requestChecksumRequired: true,
+        }),
+        T.StaticContextParams({ UseS3ExpressControlEndpoint: { value: true } }),
+      ),
+    ),
+  ).annotate({
+    identifier: "UpdateBucketMetadataAnnotationTableConfigurationRequest",
+  }) as any as S.Schema<UpdateBucketMetadataAnnotationTableConfigurationRequest>;
+export interface UpdateBucketMetadataAnnotationTableConfigurationResponse {}
+export const UpdateBucketMetadataAnnotationTableConfigurationResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() => S.Struct({}).pipe(ns)).annotate({
+    identifier: "UpdateBucketMetadataAnnotationTableConfigurationResponse",
+  }) as any as S.Schema<UpdateBucketMetadataAnnotationTableConfigurationResponse>;
 export interface InventoryTableConfigurationUpdates {
   ConfigurationState: InventoryConfigurationState;
   EncryptionConfiguration?: MetadataTableEncryptionConfiguration;
@@ -11563,6 +12328,11 @@ export interface UploadPartRequest {
   ChecksumCRC64NVME?: string;
   ChecksumSHA1?: string;
   ChecksumSHA256?: string;
+  ChecksumSHA512?: string;
+  ChecksumMD5?: string;
+  ChecksumXXHASH64?: string;
+  ChecksumXXHASH3?: string;
+  ChecksumXXHASH128?: string;
   Key: string;
   PartNumber: number;
   UploadId: string;
@@ -11595,6 +12365,19 @@ export const UploadPartRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     ),
     ChecksumSHA256: S.optional(S.String).pipe(
       T.HttpHeader("x-amz-checksum-sha256"),
+    ),
+    ChecksumSHA512: S.optional(S.String).pipe(
+      T.HttpHeader("x-amz-checksum-sha512"),
+    ),
+    ChecksumMD5: S.optional(S.String).pipe(T.HttpHeader("x-amz-checksum-md5")),
+    ChecksumXXHASH64: S.optional(S.String).pipe(
+      T.HttpHeader("x-amz-checksum-xxhash64"),
+    ),
+    ChecksumXXHASH3: S.optional(S.String).pipe(
+      T.HttpHeader("x-amz-checksum-xxhash3"),
+    ),
+    ChecksumXXHASH128: S.optional(S.String).pipe(
+      T.HttpHeader("x-amz-checksum-xxhash128"),
     ),
     Key: S.String.pipe(T.HttpLabel("Key"), T.ContextParam("Key")),
     PartNumber: S.Number.pipe(T.HttpQuery("partNumber")),
@@ -11639,6 +12422,11 @@ export interface UploadPartOutput {
   ChecksumCRC64NVME?: string;
   ChecksumSHA1?: string;
   ChecksumSHA256?: string;
+  ChecksumSHA512?: string;
+  ChecksumMD5?: string;
+  ChecksumXXHASH64?: string;
+  ChecksumXXHASH3?: string;
+  ChecksumXXHASH128?: string;
   SSECustomerAlgorithm?: string;
   SSECustomerKeyMD5?: string;
   SSEKMSKeyId?: string | redacted.Redacted<string>;
@@ -11665,6 +12453,19 @@ export const UploadPartOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     ),
     ChecksumSHA256: S.optional(S.String).pipe(
       T.HttpHeader("x-amz-checksum-sha256"),
+    ),
+    ChecksumSHA512: S.optional(S.String).pipe(
+      T.HttpHeader("x-amz-checksum-sha512"),
+    ),
+    ChecksumMD5: S.optional(S.String).pipe(T.HttpHeader("x-amz-checksum-md5")),
+    ChecksumXXHASH64: S.optional(S.String).pipe(
+      T.HttpHeader("x-amz-checksum-xxhash64"),
+    ),
+    ChecksumXXHASH3: S.optional(S.String).pipe(
+      T.HttpHeader("x-amz-checksum-xxhash3"),
+    ),
+    ChecksumXXHASH128: S.optional(S.String).pipe(
+      T.HttpHeader("x-amz-checksum-xxhash128"),
     ),
     SSECustomerAlgorithm: S.optional(S.String).pipe(
       T.HttpHeader("x-amz-server-side-encryption-customer-algorithm"),
@@ -11780,6 +12581,11 @@ export interface CopyPartResult {
   ChecksumCRC64NVME?: string;
   ChecksumSHA1?: string;
   ChecksumSHA256?: string;
+  ChecksumSHA512?: string;
+  ChecksumMD5?: string;
+  ChecksumXXHASH64?: string;
+  ChecksumXXHASH3?: string;
+  ChecksumXXHASH128?: string;
 }
 export const CopyPartResult = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -11790,6 +12596,11 @@ export const CopyPartResult = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     ChecksumCRC64NVME: S.optional(S.String),
     ChecksumSHA1: S.optional(S.String),
     ChecksumSHA256: S.optional(S.String),
+    ChecksumSHA512: S.optional(S.String),
+    ChecksumMD5: S.optional(S.String),
+    ChecksumXXHASH64: S.optional(S.String),
+    ChecksumXXHASH3: S.optional(S.String),
+    ChecksumXXHASH128: S.optional(S.String),
   }),
 ).annotate({ identifier: "CopyPartResult" }) as any as S.Schema<CopyPartResult>;
 export interface UploadPartCopyOutput {
@@ -11852,6 +12663,11 @@ export interface WriteGetObjectResponseRequest {
   ChecksumCRC64NVME?: string;
   ChecksumSHA1?: string;
   ChecksumSHA256?: string;
+  ChecksumSHA512?: string;
+  ChecksumMD5?: string;
+  ChecksumXXHASH64?: string;
+  ChecksumXXHASH3?: string;
+  ChecksumXXHASH128?: string;
   DeleteMarker?: boolean;
   ETag?: string;
   Expires?: string;
@@ -11927,6 +12743,21 @@ export const WriteGetObjectResponseRequest =
       ),
       ChecksumSHA256: S.optional(S.String).pipe(
         T.HttpHeader("x-amz-fwd-header-x-amz-checksum-sha256"),
+      ),
+      ChecksumSHA512: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-fwd-header-x-amz-checksum-sha512"),
+      ),
+      ChecksumMD5: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-fwd-header-x-amz-checksum-md5"),
+      ),
+      ChecksumXXHASH64: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-fwd-header-x-amz-checksum-xxhash64"),
+      ),
+      ChecksumXXHASH3: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-fwd-header-x-amz-checksum-xxhash3"),
+      ),
+      ChecksumXXHASH128: S.optional(S.String).pipe(
+        T.HttpHeader("x-amz-fwd-header-x-amz-checksum-xxhash128"),
       ),
       DeleteMarker: S.optional(S.Boolean).pipe(
         T.HttpHeader("x-amz-fwd-header-x-amz-delete-marker"),
@@ -12081,7 +12912,7 @@ export class InvalidLocationConstraint extends S.TaggedErrorClass<InvalidLocatio
 export class BucketNotEmpty extends S.TaggedErrorClass<BucketNotEmpty>()(
   "BucketNotEmpty",
   {},
-).pipe(C.withConflictError, C.withRetryableError) {}
+).pipe(C.withConflictError) {}
 export class SignatureDoesNotMatch extends S.TaggedErrorClass<SignatureDoesNotMatch>()(
   "SignatureDoesNotMatch",
   {},
@@ -12089,7 +12920,7 @@ export class SignatureDoesNotMatch extends S.TaggedErrorClass<SignatureDoesNotMa
 export class NoSuchKey extends S.TaggedErrorClass<NoSuchKey>()(
   "NoSuchKey",
   {},
-) {}
+).pipe(C.withBadRequestError) {}
 export class NoSuchConfiguration extends S.TaggedErrorClass<NoSuchConfiguration>()(
   "NoSuchConfiguration",
   {},
@@ -12133,6 +12964,10 @@ export class InvalidObjectState extends S.TaggedErrorClass<InvalidObjectState>()
     AccessTier: S.optional(IntelligentTieringAccessTier),
   },
 ).pipe(C.withAuthError) {}
+export class NoSuchAnnotation extends S.TaggedErrorClass<NoSuchAnnotation>()(
+  "NoSuchAnnotation",
+  {},
+).pipe(C.withBadRequestError) {}
 export class InvalidRequest extends S.TaggedErrorClass<InvalidRequest>()(
   "InvalidRequest",
   {},
@@ -12149,6 +12984,10 @@ export class RequestError extends S.TaggedErrorClass<RequestError>()(
   "RequestError",
   {},
 ) {}
+export class InvalidPrefix extends S.TaggedErrorClass<InvalidPrefix>()(
+  "InvalidPrefix",
+  {},
+).pipe(C.withBadRequestError) {}
 export class MalformedXML extends S.TaggedErrorClass<MalformedXML>()(
   "MalformedXML",
   {},
@@ -12175,6 +13014,30 @@ export class InvalidWriteOffset extends S.TaggedErrorClass<InvalidWriteOffset>()
 ).pipe(C.withBadRequestError) {}
 export class TooManyParts extends S.TaggedErrorClass<TooManyParts>()(
   "TooManyParts",
+  {},
+).pipe(C.withBadRequestError) {}
+export class PreconditionFailed extends S.TaggedErrorClass<PreconditionFailed>()(
+  "PreconditionFailed",
+  {},
+).pipe(C.withConflictError) {}
+export class ConditionalRequestConflict extends S.TaggedErrorClass<ConditionalRequestConflict>()(
+  "ConditionalRequestConflict",
+  {},
+).pipe(C.withConflictError, C.withRetryableError) {}
+export class AnnotationLimitExceeded extends S.TaggedErrorClass<AnnotationLimitExceeded>()(
+  "AnnotationLimitExceeded",
+  {},
+).pipe(C.withBadRequestError, C.withThrottlingError) {}
+export class AnnotationNameTooLong extends S.TaggedErrorClass<AnnotationNameTooLong>()(
+  "AnnotationNameTooLong",
+  {},
+).pipe(C.withBadRequestError) {}
+export class InvalidAnnotationName extends S.TaggedErrorClass<InvalidAnnotationName>()(
+  "InvalidAnnotationName",
+  {},
+).pipe(C.withBadRequestError) {}
+export class UnsupportedMediaType extends S.TaggedErrorClass<UnsupportedMediaType>()(
+  "UnsupportedMediaType",
   {},
 ).pipe(C.withBadRequestError) {}
 export class InvalidBucketState extends S.TaggedErrorClass<InvalidBucketState>()(
@@ -12267,6 +13130,7 @@ export const abortMultipartUpload: API.OperationMethod<
     NoSuchBucket,
     NotFound,
   ],
+  operationName: "AbortMultipartUpload",
 }));
 export type CompleteMultipartUploadError = CommonErrors;
 /**
@@ -12391,6 +13255,7 @@ export const completeMultipartUpload: API.OperationMethod<
   input: CompleteMultipartUploadRequest,
   output: CompleteMultipartUploadOutput,
   errors: [],
+  operationName: "CompleteMultipartUpload",
 }));
 export type CopyObjectError =
   | ObjectNotInActiveTierError
@@ -12575,6 +13440,7 @@ export const copyObject: API.OperationMethod<
     NoSuchBucket,
     PermanentRedirect,
   ],
+  operationName: "CopyObject",
 }));
 export type CreateBucketError =
   | BucketAlreadyExists
@@ -12718,6 +13584,7 @@ export const createBucket: API.OperationMethod<
     InvalidBucketName,
     InvalidLocationConstraint,
   ],
+  operationName: "CreateBucket",
 }));
 export type CreateBucketMetadataConfigurationError = CommonErrors;
 /**
@@ -12760,9 +13627,14 @@ export type CreateBucketMetadataConfigurationError = CommonErrors;
  *
  * - `s3tables:PutTablePolicy`
  *
+ * - `s3tables:PutTableBucketPolicy`
+ *
  * - `s3tables:PutTableEncryption`
  *
  * - `kms:DescribeKey`
+ *
+ * - `iam:PassRole` - required if you include an
+ * `AnnotationTableConfiguration` with an IAM role.
  *
  * The following operations are related to `CreateBucketMetadataConfiguration`:
  *
@@ -12773,6 +13645,13 @@ export type CreateBucketMetadataConfigurationError = CommonErrors;
  * - UpdateBucketMetadataInventoryTableConfiguration
  *
  * - UpdateBucketMetadataJournalTableConfiguration
+ *
+ * - UpdateBucketMetadataAnnotationTableConfiguration
+ *
+ * If you include an `AnnotationTableConfiguration` with an IAM role, the role must
+ * have a trust policy that allows the Amazon S3 metadata service to assume it, and a permissions policy
+ * that grants the actions needed to read annotations from your bucket. The following examples show
+ * a trust policy and a permissions policy that you can adapt for your bucket and account.
  *
  * You must URL encode any signed header values that contain spaces. For example, if your header value is `my file.txt`, containing two spaces after `my`, you must URL encode this value to `my%20%20file.txt`.
  */
@@ -12785,6 +13664,7 @@ export const createBucketMetadataConfiguration: API.OperationMethod<
   input: CreateBucketMetadataConfigurationRequest,
   output: CreateBucketMetadataConfigurationResponse,
   errors: [],
+  operationName: "CreateBucketMetadataConfiguration",
 }));
 export type CreateBucketMetadataTableConfigurationError = CommonErrors;
 /**
@@ -12844,6 +13724,7 @@ export const createBucketMetadataTableConfiguration: API.OperationMethod<
   input: CreateBucketMetadataTableConfigurationRequest,
   output: CreateBucketMetadataTableConfigurationResponse,
   errors: [],
+  operationName: "CreateBucketMetadataTableConfiguration",
 }));
 export type CreateMultipartUploadError =
   | RequestLimitExceeded
@@ -13034,6 +13915,7 @@ export const createMultipartUpload: API.OperationMethod<
   input: CreateMultipartUploadRequest,
   output: CreateMultipartUploadOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, PermanentRedirect],
+  operationName: "CreateMultipartUpload",
 }));
 export type CreateSessionError = NoSuchBucket | CommonErrors;
 /**
@@ -13140,6 +14022,7 @@ export const createSession: API.OperationMethod<
   input: CreateSessionRequest,
   output: CreateSessionOutput,
   errors: [NoSuchBucket],
+  operationName: "CreateSession",
 }));
 export type DeleteBucketError =
   | RequestLimitExceeded
@@ -13198,6 +14081,7 @@ export const deleteBucket: API.OperationMethod<
     NoSuchBucket,
     PermanentRedirect,
   ],
+  operationName: "DeleteBucket",
 }));
 export type DeleteBucketAnalyticsConfigurationError =
   | RequestLimitExceeded
@@ -13237,6 +14121,7 @@ export const deleteBucketAnalyticsConfiguration: API.OperationMethod<
   input: DeleteBucketAnalyticsConfigurationRequest,
   output: DeleteBucketAnalyticsConfigurationResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "DeleteBucketAnalyticsConfiguration",
 }));
 export type DeleteBucketCorsError =
   | RequestLimitExceeded
@@ -13271,6 +14156,7 @@ export const deleteBucketCors: API.OperationMethod<
   input: DeleteBucketCorsRequest,
   output: DeleteBucketCorsResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "DeleteBucketCors",
 }));
 export type DeleteBucketEncryptionError =
   | RequestLimitExceeded
@@ -13324,6 +14210,7 @@ export const deleteBucketEncryption: API.OperationMethod<
   input: DeleteBucketEncryptionRequest,
   output: DeleteBucketEncryptionResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "DeleteBucketEncryption",
 }));
 export type DeleteBucketIntelligentTieringConfigurationError =
   | RequestLimitExceeded
@@ -13360,6 +14247,7 @@ export const deleteBucketIntelligentTieringConfiguration: API.OperationMethod<
   input: DeleteBucketIntelligentTieringConfigurationRequest,
   output: DeleteBucketIntelligentTieringConfigurationResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "DeleteBucketIntelligentTieringConfiguration",
 }));
 export type DeleteBucketInventoryConfigurationError =
   | RequestLimitExceeded
@@ -13367,14 +14255,34 @@ export type DeleteBucketInventoryConfigurationError =
   | NoSuchBucket
   | CommonErrors;
 /**
- * This operation is not supported for directory buckets.
- *
  * Deletes an S3 Inventory configuration (identified by the inventory ID) from the bucket.
+ *
+ * **Directory buckets ** - For directory buckets, you must make requests for this API operation to the Regional endpoint. These endpoints support path-style requests in the format https://s3express-control.*region-code*.amazonaws.com/*bucket-name*
+ * . Virtual-hosted-style requests aren't supported.
+ * For more information about endpoints in Availability Zones, see Regional and Zonal endpoints for directory buckets in Availability Zones in the
+ * *Amazon S3 User Guide*. For more information about endpoints in Local Zones, see Concepts for directory buckets in Local Zones in the
+ * *Amazon S3 User Guide*.
+ *
+ * ### Permissions
  *
  * To use this operation, you must have permissions to perform the
  * `s3:PutInventoryConfiguration` action. The bucket owner has this permission by default. The
  * bucket owner can grant this permission to others. For more information about permissions, see Permissions Related to Bucket Subresource Operations and Managing Access Permissions to Your Amazon S3
  * Resources.
+ *
+ * - **General purpose bucket permissions** - The
+ * `s3:PutInventoryConfiguration` permission is required in a policy. For more information
+ * about general purpose buckets permissions, see Using Bucket Policies and User
+ * Policies in the *Amazon S3 User Guide*.
+ *
+ * - **Directory bucket permissions** - To grant access to
+ * this API operation, you must have the `s3express:PutInventoryConfiguration` permission in
+ * an IAM identity-based policy instead of a bucket policy.
+ * For more information about directory bucket policies and permissions, see Amazon Web Services Identity and Access Management (IAM) for S3 Express One Zone in the *Amazon S3 User Guide*.
+ *
+ * ### HTTP Host header syntax
+ *
+ * **Directory buckets ** - The HTTP Host header syntax is `s3express-control.*region-code*.amazonaws.com`.
  *
  * For information about the Amazon S3 inventory feature, see Amazon S3 Inventory.
  *
@@ -13400,6 +14308,7 @@ export const deleteBucketInventoryConfiguration: API.OperationMethod<
   input: DeleteBucketInventoryConfigurationRequest,
   output: DeleteBucketInventoryConfigurationResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "DeleteBucketInventoryConfiguration",
 }));
 export type DeleteBucketLifecycleError =
   | RequestLimitExceeded
@@ -13464,6 +14373,7 @@ export const deleteBucketLifecycle: API.OperationMethod<
   input: DeleteBucketLifecycleRequest,
   output: DeleteBucketLifecycleResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "DeleteBucketLifecycle",
 }));
 export type DeleteBucketMetadataConfigurationError =
   | RequestLimitExceeded
@@ -13510,6 +14420,7 @@ export const deleteBucketMetadataConfiguration: API.OperationMethod<
   input: DeleteBucketMetadataConfigurationRequest,
   output: DeleteBucketMetadataConfigurationResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "DeleteBucketMetadataConfiguration",
 }));
 export type DeleteBucketMetadataTableConfigurationError =
   | RequestLimitExceeded
@@ -13562,6 +14473,7 @@ export const deleteBucketMetadataTableConfiguration: API.OperationMethod<
   input: DeleteBucketMetadataTableConfigurationRequest,
   output: DeleteBucketMetadataTableConfigurationResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "DeleteBucketMetadataTableConfiguration",
 }));
 export type DeleteBucketMetricsConfigurationError =
   | RequestLimitExceeded
@@ -13623,6 +14535,7 @@ export const deleteBucketMetricsConfiguration: API.OperationMethod<
   input: DeleteBucketMetricsConfigurationRequest,
   output: DeleteBucketMetricsConfigurationResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "DeleteBucketMetricsConfiguration",
 }));
 export type DeleteBucketOwnershipControlsError =
   | RequestLimitExceeded
@@ -13656,6 +14569,7 @@ export const deleteBucketOwnershipControls: API.OperationMethod<
   input: DeleteBucketOwnershipControlsRequest,
   output: DeleteBucketOwnershipControlsResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "DeleteBucketOwnershipControls",
 }));
 export type DeleteBucketPolicyError =
   | RequestLimitExceeded
@@ -13728,6 +14642,7 @@ export const deleteBucketPolicy: API.OperationMethod<
     PermanentRedirect,
     SignatureDoesNotMatch,
   ],
+  operationName: "DeleteBucketPolicy",
 }));
 export type DeleteBucketReplicationError =
   | RequestLimitExceeded
@@ -13766,6 +14681,7 @@ export const deleteBucketReplication: API.OperationMethod<
   input: DeleteBucketReplicationRequest,
   output: DeleteBucketReplicationResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "DeleteBucketReplication",
 }));
 export type DeleteBucketTaggingError =
   | RequestLimitExceeded
@@ -13797,6 +14713,7 @@ export const deleteBucketTagging: API.OperationMethod<
   input: DeleteBucketTaggingRequest,
   output: DeleteBucketTaggingResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "DeleteBucketTagging",
 }));
 export type DeleteBucketWebsiteError =
   | RequestLimitExceeded
@@ -13836,6 +14753,7 @@ export const deleteBucketWebsite: API.OperationMethod<
   input: DeleteBucketWebsiteRequest,
   output: DeleteBucketWebsiteResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "DeleteBucketWebsite",
 }));
 export type DeleteObjectError =
   | RequestLimitExceeded
@@ -13949,6 +14867,46 @@ export const deleteObject: API.OperationMethod<
     PermanentRedirect,
     NotFound,
   ],
+  operationName: "DeleteObject",
+}));
+export type DeleteObjectAnnotationError =
+  | NoSuchBucket
+  | NoSuchKey
+  | CommonErrors;
+/**
+ * Deletes a specific annotation from an Amazon S3 object. Use the `x-amz-object-if-match`
+ * header to perform a conditional delete that only succeeds if the object's ETag matches the
+ * provided value, preventing race conditions during concurrent updates.
+ *
+ * Deleting an annotation is permanent. Annotations are not independently versioned, so there is no
+ * delete marker or way to recover a deleted annotation.
+ *
+ * To use this operation, you must have the `s3:DeleteObjectAnnotation` permission. If
+ * the object is protected by Object Lock in governance mode, you must also include the
+ * `x-amz-bypass-governance-retention` header.
+ *
+ * Annotations are not supported by the following features: S3 Inventory Reports,
+ * API Gateway, S3 Storage Lens, Amazon S3 File Gateway, Amazon FSx, S3 on Outposts, and
+ * S3 Express One Zone (directory buckets).
+ *
+ * The following operations are related to `DeleteObjectAnnotation`:
+ *
+ * - PutObjectAnnotation
+ *
+ * - GetObjectAnnotation
+ *
+ * - ListObjectAnnotations
+ */
+export const deleteObjectAnnotation: API.OperationMethod<
+  DeleteObjectAnnotationRequest,
+  DeleteObjectAnnotationOutput,
+  DeleteObjectAnnotationError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: DeleteObjectAnnotationRequest,
+  output: DeleteObjectAnnotationOutput,
+  errors: [NoSuchBucket, NoSuchKey],
+  operationName: "DeleteObjectAnnotation",
 }));
 export type DeleteObjectsError =
   | RequestLimitExceeded
@@ -14057,6 +15015,7 @@ export const deleteObjects: API.OperationMethod<
   input: DeleteObjectsRequest,
   output: DeleteObjectsOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, PermanentRedirect],
+  operationName: "DeleteObjects",
 }));
 export type DeleteObjectTaggingError =
   | RequestLimitExceeded
@@ -14094,6 +15053,7 @@ export const deleteObjectTagging: API.OperationMethod<
   input: DeleteObjectTaggingRequest,
   output: DeleteObjectTaggingOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchKey, PermanentRedirect],
+  operationName: "DeleteObjectTagging",
 }));
 export type DeletePublicAccessBlockError =
   | RequestLimitExceeded
@@ -14132,6 +15092,7 @@ export const deletePublicAccessBlock: API.OperationMethod<
   input: DeletePublicAccessBlockRequest,
   output: DeletePublicAccessBlockResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "DeletePublicAccessBlock",
 }));
 export type GetBucketAbacError =
   | RequestLimitExceeded
@@ -14150,6 +15111,7 @@ export const getBucketAbac: API.OperationMethod<
   input: GetBucketAbacRequest,
   output: GetBucketAbacOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "GetBucketAbac",
 }));
 export type GetBucketAccelerateConfigurationError =
   | RequestLimitExceeded
@@ -14195,6 +15157,7 @@ export const getBucketAccelerateConfiguration: API.OperationMethod<
   input: GetBucketAccelerateConfigurationRequest,
   output: GetBucketAccelerateConfigurationOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, PermanentRedirect],
+  operationName: "GetBucketAccelerateConfiguration",
 }));
 export type GetBucketAclError =
   | RequestLimitExceeded
@@ -14238,6 +15201,7 @@ export const getBucketAcl: API.OperationMethod<
   input: GetBucketAclRequest,
   output: GetBucketAclOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, PermanentRedirect],
+  operationName: "GetBucketAcl",
 }));
 export type GetBucketAnalyticsConfigurationError =
   | RequestLimitExceeded
@@ -14278,6 +15242,7 @@ export const getBucketAnalyticsConfiguration: API.OperationMethod<
   input: GetBucketAnalyticsConfigurationRequest,
   output: GetBucketAnalyticsConfigurationOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, NoSuchConfiguration],
+  operationName: "GetBucketAnalyticsConfiguration",
 }));
 export type GetBucketCorsError =
   | RequestLimitExceeded
@@ -14327,6 +15292,7 @@ export const getBucketCors: API.OperationMethod<
     NoSuchCORSConfiguration,
     PermanentRedirect,
   ],
+  operationName: "GetBucketCors",
 }));
 export type GetBucketEncryptionError =
   | RequestLimitExceeded
@@ -14388,6 +15354,7 @@ export const getBucketEncryption: API.OperationMethod<
     ParseError,
     PermanentRedirect,
   ],
+  operationName: "GetBucketEncryption",
 }));
 export type GetBucketIntelligentTieringConfigurationError =
   | RequestLimitExceeded
@@ -14425,6 +15392,7 @@ export const getBucketIntelligentTieringConfiguration: API.OperationMethod<
   input: GetBucketIntelligentTieringConfigurationRequest,
   output: GetBucketIntelligentTieringConfigurationOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, NoSuchConfiguration],
+  operationName: "GetBucketIntelligentTieringConfiguration",
 }));
 export type GetBucketInventoryConfigurationError =
   | RequestLimitExceeded
@@ -14433,15 +15401,35 @@ export type GetBucketInventoryConfigurationError =
   | NoSuchConfiguration
   | CommonErrors;
 /**
- * This operation is not supported for directory buckets.
- *
  * Returns an S3 Inventory configuration (identified by the inventory configuration ID) from the
  * bucket.
  *
+ * **Directory buckets ** - For directory buckets, you must make requests for this API operation to the Regional endpoint. These endpoints support path-style requests in the format https://s3express-control.*region-code*.amazonaws.com/*bucket-name*
+ * . Virtual-hosted-style requests aren't supported.
+ * For more information about endpoints in Availability Zones, see Regional and Zonal endpoints for directory buckets in Availability Zones in the
+ * *Amazon S3 User Guide*. For more information about endpoints in Local Zones, see Concepts for directory buckets in Local Zones in the
+ * *Amazon S3 User Guide*.
+ *
+ * ### Permissions
+ *
  * To use this operation, you must have permissions to perform the
- * `s3:GetInventoryConfiguration` action. The bucket owner has this permission by default and
- * can grant this permission to others. For more information about permissions, see Permissions Related to Bucket Subresource Operations and Managing Access Permissions to Your Amazon S3
+ * `s3:GetInventoryConfiguration` action. The bucket owner has this permission by default. The
+ * bucket owner can grant this permission to others. For more information about permissions, see Permissions Related to Bucket Subresource Operations and Managing Access Permissions to Your Amazon S3
  * Resources.
+ *
+ * - **General purpose bucket permissions** - The
+ * `s3:GetInventoryConfiguration` permission is required in a policy. For more information
+ * about general purpose buckets permissions, see Using Bucket Policies and User
+ * Policies in the *Amazon S3 User Guide*.
+ *
+ * - **Directory bucket permissions** - To grant access to
+ * this API operation, you must have the `s3express:GetInventoryConfiguration` permission in
+ * an IAM identity-based policy instead of a bucket policy.
+ * For more information about directory bucket policies and permissions, see Amazon Web Services Identity and Access Management (IAM) for S3 Express One Zone in the *Amazon S3 User Guide*.
+ *
+ * ### HTTP Host header syntax
+ *
+ * **Directory buckets ** - The HTTP Host header syntax is `s3express-control.*region-code*.amazonaws.com`.
  *
  * For information about the Amazon S3 inventory feature, see Amazon S3 Inventory.
  *
@@ -14464,6 +15452,7 @@ export const getBucketInventoryConfiguration: API.OperationMethod<
   input: GetBucketInventoryConfigurationRequest,
   output: GetBucketInventoryConfigurationOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, NoSuchConfiguration],
+  operationName: "GetBucketInventoryConfiguration",
 }));
 export type GetBucketLifecycleConfigurationError =
   | RequestLimitExceeded
@@ -14553,6 +15542,7 @@ export const getBucketLifecycleConfiguration: API.OperationMethod<
     NoSuchLifecycleConfiguration,
     PermanentRedirect,
   ],
+  operationName: "GetBucketLifecycleConfiguration",
 }));
 export type GetBucketLocationError =
   | RequestLimitExceeded
@@ -14603,6 +15593,7 @@ export const getBucketLocation: API.OperationMethod<
   input: GetBucketLocationRequest,
   output: GetBucketLocationOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "GetBucketLocation",
 }));
 export type GetBucketLoggingError =
   | RequestLimitExceeded
@@ -14633,6 +15624,7 @@ export const getBucketLogging: API.OperationMethod<
   input: GetBucketLoggingRequest,
   output: GetBucketLoggingOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, PermanentRedirect],
+  operationName: "GetBucketLogging",
 }));
 export type GetBucketMetadataConfigurationError =
   | RequestLimitExceeded
@@ -14678,6 +15670,7 @@ export const getBucketMetadataConfiguration: API.OperationMethod<
   input: GetBucketMetadataConfigurationRequest,
   output: GetBucketMetadataConfigurationOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "GetBucketMetadataConfiguration",
 }));
 export type GetBucketMetadataTableConfigurationError =
   | RequestLimitExceeded
@@ -14729,6 +15722,7 @@ export const getBucketMetadataTableConfiguration: API.OperationMethod<
   input: GetBucketMetadataTableConfigurationRequest,
   output: GetBucketMetadataTableConfigurationOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "GetBucketMetadataTableConfiguration",
 }));
 export type GetBucketMetricsConfigurationError =
   | RequestLimitExceeded
@@ -14792,6 +15786,7 @@ export const getBucketMetricsConfiguration: API.OperationMethod<
   input: GetBucketMetricsConfigurationRequest,
   output: GetBucketMetricsConfigurationOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, NoSuchConfiguration],
+  operationName: "GetBucketMetricsConfiguration",
 }));
 export type GetBucketNotificationConfigurationError =
   | RequestLimitExceeded
@@ -14836,6 +15831,7 @@ export const getBucketNotificationConfiguration: API.OperationMethod<
   input: GetBucketNotificationConfigurationRequest,
   output: NotificationConfiguration,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "GetBucketNotificationConfiguration",
 }));
 export type GetBucketOwnershipControlsError =
   | RequestLimitExceeded
@@ -14885,6 +15881,7 @@ export const getBucketOwnershipControls: API.OperationMethod<
     NoSuchBucket,
     OwnershipControlsNotFoundError,
   ],
+  operationName: "GetBucketOwnershipControls",
 }));
 export type GetBucketPolicyError =
   | RequestLimitExceeded
@@ -14965,6 +15962,7 @@ export const getBucketPolicy: API.OperationMethod<
     PermanentRedirect,
     SignatureDoesNotMatch,
   ],
+  operationName: "GetBucketPolicy",
 }));
 export type GetBucketPolicyStatusError =
   | RequestLimitExceeded
@@ -15003,6 +16001,7 @@ export const getBucketPolicyStatus: API.OperationMethod<
   input: GetBucketPolicyStatusRequest,
   output: GetBucketPolicyStatusOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, PermanentRedirect],
+  operationName: "GetBucketPolicyStatus",
 }));
 export type GetBucketReplicationError =
   | RequestLimitExceeded
@@ -15054,6 +16053,7 @@ export const getBucketReplication: API.OperationMethod<
     NoSuchBucket,
     ReplicationConfigurationNotFoundError,
   ],
+  operationName: "GetBucketReplication",
 }));
 export type GetBucketRequestPaymentError =
   | RequestLimitExceeded
@@ -15082,6 +16082,7 @@ export const getBucketRequestPayment: API.OperationMethod<
   input: GetBucketRequestPaymentRequest,
   output: GetBucketRequestPaymentOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, PermanentRedirect],
+  operationName: "GetBucketRequestPayment",
 }));
 export type GetBucketTaggingError =
   | RequestLimitExceeded
@@ -15127,6 +16128,7 @@ export const getBucketTagging: API.OperationMethod<
     NoSuchTagSet,
     PermanentRedirect,
   ],
+  operationName: "GetBucketTagging",
 }));
 export type GetBucketVersioningError =
   | RequestLimitExceeded
@@ -15164,6 +16166,7 @@ export const getBucketVersioning: API.OperationMethod<
   input: GetBucketVersioningRequest,
   output: GetBucketVersioningOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, PermanentRedirect],
+  operationName: "GetBucketVersioning",
 }));
 export type GetBucketWebsiteError =
   | RequestLimitExceeded
@@ -15206,6 +16209,7 @@ export const getBucketWebsite: API.OperationMethod<
     NoSuchWebsiteConfiguration,
     PermanentRedirect,
   ],
+  operationName: "GetBucketWebsite",
 }));
 export type GetObjectError =
   | InvalidObjectState
@@ -15363,6 +16367,7 @@ export const getObject: API.OperationMethod<
     NoSuchBucket,
     PermanentRedirect,
   ],
+  operationName: "GetObject",
 }));
 export type GetObjectAclError =
   | NoSuchKey
@@ -15416,6 +16421,42 @@ export const getObjectAcl: API.OperationMethod<
     NoSuchBucket,
     PermanentRedirect,
   ],
+  operationName: "GetObjectAcl",
+}));
+export type GetObjectAnnotationError =
+  | NoSuchAnnotation
+  | NoSuchBucket
+  | NoSuchKey
+  | CommonErrors;
+/**
+ * Retrieves an annotation from an Amazon S3 object. To use this operation, you must have the
+ * `s3:GetObjectAnnotation` permission.
+ *
+ * If checksum mode is enabled via the `x-amz-checksum-mode` header, Amazon S3
+ * returns the stored checksum in the response headers for client-side validation.
+ *
+ * Annotations are not supported by the following features: S3 Inventory Reports,
+ * API Gateway, S3 Storage Lens, Amazon S3 File Gateway, Amazon FSx, S3 on Outposts, and
+ * S3 Express One Zone (directory buckets).
+ *
+ * The following operations are related to `GetObjectAnnotation`:
+ *
+ * - PutObjectAnnotation
+ *
+ * - ListObjectAnnotations
+ *
+ * - DeleteObjectAnnotation
+ */
+export const getObjectAnnotation: API.OperationMethod<
+  GetObjectAnnotationRequest,
+  GetObjectAnnotationOutput,
+  GetObjectAnnotationError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: GetObjectAnnotationRequest,
+  output: GetObjectAnnotationOutput,
+  errors: [NoSuchAnnotation, NoSuchBucket, NoSuchKey],
+  operationName: "GetObjectAnnotation",
 }));
 export type GetObjectAttributesError = NoSuchKey | CommonErrors;
 /**
@@ -15567,6 +16608,7 @@ export const getObjectAttributes: API.OperationMethod<
   input: GetObjectAttributesRequest,
   output: GetObjectAttributesOutput,
   errors: [NoSuchKey],
+  operationName: "GetObjectAttributes",
 }));
 export type GetObjectLegalHoldError =
   | RequestLimitExceeded
@@ -15595,6 +16637,7 @@ export const getObjectLegalHold: API.OperationMethod<
   input: GetObjectLegalHoldRequest,
   output: GetObjectLegalHoldOutput,
   errors: [RequestLimitExceeded, SlowDown, InvalidRequest],
+  operationName: "GetObjectLegalHold",
 }));
 export type GetObjectLockConfigurationError =
   | RequestLimitExceeded
@@ -15631,6 +16674,7 @@ export const getObjectLockConfiguration: API.OperationMethod<
     ObjectLockConfigurationNotFoundError,
     PermanentRedirect,
   ],
+  operationName: "GetObjectLockConfiguration",
 }));
 export type GetObjectRetentionError =
   | RequestLimitExceeded
@@ -15659,6 +16703,7 @@ export const getObjectRetention: API.OperationMethod<
   input: GetObjectRetentionRequest,
   output: GetObjectRetentionOutput,
   errors: [RequestLimitExceeded, SlowDown, InvalidRequest],
+  operationName: "GetObjectRetention",
 }));
 export type GetObjectTaggingError =
   | RequestLimitExceeded
@@ -15708,6 +16753,7 @@ export const getObjectTagging: API.OperationMethod<
     NoSuchKey,
     PermanentRedirect,
   ],
+  operationName: "GetObjectTagging",
 }));
 export type GetObjectTorrentError = CommonErrors;
 /**
@@ -15738,6 +16784,7 @@ export const getObjectTorrent: API.OperationMethod<
   input: GetObjectTorrentRequest,
   output: GetObjectTorrentOutput,
   errors: [],
+  operationName: "GetObjectTorrent",
 }));
 export type GetPublicAccessBlockError =
   | RequestLimitExceeded
@@ -15794,6 +16841,7 @@ export const getPublicAccessBlock: API.OperationMethod<
     NoSuchPublicAccessBlockConfiguration,
     PermanentRedirect,
   ],
+  operationName: "GetPublicAccessBlock",
 }));
 export type HeadBucketError =
   | NotFound
@@ -15874,6 +16922,7 @@ export const headBucket: API.OperationMethod<
   input: HeadBucketRequest,
   output: HeadBucketOutput,
   errors: [NotFound, RequestLimitExceeded, SlowDown, ParseError, NoSuchBucket],
+  operationName: "HeadBucket",
 }));
 export type HeadObjectError =
   | NotFound
@@ -15999,6 +17048,7 @@ export const headObject: API.OperationMethod<
   input: HeadObjectRequest,
   output: HeadObjectOutput,
   errors: [NotFound, RequestLimitExceeded, SlowDown, ParseError, NoSuchBucket],
+  operationName: "HeadObject",
 }));
 export type ListBucketAnalyticsConfigurationsError =
   | RequestLimitExceeded
@@ -16046,6 +17096,7 @@ export const listBucketAnalyticsConfigurations: API.OperationMethod<
   input: ListBucketAnalyticsConfigurationsRequest,
   output: ListBucketAnalyticsConfigurationsOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "ListBucketAnalyticsConfigurations",
 }));
 export type ListBucketIntelligentTieringConfigurationsError =
   | RequestLimitExceeded
@@ -16082,6 +17133,7 @@ export const listBucketIntelligentTieringConfigurations: API.OperationMethod<
   input: ListBucketIntelligentTieringConfigurationsRequest,
   output: ListBucketIntelligentTieringConfigurationsOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "ListBucketIntelligentTieringConfigurations",
 }));
 export type ListBucketInventoryConfigurationsError =
   | RequestLimitExceeded
@@ -16089,8 +17141,6 @@ export type ListBucketInventoryConfigurationsError =
   | NoSuchBucket
   | CommonErrors;
 /**
- * This operation is not supported for directory buckets.
- *
  * Returns a list of S3 Inventory configurations for the bucket. You can have up to 1,000 inventory
  * configurations per bucket.
  *
@@ -16101,10 +17151,32 @@ export type ListBucketInventoryConfigurationsError =
  * You use the `NextContinuationToken` value to continue the pagination of the list by passing
  * the value in continuation-token in the request to `GET` the next page.
  *
+ * **Directory buckets ** - For directory buckets, you must make requests for this API operation to the Regional endpoint. These endpoints support path-style requests in the format https://s3express-control.*region-code*.amazonaws.com/*bucket-name*
+ * . Virtual-hosted-style requests aren't supported.
+ * For more information about endpoints in Availability Zones, see Regional and Zonal endpoints for directory buckets in Availability Zones in the
+ * *Amazon S3 User Guide*. For more information about endpoints in Local Zones, see Concepts for directory buckets in Local Zones in the
+ * *Amazon S3 User Guide*.
+ *
+ * ### Permissions
+ *
  * To use this operation, you must have permissions to perform the
  * `s3:GetInventoryConfiguration` action. The bucket owner has this permission by default. The
  * bucket owner can grant this permission to others. For more information about permissions, see Permissions Related to Bucket Subresource Operations and Managing Access Permissions to Your Amazon S3
  * Resources.
+ *
+ * - **General purpose bucket permissions** - The
+ * `s3:GetInventoryConfiguration` permission is required in a policy. For more information
+ * about general purpose buckets permissions, see Using Bucket Policies and User
+ * Policies in the *Amazon S3 User Guide*.
+ *
+ * - **Directory bucket permissions** - To grant access to
+ * this API operation, you must have the `s3express:GetInventoryConfiguration` permission in
+ * an IAM identity-based policy instead of a bucket policy.
+ * For more information about directory bucket policies and permissions, see Amazon Web Services Identity and Access Management (IAM) for S3 Express One Zone in the *Amazon S3 User Guide*.
+ *
+ * ### HTTP Host header syntax
+ *
+ * **Directory buckets ** - The HTTP Host header syntax is `s3express-control.*region-code*.amazonaws.com`.
  *
  * For information about the Amazon S3 inventory feature, see Amazon S3 Inventory
  *
@@ -16127,6 +17199,7 @@ export const listBucketInventoryConfigurations: API.OperationMethod<
   input: ListBucketInventoryConfigurationsRequest,
   output: ListBucketInventoryConfigurationsOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "ListBucketInventoryConfigurations",
 }));
 export type ListBucketMetricsConfigurationsError =
   | RequestLimitExceeded
@@ -16194,6 +17267,7 @@ export const listBucketMetricsConfigurations: API.OperationMethod<
   input: ListBucketMetricsConfigurationsRequest,
   output: ListBucketMetricsConfigurationsOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "ListBucketMetricsConfigurations",
 }));
 export type ListBucketsError =
   | RequestLimitExceeded
@@ -16242,6 +17316,7 @@ export const listBuckets: API.OperationMethod<
   input: ListBucketsRequest,
   output: ListBucketsOutput,
   errors: [RequestLimitExceeded, SlowDown, RequestError],
+  operationName: "ListBuckets",
   pagination: {
     inputToken: "ContinuationToken",
     outputToken: "ContinuationToken",
@@ -16301,6 +17376,7 @@ export const listDirectoryBuckets: API.OperationMethod<
   input: ListDirectoryBucketsRequest,
   output: ListDirectoryBucketsOutput,
   errors: [],
+  operationName: "ListDirectoryBuckets",
   pagination: {
     inputToken: "ContinuationToken",
     outputToken: "ContinuationToken",
@@ -16410,6 +17486,63 @@ export const listMultipartUploads: API.OperationMethod<
   input: ListMultipartUploadsRequest,
   output: ListMultipartUploadsOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, PermanentRedirect],
+  operationName: "ListMultipartUploads",
+}));
+export type ListObjectAnnotationsError =
+  | InvalidPrefix
+  | NoSuchBucket
+  | NoSuchKey
+  | CommonErrors;
+/**
+ * Lists the annotations attached to an Amazon S3 object. Results are paginated, with a maximum of
+ * 1,000 annotations per object. Use the `AnnotationPrefix` parameter to filter the
+ * results by name prefix.
+ *
+ * To use this operation, you must have the `s3:ListObjectAnnotations` permission.
+ *
+ * Annotations are not supported by the following features: S3 Inventory Reports,
+ * API Gateway, S3 Storage Lens, Amazon S3 File Gateway, Amazon FSx, S3 on Outposts, and
+ * S3 Express One Zone (directory buckets).
+ *
+ * The following operations are related to `ListObjectAnnotations`:
+ *
+ * - PutObjectAnnotation
+ *
+ * - GetObjectAnnotation
+ *
+ * - DeleteObjectAnnotation
+ */
+export const listObjectAnnotations: API.OperationMethod<
+  ListObjectAnnotationsRequest,
+  ListObjectAnnotationsOutput,
+  ListObjectAnnotationsError,
+  Credentials | Rgn | HttpClient.HttpClient
+> & {
+  pages: (
+    input: ListObjectAnnotationsRequest,
+  ) => stream.Stream<
+    ListObjectAnnotationsOutput,
+    ListObjectAnnotationsError,
+    Credentials | Rgn | HttpClient.HttpClient
+  >;
+  items: (
+    input: ListObjectAnnotationsRequest,
+  ) => stream.Stream<
+    AnnotationEntry,
+    ListObjectAnnotationsError,
+    Credentials | Rgn | HttpClient.HttpClient
+  >;
+} = /*@__PURE__*/ /*#__PURE__*/ API.makePaginated(() => ({
+  input: ListObjectAnnotationsRequest,
+  output: ListObjectAnnotationsOutput,
+  errors: [InvalidPrefix, NoSuchBucket, NoSuchKey],
+  operationName: "ListObjectAnnotations",
+  pagination: {
+    inputToken: "ContinuationToken",
+    outputToken: "NextContinuationToken",
+    items: "Annotations",
+    pageSize: "MaxAnnotationResults",
+  } as const,
 }));
 export type ListObjectsError =
   | NoSuchBucket
@@ -16452,6 +17585,7 @@ export const listObjects: API.OperationMethod<
   input: ListObjectsRequest,
   output: ListObjectsOutput,
   errors: [NoSuchBucket, RequestLimitExceeded, SlowDown, PermanentRedirect],
+  operationName: "ListObjects",
 }));
 export type ListObjectsV2Error =
   | NoSuchBucket
@@ -16549,6 +17683,7 @@ export const listObjectsV2: API.OperationMethod<
   input: ListObjectsV2Request,
   output: ListObjectsV2Output,
   errors: [NoSuchBucket, RequestLimitExceeded, SlowDown, PermanentRedirect],
+  operationName: "ListObjectsV2",
   pagination: {
     inputToken: "ContinuationToken",
     outputToken: "NextContinuationToken",
@@ -16596,6 +17731,7 @@ export const listObjectVersions: API.OperationMethod<
   input: ListObjectVersionsRequest,
   output: ListObjectVersionsOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, PermanentRedirect],
+  operationName: "ListObjectVersions",
 }));
 export type ListPartsError =
   | RequestLimitExceeded
@@ -16688,6 +17824,7 @@ export const listParts: API.OperationMethod<
   input: ListPartsRequest,
   output: ListPartsOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "ListParts",
   pagination: {
     inputToken: "PartNumberMarker",
     outputToken: "NextPartNumberMarker",
@@ -16708,6 +17845,7 @@ export const putBucketAbac: API.OperationMethod<
   input: PutBucketAbacRequest,
   output: PutBucketAbacResponse,
   errors: [],
+  operationName: "PutBucketAbac",
 }));
 export type PutBucketAccelerateConfigurationError =
   | RequestLimitExceeded
@@ -16760,6 +17898,7 @@ export const putBucketAccelerateConfiguration: API.OperationMethod<
   input: PutBucketAccelerateConfigurationRequest,
   output: PutBucketAccelerateConfigurationResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, PermanentRedirect],
+  operationName: "PutBucketAccelerateConfiguration",
 }));
 export type PutBucketAclError =
   | RequestLimitExceeded
@@ -16921,6 +18060,7 @@ export const putBucketAcl: API.OperationMethod<
   input: PutBucketAclRequest,
   output: PutBucketAclResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, PermanentRedirect],
+  operationName: "PutBucketAcl",
 }));
 export type PutBucketAnalyticsConfigurationError = CommonErrors;
 /**
@@ -16995,6 +18135,7 @@ export const putBucketAnalyticsConfiguration: API.OperationMethod<
   input: PutBucketAnalyticsConfigurationRequest,
   output: PutBucketAnalyticsConfigurationResponse,
   errors: [],
+  operationName: "PutBucketAnalyticsConfiguration",
 }));
 export type PutBucketCorsError =
   | RequestLimitExceeded
@@ -17057,6 +18198,7 @@ export const putBucketCors: API.OperationMethod<
   input: PutBucketCorsRequest,
   output: PutBucketCorsResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, PermanentRedirect],
+  operationName: "PutBucketCors",
 }));
 export type PutBucketEncryptionError =
   | RequestLimitExceeded
@@ -17158,6 +18300,7 @@ export const putBucketEncryption: API.OperationMethod<
   input: PutBucketEncryptionRequest,
   output: PutBucketEncryptionResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, PermanentRedirect],
+  operationName: "PutBucketEncryption",
 }));
 export type PutBucketIntelligentTieringConfigurationError =
   | RequestLimitExceeded
@@ -17220,6 +18363,7 @@ export const putBucketIntelligentTieringConfiguration: API.OperationMethod<
   input: PutBucketIntelligentTieringConfigurationRequest,
   output: PutBucketIntelligentTieringConfigurationResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "PutBucketIntelligentTieringConfiguration",
 }));
 export type PutBucketInventoryConfigurationError =
   | RequestLimitExceeded
@@ -17227,8 +18371,6 @@ export type PutBucketInventoryConfigurationError =
   | NoSuchBucket
   | CommonErrors;
 /**
- * This operation is not supported for directory buckets.
- *
  * This implementation of the `PUT` action adds an S3 Inventory configuration (identified by
  * the inventory ID) to the bucket. You can have up to 1,000 inventory configurations per bucket.
  *
@@ -17249,6 +18391,12 @@ export type PutBucketInventoryConfigurationError =
  * Granting
  * Permissions for Amazon S3 Inventory and Storage Class Analysis.
  *
+ * **Directory buckets ** - For directory buckets, you must make requests for this API operation to the Regional endpoint. These endpoints support path-style requests in the format https://s3express-control.*region-code*.amazonaws.com/*bucket-name*
+ * . Virtual-hosted-style requests aren't supported.
+ * For more information about endpoints in Availability Zones, see Regional and Zonal endpoints for directory buckets in Availability Zones in the
+ * *Amazon S3 User Guide*. For more information about endpoints in Local Zones, see Concepts for directory buckets in Local Zones in the
+ * *Amazon S3 User Guide*.
+ *
  * ### Permissions
  *
  * To use this operation, you must have permission to perform the
@@ -17260,12 +18408,26 @@ export type PutBucketInventoryConfigurationError =
  * store the inventory. A user with read access to objects in the destination bucket can also access
  * all object metadata fields that are available in the inventory report.
  *
+ * - **General purpose bucket permissions** - The
+ * `s3:PutInventoryConfiguration` permission is required in a policy. For more information
+ * about general purpose buckets permissions, see Using Bucket Policies and User
+ * Policies in the *Amazon S3 User Guide*.
+ *
+ * - **Directory bucket permissions** - To grant access to
+ * this API operation, you must have the `s3express:PutInventoryConfiguration` permission in
+ * an IAM identity-based policy instead of a bucket policy.
+ * For more information about directory bucket policies and permissions, see Amazon Web Services Identity and Access Management (IAM) for S3 Express One Zone in the *Amazon S3 User Guide*.
+ *
  * To restrict access to an inventory report, see Restricting access to an Amazon S3 Inventory report in the
  * *Amazon S3 User Guide*. For more information about the metadata fields available
  * in S3 Inventory, see Amazon S3 Inventory
  * lists in the *Amazon S3 User Guide*. For more information about
  * permissions, see Permissions related to bucket subresource operations and Identity and access management in
  * Amazon S3 in the *Amazon S3 User Guide*.
+ *
+ * ### HTTP Host header syntax
+ *
+ * **Directory buckets ** - The HTTP Host header syntax is `s3express-control.*region-code*.amazonaws.com`.
  *
  * `PutBucketInventoryConfiguration` has the following special errors:
  *
@@ -17307,6 +18469,7 @@ export const putBucketInventoryConfiguration: API.OperationMethod<
   input: PutBucketInventoryConfigurationRequest,
   output: PutBucketInventoryConfigurationResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "PutBucketInventoryConfiguration",
 }));
 export type PutBucketLifecycleConfigurationError =
   | RequestLimitExceeded
@@ -17428,6 +18591,7 @@ export const putBucketLifecycleConfiguration: API.OperationMethod<
     NoSuchBucket,
     PermanentRedirect,
   ],
+  operationName: "PutBucketLifecycleConfiguration",
 }));
 export type PutBucketLoggingError =
   | RequestLimitExceeded
@@ -17512,6 +18676,7 @@ export const putBucketLogging: API.OperationMethod<
   input: PutBucketLoggingRequest,
   output: PutBucketLoggingResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, PermanentRedirect],
+  operationName: "PutBucketLogging",
 }));
 export type PutBucketMetricsConfigurationError =
   | RequestLimitExceeded
@@ -17582,6 +18747,7 @@ export const putBucketMetricsConfiguration: API.OperationMethod<
   input: PutBucketMetricsConfigurationRequest,
   output: PutBucketMetricsConfigurationResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "PutBucketMetricsConfiguration",
 }));
 export type PutBucketNotificationConfigurationError =
   | RequestLimitExceeded
@@ -17650,6 +18816,7 @@ export const putBucketNotificationConfiguration: API.OperationMethod<
   input: PutBucketNotificationConfigurationRequest,
   output: PutBucketNotificationConfigurationResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "PutBucketNotificationConfiguration",
 }));
 export type PutBucketOwnershipControlsError =
   | RequestLimitExceeded
@@ -17682,6 +18849,7 @@ export const putBucketOwnershipControls: API.OperationMethod<
   input: PutBucketOwnershipControlsRequest,
   output: PutBucketOwnershipControlsResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "PutBucketOwnershipControls",
 }));
 export type PutBucketPolicyError =
   | RequestLimitExceeded
@@ -17772,6 +18940,7 @@ export const putBucketPolicy: API.OperationMethod<
     PermanentRedirect,
     SignatureDoesNotMatch,
   ],
+  operationName: "PutBucketPolicy",
 }));
 export type PutBucketReplicationError =
   | RequestLimitExceeded
@@ -17849,6 +19018,7 @@ export const putBucketReplication: API.OperationMethod<
   input: PutBucketReplicationRequest,
   output: PutBucketReplicationResponse,
   errors: [RequestLimitExceeded, SlowDown, InvalidRequest, NoSuchBucket],
+  operationName: "PutBucketReplication",
 }));
 export type PutBucketRequestPaymentError =
   | RequestLimitExceeded
@@ -17881,6 +19051,7 @@ export const putBucketRequestPayment: API.OperationMethod<
   input: PutBucketRequestPaymentRequest,
   output: PutBucketRequestPaymentResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, PermanentRedirect],
+  operationName: "PutBucketRequestPayment",
 }));
 export type PutBucketTaggingError =
   | RequestLimitExceeded
@@ -17939,6 +19110,7 @@ export const putBucketTagging: API.OperationMethod<
   input: PutBucketTaggingRequest,
   output: PutBucketTaggingResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, PermanentRedirect],
+  operationName: "PutBucketTagging",
 }));
 export type PutBucketVersioningError =
   | RequestLimitExceeded
@@ -17998,6 +19170,7 @@ export const putBucketVersioning: API.OperationMethod<
   input: PutBucketVersioningRequest,
   output: PutBucketVersioningResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, PermanentRedirect],
+  operationName: "PutBucketVersioning",
 }));
 export type PutBucketWebsiteError =
   | RequestLimitExceeded
@@ -18085,6 +19258,7 @@ export const putBucketWebsite: API.OperationMethod<
   input: PutBucketWebsiteRequest,
   output: PutBucketWebsiteResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, PermanentRedirect],
+  operationName: "PutBucketWebsite",
 }));
 export type PutObjectError =
   | EncryptionTypeMismatch
@@ -18095,6 +19269,8 @@ export type PutObjectError =
   | SlowDown
   | NoSuchBucket
   | PermanentRedirect
+  | PreconditionFailed
+  | ConditionalRequestConflict
   | CommonErrors;
 /**
  * End of support notice: As of October 1, 2025, Amazon S3 has discontinued support for Email Grantee Access Control Lists (ACLs). If you attempt to use an Email Grantee ACL in a request after October 1, 2025,
@@ -18236,7 +19412,10 @@ export const putObject: API.OperationMethod<
     SlowDown,
     NoSuchBucket,
     PermanentRedirect,
+    PreconditionFailed,
+    ConditionalRequestConflict,
   ],
+  operationName: "PutObject",
 }));
 export type PutObjectAclError =
   | NoSuchKey
@@ -18396,6 +19575,62 @@ export const putObjectAcl: API.OperationMethod<
   input: PutObjectAclRequest,
   output: PutObjectAclOutput,
   errors: [NoSuchKey, RequestLimitExceeded, SlowDown, PermanentRedirect],
+  operationName: "PutObjectAcl",
+}));
+export type PutObjectAnnotationError =
+  | AnnotationLimitExceeded
+  | AnnotationNameTooLong
+  | InvalidAnnotationName
+  | InvalidRequest
+  | NoSuchBucket
+  | NoSuchKey
+  | UnsupportedMediaType
+  | CommonErrors;
+/**
+ * Attaches an annotation to an Amazon S3 object. An annotation is a named payload of 1 byte to 1 MiB
+ * that you can associate with a specific object or object version. Each object can have up to 1,000
+ * annotations.
+ *
+ * For annotation naming rules and restrictions, see Annotation naming guidelines
+ * in the *Amazon S3 User Guide*.
+ *
+ * Annotations inherit the encryption of their parent object. For objects without server-side
+ * encryption, annotations are encrypted with SSE-S3 (the default for new objects). Objects
+ * encrypted with SSE-C cannot have annotations.
+ *
+ * To use this operation, you must have the `s3:PutObjectAnnotation` permission. If the
+ * bucket has Requester Pays enabled, you must include the `x-amz-request-payer` header.
+ *
+ * Annotations are not supported by the following features: S3 Inventory Reports,
+ * API Gateway, S3 Storage Lens, Amazon S3 File Gateway, Amazon FSx, S3 on Outposts, and
+ * S3 Express One Zone (directory buckets).
+ *
+ * The following operations are related to `PutObjectAnnotation`:
+ *
+ * - GetObjectAnnotation
+ *
+ * - ListObjectAnnotations
+ *
+ * - DeleteObjectAnnotation
+ */
+export const putObjectAnnotation: API.OperationMethod<
+  PutObjectAnnotationRequest,
+  PutObjectAnnotationOutput,
+  PutObjectAnnotationError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: PutObjectAnnotationRequest,
+  output: PutObjectAnnotationOutput,
+  errors: [
+    AnnotationLimitExceeded,
+    AnnotationNameTooLong,
+    InvalidAnnotationName,
+    InvalidRequest,
+    NoSuchBucket,
+    NoSuchKey,
+    UnsupportedMediaType,
+  ],
+  operationName: "PutObjectAnnotation",
 }));
 export type PutObjectLegalHoldError =
   | RequestLimitExceeded
@@ -18420,6 +19655,7 @@ export const putObjectLegalHold: API.OperationMethod<
   input: PutObjectLegalHoldRequest,
   output: PutObjectLegalHoldOutput,
   errors: [RequestLimitExceeded, SlowDown, MalformedXML],
+  operationName: "PutObjectLegalHold",
 }));
 export type PutObjectLockConfigurationError =
   | RequestLimitExceeded
@@ -18462,6 +19698,7 @@ export const putObjectLockConfiguration: API.OperationMethod<
     NoSuchBucket,
     PermanentRedirect,
   ],
+  operationName: "PutObjectLockConfiguration",
 }));
 export type PutObjectRetentionError =
   | RequestLimitExceeded
@@ -18489,6 +19726,7 @@ export const putObjectRetention: API.OperationMethod<
   input: PutObjectRetentionRequest,
   output: PutObjectRetentionOutput,
   errors: [RequestLimitExceeded, SlowDown, InvalidRequest],
+  operationName: "PutObjectRetention",
 }));
 export type PutObjectTaggingError =
   | RequestLimitExceeded
@@ -18545,6 +19783,7 @@ export const putObjectTagging: API.OperationMethod<
   input: PutObjectTaggingRequest,
   output: PutObjectTaggingOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchKey, PermanentRedirect],
+  operationName: "PutObjectTagging",
 }));
 export type PutPublicAccessBlockError =
   | RequestLimitExceeded
@@ -18591,6 +19830,7 @@ export const putPublicAccessBlock: API.OperationMethod<
   input: PutPublicAccessBlockRequest,
   output: PutPublicAccessBlockResponse,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, PermanentRedirect],
+  operationName: "PutPublicAccessBlock",
 }));
 export type RenameObjectError = IdempotencyParameterMismatch | CommonErrors;
 /**
@@ -18647,6 +19887,7 @@ export const renameObject: API.OperationMethod<
   input: RenameObjectRequest,
   output: RenameObjectOutput,
   errors: [IdempotencyParameterMismatch],
+  operationName: "RenameObject",
 }));
 export type RestoreObjectError =
   | ObjectAlreadyInActiveTierError
@@ -18810,6 +20051,7 @@ export const restoreObject: API.OperationMethod<
     NoSuchKey,
     PermanentRedirect,
   ],
+  operationName: "RestoreObject",
 }));
 export type SelectObjectContentError =
   | RequestLimitExceeded
@@ -18916,6 +20158,44 @@ export const selectObjectContent: API.OperationMethod<
   input: SelectObjectContentRequest,
   output: SelectObjectContentOutput,
   errors: [RequestLimitExceeded, SlowDown, PermanentRedirect],
+  operationName: "SelectObjectContent",
+}));
+export type UpdateBucketMetadataAnnotationTableConfigurationError =
+  CommonErrors;
+/**
+ * Updates the annotation table configuration for an Amazon S3 bucket's metadata configuration. Use this
+ * operation to enable or disable the annotation table, or to update its associated IAM role.
+ *
+ * An annotation table is a queryable Iceberg table that contains records of all annotations
+ * attached to objects in the bucket. To use this operation, the bucket must have an existing Amazon S3
+ * Metadata configuration.
+ *
+ * To use this operation, you must have the
+ * `s3:UpdateBucketMetadataAnnotationTableConfiguration` permission. If you are specifying
+ * or changing the IAM role, you must also have `iam:PassRole` permission for the role.
+ *
+ * The IAM role must have a trust policy that allows the Amazon S3 metadata service to assume it, and a
+ * permissions policy that grants the actions needed to read annotations from your bucket. The
+ * following examples show a trust policy and a permissions policy that you can adapt for your bucket
+ * and account.
+ *
+ * The following operations are related to
+ * `UpdateBucketMetadataAnnotationTableConfiguration`:
+ *
+ * - CreateBucketMetadataConfiguration
+ *
+ * - GetBucketMetadataConfiguration
+ */
+export const updateBucketMetadataAnnotationTableConfiguration: API.OperationMethod<
+  UpdateBucketMetadataAnnotationTableConfigurationRequest,
+  UpdateBucketMetadataAnnotationTableConfigurationResponse,
+  UpdateBucketMetadataAnnotationTableConfigurationError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: UpdateBucketMetadataAnnotationTableConfigurationRequest,
+  output: UpdateBucketMetadataAnnotationTableConfigurationResponse,
+  errors: [],
+  operationName: "UpdateBucketMetadataAnnotationTableConfiguration",
 }));
 export type UpdateBucketMetadataInventoryTableConfigurationError = CommonErrors;
 /**
@@ -18973,6 +20253,7 @@ export const updateBucketMetadataInventoryTableConfiguration: API.OperationMetho
   input: UpdateBucketMetadataInventoryTableConfigurationRequest,
   output: UpdateBucketMetadataInventoryTableConfigurationResponse,
   errors: [],
+  operationName: "UpdateBucketMetadataInventoryTableConfiguration",
 }));
 export type UpdateBucketMetadataJournalTableConfigurationError = CommonErrors;
 /**
@@ -19008,6 +20289,7 @@ export const updateBucketMetadataJournalTableConfiguration: API.OperationMethod<
   input: UpdateBucketMetadataJournalTableConfigurationRequest,
   output: UpdateBucketMetadataJournalTableConfigurationResponse,
   errors: [],
+  operationName: "UpdateBucketMetadataJournalTableConfiguration",
 }));
 export type UpdateObjectEncryptionError =
   | AccessDenied
@@ -19134,6 +20416,7 @@ export const updateObjectEncryption: API.OperationMethod<
   input: UpdateObjectEncryptionRequest,
   output: UpdateObjectEncryptionResponse,
   errors: [AccessDenied, InvalidRequest, NoSuchKey],
+  operationName: "UpdateObjectEncryption",
 }));
 export type UploadPartError =
   | RequestLimitExceeded
@@ -19290,6 +20573,7 @@ export const uploadPart: API.OperationMethod<
   input: UploadPartRequest,
   output: UploadPartOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket, PermanentRedirect],
+  operationName: "UploadPart",
 }));
 export type UploadPartCopyError =
   | RequestLimitExceeded
@@ -19466,6 +20750,7 @@ export const uploadPartCopy: API.OperationMethod<
   input: UploadPartCopyRequest,
   output: UploadPartCopyOutput,
   errors: [RequestLimitExceeded, SlowDown, NoSuchBucket],
+  operationName: "UploadPartCopy",
 }));
 export type WriteGetObjectResponseError = CommonErrors;
 /**
@@ -19520,4 +20805,5 @@ export const writeGetObjectResponse: API.OperationMethod<
   input: WriteGetObjectResponseRequest,
   output: WriteGetObjectResponseResponse,
   errors: [],
+  operationName: "WriteGetObjectResponse",
 }));

@@ -4,6 +4,13 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface UpdateDocumentInput {
+  id: string;
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const UpdateDocumentInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String.pipe(T.PathParam()),
   ereborVersion: Schema.optional(Schema.String).pipe(
@@ -14,10 +21,34 @@ export const UpdateDocumentInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   ),
   custom_ref: Schema.optional(Schema.String),
   custom_fields: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
-}).pipe(T.Http({ method: "PATCH", path: "/documents/{id}" }));
-export type UpdateDocumentInput = typeof UpdateDocumentInput.Type;
+}).pipe(
+  T.Http({ method: "PATCH", path: "/documents/{id}" }),
+) as unknown as Schema.Codec<UpdateDocumentInput>;
 
 // Output Schema
+export interface UpdateDocumentOutput {
+  id: string;
+  type: "DOCUMENT";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id: string;
+  name: string;
+  description?: string | null;
+  document_type:
+    | "US_DRIVERS_LICENSE"
+    | "PASSPORT"
+    | "FORMATION_DOCUMENT"
+    | "IRS_EIN_CONFIRMATION"
+    | "OTHER";
+  content_hash: string;
+  content_size: number;
+  content_type: string;
+  content_url: string;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const UpdateDocumentOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String,
   type: Schema.Literals(["DOCUMENT"]),
@@ -39,10 +70,11 @@ export const UpdateDocumentOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   content_size: Schema.Number,
   content_type: Schema.String,
   content_url: Schema.String,
-  custom_ref: Schema.optional(Schema.Unknown),
-  custom_fields: Schema.optional(Schema.Unknown),
-});
-export type UpdateDocumentOutput = typeof UpdateDocumentOutput.Type;
+  custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+  custom_fields: Schema.optional(
+    Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+  ),
+}) as unknown as Schema.Codec<UpdateDocumentOutput>;
 
 // The operation
 /**

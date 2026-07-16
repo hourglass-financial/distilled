@@ -4,6 +4,22 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden } from "../errors.ts";
 
 // Input Schema
+export interface ListAllApiKeysInput {
+  page?: { after?: string; before?: string; size?: number };
+  fields?: Record<string, string>;
+  filter?: { name?: string };
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const ListAllApiKeysInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   page: Schema.optional(
     Schema.Struct({
@@ -11,7 +27,7 @@ export const ListAllApiKeysInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       before: Schema.optional(Schema.String),
       size: Schema.optional(Schema.Number),
     }),
-  ).pipe(T.HttpQuery("page")),
+  ),
   fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
     T.HttpQuery("fields"),
   ),
@@ -19,7 +35,7 @@ export const ListAllApiKeysInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     Schema.Struct({
       name: Schema.optional(Schema.String),
     }),
-  ).pipe(T.HttpQuery("filter")),
+  ),
   keyInflection: Schema.optional(
     Schema.Literals(["camel", "kebab", "snake"]),
   ).pipe(T.HttpHeader("Key-Inflection")),
@@ -38,10 +54,39 @@ export const ListAllApiKeysInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "2020-05-18",
     ]),
   ).pipe(T.HttpHeader("Persona-Version")),
-}).pipe(T.Http({ method: "GET", path: "/api-keys" }));
-export type ListAllApiKeysInput = typeof ListAllApiKeysInput.Type;
+}).pipe(
+  T.Http({ method: "GET", path: "/api-keys" }),
+) as unknown as Schema.Codec<ListAllApiKeysInput>;
 
 // Output Schema
+export interface ListAllApiKeysOutput {
+  data: ReadonlyArray<{
+    type?: string;
+    id?: string;
+    attributes?: {
+      name?: string;
+      note?: string | null;
+      "api-version"?:
+        | "2025-12-08"
+        | "2025-10-27"
+        | "2023-01-05"
+        | "2022-09-01"
+        | "2021-08-18"
+        | "2021-07-05"
+        | "2021-02-21"
+        | "2020-05-18";
+      "api-key-inflection"?: string;
+      "api-attributes-blocklist"?: ReadonlyArray<string | null>;
+      permissions?: ReadonlyArray<string>;
+      "ip-address-allowlist"?: ReadonlyArray<string>;
+      "file-access-token-expires-in"?: number;
+      "last-used-at"?: string | null;
+      "expires-at"?: string | null;
+      "created-at"?: string;
+    };
+  }>;
+  links: { next: string | null; prev: string | null };
+}
 export const ListAllApiKeysOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Array(
     Schema.Struct({
@@ -81,8 +126,7 @@ export const ListAllApiKeysOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     next: Schema.NullOr(Schema.String),
     prev: Schema.NullOr(Schema.String),
   }),
-});
-export type ListAllApiKeysOutput = typeof ListAllApiKeysOutput.Type;
+}) as unknown as Schema.Codec<ListAllApiKeysOutput>;
 
 // The operation
 /**

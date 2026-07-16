@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -121,7 +121,9 @@ export type SecurityGroupId = string;
 export type SubnetId = string;
 export type PrefixListId = string;
 export type VpceId = string;
+export type IPAddressType = string;
 export type KmsKeyId = string;
+export type DegradedWorkspaceReason = string;
 export type UserType = string;
 export type SsoId = string;
 export type Role = string;
@@ -675,7 +677,9 @@ export interface WorkspaceDescription {
   vpcConfiguration?: VpcConfiguration;
   networkAccessControl?: NetworkAccessConfiguration;
   grafanaToken?: string;
+  ipAddressType?: string;
   kmsKeyId?: string;
+  degradedWorkspaceReason?: string;
 }
 export const WorkspaceDescription = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -708,7 +712,9 @@ export const WorkspaceDescription = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     vpcConfiguration: S.optional(VpcConfiguration),
     networkAccessControl: S.optional(NetworkAccessConfiguration),
     grafanaToken: S.optional(S.String),
+    ipAddressType: S.optional(S.String),
     kmsKeyId: S.optional(S.String),
+    degradedWorkspaceReason: S.optional(S.String),
   }),
 ).annotate({
   identifier: "WorkspaceDescription",
@@ -1200,6 +1206,7 @@ export interface CreateWorkspaceRequest {
   configuration?: string;
   networkAccessControl?: NetworkAccessConfiguration;
   grafanaVersion?: string;
+  ipAddressType?: string;
   kmsKeyId?: string;
 }
 export const CreateWorkspaceRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
@@ -1224,6 +1231,7 @@ export const CreateWorkspaceRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       configuration: S.optional(S.String),
       networkAccessControl: S.optional(NetworkAccessConfiguration),
       grafanaVersion: S.optional(S.String),
+      ipAddressType: S.optional(S.String),
       kmsKeyId: S.optional(S.String),
     }).pipe(
       T.all(
@@ -1288,6 +1296,7 @@ export interface UpdateWorkspaceRequest {
   removeVpcConfiguration?: boolean;
   networkAccessControl?: NetworkAccessConfiguration;
   removeNetworkAccessConfiguration?: boolean;
+  ipAddressType?: string;
 }
 export const UpdateWorkspaceRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -1309,6 +1318,7 @@ export const UpdateWorkspaceRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       removeVpcConfiguration: S.optional(S.Boolean),
       networkAccessControl: S.optional(NetworkAccessConfiguration),
       removeNetworkAccessConfiguration: S.optional(S.Boolean),
+      ipAddressType: S.optional(S.String),
     }).pipe(
       T.all(
         T.Http({ method: "PUT", uri: "/workspaces/{workspaceId}" }),
@@ -1501,6 +1511,7 @@ export const listTagsForResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type ListVersionsError =
   | AccessDeniedException
@@ -1542,6 +1553,7 @@ export const listVersions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListVersions",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -1576,6 +1588,7 @@ export const tagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | AccessDeniedException
@@ -1602,6 +1615,7 @@ export const untagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UntagResource",
 }));
 export type CreateWorkspaceApiKeyError =
   | AccessDeniedException
@@ -1634,6 +1648,7 @@ export const createWorkspaceApiKey: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateWorkspaceApiKey",
 }));
 export type DeleteWorkspaceApiKeyError =
   | AccessDeniedException
@@ -1664,6 +1679,7 @@ export const deleteWorkspaceApiKey: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteWorkspaceApiKey",
 }));
 export type DescribeWorkspaceAuthenticationError =
   | AccessDeniedException
@@ -1692,6 +1708,7 @@ export const describeWorkspaceAuthentication: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeWorkspaceAuthentication",
 }));
 export type UpdateWorkspaceAuthenticationError =
   | AccessDeniedException
@@ -1722,6 +1739,7 @@ export const updateWorkspaceAuthentication: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateWorkspaceAuthentication",
 }));
 export type DescribeWorkspaceConfigurationError =
   | AccessDeniedException
@@ -1746,6 +1764,7 @@ export const describeWorkspaceConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeWorkspaceConfiguration",
 }));
 export type UpdateWorkspaceConfigurationError =
   | AccessDeniedException
@@ -1774,6 +1793,7 @@ export const updateWorkspaceConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateWorkspaceConfiguration",
 }));
 export type AssociateLicenseError =
   | AccessDeniedException
@@ -1800,6 +1820,7 @@ export const associateLicense: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssociateLicense",
 }));
 export type DisassociateLicenseError =
   | AccessDeniedException
@@ -1826,6 +1847,7 @@ export const disassociateLicense: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DisassociateLicense",
 }));
 export type ListPermissionsError =
   | AccessDeniedException
@@ -1867,6 +1889,7 @@ export const listPermissions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListPermissions",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -1899,6 +1922,7 @@ export const updatePermissions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdatePermissions",
 }));
 export type CreateWorkspaceServiceAccountError =
   | AccessDeniedException
@@ -1935,6 +1959,7 @@ export const createWorkspaceServiceAccount: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateWorkspaceServiceAccount",
 }));
 export type DeleteWorkspaceServiceAccountError =
   | AccessDeniedException
@@ -1967,6 +1992,7 @@ export const deleteWorkspaceServiceAccount: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteWorkspaceServiceAccount",
 }));
 export type ListWorkspaceServiceAccountsError =
   | AccessDeniedException
@@ -2012,6 +2038,7 @@ export const listWorkspaceServiceAccounts: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListWorkspaceServiceAccounts",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -2054,6 +2081,7 @@ export const createWorkspaceServiceAccountToken: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateWorkspaceServiceAccountToken",
 }));
 export type DeleteWorkspaceServiceAccountTokenError =
   | AccessDeniedException
@@ -2086,6 +2114,7 @@ export const deleteWorkspaceServiceAccountToken: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteWorkspaceServiceAccountToken",
 }));
 export type ListWorkspaceServiceAccountTokensError =
   | AccessDeniedException
@@ -2133,6 +2162,7 @@ export const listWorkspaceServiceAccountTokens: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListWorkspaceServiceAccountTokens",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -2169,6 +2199,7 @@ export const createWorkspace: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateWorkspace",
 }));
 export type DescribeWorkspaceError =
   | AccessDeniedException
@@ -2195,6 +2226,7 @@ export const describeWorkspace: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeWorkspace",
 }));
 export type UpdateWorkspaceError =
   | AccessDeniedException
@@ -2227,6 +2259,7 @@ export const updateWorkspace: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateWorkspace",
 }));
 export type DeleteWorkspaceError =
   | AccessDeniedException
@@ -2255,6 +2288,7 @@ export const deleteWorkspace: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteWorkspace",
 }));
 export type ListWorkspacesError =
   | AccessDeniedException
@@ -2288,6 +2322,7 @@ export const listWorkspaces: API.OperationMethod<
   input: ListWorkspacesRequest,
   output: ListWorkspacesResponse,
   errors: [AccessDeniedException, InternalServerException, ThrottlingException],
+  operationName: "ListWorkspaces",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",

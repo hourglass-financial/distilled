@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -103,6 +103,7 @@ export type ExternalCampaignType = string;
 export type Iso8601Duration = string;
 export type TimeZone = string;
 export type LocalTimeZoneDetectionType = string;
+export type LocalTimeZoneDetectionScope = string;
 export type DayOfWeek = string;
 export type Iso8601Time = string;
 export type RestrictedPeriodName = string;
@@ -139,6 +140,9 @@ export type AttributeValue = string;
 export type DialRequestId = string;
 export type FailureCode = string;
 export type ProfileId = string;
+export type SourceEvent = string;
+export type SessionId = string;
+export type BrowserId = string;
 export type ProfileOutboundRequestId = string;
 export type ProfileOutboundRequestFailureCode = string;
 
@@ -400,6 +404,15 @@ export const Schedule = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     refreshFrequency: S.optional(S.String),
   }),
 ).annotate({ identifier: "Schedule" }) as any as S.Schema<Schedule>;
+export interface EntryLimitsConfig {
+  maxEntryCount: number;
+  minEntryInterval: string;
+}
+export const EntryLimitsConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ maxEntryCount: S.Number, minEntryInterval: S.String }),
+).annotate({
+  identifier: "EntryLimitsConfig",
+}) as any as S.Schema<EntryLimitsConfig>;
 export type LocalTimeZoneDetection = string[];
 export const LocalTimeZoneDetection = /*@__PURE__*/ /*#__PURE__*/ S.Array(
   S.String,
@@ -407,11 +420,13 @@ export const LocalTimeZoneDetection = /*@__PURE__*/ /*#__PURE__*/ S.Array(
 export interface LocalTimeZoneConfig {
   defaultTimeZone?: string;
   localTimeZoneDetection?: string[];
+  localTimeZoneDetectionScope?: string;
 }
 export const LocalTimeZoneConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     defaultTimeZone: S.optional(S.String),
     localTimeZoneDetection: S.optional(LocalTimeZoneDetection),
+    localTimeZoneDetectionScope: S.optional(S.String),
   }),
 ).annotate({
   identifier: "LocalTimeZoneConfig",
@@ -535,6 +550,7 @@ export interface CreateCampaignRequest {
   source?: Source;
   connectCampaignFlowArn?: string;
   schedule?: Schedule;
+  entryLimitsConfig?: EntryLimitsConfig;
   communicationTimeConfig?: CommunicationTimeConfig;
   communicationLimitsOverride?: CommunicationLimitsConfig;
   tags?: { [key: string]: string | undefined };
@@ -548,6 +564,7 @@ export const CreateCampaignRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     source: S.optional(Source),
     connectCampaignFlowArn: S.optional(S.String),
     schedule: S.optional(Schedule),
+    entryLimitsConfig: S.optional(EntryLimitsConfig),
     communicationTimeConfig: S.optional(CommunicationTimeConfig),
     communicationLimitsOverride: S.optional(CommunicationLimitsConfig),
     tags: S.optional(TagMap),
@@ -692,6 +709,29 @@ export const DeleteCampaignCommunicationTimeResponse =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() => S.Struct({})).annotate({
     identifier: "DeleteCampaignCommunicationTimeResponse",
   }) as any as S.Schema<DeleteCampaignCommunicationTimeResponse>;
+export interface DeleteCampaignEntryLimitsRequest {
+  id: string;
+}
+export const DeleteCampaignEntryLimitsRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ id: S.String.pipe(T.HttpLabel("id")) }).pipe(
+      T.all(
+        T.Http({ method: "DELETE", uri: "/v2/campaigns/{id}/entry-limits" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "DeleteCampaignEntryLimitsRequest",
+  }) as any as S.Schema<DeleteCampaignEntryLimitsRequest>;
+export interface DeleteCampaignEntryLimitsResponse {}
+export const DeleteCampaignEntryLimitsResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() => S.Struct({})).annotate({
+    identifier: "DeleteCampaignEntryLimitsResponse",
+  }) as any as S.Schema<DeleteCampaignEntryLimitsResponse>;
 export interface DeleteConnectInstanceConfigRequest {
   connectInstanceId: string;
   campaignDeletionPolicy?: string;
@@ -858,6 +898,7 @@ export interface Campaign {
   source?: Source;
   connectCampaignFlowArn?: string;
   schedule?: Schedule;
+  entryLimitsConfig?: EntryLimitsConfig;
   communicationTimeConfig?: CommunicationTimeConfig;
   communicationLimitsOverride?: CommunicationLimitsConfig;
   tags?: { [key: string]: string | undefined };
@@ -873,6 +914,7 @@ export const Campaign = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     source: S.optional(Source),
     connectCampaignFlowArn: S.optional(S.String),
     schedule: S.optional(Schedule),
+    entryLimitsConfig: S.optional(EntryLimitsConfig),
     communicationTimeConfig: S.optional(CommunicationTimeConfig),
     communicationLimitsOverride: S.optional(CommunicationLimitsConfig),
     tags: S.optional(TagMap),
@@ -1177,6 +1219,7 @@ export interface CampaignSummary {
   channelSubtypes: string[];
   type?: string;
   schedule?: Schedule;
+  entryLimitsConfig?: EntryLimitsConfig;
   connectCampaignFlowArn?: string;
 }
 export const CampaignSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -1188,6 +1231,7 @@ export const CampaignSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     channelSubtypes: ChannelSubtypeList,
     type: S.optional(S.String),
     schedule: S.optional(Schedule),
+    entryLimitsConfig: S.optional(EntryLimitsConfig),
     connectCampaignFlowArn: S.optional(S.String),
   }),
 ).annotate({
@@ -1645,10 +1689,42 @@ export const PutOutboundRequestBatchResponse =
   ).annotate({
     identifier: "PutOutboundRequestBatchResponse",
   }) as any as S.Schema<PutOutboundRequestBatchResponse>;
+export interface WebNotificationContext {
+  sessionId?: string;
+  browserId?: string;
+}
+export const WebNotificationContext = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      sessionId: S.optional(S.String),
+      browserId: S.optional(S.String),
+    }),
+).annotate({
+  identifier: "WebNotificationContext",
+}) as any as S.Schema<WebNotificationContext>;
+export interface ChannelContext {
+  webNotificationContext?: WebNotificationContext;
+}
+export const ChannelContext = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ webNotificationContext: S.optional(WebNotificationContext) }),
+).annotate({ identifier: "ChannelContext" }) as any as S.Schema<ChannelContext>;
+export interface EventTriggerContext {
+  sourceEvent?: string;
+  channelContext?: ChannelContext;
+}
+export const EventTriggerContext = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    sourceEvent: S.optional(S.String),
+    channelContext: S.optional(ChannelContext),
+  }),
+).annotate({
+  identifier: "EventTriggerContext",
+}) as any as S.Schema<EventTriggerContext>;
 export interface ProfileOutboundRequest {
   clientToken: string;
   profileId: string;
   expirationTime?: Date;
+  eventTriggerContext?: EventTriggerContext;
 }
 export const ProfileOutboundRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -1658,6 +1734,7 @@ export const ProfileOutboundRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       expirationTime: S.optional(
         T.DateFromString.pipe(T.TimestampFormat("date-time")),
       ),
+      eventTriggerContext: S.optional(EventTriggerContext),
     }),
 ).annotate({
   identifier: "ProfileOutboundRequest",
@@ -1986,6 +2063,33 @@ export const UpdateCampaignCommunicationTimeResponse =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() => S.Struct({})).annotate({
     identifier: "UpdateCampaignCommunicationTimeResponse",
   }) as any as S.Schema<UpdateCampaignCommunicationTimeResponse>;
+export interface UpdateCampaignEntryLimitsRequest {
+  id: string;
+  entryLimitsConfig: EntryLimitsConfig;
+}
+export const UpdateCampaignEntryLimitsRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      id: S.String.pipe(T.HttpLabel("id")),
+      entryLimitsConfig: EntryLimitsConfig,
+    }).pipe(
+      T.all(
+        T.Http({ method: "POST", uri: "/v2/campaigns/{id}/entry-limits" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "UpdateCampaignEntryLimitsRequest",
+  }) as any as S.Schema<UpdateCampaignEntryLimitsRequest>;
+export interface UpdateCampaignEntryLimitsResponse {}
+export const UpdateCampaignEntryLimitsResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() => S.Struct({})).annotate({
+    identifier: "UpdateCampaignEntryLimitsResponse",
+  }) as any as S.Schema<UpdateCampaignEntryLimitsResponse>;
 export interface UpdateCampaignFlowAssociationRequest {
   id: string;
   connectCampaignFlowArn: string;
@@ -2185,6 +2289,7 @@ export const createCampaign: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateCampaign",
 }));
 export type DeleteCampaignError =
   | AccessDeniedException
@@ -2209,6 +2314,7 @@ export const deleteCampaign: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteCampaign",
 }));
 export type DeleteCampaignChannelSubtypeConfigError =
   | AccessDeniedException
@@ -2235,6 +2341,7 @@ export const deleteCampaignChannelSubtypeConfig: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteCampaignChannelSubtypeConfig",
 }));
 export type DeleteCampaignCommunicationLimitsError =
   | AccessDeniedException
@@ -2263,6 +2370,7 @@ export const deleteCampaignCommunicationLimits: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteCampaignCommunicationLimits",
 }));
 export type DeleteCampaignCommunicationTimeError =
   | AccessDeniedException
@@ -2291,6 +2399,36 @@ export const deleteCampaignCommunicationTime: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteCampaignCommunicationTime",
+}));
+export type DeleteCampaignEntryLimitsError =
+  | AccessDeniedException
+  | ConflictException
+  | InternalServerException
+  | InvalidCampaignStateException
+  | ResourceNotFoundException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Deletes the entry limits config for a campaign. This API is idempotent.
+ */
+export const deleteCampaignEntryLimits: API.OperationMethod<
+  DeleteCampaignEntryLimitsRequest,
+  DeleteCampaignEntryLimitsResponse,
+  DeleteCampaignEntryLimitsError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: DeleteCampaignEntryLimitsRequest,
+  output: DeleteCampaignEntryLimitsResponse,
+  errors: [
+    AccessDeniedException,
+    ConflictException,
+    InternalServerException,
+    InvalidCampaignStateException,
+    ResourceNotFoundException,
+    ValidationException,
+  ],
+  operationName: "DeleteCampaignEntryLimits",
 }));
 export type DeleteConnectInstanceConfigError =
   | AccessDeniedException
@@ -2319,6 +2457,7 @@ export const deleteConnectInstanceConfig: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteConnectInstanceConfig",
 }));
 export type DeleteConnectInstanceIntegrationError =
   | AccessDeniedException
@@ -2345,6 +2484,7 @@ export const deleteConnectInstanceIntegration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteConnectInstanceIntegration",
 }));
 export type DeleteInstanceOnboardingJobError =
   | AccessDeniedException
@@ -2371,6 +2511,7 @@ export const deleteInstanceOnboardingJob: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteInstanceOnboardingJob",
 }));
 export type DescribeCampaignError =
   | AccessDeniedException
@@ -2395,6 +2536,7 @@ export const describeCampaign: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DescribeCampaign",
 }));
 export type GetCampaignStateError =
   | AccessDeniedException
@@ -2421,6 +2563,7 @@ export const getCampaignState: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetCampaignState",
 }));
 export type GetCampaignStateBatchError =
   | AccessDeniedException
@@ -2445,6 +2588,7 @@ export const getCampaignStateBatch: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetCampaignStateBatch",
 }));
 export type GetConnectInstanceConfigError =
   | AccessDeniedException
@@ -2469,6 +2613,7 @@ export const getConnectInstanceConfig: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetConnectInstanceConfig",
 }));
 export type GetInstanceCommunicationLimitsError =
   | AccessDeniedException
@@ -2493,6 +2638,7 @@ export const getInstanceCommunicationLimits: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetInstanceCommunicationLimits",
 }));
 export type GetInstanceOnboardingJobStatusError =
   | AccessDeniedException
@@ -2517,6 +2663,7 @@ export const getInstanceOnboardingJobStatus: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetInstanceOnboardingJobStatus",
 }));
 export type ListCampaignsError =
   | AccessDeniedException
@@ -2550,6 +2697,7 @@ export const listCampaigns: API.OperationMethod<
   input: ListCampaignsRequest,
   output: ListCampaignsResponse,
   errors: [AccessDeniedException, InternalServerException, ValidationException],
+  operationName: "ListCampaigns",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -2597,6 +2745,7 @@ export const listConnectInstanceIntegrations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListConnectInstanceIntegrations",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -2629,6 +2778,7 @@ export const listTagsForResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type PauseCampaignError =
   | AccessDeniedException
@@ -2659,6 +2809,7 @@ export const pauseCampaign: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PauseCampaign",
 }));
 export type PutConnectInstanceIntegrationError =
   | AccessDeniedException
@@ -2687,6 +2838,7 @@ export const putConnectInstanceIntegration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutConnectInstanceIntegration",
 }));
 export type PutInstanceCommunicationLimitsError =
   | AccessDeniedException
@@ -2713,6 +2865,7 @@ export const putInstanceCommunicationLimits: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "PutInstanceCommunicationLimits",
 }));
 export type PutOutboundRequestBatchError =
   | AccessDeniedException
@@ -2743,6 +2896,7 @@ export const putOutboundRequestBatch: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutOutboundRequestBatch",
 }));
 export type PutProfileOutboundRequestBatchError =
   | AccessDeniedException
@@ -2773,6 +2927,7 @@ export const putProfileOutboundRequestBatch: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutProfileOutboundRequestBatch",
 }));
 export type ResumeCampaignError =
   | AccessDeniedException
@@ -2803,6 +2958,7 @@ export const resumeCampaign: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ResumeCampaign",
 }));
 export type StartCampaignError =
   | AccessDeniedException
@@ -2833,6 +2989,7 @@ export const startCampaign: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartCampaign",
 }));
 export type StartInstanceOnboardingJobError =
   | AccessDeniedException
@@ -2861,6 +3018,7 @@ export const startInstanceOnboardingJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartInstanceOnboardingJob",
 }));
 export type StopCampaignError =
   | AccessDeniedException
@@ -2891,6 +3049,7 @@ export const stopCampaign: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StopCampaign",
 }));
 export type TagResourceError =
   | AccessDeniedException
@@ -2917,6 +3076,7 @@ export const tagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | AccessDeniedException
@@ -2943,6 +3103,7 @@ export const untagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UntagResource",
 }));
 export type UpdateCampaignChannelSubtypeConfigError =
   | AccessDeniedException
@@ -2969,6 +3130,7 @@ export const updateCampaignChannelSubtypeConfig: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpdateCampaignChannelSubtypeConfig",
 }));
 export type UpdateCampaignCommunicationLimitsError =
   | AccessDeniedException
@@ -2997,6 +3159,7 @@ export const updateCampaignCommunicationLimits: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpdateCampaignCommunicationLimits",
 }));
 export type UpdateCampaignCommunicationTimeError =
   | AccessDeniedException
@@ -3025,6 +3188,36 @@ export const updateCampaignCommunicationTime: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpdateCampaignCommunicationTime",
+}));
+export type UpdateCampaignEntryLimitsError =
+  | AccessDeniedException
+  | ConflictException
+  | InternalServerException
+  | InvalidCampaignStateException
+  | ResourceNotFoundException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Updates the entry limits config for a campaign. This API is idempotent.
+ */
+export const updateCampaignEntryLimits: API.OperationMethod<
+  UpdateCampaignEntryLimitsRequest,
+  UpdateCampaignEntryLimitsResponse,
+  UpdateCampaignEntryLimitsError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: UpdateCampaignEntryLimitsRequest,
+  output: UpdateCampaignEntryLimitsResponse,
+  errors: [
+    AccessDeniedException,
+    ConflictException,
+    InternalServerException,
+    InvalidCampaignStateException,
+    ResourceNotFoundException,
+    ValidationException,
+  ],
+  operationName: "UpdateCampaignEntryLimits",
 }));
 export type UpdateCampaignFlowAssociationError =
   | AccessDeniedException
@@ -3053,6 +3246,7 @@ export const updateCampaignFlowAssociation: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpdateCampaignFlowAssociation",
 }));
 export type UpdateCampaignNameError =
   | AccessDeniedException
@@ -3079,6 +3273,7 @@ export const updateCampaignName: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpdateCampaignName",
 }));
 export type UpdateCampaignScheduleError =
   | AccessDeniedException
@@ -3107,6 +3302,7 @@ export const updateCampaignSchedule: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpdateCampaignSchedule",
 }));
 export type UpdateCampaignSourceError =
   | AccessDeniedException
@@ -3135,4 +3331,5 @@ export const updateCampaignSource: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpdateCampaignSource",
 }));

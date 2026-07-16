@@ -3,6 +3,16 @@ import { API } from "../client.ts";
 import * as T from "../traits.ts";
 
 // Input Schema
+export interface ListCounterpartyUsBankAccountsInput {
+  page_size?: number;
+  starting_after?: string;
+  ending_before?: string;
+  counterparty_id?: string;
+  customer_id?: string;
+  program_id?: string;
+  custom_ref?: string;
+  ereborVersion?: string;
+}
 export const ListCounterpartyUsBankAccountsInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     page_size: Schema.optional(Schema.Number),
@@ -15,11 +25,35 @@ export const ListCounterpartyUsBankAccountsInput =
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
-  }).pipe(T.Http({ method: "GET", path: "/counterparty_us_bank_accounts" }));
-export type ListCounterpartyUsBankAccountsInput =
-  typeof ListCounterpartyUsBankAccountsInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/counterparty_us_bank_accounts" }),
+  ) as unknown as Schema.Codec<ListCounterpartyUsBankAccountsInput>;
 
 // Output Schema
+export interface ListCounterpartyUsBankAccountsOutput {
+  data: ReadonlyArray<{
+    id: string;
+    type: "COUNTERPARTY_US_BANK_ACCOUNT";
+    url: string;
+    created_at: string;
+    updated_at: string;
+    archived_at?: string | null;
+    customer_id?: string | null;
+    program_id?: string | null;
+    counterparty_id?: string | null;
+    description: string | null;
+    account_number: string;
+    routing_number: string;
+    bank_name?: string | null;
+    custom_ref?: string | null;
+    custom_fields?: Record<string, unknown> | null;
+  }>;
+  has_more: boolean;
+  page_size: number;
+  page_next?: string | null;
+  page_prev?: string | null;
+  url: string;
+}
 export const ListCounterpartyUsBankAccountsOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Array(
@@ -37,8 +71,10 @@ export const ListCounterpartyUsBankAccountsOutput =
         account_number: Schema.String,
         routing_number: Schema.String,
         bank_name: Schema.optional(Schema.NullOr(Schema.String)),
-        custom_ref: Schema.optional(Schema.Unknown),
-        custom_fields: Schema.optional(Schema.Unknown),
+        custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+        custom_fields: Schema.optional(
+          Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+        ),
       }),
     ),
     has_more: Schema.Boolean,
@@ -46,9 +82,7 @@ export const ListCounterpartyUsBankAccountsOutput =
     page_next: Schema.optional(Schema.NullOr(Schema.String)),
     page_prev: Schema.optional(Schema.NullOr(Schema.String)),
     url: Schema.String,
-  });
-export type ListCounterpartyUsBankAccountsOutput =
-  typeof ListCounterpartyUsBankAccountsOutput.Type;
+  }) as unknown as Schema.Codec<ListCounterpartyUsBankAccountsOutput>;
 
 // The operation
 /**

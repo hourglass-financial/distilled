@@ -3,13 +3,29 @@ import { API } from "../client.ts";
 import * as T from "../traits.ts";
 
 // Input Schema
+export interface ListDepositAccountsInput {
+  page_size?: number;
+  starting_after?: string;
+  ending_before?: string;
+  status?: "PENDING" | "OPEN" | "CLOSED" | "FROZEN";
+  deposit_account_type?: "DDA" | "FBO" | "OMNIBUS" | "VIRTUAL_DDA";
+  customer_id?: string;
+  program_id?: string;
+  parent_account_id?: string;
+  custom_ref?: string;
+  ereborVersion?: string;
+}
 export const ListDepositAccountsInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     page_size: Schema.optional(Schema.Number),
     starting_after: Schema.optional(Schema.String),
     ending_before: Schema.optional(Schema.String),
-    status: Schema.optional(Schema.String),
-    deposit_account_type: Schema.optional(Schema.String),
+    status: Schema.optional(
+      Schema.Literals(["PENDING", "OPEN", "CLOSED", "FROZEN"]),
+    ),
+    deposit_account_type: Schema.optional(
+      Schema.Literals(["DDA", "FBO", "OMNIBUS", "VIRTUAL_DDA"]),
+    ),
     customer_id: Schema.optional(Schema.String),
     program_id: Schema.optional(Schema.String),
     parent_account_id: Schema.optional(Schema.String),
@@ -17,10 +33,110 @@ export const ListDepositAccountsInput =
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
-  }).pipe(T.Http({ method: "GET", path: "/deposit_accounts" }));
-export type ListDepositAccountsInput = typeof ListDepositAccountsInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/deposit_accounts" }),
+  ) as unknown as Schema.Codec<ListDepositAccountsInput>;
 
 // Output Schema
+export interface ListDepositAccountsOutput {
+  data: ReadonlyArray<{
+    id: string;
+    type: "DEPOSIT_ACCOUNT";
+    url: string;
+    created_at: string;
+    updated_at: string;
+    archived_at?: string | null;
+    program_id?: string | null;
+    customer_id: string;
+    name?: string | null;
+    status?: "PENDING" | "OPEN" | "CLOSED" | "FROZEN";
+    deposit_account_template_id: string;
+    deposit_account_type: "DDA" | "FBO" | "OMNIBUS" | "VIRTUAL_DDA";
+    ownership_type: "BUSINESS" | "INDIVIDUAL";
+    balances: {
+      current: {
+        currency: "USD" | "USDC";
+        exponent: number;
+        value: string;
+        display_value: string;
+      };
+      available: {
+        currency: "USD" | "USDC";
+        exponent: number;
+        value: string;
+        display_value: string;
+      };
+      pending_in: {
+        currency: "USD" | "USDC";
+        exponent: number;
+        value: string;
+        display_value: string;
+      };
+      pending_out: {
+        currency: "USD" | "USDC";
+        exponent: number;
+        value: string;
+        display_value: string;
+      };
+    };
+    account_numbers?: ReadonlyArray<{
+      id: string;
+      type: "ACCOUNT_NUMBER";
+      url: string;
+      created_at: string;
+      updated_at: string;
+      archived_at?: string | null;
+      program_id?: string | null;
+      deposit_account_id: string;
+      name?: string | null;
+      account_number: string;
+      routing_number: string;
+      default: boolean;
+      custom_ref?: string | null;
+      custom_fields?: Record<string, unknown> | null;
+    }>;
+    default_account_number?: {
+      id: string;
+      type: "ACCOUNT_NUMBER";
+      url: string;
+      created_at: string;
+      updated_at: string;
+      archived_at?: string | null;
+      program_id?: string | null;
+      deposit_account_id: string;
+      name?: string | null;
+      account_number: string;
+      routing_number: string;
+      default: boolean;
+      custom_ref?: string | null;
+      custom_fields?: Record<string, unknown> | null;
+    } | null;
+    blockchain_addresses?: ReadonlyArray<{
+      id: string;
+      type: "BLOCKCHAIN_ADDRESS";
+      url: string;
+      created_at: string;
+      updated_at: string;
+      archived_at?: string | null;
+      deposit_account_id: string;
+      name?: string | null;
+      address: string;
+      address_type: "ETHEREUM" | "SOLANA" | "SUI";
+      network: ReadonlyArray<"BASE" | "ETHEREUM" | "INK" | "SOLANA" | "SUI">;
+      custom_ref?: string | null;
+      custom_fields?: Record<string, unknown> | null;
+    }>;
+    parent_account_id?: string | null;
+    disclosures: { disclosures_signed_externally: boolean };
+    custom_ref?: string | null;
+    custom_fields?: Record<string, unknown> | null;
+  }>;
+  has_more: boolean;
+  page_size: number;
+  page_next?: string | null;
+  page_prev?: string | null;
+  url: string;
+}
 export const ListDepositAccountsOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Array(
@@ -86,12 +202,35 @@ export const ListDepositAccountsOutput =
               account_number: Schema.String,
               routing_number: Schema.String,
               default: Schema.Boolean,
-              custom_ref: Schema.optional(Schema.Unknown),
-              custom_fields: Schema.optional(Schema.Unknown),
+              custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+              custom_fields: Schema.optional(
+                Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+              ),
             }),
           ),
         ),
-        default_account_number: Schema.optional(Schema.Unknown),
+        default_account_number: Schema.optional(
+          Schema.NullOr(
+            Schema.Struct({
+              id: Schema.String,
+              type: Schema.Literals(["ACCOUNT_NUMBER"]),
+              url: Schema.String,
+              created_at: Schema.String,
+              updated_at: Schema.String,
+              archived_at: Schema.optional(Schema.NullOr(Schema.String)),
+              program_id: Schema.optional(Schema.NullOr(Schema.String)),
+              deposit_account_id: Schema.String,
+              name: Schema.optional(Schema.NullOr(Schema.String)),
+              account_number: Schema.String,
+              routing_number: Schema.String,
+              default: Schema.Boolean,
+              custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+              custom_fields: Schema.optional(
+                Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+              ),
+            }),
+          ),
+        ),
         blockchain_addresses: Schema.optional(
           Schema.Array(
             Schema.Struct({
@@ -108,8 +247,10 @@ export const ListDepositAccountsOutput =
               network: Schema.Array(
                 Schema.Literals(["BASE", "ETHEREUM", "INK", "SOLANA", "SUI"]),
               ),
-              custom_ref: Schema.optional(Schema.Unknown),
-              custom_fields: Schema.optional(Schema.Unknown),
+              custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+              custom_fields: Schema.optional(
+                Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+              ),
             }),
           ),
         ),
@@ -117,8 +258,10 @@ export const ListDepositAccountsOutput =
         disclosures: Schema.Struct({
           disclosures_signed_externally: Schema.Boolean,
         }),
-        custom_ref: Schema.optional(Schema.Unknown),
-        custom_fields: Schema.optional(Schema.Unknown),
+        custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+        custom_fields: Schema.optional(
+          Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+        ),
       }),
     ),
     has_more: Schema.Boolean,
@@ -126,8 +269,7 @@ export const ListDepositAccountsOutput =
     page_next: Schema.optional(Schema.NullOr(Schema.String)),
     page_prev: Schema.optional(Schema.NullOr(Schema.String)),
     url: Schema.String,
-  });
-export type ListDepositAccountsOutput = typeof ListDepositAccountsOutput.Type;
+  }) as unknown as Schema.Codec<ListDepositAccountsOutput>;
 
 // The operation
 /**

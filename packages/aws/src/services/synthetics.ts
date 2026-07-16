@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -101,6 +101,7 @@ export type EphemeralStorageSize = number;
 export type MaxSize1024 = number;
 export type SubnetId = string;
 export type SecurityGroupId = string;
+export type Location = string;
 export type TagKey = string;
 export type TagValue = string;
 export type KmsKeyArn = string;
@@ -264,6 +265,19 @@ export const BrowserConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 export type BrowserConfigs = BrowserConfig[];
 export const BrowserConfigs =
   /*@__PURE__*/ /*#__PURE__*/ S.Array(BrowserConfig);
+export interface AddReplicaLocationInput {
+  Location: string;
+  VpcConfig?: VpcConfigInput;
+}
+export const AddReplicaLocationInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () => S.Struct({ Location: S.String, VpcConfig: S.optional(VpcConfigInput) }),
+).annotate({
+  identifier: "AddReplicaLocationInput",
+}) as any as S.Schema<AddReplicaLocationInput>;
+export type AddReplicaLocations = AddReplicaLocationInput[];
+export const AddReplicaLocations = /*@__PURE__*/ /*#__PURE__*/ S.Array(
+  AddReplicaLocationInput,
+);
 export type TagMap = { [key: string]: string | undefined };
 export const TagMap = /*@__PURE__*/ /*#__PURE__*/ S.Record(
   S.String,
@@ -305,6 +319,7 @@ export interface CreateCanaryRequest {
   ResourcesToReplicateTags?: ResourceToTag[];
   ProvisionedResourceCleanup?: ProvisionedResourceCleanupSetting;
   BrowserConfigs?: BrowserConfig[];
+  AddReplicaLocations?: AddReplicaLocationInput[];
   Tags?: { [key: string]: string | undefined };
   ArtifactConfig?: ArtifactConfigInput;
 }
@@ -323,6 +338,7 @@ export const CreateCanaryRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     ResourcesToReplicateTags: S.optional(ResourceList),
     ProvisionedResourceCleanup: S.optional(ProvisionedResourceCleanupSetting),
     BrowserConfigs: S.optional(BrowserConfigs),
+    AddReplicaLocations: S.optional(AddReplicaLocations),
     Tags: S.optional(TagMap),
     ArtifactConfig: S.optional(ArtifactConfigInput),
   }).pipe(
@@ -507,6 +523,62 @@ export type VisualReferencesOutput = VisualReferenceOutput[];
 export const VisualReferencesOutput = /*@__PURE__*/ /*#__PURE__*/ S.Array(
   VisualReferenceOutput,
 );
+export type LocationType = "Primary" | "Replica" | (string & {});
+export const LocationType = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export type ReplicationState =
+  | "InProgress"
+  | "InSync"
+  | "Inconsistent"
+  | (string & {});
+export const ReplicationState = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface ReplicationStatus {
+  State?: ReplicationState;
+  StateReason?: string;
+  StateReasonCode?: string;
+}
+export const ReplicationStatus = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    State: S.optional(ReplicationState),
+    StateReason: S.optional(S.String),
+    StateReasonCode: S.optional(S.String),
+  }),
+).annotate({
+  identifier: "ReplicationStatus",
+}) as any as S.Schema<ReplicationStatus>;
+export interface Replica {
+  Location?: string;
+  ReplicationStatus?: ReplicationStatus;
+  CanaryState?: CanaryState;
+  LastModified?: Date;
+  VpcConfig?: VpcConfigOutput;
+}
+export const Replica = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    Location: S.optional(S.String),
+    ReplicationStatus: S.optional(ReplicationStatus),
+    CanaryState: S.optional(CanaryState),
+    LastModified: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    VpcConfig: S.optional(VpcConfigOutput),
+  }),
+).annotate({ identifier: "Replica" }) as any as S.Schema<Replica>;
+export type Replicas = Replica[];
+export const Replicas = /*@__PURE__*/ /*#__PURE__*/ S.Array(Replica);
+export interface MultiLocationConfig {
+  LocationType?: LocationType;
+  PrimaryLocation?: string;
+  Replicas?: Replica[];
+  ReplicationState?: ReplicationState;
+}
+export const MultiLocationConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    LocationType: S.optional(LocationType),
+    PrimaryLocation: S.optional(S.String),
+    Replicas: S.optional(Replicas),
+    ReplicationState: S.optional(ReplicationState),
+  }),
+).annotate({
+  identifier: "MultiLocationConfig",
+}) as any as S.Schema<MultiLocationConfig>;
 export interface ArtifactConfigOutput {
   S3Encryption?: S3EncryptionConfig;
 }
@@ -547,6 +619,7 @@ export interface Canary {
   BrowserConfigs?: BrowserConfig[];
   EngineConfigs?: EngineConfig[];
   VisualReferences?: VisualReferenceOutput[];
+  MultiLocationConfig?: MultiLocationConfig;
   Tags?: { [key: string]: string | undefined };
   ArtifactConfig?: ArtifactConfigOutput;
   DryRunConfig?: DryRunConfigOutput;
@@ -572,6 +645,7 @@ export const Canary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     BrowserConfigs: S.optional(BrowserConfigs),
     EngineConfigs: S.optional(EngineConfigs),
     VisualReferences: S.optional(VisualReferencesOutput),
+    MultiLocationConfig: S.optional(MultiLocationConfig),
     Tags: S.optional(TagMap),
     ArtifactConfig: S.optional(ArtifactConfigOutput),
     DryRunConfig: S.optional(DryRunConfigOutput),
@@ -818,6 +892,7 @@ export interface CanaryRun {
   ArtifactS3Location?: string;
   DryRunConfig?: CanaryDryRunConfigOutput;
   BrowserType?: BrowserType;
+  Location?: string;
 }
 export const CanaryRun = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -830,6 +905,7 @@ export const CanaryRun = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     ArtifactS3Location: S.optional(S.String),
     DryRunConfig: S.optional(CanaryDryRunConfigOutput),
     BrowserType: S.optional(BrowserType),
+    Location: S.optional(S.String),
   }),
 ).annotate({ identifier: "CanaryRun" }) as any as S.Schema<CanaryRun>;
 export interface CanaryLastRun {
@@ -1365,6 +1441,10 @@ export const UntagResourceResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "UntagResourceResponse",
 }) as any as S.Schema<UntagResourceResponse>;
+export type RemoveReplicaLocations = string[];
+export const RemoveReplicaLocations = /*@__PURE__*/ /*#__PURE__*/ S.Array(
+  S.String,
+);
 export interface UpdateCanaryRequest {
   Name: string;
   Code?: CanaryCodeInput;
@@ -1382,6 +1462,8 @@ export interface UpdateCanaryRequest {
   DryRunId?: string;
   VisualReferences?: VisualReferenceInput[];
   BrowserConfigs?: BrowserConfig[];
+  AddReplicaLocations?: AddReplicaLocationInput[];
+  RemoveReplicaLocations?: string[];
 }
 export const UpdateCanaryRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -1401,6 +1483,8 @@ export const UpdateCanaryRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     DryRunId: S.optional(S.String),
     VisualReferences: S.optional(VisualReferences),
     BrowserConfigs: S.optional(BrowserConfigs),
+    AddReplicaLocations: S.optional(AddReplicaLocations),
+    RemoveReplicaLocations: S.optional(RemoveReplicaLocations),
   }).pipe(
     T.all(
       T.Http({ method: "PATCH", uri: "/canary/{Name}" }),
@@ -1497,6 +1581,7 @@ export const associateResource: API.OperationMethod<
     ServiceQuotaExceededException,
     ValidationException,
   ],
+  operationName: "AssociateResource",
 }));
 export type CreateCanaryError =
   | InternalServerException
@@ -1535,6 +1620,7 @@ export const createCanary: API.OperationMethod<
     RequestEntityTooLargeException,
     ValidationException,
   ],
+  operationName: "CreateCanary",
 }));
 export type CreateGroupError =
   | ConflictException
@@ -1574,6 +1660,7 @@ export const createGroup: API.OperationMethod<
     ServiceQuotaExceededException,
     ValidationException,
   ],
+  operationName: "CreateGroup",
 }));
 export type DeleteCanaryError =
   | ConflictException
@@ -1623,6 +1710,7 @@ export const deleteCanary: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteCanary",
 }));
 export type DeleteGroupError =
   | ConflictException
@@ -1651,6 +1739,7 @@ export const deleteGroup: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteGroup",
 }));
 export type DescribeCanariesError =
   | InternalServerException
@@ -1694,6 +1783,7 @@ export const describeCanaries: API.OperationMethod<
   input: DescribeCanariesRequest,
   output: DescribeCanariesResponse,
   errors: [InternalServerException, ValidationException],
+  operationName: "DescribeCanaries",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -1741,6 +1831,7 @@ export const describeCanariesLastRun: API.OperationMethod<
   input: DescribeCanariesLastRunRequest,
   output: DescribeCanariesLastRunResponse,
   errors: [InternalServerException, ValidationException],
+  operationName: "DescribeCanariesLastRun",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -1780,6 +1871,7 @@ export const describeRuntimeVersions: API.OperationMethod<
   input: DescribeRuntimeVersionsRequest,
   output: DescribeRuntimeVersionsResponse,
   errors: [InternalServerException, ValidationException],
+  operationName: "DescribeRuntimeVersions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -1809,6 +1901,7 @@ export const disassociateResource: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DisassociateResource",
 }));
 export type GetCanaryError =
   | InternalServerException
@@ -1828,6 +1921,7 @@ export const getCanary: API.OperationMethod<
   input: GetCanaryRequest,
   output: GetCanaryResponse,
   errors: [InternalServerException, ValidationException],
+  operationName: "GetCanary",
 }));
 export type GetCanaryRunsError =
   | InternalServerException
@@ -1865,6 +1959,7 @@ export const getCanaryRuns: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetCanaryRuns",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -1895,6 +1990,7 @@ export const getGroup: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetGroup",
 }));
 export type ListAssociatedGroupsError =
   | InternalServerException
@@ -1933,6 +2029,7 @@ export const listAssociatedGroups: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "ListAssociatedGroups",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -1977,6 +2074,7 @@ export const listGroupResources: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "ListGroupResources",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -2015,6 +2113,7 @@ export const listGroups: API.OperationMethod<
   input: ListGroupsRequest,
   output: ListGroupsResponse,
   errors: [InternalServerException, ValidationException],
+  operationName: "ListGroups",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -2046,6 +2145,7 @@ export const listTagsForResource: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type StartCanaryError =
   | ConflictException
@@ -2072,6 +2172,7 @@ export const startCanary: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "StartCanary",
 }));
 export type StartCanaryDryRunError =
   | AccessDeniedException
@@ -2098,6 +2199,7 @@ export const startCanaryDryRun: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "StartCanaryDryRun",
 }));
 export type StopCanaryError =
   | ConflictException
@@ -2127,6 +2229,7 @@ export const stopCanary: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "StopCanary",
 }));
 export type TagResourceError =
   | BadRequestException
@@ -2168,6 +2271,7 @@ export const tagResource: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | BadRequestException
@@ -2194,6 +2298,7 @@ export const untagResource: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "UntagResource",
 }));
 export type UpdateCanaryError =
   | AccessDeniedException
@@ -2233,4 +2338,5 @@ export const updateCanary: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpdateCanary",
 }));

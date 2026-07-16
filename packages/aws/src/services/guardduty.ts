@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -99,6 +99,8 @@ export type FilterDescription = string;
 export type FilterRank = number;
 export type Match = string;
 export type NotMatch = string;
+export type TriggerPrompt = string;
+export type InvestigationId = string;
 export type Name = string;
 export type Location = string;
 export type AccountId = string;
@@ -124,7 +126,12 @@ export type SignalDescription = string;
 export type IndicatorValueString = string;
 export type IndicatorTitle = string;
 export type MaxResults100 = number;
+export type TriggeredBy = string;
+export type RiskDetails = string;
+export type InvestigationErrorDetails = string;
 export type NonNegativeInteger = number;
+export type NextToken = string;
+export type InvestigationTitle = string;
 export type GuardDutyArn = string;
 export type ResourceArn = string;
 
@@ -634,6 +641,51 @@ export const CreateFilterResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "CreateFilterResponse",
 }) as any as S.Schema<CreateFilterResponse>;
+export interface CreateInvestigationRequest {
+  DetectorId: string;
+  TriggerPrompt?: string;
+  ClientToken?: string;
+}
+export const CreateInvestigationRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      DetectorId: S.String.pipe(T.HttpLabel("DetectorId")),
+      TriggerPrompt: S.optional(S.String),
+      ClientToken: S.optional(S.String).pipe(T.IdempotencyToken()),
+    })
+      .pipe(
+        S.encodeKeys({
+          TriggerPrompt: "triggerPrompt",
+          ClientToken: "clientToken",
+        }),
+      )
+      .pipe(
+        T.all(
+          T.Http({
+            method: "POST",
+            uri: "/detector/{DetectorId}/investigation",
+          }),
+          svc,
+          auth,
+          proto,
+          ver,
+          rules,
+        ),
+      ),
+).annotate({
+  identifier: "CreateInvestigationRequest",
+}) as any as S.Schema<CreateInvestigationRequest>;
+export interface CreateInvestigationResponse {
+  InvestigationId: string;
+}
+export const CreateInvestigationResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ InvestigationId: S.optional(S.String) }).pipe(
+      S.encodeKeys({ InvestigationId: "investigationId" }),
+    ),
+  ).annotate({
+    identifier: "CreateInvestigationResponse",
+  }) as any as S.Schema<CreateInvestigationResponse>;
 export type IpSetFormat =
   | "TXT"
   | "STIX"
@@ -4422,6 +4474,10 @@ export type FlagsList = string[];
 export const FlagsList = /*@__PURE__*/ /*#__PURE__*/ S.Array(S.String);
 export type MemoryRegionsList = string[];
 export const MemoryRegionsList = /*@__PURE__*/ /*#__PURE__*/ S.Array(S.String);
+export type RelatedFilePathsList = string[];
+export const RelatedFilePathsList = /*@__PURE__*/ /*#__PURE__*/ S.Array(
+  S.String,
+);
 export interface RuntimeContext {
   ModifyingProcess?: ProcessDetails;
   ModifiedAt?: Date;
@@ -4448,6 +4504,9 @@ export interface RuntimeContext {
   ServiceName?: string;
   CommandLineExample?: string;
   ThreatFilePath?: string;
+  FileOperation?: string;
+  FilePath?: string;
+  RelatedFilePaths?: string[];
 }
 export const RuntimeContext = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -4476,6 +4535,9 @@ export const RuntimeContext = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     ServiceName: S.optional(S.String),
     CommandLineExample: S.optional(S.String),
     ThreatFilePath: S.optional(S.String),
+    FileOperation: S.optional(S.String),
+    FilePath: S.optional(S.String),
+    RelatedFilePaths: S.optional(RelatedFilePathsList),
   }).pipe(
     S.encodeKeys({
       ModifyingProcess: "modifyingProcess",
@@ -4503,6 +4565,9 @@ export const RuntimeContext = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
       ServiceName: "serviceName",
       CommandLineExample: "commandLineExample",
       ThreatFilePath: "threatFilePath",
+      FileOperation: "fileOperation",
+      FilePath: "filePath",
+      RelatedFilePaths: "relatedFilePaths",
     }),
   ),
 ).annotate({ identifier: "RuntimeContext" }) as any as S.Schema<RuntimeContext>;
@@ -5285,6 +5350,11 @@ export type IndicatorType =
   | "CRYPTOMINING_DOMAIN"
   | "CRYPTOMINING_PROCESS"
   | "MALICIOUS_FILE"
+  | "VULNERABILITY"
+  | "MALICIOUS_PACKAGE"
+  | "MISCONFIGURATION"
+  | "REACHABILITY"
+  | "SENSITIVE_DATA"
   | (string & {});
 export const IndicatorType = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export type IndicatorValues = string[];
@@ -5979,6 +6049,161 @@ export const GetFindingsStatisticsResponse =
   ).annotate({
     identifier: "GetFindingsStatisticsResponse",
   }) as any as S.Schema<GetFindingsStatisticsResponse>;
+export interface GetInvestigationRequest {
+  DetectorId: string;
+  InvestigationId: string;
+}
+export const GetInvestigationRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      DetectorId: S.String.pipe(T.HttpLabel("DetectorId")),
+      InvestigationId: S.String.pipe(T.HttpLabel("InvestigationId")),
+    }).pipe(
+      T.all(
+        T.Http({
+          method: "GET",
+          uri: "/detector/{DetectorId}/investigation/{InvestigationId}",
+        }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+).annotate({
+  identifier: "GetInvestigationRequest",
+}) as any as S.Schema<GetInvestigationRequest>;
+export type InvestigationStatus =
+  | "RUNNING"
+  | "COMPLETED"
+  | "FAILED"
+  | (string & {});
+export const InvestigationStatus = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface Product {
+  Name?: string;
+  Feature?: string;
+}
+export const Product = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ Name: S.optional(S.String), Feature: S.optional(S.String) }).pipe(
+    S.encodeKeys({ Name: "name", Feature: "feature" }),
+  ),
+).annotate({ identifier: "Product" }) as any as S.Schema<Product>;
+export interface InvestigationMetadata {
+  Version?: string;
+  Product?: Product;
+}
+export const InvestigationMetadata = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    Version: S.optional(S.String),
+    Product: S.optional(Product),
+  }).pipe(S.encodeKeys({ Version: "version", Product: "product" })),
+).annotate({
+  identifier: "InvestigationMetadata",
+}) as any as S.Schema<InvestigationMetadata>;
+export type CloudProvider = "AWS" | (string & {});
+export const CloudProvider = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface CloudDetails {
+  Provider?: CloudProvider;
+  Region?: string;
+  Account?: string;
+}
+export const CloudDetails = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    Provider: S.optional(CloudProvider),
+    Region: S.optional(S.String),
+    Account: S.optional(S.String),
+  }).pipe(
+    S.encodeKeys({
+      Provider: "provider",
+      Region: "region",
+      Account: "account",
+    }),
+  ),
+).annotate({ identifier: "CloudDetails" }) as any as S.Schema<CloudDetails>;
+export type RiskLevel =
+  | "Info"
+  | "Low"
+  | "Medium"
+  | "High"
+  | "Critical"
+  | (string & {});
+export const RiskLevel = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export type Confidence = "Unknown" | "Low" | "Medium" | "High" | (string & {});
+export const Confidence = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface Investigation {
+  InvestigationId?: string;
+  Status?: InvestigationStatus;
+  TriggerPrompt?: string;
+  TriggeredBy?: string;
+  Metadata?: InvestigationMetadata;
+  Cloud?: CloudDetails;
+  RiskLevel?: RiskLevel;
+  Risk?: string;
+  Confidence?: Confidence;
+  Summary?: string;
+  StartTime?: Date;
+  EndTime?: Date;
+  Error?: string;
+}
+export const Investigation = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    InvestigationId: S.optional(S.String),
+    Status: S.optional(InvestigationStatus),
+    TriggerPrompt: S.optional(S.String),
+    TriggeredBy: S.optional(S.String),
+    Metadata: S.optional(InvestigationMetadata),
+    Cloud: S.optional(CloudDetails),
+    RiskLevel: S.optional(RiskLevel),
+    Risk: S.optional(S.String),
+    Confidence: S.optional(Confidence),
+    Summary: S.optional(S.String),
+    StartTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    EndTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    Error: S.optional(S.String),
+  }).pipe(
+    S.encodeKeys({
+      InvestigationId: "investigationId",
+      Status: "status",
+      TriggerPrompt: "triggerPrompt",
+      TriggeredBy: "triggeredBy",
+      Metadata: "metadata",
+      Cloud: "cloud",
+      RiskLevel: "riskLevel",
+      Risk: "risk",
+      Confidence: "confidence",
+      Summary: "summary",
+      StartTime: "startTime",
+      EndTime: "endTime",
+      Error: "error",
+    }),
+  ),
+).annotate({ identifier: "Investigation" }) as any as S.Schema<Investigation>;
+export interface GetInvestigationResponse {
+  Investigation: Investigation & {
+    InvestigationId: InvestigationId;
+    Status: InvestigationStatus;
+    TriggerPrompt: TriggerPrompt;
+    TriggeredBy: TriggeredBy;
+    Metadata: InvestigationMetadata & {
+      Version: string;
+      Product: Product & { Name: string };
+    };
+    Cloud: CloudDetails & {
+      Provider: CloudProvider;
+      Region: string;
+      Account: string;
+    };
+  };
+}
+export const GetInvestigationResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({ Investigation: S.optional(Investigation) }).pipe(
+      S.encodeKeys({ Investigation: "investigation" }),
+    ),
+).annotate({
+  identifier: "GetInvestigationResponse",
+}) as any as S.Schema<GetInvestigationResponse>;
 export interface GetInvitationsCountRequest {}
 export const GetInvitationsCountRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -6176,6 +6401,7 @@ export type MalwareProtectionResourceType =
   | "EC2_RECOVERY_POINT"
   | "S3_RECOVERY_POINT"
   | "S3_BUCKET"
+  | "S3_POINT_IN_TIME_RECOVERY"
   | (string & {});
 export const MalwareProtectionResourceType =
   /*@__PURE__*/ /*#__PURE__*/ S.String;
@@ -6259,13 +6485,33 @@ export const ScannedResource = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 export type ScannedResources = ScannedResource[];
 export const ScannedResources =
   /*@__PURE__*/ /*#__PURE__*/ S.Array(ScannedResource);
+export interface ScanConfigurationContinuousScanDetails {
+  StartTime?: Date;
+  EndTime: Date;
+}
+export const ScanConfigurationContinuousScanDetails =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      StartTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+      EndTime: S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+    }).pipe(S.encodeKeys({ StartTime: "startTime", EndTime: "endTime" })),
+  ).annotate({
+    identifier: "ScanConfigurationContinuousScanDetails",
+  }) as any as S.Schema<ScanConfigurationContinuousScanDetails>;
 export interface ScanConfigurationRecoveryPoint {
   BackupVaultName?: string;
+  ContinuousScanDetails?: ScanConfigurationContinuousScanDetails;
 }
 export const ScanConfigurationRecoveryPoint =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-    S.Struct({ BackupVaultName: S.optional(S.String) }).pipe(
-      S.encodeKeys({ BackupVaultName: "backupVaultName" }),
+    S.Struct({
+      BackupVaultName: S.optional(S.String),
+      ContinuousScanDetails: S.optional(ScanConfigurationContinuousScanDetails),
+    }).pipe(
+      S.encodeKeys({
+        BackupVaultName: "backupVaultName",
+        ContinuousScanDetails: "continuousScanDetails",
+      }),
     ),
   ).annotate({
     identifier: "ScanConfigurationRecoveryPoint",
@@ -7986,6 +8232,125 @@ export const ListFindingsResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "ListFindingsResponse",
 }) as any as S.Schema<ListFindingsResponse>;
+export type InvestigationSortField =
+  | "START_TIME"
+  | "END_TIME"
+  | "STATUS"
+  | "RISK_LEVEL"
+  | "CONFIDENCE"
+  | (string & {});
+export const InvestigationSortField = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface InvestigationSortCriteria {
+  AttributeName?: InvestigationSortField;
+  OrderBy?: OrderBy;
+}
+export const InvestigationSortCriteria = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      AttributeName: S.optional(InvestigationSortField),
+      OrderBy: S.optional(OrderBy),
+    }).pipe(
+      S.encodeKeys({ AttributeName: "attributeName", OrderBy: "orderBy" }),
+    ),
+).annotate({
+  identifier: "InvestigationSortCriteria",
+}) as any as S.Schema<InvestigationSortCriteria>;
+export interface ListInvestigationsRequest {
+  DetectorId: string;
+  SortCriteria?: InvestigationSortCriteria;
+  MaxResults?: number;
+  NextToken?: string;
+}
+export const ListInvestigationsRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      DetectorId: S.String.pipe(T.HttpLabel("DetectorId")),
+      SortCriteria: S.optional(InvestigationSortCriteria),
+      MaxResults: S.optional(S.Number),
+      NextToken: S.optional(S.String),
+    })
+      .pipe(
+        S.encodeKeys({
+          SortCriteria: "sortCriteria",
+          MaxResults: "maxResults",
+          NextToken: "nextToken",
+        }),
+      )
+      .pipe(
+        T.all(
+          T.Http({
+            method: "POST",
+            uri: "/detector/{DetectorId}/investigation/list",
+          }),
+          svc,
+          auth,
+          proto,
+          ver,
+          rules,
+        ),
+      ),
+).annotate({
+  identifier: "ListInvestigationsRequest",
+}) as any as S.Schema<ListInvestigationsRequest>;
+export interface InvestigationSummary {
+  InvestigationId?: string;
+  Status?: InvestigationStatus;
+  TriggerPrompt?: string;
+  RiskLevel?: RiskLevel;
+  Confidence?: Confidence;
+  Title?: string;
+  AccountId?: string;
+  StartTime?: Date;
+  EndTime?: Date;
+}
+export const InvestigationSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    InvestigationId: S.optional(S.String),
+    Status: S.optional(InvestigationStatus),
+    TriggerPrompt: S.optional(S.String),
+    RiskLevel: S.optional(RiskLevel),
+    Confidence: S.optional(Confidence),
+    Title: S.optional(S.String),
+    AccountId: S.optional(S.String),
+    StartTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    EndTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+  }).pipe(
+    S.encodeKeys({
+      InvestigationId: "investigationId",
+      Status: "status",
+      TriggerPrompt: "triggerPrompt",
+      RiskLevel: "riskLevel",
+      Confidence: "confidence",
+      Title: "title",
+      AccountId: "accountId",
+      StartTime: "startTime",
+      EndTime: "endTime",
+    }),
+  ),
+).annotate({
+  identifier: "InvestigationSummary",
+}) as any as S.Schema<InvestigationSummary>;
+export type InvestigationSummaries = InvestigationSummary[];
+export const InvestigationSummaries =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(InvestigationSummary);
+export interface ListInvestigationsResponse {
+  Investigations: InvestigationSummary[];
+  NextToken?: string;
+}
+export const ListInvestigationsResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      Investigations: S.optional(InvestigationSummaries),
+      NextToken: S.optional(S.String),
+    }).pipe(
+      S.encodeKeys({
+        Investigations: "investigations",
+        NextToken: "nextToken",
+      }),
+    ),
+).annotate({
+  identifier: "ListInvestigationsResponse",
+}) as any as S.Schema<ListInvestigationsResponse>;
 export interface ListInvitationsRequest {
   MaxResults?: number;
   NextToken?: string;
@@ -8641,12 +9006,31 @@ export const SendObjectMalwareScanResponse =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() => S.Struct({})).annotate({
     identifier: "SendObjectMalwareScanResponse",
   }) as any as S.Schema<SendObjectMalwareScanResponse>;
+export interface ContinuousScanDetails {
+  StartTime?: Date;
+  EndTime: Date;
+}
+export const ContinuousScanDetails = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    StartTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    EndTime: S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+  }).pipe(S.encodeKeys({ StartTime: "startTime", EndTime: "endTime" })),
+).annotate({
+  identifier: "ContinuousScanDetails",
+}) as any as S.Schema<ContinuousScanDetails>;
 export interface RecoveryPoint {
   BackupVaultName?: string;
+  ContinuousScanDetails?: ContinuousScanDetails;
 }
 export const RecoveryPoint = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-  S.Struct({ BackupVaultName: S.optional(S.String) }).pipe(
-    S.encodeKeys({ BackupVaultName: "backupVaultName" }),
+  S.Struct({
+    BackupVaultName: S.optional(S.String),
+    ContinuousScanDetails: S.optional(ContinuousScanDetails),
+  }).pipe(
+    S.encodeKeys({
+      BackupVaultName: "backupVaultName",
+      ContinuousScanDetails: "continuousScanDetails",
+    }),
   ),
 ).annotate({ identifier: "RecoveryPoint" }) as any as S.Schema<RecoveryPoint>;
 export interface StartMalwareScanConfiguration {
@@ -9656,6 +10040,7 @@ export const acceptAdministratorInvitation: API.OperationMethod<
   input: AcceptAdministratorInvitationRequest,
   output: AcceptAdministratorInvitationResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "AcceptAdministratorInvitation",
 }));
 export type AcceptInvitationError =
   | BadRequestException
@@ -9673,6 +10058,7 @@ export const acceptInvitation: API.OperationMethod<
   input: AcceptInvitationRequest,
   output: AcceptInvitationResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "AcceptInvitation",
 }));
 export type ArchiveFindingsError =
   | BadRequestException
@@ -9692,6 +10078,7 @@ export const archiveFindings: API.OperationMethod<
   input: ArchiveFindingsRequest,
   output: ArchiveFindingsResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "ArchiveFindings",
 }));
 export type CreateDetectorError =
   | BadRequestException
@@ -9717,6 +10104,7 @@ export const createDetector: API.OperationMethod<
   input: CreateDetectorRequest,
   output: CreateDetectorResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "CreateDetector",
 }));
 export type CreateFilterError =
   | BadRequestException
@@ -9734,6 +10122,38 @@ export const createFilter: API.OperationMethod<
   input: CreateFilterRequest,
   output: CreateFilterResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "CreateFilter",
+}));
+export type CreateInvestigationError =
+  | AccessDeniedException
+  | BadRequestException
+  | InternalServerErrorException
+  | CommonErrors;
+/**
+ * This API is currently available as a preview. During the preview, you can initiate up to 10 investigations per account per day, with a total limit of 100 investigations per account. This feature is available in the following Amazon Web Services Regions: US East (N. Virginia), US East (Ohio), US West (Oregon), Canada (Central), Europe (Frankfurt), Europe (Ireland), Europe (London), Europe (Paris), Europe (Stockholm), and Asia Pacific (Tokyo).
+ *
+ * Initiates a GuardDuty investigation that automatically analyzes security findings, correlates related activity, performs account-level analysis, and produces a structured investigation summary with recommended next steps.
+ *
+ * Only the administrator account can create an investigation. Member accounts don't have permission to create investigations from their accounts.
+ *
+ * To use this operation, the `AI_ANALYST` feature must be enabled on your detector.
+ *
+ * This feature uses Amazon Bedrock models that leverage Cross-Region Inference (CRIS), which automatically selects the optimal Amazon Web Services Region within your geography to process the investigation analysis and generate the investigation report. This maximizes available compute resources, model availability, and delivers the best customer experience. Your data remains stored only in the Region where the investigation request originates, however, investigation data and summary results may be processed outside that Region. All data is transmitted encrypted across Amazon's secure network. For more information, see GuardDuty Investigation.
+ */
+export const createInvestigation: API.OperationMethod<
+  CreateInvestigationRequest,
+  CreateInvestigationResponse,
+  CreateInvestigationError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: CreateInvestigationRequest,
+  output: CreateInvestigationResponse,
+  errors: [
+    AccessDeniedException,
+    BadRequestException,
+    InternalServerErrorException,
+  ],
+  operationName: "CreateInvestigation",
 }));
 export type CreateIPSetError =
   | AccessDeniedException
@@ -9756,6 +10176,7 @@ export const createIPSet: API.OperationMethod<
     BadRequestException,
     InternalServerErrorException,
   ],
+  operationName: "CreateIPSet",
 }));
 export type CreateMalwareProtectionPlanError =
   | AccessDeniedException
@@ -9782,6 +10203,7 @@ export const createMalwareProtectionPlan: API.OperationMethod<
     ConflictException,
     InternalServerErrorException,
   ],
+  operationName: "CreateMalwareProtectionPlan",
 }));
 export type CreateMembersError =
   | BadRequestException
@@ -9807,6 +10229,7 @@ export const createMembers: API.OperationMethod<
   input: CreateMembersRequest,
   output: CreateMembersResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "CreateMembers",
 }));
 export type CreatePublishingDestinationError =
   | BadRequestException
@@ -9824,6 +10247,7 @@ export const createPublishingDestination: API.OperationMethod<
   input: CreatePublishingDestinationRequest,
   output: CreatePublishingDestinationResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "CreatePublishingDestination",
 }));
 export type CreateSampleFindingsError =
   | BadRequestException
@@ -9841,13 +10265,14 @@ export const createSampleFindings: API.OperationMethod<
   input: CreateSampleFindingsRequest,
   output: CreateSampleFindingsResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "CreateSampleFindings",
 }));
 export type CreateThreatEntitySetError =
   | BadRequestException
   | InternalServerErrorException
   | CommonErrors;
 /**
- * Creates a new threat entity set. In a threat entity set, you can provide known malicious IP addresses and domains for your Amazon Web Services environment. GuardDuty generates findings based on the entries in the threat entity sets. Only users of the administrator account can manage entity sets, which automatically apply to member accounts.
+ * Creates a new threat entity set. In a threat entity set, you can provide known malicious threat entities for your Amazon Web Services environment. GuardDuty generates findings based on the entries in the threat entity sets. Only users of the administrator account can manage entity sets, which automatically apply to member accounts.
  */
 export const createThreatEntitySet: API.OperationMethod<
   CreateThreatEntitySetRequest,
@@ -9858,6 +10283,7 @@ export const createThreatEntitySet: API.OperationMethod<
   input: CreateThreatEntitySetRequest,
   output: CreateThreatEntitySetResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "CreateThreatEntitySet",
 }));
 export type CreateThreatIntelSetError =
   | AccessDeniedException
@@ -9880,6 +10306,7 @@ export const createThreatIntelSet: API.OperationMethod<
     BadRequestException,
     InternalServerErrorException,
   ],
+  operationName: "CreateThreatIntelSet",
 }));
 export type CreateTrustedEntitySetError =
   | BadRequestException
@@ -9899,6 +10326,7 @@ export const createTrustedEntitySet: API.OperationMethod<
   input: CreateTrustedEntitySetRequest,
   output: CreateTrustedEntitySetResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "CreateTrustedEntitySet",
 }));
 export type DeclineInvitationsError =
   | BadRequestException
@@ -9916,6 +10344,7 @@ export const declineInvitations: API.OperationMethod<
   input: DeclineInvitationsRequest,
   output: DeclineInvitationsResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "DeclineInvitations",
 }));
 export type DeleteDetectorError =
   | BadRequestException
@@ -9933,6 +10362,7 @@ export const deleteDetector: API.OperationMethod<
   input: DeleteDetectorRequest,
   output: DeleteDetectorResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "DeleteDetector",
 }));
 export type DeleteFilterError =
   | BadRequestException
@@ -9950,6 +10380,7 @@ export const deleteFilter: API.OperationMethod<
   input: DeleteFilterRequest,
   output: DeleteFilterResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "DeleteFilter",
 }));
 export type DeleteInvitationsError =
   | BadRequestException
@@ -9967,6 +10398,7 @@ export const deleteInvitations: API.OperationMethod<
   input: DeleteInvitationsRequest,
   output: DeleteInvitationsResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "DeleteInvitations",
 }));
 export type DeleteIPSetError =
   | BadRequestException
@@ -9984,6 +10416,7 @@ export const deleteIPSet: API.OperationMethod<
   input: DeleteIPSetRequest,
   output: DeleteIPSetResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "DeleteIPSet",
 }));
 export type DeleteMalwareProtectionPlanError =
   | AccessDeniedException
@@ -10008,6 +10441,7 @@ export const deleteMalwareProtectionPlan: API.OperationMethod<
     InternalServerErrorException,
     ResourceNotFoundException,
   ],
+  operationName: "DeleteMalwareProtectionPlan",
 }));
 export type DeleteMembersError =
   | BadRequestException
@@ -10027,6 +10461,7 @@ export const deleteMembers: API.OperationMethod<
   input: DeleteMembersRequest,
   output: DeleteMembersResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "DeleteMembers",
 }));
 export type DeletePublishingDestinationError =
   | BadRequestException
@@ -10044,6 +10479,7 @@ export const deletePublishingDestination: API.OperationMethod<
   input: DeletePublishingDestinationRequest,
   output: DeletePublishingDestinationResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "DeletePublishingDestination",
 }));
 export type DeleteThreatEntitySetError =
   | BadRequestException
@@ -10061,6 +10497,7 @@ export const deleteThreatEntitySet: API.OperationMethod<
   input: DeleteThreatEntitySetRequest,
   output: DeleteThreatEntitySetResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "DeleteThreatEntitySet",
 }));
 export type DeleteThreatIntelSetError =
   | BadRequestException
@@ -10078,6 +10515,7 @@ export const deleteThreatIntelSet: API.OperationMethod<
   input: DeleteThreatIntelSetRequest,
   output: DeleteThreatIntelSetResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "DeleteThreatIntelSet",
 }));
 export type DeleteTrustedEntitySetError =
   | BadRequestException
@@ -10095,6 +10533,7 @@ export const deleteTrustedEntitySet: API.OperationMethod<
   input: DeleteTrustedEntitySetRequest,
   output: DeleteTrustedEntitySetResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "DeleteTrustedEntitySet",
 }));
 export type DescribeMalwareScansError =
   | BadRequestException
@@ -10129,6 +10568,7 @@ export const describeMalwareScans: API.OperationMethod<
   input: DescribeMalwareScansRequest,
   output: DescribeMalwareScansResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "DescribeMalwareScans",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -10169,6 +10609,7 @@ export const describeOrganizationConfiguration: API.OperationMethod<
   input: DescribeOrganizationConfigurationRequest,
   output: DescribeOrganizationConfigurationResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "DescribeOrganizationConfiguration",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -10191,6 +10632,7 @@ export const describePublishingDestination: API.OperationMethod<
   input: DescribePublishingDestinationRequest,
   output: DescribePublishingDestinationResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "DescribePublishingDestination",
 }));
 export type DisableOrganizationAdminAccountError =
   | BadRequestException
@@ -10208,6 +10650,7 @@ export const disableOrganizationAdminAccount: API.OperationMethod<
   input: DisableOrganizationAdminAccountRequest,
   output: DisableOrganizationAdminAccountResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "DisableOrganizationAdminAccount",
 }));
 export type DisassociateFromAdministratorAccountError =
   | BadRequestException
@@ -10229,6 +10672,7 @@ export const disassociateFromAdministratorAccount: API.OperationMethod<
   input: DisassociateFromAdministratorAccountRequest,
   output: DisassociateFromAdministratorAccountResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "DisassociateFromAdministratorAccount",
 }));
 export type DisassociateFromMasterAccountError =
   | BadRequestException
@@ -10248,6 +10692,7 @@ export const disassociateFromMasterAccount: API.OperationMethod<
   input: DisassociateFromMasterAccountRequest,
   output: DisassociateFromMasterAccountResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "DisassociateFromMasterAccount",
 }));
 export type DisassociateMembersError =
   | BadRequestException
@@ -10273,6 +10718,7 @@ export const disassociateMembers: API.OperationMethod<
   input: DisassociateMembersRequest,
   output: DisassociateMembersResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "DisassociateMembers",
 }));
 export type EnableOrganizationAdminAccountError =
   | BadRequestException
@@ -10290,6 +10736,7 @@ export const enableOrganizationAdminAccount: API.OperationMethod<
   input: EnableOrganizationAdminAccountRequest,
   output: EnableOrganizationAdminAccountResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "EnableOrganizationAdminAccount",
 }));
 export type GetAdministratorAccountError =
   | BadRequestException
@@ -10315,6 +10762,7 @@ export const getAdministratorAccount: API.OperationMethod<
   input: GetAdministratorAccountRequest,
   output: GetAdministratorAccountResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "GetAdministratorAccount",
 }));
 export type GetCoverageStatisticsError =
   | BadRequestException
@@ -10332,6 +10780,7 @@ export const getCoverageStatistics: API.OperationMethod<
   input: GetCoverageStatisticsRequest,
   output: GetCoverageStatisticsResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "GetCoverageStatistics",
 }));
 export type GetDetectorError =
   | BadRequestException
@@ -10351,6 +10800,7 @@ export const getDetector: API.OperationMethod<
   input: GetDetectorRequest,
   output: GetDetectorResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "GetDetector",
 }));
 export type GetFilterError =
   | BadRequestException
@@ -10368,6 +10818,7 @@ export const getFilter: API.OperationMethod<
   input: GetFilterRequest,
   output: GetFilterResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "GetFilter",
 }));
 export type GetFindingsError =
   | BadRequestException
@@ -10385,6 +10836,7 @@ export const getFindings: API.OperationMethod<
   input: GetFindingsRequest,
   output: GetFindingsResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "GetFindings",
 }));
 export type GetFindingsStatisticsError =
   | BadRequestException
@@ -10406,6 +10858,36 @@ export const getFindingsStatistics: API.OperationMethod<
   input: GetFindingsStatisticsRequest,
   output: GetFindingsStatisticsResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "GetFindingsStatistics",
+}));
+export type GetInvestigationError =
+  | AccessDeniedException
+  | BadRequestException
+  | InternalServerErrorException
+  | ResourceNotFoundException
+  | CommonErrors;
+/**
+ * This API is currently available as a preview. This feature is available in the following Amazon Web Services Regions: US East (N. Virginia), US East (Ohio), US West (Oregon), Canada (Central), Europe (Frankfurt), Europe (Ireland), Europe (London), Europe (Paris), Europe (Stockholm), and Asia Pacific (Tokyo).
+ *
+ * Retrieves the results and status of a specific GuardDuty investigation.
+ *
+ * An administrator account can retrieve any investigation within the organization. Member accounts can only retrieve investigations that belong to them.
+ */
+export const getInvestigation: API.OperationMethod<
+  GetInvestigationRequest,
+  GetInvestigationResponse,
+  GetInvestigationError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: GetInvestigationRequest,
+  output: GetInvestigationResponse,
+  errors: [
+    AccessDeniedException,
+    BadRequestException,
+    InternalServerErrorException,
+    ResourceNotFoundException,
+  ],
+  operationName: "GetInvestigation",
 }));
 export type GetInvitationsCountError =
   | BadRequestException
@@ -10423,6 +10905,7 @@ export const getInvitationsCount: API.OperationMethod<
   input: GetInvitationsCountRequest,
   output: GetInvitationsCountResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "GetInvitationsCount",
 }));
 export type GetIPSetError =
   | BadRequestException
@@ -10440,6 +10923,7 @@ export const getIPSet: API.OperationMethod<
   input: GetIPSetRequest,
   output: GetIPSetResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "GetIPSet",
 }));
 export type GetMalwareProtectionPlanError =
   | AccessDeniedException
@@ -10464,6 +10948,7 @@ export const getMalwareProtectionPlan: API.OperationMethod<
     InternalServerErrorException,
     ResourceNotFoundException,
   ],
+  operationName: "GetMalwareProtectionPlan",
 }));
 export type GetMalwareScanError =
   | BadRequestException
@@ -10488,6 +10973,7 @@ export const getMalwareScan: API.OperationMethod<
     InternalServerErrorException,
     ResourceNotFoundException,
   ],
+  operationName: "GetMalwareScan",
 }));
 export type GetMalwareScanSettingsError =
   | BadRequestException
@@ -10507,6 +10993,7 @@ export const getMalwareScanSettings: API.OperationMethod<
   input: GetMalwareScanSettingsRequest,
   output: GetMalwareScanSettingsResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "GetMalwareScanSettings",
 }));
 export type GetMasterAccountError =
   | BadRequestException
@@ -10524,6 +11011,7 @@ export const getMasterAccount: API.OperationMethod<
   input: GetMasterAccountRequest,
   output: GetMasterAccountResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "GetMasterAccount",
 }));
 export type GetMemberDetectorsError =
   | BadRequestException
@@ -10543,6 +11031,7 @@ export const getMemberDetectors: API.OperationMethod<
   input: GetMemberDetectorsRequest,
   output: GetMemberDetectorsResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "GetMemberDetectors",
 }));
 export type GetMembersError =
   | BadRequestException
@@ -10560,6 +11049,7 @@ export const getMembers: API.OperationMethod<
   input: GetMembersRequest,
   output: GetMembersResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "GetMembers",
 }));
 export type GetOrganizationStatisticsError =
   | BadRequestException
@@ -10579,6 +11069,7 @@ export const getOrganizationStatistics: API.OperationMethod<
   input: GetOrganizationStatisticsRequest,
   output: GetOrganizationStatisticsResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "GetOrganizationStatistics",
 }));
 export type GetRemainingFreeTrialDaysError =
   | BadRequestException
@@ -10596,6 +11087,7 @@ export const getRemainingFreeTrialDays: API.OperationMethod<
   input: GetRemainingFreeTrialDaysRequest,
   output: GetRemainingFreeTrialDaysResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "GetRemainingFreeTrialDays",
 }));
 export type GetThreatEntitySetError =
   | BadRequestException
@@ -10613,6 +11105,7 @@ export const getThreatEntitySet: API.OperationMethod<
   input: GetThreatEntitySetRequest,
   output: GetThreatEntitySetResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "GetThreatEntitySet",
 }));
 export type GetThreatIntelSetError =
   | BadRequestException
@@ -10630,6 +11123,7 @@ export const getThreatIntelSet: API.OperationMethod<
   input: GetThreatIntelSetRequest,
   output: GetThreatIntelSetResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "GetThreatIntelSet",
 }));
 export type GetTrustedEntitySetError =
   | BadRequestException
@@ -10647,6 +11141,7 @@ export const getTrustedEntitySet: API.OperationMethod<
   input: GetTrustedEntitySetRequest,
   output: GetTrustedEntitySetResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "GetTrustedEntitySet",
 }));
 export type GetUsageStatisticsError =
   | BadRequestException
@@ -10679,6 +11174,7 @@ export const getUsageStatistics: API.OperationMethod<
   input: GetUsageStatisticsRequest,
   output: GetUsageStatisticsResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "GetUsageStatistics",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -10709,6 +11205,7 @@ export const inviteMembers: API.OperationMethod<
   input: InviteMembersRequest,
   output: InviteMembersResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "InviteMembers",
 }));
 export type ListCoverageError =
   | BadRequestException
@@ -10743,6 +11240,7 @@ export const listCoverage: API.OperationMethod<
   input: ListCoverageRequest,
   output: ListCoverageResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "ListCoverage",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -10781,6 +11279,7 @@ export const listDetectors: API.OperationMethod<
   input: ListDetectorsRequest,
   output: ListDetectorsResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "ListDetectors",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -10819,6 +11318,7 @@ export const listFilters: API.OperationMethod<
   input: ListFiltersRequest,
   output: ListFiltersResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "ListFilters",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -10859,10 +11359,59 @@ export const listFindings: API.OperationMethod<
   input: ListFindingsRequest,
   output: ListFindingsResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "ListFindings",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
     items: "FindingIds",
+    pageSize: "MaxResults",
+  } as const,
+}));
+export type ListInvestigationsError =
+  | AccessDeniedException
+  | BadRequestException
+  | InternalServerErrorException
+  | CommonErrors;
+/**
+ * This API is currently available as a preview. This feature is available in the following Amazon Web Services Regions: US East (N. Virginia), US East (Ohio), US West (Oregon), Canada (Central), Europe (Frankfurt), Europe (Ireland), Europe (London), Europe (Paris), Europe (Stockholm), and Asia Pacific (Tokyo).
+ *
+ * Returns a list of investigations associated with the specified GuardDuty detector.
+ *
+ * An administrator account sees all investigations across the organization. Member accounts see only the investigations that belong to them.
+ */
+export const listInvestigations: API.OperationMethod<
+  ListInvestigationsRequest,
+  ListInvestigationsResponse,
+  ListInvestigationsError,
+  Credentials | Region | HttpClient.HttpClient
+> & {
+  pages: (
+    input: ListInvestigationsRequest,
+  ) => stream.Stream<
+    ListInvestigationsResponse,
+    ListInvestigationsError,
+    Credentials | Region | HttpClient.HttpClient
+  >;
+  items: (
+    input: ListInvestigationsRequest,
+  ) => stream.Stream<
+    InvestigationSummary,
+    ListInvestigationsError,
+    Credentials | Region | HttpClient.HttpClient
+  >;
+} = /*@__PURE__*/ /*#__PURE__*/ API.makePaginated(() => ({
+  input: ListInvestigationsRequest,
+  output: ListInvestigationsResponse,
+  errors: [
+    AccessDeniedException,
+    BadRequestException,
+    InternalServerErrorException,
+  ],
+  operationName: "ListInvestigations",
+  pagination: {
+    inputToken: "NextToken",
+    outputToken: "NextToken",
+    items: "Investigations",
     pageSize: "MaxResults",
   } as const,
 }));
@@ -10897,6 +11446,7 @@ export const listInvitations: API.OperationMethod<
   input: ListInvitationsRequest,
   output: ListInvitationsResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "ListInvitations",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -10935,6 +11485,7 @@ export const listIPSets: API.OperationMethod<
   input: ListIPSetsRequest,
   output: ListIPSetsResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "ListIPSets",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -10963,6 +11514,7 @@ export const listMalwareProtectionPlans: API.OperationMethod<
     BadRequestException,
     InternalServerErrorException,
   ],
+  operationName: "ListMalwareProtectionPlans",
 }));
 export type ListMalwareScansError =
   | BadRequestException
@@ -10995,6 +11547,7 @@ export const listMalwareScans: API.OperationMethod<
   input: ListMalwareScansRequest,
   output: ListMalwareScansResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "ListMalwareScans",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -11033,6 +11586,7 @@ export const listMembers: API.OperationMethod<
   input: ListMembersRequest,
   output: ListMembersResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "ListMembers",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -11071,6 +11625,7 @@ export const listOrganizationAdminAccounts: API.OperationMethod<
   input: ListOrganizationAdminAccountsRequest,
   output: ListOrganizationAdminAccountsResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "ListOrganizationAdminAccounts",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -11109,6 +11664,7 @@ export const listPublishingDestinations: API.OperationMethod<
   input: ListPublishingDestinationsRequest,
   output: ListPublishingDestinationsResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "ListPublishingDestinations",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -11136,6 +11692,7 @@ export const listTagsForResource: API.OperationMethod<
     BadRequestException,
     InternalServerErrorException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type ListThreatEntitySetsError =
   | BadRequestException
@@ -11168,6 +11725,7 @@ export const listThreatEntitySets: API.OperationMethod<
   input: ListThreatEntitySetsRequest,
   output: ListThreatEntitySetsResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "ListThreatEntitySets",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -11206,6 +11764,7 @@ export const listThreatIntelSets: API.OperationMethod<
   input: ListThreatIntelSetsRequest,
   output: ListThreatIntelSetsResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "ListThreatIntelSets",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -11244,6 +11803,7 @@ export const listTrustedEntitySets: API.OperationMethod<
   input: ListTrustedEntitySetsRequest,
   output: ListTrustedEntitySetsResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "ListTrustedEntitySets",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -11274,6 +11834,7 @@ export const sendObjectMalwareScan: API.OperationMethod<
     BadRequestException,
     InternalServerErrorException,
   ],
+  operationName: "SendObjectMalwareScan",
 }));
 export type StartMalwareScanError =
   | BadRequestException
@@ -11300,6 +11861,7 @@ export const startMalwareScan: API.OperationMethod<
     ConflictException,
     InternalServerErrorException,
   ],
+  operationName: "StartMalwareScan",
 }));
 export type StartMonitoringMembersError =
   | BadRequestException
@@ -11317,6 +11879,7 @@ export const startMonitoringMembers: API.OperationMethod<
   input: StartMonitoringMembersRequest,
   output: StartMonitoringMembersResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "StartMonitoringMembers",
 }));
 export type StopMonitoringMembersError =
   | BadRequestException
@@ -11336,6 +11899,7 @@ export const stopMonitoringMembers: API.OperationMethod<
   input: StopMonitoringMembersRequest,
   output: StopMonitoringMembersResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "StopMonitoringMembers",
 }));
 export type TagResourceError =
   | AccessDeniedException
@@ -11358,6 +11922,7 @@ export const tagResource: API.OperationMethod<
     BadRequestException,
     InternalServerErrorException,
   ],
+  operationName: "TagResource",
 }));
 export type UnarchiveFindingsError =
   | BadRequestException
@@ -11375,6 +11940,7 @@ export const unarchiveFindings: API.OperationMethod<
   input: UnarchiveFindingsRequest,
   output: UnarchiveFindingsResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "UnarchiveFindings",
 }));
 export type UntagResourceError =
   | AccessDeniedException
@@ -11397,6 +11963,7 @@ export const untagResource: API.OperationMethod<
     BadRequestException,
     InternalServerErrorException,
   ],
+  operationName: "UntagResource",
 }));
 export type UpdateDetectorError =
   | BadRequestException
@@ -11418,6 +11985,7 @@ export const updateDetector: API.OperationMethod<
   input: UpdateDetectorRequest,
   output: UpdateDetectorResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "UpdateDetector",
 }));
 export type UpdateFilterError =
   | BadRequestException
@@ -11435,6 +12003,7 @@ export const updateFilter: API.OperationMethod<
   input: UpdateFilterRequest,
   output: UpdateFilterResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "UpdateFilter",
 }));
 export type UpdateFindingsFeedbackError =
   | BadRequestException
@@ -11452,6 +12021,7 @@ export const updateFindingsFeedback: API.OperationMethod<
   input: UpdateFindingsFeedbackRequest,
   output: UpdateFindingsFeedbackResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "UpdateFindingsFeedback",
 }));
 export type UpdateIPSetError =
   | AccessDeniedException
@@ -11474,6 +12044,7 @@ export const updateIPSet: API.OperationMethod<
     BadRequestException,
     InternalServerErrorException,
   ],
+  operationName: "UpdateIPSet",
 }));
 export type UpdateMalwareProtectionPlanError =
   | AccessDeniedException
@@ -11498,6 +12069,7 @@ export const updateMalwareProtectionPlan: API.OperationMethod<
     InternalServerErrorException,
     ResourceNotFoundException,
   ],
+  operationName: "UpdateMalwareProtectionPlan",
 }));
 export type UpdateMalwareScanSettingsError =
   | BadRequestException
@@ -11517,6 +12089,7 @@ export const updateMalwareScanSettings: API.OperationMethod<
   input: UpdateMalwareScanSettingsRequest,
   output: UpdateMalwareScanSettingsResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "UpdateMalwareScanSettings",
 }));
 export type UpdateMemberDetectorsError =
   | BadRequestException
@@ -11538,6 +12111,7 @@ export const updateMemberDetectors: API.OperationMethod<
   input: UpdateMemberDetectorsRequest,
   output: UpdateMemberDetectorsResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "UpdateMemberDetectors",
 }));
 export type UpdateOrganizationConfigurationError =
   | BadRequestException
@@ -11559,6 +12133,7 @@ export const updateOrganizationConfiguration: API.OperationMethod<
   input: UpdateOrganizationConfigurationRequest,
   output: UpdateOrganizationConfigurationResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "UpdateOrganizationConfiguration",
 }));
 export type UpdatePublishingDestinationError =
   | BadRequestException
@@ -11576,6 +12151,7 @@ export const updatePublishingDestination: API.OperationMethod<
   input: UpdatePublishingDestinationRequest,
   output: UpdatePublishingDestinationResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "UpdatePublishingDestination",
 }));
 export type UpdateThreatEntitySetError =
   | BadRequestException
@@ -11593,6 +12169,7 @@ export const updateThreatEntitySet: API.OperationMethod<
   input: UpdateThreatEntitySetRequest,
   output: UpdateThreatEntitySetResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "UpdateThreatEntitySet",
 }));
 export type UpdateThreatIntelSetError =
   | AccessDeniedException
@@ -11615,6 +12192,7 @@ export const updateThreatIntelSet: API.OperationMethod<
     BadRequestException,
     InternalServerErrorException,
   ],
+  operationName: "UpdateThreatIntelSet",
 }));
 export type UpdateTrustedEntitySetError =
   | BadRequestException
@@ -11632,4 +12210,5 @@ export const updateTrustedEntitySet: API.OperationMethod<
   input: UpdateTrustedEntitySetRequest,
   output: UpdateTrustedEntitySetResponse,
   errors: [BadRequestException, InternalServerErrorException],
+  operationName: "UpdateTrustedEntitySet",
 }));

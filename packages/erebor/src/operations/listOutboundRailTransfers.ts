@@ -3,24 +3,67 @@ import { API } from "../client.ts";
 import * as T from "../traits.ts";
 
 // Input Schema
+export interface ListOutboundRailTransfersInput {
+  page_size?: number;
+  starting_after?: string;
+  ending_before?: string;
+  deposit_account_id?: string;
+  status?: "CREATED" | "PENDING" | "SETTLED" | "FAILED";
+  customer_id?: string;
+  program_id?: string;
+  custom_ref?: string;
+  ereborVersion?: string;
+}
 export const ListOutboundRailTransfersInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     page_size: Schema.optional(Schema.Number),
     starting_after: Schema.optional(Schema.String),
     ending_before: Schema.optional(Schema.String),
     deposit_account_id: Schema.optional(Schema.String),
-    status: Schema.optional(Schema.String),
+    status: Schema.optional(
+      Schema.Literals(["CREATED", "PENDING", "SETTLED", "FAILED"]),
+    ),
     customer_id: Schema.optional(Schema.String),
     program_id: Schema.optional(Schema.String),
     custom_ref: Schema.optional(Schema.String),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
-  }).pipe(T.Http({ method: "GET", path: "/rail_out" }));
-export type ListOutboundRailTransfersInput =
-  typeof ListOutboundRailTransfersInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/rail_out" }),
+  ) as unknown as Schema.Codec<ListOutboundRailTransfersInput>;
 
 // Output Schema
+export interface ListOutboundRailTransfersOutput {
+  data: ReadonlyArray<{
+    id: string;
+    type: "RAIL_OUT";
+    url: string;
+    created_at: string;
+    updated_at: string;
+    archived_at?: string | null;
+    program_id?: string | null;
+    status: "CREATED" | "PENDING" | "SETTLED" | "FAILED";
+    from_deposit_account_id: string;
+    counterparty_rail_address_id?: string | null;
+    to_deposit_account_id?: string | null;
+    amount: {
+      currency: "USD";
+      exponent: number;
+      value: string;
+      display_value: string;
+    };
+    memo?: string | null;
+    internal_note?: string | null;
+    custom_ref?: string | null;
+    custom_fields?: Record<string, unknown> | null;
+  }>;
+  has_more: boolean;
+  page_size: number;
+  page_next?: string | null;
+  page_prev?: string | null;
+  url: string;
+}
 export const ListOutboundRailTransfersOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Array(
@@ -46,8 +89,10 @@ export const ListOutboundRailTransfersOutput =
         }),
         memo: Schema.optional(Schema.NullOr(Schema.String)),
         internal_note: Schema.optional(Schema.NullOr(Schema.String)),
-        custom_ref: Schema.optional(Schema.Unknown),
-        custom_fields: Schema.optional(Schema.Unknown),
+        custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+        custom_fields: Schema.optional(
+          Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+        ),
       }),
     ),
     has_more: Schema.Boolean,
@@ -55,9 +100,7 @@ export const ListOutboundRailTransfersOutput =
     page_next: Schema.optional(Schema.NullOr(Schema.String)),
     page_prev: Schema.optional(Schema.NullOr(Schema.String)),
     url: Schema.String,
-  });
-export type ListOutboundRailTransfersOutput =
-  typeof ListOutboundRailTransfersOutput.Type;
+  }) as unknown as Schema.Codec<ListOutboundRailTransfersOutput>;
 
 // The operation
 /**

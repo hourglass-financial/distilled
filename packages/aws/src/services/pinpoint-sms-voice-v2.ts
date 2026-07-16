@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -127,6 +127,9 @@ export type PoolStatus = string;
 export type TwoWayChannelArn = string;
 export type OptOutListNameOrArn = string;
 export type RcsAgentStatus = string;
+export type TwoWayMediaS3BucketName = string;
+export type TwoWayMediaS3KeyPrefix = string;
+export type RcsEventType = string;
 export type RegistrationType = string;
 export type RegistrationStatus = string;
 export type RegistrationVersionNumber = number;
@@ -219,11 +222,29 @@ export type MaxPrice = string;
 export type TimeToLive = number;
 export type TemplateVariableName = string;
 export type TemplateVariableValue = string;
+export type RcsMessageOriginationIdentity = string;
+export type RcsTextBody = string;
+export type RcsMediaUrl = string;
+export type RcsCardTitle = string;
+export type RcsCardDescription = string;
+export type RcsSuggestedActionText = string;
+export type RcsPostbackData = string;
+export type RcsOpenUrlValue = string;
+export type RcsLocationLabel = string;
+export type RcsCalendarEventTitle = string;
+export type RcsCalendarEventDescription = string;
+export type RcsTimeToLive = number;
+export type RcsMessageTrafficType = string;
+export type RcsFallbackChannel = string;
+export type RcsFallbackMessageBody = string;
+export type RcsFallbackOriginationIdentity = string;
 export type TextMessageOriginationIdentity = string;
 export type VoiceMessageOriginationIdentity = string;
 export type VoiceMessageBody = string;
 export type VoiceMessageBodyTextType = string;
 export type NotifyPoolIdOrUnset = string;
+export type TwoWayMediaS3BucketNameOrUnset = string;
+export type IamRoleArnOrUnset = string;
 export type VerificationCode = string;
 
 //# Schemas
@@ -699,6 +720,8 @@ export const CreateRcsAgentRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "CreateRcsAgentRequest",
 }) as any as S.Schema<CreateRcsAgentRequest>;
+export type RcsEventTypeList = string[];
+export const RcsEventTypeList = /*@__PURE__*/ /*#__PURE__*/ S.Array(S.String);
 export interface CreateRcsAgentResult {
   RcsAgentArn: string;
   RcsAgentId: string;
@@ -710,6 +733,10 @@ export interface CreateRcsAgentResult {
   TwoWayChannelArn?: string;
   TwoWayChannelRole?: string;
   TwoWayEnabled: boolean;
+  TwoWayMediaS3BucketName?: string;
+  TwoWayMediaS3KeyPrefix?: string;
+  TwoWayMediaS3Role?: string;
+  TwoWayRcsEventsEnabled?: string[];
   Tags?: Tag[];
 }
 export const CreateRcsAgentResult = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -724,6 +751,10 @@ export const CreateRcsAgentResult = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     TwoWayChannelArn: S.optional(S.String),
     TwoWayChannelRole: S.optional(S.String),
     TwoWayEnabled: S.Boolean,
+    TwoWayMediaS3BucketName: S.optional(S.String),
+    TwoWayMediaS3KeyPrefix: S.optional(S.String),
+    TwoWayMediaS3Role: S.optional(S.String),
+    TwoWayRcsEventsEnabled: S.optional(RcsEventTypeList),
     Tags: S.optional(TagList),
   }),
 ).annotate({
@@ -1420,6 +1451,7 @@ export interface DeleteRcsAgentResult {
   TwoWayChannelArn?: string;
   TwoWayChannelRole?: string;
   TwoWayEnabled: boolean;
+  TwoWayRcsEventsEnabled?: string[];
 }
 export const DeleteRcsAgentResult = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -1433,10 +1465,29 @@ export const DeleteRcsAgentResult = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     TwoWayChannelArn: S.optional(S.String),
     TwoWayChannelRole: S.optional(S.String),
     TwoWayEnabled: S.Boolean,
+    TwoWayRcsEventsEnabled: S.optional(RcsEventTypeList),
   }),
 ).annotate({
   identifier: "DeleteRcsAgentResult",
 }) as any as S.Schema<DeleteRcsAgentResult>;
+export interface DeleteRcsMessageSpendLimitOverrideRequest {}
+export const DeleteRcsMessageSpendLimitOverrideRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({}).pipe(
+      T.all(T.Http({ method: "POST", uri: "/" }), svc, auth, proto, ver, rules),
+    ),
+  ).annotate({
+    identifier: "DeleteRcsMessageSpendLimitOverrideRequest",
+  }) as any as S.Schema<DeleteRcsMessageSpendLimitOverrideRequest>;
+export interface DeleteRcsMessageSpendLimitOverrideResult {
+  MonthlyLimit?: number;
+}
+export const DeleteRcsMessageSpendLimitOverrideResult =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ MonthlyLimit: S.optional(S.Number) }),
+  ).annotate({
+    identifier: "DeleteRcsMessageSpendLimitOverrideResult",
+  }) as any as S.Schema<DeleteRcsMessageSpendLimitOverrideResult>;
 export interface DeleteRegistrationRequest {
   RegistrationId: string;
 }
@@ -2592,6 +2643,10 @@ export interface RcsAgentInformation {
   TwoWayChannelRole?: string;
   TwoWayEnabled: boolean;
   PoolId?: string;
+  TwoWayMediaS3BucketName?: string;
+  TwoWayMediaS3KeyPrefix?: string;
+  TwoWayMediaS3Role?: string;
+  TwoWayRcsEventsEnabled?: string[];
   TestingAgent?: TestingAgentInformation;
 }
 export const RcsAgentInformation = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -2607,6 +2662,10 @@ export const RcsAgentInformation = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     TwoWayChannelRole: S.optional(S.String),
     TwoWayEnabled: S.Boolean,
     PoolId: S.optional(S.String),
+    TwoWayMediaS3BucketName: S.optional(S.String),
+    TwoWayMediaS3KeyPrefix: S.optional(S.String),
+    TwoWayMediaS3Role: S.optional(S.String),
+    TwoWayRcsEventsEnabled: S.optional(RcsEventTypeList),
     TestingAgent: S.optional(TestingAgentInformation),
   }),
 ).annotate({
@@ -4560,6 +4619,349 @@ export const SendNotifyVoiceMessageResult =
   ).annotate({
     identifier: "SendNotifyVoiceMessageResult",
   }) as any as S.Schema<SendNotifyVoiceMessageResult>;
+export interface RcsTextMessage {
+  Body: string;
+}
+export const RcsTextMessage = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ Body: S.String }),
+).annotate({ identifier: "RcsTextMessage" }) as any as S.Schema<RcsTextMessage>;
+export interface RcsFileMessage {
+  FileUrl: string;
+  ThumbnailUrl?: string;
+}
+export const RcsFileMessage = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ FileUrl: S.String, ThumbnailUrl: S.optional(S.String) }),
+).annotate({ identifier: "RcsFileMessage" }) as any as S.Schema<RcsFileMessage>;
+export interface RcsCardMedia {
+  FileUrl: string;
+  ThumbnailUrl?: string;
+  Height?: string;
+}
+export const RcsCardMedia = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    FileUrl: S.String,
+    ThumbnailUrl: S.optional(S.String),
+    Height: S.optional(S.String),
+  }),
+).annotate({ identifier: "RcsCardMedia" }) as any as S.Schema<RcsCardMedia>;
+export interface RcsReplyAction {
+  Text: string;
+  PostbackData: string;
+}
+export const RcsReplyAction = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ Text: S.String, PostbackData: S.String }),
+).annotate({ identifier: "RcsReplyAction" }) as any as S.Schema<RcsReplyAction>;
+export interface RcsOpenUrlAction {
+  Text: string;
+  PostbackData: string;
+  Url: string;
+  Application?: string;
+  WebviewViewMode?: string;
+}
+export const RcsOpenUrlAction = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    Text: S.String,
+    PostbackData: S.String,
+    Url: S.String,
+    Application: S.optional(S.String),
+    WebviewViewMode: S.optional(S.String),
+  }),
+).annotate({
+  identifier: "RcsOpenUrlAction",
+}) as any as S.Schema<RcsOpenUrlAction>;
+export interface RcsDialPhoneAction {
+  Text: string;
+  PostbackData: string;
+  PhoneNumber: string;
+}
+export const RcsDialPhoneAction = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ Text: S.String, PostbackData: S.String, PhoneNumber: S.String }),
+).annotate({
+  identifier: "RcsDialPhoneAction",
+}) as any as S.Schema<RcsDialPhoneAction>;
+export interface RcsShowLocationAction {
+  Text: string;
+  PostbackData: string;
+  Latitude: number;
+  Longitude: number;
+  Label?: string;
+}
+export const RcsShowLocationAction = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    Text: S.String,
+    PostbackData: S.String,
+    Latitude: S.Number,
+    Longitude: S.Number,
+    Label: S.optional(S.String),
+  }),
+).annotate({
+  identifier: "RcsShowLocationAction",
+}) as any as S.Schema<RcsShowLocationAction>;
+export interface RcsRequestLocationAction {
+  Text: string;
+  PostbackData: string;
+}
+export const RcsRequestLocationAction = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () => S.Struct({ Text: S.String, PostbackData: S.String }),
+).annotate({
+  identifier: "RcsRequestLocationAction",
+}) as any as S.Schema<RcsRequestLocationAction>;
+export interface RcsCreateCalendarEventAction {
+  Text: string;
+  PostbackData: string;
+  Title: string;
+  StartTime: Date;
+  EndTime: Date;
+  Description?: string;
+}
+export const RcsCreateCalendarEventAction =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      Text: S.String,
+      PostbackData: S.String,
+      Title: S.String,
+      StartTime: S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+      EndTime: S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+      Description: S.optional(S.String),
+    }),
+  ).annotate({
+    identifier: "RcsCreateCalendarEventAction",
+  }) as any as S.Schema<RcsCreateCalendarEventAction>;
+export type RcsSuggestedAction =
+  | {
+      Reply: RcsReplyAction;
+      OpenUrl?: never;
+      DialPhone?: never;
+      ShowLocation?: never;
+      RequestLocation?: never;
+      CreateCalendarEvent?: never;
+    }
+  | {
+      Reply?: never;
+      OpenUrl: RcsOpenUrlAction;
+      DialPhone?: never;
+      ShowLocation?: never;
+      RequestLocation?: never;
+      CreateCalendarEvent?: never;
+    }
+  | {
+      Reply?: never;
+      OpenUrl?: never;
+      DialPhone: RcsDialPhoneAction;
+      ShowLocation?: never;
+      RequestLocation?: never;
+      CreateCalendarEvent?: never;
+    }
+  | {
+      Reply?: never;
+      OpenUrl?: never;
+      DialPhone?: never;
+      ShowLocation: RcsShowLocationAction;
+      RequestLocation?: never;
+      CreateCalendarEvent?: never;
+    }
+  | {
+      Reply?: never;
+      OpenUrl?: never;
+      DialPhone?: never;
+      ShowLocation?: never;
+      RequestLocation: RcsRequestLocationAction;
+      CreateCalendarEvent?: never;
+    }
+  | {
+      Reply?: never;
+      OpenUrl?: never;
+      DialPhone?: never;
+      ShowLocation?: never;
+      RequestLocation?: never;
+      CreateCalendarEvent: RcsCreateCalendarEventAction;
+    };
+export const RcsSuggestedAction = /*@__PURE__*/ /*#__PURE__*/ S.Union([
+  S.Struct({ Reply: RcsReplyAction }),
+  S.Struct({ OpenUrl: RcsOpenUrlAction }),
+  S.Struct({ DialPhone: RcsDialPhoneAction }),
+  S.Struct({ ShowLocation: RcsShowLocationAction }),
+  S.Struct({ RequestLocation: RcsRequestLocationAction }),
+  S.Struct({ CreateCalendarEvent: RcsCreateCalendarEventAction }),
+]);
+export type RcsCardSuggestedActionList = RcsSuggestedAction[];
+export const RcsCardSuggestedActionList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(RcsSuggestedAction);
+export interface RcsCardContent {
+  Title?: string;
+  Description?: string;
+  Media?: RcsCardMedia;
+  Suggestions?: RcsSuggestedAction[];
+}
+export const RcsCardContent = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    Title: S.optional(S.String),
+    Description: S.optional(S.String),
+    Media: S.optional(RcsCardMedia),
+    Suggestions: S.optional(RcsCardSuggestedActionList),
+  }),
+).annotate({ identifier: "RcsCardContent" }) as any as S.Schema<RcsCardContent>;
+export interface RcsStandaloneCard {
+  CardOrientation: string;
+  ThumbnailImageAlignment?: string;
+  CardContent: RcsCardContent;
+}
+export const RcsStandaloneCard = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    CardOrientation: S.String,
+    ThumbnailImageAlignment: S.optional(S.String),
+    CardContent: RcsCardContent,
+  }),
+).annotate({
+  identifier: "RcsStandaloneCard",
+}) as any as S.Schema<RcsStandaloneCard>;
+export interface RcsCarouselCardMedia {
+  FileUrl: string;
+  ThumbnailUrl?: string;
+  Height?: string;
+}
+export const RcsCarouselCardMedia = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    FileUrl: S.String,
+    ThumbnailUrl: S.optional(S.String),
+    Height: S.optional(S.String),
+  }),
+).annotate({
+  identifier: "RcsCarouselCardMedia",
+}) as any as S.Schema<RcsCarouselCardMedia>;
+export interface RcsCarouselCardContent {
+  Title?: string;
+  Description?: string;
+  Media?: RcsCarouselCardMedia;
+  Suggestions?: RcsSuggestedAction[];
+}
+export const RcsCarouselCardContent = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      Title: S.optional(S.String),
+      Description: S.optional(S.String),
+      Media: S.optional(RcsCarouselCardMedia),
+      Suggestions: S.optional(RcsCardSuggestedActionList),
+    }),
+).annotate({
+  identifier: "RcsCarouselCardContent",
+}) as any as S.Schema<RcsCarouselCardContent>;
+export type RcsCarouselCardContentList = RcsCarouselCardContent[];
+export const RcsCarouselCardContentList = /*@__PURE__*/ /*#__PURE__*/ S.Array(
+  RcsCarouselCardContent,
+);
+export interface RcsCarousel {
+  CardWidth: string;
+  CardContents: RcsCarouselCardContent[];
+}
+export const RcsCarousel = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ CardWidth: S.String, CardContents: RcsCarouselCardContentList }),
+).annotate({ identifier: "RcsCarousel" }) as any as S.Schema<RcsCarousel>;
+export type RcsContent =
+  | {
+      TextMessage: RcsTextMessage;
+      FileMessage?: never;
+      RichCard?: never;
+      Carousel?: never;
+    }
+  | {
+      TextMessage?: never;
+      FileMessage: RcsFileMessage;
+      RichCard?: never;
+      Carousel?: never;
+    }
+  | {
+      TextMessage?: never;
+      FileMessage?: never;
+      RichCard: RcsStandaloneCard;
+      Carousel?: never;
+    }
+  | {
+      TextMessage?: never;
+      FileMessage?: never;
+      RichCard?: never;
+      Carousel: RcsCarousel;
+    };
+export const RcsContent = /*@__PURE__*/ /*#__PURE__*/ S.Union([
+  S.Struct({ TextMessage: RcsTextMessage }),
+  S.Struct({ FileMessage: RcsFileMessage }),
+  S.Struct({ RichCard: RcsStandaloneCard }),
+  S.Struct({ Carousel: RcsCarousel }),
+]);
+export type RcsSuggestedActionList = RcsSuggestedAction[];
+export const RcsSuggestedActionList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(RcsSuggestedAction);
+export interface RcsMessageContent {
+  Content: RcsContent;
+  Suggestions?: RcsSuggestedAction[];
+}
+export const RcsMessageContent = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    Content: RcsContent,
+    Suggestions: S.optional(RcsSuggestedActionList),
+  }),
+).annotate({
+  identifier: "RcsMessageContent",
+}) as any as S.Schema<RcsMessageContent>;
+export interface RcsFallbackConfiguration {
+  Channel: string;
+  MessageBody?: string;
+  MediaUrls?: string[];
+  OriginationIdentity?: string;
+}
+export const RcsFallbackConfiguration = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      Channel: S.String,
+      MessageBody: S.optional(S.String),
+      MediaUrls: S.optional(MediaUrlList),
+      OriginationIdentity: S.optional(S.String),
+    }),
+).annotate({
+  identifier: "RcsFallbackConfiguration",
+}) as any as S.Schema<RcsFallbackConfiguration>;
+export interface SendRcsMessageRequest {
+  DestinationPhoneNumber: string;
+  OriginationIdentity: string;
+  RcsMessageContent?: RcsMessageContent;
+  TimeToLive?: number;
+  MessageTrafficType?: string;
+  FallbackConfiguration?: RcsFallbackConfiguration;
+  ProtectConfigurationId?: string;
+  ConfigurationSetName?: string;
+  MaxPrice?: string;
+  DryRun?: boolean;
+  Context?: { [key: string]: string | undefined };
+  MessageFeedbackEnabled?: boolean;
+}
+export const SendRcsMessageRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    DestinationPhoneNumber: S.String,
+    OriginationIdentity: S.String,
+    RcsMessageContent: S.optional(RcsMessageContent),
+    TimeToLive: S.optional(S.Number),
+    MessageTrafficType: S.optional(S.String),
+    FallbackConfiguration: S.optional(RcsFallbackConfiguration),
+    ProtectConfigurationId: S.optional(S.String),
+    ConfigurationSetName: S.optional(S.String),
+    MaxPrice: S.optional(S.String),
+    DryRun: S.optional(S.Boolean),
+    Context: S.optional(ContextMap),
+    MessageFeedbackEnabled: S.optional(S.Boolean),
+  }).pipe(
+    T.all(T.Http({ method: "POST", uri: "/" }), svc, auth, proto, ver, rules),
+  ),
+).annotate({
+  identifier: "SendRcsMessageRequest",
+}) as any as S.Schema<SendRcsMessageRequest>;
+export interface SendRcsMessageResult {
+  MessageId?: string;
+}
+export const SendRcsMessageResult = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ MessageId: S.optional(S.String) }),
+).annotate({
+  identifier: "SendRcsMessageResult",
+}) as any as S.Schema<SendRcsMessageResult>;
 export interface SendTextMessageRequest {
   DestinationPhoneNumber: string;
   OriginationIdentity?: string;
@@ -4796,6 +5198,26 @@ export const SetNotifyMessageSpendLimitOverrideResult =
   ).annotate({
     identifier: "SetNotifyMessageSpendLimitOverrideResult",
   }) as any as S.Schema<SetNotifyMessageSpendLimitOverrideResult>;
+export interface SetRcsMessageSpendLimitOverrideRequest {
+  MonthlyLimit: number;
+}
+export const SetRcsMessageSpendLimitOverrideRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ MonthlyLimit: S.Number }).pipe(
+      T.all(T.Http({ method: "POST", uri: "/" }), svc, auth, proto, ver, rules),
+    ),
+  ).annotate({
+    identifier: "SetRcsMessageSpendLimitOverrideRequest",
+  }) as any as S.Schema<SetRcsMessageSpendLimitOverrideRequest>;
+export interface SetRcsMessageSpendLimitOverrideResult {
+  MonthlyLimit?: number;
+}
+export const SetRcsMessageSpendLimitOverrideResult =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ MonthlyLimit: S.optional(S.Number) }),
+  ).annotate({
+    identifier: "SetRcsMessageSpendLimitOverrideResult",
+  }) as any as S.Schema<SetRcsMessageSpendLimitOverrideResult>;
 export interface SetTextMessageSpendLimitOverrideRequest {
   MonthlyLimit: number;
 }
@@ -5224,6 +5646,10 @@ export interface UpdateRcsAgentRequest {
   TwoWayChannelArn?: string;
   TwoWayChannelRole?: string;
   TwoWayEnabled?: boolean;
+  TwoWayMediaS3BucketName?: string;
+  TwoWayMediaS3KeyPrefix?: string;
+  TwoWayMediaS3Role?: string;
+  TwoWayRcsEventsEnabled?: string[];
 }
 export const UpdateRcsAgentRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -5234,6 +5660,10 @@ export const UpdateRcsAgentRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     TwoWayChannelArn: S.optional(S.String),
     TwoWayChannelRole: S.optional(S.String),
     TwoWayEnabled: S.optional(S.Boolean),
+    TwoWayMediaS3BucketName: S.optional(S.String),
+    TwoWayMediaS3KeyPrefix: S.optional(S.String),
+    TwoWayMediaS3Role: S.optional(S.String),
+    TwoWayRcsEventsEnabled: S.optional(RcsEventTypeList),
   }).pipe(
     T.all(T.Http({ method: "POST", uri: "/" }), svc, auth, proto, ver, rules),
   ),
@@ -5251,6 +5681,10 @@ export interface UpdateRcsAgentResult {
   TwoWayChannelArn?: string;
   TwoWayChannelRole?: string;
   TwoWayEnabled: boolean;
+  TwoWayMediaS3BucketName?: string;
+  TwoWayMediaS3KeyPrefix?: string;
+  TwoWayMediaS3Role?: string;
+  TwoWayRcsEventsEnabled?: string[];
 }
 export const UpdateRcsAgentResult = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -5264,6 +5698,10 @@ export const UpdateRcsAgentResult = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     TwoWayChannelArn: S.optional(S.String),
     TwoWayChannelRole: S.optional(S.String),
     TwoWayEnabled: S.Boolean,
+    TwoWayMediaS3BucketName: S.optional(S.String),
+    TwoWayMediaS3KeyPrefix: S.optional(S.String),
+    TwoWayMediaS3Role: S.optional(S.String),
+    TwoWayRcsEventsEnabled: S.optional(RcsEventTypeList),
   }),
 ).annotate({
   identifier: "UpdateRcsAgentResult",
@@ -5422,6 +5860,7 @@ export const associateOriginationIdentity: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssociateOriginationIdentity",
 }));
 export type AssociateProtectConfigurationError =
   | AccessDeniedException
@@ -5450,6 +5889,7 @@ export const associateProtectConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssociateProtectConfiguration",
 }));
 export type CarrierLookupError =
   | AccessDeniedException
@@ -5476,6 +5916,7 @@ export const carrierLookup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CarrierLookup",
 }));
 export type CreateConfigurationSetError =
   | AccessDeniedException
@@ -5508,6 +5949,7 @@ export const createConfigurationSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateConfigurationSet",
 }));
 export type CreateEventDestinationError =
   | AccessDeniedException
@@ -5544,6 +5986,7 @@ export const createEventDestination: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateEventDestination",
 }));
 export type CreateNotifyConfigurationError =
   | AccessDeniedException
@@ -5574,6 +6017,7 @@ export const createNotifyConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateNotifyConfiguration",
 }));
 export type CreateOptOutListError =
   | AccessDeniedException
@@ -5606,6 +6050,7 @@ export const createOptOutList: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateOptOutList",
 }));
 export type CreatePoolError =
   | AccessDeniedException
@@ -5640,6 +6085,7 @@ export const createPool: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreatePool",
 }));
 export type CreateProtectConfigurationError =
   | AccessDeniedException
@@ -5668,6 +6114,7 @@ export const createProtectConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateProtectConfiguration",
 }));
 export type CreateRcsAgentError =
   | AccessDeniedException
@@ -5698,6 +6145,7 @@ export const createRcsAgent: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateRcsAgent",
 }));
 export type CreateRegistrationError =
   | AccessDeniedException
@@ -5726,6 +6174,7 @@ export const createRegistration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateRegistration",
 }));
 export type CreateRegistrationAssociationError =
   | AccessDeniedException
@@ -5756,6 +6205,7 @@ export const createRegistrationAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateRegistrationAssociation",
 }));
 export type CreateRegistrationAttachmentError =
   | AccessDeniedException
@@ -5786,6 +6236,7 @@ export const createRegistrationAttachment: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateRegistrationAttachment",
 }));
 export type CreateRegistrationVersionError =
   | AccessDeniedException
@@ -5816,6 +6267,7 @@ export const createRegistrationVersion: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateRegistrationVersion",
 }));
 export type CreateVerifiedDestinationNumberError =
   | AccessDeniedException
@@ -5846,6 +6298,7 @@ export const createVerifiedDestinationNumber: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateVerifiedDestinationNumber",
 }));
 export type DeleteAccountDefaultProtectConfigurationError =
   | AccessDeniedException
@@ -5872,6 +6325,7 @@ export const deleteAccountDefaultProtectConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteAccountDefaultProtectConfiguration",
 }));
 export type DeleteConfigurationSetError =
   | AccessDeniedException
@@ -5900,6 +6354,7 @@ export const deleteConfigurationSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteConfigurationSet",
 }));
 export type DeleteDefaultMessageTypeError =
   | AccessDeniedException
@@ -5928,6 +6383,7 @@ export const deleteDefaultMessageType: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteDefaultMessageType",
 }));
 export type DeleteDefaultSenderIdError =
   | AccessDeniedException
@@ -5956,6 +6412,7 @@ export const deleteDefaultSenderId: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteDefaultSenderId",
 }));
 export type DeleteEventDestinationError =
   | AccessDeniedException
@@ -5984,6 +6441,7 @@ export const deleteEventDestination: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteEventDestination",
 }));
 export type DeleteKeywordError =
   | AccessDeniedException
@@ -6016,6 +6474,7 @@ export const deleteKeyword: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteKeyword",
 }));
 export type DeleteMediaMessageSpendLimitOverrideError =
   | AccessDeniedException
@@ -6040,6 +6499,7 @@ export const deleteMediaMessageSpendLimitOverride: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteMediaMessageSpendLimitOverride",
 }));
 export type DeleteNotifyConfigurationError =
   | AccessDeniedException
@@ -6070,6 +6530,7 @@ export const deleteNotifyConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteNotifyConfiguration",
 }));
 export type DeleteNotifyMessageSpendLimitOverrideError =
   | AccessDeniedException
@@ -6094,6 +6555,7 @@ export const deleteNotifyMessageSpendLimitOverride: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteNotifyMessageSpendLimitOverride",
 }));
 export type DeleteOptedOutNumberError =
   | AccessDeniedException
@@ -6126,6 +6588,7 @@ export const deleteOptedOutNumber: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteOptedOutNumber",
 }));
 export type DeleteOptOutListError =
   | AccessDeniedException
@@ -6156,6 +6619,7 @@ export const deleteOptOutList: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteOptOutList",
 }));
 export type DeletePoolError =
   | AccessDeniedException
@@ -6188,6 +6652,7 @@ export const deletePool: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeletePool",
 }));
 export type DeleteProtectConfigurationError =
   | AccessDeniedException
@@ -6216,6 +6681,7 @@ export const deleteProtectConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteProtectConfiguration",
 }));
 export type DeleteProtectConfigurationRuleSetNumberOverrideError =
   | AccessDeniedException
@@ -6242,6 +6708,7 @@ export const deleteProtectConfigurationRuleSetNumberOverride: API.OperationMetho
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteProtectConfigurationRuleSetNumberOverride",
 }));
 export type DeleteRcsAgentError =
   | AccessDeniedException
@@ -6270,6 +6737,32 @@ export const deleteRcsAgent: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteRcsAgent",
+}));
+export type DeleteRcsMessageSpendLimitOverrideError =
+  | AccessDeniedException
+  | InternalServerException
+  | ThrottlingException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Deletes an account-level monthly spending limit override for sending RCS messages. Deleting a spend limit override sets the `EnforcedLimit` to equal the `MaxLimit`, which is set by Amazon Web Services.
+ */
+export const deleteRcsMessageSpendLimitOverride: API.OperationMethod<
+  DeleteRcsMessageSpendLimitOverrideRequest,
+  DeleteRcsMessageSpendLimitOverrideResult,
+  DeleteRcsMessageSpendLimitOverrideError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: DeleteRcsMessageSpendLimitOverrideRequest,
+  output: DeleteRcsMessageSpendLimitOverrideResult,
+  errors: [
+    AccessDeniedException,
+    InternalServerException,
+    ThrottlingException,
+    ValidationException,
+  ],
+  operationName: "DeleteRcsMessageSpendLimitOverride",
 }));
 export type DeleteRegistrationError =
   | AccessDeniedException
@@ -6298,6 +6791,7 @@ export const deleteRegistration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteRegistration",
 }));
 export type DeleteRegistrationAttachmentError =
   | AccessDeniedException
@@ -6326,6 +6820,7 @@ export const deleteRegistrationAttachment: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteRegistrationAttachment",
 }));
 export type DeleteRegistrationFieldValueError =
   | AccessDeniedException
@@ -6354,6 +6849,7 @@ export const deleteRegistrationFieldValue: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteRegistrationFieldValue",
 }));
 export type DeleteResourcePolicyError =
   | AccessDeniedException
@@ -6380,6 +6876,7 @@ export const deleteResourcePolicy: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteResourcePolicy",
 }));
 export type DeleteTextMessageSpendLimitOverrideError =
   | AccessDeniedException
@@ -6404,6 +6901,7 @@ export const deleteTextMessageSpendLimitOverride: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteTextMessageSpendLimitOverride",
 }));
 export type DeleteVerifiedDestinationNumberError =
   | AccessDeniedException
@@ -6432,6 +6930,7 @@ export const deleteVerifiedDestinationNumber: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteVerifiedDestinationNumber",
 }));
 export type DeleteVoiceMessageSpendLimitOverrideError =
   | AccessDeniedException
@@ -6456,6 +6955,7 @@ export const deleteVoiceMessageSpendLimitOverride: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteVoiceMessageSpendLimitOverride",
 }));
 export type DescribeAccountAttributesError =
   | AccessDeniedException
@@ -6497,6 +6997,7 @@ export const describeAccountAttributes: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeAccountAttributes",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -6544,6 +7045,7 @@ export const describeAccountLimits: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeAccountLimits",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -6595,6 +7097,7 @@ export const describeConfigurationSets: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeConfigurationSets",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -6646,6 +7149,7 @@ export const describeKeywords: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeKeywords",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -6697,6 +7201,7 @@ export const describeNotifyConfigurations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeNotifyConfigurations",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -6748,6 +7253,7 @@ export const describeNotifyTemplates: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeNotifyTemplates",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -6799,6 +7305,7 @@ export const describeOptedOutNumbers: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeOptedOutNumbers",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -6850,6 +7357,7 @@ export const describeOptOutLists: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeOptOutLists",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -6901,6 +7409,7 @@ export const describePhoneNumbers: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribePhoneNumbers",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -6954,6 +7463,7 @@ export const describePools: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribePools",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7001,6 +7511,7 @@ export const describeProtectConfigurations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeProtectConfigurations",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7048,6 +7559,7 @@ export const describeRcsAgentCountryLaunchStatus: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeRcsAgentCountryLaunchStatus",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7097,6 +7609,7 @@ export const describeRcsAgents: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeRcsAgents",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7144,6 +7657,7 @@ export const describeRegistrationAttachments: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeRegistrationAttachments",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7189,6 +7703,7 @@ export const describeRegistrationFieldDefinitions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeRegistrationFieldDefinitions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7236,6 +7751,7 @@ export const describeRegistrationFieldValues: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeRegistrationFieldValues",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7283,6 +7799,7 @@ export const describeRegistrations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeRegistrations",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7328,6 +7845,7 @@ export const describeRegistrationSectionDefinitions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeRegistrationSectionDefinitions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7373,6 +7891,7 @@ export const describeRegistrationTypeDefinitions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeRegistrationTypeDefinitions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7420,6 +7939,7 @@ export const describeRegistrationVersions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeRegistrationVersions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7471,6 +7991,7 @@ export const describeSenderIds: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeSenderIds",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7518,6 +8039,7 @@ export const describeSpendLimits: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeSpendLimits",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7565,6 +8087,7 @@ export const describeVerifiedDestinationNumbers: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeVerifiedDestinationNumbers",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7601,6 +8124,7 @@ export const disassociateOriginationIdentity: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DisassociateOriginationIdentity",
 }));
 export type DisassociateProtectConfigurationError =
   | AccessDeniedException
@@ -7629,6 +8153,7 @@ export const disassociateProtectConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DisassociateProtectConfiguration",
 }));
 export type DiscardRegistrationVersionError =
   | AccessDeniedException
@@ -7657,6 +8182,7 @@ export const discardRegistrationVersion: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DiscardRegistrationVersion",
 }));
 export type GetProtectConfigurationCountryRuleSetError =
   | AccessDeniedException
@@ -7683,6 +8209,7 @@ export const getProtectConfigurationCountryRuleSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetProtectConfigurationCountryRuleSet",
 }));
 export type GetResourcePolicyError =
   | AccessDeniedException
@@ -7709,6 +8236,7 @@ export const getResourcePolicy: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetResourcePolicy",
 }));
 export type ListNotifyCountriesError =
   | AccessDeniedException
@@ -7748,6 +8276,7 @@ export const listNotifyCountries: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListNotifyCountries",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7797,6 +8326,7 @@ export const listPoolOriginationIdentities: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListPoolOriginationIdentities",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7844,6 +8374,7 @@ export const listProtectConfigurationRuleSetNumberOverrides: API.OperationMethod
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListProtectConfigurationRuleSetNumberOverrides",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7891,6 +8422,7 @@ export const listRegistrationAssociations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListRegistrationAssociations",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7923,6 +8455,7 @@ export const listTagsForResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type PutKeywordError =
   | AccessDeniedException
@@ -7957,6 +8490,7 @@ export const putKeyword: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutKeyword",
 }));
 export type PutMessageFeedbackError =
   | AccessDeniedException
@@ -7985,6 +8519,7 @@ export const putMessageFeedback: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutMessageFeedback",
 }));
 export type PutOptedOutNumberError =
   | AccessDeniedException
@@ -8013,6 +8548,7 @@ export const putOptedOutNumber: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutOptedOutNumber",
 }));
 export type PutProtectConfigurationRuleSetNumberOverrideError =
   | AccessDeniedException
@@ -8043,6 +8579,7 @@ export const putProtectConfigurationRuleSetNumberOverride: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutProtectConfigurationRuleSetNumberOverride",
 }));
 export type PutRegistrationFieldValueError =
   | AccessDeniedException
@@ -8071,6 +8608,7 @@ export const putRegistrationFieldValue: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutRegistrationFieldValue",
 }));
 export type PutResourcePolicyError =
   | AccessDeniedException
@@ -8097,6 +8635,7 @@ export const putResourcePolicy: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutResourcePolicy",
 }));
 export type ReleasePhoneNumberError =
   | AccessDeniedException
@@ -8127,6 +8666,7 @@ export const releasePhoneNumber: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ReleasePhoneNumber",
 }));
 export type ReleaseSenderIdError =
   | AccessDeniedException
@@ -8155,6 +8695,7 @@ export const releaseSenderId: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ReleaseSenderId",
 }));
 export type RequestPhoneNumberError =
   | AccessDeniedException
@@ -8185,6 +8726,7 @@ export const requestPhoneNumber: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "RequestPhoneNumber",
 }));
 export type RequestSenderIdError =
   | AccessDeniedException
@@ -8213,6 +8755,7 @@ export const requestSenderId: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "RequestSenderId",
 }));
 export type SendDestinationNumberVerificationCodeError =
   | AccessDeniedException
@@ -8243,6 +8786,7 @@ export const sendDestinationNumberVerificationCode: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SendDestinationNumberVerificationCode",
 }));
 export type SendMediaMessageError =
   | AccessDeniedException
@@ -8273,6 +8817,7 @@ export const sendMediaMessage: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SendMediaMessage",
 }));
 export type SendNotifyTextMessageError =
   | AccessDeniedException
@@ -8303,6 +8848,7 @@ export const sendNotifyTextMessage: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SendNotifyTextMessage",
 }));
 export type SendNotifyVoiceMessageError =
   | AccessDeniedException
@@ -8333,6 +8879,38 @@ export const sendNotifyVoiceMessage: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SendNotifyVoiceMessage",
+}));
+export type SendRcsMessageError =
+  | AccessDeniedException
+  | ConflictException
+  | InternalServerException
+  | ResourceNotFoundException
+  | ServiceQuotaExceededException
+  | ThrottlingException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Creates a new RCS message and sends it to a recipient's phone number. RCS messages support rich content including text, files, rich cards, and carousels with interactive suggested actions.
+ */
+export const sendRcsMessage: API.OperationMethod<
+  SendRcsMessageRequest,
+  SendRcsMessageResult,
+  SendRcsMessageError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: SendRcsMessageRequest,
+  output: SendRcsMessageResult,
+  errors: [
+    AccessDeniedException,
+    ConflictException,
+    InternalServerException,
+    ResourceNotFoundException,
+    ServiceQuotaExceededException,
+    ThrottlingException,
+    ValidationException,
+  ],
+  operationName: "SendRcsMessage",
 }));
 export type SendTextMessageError =
   | AccessDeniedException
@@ -8365,6 +8943,7 @@ export const sendTextMessage: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SendTextMessage",
 }));
 export type SendVoiceMessageError =
   | AccessDeniedException
@@ -8395,6 +8974,7 @@ export const sendVoiceMessage: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SendVoiceMessage",
 }));
 export type SetAccountDefaultProtectConfigurationError =
   | AccessDeniedException
@@ -8421,6 +9001,7 @@ export const setAccountDefaultProtectConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SetAccountDefaultProtectConfiguration",
 }));
 export type SetDefaultMessageFeedbackEnabledError =
   | AccessDeniedException
@@ -8447,6 +9028,7 @@ export const setDefaultMessageFeedbackEnabled: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SetDefaultMessageFeedbackEnabled",
 }));
 export type SetDefaultMessageTypeError =
   | AccessDeniedException
@@ -8475,6 +9057,7 @@ export const setDefaultMessageType: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SetDefaultMessageType",
 }));
 export type SetDefaultSenderIdError =
   | AccessDeniedException
@@ -8503,6 +9086,7 @@ export const setDefaultSenderId: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SetDefaultSenderId",
 }));
 export type SetMediaMessageSpendLimitOverrideError =
   | AccessDeniedException
@@ -8527,6 +9111,7 @@ export const setMediaMessageSpendLimitOverride: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SetMediaMessageSpendLimitOverride",
 }));
 export type SetNotifyMessageSpendLimitOverrideError =
   | AccessDeniedException
@@ -8551,6 +9136,32 @@ export const setNotifyMessageSpendLimitOverride: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SetNotifyMessageSpendLimitOverride",
+}));
+export type SetRcsMessageSpendLimitOverrideError =
+  | AccessDeniedException
+  | InternalServerException
+  | ThrottlingException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Sets an account level monthly spend limit override for sending RCS messages. The requested spend limit must be less than or equal to the `MaxLimit`, which is set by Amazon Web Services.
+ */
+export const setRcsMessageSpendLimitOverride: API.OperationMethod<
+  SetRcsMessageSpendLimitOverrideRequest,
+  SetRcsMessageSpendLimitOverrideResult,
+  SetRcsMessageSpendLimitOverrideError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: SetRcsMessageSpendLimitOverrideRequest,
+  output: SetRcsMessageSpendLimitOverrideResult,
+  errors: [
+    AccessDeniedException,
+    InternalServerException,
+    ThrottlingException,
+    ValidationException,
+  ],
+  operationName: "SetRcsMessageSpendLimitOverride",
 }));
 export type SetTextMessageSpendLimitOverrideError =
   | AccessDeniedException
@@ -8575,6 +9186,7 @@ export const setTextMessageSpendLimitOverride: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SetTextMessageSpendLimitOverride",
 }));
 export type SetVoiceMessageSpendLimitOverrideError =
   | AccessDeniedException
@@ -8599,6 +9211,7 @@ export const setVoiceMessageSpendLimitOverride: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SetVoiceMessageSpendLimitOverride",
 }));
 export type SubmitRegistrationVersionError =
   | AccessDeniedException
@@ -8627,6 +9240,7 @@ export const submitRegistrationVersion: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SubmitRegistrationVersion",
 }));
 export type TagResourceError =
   | AccessDeniedException
@@ -8655,6 +9269,7 @@ export const tagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | AccessDeniedException
@@ -8681,6 +9296,7 @@ export const untagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UntagResource",
 }));
 export type UpdateEventDestinationError =
   | AccessDeniedException
@@ -8711,6 +9327,7 @@ export const updateEventDestination: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateEventDestination",
 }));
 export type UpdateNotifyConfigurationError =
   | AccessDeniedException
@@ -8739,6 +9356,7 @@ export const updateNotifyConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateNotifyConfiguration",
 }));
 export type UpdatePhoneNumberError =
   | AccessDeniedException
@@ -8769,6 +9387,7 @@ export const updatePhoneNumber: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdatePhoneNumber",
 }));
 export type UpdatePoolError =
   | AccessDeniedException
@@ -8797,6 +9416,7 @@ export const updatePool: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdatePool",
 }));
 export type UpdateProtectConfigurationError =
   | AccessDeniedException
@@ -8823,6 +9443,7 @@ export const updateProtectConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateProtectConfiguration",
 }));
 export type UpdateProtectConfigurationCountryRuleSetError =
   | AccessDeniedException
@@ -8849,6 +9470,7 @@ export const updateProtectConfigurationCountryRuleSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateProtectConfigurationCountryRuleSet",
 }));
 export type UpdateRcsAgentError =
   | AccessDeniedException
@@ -8877,6 +9499,7 @@ export const updateRcsAgent: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateRcsAgent",
 }));
 export type UpdateSenderIdError =
   | AccessDeniedException
@@ -8903,6 +9526,7 @@ export const updateSenderId: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateSenderId",
 }));
 export type VerifyDestinationNumberError =
   | AccessDeniedException
@@ -8931,4 +9555,5 @@ export const verifyDestinationNumber: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "VerifyDestinationNumber",
 }));

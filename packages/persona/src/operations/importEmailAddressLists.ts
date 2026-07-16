@@ -9,6 +9,27 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface ImportEmailAddressListsInput {
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  data: {
+    attributes: {
+      file: { data?: string; filename?: string };
+      "list-id": string;
+    };
+  };
+}
 export const ImportEmailAddressListsInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
@@ -44,11 +65,23 @@ export const ImportEmailAddressListsInput =
     }),
   }).pipe(
     T.Http({ method: "POST", path: "/importer/list-item/email-addresses" }),
-  );
-export type ImportEmailAddressListsInput =
-  typeof ImportEmailAddressListsInput.Type;
+  ) as unknown as Schema.Codec<ImportEmailAddressListsInput>;
 
 // Output Schema
+export interface ImportEmailAddressListsOutput {
+  data: {
+    id?: string;
+    type?: string;
+    attributes?: {
+      "completed-at"?: string | null;
+      "created-at"?: string;
+      "duplicate-count"?: number;
+      "error-count"?: number;
+      status?: string;
+      "successful-count"?: number;
+    };
+  };
+}
 export const ImportEmailAddressListsOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -65,9 +98,7 @@ export const ImportEmailAddressListsOutput =
         }),
       ),
     }),
-  });
-export type ImportEmailAddressListsOutput =
-  typeof ImportEmailAddressListsOutput.Type;
+  }) as unknown as Schema.Codec<ImportEmailAddressListsOutput>;
 
 // The operation
 /**

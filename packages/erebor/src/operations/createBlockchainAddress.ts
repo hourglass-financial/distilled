@@ -4,6 +4,15 @@ import * as T from "../traits.ts";
 import { BadRequest, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface CreateBlockchainAddressInput {
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  deposit_account_id: string;
+  address_type: "ETHEREUM" | "SOLANA" | "SUI";
+  name?: string | null;
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const CreateBlockchainAddressInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     ereborVersion: Schema.optional(Schema.String).pipe(
@@ -19,11 +28,26 @@ export const CreateBlockchainAddressInput =
     custom_fields: Schema.optional(
       Schema.Record(Schema.String, Schema.Unknown),
     ),
-  }).pipe(T.Http({ method: "POST", path: "/blockchain_addresses" }));
-export type CreateBlockchainAddressInput =
-  typeof CreateBlockchainAddressInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/blockchain_addresses" }),
+  ) as unknown as Schema.Codec<CreateBlockchainAddressInput>;
 
 // Output Schema
+export interface CreateBlockchainAddressOutput {
+  id: string;
+  type: "BLOCKCHAIN_ADDRESS";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  deposit_account_id: string;
+  name?: string | null;
+  address: string;
+  address_type: "ETHEREUM" | "SOLANA" | "SUI";
+  network: ReadonlyArray<"BASE" | "ETHEREUM" | "INK" | "SOLANA" | "SUI">;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const CreateBlockchainAddressOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -39,11 +63,11 @@ export const CreateBlockchainAddressOutput =
     network: Schema.Array(
       Schema.Literals(["BASE", "ETHEREUM", "INK", "SOLANA", "SUI"]),
     ),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type CreateBlockchainAddressOutput =
-  typeof CreateBlockchainAddressOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<CreateBlockchainAddressOutput>;
 
 // The operation
 /**

@@ -10,6 +10,29 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface RedeemShareTokenInput {
+  shareTokenId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  data?: { attributes?: { "destination-id"?: string } };
+  meta?: {
+    "field-mappings"?: ReadonlyArray<{
+      "source-field-name": string;
+      "destination-field-name": string;
+    }>;
+  };
+}
 export const RedeemShareTokenInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   shareTokenId: Schema.String.pipe(T.PathParam()),
   include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
@@ -60,12 +83,12 @@ export const RedeemShareTokenInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     method: "POST",
     path: "/connect/share-tokens/{shareTokenId}/redeem",
   }),
-);
-export type RedeemShareTokenInput = typeof RedeemShareTokenInput.Type;
+) as unknown as Schema.Codec<RedeemShareTokenInput>;
 
 // Output Schema
-export const RedeemShareTokenOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Void;
-export type RedeemShareTokenOutput = typeof RedeemShareTokenOutput.Type;
+export type RedeemShareTokenOutput = void;
+export const RedeemShareTokenOutput =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.Void as unknown as Schema.Codec<RedeemShareTokenOutput>;
 
 // The operation
 /**

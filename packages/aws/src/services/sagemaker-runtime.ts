@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -214,6 +214,7 @@ export interface InvokeEndpointAsyncInput {
   Filename?: string;
   RequestTTLSeconds?: number;
   InvocationTimeoutSeconds?: number;
+  Body?: T.StreamingInputBody;
 }
 export const InvokeEndpointAsyncInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -246,6 +247,7 @@ export const InvokeEndpointAsyncInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       InvocationTimeoutSeconds: S.optional(S.Number).pipe(
         T.HttpHeader("X-Amzn-SageMaker-InvocationTimeoutSeconds"),
       ),
+      Body: S.optional(T.StreamingInput).pipe(T.HttpPayload()),
     }).pipe(
       T.all(
         T.Http({
@@ -483,6 +485,7 @@ export const invokeEndpoint: API.OperationMethod<
     ServiceUnavailable,
     ValidationError,
   ],
+  operationName: "InvokeEndpoint",
 }));
 export type InvokeEndpointAsyncError =
   | InternalFailure
@@ -515,6 +518,7 @@ export const invokeEndpointAsync: API.OperationMethod<
   input: InvokeEndpointAsyncInput,
   output: InvokeEndpointAsyncOutput,
   errors: [InternalFailure, ServiceUnavailable, ValidationError],
+  operationName: "InvokeEndpointAsync",
 }));
 export type InvokeEndpointWithResponseStreamError =
   | InternalFailure
@@ -566,4 +570,5 @@ export const invokeEndpointWithResponseStream: API.OperationMethod<
     ServiceUnavailable,
     ValidationError,
   ],
+  operationName: "InvokeEndpointWithResponseStream",
 }));

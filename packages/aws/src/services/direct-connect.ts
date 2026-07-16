@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
 import * as C from "../category.ts";
@@ -120,6 +120,7 @@ export type SecretARN = string;
 export type Ckn = string;
 export type State = string;
 export type StartOnDate = string;
+export type Count = number;
 export type PartnerInterconnectMacSecCapable = boolean;
 export type VirtualInterfaceName = string;
 export type ASN = number;
@@ -128,6 +129,7 @@ export type MTU = number;
 export type BGPAuthKey = string;
 export type AmazonAddress = string;
 export type CustomerAddress = string;
+export type RateLimit = string;
 export type VirtualInterfaceId = string;
 export type VirtualInterfaceType = string;
 export type RouterConfig = string;
@@ -140,7 +142,6 @@ export type RequestMACSec = boolean;
 export type DirectConnectGatewayName = string;
 export type GatewayIdToAssociate = string;
 export type InterconnectName = string;
-export type Count = number;
 export type LagName = string;
 export type BooleanFlag = boolean;
 export type EnableSiteLink = boolean;
@@ -362,6 +363,22 @@ export const MacSecKey = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({ identifier: "MacSecKey" }) as any as S.Schema<MacSecKey>;
 export type MacSecKeyList = MacSecKey[];
 export const MacSecKeyList = /*@__PURE__*/ /*#__PURE__*/ S.Array(MacSecKey);
+export interface RateLimiterStatus {
+  maxAllowed?: number;
+  inUse?: number;
+  remaining?: number;
+  totalBandwidth?: string;
+}
+export const RateLimiterStatus = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    maxAllowed: S.optional(S.Number),
+    inUse: S.optional(S.Number),
+    remaining: S.optional(S.Number),
+    totalBandwidth: S.optional(S.String),
+  }),
+).annotate({
+  identifier: "RateLimiterStatus",
+}) as any as S.Schema<RateLimiterStatus>;
 export interface Connection {
   ownerAccount?: string;
   connectionId?: string;
@@ -385,6 +402,7 @@ export interface Connection {
   portEncryptionStatus?: string;
   encryptionMode?: string;
   macSecKeys?: MacSecKey[];
+  rateLimiterStatus?: RateLimiterStatus;
   partnerInterconnectMacSecCapable?: boolean;
 }
 export const Connection = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -411,6 +429,7 @@ export const Connection = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     portEncryptionStatus: S.optional(S.String),
     encryptionMode: S.optional(S.String),
     macSecKeys: S.optional(MacSecKeyList),
+    rateLimiterStatus: S.optional(RateLimiterStatus),
     partnerInterconnectMacSecCapable: S.optional(S.Boolean),
   }).pipe(ns),
 ).annotate({ identifier: "Connection" }) as any as S.Schema<Connection>;
@@ -458,6 +477,7 @@ export interface NewPrivateVirtualInterfaceAllocation {
   addressFamily?: AddressFamily;
   customerAddress?: string;
   tags?: Tag[];
+  rateLimit?: string;
 }
 export const NewPrivateVirtualInterfaceAllocation =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -472,6 +492,7 @@ export const NewPrivateVirtualInterfaceAllocation =
       addressFamily: S.optional(AddressFamily),
       customerAddress: S.optional(S.String),
       tags: S.optional(TagList),
+      rateLimit: S.optional(S.String),
     }),
   ).annotate({
     identifier: "NewPrivateVirtualInterfaceAllocation",
@@ -583,6 +604,7 @@ export interface VirtualInterface {
   awsLogicalDeviceId?: string;
   tags?: Tag[];
   siteLinkEnabled?: boolean;
+  rateLimit?: string;
 }
 export const VirtualInterface = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -613,6 +635,7 @@ export const VirtualInterface = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     awsLogicalDeviceId: S.optional(S.String),
     tags: S.optional(TagList),
     siteLinkEnabled: S.optional(S.Boolean),
+    rateLimit: S.optional(S.String),
   }).pipe(ns),
 ).annotate({
   identifier: "VirtualInterface",
@@ -628,6 +651,7 @@ export interface NewPublicVirtualInterfaceAllocation {
   addressFamily?: AddressFamily;
   routeFilterPrefixes?: RouteFilterPrefix[];
   tags?: Tag[];
+  rateLimit?: string;
 }
 export const NewPublicVirtualInterfaceAllocation =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -642,6 +666,7 @@ export const NewPublicVirtualInterfaceAllocation =
       addressFamily: S.optional(AddressFamily),
       routeFilterPrefixes: S.optional(RouteFilterPrefixList),
       tags: S.optional(TagList),
+      rateLimit: S.optional(S.String),
     }),
   ).annotate({
     identifier: "NewPublicVirtualInterfaceAllocation",
@@ -682,6 +707,7 @@ export interface NewTransitVirtualInterfaceAllocation {
   customerAddress?: string;
   addressFamily?: AddressFamily;
   tags?: Tag[];
+  rateLimit?: string;
 }
 export const NewTransitVirtualInterfaceAllocation =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -696,6 +722,7 @@ export const NewTransitVirtualInterfaceAllocation =
       customerAddress: S.optional(S.String),
       addressFamily: S.optional(AddressFamily),
       tags: S.optional(TagList),
+      rateLimit: S.optional(S.String),
     }),
   ).annotate({
     identifier: "NewTransitVirtualInterfaceAllocation",
@@ -1415,6 +1442,7 @@ export interface Lag {
   macSecCapable?: boolean;
   encryptionMode?: string;
   macSecKeys?: MacSecKey[];
+  rateLimiterStatus?: RateLimiterStatus;
 }
 export const Lag = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -1439,6 +1467,7 @@ export const Lag = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     macSecCapable: S.optional(S.Boolean),
     encryptionMode: S.optional(S.String),
     macSecKeys: S.optional(MacSecKeyList),
+    rateLimiterStatus: S.optional(RateLimiterStatus),
   }).pipe(ns),
 ).annotate({ identifier: "Lag" }) as any as S.Schema<Lag>;
 export interface NewPrivateVirtualInterface {
@@ -1455,6 +1484,7 @@ export interface NewPrivateVirtualInterface {
   directConnectGatewayId?: string;
   tags?: Tag[];
   enableSiteLink?: boolean;
+  rateLimit?: string;
 }
 export const NewPrivateVirtualInterface = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -1472,6 +1502,7 @@ export const NewPrivateVirtualInterface = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       directConnectGatewayId: S.optional(S.String),
       tags: S.optional(TagList),
       enableSiteLink: S.optional(S.Boolean),
+      rateLimit: S.optional(S.String),
     }),
 ).annotate({
   identifier: "NewPrivateVirtualInterface",
@@ -1510,6 +1541,7 @@ export interface NewPublicVirtualInterface {
   addressFamily?: AddressFamily;
   routeFilterPrefixes?: RouteFilterPrefix[];
   tags?: Tag[];
+  rateLimit?: string;
 }
 export const NewPublicVirtualInterface = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -1524,6 +1556,7 @@ export const NewPublicVirtualInterface = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       addressFamily: S.optional(AddressFamily),
       routeFilterPrefixes: S.optional(RouteFilterPrefixList),
       tags: S.optional(TagList),
+      rateLimit: S.optional(S.String),
     }),
 ).annotate({
   identifier: "NewPublicVirtualInterface",
@@ -1564,6 +1597,7 @@ export interface NewTransitVirtualInterface {
   directConnectGatewayId?: string;
   tags?: Tag[];
   enableSiteLink?: boolean;
+  rateLimit?: string;
 }
 export const NewTransitVirtualInterface = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -1580,6 +1614,7 @@ export const NewTransitVirtualInterface = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       directConnectGatewayId: S.optional(S.String),
       tags: S.optional(TagList),
       enableSiteLink: S.optional(S.Boolean),
+      rateLimit: S.optional(S.String),
     }),
 ).annotate({
   identifier: "NewTransitVirtualInterface",
@@ -2976,6 +3011,7 @@ export interface UpdateVirtualInterfaceAttributesRequest {
   mtu?: number;
   enableSiteLink?: boolean;
   virtualInterfaceName?: string;
+  rateLimit?: string;
 }
 export const UpdateVirtualInterfaceAttributesRequest =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -2984,6 +3020,7 @@ export const UpdateVirtualInterfaceAttributesRequest =
       mtu: S.optional(S.Number),
       enableSiteLink: S.optional(S.Boolean),
       virtualInterfaceName: S.optional(S.String),
+      rateLimit: S.optional(S.String),
     }).pipe(
       T.all(
         ns,
@@ -3016,6 +3053,10 @@ export class TooManyTagsException extends S.TaggedErrorClass<TooManyTagsExceptio
   "TooManyTagsException",
   { message: S.optional(S.String) },
 ) {}
+export class LimitExceededException extends S.TaggedErrorClass<LimitExceededException>()(
+  "LimitExceededException",
+  { message: S.optional(S.String) },
+).pipe(C.withBadRequestError) {}
 
 //# Operations
 export type AcceptDirectConnectGatewayAssociationProposalError =
@@ -3034,6 +3075,7 @@ export const acceptDirectConnectGatewayAssociationProposal: API.OperationMethod<
   input: AcceptDirectConnectGatewayAssociationProposalRequest,
   output: AcceptDirectConnectGatewayAssociationProposalResult,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "AcceptDirectConnectGatewayAssociationProposal",
 }));
 export type AllocateConnectionOnInterconnectError =
   | DirectConnectClientException
@@ -3057,6 +3099,7 @@ export const allocateConnectionOnInterconnect: API.OperationMethod<
   input: AllocateConnectionOnInterconnectRequest,
   output: Connection,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "AllocateConnectionOnInterconnect",
 }));
 export type AllocateHostedConnectionError =
   | DirectConnectClientException
@@ -3086,11 +3129,13 @@ export const allocateHostedConnection: API.OperationMethod<
     DuplicateTagKeysException,
     TooManyTagsException,
   ],
+  operationName: "AllocateHostedConnection",
 }));
 export type AllocatePrivateVirtualInterfaceError =
   | DirectConnectClientException
   | DirectConnectServerException
   | DuplicateTagKeysException
+  | LimitExceededException
   | TooManyTagsException
   | CommonErrors;
 /**
@@ -3111,13 +3156,16 @@ export const allocatePrivateVirtualInterface: API.OperationMethod<
     DirectConnectClientException,
     DirectConnectServerException,
     DuplicateTagKeysException,
+    LimitExceededException,
     TooManyTagsException,
   ],
+  operationName: "AllocatePrivateVirtualInterface",
 }));
 export type AllocatePublicVirtualInterfaceError =
   | DirectConnectClientException
   | DirectConnectServerException
   | DuplicateTagKeysException
+  | LimitExceededException
   | TooManyTagsException
   | CommonErrors;
 /**
@@ -3143,13 +3191,16 @@ export const allocatePublicVirtualInterface: API.OperationMethod<
     DirectConnectClientException,
     DirectConnectServerException,
     DuplicateTagKeysException,
+    LimitExceededException,
     TooManyTagsException,
   ],
+  operationName: "AllocatePublicVirtualInterface",
 }));
 export type AllocateTransitVirtualInterfaceError =
   | DirectConnectClientException
   | DirectConnectServerException
   | DuplicateTagKeysException
+  | LimitExceededException
   | TooManyTagsException
   | CommonErrors;
 /**
@@ -3171,12 +3222,15 @@ export const allocateTransitVirtualInterface: API.OperationMethod<
     DirectConnectClientException,
     DirectConnectServerException,
     DuplicateTagKeysException,
+    LimitExceededException,
     TooManyTagsException,
   ],
+  operationName: "AllocateTransitVirtualInterface",
 }));
 export type AssociateConnectionWithLagError =
   | DirectConnectClientException
   | DirectConnectServerException
+  | LimitExceededException
   | CommonErrors;
 /**
  * Associates an existing connection with a link aggregation group (LAG). The connection
@@ -3204,7 +3258,12 @@ export const associateConnectionWithLag: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: AssociateConnectionWithLagRequest,
   output: Connection,
-  errors: [DirectConnectClientException, DirectConnectServerException],
+  errors: [
+    DirectConnectClientException,
+    DirectConnectServerException,
+    LimitExceededException,
+  ],
+  operationName: "AssociateConnectionWithLag",
 }));
 export type AssociateHostedConnectionError =
   | DirectConnectClientException
@@ -3228,6 +3287,7 @@ export const associateHostedConnection: API.OperationMethod<
   input: AssociateHostedConnectionRequest,
   output: Connection,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "AssociateHostedConnection",
 }));
 export type AssociateMacSecKeyError =
   | DirectConnectClientException
@@ -3249,6 +3309,7 @@ export const associateMacSecKey: API.OperationMethod<
   input: AssociateMacSecKeyRequest,
   output: AssociateMacSecKeyResponse,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "AssociateMacSecKey",
 }));
 export type AssociateVirtualInterfaceError =
   | DirectConnectClientException
@@ -3277,6 +3338,7 @@ export const associateVirtualInterface: API.OperationMethod<
   input: AssociateVirtualInterfaceRequest,
   output: VirtualInterface,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "AssociateVirtualInterface",
 }));
 export type ConfirmConnectionError =
   | DirectConnectClientException
@@ -3297,6 +3359,7 @@ export const confirmConnection: API.OperationMethod<
   input: ConfirmConnectionRequest,
   output: ConfirmConnectionResponse,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "ConfirmConnection",
 }));
 export type ConfirmCustomerAgreementError =
   | DirectConnectClientException
@@ -3314,6 +3377,7 @@ export const confirmCustomerAgreement: API.OperationMethod<
   input: ConfirmCustomerAgreementRequest,
   output: ConfirmCustomerAgreementResponse,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "ConfirmCustomerAgreement",
 }));
 export type ConfirmPrivateVirtualInterfaceError =
   | DirectConnectClientException
@@ -3335,6 +3399,7 @@ export const confirmPrivateVirtualInterface: API.OperationMethod<
   input: ConfirmPrivateVirtualInterfaceRequest,
   output: ConfirmPrivateVirtualInterfaceResponse,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "ConfirmPrivateVirtualInterface",
 }));
 export type ConfirmPublicVirtualInterfaceError =
   | DirectConnectClientException
@@ -3355,6 +3420,7 @@ export const confirmPublicVirtualInterface: API.OperationMethod<
   input: ConfirmPublicVirtualInterfaceRequest,
   output: ConfirmPublicVirtualInterfaceResponse,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "ConfirmPublicVirtualInterface",
 }));
 export type ConfirmTransitVirtualInterfaceError =
   | DirectConnectClientException
@@ -3374,6 +3440,7 @@ export const confirmTransitVirtualInterface: API.OperationMethod<
   input: ConfirmTransitVirtualInterfaceRequest,
   output: ConfirmTransitVirtualInterfaceResponse,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "ConfirmTransitVirtualInterface",
 }));
 export type CreateBGPPeerError =
   | DirectConnectClientException
@@ -3409,6 +3476,7 @@ export const createBGPPeer: API.OperationMethod<
   input: CreateBGPPeerRequest,
   output: CreateBGPPeerResponse,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "CreateBGPPeer",
 }));
 export type CreateConnectionError =
   | DirectConnectClientException
@@ -3443,6 +3511,7 @@ export const createConnection: API.OperationMethod<
     DuplicateTagKeysException,
     TooManyTagsException,
   ],
+  operationName: "CreateConnection",
 }));
 export type CreateDirectConnectGatewayError =
   | DirectConnectClientException
@@ -3465,6 +3534,7 @@ export const createDirectConnectGateway: API.OperationMethod<
   input: CreateDirectConnectGatewayRequest,
   output: CreateDirectConnectGatewayResult,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "CreateDirectConnectGateway",
 }));
 export type CreateDirectConnectGatewayAssociationError =
   | DirectConnectClientException
@@ -3483,6 +3553,7 @@ export const createDirectConnectGatewayAssociation: API.OperationMethod<
   input: CreateDirectConnectGatewayAssociationRequest,
   output: CreateDirectConnectGatewayAssociationResult,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "CreateDirectConnectGatewayAssociation",
 }));
 export type CreateDirectConnectGatewayAssociationProposalError =
   | DirectConnectClientException
@@ -3502,6 +3573,7 @@ export const createDirectConnectGatewayAssociationProposal: API.OperationMethod<
   input: CreateDirectConnectGatewayAssociationProposalRequest,
   output: CreateDirectConnectGatewayAssociationProposalResult,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "CreateDirectConnectGatewayAssociationProposal",
 }));
 export type CreateInterconnectError =
   | DirectConnectClientException
@@ -3543,6 +3615,7 @@ export const createInterconnect: API.OperationMethod<
     DuplicateTagKeysException,
     TooManyTagsException,
   ],
+  operationName: "CreateInterconnect",
 }));
 export type CreateLagError =
   | DirectConnectClientException
@@ -3589,11 +3662,13 @@ export const createLag: API.OperationMethod<
     DuplicateTagKeysException,
     TooManyTagsException,
   ],
+  operationName: "CreateLag",
 }));
 export type CreatePrivateVirtualInterfaceError =
   | DirectConnectClientException
   | DirectConnectServerException
   | DuplicateTagKeysException
+  | LimitExceededException
   | TooManyTagsException
   | CommonErrors;
 /**
@@ -3622,13 +3697,16 @@ export const createPrivateVirtualInterface: API.OperationMethod<
     DirectConnectClientException,
     DirectConnectServerException,
     DuplicateTagKeysException,
+    LimitExceededException,
     TooManyTagsException,
   ],
+  operationName: "CreatePrivateVirtualInterface",
 }));
 export type CreatePublicVirtualInterfaceError =
   | DirectConnectClientException
   | DirectConnectServerException
   | DuplicateTagKeysException
+  | LimitExceededException
   | TooManyTagsException
   | CommonErrors;
 /**
@@ -3650,13 +3728,16 @@ export const createPublicVirtualInterface: API.OperationMethod<
     DirectConnectClientException,
     DirectConnectServerException,
     DuplicateTagKeysException,
+    LimitExceededException,
     TooManyTagsException,
   ],
+  operationName: "CreatePublicVirtualInterface",
 }));
 export type CreateTransitVirtualInterfaceError =
   | DirectConnectClientException
   | DirectConnectServerException
   | DuplicateTagKeysException
+  | LimitExceededException
   | TooManyTagsException
   | CommonErrors;
 /**
@@ -3683,8 +3764,10 @@ export const createTransitVirtualInterface: API.OperationMethod<
     DirectConnectClientException,
     DirectConnectServerException,
     DuplicateTagKeysException,
+    LimitExceededException,
     TooManyTagsException,
   ],
+  operationName: "CreateTransitVirtualInterface",
 }));
 export type DeleteBGPPeerError =
   | DirectConnectClientException
@@ -3704,6 +3787,7 @@ export const deleteBGPPeer: API.OperationMethod<
   input: DeleteBGPPeerRequest,
   output: DeleteBGPPeerResponse,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DeleteBGPPeer",
 }));
 export type DeleteConnectionError =
   | DirectConnectClientException
@@ -3725,6 +3809,7 @@ export const deleteConnection: API.OperationMethod<
   input: DeleteConnectionRequest,
   output: Connection,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DeleteConnection",
 }));
 export type DeleteDirectConnectGatewayError =
   | DirectConnectClientException
@@ -3744,6 +3829,7 @@ export const deleteDirectConnectGateway: API.OperationMethod<
   input: DeleteDirectConnectGatewayRequest,
   output: DeleteDirectConnectGatewayResult,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DeleteDirectConnectGateway",
 }));
 export type DeleteDirectConnectGatewayAssociationError =
   | DirectConnectClientException
@@ -3763,6 +3849,7 @@ export const deleteDirectConnectGatewayAssociation: API.OperationMethod<
   input: DeleteDirectConnectGatewayAssociationRequest,
   output: DeleteDirectConnectGatewayAssociationResult,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DeleteDirectConnectGatewayAssociation",
 }));
 export type DeleteDirectConnectGatewayAssociationProposalError =
   | DirectConnectClientException
@@ -3780,6 +3867,7 @@ export const deleteDirectConnectGatewayAssociationProposal: API.OperationMethod<
   input: DeleteDirectConnectGatewayAssociationProposalRequest,
   output: DeleteDirectConnectGatewayAssociationProposalResult,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DeleteDirectConnectGatewayAssociationProposal",
 }));
 export type DeleteInterconnectError =
   | DirectConnectClientException
@@ -3800,6 +3888,7 @@ export const deleteInterconnect: API.OperationMethod<
   input: DeleteInterconnectRequest,
   output: DeleteInterconnectResponse,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DeleteInterconnect",
 }));
 export type DeleteLagError =
   | DirectConnectClientException
@@ -3818,6 +3907,7 @@ export const deleteLag: API.OperationMethod<
   input: DeleteLagRequest,
   output: Lag,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DeleteLag",
 }));
 export type DeleteVirtualInterfaceError =
   | DirectConnectClientException
@@ -3835,6 +3925,7 @@ export const deleteVirtualInterface: API.OperationMethod<
   input: DeleteVirtualInterfaceRequest,
   output: DeleteVirtualInterfaceResponse,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DeleteVirtualInterface",
 }));
 export type DescribeConnectionLoaError =
   | DirectConnectClientException
@@ -3859,6 +3950,7 @@ export const describeConnectionLoa: API.OperationMethod<
   input: DescribeConnectionLoaRequest,
   output: DescribeConnectionLoaResponse,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DescribeConnectionLoa",
 }));
 export type DescribeConnectionsError =
   | DirectConnectClientException
@@ -3876,6 +3968,7 @@ export const describeConnections: API.OperationMethod<
   input: DescribeConnectionsRequest,
   output: Connections,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DescribeConnections",
 }));
 export type DescribeConnectionsOnInterconnectError =
   | DirectConnectClientException
@@ -3897,6 +3990,7 @@ export const describeConnectionsOnInterconnect: API.OperationMethod<
   input: DescribeConnectionsOnInterconnectRequest,
   output: Connections,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DescribeConnectionsOnInterconnect",
 }));
 export type DescribeCustomerMetadataError =
   | DirectConnectClientException
@@ -3914,6 +4008,7 @@ export const describeCustomerMetadata: API.OperationMethod<
   input: DescribeCustomerMetadataRequest,
   output: DescribeCustomerMetadataResponse,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DescribeCustomerMetadata",
 }));
 export type DescribeDirectConnectGatewayAssociationProposalsError =
   | DirectConnectClientException
@@ -3931,6 +4026,7 @@ export const describeDirectConnectGatewayAssociationProposals: API.OperationMeth
   input: DescribeDirectConnectGatewayAssociationProposalsRequest,
   output: DescribeDirectConnectGatewayAssociationProposalsResult,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DescribeDirectConnectGatewayAssociationProposals",
 }));
 export type DescribeDirectConnectGatewayAssociationsError =
   | DirectConnectClientException
@@ -3976,6 +4072,7 @@ export const describeDirectConnectGatewayAssociations: API.OperationMethod<
   input: DescribeDirectConnectGatewayAssociationsRequest,
   output: DescribeDirectConnectGatewayAssociationsResult,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DescribeDirectConnectGatewayAssociations",
 }));
 export type DescribeDirectConnectGatewayAttachmentsError =
   | DirectConnectClientException
@@ -3997,6 +4094,7 @@ export const describeDirectConnectGatewayAttachments: API.OperationMethod<
   input: DescribeDirectConnectGatewayAttachmentsRequest,
   output: DescribeDirectConnectGatewayAttachmentsResult,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DescribeDirectConnectGatewayAttachments",
 }));
 export type DescribeDirectConnectGatewaysError =
   | DirectConnectClientException
@@ -4014,6 +4112,7 @@ export const describeDirectConnectGateways: API.OperationMethod<
   input: DescribeDirectConnectGatewaysRequest,
   output: DescribeDirectConnectGatewaysResult,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DescribeDirectConnectGateways",
 }));
 export type DescribeHostedConnectionsError =
   | DirectConnectClientException
@@ -4034,6 +4133,7 @@ export const describeHostedConnections: API.OperationMethod<
   input: DescribeHostedConnectionsRequest,
   output: Connections,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DescribeHostedConnections",
 }));
 export type DescribeInterconnectLoaError =
   | DirectConnectClientException
@@ -4057,6 +4157,7 @@ export const describeInterconnectLoa: API.OperationMethod<
   input: DescribeInterconnectLoaRequest,
   output: DescribeInterconnectLoaResponse,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DescribeInterconnectLoa",
 }));
 export type DescribeInterconnectsError =
   | DirectConnectClientException
@@ -4074,6 +4175,7 @@ export const describeInterconnects: API.OperationMethod<
   input: DescribeInterconnectsRequest,
   output: Interconnects,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DescribeInterconnects",
 }));
 export type DescribeLagsError =
   | DirectConnectClientException
@@ -4091,6 +4193,7 @@ export const describeLags: API.OperationMethod<
   input: DescribeLagsRequest,
   output: Lags,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DescribeLags",
 }));
 export type DescribeLoaError =
   | DirectConnectClientException
@@ -4112,6 +4215,7 @@ export const describeLoa: API.OperationMethod<
   input: DescribeLoaRequest,
   output: Loa,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DescribeLoa",
 }));
 export type DescribeLocationsError =
   | DirectConnectClientException
@@ -4130,6 +4234,7 @@ export const describeLocations: API.OperationMethod<
   input: DescribeLocationsRequest,
   output: Locations,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DescribeLocations",
 }));
 export type DescribeRouterConfigurationError =
   | DirectConnectClientException
@@ -4147,6 +4252,7 @@ export const describeRouterConfiguration: API.OperationMethod<
   input: DescribeRouterConfigurationRequest,
   output: DescribeRouterConfigurationResponse,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DescribeRouterConfiguration",
 }));
 export type DescribeTagsError =
   | DirectConnectClientException
@@ -4164,6 +4270,7 @@ export const describeTags: API.OperationMethod<
   input: DescribeTagsRequest,
   output: DescribeTagsResponse,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DescribeTags",
 }));
 export type DescribeVirtualGatewaysError =
   | DirectConnectClientException
@@ -4185,6 +4292,7 @@ export const describeVirtualGateways: API.OperationMethod<
   input: DescribeVirtualGatewaysRequest,
   output: VirtualGateways,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DescribeVirtualGateways",
 }));
 export type DescribeVirtualInterfacesError =
   | DirectConnectClientException
@@ -4198,7 +4306,7 @@ export type DescribeVirtualInterfacesError =
  *
  * A virtual interface (VLAN) transmits the traffic between the Direct Connect location and the customer network.
  *
- * - If you're using an `asn`, the response includes ASN value in both the `asn` and `asnLong` fields.
+ * - If you're using an `asn`, the response includes the ASN value in both the `asn` and `asnLong` fields.
  *
  * - If you're using `asnLong`, the response returns a value of `0` (zero) for the `asn` attribute because it exceeds the highest ASN value of 2,147,483,647 that it can support
  */
@@ -4211,6 +4319,7 @@ export const describeVirtualInterfaces: API.OperationMethod<
   input: DescribeVirtualInterfacesRequest,
   output: VirtualInterfaces,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DescribeVirtualInterfaces",
 }));
 export type DisassociateConnectionFromLagError =
   | DirectConnectClientException
@@ -4238,6 +4347,7 @@ export const disassociateConnectionFromLag: API.OperationMethod<
   input: DisassociateConnectionFromLagRequest,
   output: Connection,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DisassociateConnectionFromLag",
 }));
 export type DisassociateMacSecKeyError =
   | DirectConnectClientException
@@ -4255,6 +4365,7 @@ export const disassociateMacSecKey: API.OperationMethod<
   input: DisassociateMacSecKeyRequest,
   output: DisassociateMacSecKeyResponse,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "DisassociateMacSecKey",
 }));
 export type ListVirtualInterfaceTestHistoryError =
   | DirectConnectClientException
@@ -4272,6 +4383,7 @@ export const listVirtualInterfaceTestHistory: API.OperationMethod<
   input: ListVirtualInterfaceTestHistoryRequest,
   output: ListVirtualInterfaceTestHistoryResponse,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "ListVirtualInterfaceTestHistory",
 }));
 export type StartBgpFailoverTestError =
   | DirectConnectClientException
@@ -4295,6 +4407,7 @@ export const startBgpFailoverTest: API.OperationMethod<
   input: StartBgpFailoverTestRequest,
   output: StartBgpFailoverTestResponse,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "StartBgpFailoverTest",
 }));
 export type StopBgpFailoverTestError =
   | DirectConnectClientException
@@ -4312,6 +4425,7 @@ export const stopBgpFailoverTest: API.OperationMethod<
   input: StopBgpFailoverTestRequest,
   output: StopBgpFailoverTestResponse,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "StopBgpFailoverTest",
 }));
 export type TagResourceError =
   | DirectConnectClientException
@@ -4338,6 +4452,7 @@ export const tagResource: API.OperationMethod<
     DuplicateTagKeysException,
     TooManyTagsException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | DirectConnectClientException
@@ -4355,6 +4470,7 @@ export const untagResource: API.OperationMethod<
   input: UntagResourceRequest,
   output: UntagResourceResponse,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "UntagResource",
 }));
 export type UpdateConnectionError =
   | DirectConnectClientException
@@ -4378,6 +4494,7 @@ export const updateConnection: API.OperationMethod<
   input: UpdateConnectionRequest,
   output: Connection,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "UpdateConnection",
 }));
 export type UpdateDirectConnectGatewayError =
   | DirectConnectClientException
@@ -4395,6 +4512,7 @@ export const updateDirectConnectGateway: API.OperationMethod<
   input: UpdateDirectConnectGatewayRequest,
   output: UpdateDirectConnectGatewayResponse,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "UpdateDirectConnectGateway",
 }));
 export type UpdateDirectConnectGatewayAssociationError =
   | DirectConnectClientException
@@ -4414,6 +4532,7 @@ export const updateDirectConnectGatewayAssociation: API.OperationMethod<
   input: UpdateDirectConnectGatewayAssociationRequest,
   output: UpdateDirectConnectGatewayAssociationResult,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "UpdateDirectConnectGatewayAssociation",
 }));
 export type UpdateLagError =
   | DirectConnectClientException
@@ -4448,6 +4567,7 @@ export const updateLag: API.OperationMethod<
   input: UpdateLagRequest,
   output: Lag,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "UpdateLag",
 }));
 export type UpdateVirtualInterfaceAttributesError =
   | DirectConnectClientException
@@ -4472,4 +4592,5 @@ export const updateVirtualInterfaceAttributes: API.OperationMethod<
   input: UpdateVirtualInterfaceAttributesRequest,
   output: VirtualInterface,
   errors: [DirectConnectClientException, DirectConnectServerException],
+  operationName: "UpdateVirtualInterfaceAttributes",
 }));

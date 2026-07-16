@@ -9,6 +9,27 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface ImportPhoneNumberListsInput {
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  data: {
+    attributes: {
+      file: { data?: string; filename?: string };
+      "list-id": string;
+    };
+  };
+}
 export const ImportPhoneNumberListsInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
@@ -44,11 +65,23 @@ export const ImportPhoneNumberListsInput =
     }),
   }).pipe(
     T.Http({ method: "POST", path: "/importer/list-item/phone-numbers" }),
-  );
-export type ImportPhoneNumberListsInput =
-  typeof ImportPhoneNumberListsInput.Type;
+  ) as unknown as Schema.Codec<ImportPhoneNumberListsInput>;
 
 // Output Schema
+export interface ImportPhoneNumberListsOutput {
+  data: {
+    id?: string;
+    type?: string;
+    attributes?: {
+      "completed-at"?: string | null;
+      "created-at"?: string;
+      "duplicate-count"?: number;
+      "error-count"?: number;
+      status?: string;
+      "successful-count"?: number;
+    };
+  };
+}
 export const ImportPhoneNumberListsOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -65,9 +98,7 @@ export const ImportPhoneNumberListsOutput =
         }),
       ),
     }),
-  });
-export type ImportPhoneNumberListsOutput =
-  typeof ImportPhoneNumberListsOutput.Type;
+  }) as unknown as Schema.Codec<ImportPhoneNumberListsOutput>;
 
 // The operation
 /**

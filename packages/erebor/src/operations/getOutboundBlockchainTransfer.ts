@@ -4,17 +4,45 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface GetOutboundBlockchainTransferInput {
+  id: string;
+  ereborVersion?: string;
+}
 export const GetOutboundBlockchainTransferInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
-  }).pipe(T.Http({ method: "GET", path: "/blockchain_out/{id}" }));
-export type GetOutboundBlockchainTransferInput =
-  typeof GetOutboundBlockchainTransferInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/blockchain_out/{id}" }),
+  ) as unknown as Schema.Codec<GetOutboundBlockchainTransferInput>;
 
 // Output Schema
+export interface GetOutboundBlockchainTransferOutput {
+  id: string;
+  type: "BLOCKCHAIN_OUT";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id?: string | null;
+  status: "CREATED" | "PENDING" | "SETTLED" | "FAILED";
+  deposit_account_id: string;
+  counterparty_blockchain_address_id: string;
+  amount: {
+    currency: "USAT" | "USDC" | "USDT";
+    exponent: number;
+    value: string;
+    display_value: string;
+  };
+  network: "BASE" | "ETHEREUM" | "INK" | "SOLANA" | "SUI";
+  transaction_hash?: string | null;
+  from_address?: string | null;
+  to_address?: string | null;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const GetOutboundBlockchainTransferOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -37,11 +65,11 @@ export const GetOutboundBlockchainTransferOutput =
     transaction_hash: Schema.optional(Schema.NullOr(Schema.String)),
     from_address: Schema.optional(Schema.NullOr(Schema.String)),
     to_address: Schema.optional(Schema.NullOr(Schema.String)),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type GetOutboundBlockchainTransferOutput =
-  typeof GetOutboundBlockchainTransferOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<GetOutboundBlockchainTransferOutput>;
 
 // The operation
 /**

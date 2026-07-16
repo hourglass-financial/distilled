@@ -4,6 +4,10 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface GetCounterpartyUsBankAccountInput {
+  id: string;
+  ereborVersion?: string;
+}
 export const GetCounterpartyUsBankAccountInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
@@ -12,11 +16,26 @@ export const GetCounterpartyUsBankAccountInput =
     ),
   }).pipe(
     T.Http({ method: "GET", path: "/counterparty_us_bank_accounts/{id}" }),
-  );
-export type GetCounterpartyUsBankAccountInput =
-  typeof GetCounterpartyUsBankAccountInput.Type;
+  ) as unknown as Schema.Codec<GetCounterpartyUsBankAccountInput>;
 
 // Output Schema
+export interface GetCounterpartyUsBankAccountOutput {
+  id: string;
+  type: "COUNTERPARTY_US_BANK_ACCOUNT";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  customer_id?: string | null;
+  program_id?: string | null;
+  counterparty_id?: string | null;
+  description: string | null;
+  account_number: string;
+  routing_number: string;
+  bank_name?: string | null;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const GetCounterpartyUsBankAccountOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -32,11 +51,11 @@ export const GetCounterpartyUsBankAccountOutput =
     account_number: Schema.String,
     routing_number: Schema.String,
     bank_name: Schema.optional(Schema.NullOr(Schema.String)),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type GetCounterpartyUsBankAccountOutput =
-  typeof GetCounterpartyUsBankAccountOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<GetCounterpartyUsBankAccountOutput>;
 
 // The operation
 /**

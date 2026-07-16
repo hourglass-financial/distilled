@@ -222,8 +222,15 @@ function matchesExpression(
   if (matcher.message !== undefined) {
     if (typeof matcher.message === "string") {
       if (matcher.message !== message) return false;
-    } else if (matcher.message.includes !== undefined) {
-      if (!message.includes(matcher.message.includes)) return false;
+    } else {
+      const { includes, matches } = matcher.message;
+      // An empty message-object constrains nothing and would otherwise
+      // match every error — reject it like the fully-empty matcher above.
+      if (includes === undefined && matches === undefined) return false;
+      if (includes !== undefined && !message.includes(includes)) return false;
+      if (matches !== undefined && !new RegExp(matches).test(message)) {
+        return false;
+      }
     }
   }
   return true;
@@ -412,6 +419,17 @@ const matchError = (
       bodyStr,
     );
     if (matchedRaw) return matchedRaw;
+    // The global API rate limiter can respond 429 with an empty/non-envelope
+    // body (e.g. `null`); surface it as the retryable TooManyRequests instead
+    // of the catch-all CloudflareHttpError so the retry policy backs off.
+    if (status === 429) {
+      return Effect.fail(
+        new TooManyRequests({
+          message: bodyStr,
+          retryAfter: parseServerRetryHint(headers),
+        }),
+      );
+    }
     return Effect.fail(
       new CloudflareHttpError({
         status,

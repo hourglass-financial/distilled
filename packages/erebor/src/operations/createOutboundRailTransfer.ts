@@ -4,6 +4,18 @@ import * as T from "../traits.ts";
 import { BadRequest, Conflict, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
+export interface CreateOutboundRailTransferInput {
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  from_deposit_account_id: string;
+  counterparty_rail_address_id?: string | null;
+  to_deposit_account_id?: string | null;
+  amount: { currency: "USD"; value: string };
+  memo?: string | null;
+  internal_note?: string | null;
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const CreateOutboundRailTransferInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     ereborVersion: Schema.optional(Schema.String).pipe(
@@ -25,11 +37,34 @@ export const CreateOutboundRailTransferInput =
     custom_fields: Schema.optional(
       Schema.Record(Schema.String, Schema.Unknown),
     ),
-  }).pipe(T.Http({ method: "POST", path: "/rail_out" }));
-export type CreateOutboundRailTransferInput =
-  typeof CreateOutboundRailTransferInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/rail_out" }),
+  ) as unknown as Schema.Codec<CreateOutboundRailTransferInput>;
 
 // Output Schema
+export interface CreateOutboundRailTransferOutput {
+  id: string;
+  type: "RAIL_OUT";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id?: string | null;
+  status: "CREATED" | "PENDING" | "SETTLED" | "FAILED";
+  from_deposit_account_id: string;
+  counterparty_rail_address_id?: string | null;
+  to_deposit_account_id?: string | null;
+  amount: {
+    currency: "USD";
+    exponent: number;
+    value: string;
+    display_value: string;
+  };
+  memo?: string | null;
+  internal_note?: string | null;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const CreateOutboundRailTransferOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -51,11 +86,11 @@ export const CreateOutboundRailTransferOutput =
     }),
     memo: Schema.optional(Schema.NullOr(Schema.String)),
     internal_note: Schema.optional(Schema.NullOr(Schema.String)),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type CreateOutboundRailTransferOutput =
-  typeof CreateOutboundRailTransferOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<CreateOutboundRailTransferOutput>;
 
 // The operation
 /**

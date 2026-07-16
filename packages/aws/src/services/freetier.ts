@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -490,6 +490,7 @@ export const getAccountActivity: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetAccountActivity",
 }));
 export type GetAccountPlanStateError =
   | AccessDeniedException
@@ -516,6 +517,7 @@ export const getAccountPlanState: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetAccountPlanState",
 }));
 export type GetFreeTierUsageError =
   | InternalServerException
@@ -549,6 +551,7 @@ export const getFreeTierUsage: API.OperationMethod<
   input: GetFreeTierUsageRequest,
   output: GetFreeTierUsageResponse,
   errors: [InternalServerException, ThrottlingException, ValidationException],
+  operationName: "GetFreeTierUsage",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -588,6 +591,7 @@ export const listAccountActivities: API.OperationMethod<
   input: ListAccountActivitiesRequest,
   output: ListAccountActivitiesResponse,
   errors: [InternalServerException, ThrottlingException, ValidationException],
+  operationName: "ListAccountActivities",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -620,4 +624,5 @@ export const upgradeAccountPlan: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpgradeAccountPlan",
 }));

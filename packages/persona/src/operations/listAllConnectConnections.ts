@@ -4,6 +4,22 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface ListAllConnectConnectionsInput {
+  page?: { after?: string; before?: string; size?: number };
+  fields?: Record<string, string>;
+  filter?: { status?: string; "destination-organization-id"?: string };
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const ListAllConnectConnectionsInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     page: Schema.optional(
@@ -12,7 +28,7 @@ export const ListAllConnectConnectionsInput =
         before: Schema.optional(Schema.String),
         size: Schema.optional(Schema.Number),
       }),
-    ).pipe(T.HttpQuery("page")),
+    ),
     fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
       T.HttpQuery("fields"),
     ),
@@ -21,7 +37,7 @@ export const ListAllConnectConnectionsInput =
         status: Schema.optional(Schema.String),
         "destination-organization-id": Schema.optional(Schema.String),
       }),
-    ).pipe(T.HttpQuery("filter")),
+    ),
     keyInflection: Schema.optional(
       Schema.Literals(["camel", "kebab", "snake"]),
     ).pipe(T.HttpHeader("Key-Inflection")),
@@ -40,11 +56,26 @@ export const ListAllConnectConnectionsInput =
         "2020-05-18",
       ]),
     ).pipe(T.HttpHeader("Persona-Version")),
-  }).pipe(T.Http({ method: "GET", path: "/connect/connections" }));
-export type ListAllConnectConnectionsInput =
-  typeof ListAllConnectConnectionsInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/connect/connections" }),
+  ) as unknown as Schema.Codec<ListAllConnectConnectionsInput>;
 
 // Output Schema
+export interface ListAllConnectConnectionsOutput {
+  data: ReadonlyArray<{
+    type?: string;
+    id?: string;
+    attributes?: {
+      status?: string;
+      "destination-organization-id"?: string;
+      "source-organization-id"?: string;
+      "created-at"?: string;
+      "updated-at"?: string;
+    };
+    relationships?: { creator?: { data: { id: string; type: string } } };
+  }>;
+  links: { prev: string | null; next: string | null };
+}
 export const ListAllConnectConnectionsOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Array(
@@ -78,9 +109,7 @@ export const ListAllConnectConnectionsOutput =
       prev: Schema.NullOr(Schema.String),
       next: Schema.NullOr(Schema.String),
     }),
-  });
-export type ListAllConnectConnectionsOutput =
-  typeof ListAllConnectConnectionsOutput.Type;
+  }) as unknown as Schema.Codec<ListAllConnectConnectionsOutput>;
 
 // The operation
 /**
