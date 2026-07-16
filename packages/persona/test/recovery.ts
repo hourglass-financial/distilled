@@ -45,7 +45,7 @@ const locatorAttribute = (kind: OwnedLocator["kind"]): string => {
     case "account":
       return "reference-id";
     case "inquiry":
-      return "note";
+      return "reference-id";
     case "list":
       return "name";
   }
@@ -78,29 +78,45 @@ export const findOwnedResourceId = async (
     );
   }
 
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Persona-Version": PERSONA_VERSION,
-    },
-  });
-  if (!response.ok) {
-    throw new Error(`Recovery read failed with HTTP ${response.status}`);
-  }
-  const body = record(await response.json());
-  if (!Array.isArray(body?.data)) {
-    throw new Error("Recovery read returned an invalid resource collection");
-  }
-
   const attribute = locatorAttribute(locator.kind);
-  const matches = body.data.flatMap((value) => {
-    const item = record(value);
-    const attributes = record(item?.attributes);
-    return typeof item?.id === "string" &&
-      attributes?.[attribute] === locator.value
-      ? [item.id]
-      : [];
-  });
+  const matches: string[] = [];
+  const visited = new Set<string>();
+  let pageUrl: URL | undefined = url;
+  while (pageUrl) {
+    if (visited.has(pageUrl.href)) {
+      throw new Error("Recovery read returned a pagination cycle");
+    }
+    visited.add(pageUrl.href);
+
+    const response = await fetch(pageUrl, {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Persona-Version": PERSONA_VERSION,
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`Recovery read failed with HTTP ${response.status}`);
+    }
+    const body = record(await response.json());
+    if (!Array.isArray(body?.data)) {
+      throw new Error("Recovery read returned an invalid resource collection");
+    }
+
+    for (const value of body.data) {
+      const item = record(value);
+      const attributes = record(item?.attributes);
+      if (
+        typeof item?.id === "string" &&
+        attributes?.[attribute] === locator.value
+      ) {
+        matches.push(item.id);
+      }
+    }
+
+    const links = record(body.links);
+    const next = typeof links?.next === "string" ? links.next : undefined;
+    pageUrl = next ? new URL(next, pageUrl) : undefined;
+  }
   if (matches.length > 1) {
     throw new Error("Recovery locator matched more than one Persona resource");
   }

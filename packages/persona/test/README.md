@@ -3,8 +3,9 @@
 These tests call Persona's real sandbox API. They are intentionally local-only
 and run serially so each test can own and clean up its resources deterministically.
 
-There is exactly one `test/<operation>.test.ts` file for each generated Persona
-operation. Every file exposes one coverage marker:
+There is exactly one `test/operations/<operation>.test.ts` file for each
+generated Persona operation. Cross-cutting client tests and shared helpers stay
+at the top of `test/`. Every operation file exposes one coverage marker:
 
 - `live-lifecycle` creates or changes only test-owned resources and cleans them up
 - `live-data` decodes a successful response from stable sandbox data

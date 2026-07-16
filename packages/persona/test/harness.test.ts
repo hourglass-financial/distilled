@@ -1,15 +1,30 @@
-import { describe, expect, it, vi } from "vitest";
+import { Effect } from "effect";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   confirmationToken,
   parseCleanupArguments,
 } from "../scripts/cleanup-test-run.ts";
 import { ownedName } from "./fixtures.ts";
 import type { OwnedLocator } from "./recovery.ts";
-import { isExactOwnedLocator, reconcileOwnedId } from "./recovery.ts";
-import { CleanupStack, sanitizeFailure, withCleanup } from "./safe-run.ts";
+import {
+  findOwnedResourceId,
+  isExactOwnedLocator,
+  reconcileOwnedId,
+} from "./recovery.ts";
+import {
+  CleanupStack,
+  runFailure,
+  sanitizeFailure,
+  withCleanup,
+} from "./safe-run.ts";
 import { testRunId } from "./setup.ts";
 
 describe("Persona live-test harness", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+
   it("creates distinct names scoped to the same run", () => {
     const first = ownedName("account", "first");
     const second = ownedName("account", "second");
@@ -46,6 +61,50 @@ describe("Persona live-test harness", () => {
     await expect(
       reconcileOwnedId(locator, findExact, { attempts: 3, delayMs: 0 }),
     ).resolves.toEqual({ id: "act_owned", locator });
+  });
+
+  it("follows recovery pagination before matching an owned resource", async () => {
+    vi.stubEnv("PERSONA_API_KEY", "sandbox-test-key");
+    const locator = {
+      kind: "list" as const,
+      value: ownedName("list", "recovery-pagination"),
+    };
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            data: [],
+            links: { next: "/api/v1/lists?page%5Bafter%5D=next" },
+          }),
+          { status: 200 },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            data: [{ id: "lst_owned", attributes: { name: locator.value } }],
+            links: { next: null },
+          }),
+          { status: 200 },
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(findOwnedResourceId(locator, testRunId)).resolves.toBe(
+      "lst_owned",
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("returns the actual Effect failure to negative-path assertions", async () => {
+    vi.stubEnv("PERSONA_API_KEY", "sandbox-test-key");
+    await expect(
+      runFailure(Effect.fail({ _tag: "NotFound", secret: "do-not-print" })),
+    ).resolves.toEqual({
+      tag: "NotFound",
+      message: "NotFound",
+    });
   });
 
   it("runs cleanup in dependency-safe LIFO order", async () => {
