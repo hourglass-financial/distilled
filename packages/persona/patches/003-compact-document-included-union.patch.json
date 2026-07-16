@@ -1,0 +1,71 @@
+{
+  "description": "Keep Persona document included-object responses below the shared generator's bounded-union limit without losing the document-file contract. Normalize the OpenAPI 3.1 const discriminants to equivalent single-value enums understood by the generator; compact the five large related-resource branches to their JSON:API type/id envelope while preserving arbitrary response keys; and retain the complete document-file branch.",
+  "patches": [
+    {
+      "op": "replace",
+      "path": "/components/schemas/document-included-objects/items/oneOf/0",
+      "value": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "type": { "type": "string", "enum": ["inquiry"] },
+          "id": { "type": "string" }
+        },
+        "required": ["type", "id"]
+      }
+    },
+    {
+      "op": "replace",
+      "path": "/components/schemas/document-included-objects/items/oneOf/1",
+      "value": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "type": { "type": "string", "enum": ["inquiry-template"] },
+          "id": { "type": "string" }
+        }
+      }
+    },
+    {
+      "op": "replace",
+      "path": "/components/schemas/document-included-objects/items/oneOf/2",
+      "value": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "type": { "type": "string", "enum": ["inquiry-template-version"] },
+          "id": { "type": "string" }
+        }
+      }
+    },
+    {
+      "op": "replace",
+      "path": "/components/schemas/document-included-objects/items/oneOf/3",
+      "value": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "type": { "type": "string", "enum": ["template"] },
+          "id": { "type": "string" }
+        }
+      }
+    },
+    {
+      "op": "replace",
+      "path": "/components/schemas/document-included-objects/items/oneOf/4",
+      "value": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "type": { "type": "string", "enum": ["transaction"] },
+          "id": { "type": "string" }
+        }
+      }
+    },
+    {
+      "op": "add",
+      "path": "/components/schemas/document-file/properties/type/enum",
+      "value": ["document-file"]
+    }
+  ]
+}

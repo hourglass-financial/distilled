@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import { StructWithAdditionalProperties } from "@distilled.cloud/core/openapi/additional-properties";
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -118,7 +119,29 @@ export interface RetrieveAGovernmentIdDocumentOutput {
       };
     };
   };
-  included?: ReadonlyArray<unknown>;
+  included?: ReadonlyArray<
+    | ({ type: "inquiry"; id: string } & Record<string, unknown>)
+    | ({ type?: "inquiry-template"; id?: string } & Record<string, unknown>)
+    | ({ type?: "inquiry-template-version"; id?: string } & Record<
+        string,
+        unknown
+      >)
+    | ({ type?: "template"; id?: string } & Record<string, unknown>)
+    | ({ type?: "transaction"; id?: string } & Record<string, unknown>)
+    | {
+        type?: "document-file";
+        id?: string;
+        attributes?: {
+          name?: string | null;
+          "capture-method"?: string;
+          originals?: ReadonlyArray<{
+            filename?: string;
+            url?: string;
+            "byte-size"?: number;
+          } | null>;
+        };
+      }
+  >;
 }
 export const RetrieveAGovernmentIdDocumentOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
@@ -271,7 +294,70 @@ export const RetrieveAGovernmentIdDocumentOutput =
         }),
       ),
     }),
-    included: Schema.optional(Schema.Array(Schema.Unknown)),
+    included: Schema.optional(
+      Schema.Array(
+        Schema.Union([
+          StructWithAdditionalProperties(
+            Schema.Struct({
+              type: Schema.Literals(["inquiry"]),
+              id: Schema.String,
+            }),
+            Schema.Unknown,
+          ),
+          StructWithAdditionalProperties(
+            Schema.Struct({
+              type: Schema.optional(Schema.Literals(["inquiry-template"])),
+              id: Schema.optional(Schema.String),
+            }),
+            Schema.Unknown,
+          ),
+          StructWithAdditionalProperties(
+            Schema.Struct({
+              type: Schema.optional(
+                Schema.Literals(["inquiry-template-version"]),
+              ),
+              id: Schema.optional(Schema.String),
+            }),
+            Schema.Unknown,
+          ),
+          StructWithAdditionalProperties(
+            Schema.Struct({
+              type: Schema.optional(Schema.Literals(["template"])),
+              id: Schema.optional(Schema.String),
+            }),
+            Schema.Unknown,
+          ),
+          StructWithAdditionalProperties(
+            Schema.Struct({
+              type: Schema.optional(Schema.Literals(["transaction"])),
+              id: Schema.optional(Schema.String),
+            }),
+            Schema.Unknown,
+          ),
+          Schema.Struct({
+            type: Schema.optional(Schema.Literals(["document-file"])),
+            id: Schema.optional(Schema.String),
+            attributes: Schema.optional(
+              Schema.Struct({
+                name: Schema.optional(Schema.NullOr(Schema.String)),
+                "capture-method": Schema.optional(Schema.String),
+                originals: Schema.optional(
+                  Schema.Array(
+                    Schema.NullOr(
+                      Schema.Struct({
+                        filename: Schema.optional(Schema.String),
+                        url: Schema.optional(Schema.String),
+                        "byte-size": Schema.optional(Schema.Number),
+                      }),
+                    ),
+                  ),
+                ),
+              }),
+            ),
+          }),
+        ]),
+      ),
+    ),
   }) as unknown as Schema.Codec<RetrieveAGovernmentIdDocumentOutput>;
 
 // The operation
