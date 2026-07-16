@@ -196,6 +196,8 @@ export interface GeneratorConfig {
   sensitiveImport?: string;
   /** Errors import path (for operation-specific error imports) */
   errorsImport?: string;
+  /** Runtime helper import path for OpenAPI additional-property schemas */
+  additionalPropertiesImport?: string;
   /** Whether to include operation-specific error imports (default: true for Swagger, false for OAS 3.x) */
   includeOperationErrors?: boolean;
   /** Status codes to error class name mapping (only used when includeOperationErrors=true) */
@@ -433,10 +435,94 @@ interface SchemaGenerationContext {
   // never have to coerce. Defaults to "input" for backwards-compat callers
   // that don't pass a direction.
   direction?: "input" | "output";
+  usesAdditionalPropertiesSchema: boolean;
   usesSensitiveString: boolean;
   usesSensitiveNullableString: boolean;
   usesSensitiveOutputString: boolean;
   usesSensitiveOutputNullableString: boolean;
+}
+
+function generateAdditionalPropertiesValueSchema(
+  additionalProperties: true | SchemaObject,
+  spec: any,
+  indent: string,
+  seenRefs: Set<string>,
+  ctx?: SchemaGenerationContext,
+): string {
+  if (additionalProperties === true) {
+    return "Schema.Unknown";
+  }
+  const valueSchema = openApiTypeToEffectSchema(
+    additionalProperties,
+    spec,
+    indent,
+    seenRefs,
+    ctx,
+  );
+  return valueSchema;
+}
+
+/**
+ * Returns the members of a `oneOf` when each member is an object with the same
+ * required, single-value enum property and every discriminator value is
+ * unique. This is the subset the generator can render without changing the
+ * legacy `Schema.Unknown` fallback for ambiguous or otherwise unsupported
+ * unions.
+ */
+function getDiscriminatedOneOfMembers(
+  prop: SchemaObject,
+  spec: any,
+  seenRefs: Set<string>,
+): SchemaObject[] | undefined {
+  if (!prop.oneOf || prop.oneOf.length === 0) return undefined;
+
+  const resolvedMembers: SchemaObject[] = [];
+  for (const member of prop.oneOf) {
+    let resolved = member;
+    const memberRefs = new Set(seenRefs);
+
+    while (resolved.$ref) {
+      if (memberRefs.has(resolved.$ref)) return undefined;
+      memberRefs.add(resolved.$ref);
+      resolved = resolveRef(spec, resolved.$ref);
+    }
+
+    resolvedMembers.push(resolved);
+  }
+
+  if (resolvedMembers.some((member) => member.properties === undefined)) {
+    return undefined;
+  }
+
+  const first = resolvedMembers[0];
+  const candidateKeys = Object.entries(first.properties!).flatMap(
+    ([key, schema]) =>
+      first.required?.includes(key) && schema.enum?.length === 1 ? [key] : [],
+  );
+
+  for (const key of candidateKeys) {
+    const discriminatorValues = resolvedMembers.map((member) => {
+      const discriminator = member.properties![key];
+      if (
+        !member.required?.includes(key) ||
+        discriminator?.enum?.length !== 1
+      ) {
+        return undefined;
+      }
+      return discriminator.enum[0];
+    });
+
+    if (discriminatorValues.some((value) => value === undefined)) continue;
+
+    const uniqueValues = new Set(
+      discriminatorValues.map(
+        (value) => `${typeof value}:${JSON.stringify(value)}`,
+      ),
+    );
+    if (uniqueValues.size === resolvedMembers.length) return prop.oneOf;
+  }
+
+  return undefined;
 }
 
 function openApiTypeToEffectSchema(
@@ -519,8 +605,16 @@ function openApiTypeToEffectSchema(
     return generateStructSchema(mergedSchema, spec, indent, seenRefs, ctx);
   }
 
-  // Handle oneOf/anyOf - use Unknown for now
+  // HOURGLASS PATCH: Render unambiguous standard OpenAPI discriminated unions.
   if (prop.oneOf || prop.anyOf) {
+    const unionMembers = getDiscriminatedOneOfMembers(prop, spec, seenRefs);
+    if (unionMembers) {
+      const members = unionMembers.map((member) =>
+        openApiTypeToEffectSchema(member, spec, `${indent}  `, seenRefs, ctx),
+      );
+      const unionSchema = `Schema.Union([${members.join(", ")}], { mode: "oneOf" })`;
+      return isNullable(prop) ? `Schema.NullOr(${unionSchema})` : unionSchema;
+    }
     return "Schema.Unknown";
   }
 
@@ -535,6 +629,9 @@ function openApiTypeToEffectSchema(
   let baseSchema: string;
 
   switch (baseType) {
+    case "null":
+      baseSchema = "Schema.Null";
+      break;
     case "string":
       // Check for sensitive annotation
       if (prop["x-sensitive"]) {
@@ -587,20 +684,38 @@ function openApiTypeToEffectSchema(
       break;
     case "object":
       if (prop.properties) {
-        baseSchema = generateStructSchema(prop, spec, indent, seenRefs, ctx);
-      } else if (prop.additionalProperties) {
-        if (typeof prop.additionalProperties === "boolean") {
-          baseSchema = "Schema.Record(Schema.String, Schema.Unknown)";
+        const structSchema = generateStructSchema(
+          prop,
+          spec,
+          indent,
+          seenRefs,
+          ctx,
+        );
+        // HOURGLASS PATCH: Preserve explicit OpenAPI mixed-object index signatures.
+        if (prop.additionalProperties) {
+          if (ctx) ctx.usesAdditionalPropertiesSchema = true;
+          const additionalPropertiesSchema =
+            generateAdditionalPropertiesValueSchema(
+              prop.additionalProperties,
+              spec,
+              indent,
+              seenRefs,
+              ctx,
+            );
+          baseSchema = `StructWithAdditionalProperties(${structSchema}, ${additionalPropertiesSchema})`;
         } else {
-          const valueSchema = openApiTypeToEffectSchema(
+          baseSchema = structSchema;
+        }
+      } else if (prop.additionalProperties) {
+        const additionalPropertiesSchema =
+          generateAdditionalPropertiesValueSchema(
             prop.additionalProperties,
             spec,
             indent,
             seenRefs,
             ctx,
           );
-          baseSchema = `Schema.Record(Schema.String, ${valueSchema})`;
-        }
+        baseSchema = `Schema.Record(Schema.String, ${additionalPropertiesSchema})`;
       } else {
         baseSchema = "Schema.Unknown";
       }
@@ -1191,6 +1306,7 @@ function generateOutputSchema(
   outputSchemaCode: string;
   outputSchemaName: string;
   sensitiveImports: {
+    usesAdditionalPropertiesSchema: boolean;
     usesSensitiveString: boolean;
     usesSensitiveNullableString: boolean;
     usesSensitiveOutputString: boolean;
@@ -1200,6 +1316,7 @@ function generateOutputSchema(
   const outputSchemaName = toPascalCase(operationId) + "Output";
   const ctx: SchemaGenerationContext = {
     direction: "output",
+    usesAdditionalPropertiesSchema: false,
     usesSensitiveString: false,
     usesSensitiveNullableString: false,
     usesSensitiveOutputString: false,
@@ -1212,6 +1329,7 @@ function generateOutputSchema(
 export type ${outputSchemaName} = typeof ${outputSchemaName}.Type;`,
       outputSchemaName,
       sensitiveImports: {
+        usesAdditionalPropertiesSchema: false,
         usesSensitiveString: false,
         usesSensitiveNullableString: false,
         usesSensitiveOutputString: false,
@@ -1239,6 +1357,7 @@ export type ${outputSchemaName} = typeof ${outputSchemaName}.Type;`,
 export type ${outputSchemaName} = typeof ${outputSchemaName}.Type;`,
       outputSchemaName,
       sensitiveImports: {
+        usesAdditionalPropertiesSchema: ctx.usesAdditionalPropertiesSchema,
         usesSensitiveString: ctx.usesSensitiveString,
         usesSensitiveNullableString: ctx.usesSensitiveNullableString,
         usesSensitiveOutputString: ctx.usesSensitiveOutputString,
@@ -1260,6 +1379,7 @@ export type ${outputSchemaName} = typeof ${outputSchemaName}.Type;`,
 export type ${outputSchemaName} = typeof ${outputSchemaName}.Type;`,
     outputSchemaName,
     sensitiveImports: {
+      usesAdditionalPropertiesSchema: ctx.usesAdditionalPropertiesSchema,
       usesSensitiveString: ctx.usesSensitiveString,
       usesSensitiveNullableString: ctx.usesSensitiveNullableString,
       usesSensitiveOutputString: ctx.usesSensitiveOutputString,
@@ -1434,6 +1554,7 @@ export function generateFromOpenAPI(config: GeneratorConfig): void {
 
           const sensitiveCtx: SchemaGenerationContext = {
             direction: "input",
+            usesAdditionalPropertiesSchema: false,
             usesSensitiveString: false,
             usesSensitiveNullableString: false,
             usesSensitiveOutputString: false,
@@ -1466,6 +1587,9 @@ export function generateFromOpenAPI(config: GeneratorConfig): void {
             swagger,
           );
           const sensitiveImports = {
+            usesAdditionalPropertiesSchema:
+              sensitiveCtx.usesAdditionalPropertiesSchema ||
+              outputSensitiveImports.usesAdditionalPropertiesSchema,
             usesSensitiveString:
               sensitiveCtx.usesSensitiveString ||
               outputSensitiveImports.usesSensitiveString,
@@ -1557,6 +1681,7 @@ export function generateFromOpenAPI(config: GeneratorConfig): void {
 
           const sensitiveCtx: SchemaGenerationContext = {
             direction: "input",
+            usesAdditionalPropertiesSchema: false,
             usesSensitiveString: false,
             usesSensitiveNullableString: false,
             usesSensitiveOutputString: false,
@@ -1607,6 +1732,9 @@ export function generateFromOpenAPI(config: GeneratorConfig): void {
             sensitiveImports: outputSensitiveImports,
           } = generateOutputSchema(operation.operationId, responseSchema, oas);
           const sensitiveImports = {
+            usesAdditionalPropertiesSchema:
+              sensitiveCtx.usesAdditionalPropertiesSchema ||
+              outputSensitiveImports.usesAdditionalPropertiesSchema,
             usesSensitiveString:
               sensitiveCtx.usesSensitiveString ||
               outputSensitiveImports.usesSensitiveString,
@@ -1813,8 +1941,11 @@ function buildOperationFile(
   jsDoc: string,
   operationErrors: string[],
   sensitiveImports: {
+    usesAdditionalPropertiesSchema: boolean;
     usesSensitiveString: boolean;
     usesSensitiveNullableString: boolean;
+    usesSensitiveOutputString: boolean;
+    usesSensitiveOutputNullableString: boolean;
   },
   pagination:
     | {
@@ -1832,6 +1963,9 @@ function buildOperationFile(
     config.sensitiveImport ?? `${config.importPrefix}/sensitive`;
   const errorsImportPath =
     config.errorsImport ?? `${config.importPrefix}/errors`;
+  const additionalPropertiesImportPath =
+    config.additionalPropertiesImport ??
+    "@distilled.cloud/core/openapi/additional-properties";
 
   const hasErrors = operationErrors.length > 0;
   const errorsLine = hasErrors
@@ -1857,6 +1991,10 @@ export const ${functionName} = /*@__PURE__*/ /*#__PURE__*/ API.${factory}(() => 
   let imports = `import * as Schema from "effect/Schema";
 import { API } from "${clientImport}.ts";
 import * as T from "${traitsImport}.ts";`;
+
+  if (sensitiveImports.usesAdditionalPropertiesSchema) {
+    imports += `\nimport { StructWithAdditionalProperties } from "${additionalPropertiesImportPath}";`;
+  }
 
   if (hasErrors) {
     imports += `\nimport { ${operationErrors.join(", ")} } from "${errorsImportPath}.ts";`;

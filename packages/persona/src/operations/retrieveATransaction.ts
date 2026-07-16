@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import { StructWithAdditionalProperties } from "@distilled.cloud/core/openapi/additional-properties";
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -101,10 +102,13 @@ export const RetrieveATransactionOutput =
     }),
     included: Schema.optional(
       Schema.Array(
-        Schema.Struct({
-          type: Schema.String,
-          id: Schema.String,
-        }),
+        StructWithAdditionalProperties(
+          Schema.Struct({
+            type: Schema.String,
+            id: Schema.String,
+          }),
+          Schema.Unknown,
+        ),
       ),
     ),
   });

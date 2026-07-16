@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import { StructWithAdditionalProperties } from "@distilled.cloud/core/openapi/additional-properties";
 import {
   BadRequest,
   Forbidden,
@@ -95,172 +96,175 @@ export const CreateAGraphQueryOutput =
               "updated-at": Schema.optional(Schema.String),
               "redacted-at": Schema.optional(Schema.NullOr(Schema.String)),
               fields: Schema.optional(
-                Schema.Struct({
-                  name: Schema.optional(
-                    Schema.Struct({
-                      type: Schema.optional(Schema.String),
-                      value: Schema.optional(
-                        Schema.Struct({
-                          first: Schema.optional(
-                            Schema.Struct({
-                              type: Schema.optional(Schema.String),
-                              value: Schema.optional(
-                                Schema.NullOr(Schema.String),
-                              ),
-                            }),
-                          ),
-                          middle: Schema.optional(
-                            Schema.Struct({
-                              type: Schema.optional(Schema.String),
-                              value: Schema.optional(
-                                Schema.NullOr(Schema.String),
-                              ),
-                            }),
-                          ),
-                          last: Schema.optional(
-                            Schema.Struct({
-                              type: Schema.optional(Schema.String),
-                              value: Schema.optional(
-                                Schema.NullOr(Schema.String),
-                              ),
-                            }),
-                          ),
-                        }),
-                      ),
-                    }),
-                  ),
-                  address: Schema.optional(
-                    Schema.Struct({
-                      type: Schema.optional(Schema.String),
-                      value: Schema.optional(
-                        Schema.Struct({
-                          street_1: Schema.optional(
-                            Schema.Struct({
-                              type: Schema.optional(Schema.String),
-                              value: Schema.optional(
-                                Schema.NullOr(Schema.String),
-                              ),
-                            }),
-                          ),
-                          street_2: Schema.optional(
-                            Schema.Struct({
-                              type: Schema.optional(Schema.String),
-                              value: Schema.optional(
-                                Schema.NullOr(Schema.String),
-                              ),
-                            }),
-                          ),
-                          subdivision: Schema.optional(
-                            Schema.Struct({
-                              type: Schema.optional(Schema.String),
-                              value: Schema.optional(
-                                Schema.NullOr(Schema.String),
-                              ),
-                            }),
-                          ),
-                          city: Schema.optional(
-                            Schema.Struct({
-                              type: Schema.optional(Schema.String),
-                              value: Schema.optional(
-                                Schema.NullOr(Schema.String),
-                              ),
-                            }),
-                          ),
-                          postal_code: Schema.optional(
-                            Schema.Struct({
-                              type: Schema.optional(Schema.String),
-                              value: Schema.optional(
-                                Schema.NullOr(Schema.String),
-                              ),
-                            }),
-                          ),
-                          country_code: Schema.optional(
-                            Schema.Struct({
-                              type: Schema.optional(Schema.String),
-                              value: Schema.optional(
-                                Schema.NullOr(Schema.String),
-                              ),
-                            }),
-                          ),
-                        }),
-                      ),
-                    }),
-                  ),
-                  identification_numbers: Schema.optional(
-                    Schema.Struct({
-                      type: Schema.optional(Schema.String),
-                      value: Schema.optional(
-                        Schema.Array(
+                StructWithAdditionalProperties(
+                  Schema.Struct({
+                    name: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        value: Schema.optional(
                           Schema.Struct({
-                            type: Schema.optional(Schema.String),
-                            value: Schema.optional(
+                            first: Schema.optional(
                               Schema.Struct({
-                                identification_class: Schema.optional(
-                                  Schema.Struct({
-                                    type: Schema.optional(Schema.String),
-                                    value: Schema.optional(Schema.String),
-                                  }),
+                                type: Schema.optional(Schema.String),
+                                value: Schema.optional(
+                                  Schema.NullOr(Schema.String),
                                 ),
-                                identification_number: Schema.optional(
-                                  Schema.Struct({
-                                    type: Schema.optional(Schema.String),
-                                    value: Schema.optional(Schema.String),
-                                  }),
+                              }),
+                            ),
+                            middle: Schema.optional(
+                              Schema.Struct({
+                                type: Schema.optional(Schema.String),
+                                value: Schema.optional(
+                                  Schema.NullOr(Schema.String),
                                 ),
-                                issuing_country: Schema.optional(
-                                  Schema.Struct({
-                                    type: Schema.optional(Schema.String),
-                                    value: Schema.optional(Schema.String),
-                                  }),
-                                ),
-                                hashed_identification_number: Schema.optional(
-                                  Schema.Struct({
-                                    type: Schema.optional(Schema.String),
-                                    value: Schema.optional(
-                                      Schema.NullOr(Schema.String),
-                                    ),
-                                  }),
+                              }),
+                            ),
+                            last: Schema.optional(
+                              Schema.Struct({
+                                type: Schema.optional(Schema.String),
+                                value: Schema.optional(
+                                  Schema.NullOr(Schema.String),
                                 ),
                               }),
                             ),
                           }),
                         ),
-                      ),
-                    }),
-                  ),
-                  birthdate: Schema.optional(
-                    Schema.Struct({
-                      type: Schema.optional(Schema.String),
-                      value: Schema.optional(Schema.NullOr(Schema.String)),
-                    }),
-                  ),
-                  phone_number: Schema.optional(
-                    Schema.Struct({
-                      type: Schema.optional(Schema.String),
-                      value: Schema.optional(Schema.NullOr(Schema.String)),
-                    }),
-                  ),
-                  email_address: Schema.optional(
-                    Schema.Struct({
-                      type: Schema.optional(Schema.String),
-                      value: Schema.optional(Schema.NullOr(Schema.String)),
-                    }),
-                  ),
-                  selfie_photo: Schema.optional(
-                    Schema.Struct({
-                      type: Schema.optional(Schema.String),
-                      value: Schema.optional(
-                        Schema.NullOr(
+                      }),
+                    ),
+                    address: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        value: Schema.optional(
                           Schema.Struct({
-                            filename: Schema.optional(Schema.String),
-                            url: Schema.optional(Schema.String),
-                            "byte-size": Schema.optional(Schema.Number),
+                            street_1: Schema.optional(
+                              Schema.Struct({
+                                type: Schema.optional(Schema.String),
+                                value: Schema.optional(
+                                  Schema.NullOr(Schema.String),
+                                ),
+                              }),
+                            ),
+                            street_2: Schema.optional(
+                              Schema.Struct({
+                                type: Schema.optional(Schema.String),
+                                value: Schema.optional(
+                                  Schema.NullOr(Schema.String),
+                                ),
+                              }),
+                            ),
+                            subdivision: Schema.optional(
+                              Schema.Struct({
+                                type: Schema.optional(Schema.String),
+                                value: Schema.optional(
+                                  Schema.NullOr(Schema.String),
+                                ),
+                              }),
+                            ),
+                            city: Schema.optional(
+                              Schema.Struct({
+                                type: Schema.optional(Schema.String),
+                                value: Schema.optional(
+                                  Schema.NullOr(Schema.String),
+                                ),
+                              }),
+                            ),
+                            postal_code: Schema.optional(
+                              Schema.Struct({
+                                type: Schema.optional(Schema.String),
+                                value: Schema.optional(
+                                  Schema.NullOr(Schema.String),
+                                ),
+                              }),
+                            ),
+                            country_code: Schema.optional(
+                              Schema.Struct({
+                                type: Schema.optional(Schema.String),
+                                value: Schema.optional(
+                                  Schema.NullOr(Schema.String),
+                                ),
+                              }),
+                            ),
                           }),
                         ),
-                      ),
-                    }),
-                  ),
-                }),
+                      }),
+                    ),
+                    identification_numbers: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        value: Schema.optional(
+                          Schema.Array(
+                            Schema.Struct({
+                              type: Schema.optional(Schema.String),
+                              value: Schema.optional(
+                                Schema.Struct({
+                                  identification_class: Schema.optional(
+                                    Schema.Struct({
+                                      type: Schema.optional(Schema.String),
+                                      value: Schema.optional(Schema.String),
+                                    }),
+                                  ),
+                                  identification_number: Schema.optional(
+                                    Schema.Struct({
+                                      type: Schema.optional(Schema.String),
+                                      value: Schema.optional(Schema.String),
+                                    }),
+                                  ),
+                                  issuing_country: Schema.optional(
+                                    Schema.Struct({
+                                      type: Schema.optional(Schema.String),
+                                      value: Schema.optional(Schema.String),
+                                    }),
+                                  ),
+                                  hashed_identification_number: Schema.optional(
+                                    Schema.Struct({
+                                      type: Schema.optional(Schema.String),
+                                      value: Schema.optional(
+                                        Schema.NullOr(Schema.String),
+                                      ),
+                                    }),
+                                  ),
+                                }),
+                              ),
+                            }),
+                          ),
+                        ),
+                      }),
+                    ),
+                    birthdate: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        value: Schema.optional(Schema.NullOr(Schema.String)),
+                      }),
+                    ),
+                    phone_number: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        value: Schema.optional(Schema.NullOr(Schema.String)),
+                      }),
+                    ),
+                    email_address: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        value: Schema.optional(Schema.NullOr(Schema.String)),
+                      }),
+                    ),
+                    selfie_photo: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        value: Schema.optional(
+                          Schema.NullOr(
+                            Schema.Struct({
+                              filename: Schema.optional(Schema.String),
+                              url: Schema.optional(Schema.String),
+                              "byte-size": Schema.optional(Schema.Number),
+                            }),
+                          ),
+                        ),
+                      }),
+                    ),
+                  }),
+                  Schema.Unknown,
+                ),
               ),
               tags: Schema.optional(Schema.Array(Schema.Unknown)),
               "account-status": Schema.optional(Schema.String),

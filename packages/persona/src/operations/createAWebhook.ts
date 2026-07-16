@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import { StructWithAdditionalProperties } from "@distilled.cloud/core/openapi/additional-properties";
 import {
   BadRequest,
   Forbidden,
@@ -319,13 +320,16 @@ export const CreateAWebhookInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "included-allowlist": Schema.optional(Schema.Unknown),
       "relationship-allowlist": Schema.optional(Schema.Unknown),
       "custom-http-headers": Schema.optional(
-        Schema.Struct({
-          Authorization: Schema.optional(Schema.String),
-          "Calling-Application": Schema.optional(Schema.String),
-          "CF-Access-Client-Id": Schema.optional(Schema.String),
-          "CF-Access-Client-Secret": Schema.optional(SensitiveString),
-          "X-API-Key": Schema.optional(Schema.String),
-        }),
+        StructWithAdditionalProperties(
+          Schema.Struct({
+            Authorization: Schema.optional(Schema.String),
+            "Calling-Application": Schema.optional(Schema.String),
+            "CF-Access-Client-Id": Schema.optional(Schema.String),
+            "CF-Access-Client-Secret": Schema.optional(SensitiveString),
+            "X-API-Key": Schema.optional(Schema.String),
+          }),
+          Schema.Unknown,
+        ),
       ),
     }),
   }),
