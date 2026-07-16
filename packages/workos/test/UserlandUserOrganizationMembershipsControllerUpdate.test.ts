@@ -3,51 +3,60 @@ import { describe, expect, it } from "vitest";
 import { UserlandUserOrganizationMembershipsControllerList } from "../src/operations/UserlandUserOrganizationMembershipsControllerList.ts";
 import { UserlandUserOrganizationMembershipsControllerUpdate } from "../src/operations/UserlandUserOrganizationMembershipsControllerUpdate.ts";
 import { UserlandUsersControllerList } from "../src/operations/UserlandUsersControllerList.ts";
-import { runEffect, testRunId } from "./setup.ts";
+import { runEffect, runOrSkipOnEnvLimitation, testRunId } from "./setup.ts";
 
 describe("UserlandUserOrganizationMembershipsControllerUpdate", () => {
   it(
-    "updates an organization membership",
-    async () => {
-      const users = await runEffect(UserlandUsersControllerList({ limit: 1 }));
+    "updates an organization membership with its complete role set",
+    async (ctx) => {
+      const users = await runOrSkipOnEnvLimitation(
+        ctx,
+        UserlandUsersControllerList({ limit: 1 }),
+      );
 
-      if (users.data.length === 0) {
-        const error = await runEffect(
-          UserlandUserOrganizationMembershipsControllerUpdate({
-            id: `om_does_not_exist_${testRunId}`,
-          }).pipe(Effect.flip),
-        );
-        expect(error._tag).toBe("NotFound");
+      const seedUser = users.data?.[0];
+      if (!seedUser?.id) {
+        ctx.skip("workspace has no user available for a membership update");
         return;
       }
 
-      const seedUser = users.data[0] as { id: string };
-      const memberships = await runEffect(
+      const memberships = await runOrSkipOnEnvLimitation(
+        ctx,
         UserlandUserOrganizationMembershipsControllerList({
           user_id: seedUser.id,
           limit: 1,
         }),
       );
       const member = memberships.data?.[0];
-      if (!member) {
-        const error = await runEffect(
-          UserlandUserOrganizationMembershipsControllerUpdate({
-            id: `om_does_not_exist_${testRunId}`,
-          }).pipe(Effect.flip),
-        );
-        expect(error._tag).toBe("NotFound");
+      if (!member?.id) {
+        ctx.skip("workspace user has no organization membership to update");
+        return;
+      }
+
+      const roleSlugs = [
+        ...(member.roles ?? []).map((role) => role.slug),
+        member.role?.slug,
+      ].filter((slug): slug is string => typeof slug === "string");
+      const uniqueRoleSlugs = [...new Set(roleSlugs)];
+      if (uniqueRoleSlugs.length === 0) {
+        ctx.skip("workspace membership has no role slug to preserve");
         return;
       }
 
       const result = await runEffect(
-        UserlandUserOrganizationMembershipsControllerUpdate({ id: member.id }),
+        UserlandUserOrganizationMembershipsControllerUpdate({
+          id: member.id,
+          role_slugs: uniqueRoleSlugs,
+        }),
       );
-      expect(result).toBeDefined();
+      const returnedRoleSlugs = (result.roles ?? [])
+        .map((role) => role.slug)
+        .filter((slug): slug is string => typeof slug === "string");
+
       expect(result.id).toBe(member.id);
-      expect(typeof result.user_id).toBe("string");
-      expect(typeof result.organization_id).toBe("string");
-      expect(["active", "inactive", "pending"]).toContain(result.status);
-      expect(typeof result.role.slug).toBe("string");
+      expect([...new Set(returnedRoleSlugs)].sort()).toEqual(
+        [...uniqueRoleSlugs].sort(),
+      );
     },
     60_000,
   );

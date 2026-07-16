@@ -7,11 +7,15 @@ import { BadRequest, NotFound, UnprocessableEntity } from "../errors.ts";
 export interface UserlandUserOrganizationMembershipsControllerCreateInput {
   user_id: string;
   organization_id: string;
+  role_slug?: string;
+  role_slugs?: ReadonlyArray<string>;
 }
 export const UserlandUserOrganizationMembershipsControllerCreateInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     user_id: Schema.String,
     organization_id: Schema.String,
+    role_slug: Schema.optional(Schema.String),
+    role_slugs: Schema.optional(Schema.Array(Schema.String)),
   }).pipe(
     T.Http({
       method: "POST",

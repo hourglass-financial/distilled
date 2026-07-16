@@ -2,6 +2,8 @@ import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
 import { BadRequest, NotFound, UnprocessableEntity } from "../errors.ts";
+import { SensitiveString, SensitiveNullableString } from "../sensitive.ts";
+import * as Redacted from "effect/Redacted";
 
 // Input Schema
 export interface UserlandUsersControllerCreate0Input {
@@ -12,6 +14,15 @@ export interface UserlandUsersControllerCreate0Input {
   email_verified?: boolean | null;
   metadata?: Record<string, string> | null;
   external_id?: string | null;
+  password?: string | Redacted.Redacted<string> | null;
+  password_hash?: string | Redacted.Redacted<string>;
+  password_hash_type?:
+    | "bcrypt"
+    | "firebase-scrypt"
+    | "ssha"
+    | "scrypt"
+    | "pbkdf2"
+    | "argon2";
 }
 export const UserlandUsersControllerCreate0Input =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
@@ -24,6 +35,18 @@ export const UserlandUsersControllerCreate0Input =
       Schema.NullOr(Schema.Record(Schema.String, Schema.String)),
     ),
     external_id: Schema.optional(Schema.NullOr(Schema.String)),
+    password: Schema.optional(SensitiveNullableString),
+    password_hash: Schema.optional(SensitiveString),
+    password_hash_type: Schema.optional(
+      Schema.Literals([
+        "bcrypt",
+        "firebase-scrypt",
+        "ssha",
+        "scrypt",
+        "pbkdf2",
+        "argon2",
+      ]),
+    ),
   }).pipe(
     T.Http({ method: "POST", path: "/user_management/users" }),
   ) as unknown as Schema.Codec<UserlandUsersControllerCreate0Input>;

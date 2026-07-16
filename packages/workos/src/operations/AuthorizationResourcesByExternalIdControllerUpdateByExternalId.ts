@@ -16,6 +16,9 @@ export interface AuthorizationResourcesByExternalIdControllerUpdateByExternalIdI
   external_id: string;
   name?: string;
   description?: string | null;
+  parent_resource_id?: string;
+  parent_resource_external_id?: string;
+  parent_resource_type_slug?: string;
 }
 export const AuthorizationResourcesByExternalIdControllerUpdateByExternalIdInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
@@ -24,6 +27,9 @@ export const AuthorizationResourcesByExternalIdControllerUpdateByExternalIdInput
     external_id: Schema.String.pipe(T.PathParam()),
     name: Schema.optional(Schema.String),
     description: Schema.optional(Schema.NullOr(Schema.String)),
+    parent_resource_id: Schema.optional(Schema.String),
+    parent_resource_external_id: Schema.optional(Schema.String),
+    parent_resource_type_slug: Schema.optional(Schema.String),
   }).pipe(
     T.Http({
       method: "PATCH",

@@ -7,13 +7,47 @@ import {
   NotFound,
   UnprocessableEntity,
 } from "../errors.ts";
-import { SensitiveOutputString } from "../sensitive.ts";
+import { SensitiveString, SensitiveOutputString } from "../sensitive.ts";
 import * as Redacted from "effect/Redacted";
 
 // Input Schema
-export interface UserlandSessionsControllerAuthenticate0Input {}
+export interface UserlandSessionsControllerAuthenticate0Input {
+  client_id: string;
+  client_secret?: string | Redacted.Redacted<string>;
+  grant_type: string;
+  code?: string;
+  code_verifier?: string;
+  invitation_token?: string;
+  ip_address?: string;
+  device_id?: string;
+  user_agent?: string;
+  email?: string;
+  password?: string | Redacted.Redacted<string>;
+  refresh_token?: string | Redacted.Redacted<string>;
+  organization_id?: string;
+  pending_authentication_token?: string;
+  authentication_challenge_id?: string;
+  device_code?: string;
+}
 export const UserlandSessionsControllerAuthenticate0Input =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({}).pipe(
+  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
+    client_id: Schema.String,
+    client_secret: Schema.optional(SensitiveString),
+    grant_type: Schema.String,
+    code: Schema.optional(Schema.String),
+    code_verifier: Schema.optional(Schema.String),
+    invitation_token: Schema.optional(Schema.String),
+    ip_address: Schema.optional(Schema.String),
+    device_id: Schema.optional(Schema.String),
+    user_agent: Schema.optional(Schema.String),
+    email: Schema.optional(Schema.String),
+    password: Schema.optional(SensitiveString),
+    refresh_token: Schema.optional(SensitiveString),
+    organization_id: Schema.optional(Schema.String),
+    pending_authentication_token: Schema.optional(Schema.String),
+    authentication_challenge_id: Schema.optional(Schema.String),
+    device_code: Schema.optional(Schema.String),
+  }).pipe(
     T.Http({ method: "POST", path: "/user_management/authenticate" }),
   ) as unknown as Schema.Codec<UserlandSessionsControllerAuthenticate0Input>;
 

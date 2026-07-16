@@ -6,10 +6,14 @@ import { NotFound, UnprocessableEntity } from "../errors.ts";
 // Input Schema
 export interface UserlandUserOrganizationMembershipsControllerUpdateInput {
   id: string;
+  role_slug?: string;
+  role_slugs?: ReadonlyArray<string>;
 }
 export const UserlandUserOrganizationMembershipsControllerUpdateInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
+    role_slug: Schema.optional(Schema.String),
+    role_slugs: Schema.optional(Schema.Array(Schema.String)),
   }).pipe(
     T.Http({
       method: "PUT",
