@@ -144,10 +144,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          core_tags="$(npm dist-tag ls @hourglass-financial/distilled-core --json --registry=https://npm.pkg.github.com)"
-          provider_tags="$(npm dist-tag ls @hourglass-financial/erebor --json --registry=https://npm.pkg.github.com)"
-          core_previous="$(node -e 'process.stdout.write(JSON.parse(process.argv[1])[process.argv[2]] ?? "")' "$core_tags" "$DIST_TAG")"
-          provider_previous="$(node -e 'process.stdout.write(JSON.parse(process.argv[1])[process.argv[2]] ?? "")' "$provider_tags" "$DIST_TAG")"
+          core_previous="$(bun scripts/private-package-release.ts tag-version --package @hourglass-financial/distilled-core --tag "$DIST_TAG")"
+          provider_previous="$(bun scripts/private-package-release.ts tag-version --package @hourglass-financial/erebor --tag "$DIST_TAG")"
           echo "core=$core_previous" >> "$GITHUB_OUTPUT"
           echo "provider=$provider_previous" >> "$GITHUB_OUTPUT"
 

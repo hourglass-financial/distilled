@@ -8,6 +8,7 @@ import {
   assertDistTag,
   createReleaseReceipt,
   digestLibDirectory,
+  parseDistTagListing,
   pollForExpectedValue,
 } from "./private-package-release.ts";
 
@@ -30,6 +31,17 @@ describe("private package release provenance", () => {
     for (const tag of ["--registry", "Persona-SDK", "1.2.3", "tag/child"]) {
       expect(() => assertDistTag(tag)).toThrow("non-version npm tag");
     }
+  });
+
+  test("reads a version from npm's plain-text dist-tag listing", () => {
+    const listing = [
+      "erebor-sdk: 0.2.0-alpha.3.1.g225d212",
+      "latest: 0.2.0-alpha.1",
+    ].join("\n");
+    expect(parseDistTagListing(listing, "erebor-sdk")).toBe(
+      "0.2.0-alpha.3.1.g225d212",
+    );
+    expect(parseDistTagListing(listing, "missing-tag")).toBe("");
   });
 
   test("computes a deterministic normalized lib digest", async () => {
