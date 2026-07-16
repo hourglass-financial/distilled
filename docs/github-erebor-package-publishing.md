@@ -12,14 +12,22 @@ The private Erebor package preserves runtime imports of `@distilled.cloud/core/*
 
 ## Publishing
 
-Run the `Publish Private Erebor Packages` GitHub Actions workflow from the branch that contains the Erebor build you want to consume. The workflow:
+Merge the release source to `main`, then run the `Publish Private Erebor
+Packages` workflow on `main`. Supply the full 40-character merged commit SHA as
+`source-sha`; the workflow rejects revisions that are not reachable from
+`main`. The workflow:
 
 1. Builds `@distilled.cloud/core` and `@distilled.cloud/erebor`.
-2. Stages registry-ready manifests under `.ai-workspace/github-packages`.
-3. Publishes core and Erebor to `https://npm.pkg.github.com`.
-4. Moves the selected dist tag, defaulting to `erebor-sdk`.
+2. Stages registry-ready manifests under `.ai-workspace/github-erebor-packages`.
+3. Publishes immutable core and Erebor tarballs under a temporary run tag.
+4. Verifies registry integrity and tests the published pair with npm and Bun.
+5. Moves the selected dist tag, defaulting to `erebor-sdk`.
+6. Uploads a release receipt containing the source SHA, versions, registry
+   integrity values, and normalized build digests.
 
-Each workflow run creates a unique prerelease version from the Erebor package version, run number, run attempt, and commit SHA. This avoids GitHub Packages version-collision failures on reruns.
+Each workflow run creates a unique prerelease version from the Erebor package
+version, run ID, run attempt, and commit SHA. This avoids GitHub Packages
+version-collision failures on reruns.
 
 ## Consumer Setup
 
@@ -30,10 +38,10 @@ Add this `.npmrc` entry in the consuming repository:
 //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
 ```
 
-Install the branch preview package:
+Install the private package with its verified Effect peer:
 
 ```bash
-bun add @hourglass-financial/erebor@erebor-sdk
+bun add @hourglass-financial/erebor@erebor-sdk effect@4.0.0-beta.98
 ```
 
 Import from the private package name in consuming code:
@@ -67,6 +75,10 @@ After publishing, verify installability from outside this monorepo:
 bun run smoke:github-erebor-install -- --tag erebor-sdk
 ```
 
-The smoke helper creates a temporary consumer project, installs `@hourglass-financial/erebor`, and imports the package entrypoint. It does not call the Erebor API.
+The smoke helper creates a temporary consumer project, installs
+`@hourglass-financial/erebor` and the exact verified Effect peer, requires a
+single physical Effect installation, checks types without skipping library
+declarations, and imports the public runtime subpaths. It does not call the
+Erebor API.
 
 Use `--dry-run` to inspect the temp project setup without installing from GitHub Packages.

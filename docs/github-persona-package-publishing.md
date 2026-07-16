@@ -17,16 +17,21 @@ or import core directly.
 
 ## Publishing
 
-Run the `Publish Private Persona Packages` GitHub Actions workflow from the
-branch that contains the Persona build you want to consume. The workflow:
+Merge the release source to `main`, then run the `Publish Private Persona
+Packages` workflow on `main`. Supply the full 40-character merged commit SHA as
+`source-sha`; the workflow rejects revisions that are not reachable from
+`main`. The workflow:
 
 1. Builds `@distilled.cloud/core` and `@distilled.cloud/persona`.
 2. Stages registry-ready manifests under `.ai-workspace/github-persona-packages`.
-3. Publishes core and Persona to `https://npm.pkg.github.com`.
-4. Moves the selected dist tag, defaulting to `persona-sdk`.
+3. Publishes immutable core and Persona tarballs under a temporary run tag.
+4. Verifies registry integrity and tests the published pair with npm and Bun.
+5. Moves the selected dist tag, defaulting to `persona-sdk`.
+6. Uploads a release receipt containing the source SHA, versions, registry
+   integrity values, and normalized build digests.
 
 Each workflow run creates a unique prerelease version from the Persona package
-version, run number, run attempt, and commit SHA. This avoids GitHub Packages
+version, run ID, run attempt, and commit SHA. This avoids GitHub Packages
 version-collision failures on reruns.
 
 ## Consumer Setup
@@ -38,10 +43,10 @@ Add this `.npmrc` entry in the consuming repository:
 //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
 ```
 
-Install the branch preview package:
+Install the private package with its verified Effect peer:
 
 ```bash
-bun add @hourglass-financial/persona@persona-sdk effect
+bun add @hourglass-financial/persona@persona-sdk effect@4.0.0-beta.98
 ```
 
 Import from the private package name in consuming code:
@@ -79,9 +84,10 @@ bun run smoke:github-persona-install -- --tag persona-sdk
 ```
 
 The smoke helper creates a temporary consumer project, installs
-`@hourglass-financial/persona`, and imports the package entrypoint. It does not
-call the Persona API.
+`@hourglass-financial/persona` and the exact verified Effect peer, requires a
+single physical Effect installation, checks types without skipping library
+declarations, and imports the public runtime subpaths. It does not call the
+Persona API.
 
 Use `--dry-run` to inspect the temp project setup without installing from
 GitHub Packages.
-

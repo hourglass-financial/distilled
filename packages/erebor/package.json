@@ -61,11 +61,11 @@
     }
   },
   "scripts": {
-    "typecheck": "tsgo",
-    "build": "tsgo -b",
+    "typecheck": "tsc",
+    "build": "tsc -b",
     "fmt": "oxfmt --write src",
     "lint": "oxlint --fix src",
-    "check": "tsgo && oxlint src && oxfmt --check src",
+    "check": "tsc && oxlint src && oxfmt --check src",
     "test": "bunx vitest run test --passWithNoTests",
     "publish:npm": "bun run build && bun publish --access public",
     "generate": "bun run scripts/generate.ts && oxlint --fix src && oxfmt --write src && oxfmt --write src",
@@ -78,8 +78,7 @@
     "specs:update": "bun run specs:fetch"
   },
   "dependencies": {
-    "@distilled.cloud/core": "workspace:*",
-    "effect": "catalog:"
+    "@distilled.cloud/core": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "catalog:",
@@ -88,6 +87,6 @@
     "vitest": "catalog:"
   },
   "peerDependencies": {
-    "effect": "catalog:"
+    "effect": "4.0.0-beta.98"
   }
 }

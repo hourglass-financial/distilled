@@ -11,6 +11,14 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 
+import {
+  applyEffectPackagePolicy,
+  assertSourceEffectPackagePolicy,
+  assertWorkspaceEffectIsVerified,
+  readEffectCompatibilityPolicy,
+  type EffectCompatibilityPolicy,
+} from "./lib/effect-package-policy.ts";
+
 const GITHUB_REGISTRY = "https://npm.pkg.github.com";
 const ORG_SCOPE = "@hourglass-financial";
 const DISTILLED_CORE_NAME = "@distilled.cloud/core";
@@ -209,7 +217,10 @@ const runtimeExports = (exportsValue: unknown): JsonObject | undefined => {
   return Object.keys(next).length > 0 ? next : undefined;
 };
 
-const privateReadme = (source: SourcePackage): string => {
+const privateReadme = (
+  source: SourcePackage,
+  effectPolicy: EffectCompatibilityPolicy,
+): string => {
   if (source.privateName === PRIVATE_CORE_NAME) {
     return [
       `# ${PRIVATE_CORE_NAME}`,
@@ -229,7 +240,7 @@ const privateReadme = (source: SourcePackage): string => {
     "## Installation",
     "",
     "```bash",
-    `bun add ${PRIVATE_EREBOR_NAME}@erebor-sdk`,
+    `bun add ${PRIVATE_EREBOR_NAME}@erebor-sdk effect@${effectPolicy.effectVersion}`,
     "```",
     "",
     "## Usage",
@@ -259,6 +270,7 @@ const stagedManifest = (
   rootManifest: JsonObject,
   source: SourcePackage,
   version: string,
+  effectPolicy: EffectCompatibilityPolicy,
 ): JsonObject => {
   const dependencies = resolveDependencyMap(
     sourceManifest.dependencies,
@@ -276,24 +288,28 @@ const stagedManifest = (
     throw new Error(`No lib-backed exports found for ${source.sourceName}`);
   }
 
-  return {
-    name: source.privateName,
-    version,
-    repository: {
-      type: "git",
-      url: "git+https://github.com/hourglass-financial/distilled.git",
-      directory: source.directory,
+  return applyEffectPackagePolicy(
+    {
+      name: source.privateName,
+      version,
+      repository: {
+        type: "git",
+        url: "git+https://github.com/hourglass-financial/distilled.git",
+        directory: source.directory,
+      },
+      type: sourceManifest.type ?? "module",
+      sideEffects: sourceManifest.sideEffects ?? false,
+      files: ["lib", "README.md"],
+      exports: exportsValue,
+      publishConfig: {
+        registry: GITHUB_REGISTRY,
+      },
+      ...(dependencies ? { dependencies } : {}),
+      ...(peerDependencies ? { peerDependencies } : {}),
     },
-    type: sourceManifest.type ?? "module",
-    sideEffects: sourceManifest.sideEffects ?? false,
-    files: ["lib", "README.md"],
-    exports: exportsValue,
-    publishConfig: {
-      registry: GITHUB_REGISTRY,
-    },
-    ...(dependencies ? { dependencies } : {}),
-    ...(peerDependencies ? { peerDependencies } : {}),
-  };
+    source.privateName,
+    effectPolicy,
+  );
 };
 
 const isWithin = (parent: string, child: string): boolean => {
@@ -318,7 +334,7 @@ const assertSafeStageDir = (
   }
 };
 
-const prepareGithubEreborPackages = async (
+export const prepareGithubEreborPackages = async (
   options: PrepareOptions,
 ): Promise<PreparedPackage[]> => {
   const rootDir = path.resolve(options.rootDir ?? process.cwd());
@@ -326,6 +342,8 @@ const prepareGithubEreborPackages = async (
   const rootManifest = await readJson<JsonObject>(
     path.join(rootDir, "package.json"),
   );
+  const effectPolicy = await readEffectCompatibilityPolicy(rootDir);
+  await assertWorkspaceEffectIsVerified(rootDir, effectPolicy);
 
   assertSafeStageDir(rootDir, stageDir, options.force);
   await rm(stageDir, { recursive: true, force: true });
@@ -340,6 +358,12 @@ const prepareGithubEreborPackages = async (
     const sourceManifest = await readJson<JsonObject>(
       path.join(packageDir, "package.json"),
     );
+    assertSourceEffectPackagePolicy(
+      sourceManifest,
+      source.sourceName,
+      effectPolicy,
+      { allowCatalogPeer: source.privateName === PRIVATE_CORE_NAME },
+    );
     const outputDir = path.join(
       stageDir,
       source.privateName.replace("/", "__"),
@@ -349,13 +373,17 @@ const prepareGithubEreborPackages = async (
       rootManifest,
       source,
       options.version,
+      effectPolicy,
     );
 
     await mkdir(outputDir, { recursive: true });
     const stagedLibDir = path.join(outputDir, "lib");
     await cp(libDir, stagedLibDir, { recursive: true });
     await assertNoPathAliasImports(stagedLibDir, source.privateName);
-    await writeFile(path.join(outputDir, "README.md"), privateReadme(source));
+    await writeFile(
+      path.join(outputDir, "README.md"),
+      privateReadme(source, effectPolicy),
+    );
     await writeJson(path.join(outputDir, "package.json"), manifest);
 
     prepared.push({
