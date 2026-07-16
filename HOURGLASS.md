@@ -32,6 +32,29 @@ files such as `package.json` and `bun.lock`, keep the explanation in the nearest
 commentable file that owns the behavior. Use `rg "HOURGLASS PATCH"` to discover
 the current set of intentional fork patches.
 
+## Private package Effect compatibility
+
+The private core, Persona, and Erebor packages expose Effect types from the
+consumer's peer installation. Persona and Erebor must not also declare Effect as
+a direct dependency. Their publish-time peer contract comes from
+`scripts/effect-compatibility-versions.json`, which contains the exact Effect
+prerelease that passes the strict staged-artifact matrix under the recorded
+TypeScript version. Updating Effect replaces that single verified version; the
+private packages do not advertise an open-ended prerelease range.
+
+Run `bun run test:effect-compatibility` before changing that policy or publishing
+the private packages. The check builds and packs the real core/provider pairs,
+serves them from a temporary loopback-only registry, and verifies Persona and
+Erebor with both npm and Bun. It requires one Effect installation, strict
+declaration checking, and a runtime import. This private finite policy is
+intentionally separate from the shared workspace catalog; changing the shared
+catalog requires broader SDK evidence.
+
+Both private publication workflows require a full merge commit SHA reachable
+from `main`. They publish immutable tarballs under a temporary run tag, verify
+the pair before moving the requested tag, and upload a receipt tying the exact
+source, versions, integrity values, and normalized `lib/` digests to the run.
+
 ## Updating the Erebor client for a new API spec
 
 When Erebor ships changes to their API, regenerate the `@distilled.cloud/erebor`

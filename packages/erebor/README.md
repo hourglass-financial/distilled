@@ -5,16 +5,16 @@ Effect-native [Erebor](https://erebor.bank) SDK generated from the Erebor OpenAP
 ## Installation
 
 ```bash
-npm install @distilled.cloud/erebor effect
+npm install @distilled.cloud/erebor effect@4.0.0-beta.98
 ```
 
-### Private GitHub Packages Preview
+### Private GitHub Package
 
-This fork can publish a private branch-built package for other
+This fork publishes a private package from merged `main` revisions for other
 `hourglass-financial` repositories:
 
 ```bash
-bun add @hourglass-financial/erebor@erebor-sdk
+bun add @hourglass-financial/erebor@erebor-sdk effect@4.0.0-beta.98
 ```
 
 Consumers must route the `@hourglass-financial` scope to GitHub Packages:
@@ -69,7 +69,9 @@ getProgram({ id: "missing" }).pipe(
   Effect.catchTags({
     NotFound: () => Effect.succeed(null),
     UnknownEreborError: (e) =>
-      Effect.fail(new Error(`Erebor error ${e.code ?? "?"}: ${e.message ?? ""}`)),
+      Effect.fail(
+        new Error(`Erebor error ${e.code ?? "?"}: ${e.message ?? ""}`),
+      ),
   }),
 );
 ```

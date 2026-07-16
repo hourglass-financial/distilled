@@ -6,16 +6,16 @@ Effect-native SDK for the Persona API generated from Persona OpenAPI version
 ## Install
 
 ```bash
-bun add @distilled.cloud/persona effect
+bun add @distilled.cloud/persona effect@4.0.0-beta.98
 ```
 
-### Private GitHub Packages Preview
+### Private GitHub Package
 
-This fork can publish a private branch-built package for other
+This fork publishes a private package from merged `main` revisions for other
 `hourglass-financial` repositories:
 
 ```bash
-bun add @hourglass-financial/persona@persona-sdk effect
+bun add @hourglass-financial/persona@persona-sdk effect@4.0.0-beta.98
 ```
 
 Consumers must route the `@hourglass-financial` scope to GitHub Packages:
@@ -69,13 +69,14 @@ Persona error responses use an `errors` array with entries such as
 errors and preserves unrecognized envelopes in `UnknownPersonaError`.
 
 ```typescript
-const getAccount = yield* Persona.retrieveAnAccount;
+const getAccount = yield * Persona.retrieveAnAccount;
 
-yield* getAccount({ accountId: "act_missing" }).pipe(
-  Effect.catch("NotFound", (error) =>
-    Effect.succeed(`missing account: ${error.message}`),
-  ),
-);
+yield *
+  getAccount({ accountId: "act_missing" }).pipe(
+    Effect.catch("NotFound", (error) =>
+      Effect.succeed(`missing account: ${error.message}`),
+    ),
+  );
 ```
 
 Common errors include `BadRequest`, `Unauthorized`, `Forbidden`, `NotFound`,
