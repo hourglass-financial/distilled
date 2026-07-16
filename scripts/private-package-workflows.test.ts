@@ -66,6 +66,12 @@ describe.each(workflows)("%s", (file) => {
       stepIndex("Verify published pair before moving final tags"),
     ).toBeLessThan(stepIndex(smokeStep));
     expect(stepIndex(smokeStep)).toBeLessThan(stepIndex("Move final tags"));
+    expect(stepNamed("Snapshot current final tags").run).toContain(
+      "private-package-release.ts tag-version",
+    );
+    expect(stepNamed("Snapshot current final tags").run).not.toContain(
+      "JSON.parse",
+    );
     expect(stepIndex("Move final tags")).toBeLessThan(
       stepIndex("Write release receipt"),
     );

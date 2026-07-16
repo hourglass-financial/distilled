@@ -84,6 +84,21 @@ export const assertDistTag = (tag: string): string => {
   return tag;
 };
 
+const assertPrivatePackageName = (packageName: string): string => {
+  if (!/^@hourglass-financial\/[a-z0-9._-]+$/.test(packageName)) {
+    throw new Error("package must be in the @hourglass-financial scope");
+  }
+  return packageName;
+};
+
+export const parseDistTagListing = (listing: string, tag: string): string => {
+  const prefix = `${assertDistTag(tag)}: `;
+  const line = listing
+    .split(/\r?\n/)
+    .find((candidate) => candidate.startsWith(prefix));
+  return line?.slice(prefix.length).trim() ?? "";
+};
+
 export const digestLibDirectory = async (
   packageDir: string,
 ): Promise<string> => {
@@ -265,7 +280,18 @@ const argument = (name: string): string => {
 if (import.meta.main) {
   try {
     const command = process.argv[2];
-    if (command === "verify" || command === "receipt") {
+    if (command === "tag-version") {
+      const packageName = assertPrivatePackageName(argument("--package"));
+      const tag = assertDistTag(argument("--tag"));
+      const listing = await run([
+        "npm",
+        "dist-tag",
+        "ls",
+        packageName,
+        "--registry=https://npm.pkg.github.com",
+      ]);
+      console.log(parseDistTagListing(listing, tag));
+    } else if (command === "verify" || command === "receipt") {
       const tag = argument("--tag");
       const packages = await verifyPair({
         corePack: argument("--core-pack"),
@@ -303,7 +329,7 @@ if (import.meta.main) {
         );
       }
     } else {
-      throw new Error("Expected verify or receipt command");
+      throw new Error("Expected tag-version, verify, or receipt command");
     }
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
