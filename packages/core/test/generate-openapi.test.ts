@@ -12,29 +12,21 @@ import {
 } from "vitest";
 import { generateFromOpenAPI } from "../scripts/generate-openapi.ts";
 import { StructWithAdditionalProperties } from "../src/openapi-additional-properties.ts";
+import * as T from "../src/traits.ts";
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const workspaceDir = resolve(packageRoot, "../../.ai-workspace");
-const fixturePath = join(
-  packageRoot,
-  "test/fixtures/openapi/mixed-properties-additional-properties.json",
-);
 mkdirSync(workspaceDir, { recursive: true });
-const outputDir = mkdtempSync(
-  join(workspaceDir, "distilled-openapi-generator-"),
-);
-const patchesDir = join(outputDir, "patches");
-const generatedDir = join(outputDir, "operations");
+const fixtureOutputDirs: string[] = [];
 
-let generatedSource: string;
-let inputSchema: Schema.Top;
-let outputSchema: Schema.Top;
-
-beforeAll(async () => {
-  mkdirSync(patchesDir, { recursive: true });
+function generateFixture(specName: string, outputPrefix: string): string {
+  const outputDir = mkdtempSync(join(workspaceDir, outputPrefix));
+  const generatedDir = join(outputDir, "operations");
+  const specPath = join(packageRoot, "test/fixtures/openapi", specName);
+  fixtureOutputDirs.push(outputDir);
   generateFromOpenAPI({
-    specPath: fixturePath,
-    patchDir: patchesDir,
+    specPath,
+    patchDir: join(outputDir, "patches"),
     outputDir: generatedDir,
     importPrefix: resolve(packageRoot, "src"),
     clientImport: resolve(packageRoot, "test/fixtures/openapi/client"),
@@ -46,6 +38,22 @@ beforeAll(async () => {
       "src/openapi-additional-properties.ts",
     ),
   });
+  return generatedDir;
+}
+
+let generatedSource: string;
+let inputSchema: Schema.Top;
+let outputSchema: Schema.Top;
+let updateMembershipSource: string;
+let createMembershipSource: string;
+let updateMembershipInputSchema: Schema.Top;
+let createMembershipInputSchema: Schema.Top;
+
+beforeAll(async () => {
+  const generatedDir = generateFixture(
+    "mixed-properties-additional-properties.json",
+    "distilled-openapi-generator-",
+  );
 
   const generatedPath = join(generatedDir, "getMixedObject.ts");
   generatedSource = readFileSync(generatedPath, "utf8");
@@ -54,10 +62,36 @@ beforeAll(async () => {
   );
   inputSchema = generated.GetMixedObjectInput;
   outputSchema = generated.GetMixedObjectOutput;
+
+  const composedRequestBodiesGeneratedDir = generateFixture(
+    "composed-request-bodies.json",
+    "distilled-openapi-composed-request-bodies-",
+  );
+
+  const updateMembershipPath = join(
+    composedRequestBodiesGeneratedDir,
+    "updateMembership.ts",
+  );
+  const createMembershipPath = join(
+    composedRequestBodiesGeneratedDir,
+    "createMembership.ts",
+  );
+  updateMembershipSource = readFileSync(updateMembershipPath, "utf8");
+  createMembershipSource = readFileSync(createMembershipPath, "utf8");
+  const updateMembership = await import(
+    /* @vite-ignore */ `${pathToFileURL(updateMembershipPath).href}?test=${Date.now()}`
+  );
+  const createMembership = await import(
+    /* @vite-ignore */ `${pathToFileURL(createMembershipPath).href}?test=${Date.now()}`
+  );
+  updateMembershipInputSchema = updateMembership.UpdateMembershipInput;
+  createMembershipInputSchema = createMembership.CreateMembershipInput;
 });
 
 afterAll(() => {
-  rmSync(outputDir, { recursive: true, force: true });
+  for (const outputDir of fixtureOutputDirs) {
+    rmSync(outputDir, { recursive: true, force: true });
+  }
 });
 
 const validInput = {
@@ -94,9 +128,7 @@ describe("OpenAPI mixed object generation", () => {
     const decoded = Schema.decodeUnknownSync(outputSchema)(validInput) as any;
 
     expect(decoded.untyped).toEqual(validInput.untyped);
-    expect(generatedSource).toContain(
-      "StructWithAdditionalProperties",
-    );
+    expect(generatedSource).toContain("StructWithAdditionalProperties");
     expect(generatedSource).toMatch(
       /typed:\s*\{\s*known:\s*number\s*\}\s*&\s*Record<string,\s*string\s*\|\s*number>/,
     );
@@ -184,5 +216,87 @@ describe("OpenAPI mixed object generation", () => {
         },
       }),
     ).toThrow();
+  });
+});
+
+describe("OpenAPI composed request body generation", () => {
+  it("preserves root oneOf body fields", () => {
+    const input = {
+      id: "membership_123",
+      actor_id: "actor_123",
+      role_slugs: ["admin", "member"],
+      client_secret: "secret_123",
+    };
+    const decoded = Schema.decodeUnknownSync(updateMembershipInputSchema)(
+      input,
+    ) as Record<string, unknown>;
+    const encoded = Schema.encodeSync(updateMembershipInputSchema)(decoded);
+
+    expect(encoded).toEqual(input);
+    expect(updateMembershipSource).toContain("role_slug");
+    expect(updateMembershipSource).toContain("role_slugs");
+    expect(updateMembershipSource).toContain("role_slug?: string");
+    expect(updateMembershipSource).toContain(
+      "role_slugs?: ReadonlyArray<string>",
+    );
+    expect(updateMembershipSource).toContain("actor_id: string");
+    expect(updateMembershipSource).toContain(
+      "client_secret?: string | Redacted.Redacted<string>",
+    );
+    expect(updateMembershipSource).toContain(
+      "client_secret: Schema.optional(SensitiveString)",
+    );
+    expect(() =>
+      Schema.decodeUnknownSync(updateMembershipInputSchema)({
+        id: "membership_123",
+        role_slug: "admin",
+      }),
+    ).toThrow();
+  });
+
+  it("preserves allOf common fields and nested oneOf body fields", () => {
+    const input = {
+      user_id: "user_123",
+      organization_id: "organization_123",
+      actor_id: "actor_123",
+      role_slug: "admin",
+    };
+    const decoded = Schema.decodeUnknownSync(createMembershipInputSchema)(
+      input,
+    ) as Record<string, unknown>;
+    const encoded = Schema.encodeSync(createMembershipInputSchema)(decoded);
+
+    expect(encoded).toEqual(input);
+    expect(createMembershipSource).toContain("user_id: string");
+    expect(createMembershipSource).toContain("organization_id: string");
+    expect(createMembershipSource).toContain("role_slug");
+    expect(createMembershipSource).toContain("role_slugs");
+    expect(() =>
+      Schema.decodeUnknownSync(createMembershipInputSchema)({
+        organization_id: "organization_123",
+        actor_id: "actor_123",
+        role_slug: "admin",
+      }),
+    ).toThrow();
+  });
+
+  it("serializes composed body fields into the HTTP request body", () => {
+    const input = {
+      id: "membership_123",
+      actor_id: "actor_123",
+      role_slugs: ["admin", "member"],
+    };
+    const parts = T.buildRequestParts(
+      updateMembershipInputSchema.ast,
+      T.getHttpTrait(updateMembershipInputSchema.ast)!,
+      input,
+      updateMembershipInputSchema,
+    );
+
+    expect(parts.path).toBe("/memberships/membership_123");
+    expect(parts.body).toEqual({
+      actor_id: "actor_123",
+      role_slugs: ["admin", "member"],
+    });
   });
 });

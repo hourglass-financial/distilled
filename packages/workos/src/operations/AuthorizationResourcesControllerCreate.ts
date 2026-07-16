@@ -16,6 +16,9 @@ export interface AuthorizationResourcesControllerCreateInput {
   description?: string | null;
   resource_type_slug: string;
   organization_id: string;
+  parent_resource_id?: string | null;
+  parent_resource_external_id?: string;
+  parent_resource_type_slug?: string;
 }
 export const AuthorizationResourcesControllerCreateInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
@@ -24,6 +27,9 @@ export const AuthorizationResourcesControllerCreateInput =
     description: Schema.optional(Schema.NullOr(Schema.String)),
     resource_type_slug: Schema.String,
     organization_id: Schema.String,
+    parent_resource_id: Schema.optional(Schema.NullOr(Schema.String)),
+    parent_resource_external_id: Schema.optional(Schema.String),
+    parent_resource_type_slug: Schema.optional(Schema.String),
   }).pipe(
     T.Http({ method: "POST", path: "/authorization/resources" }),
   ) as unknown as Schema.Codec<AuthorizationResourcesControllerCreateInput>;

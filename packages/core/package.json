@@ -84,11 +84,11 @@
     }
   },
   "scripts": {
-    "typecheck": "tsc",
+    "typecheck": "tsc && tsc -p tsconfig.scripts.json",
     "build": "tsc -b",
     "fmt": "oxfmt --write src",
     "lint": "oxlint --fix src",
-    "check": "tsc && oxlint src && oxfmt --check src",
+    "check": "bun run typecheck && oxlint src && oxfmt --check src",
     "test": "bunx vitest run test --exclude specs --passWithNoTests",
     "publish:npm": "bun run build && bun publish --access public"
   },

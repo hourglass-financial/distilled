@@ -2,6 +2,8 @@ import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
 import { BadRequest, UnprocessableEntity } from "../errors.ts";
+import { SensitiveString } from "../sensitive.ts";
+import * as Redacted from "effect/Redacted";
 
 // Input Schema
 export interface UserlandUsersControllerUpdate0Input {
@@ -14,6 +16,15 @@ export interface UserlandUsersControllerUpdate0Input {
   metadata?: Record<string, string> | null;
   external_id?: string | null;
   locale?: string | null;
+  password?: string | Redacted.Redacted<string>;
+  password_hash?: string | Redacted.Redacted<string>;
+  password_hash_type?:
+    | "bcrypt"
+    | "firebase-scrypt"
+    | "ssha"
+    | "scrypt"
+    | "pbkdf2"
+    | "argon2";
 }
 export const UserlandUsersControllerUpdate0Input =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
@@ -28,6 +39,18 @@ export const UserlandUsersControllerUpdate0Input =
     ),
     external_id: Schema.optional(Schema.NullOr(Schema.String)),
     locale: Schema.optional(Schema.NullOr(Schema.String)),
+    password: Schema.optional(SensitiveString),
+    password_hash: Schema.optional(SensitiveString),
+    password_hash_type: Schema.optional(
+      Schema.Literals([
+        "bcrypt",
+        "firebase-scrypt",
+        "ssha",
+        "scrypt",
+        "pbkdf2",
+        "argon2",
+      ]),
+    ),
   }).pipe(
     T.Http({ method: "PUT", path: "/user_management/users/{id}" }),
   ) as unknown as Schema.Codec<UserlandUsersControllerUpdate0Input>;

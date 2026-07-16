@@ -4,9 +4,41 @@ import * as T from "../traits.ts";
 import { NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
-export interface ApplicationsControllerCreateInput {}
+export interface ApplicationsControllerCreateInput {
+  name?: string;
+  application_type?: string;
+  description?: string | null;
+  scopes?: ReadonlyArray<string> | null;
+  redirect_uris?: ReadonlyArray<{
+    uri?: string;
+    default?: boolean | null;
+  }> | null;
+  uses_pkce?: boolean | null;
+  is_first_party?: boolean;
+  organization_id?: string | null | string;
+}
 export const ApplicationsControllerCreateInput =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({}).pipe(
+  /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
+    name: Schema.optional(Schema.String),
+    application_type: Schema.optional(Schema.String),
+    description: Schema.optional(Schema.NullOr(Schema.String)),
+    scopes: Schema.optional(Schema.NullOr(Schema.Array(Schema.String))),
+    redirect_uris: Schema.optional(
+      Schema.NullOr(
+        Schema.Array(
+          Schema.Struct({
+            uri: Schema.optional(Schema.String),
+            default: Schema.optional(Schema.NullOr(Schema.Boolean)),
+          }),
+        ),
+      ),
+    ),
+    uses_pkce: Schema.optional(Schema.NullOr(Schema.Boolean)),
+    is_first_party: Schema.optional(Schema.Boolean),
+    organization_id: Schema.optional(
+      Schema.Union([Schema.NullOr(Schema.String), Schema.String]),
+    ),
+  }).pipe(
     T.Http({ method: "POST", path: "/connect/applications" }),
   ) as unknown as Schema.Codec<ApplicationsControllerCreateInput>;
 

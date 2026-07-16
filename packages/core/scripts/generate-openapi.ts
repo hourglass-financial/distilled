@@ -153,6 +153,8 @@ interface MediaType3 {
   schema?: SchemaObject;
 }
 
+type OpenAPISpec = Swagger2Spec | OpenAPI3Spec;
+
 // --- Shared Schema Object ---
 interface SchemaObject {
   type?: string | string[]; // string[] for OAS 3.1 nullable syntax
@@ -295,11 +297,11 @@ function renderParameterSchema(
 function renderParameterSchema3(
   schema: SchemaObject | undefined,
   spec: OpenAPI3Spec,
-  ctx: SchemaGenerationContext,
+  ctx?: SchemaGenerationContext,
 ): string {
   if (!schema) return "Schema.String";
   if (schema.enum && schema.enum.length > 0) {
-    return renderEnumLiterals(schema.enum, schema.type);
+    return renderEnumLiterals(schema.enum, getBaseType(schema));
   }
   return openApiTypeToEffectSchema(schema, spec, "", new Set(), ctx);
 }
@@ -562,14 +564,13 @@ function generateObjectEffectSchema(
   }
 
   if (prop.additionalProperties) {
-    const additionalPropertiesSchema =
-      generateAdditionalPropertiesValueSchema(
-        prop.additionalProperties,
-        spec,
-        indent,
-        seenRefs,
-        ctx,
-      );
+    const additionalPropertiesSchema = generateAdditionalPropertiesValueSchema(
+      prop.additionalProperties,
+      spec,
+      indent,
+      seenRefs,
+      ctx,
+    );
     return `Schema.Record(Schema.String, ${additionalPropertiesSchema})`;
   }
 
@@ -759,7 +760,7 @@ function openApiTypeToEffectSchema(
 
   // Handle enum
   if (prop.enum && prop.enum.length > 0) {
-    const baseSchema = renderEnumLiterals(prop.enum, prop.type);
+    const baseSchema = renderEnumLiterals(prop.enum, getBaseType(prop));
     return isNullable(prop) ? `Schema.NullOr(${baseSchema})` : baseSchema;
   }
 
@@ -1070,12 +1071,7 @@ function objectToTsType(
     const valueType =
       typeof prop.additionalProperties === "boolean"
         ? "unknown"
-        : openApiTypeToTsType(
-            prop.additionalProperties,
-            spec,
-            seenRefs,
-            ctx,
-          );
+        : openApiTypeToTsType(prop.additionalProperties, spec, seenRefs, ctx);
     return `Record<string, ${valueType}>`;
   }
   return "unknown";
@@ -1285,6 +1281,114 @@ function generateJsDoc(
 }
 
 // ============================================================================
+// Composed Request Body Generation
+// ============================================================================
+
+interface ComposedObjectShape {
+  properties: Record<string, SchemaObject>;
+  required: Set<string>;
+}
+
+function resolveSchemaObject(
+  schema: SchemaObject,
+  spec: OpenAPISpec,
+  seenRefs: Set<string>,
+): SchemaObject | undefined {
+  if (!schema.$ref) return schema;
+  if (seenRefs.has(schema.$ref)) return undefined;
+  seenRefs.add(schema.$ref);
+  return resolveSchemaObject(resolveRef(spec, schema.$ref), spec, seenRefs);
+}
+
+function schemaWithoutDescription(schema: SchemaObject): SchemaObject {
+  // Descriptions are annotations, not validation constraints, and vendors
+  // commonly vary their wording for the same property across union branches.
+  const { description: _, ...rest } = schema;
+  return rest;
+}
+
+function mergeUnionProperty(
+  properties: Record<string, SchemaObject>,
+  name: string,
+  schema: SchemaObject,
+): void {
+  const existing = properties[name];
+  if (!existing) {
+    properties[name] = schema;
+    return;
+  }
+
+  const variants = existing.anyOf ?? [existing];
+  const schemaShape = JSON.stringify(schemaWithoutDescription(schema));
+  if (
+    variants.some(
+      (variant) =>
+        JSON.stringify(schemaWithoutDescription(variant)) === schemaShape,
+    )
+  ) {
+    return;
+  }
+  properties[name] = { anyOf: [...variants, schema] };
+}
+
+/**
+ * Collect the object fields exposed by a composed request body. The generated
+ * operation input is intentionally a flat struct so path/query/header traits
+ * remain discoverable by the runtime. Union-only fields therefore become
+ * optional in that struct, while fields required by every union branch remain
+ * required. The API remains responsible for enforcing union exclusivity.
+ */
+// HOURGLASS PATCH: Preserve fields nested under composed OpenAPI request bodies.
+function collectComposedObjectShape(
+  schema: SchemaObject,
+  spec: OpenAPISpec,
+  seenRefs: Set<string> = new Set(),
+): ComposedObjectShape {
+  const resolved = resolveSchemaObject(schema, spec, seenRefs);
+  if (!resolved) return { properties: {}, required: new Set() };
+
+  const properties: Record<string, SchemaObject> = {};
+  for (const [name, property] of Object.entries(resolved.properties ?? {})) {
+    properties[name] = property;
+  }
+  const required = new Set(resolved.required ?? []);
+
+  for (const member of resolved.allOf ?? []) {
+    const memberShape = collectComposedObjectShape(
+      member,
+      spec,
+      new Set(seenRefs),
+    );
+    for (const [name, property] of Object.entries(memberShape.properties)) {
+      properties[name] = property;
+    }
+    for (const name of memberShape.required) required.add(name);
+  }
+
+  const union = resolved.oneOf ?? resolved.anyOf;
+  if (union && union.length > 0) {
+    const memberShapes = union.map((member) =>
+      collectComposedObjectShape(member, spec, new Set(seenRefs)),
+    );
+    for (const memberShape of memberShapes) {
+      for (const [name, property] of Object.entries(memberShape.properties)) {
+        mergeUnionProperty(properties, name, property);
+      }
+    }
+
+    const requiredByEveryMember = new Set(memberShapes[0].required);
+    for (const memberShape of memberShapes.slice(1)) {
+      for (const name of requiredByEveryMember) {
+        if (!memberShape.required.has(name)) requiredByEveryMember.delete(name);
+      }
+    }
+    for (const name of requiredByEveryMember) required.add(name);
+  }
+
+  return { properties, required };
+}
+
+// ============================================================================
 // Code Generation - Swagger 2.0
 // ============================================================================
 
@@ -1408,74 +1512,36 @@ function generateInputSchemaSwagger(
 
   // Body parameters
   if (bodyParam?.schema) {
-    let bodySchema = bodyParam.schema;
-    // Resolve a top-level `$ref` body (e.g. `{ $ref: "#/definitions/ResourceGroup" }`).
-    // Without this, `bodySchema.properties` is undefined and the request body is
-    // emitted empty — breaking create/update operations. Mirrors the OAS3 emitter.
-    if (bodySchema.$ref) {
-      bodySchema = resolveRef(
-        spec as any,
-        bodySchema.$ref,
-      ) as typeof bodySchema;
-    }
-    // Flatten `allOf` so inherited properties surface as body fields.
-    if (bodySchema.allOf && bodySchema.allOf.length > 0) {
-      const mergedProps: Record<string, any> = {
-        ...(bodySchema.properties ?? {}),
-      };
-      const mergedRequired: string[] = [...(bodySchema.required ?? [])];
-      for (const subSchema of bodySchema.allOf) {
-        const resolvedSub = subSchema.$ref
-          ? (resolveRef(spec as any, subSchema.$ref) as any)
-          : subSchema;
-        if (resolvedSub.properties)
-          Object.assign(mergedProps, resolvedSub.properties);
-        if (resolvedSub.required) mergedRequired.push(...resolvedSub.required);
-      }
-      bodySchema = {
-        ...bodySchema,
-        type: "object",
-        properties: mergedProps,
-        required: [...new Set(mergedRequired)],
-      } as typeof bodySchema;
-    }
-    if (bodySchema.properties) {
-      const required = new Set(bodySchema.required || []);
-      for (const [key, value] of Object.entries(bodySchema.properties)) {
-        if (usedNames.has(key)) continue;
-        usedNames.add(key);
-        // Auto-detect sensitive fields by name pattern
-        const bType = getBaseType(value);
-        const isSensitiveByName =
-          bType === "string" &&
-          !value["x-sensitive"] &&
-          !value.enum &&
-          isSensitiveFieldName(key);
-        const effectiveValue = isSensitiveByName
-          ? { ...value, "x-sensitive": true }
-          : value;
+    const bodyShape = collectComposedObjectShape(bodyParam.schema, spec);
+    for (const [key, value] of Object.entries(bodyShape.properties)) {
+      if (usedNames.has(key)) continue;
+      usedNames.add(key);
+      // Auto-detect sensitive fields by name pattern
+      const bType = getBaseType(value);
+      const isSensitiveByName =
+        bType === "string" &&
+        !value["x-sensitive"] &&
+        !value.enum &&
+        isSensitiveFieldName(key);
+      const effectiveValue = isSensitiveByName
+        ? { ...value, "x-sensitive": true }
+        : value;
 
-        let fieldSchema = openApiTypeToEffectSchema(
-          effectiveValue,
-          spec,
-          "  ",
-          new Set(),
-          ctx,
-        );
-        const fieldTs = openApiTypeToTsType(
-          effectiveValue,
-          spec,
-          new Set(),
-          ctx,
-        );
-        if (!required.has(key)) {
-          fieldSchema = `Schema.optional(${fieldSchema})`;
-        }
-        fields.push(`  ${quotePropKey(key)}: ${fieldSchema},`);
-        tsFields.push(
-          `${quotePropKey(key)}${required.has(key) ? "" : "?"}: ${fieldTs}`,
-        );
+      let fieldSchema = openApiTypeToEffectSchema(
+        effectiveValue,
+        spec,
+        "  ",
+        new Set(),
+        ctx,
+      );
+      const fieldTs = openApiTypeToTsType(effectiveValue, spec, new Set(), ctx);
+      if (!bodyShape.required.has(key)) {
+        fieldSchema = `Schema.optional(${fieldSchema})`;
       }
+      fields.push(`  ${quotePropKey(key)}: ${fieldSchema},`);
+      tsFields.push(
+        `${quotePropKey(key)}${bodyShape.required.has(key) ? "" : "?"}: ${fieldTs}`,
+      );
     }
   }
 
@@ -1570,7 +1636,7 @@ function generateInputSchema3(
     const schema = param.schema;
     const baseSchema =
       schema?.enum && schema.enum.length > 0
-        ? renderEnumLiterals(schema.enum, schema.type)
+        ? renderEnumLiterals(schema.enum, getBaseType(schema))
         : schema?.type === "integer" || schema?.type === "number"
           ? "Schema.Number"
           : "Schema.String";
@@ -1627,75 +1693,41 @@ function generateInputSchema3(
       bodyContentType = "multipart";
     }
     if (bodyContent?.schema) {
-      let bodySchema = bodyContent.schema;
-      if (bodySchema.$ref) {
-        bodySchema = resolveRef(spec, bodySchema.$ref);
-      }
+      const bodyShape = collectComposedObjectShape(bodyContent.schema, spec);
+      for (const [key, value] of Object.entries(bodyShape.properties)) {
+        if (usedNames.has(key)) continue;
+        usedNames.add(key);
+        // Auto-detect sensitive fields by name pattern
+        const bType = getBaseType(value);
+        const isSensitiveByName =
+          bType === "string" &&
+          !value["x-sensitive"] &&
+          !value.enum &&
+          isSensitiveFieldName(key);
+        const effectiveValue = isSensitiveByName
+          ? { ...value, "x-sensitive": true }
+          : value;
 
-      // Flatten `allOf` so a body schema like `{ allOf: [BranchCreateRequest,
-      // AnnotationCreateValueRequest] }` exposes the union of its sub-schemas'
-      // properties as fields, instead of degenerating to an empty body.
-      if (bodySchema.allOf && bodySchema.allOf.length > 0) {
-        const mergedProps: Record<string, SchemaObject> = {
-          ...bodySchema.properties,
-        };
-        const mergedRequired: string[] = [...(bodySchema.required ?? [])];
-        for (const subSchema of bodySchema.allOf) {
-          const resolvedSub = subSchema.$ref
-            ? (resolveRef(spec, subSchema.$ref) as SchemaObject)
-            : subSchema;
-          if (resolvedSub.properties) {
-            Object.assign(mergedProps, resolvedSub.properties);
-          }
-          if (resolvedSub.required) {
-            mergedRequired.push(...resolvedSub.required);
-          }
+        let fieldSchema = openApiTypeToEffectSchema(
+          effectiveValue,
+          spec,
+          "  ",
+          new Set(),
+          ctx,
+        );
+        if (!bodyShape.required.has(key)) {
+          fieldSchema = `Schema.optional(${fieldSchema})`;
         }
-        bodySchema = {
-          ...bodySchema,
-          type: "object",
-          properties: mergedProps,
-          required: [...new Set(mergedRequired)],
-        };
-      }
-
-      if (bodySchema.properties) {
-        const required = new Set(bodySchema.required || []);
-        for (const [key, value] of Object.entries(bodySchema.properties)) {
-          if (usedNames.has(key)) continue;
-          usedNames.add(key);
-          // Auto-detect sensitive fields by name pattern
-          const bType = getBaseType(value);
-          const isSensitiveByName =
-            bType === "string" &&
-            !value["x-sensitive"] &&
-            !value.enum &&
-            isSensitiveFieldName(key);
-          const effectiveValue = isSensitiveByName
-            ? { ...value, "x-sensitive": true }
-            : value;
-
-          let fieldSchema = openApiTypeToEffectSchema(
-            effectiveValue,
-            spec,
-            "  ",
-            new Set(),
-            ctx,
-          );
-          const fieldTs = openApiTypeToTsType(
-            effectiveValue,
-            spec,
-            new Set(),
-            ctx,
-          );
-          if (!required.has(key)) {
-            fieldSchema = `Schema.optional(${fieldSchema})`;
-          }
-          fields.push(`  ${quotePropKey(key)}: ${fieldSchema},`);
-          tsFields.push(
-            `${quotePropKey(key)}${required.has(key) ? "" : "?"}: ${fieldTs}`,
-          );
-        }
+        fields.push(`  ${quotePropKey(key)}: ${fieldSchema},`);
+        const fieldTs = openApiTypeToTsType(
+          effectiveValue,
+          spec,
+          new Set(),
+          ctx,
+        );
+        tsFields.push(
+          `${quotePropKey(key)}${bodyShape.required.has(key) ? "" : "?"}: ${fieldTs}`,
+        );
       }
     }
   }
