@@ -11,6 +11,44 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface UpdateAnAccountInput {
+  accountId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  data?: {
+    attributes?: {
+      "reference-id"?: string;
+      "account-status"?: string;
+      "selfie-photo"?: { data?: { data?: string; filename?: string } | null };
+      tags?: ReadonlyArray<string> | null;
+      "country-code"?: string;
+      "social-security-number"?: string;
+      fields?: Record<string, unknown>;
+      birthdate?: string;
+      "name-first"?: string;
+      "name-middle"?: string;
+      "name-last"?: string;
+      "phone-number"?: string;
+      "email-address"?: string;
+      "address-street-1"?: string;
+      "address-street-2"?: string;
+      "address-city"?: string;
+      "address-subdivision"?: string;
+      "address-postal-code"?: string;
+    };
+  };
+}
 export const UpdateAnAccountInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   accountId: Schema.String.pipe(T.PathParam()),
   include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
@@ -72,10 +110,77 @@ export const UpdateAnAccountInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       ),
     }),
   ),
-}).pipe(T.Http({ method: "PATCH", path: "/accounts/{accountId}" }));
-export type UpdateAnAccountInput = typeof UpdateAnAccountInput.Type;
+}).pipe(
+  T.Http({ method: "PATCH", path: "/accounts/{accountId}" }),
+) as unknown as Schema.Codec<UpdateAnAccountInput>;
 
 // Output Schema
+export interface UpdateAnAccountOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      "reference-id"?: string | null;
+      "account-type-name"?: string;
+      "created-at"?: string;
+      "updated-at"?: string;
+      "redacted-at"?: string | null;
+      fields?: {
+        name?: {
+          type?: string;
+          value?: {
+            first?: { type?: string; value?: string | null };
+            middle?: { type?: string; value?: string | null };
+            last?: { type?: string; value?: string | null };
+          };
+        };
+        address?: {
+          type?: string;
+          value?: {
+            street_1?: { type?: string; value?: string | null };
+            street_2?: { type?: string; value?: string | null };
+            subdivision?: { type?: string; value?: string | null };
+            city?: { type?: string; value?: string | null };
+            postal_code?: { type?: string; value?: string | null };
+            country_code?: { type?: string; value?: string | null };
+          };
+        };
+        identification_numbers?: {
+          type?: string;
+          value?: ReadonlyArray<{
+            type?: string;
+            value?: {
+              identification_class?: { type?: string; value?: string };
+              identification_number?: { type?: string; value?: string };
+              issuing_country?: { type?: string; value?: string };
+              hashed_identification_number?: {
+                type?: string;
+                value?: string | null;
+              };
+            };
+          }>;
+        };
+        birthdate?: { type?: string; value?: string | null };
+        phone_number?: { type?: string; value?: string | null };
+        email_address?: { type?: string; value?: string | null };
+        selfie_photo?: {
+          type?: string;
+          value?: {
+            filename?: string;
+            url?: string;
+            "byte-size"?: number;
+          } | null;
+        };
+      } & Record<string, unknown>;
+      tags?: ReadonlyArray<unknown>;
+      "account-status"?: string;
+    };
+    relationships?: {
+      "account-type"?: { data?: { id?: string; type?: string } };
+    };
+  };
+  included?: ReadonlyArray<unknown>;
+}
 export const UpdateAnAccountOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Struct({
     type: Schema.optional(Schema.String),
@@ -259,9 +364,51 @@ export const UpdateAnAccountOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       }),
     ),
   }),
-  included: Schema.optional(Schema.Array(Schema.Unknown)),
-});
-export type UpdateAnAccountOutput = typeof UpdateAnAccountOutput.Type;
+  included: Schema.optional(
+    Schema.Array(
+      Schema.Struct({
+        type: Schema.optional(Schema.String),
+        id: Schema.optional(Schema.String),
+        attributes: Schema.optional(
+          Schema.Struct({
+            name: Schema.optional(Schema.String),
+            "created-at": Schema.optional(Schema.String),
+            "updated-at": Schema.optional(Schema.NullOr(Schema.String)),
+            "field-schemas": Schema.optional(Schema.Array(Schema.Unknown)),
+          }),
+        ),
+        relationships: Schema.optional(
+          Schema.Struct({
+            "account-statuses": Schema.optional(
+              Schema.Struct({
+                data: Schema.optional(
+                  Schema.Array(
+                    Schema.Struct({
+                      type: Schema.optional(Schema.String),
+                      id: Schema.optional(Schema.String),
+                    }),
+                  ),
+                ),
+              }),
+            ),
+            "default-account-status": Schema.optional(
+              Schema.Struct({
+                data: Schema.optional(
+                  Schema.NullOr(
+                    Schema.Struct({
+                      type: Schema.optional(Schema.String),
+                      id: Schema.optional(Schema.String),
+                    }),
+                  ),
+                ),
+              }),
+            ),
+          }),
+        ),
+      }),
+    ),
+  ),
+}) as unknown as Schema.Codec<UpdateAnAccountOutput>;
 
 // The operation
 /**

@@ -4,6 +4,21 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface ListAllApiLogsInput {
+  page?: { after?: string; before?: string; size?: number };
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const ListAllApiLogsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   page: Schema.optional(
     Schema.Struct({
@@ -11,7 +26,7 @@ export const ListAllApiLogsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       before: Schema.optional(Schema.String),
       size: Schema.optional(Schema.Number),
     }),
-  ).pipe(T.HttpQuery("page")),
+  ),
   fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
     T.HttpQuery("fields"),
   ),
@@ -33,10 +48,54 @@ export const ListAllApiLogsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "2020-05-18",
     ]),
   ).pipe(T.HttpHeader("Persona-Version")),
-}).pipe(T.Http({ method: "GET", path: "/api-logs" }));
-export type ListAllApiLogsInput = typeof ListAllApiLogsInput.Type;
+}).pipe(
+  T.Http({ method: "GET", path: "/api-logs" }),
+) as unknown as Schema.Codec<ListAllApiLogsInput>;
 
 // Output Schema
+export interface ListAllApiLogsOutput {
+  data: ReadonlyArray<{
+    type?: string;
+    id?: string;
+    attributes?: {
+      request?: {
+        method?: string;
+        path?: string;
+        headers?: {
+          Accept?: string;
+          Authorization?: string;
+          Host?: string;
+          "Persona-Version"?: string;
+          "User-Agent"?: string;
+        };
+        "get-params"?: Record<string, unknown>;
+        "post-params"?: Record<string, unknown>;
+        "ip-address"?: string;
+      };
+      response?: {
+        status?: number;
+        headers?: {
+          "Persona-Host"?: string;
+          "Cache-Control"?: string;
+          Pragma?: string;
+          Expires?: string;
+          "RateLimit-Limit"?: number;
+          "RateLimit-Remaining"?: number;
+          "RateLimit-Reset"?: number;
+          "Quota-Limit"?: number;
+          "Quota-Remaining"?: number;
+          "Quota-Reset"?: number;
+          "Request-Id"?: string;
+          "Content-Type"?: string;
+          Vary?: string;
+        };
+      };
+      "created-at"?: string;
+      "redacted-at"?: string | null;
+    };
+  }>;
+  links: { next: string | null; prev: string | null };
+}
 export const ListAllApiLogsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Array(
     Schema.Struct({
@@ -98,8 +157,7 @@ export const ListAllApiLogsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     next: Schema.NullOr(Schema.String),
     prev: Schema.NullOr(Schema.String),
   }),
-});
-export type ListAllApiLogsOutput = typeof ListAllApiLogsOutput.Type;
+}) as unknown as Schema.Codec<ListAllApiLogsOutput>;
 
 // The operation
 /**

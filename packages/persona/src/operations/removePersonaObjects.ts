@@ -10,6 +10,23 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface RemovePersonaObjectsInput {
+  caseId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  meta?: { "object-ids"?: ReadonlyArray<string> | null };
+}
 export const RemovePersonaObjectsInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     caseId: Schema.String.pipe(T.PathParam()),
@@ -42,10 +59,57 @@ export const RemovePersonaObjectsInput =
         ),
       }),
     ),
-  }).pipe(T.Http({ method: "POST", path: "/cases/{caseId}/remove-objects" }));
-export type RemovePersonaObjectsInput = typeof RemovePersonaObjectsInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/cases/{caseId}/remove-objects" }),
+  ) as unknown as Schema.Codec<RemovePersonaObjectsInput>;
 
 // Output Schema
+export interface RemovePersonaObjectsOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      status?: string;
+      name?: string;
+      resolution?: string | null;
+      "created-at"?: string;
+      "updated-at"?: string | null;
+      "assigned-at"?: string | null;
+      "resolved-at"?: string | null;
+      "redacted-at"?: string | null;
+      "sla-expires-at"?: string | null;
+      "creator-id"?: string | null;
+      "creator-type"?: string | null;
+      "assignee-id"?: string | null;
+      "assigner-id"?: string | null;
+      "assigner-type"?: string | null;
+      "resolver-id"?: string | null;
+      "resolver-type"?: string | null;
+      "updater-id"?: string | null;
+      "updater-type"?: string | null;
+      tags?: ReadonlyArray<unknown>;
+      fields?: Record<string, unknown>;
+      attachments?: ReadonlyArray<{
+        filename?: string;
+        url?: string;
+        "byte-size"?: number;
+      }>;
+    };
+    relationships?: {
+      accounts?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      "case-comments"?: {
+        data?: ReadonlyArray<{ id?: string; type?: string }>;
+      };
+      "case-template"?: { data?: { id?: string; type?: string } };
+      "case-queue"?: { data?: { id?: string; type?: string } | null };
+      inquiries?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      reports?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      verifications?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      txns?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+    };
+  };
+  included?: ReadonlyArray<unknown>;
+}
 export const RemovePersonaObjectsOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -184,8 +248,7 @@ export const RemovePersonaObjectsOutput =
       ),
     }),
     included: Schema.optional(Schema.Array(Schema.Unknown)),
-  });
-export type RemovePersonaObjectsOutput = typeof RemovePersonaObjectsOutput.Type;
+  }) as unknown as Schema.Codec<RemovePersonaObjectsOutput>;
 
 // The operation
 /**

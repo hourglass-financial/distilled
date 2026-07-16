@@ -4,6 +4,22 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface RetrieveAnApiLogInput {
+  apiLogId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const RetrieveAnApiLogInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   apiLogId: Schema.String.pipe(T.PathParam()),
   include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
@@ -28,10 +44,54 @@ export const RetrieveAnApiLogInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "2020-05-18",
     ]),
   ).pipe(T.HttpHeader("Persona-Version")),
-}).pipe(T.Http({ method: "GET", path: "/api-logs/{apiLogId}" }));
-export type RetrieveAnApiLogInput = typeof RetrieveAnApiLogInput.Type;
+}).pipe(
+  T.Http({ method: "GET", path: "/api-logs/{apiLogId}" }),
+) as unknown as Schema.Codec<RetrieveAnApiLogInput>;
 
 // Output Schema
+export interface RetrieveAnApiLogOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      request?: {
+        method?: string;
+        path?: string;
+        headers?: {
+          Accept?: string;
+          Authorization?: string;
+          Host?: string;
+          "Persona-Version"?: string;
+          "User-Agent"?: string;
+        };
+        "get-params"?: Record<string, unknown>;
+        "post-params"?: Record<string, unknown>;
+        "ip-address"?: string;
+      };
+      response?: {
+        status?: number;
+        headers?: {
+          "Persona-Host"?: string;
+          "Cache-Control"?: string;
+          Pragma?: string;
+          Expires?: string;
+          "RateLimit-Limit"?: number;
+          "RateLimit-Remaining"?: number;
+          "RateLimit-Reset"?: number;
+          "Quota-Limit"?: number;
+          "Quota-Remaining"?: number;
+          "Quota-Reset"?: number;
+          "Request-Id"?: string;
+          "Content-Type"?: string;
+          Vary?: string;
+        };
+      };
+      "created-at"?: string;
+      "redacted-at"?: string | null;
+    };
+  };
+  included?: ReadonlyArray<unknown>;
+}
 export const RetrieveAnApiLogOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
   {
     data: Schema.Struct({
@@ -90,8 +150,7 @@ export const RetrieveAnApiLogOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
     }),
     included: Schema.optional(Schema.Array(Schema.Unknown)),
   },
-);
-export type RetrieveAnApiLogOutput = typeof RetrieveAnApiLogOutput.Type;
+) as unknown as Schema.Codec<RetrieveAnApiLogOutput>;
 
 // The operation
 /**

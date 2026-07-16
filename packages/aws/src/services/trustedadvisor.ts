@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -1156,6 +1156,7 @@ export const batchUpdateRecommendationResourceExclusion: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchUpdateRecommendationResourceExclusion",
 }));
 export type GetOrganizationRecommendationError =
   | AccessDeniedException
@@ -1182,6 +1183,7 @@ export const getOrganizationRecommendation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetOrganizationRecommendation",
 }));
 export type GetRecommendationError =
   | AccessDeniedException
@@ -1208,6 +1210,7 @@ export const getRecommendation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetRecommendation",
 }));
 export type ListChecksError =
   | AccessDeniedException
@@ -1247,6 +1250,7 @@ export const listChecks: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListChecks",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -1294,6 +1298,7 @@ export const listOrganizationRecommendationAccounts: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListOrganizationRecommendationAccounts",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -1341,6 +1346,7 @@ export const listOrganizationRecommendationResources: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListOrganizationRecommendationResources",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -1386,6 +1392,7 @@ export const listOrganizationRecommendations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListOrganizationRecommendations",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -1433,6 +1440,7 @@ export const listRecommendationResources: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListRecommendationResources",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -1478,6 +1486,7 @@ export const listRecommendations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListRecommendations",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -1512,6 +1521,7 @@ export const updateOrganizationRecommendationLifecycle: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateOrganizationRecommendationLifecycle",
 }));
 export type UpdateRecommendationLifecycleError =
   | AccessDeniedException
@@ -1540,4 +1550,5 @@ export const updateRecommendationLifecycle: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateRecommendationLifecycle",
 }));

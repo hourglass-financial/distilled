@@ -1,5 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as redacted from "effect/Redacted";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -7,6 +8,7 @@ import * as C from "../category.ts";
 import type { Credentials as Creds } from "../credentials.ts";
 import type { CommonErrors } from "../errors.ts";
 import type { Region } from "../region.ts";
+import { SensitiveString } from "../sensitive.ts";
 const ns = T.XmlNamespace(
   "http://elasticmapreduce.amazonaws.com/doc/2009-03-31",
 );
@@ -101,17 +103,20 @@ export type ErrorMessage = string;
 export type ErrorCode = string;
 export type XmlString = string;
 export type ResourceId = string;
-export type StepId = string;
 export type ClusterId = string;
+export type StepId = string;
 export type OptionalArnType = string;
 export type IAMRoleArn = string;
 export type UriString = string;
 export type MaxResultsNumber = number;
 export type Port = number;
 export type UtilizationPerformanceIndexInteger = number;
+export type SessionId = string;
+export type SensitiveString = string | redacted.Redacted<string>;
 export type Marker = string;
 export type InstanceGroupId = string;
 export type InstanceId = string;
+export type ClientRequestToken = string;
 
 //# Schemas
 export type InstanceFleetType = "MASTER" | "CORE" | "TASK" | (string & {});
@@ -773,11 +778,13 @@ export const TagList = /*@__PURE__*/ /*#__PURE__*/ S.Array(Tag);
 export interface AddTagsInput {
   ResourceId?: string;
   Tags?: Tag[];
+  ClusterId?: string;
 }
 export const AddTagsInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     ResourceId: S.optional(S.String),
     Tags: S.optional(TagList),
+    ClusterId: S.optional(S.String),
   }).pipe(
     T.all(
       ns,
@@ -1427,6 +1434,7 @@ export interface Cluster {
   EbsRootVolumeThroughput?: number;
   ExtendedSupport?: boolean;
   MonitoringConfiguration?: MonitoringConfiguration;
+  SessionEnabled?: boolean;
 }
 export const Cluster = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -1466,6 +1474,7 @@ export const Cluster = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     EbsRootVolumeThroughput: S.optional(S.Number),
     ExtendedSupport: S.optional(S.Boolean),
     MonitoringConfiguration: S.optional(MonitoringConfiguration),
+    SessionEnabled: S.optional(S.Boolean),
   }),
 ).annotate({ identifier: "Cluster" }) as any as S.Schema<Cluster>;
 export interface DescribeClusterOutput {
@@ -2661,6 +2670,220 @@ export const GetPersistentAppUIPresignedURLOutput =
   ).annotate({
     identifier: "GetPersistentAppUIPresignedURLOutput",
   }) as any as S.Schema<GetPersistentAppUIPresignedURLOutput>;
+export interface GetSessionInput {
+  ClusterId?: string;
+  SessionId?: string;
+}
+export const GetSessionInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    ClusterId: S.optional(S.String),
+    SessionId: S.optional(S.String),
+  }).pipe(
+    T.all(
+      ns,
+      T.Http({ method: "POST", uri: "/" }),
+      svc,
+      auth,
+      proto,
+      ver,
+      rules,
+    ),
+  ),
+).annotate({
+  identifier: "GetSessionInput",
+}) as any as S.Schema<GetSessionInput>;
+export type SessionState =
+  | "SUBMITTED"
+  | "STARTING"
+  | "STARTED"
+  | "IDLE"
+  | "BUSY"
+  | "TERMINATING"
+  | "TERMINATED"
+  | "FAILED"
+  | (string & {});
+export const SessionState = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface SessionCloudWatchLoggingConfiguration {
+  Enabled?: boolean;
+  LogGroup?: string;
+  LogStreamNamePrefix?: string;
+  EncryptionKeyArn?: string;
+  LogTypes?: { [key: string]: string[] | undefined };
+}
+export const SessionCloudWatchLoggingConfiguration =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      Enabled: S.optional(S.Boolean),
+      LogGroup: S.optional(S.String),
+      LogStreamNamePrefix: S.optional(S.String),
+      EncryptionKeyArn: S.optional(S.String),
+      LogTypes: S.optional(LogTypesMap),
+    }),
+  ).annotate({
+    identifier: "SessionCloudWatchLoggingConfiguration",
+  }) as any as S.Schema<SessionCloudWatchLoggingConfiguration>;
+export interface SessionManagedLoggingConfiguration {
+  Enabled?: boolean;
+  EncryptionKeyArn?: string;
+}
+export const SessionManagedLoggingConfiguration =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      Enabled: S.optional(S.Boolean),
+      EncryptionKeyArn: S.optional(S.String),
+    }),
+  ).annotate({
+    identifier: "SessionManagedLoggingConfiguration",
+  }) as any as S.Schema<SessionManagedLoggingConfiguration>;
+export interface SessionS3LoggingConfiguration {
+  Enabled?: boolean;
+  LogUri?: string;
+  EncryptionKeyArn?: string;
+  LogTypes?: { [key: string]: string[] | undefined };
+}
+export const SessionS3LoggingConfiguration =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      Enabled: S.optional(S.Boolean),
+      LogUri: S.optional(S.String),
+      EncryptionKeyArn: S.optional(S.String),
+      LogTypes: S.optional(LogTypesMap),
+    }),
+  ).annotate({
+    identifier: "SessionS3LoggingConfiguration",
+  }) as any as S.Schema<SessionS3LoggingConfiguration>;
+export interface SessionMonitoringConfiguration {
+  CloudWatchLoggingConfiguration?: SessionCloudWatchLoggingConfiguration;
+  ManagedLoggingConfiguration?: SessionManagedLoggingConfiguration;
+  S3LoggingConfiguration?: SessionS3LoggingConfiguration;
+}
+export const SessionMonitoringConfiguration =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      CloudWatchLoggingConfiguration: S.optional(
+        SessionCloudWatchLoggingConfiguration,
+      ),
+      ManagedLoggingConfiguration: S.optional(
+        SessionManagedLoggingConfiguration,
+      ),
+      S3LoggingConfiguration: S.optional(SessionS3LoggingConfiguration),
+    }),
+  ).annotate({
+    identifier: "SessionMonitoringConfiguration",
+  }) as any as S.Schema<SessionMonitoringConfiguration>;
+export interface CertificateAuthority {
+  CertificateArn?: string;
+  CertificateData?: string;
+}
+export const CertificateAuthority = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    CertificateArn: S.optional(S.String),
+    CertificateData: S.optional(S.String),
+  }),
+).annotate({
+  identifier: "CertificateAuthority",
+}) as any as S.Schema<CertificateAuthority>;
+export interface Session {
+  Id?: string;
+  ClusterId?: string;
+  Name?: string;
+  Arn?: string;
+  State?: SessionState;
+  StateChangeReason?: string;
+  ReleaseLabel?: string;
+  ExecutionRoleArn?: string;
+  AccountId?: string;
+  CreatedAt?: Date;
+  UpdatedAt?: Date;
+  StartedAt?: Date;
+  EndedAt?: Date;
+  IdleSince?: Date;
+  EngineConfigurations?: Configuration[];
+  MonitoringConfiguration?: SessionMonitoringConfiguration;
+  SessionIdleTimeoutInMinutes?: number;
+  CertificateAuthority?: CertificateAuthority;
+  ServerUrl?: string;
+  Tags?: Tag[];
+}
+export const Session = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    Id: S.optional(S.String),
+    ClusterId: S.optional(S.String),
+    Name: S.optional(S.String),
+    Arn: S.optional(S.String),
+    State: S.optional(SessionState),
+    StateChangeReason: S.optional(S.String),
+    ReleaseLabel: S.optional(S.String),
+    ExecutionRoleArn: S.optional(S.String),
+    AccountId: S.optional(S.String),
+    CreatedAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    UpdatedAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    StartedAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    EndedAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    IdleSince: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    EngineConfigurations: S.optional(ConfigurationList),
+    MonitoringConfiguration: S.optional(SessionMonitoringConfiguration),
+    SessionIdleTimeoutInMinutes: S.optional(S.Number),
+    CertificateAuthority: S.optional(CertificateAuthority),
+    ServerUrl: S.optional(S.String),
+    Tags: S.optional(TagList),
+  }),
+).annotate({ identifier: "Session" }) as any as S.Schema<Session>;
+export interface GetSessionOutput {
+  Session: Session & {
+    Id: SessionId;
+    ClusterId: ClusterId;
+    Arn: ArnType;
+    State: SessionState;
+  };
+}
+export const GetSessionOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ Session: S.optional(Session) }).pipe(ns),
+).annotate({
+  identifier: "GetSessionOutput",
+}) as any as S.Schema<GetSessionOutput>;
+export interface GetSessionEndpointInput {
+  ClusterId?: string;
+  SessionId?: string;
+}
+export const GetSessionEndpointInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      ClusterId: S.optional(S.String),
+      SessionId: S.optional(S.String),
+    }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "POST", uri: "/" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+).annotate({
+  identifier: "GetSessionEndpointInput",
+}) as any as S.Schema<GetSessionEndpointInput>;
+export interface GetSessionEndpointOutput {
+  Endpoint: string;
+  AuthToken?: string | redacted.Redacted<string>;
+  AuthTokenExpirationTime?: Date;
+  Credentials?: Credentials;
+}
+export const GetSessionEndpointOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      Endpoint: S.optional(S.String),
+      AuthToken: S.optional(SensitiveString),
+      AuthTokenExpirationTime: S.optional(
+        S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+      ),
+      Credentials: S.optional(Credentials),
+    }).pipe(ns),
+).annotate({
+  identifier: "GetSessionEndpointOutput",
+}) as any as S.Schema<GetSessionEndpointOutput>;
 export interface GetStudioSessionMappingInput {
   StudioId?: string;
   IdentityId?: string;
@@ -3591,6 +3814,54 @@ export const ListSecurityConfigurationsOutput =
   ).annotate({
     identifier: "ListSecurityConfigurationsOutput",
   }) as any as S.Schema<ListSecurityConfigurationsOutput>;
+export type SessionStateList = SessionState[];
+export const SessionStateList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(SessionState);
+export interface ListSessionsInput {
+  ClusterId?: string;
+  SessionStates?: SessionState[];
+  NextToken?: string;
+  MaxResults?: number;
+}
+export const ListSessionsInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    ClusterId: S.optional(S.String),
+    SessionStates: S.optional(SessionStateList),
+    NextToken: S.optional(S.String),
+    MaxResults: S.optional(S.Number),
+  }).pipe(
+    T.all(
+      ns,
+      T.Http({ method: "POST", uri: "/" }),
+      svc,
+      auth,
+      proto,
+      ver,
+      rules,
+    ),
+  ),
+).annotate({
+  identifier: "ListSessionsInput",
+}) as any as S.Schema<ListSessionsInput>;
+export type SessionList = Session[];
+export const SessionList = /*@__PURE__*/ /*#__PURE__*/ S.Array(Session);
+export interface ListSessionsOutput {
+  Sessions?: (Session & {
+    Id: SessionId;
+    ClusterId: ClusterId;
+    Arn: ArnType;
+    State: SessionState;
+  })[];
+  NextToken?: string;
+}
+export const ListSessionsOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    Sessions: S.optional(SessionList),
+    NextToken: S.optional(S.String),
+  }).pipe(ns),
+).annotate({
+  identifier: "ListSessionsOutput",
+}) as any as S.Schema<ListSessionsOutput>;
 export type StepStateList = StepState[];
 export const StepStateList = /*@__PURE__*/ /*#__PURE__*/ S.Array(StepState);
 export interface ListStepsInput {
@@ -4204,11 +4475,13 @@ export const RemoveManagedScalingPolicyOutput =
 export interface RemoveTagsInput {
   ResourceId?: string;
   TagKeys?: string[];
+  ClusterId?: string;
 }
 export const RemoveTagsInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     ResourceId: S.optional(S.String),
     TagKeys: S.optional(StringList),
+    ClusterId: S.optional(S.String),
   }).pipe(
     T.all(
       ns,
@@ -4332,6 +4605,7 @@ export interface RunJobFlowInput {
   EbsRootVolumeThroughput?: number;
   ExtendedSupport?: boolean;
   MonitoringConfiguration?: MonitoringConfiguration;
+  SessionEnabled?: boolean;
 }
 export const RunJobFlowInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -4369,6 +4643,7 @@ export const RunJobFlowInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     EbsRootVolumeThroughput: S.optional(S.Number),
     ExtendedSupport: S.optional(S.Boolean),
     MonitoringConfiguration: S.optional(MonitoringConfiguration),
+    SessionEnabled: S.optional(S.Boolean),
   }).pipe(
     T.all(
       ns,
@@ -4579,6 +4854,58 @@ export const StartNotebookExecutionOutput =
   ).annotate({
     identifier: "StartNotebookExecutionOutput",
   }) as any as S.Schema<StartNotebookExecutionOutput>;
+export interface StartSessionInput {
+  Name?: string;
+  ClusterId?: string;
+  ExecutionRoleArn?: string;
+  EngineConfigurations?: Configuration[];
+  MonitoringConfiguration?: SessionMonitoringConfiguration;
+  SessionIdleTimeoutInMinutes?: number;
+  ClientRequestToken?: string;
+  Tags?: Tag[];
+}
+export const StartSessionInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    Name: S.optional(S.String),
+    ClusterId: S.optional(S.String),
+    ExecutionRoleArn: S.optional(S.String),
+    EngineConfigurations: S.optional(ConfigurationList),
+    MonitoringConfiguration: S.optional(SessionMonitoringConfiguration),
+    SessionIdleTimeoutInMinutes: S.optional(S.Number),
+    ClientRequestToken: S.optional(S.String),
+    Tags: S.optional(TagList),
+  }).pipe(
+    T.all(
+      ns,
+      T.Http({ method: "POST", uri: "/" }),
+      svc,
+      auth,
+      proto,
+      ver,
+      rules,
+    ),
+  ),
+).annotate({
+  identifier: "StartSessionInput",
+}) as any as S.Schema<StartSessionInput>;
+export interface StartSessionOutput {
+  Id: string;
+  ClusterId?: string;
+  Arn?: string;
+  AccountId?: string;
+  State?: SessionState;
+}
+export const StartSessionOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    Id: S.optional(S.String),
+    ClusterId: S.optional(S.String),
+    Arn: S.optional(S.String),
+    AccountId: S.optional(S.String),
+    State: S.optional(SessionState),
+  }).pipe(ns),
+).annotate({
+  identifier: "StartSessionOutput",
+}) as any as S.Schema<StartSessionOutput>;
 export interface StopNotebookExecutionInput {
   NotebookExecutionId?: string;
 }
@@ -4628,6 +4955,43 @@ export const TerminateJobFlowsResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 ).annotate({
   identifier: "TerminateJobFlowsResponse",
 }) as any as S.Schema<TerminateJobFlowsResponse>;
+export interface TerminateSessionInput {
+  ClusterId?: string;
+  SessionId?: string;
+}
+export const TerminateSessionInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    ClusterId: S.optional(S.String),
+    SessionId: S.optional(S.String),
+  }).pipe(
+    T.all(
+      ns,
+      T.Http({ method: "POST", uri: "/" }),
+      svc,
+      auth,
+      proto,
+      ver,
+      rules,
+    ),
+  ),
+).annotate({
+  identifier: "TerminateSessionInput",
+}) as any as S.Schema<TerminateSessionInput>;
+export interface TerminateSessionOutput {
+  ClusterId: string;
+  SessionId: string;
+  State: SessionState;
+}
+export const TerminateSessionOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      ClusterId: S.optional(S.String),
+      SessionId: S.optional(S.String),
+      State: S.optional(SessionState),
+    }).pipe(ns),
+).annotate({
+  identifier: "TerminateSessionOutput",
+}) as any as S.Schema<TerminateSessionOutput>;
 export interface UpdateStudioInput {
   StudioId?: string;
   Name?: string;
@@ -4734,6 +5098,7 @@ export const addInstanceFleet: API.OperationMethod<
   input: AddInstanceFleetInput,
   output: AddInstanceFleetOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "AddInstanceFleet",
 }));
 export type AddInstanceGroupsError = InternalServerError | CommonErrors;
 /**
@@ -4748,6 +5113,7 @@ export const addInstanceGroups: API.OperationMethod<
   input: AddInstanceGroupsInput,
   output: AddInstanceGroupsOutput,
   errors: [InternalServerError],
+  operationName: "AddInstanceGroups",
 }));
 export type AddJobFlowStepsError = InternalServerError | CommonErrors;
 /**
@@ -4783,6 +5149,7 @@ export const addJobFlowSteps: API.OperationMethod<
   input: AddJobFlowStepsInput,
   output: AddJobFlowStepsOutput,
   errors: [InternalServerError],
+  operationName: "AddJobFlowSteps",
 }));
 export type AddTagsError =
   | InternalServerException
@@ -4804,6 +5171,7 @@ export const addTags: API.OperationMethod<
   input: AddTagsInput,
   output: AddTagsOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "AddTags",
 }));
 export type CancelStepsError =
   | InternalServerError
@@ -4825,6 +5193,7 @@ export const cancelSteps: API.OperationMethod<
   input: CancelStepsInput,
   output: CancelStepsOutput,
   errors: [InternalServerError, InvalidRequestException],
+  operationName: "CancelSteps",
 }));
 export type CreatePersistentAppUIError =
   | InternalServerException
@@ -4842,6 +5211,7 @@ export const createPersistentAppUI: API.OperationMethod<
   input: CreatePersistentAppUIInput,
   output: CreatePersistentAppUIOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "CreatePersistentAppUI",
 }));
 export type CreateSecurityConfigurationError =
   | InternalServerException
@@ -4860,6 +5230,7 @@ export const createSecurityConfiguration: API.OperationMethod<
   input: CreateSecurityConfigurationInput,
   output: CreateSecurityConfigurationOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "CreateSecurityConfiguration",
 }));
 export type CreateStudioError =
   | InternalServerException
@@ -4877,6 +5248,7 @@ export const createStudio: API.OperationMethod<
   input: CreateStudioInput,
   output: CreateStudioOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "CreateStudio",
 }));
 export type CreateStudioSessionMappingError =
   | InternalServerError
@@ -4898,6 +5270,7 @@ export const createStudioSessionMapping: API.OperationMethod<
   input: CreateStudioSessionMappingInput,
   output: CreateStudioSessionMappingResponse,
   errors: [InternalServerError, InvalidRequestException],
+  operationName: "CreateStudioSessionMapping",
 }));
 export type DeleteSecurityConfigurationError =
   | InternalServerException
@@ -4915,6 +5288,7 @@ export const deleteSecurityConfiguration: API.OperationMethod<
   input: DeleteSecurityConfigurationInput,
   output: DeleteSecurityConfigurationOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "DeleteSecurityConfiguration",
 }));
 export type DeleteStudioError =
   | InternalServerException
@@ -4932,6 +5306,7 @@ export const deleteStudio: API.OperationMethod<
   input: DeleteStudioInput,
   output: DeleteStudioResponse,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "DeleteStudio",
 }));
 export type DeleteStudioSessionMappingError =
   | InternalServerError
@@ -4949,6 +5324,7 @@ export const deleteStudioSessionMapping: API.OperationMethod<
   input: DeleteStudioSessionMappingInput,
   output: DeleteStudioSessionMappingResponse,
   errors: [InternalServerError, InvalidRequestException],
+  operationName: "DeleteStudioSessionMapping",
 }));
 export type DescribeClusterError =
   | InternalServerException
@@ -4967,6 +5343,7 @@ export const describeCluster: API.OperationMethod<
   input: DescribeClusterInput,
   output: DescribeClusterOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "DescribeCluster",
 }));
 export type DescribeJobFlowsError = InternalServerError | CommonErrors;
 /**
@@ -5000,6 +5377,7 @@ export const describeJobFlows: API.OperationMethod<
   input: DescribeJobFlowsInput,
   output: DescribeJobFlowsOutput,
   errors: [InternalServerError],
+  operationName: "DescribeJobFlows",
 }));
 export type DescribeNotebookExecutionError =
   | InternalServerError
@@ -5017,6 +5395,7 @@ export const describeNotebookExecution: API.OperationMethod<
   input: DescribeNotebookExecutionInput,
   output: DescribeNotebookExecutionOutput,
   errors: [InternalServerError, InvalidRequestException],
+  operationName: "DescribeNotebookExecution",
 }));
 export type DescribePersistentAppUIError =
   | InternalServerException
@@ -5034,6 +5413,7 @@ export const describePersistentAppUI: API.OperationMethod<
   input: DescribePersistentAppUIInput,
   output: DescribePersistentAppUIOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "DescribePersistentAppUI",
 }));
 export type DescribeReleaseLabelError =
   | InternalServerException
@@ -5053,6 +5433,7 @@ export const describeReleaseLabel: API.OperationMethod<
   input: DescribeReleaseLabelInput,
   output: DescribeReleaseLabelOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "DescribeReleaseLabel",
 }));
 export type DescribeSecurityConfigurationError =
   | InternalServerException
@@ -5071,6 +5452,7 @@ export const describeSecurityConfiguration: API.OperationMethod<
   input: DescribeSecurityConfigurationInput,
   output: DescribeSecurityConfigurationOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "DescribeSecurityConfiguration",
 }));
 export type DescribeStepError =
   | InternalServerException
@@ -5088,6 +5470,7 @@ export const describeStep: API.OperationMethod<
   input: DescribeStepInput,
   output: DescribeStepOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "DescribeStep",
 }));
 export type DescribeStudioError =
   | InternalServerException
@@ -5106,6 +5489,7 @@ export const describeStudio: API.OperationMethod<
   input: DescribeStudioInput,
   output: DescribeStudioOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "DescribeStudio",
 }));
 export type GetAutoTerminationPolicyError = CommonErrors;
 /**
@@ -5120,6 +5504,7 @@ export const getAutoTerminationPolicy: API.OperationMethod<
   input: GetAutoTerminationPolicyInput,
   output: GetAutoTerminationPolicyOutput,
   errors: [],
+  operationName: "GetAutoTerminationPolicy",
 }));
 export type GetBlockPublicAccessConfigurationError =
   | InternalServerException
@@ -5139,6 +5524,7 @@ export const getBlockPublicAccessConfiguration: API.OperationMethod<
   input: GetBlockPublicAccessConfigurationInput,
   output: GetBlockPublicAccessConfigurationOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "GetBlockPublicAccessConfiguration",
 }));
 export type GetClusterSessionCredentialsError =
   | InternalServerError
@@ -5159,6 +5545,7 @@ export const getClusterSessionCredentials: API.OperationMethod<
   input: GetClusterSessionCredentialsInput,
   output: GetClusterSessionCredentialsOutput,
   errors: [InternalServerError, InvalidRequestException],
+  operationName: "GetClusterSessionCredentials",
 }));
 export type GetManagedScalingPolicyError = CommonErrors;
 /**
@@ -5173,6 +5560,7 @@ export const getManagedScalingPolicy: API.OperationMethod<
   input: GetManagedScalingPolicyInput,
   output: GetManagedScalingPolicyOutput,
   errors: [],
+  operationName: "GetManagedScalingPolicy",
 }));
 export type GetOnClusterAppUIPresignedURLError =
   | InternalServerError
@@ -5190,6 +5578,7 @@ export const getOnClusterAppUIPresignedURL: API.OperationMethod<
   input: GetOnClusterAppUIPresignedURLInput,
   output: GetOnClusterAppUIPresignedURLOutput,
   errors: [InternalServerError, InvalidRequestException],
+  operationName: "GetOnClusterAppUIPresignedURL",
 }));
 export type GetPersistentAppUIPresignedURLError =
   | InternalServerError
@@ -5207,6 +5596,43 @@ export const getPersistentAppUIPresignedURL: API.OperationMethod<
   input: GetPersistentAppUIPresignedURLInput,
   output: GetPersistentAppUIPresignedURLOutput,
   errors: [InternalServerError, InvalidRequestException],
+  operationName: "GetPersistentAppUIPresignedURL",
+}));
+export type GetSessionError =
+  | InternalServerException
+  | InvalidRequestException
+  | CommonErrors;
+/**
+ * Returns detailed information about a session.
+ */
+export const getSession: API.OperationMethod<
+  GetSessionInput,
+  GetSessionOutput,
+  GetSessionError,
+  Creds | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: GetSessionInput,
+  output: GetSessionOutput,
+  errors: [InternalServerException, InvalidRequestException],
+  operationName: "GetSession",
+}));
+export type GetSessionEndpointError =
+  | InternalServerException
+  | InvalidRequestException
+  | CommonErrors;
+/**
+ * Returns the Spark Connect endpoint URL and a time-limited authentication token for the specified session. Use the endpoint and token to connect a PySpark client to the session. Call this operation again when the token expires to obtain a new one.
+ */
+export const getSessionEndpoint: API.OperationMethod<
+  GetSessionEndpointInput,
+  GetSessionEndpointOutput,
+  GetSessionEndpointError,
+  Creds | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: GetSessionEndpointInput,
+  output: GetSessionEndpointOutput,
+  errors: [InternalServerException, InvalidRequestException],
+  operationName: "GetSessionEndpoint",
 }));
 export type GetStudioSessionMappingError =
   | InternalServerError
@@ -5225,6 +5651,7 @@ export const getStudioSessionMapping: API.OperationMethod<
   input: GetStudioSessionMappingInput,
   output: GetStudioSessionMappingOutput,
   errors: [InternalServerError, InvalidRequestException],
+  operationName: "GetStudioSessionMapping",
 }));
 export type ListBootstrapActionsError =
   | InternalServerException
@@ -5257,6 +5684,7 @@ export const listBootstrapActions: API.OperationMethod<
   input: ListBootstrapActionsInput,
   output: ListBootstrapActionsOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "ListBootstrapActions",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -5298,6 +5726,7 @@ export const listClusters: API.OperationMethod<
   input: ListClustersInput,
   output: ListClustersOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "ListClusters",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -5338,6 +5767,7 @@ export const listInstanceFleets: API.OperationMethod<
   input: ListInstanceFleetsInput,
   output: ListInstanceFleetsOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "ListInstanceFleets",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -5375,6 +5805,7 @@ export const listInstanceGroups: API.OperationMethod<
   input: ListInstanceGroupsInput,
   output: ListInstanceGroupsOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "ListInstanceGroups",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -5415,6 +5846,7 @@ export const listInstances: API.OperationMethod<
   input: ListInstancesInput,
   output: ListInstancesOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "ListInstances",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -5455,6 +5887,7 @@ export const listNotebookExecutions: API.OperationMethod<
   input: ListNotebookExecutionsInput,
   output: ListNotebookExecutionsOutput,
   errors: [InternalServerError, InvalidRequestException],
+  operationName: "ListNotebookExecutions",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -5493,6 +5926,7 @@ export const listReleaseLabels: API.OperationMethod<
   input: ListReleaseLabelsInput,
   output: ListReleaseLabelsOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "ListReleaseLabels",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5533,10 +5967,49 @@ export const listSecurityConfigurations: API.OperationMethod<
   input: ListSecurityConfigurationsInput,
   output: ListSecurityConfigurationsOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "ListSecurityConfigurations",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
     items: "SecurityConfigurations",
+  } as const,
+}));
+export type ListSessionsError =
+  | InternalServerException
+  | InvalidRequestException
+  | CommonErrors;
+/**
+ * Lists the sessions on a cluster. You can filter the results by session state. Newer sessions are returned first.
+ */
+export const listSessions: API.OperationMethod<
+  ListSessionsInput,
+  ListSessionsOutput,
+  ListSessionsError,
+  Creds | Region | HttpClient.HttpClient
+> & {
+  pages: (
+    input: ListSessionsInput,
+  ) => stream.Stream<
+    ListSessionsOutput,
+    ListSessionsError,
+    Creds | Region | HttpClient.HttpClient
+  >;
+  items: (
+    input: ListSessionsInput,
+  ) => stream.Stream<
+    Session,
+    ListSessionsError,
+    Creds | Region | HttpClient.HttpClient
+  >;
+} = /*@__PURE__*/ /*#__PURE__*/ API.makePaginated(() => ({
+  input: ListSessionsInput,
+  output: ListSessionsOutput,
+  errors: [InternalServerException, InvalidRequestException],
+  operationName: "ListSessions",
+  pagination: {
+    inputToken: "NextToken",
+    outputToken: "NextToken",
+    items: "Sessions",
   } as const,
 }));
 export type ListStepsError =
@@ -5575,6 +6048,7 @@ export const listSteps: API.OperationMethod<
   input: ListStepsInput,
   output: ListStepsOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "ListSteps",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -5613,6 +6087,7 @@ export const listStudios: API.OperationMethod<
   input: ListStudiosInput,
   output: ListStudiosOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "ListStudios",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -5651,6 +6126,7 @@ export const listStudioSessionMappings: API.OperationMethod<
   input: ListStudioSessionMappingsInput,
   output: ListStudioSessionMappingsOutput,
   errors: [InternalServerError, InvalidRequestException],
+  operationName: "ListStudioSessionMappings",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -5689,6 +6165,7 @@ export const listSupportedInstanceTypes: API.OperationMethod<
   input: ListSupportedInstanceTypesInput,
   output: ListSupportedInstanceTypesOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "ListSupportedInstanceTypes",
   pagination: { inputToken: "Marker", outputToken: "Marker" } as const,
 }));
 export type ModifyClusterError =
@@ -5708,6 +6185,7 @@ export const modifyCluster: API.OperationMethod<
   input: ModifyClusterInput,
   output: ModifyClusterOutput,
   errors: [InternalServerError, InvalidRequestException],
+  operationName: "ModifyCluster",
 }));
 export type ModifyInstanceFleetError =
   | InternalServerException
@@ -5730,6 +6208,7 @@ export const modifyInstanceFleet: API.OperationMethod<
   input: ModifyInstanceFleetInput,
   output: ModifyInstanceFleetResponse,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "ModifyInstanceFleet",
 }));
 export type ModifyInstanceGroupsError = InternalServerError | CommonErrors;
 /**
@@ -5746,6 +6225,7 @@ export const modifyInstanceGroups: API.OperationMethod<
   input: ModifyInstanceGroupsInput,
   output: ModifyInstanceGroupsResponse,
   errors: [InternalServerError],
+  operationName: "ModifyInstanceGroups",
 }));
 export type PutAutoScalingPolicyError = CommonErrors;
 /**
@@ -5763,6 +6243,7 @@ export const putAutoScalingPolicy: API.OperationMethod<
   input: PutAutoScalingPolicyInput,
   output: PutAutoScalingPolicyOutput,
   errors: [],
+  operationName: "PutAutoScalingPolicy",
 }));
 export type PutAutoTerminationPolicyError = CommonErrors;
 /**
@@ -5784,6 +6265,7 @@ export const putAutoTerminationPolicy: API.OperationMethod<
   input: PutAutoTerminationPolicyInput,
   output: PutAutoTerminationPolicyOutput,
   errors: [],
+  operationName: "PutAutoTerminationPolicy",
 }));
 export type PutBlockPublicAccessConfigurationError =
   | InternalServerException
@@ -5804,6 +6286,7 @@ export const putBlockPublicAccessConfiguration: API.OperationMethod<
   input: PutBlockPublicAccessConfigurationInput,
   output: PutBlockPublicAccessConfigurationOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "PutBlockPublicAccessConfiguration",
 }));
 export type PutManagedScalingPolicyError = CommonErrors;
 /**
@@ -5821,6 +6304,7 @@ export const putManagedScalingPolicy: API.OperationMethod<
   input: PutManagedScalingPolicyInput,
   output: PutManagedScalingPolicyOutput,
   errors: [],
+  operationName: "PutManagedScalingPolicy",
 }));
 export type RemoveAutoScalingPolicyError = CommonErrors;
 /**
@@ -5835,6 +6319,7 @@ export const removeAutoScalingPolicy: API.OperationMethod<
   input: RemoveAutoScalingPolicyInput,
   output: RemoveAutoScalingPolicyOutput,
   errors: [],
+  operationName: "RemoveAutoScalingPolicy",
 }));
 export type RemoveAutoTerminationPolicyError = CommonErrors;
 /**
@@ -5849,6 +6334,7 @@ export const removeAutoTerminationPolicy: API.OperationMethod<
   input: RemoveAutoTerminationPolicyInput,
   output: RemoveAutoTerminationPolicyOutput,
   errors: [],
+  operationName: "RemoveAutoTerminationPolicy",
 }));
 export type RemoveManagedScalingPolicyError = CommonErrors;
 /**
@@ -5863,6 +6349,7 @@ export const removeManagedScalingPolicy: API.OperationMethod<
   input: RemoveManagedScalingPolicyInput,
   output: RemoveManagedScalingPolicyOutput,
   errors: [],
+  operationName: "RemoveManagedScalingPolicy",
 }));
 export type RemoveTagsError =
   | InternalServerException
@@ -5885,6 +6372,7 @@ export const removeTags: API.OperationMethod<
   input: RemoveTagsInput,
   output: RemoveTagsOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "RemoveTags",
 }));
 export type RunJobFlowError = InternalServerError | CommonErrors;
 /**
@@ -5923,6 +6411,7 @@ export const runJobFlow: API.OperationMethod<
   input: RunJobFlowInput,
   output: RunJobFlowOutput,
   errors: [InternalServerError],
+  operationName: "RunJobFlow",
 }));
 export type SetKeepJobFlowAliveWhenNoStepsError =
   | InternalServerError
@@ -5943,6 +6432,7 @@ export const setKeepJobFlowAliveWhenNoSteps: API.OperationMethod<
   input: SetKeepJobFlowAliveWhenNoStepsInput,
   output: SetKeepJobFlowAliveWhenNoStepsResponse,
   errors: [InternalServerError],
+  operationName: "SetKeepJobFlowAliveWhenNoSteps",
 }));
 export type SetTerminationProtectionError = InternalServerError | CommonErrors;
 /**
@@ -5975,6 +6465,7 @@ export const setTerminationProtection: API.OperationMethod<
   input: SetTerminationProtectionInput,
   output: SetTerminationProtectionResponse,
   errors: [InternalServerError],
+  operationName: "SetTerminationProtection",
 }));
 export type SetUnhealthyNodeReplacementError =
   | InternalServerError
@@ -6004,6 +6495,7 @@ export const setUnhealthyNodeReplacement: API.OperationMethod<
   input: SetUnhealthyNodeReplacementInput,
   output: SetUnhealthyNodeReplacementResponse,
   errors: [InternalServerError],
+  operationName: "SetUnhealthyNodeReplacement",
 }));
 export type SetVisibleToAllUsersError = InternalServerError | CommonErrors;
 /**
@@ -6031,6 +6523,7 @@ export const setVisibleToAllUsers: API.OperationMethod<
   input: SetVisibleToAllUsersInput,
   output: SetVisibleToAllUsersResponse,
   errors: [InternalServerError],
+  operationName: "SetVisibleToAllUsers",
 }));
 export type StartNotebookExecutionError =
   | InternalServerException
@@ -6048,6 +6541,25 @@ export const startNotebookExecution: API.OperationMethod<
   input: StartNotebookExecutionInput,
   output: StartNotebookExecutionOutput,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "StartNotebookExecution",
+}));
+export type StartSessionError =
+  | InternalServerException
+  | InvalidRequestException
+  | CommonErrors;
+/**
+ * Creates and starts a new Spark Connect session on the specified cluster. The cluster must be in the `RUNNING` or `WAITING` state and have sessions enabled. This operation is supported in Amazon EMR Spark 8.0.0 and later.
+ */
+export const startSession: API.OperationMethod<
+  StartSessionInput,
+  StartSessionOutput,
+  StartSessionError,
+  Creds | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: StartSessionInput,
+  output: StartSessionOutput,
+  errors: [InternalServerException, InvalidRequestException],
+  operationName: "StartSession",
 }));
 export type StopNotebookExecutionError =
   | InternalServerError
@@ -6065,6 +6577,7 @@ export const stopNotebookExecution: API.OperationMethod<
   input: StopNotebookExecutionInput,
   output: StopNotebookExecutionResponse,
   errors: [InternalServerError, InvalidRequestException],
+  operationName: "StopNotebookExecution",
 }));
 export type TerminateJobFlowsError = InternalServerError | CommonErrors;
 /**
@@ -6086,6 +6599,25 @@ export const terminateJobFlows: API.OperationMethod<
   input: TerminateJobFlowsInput,
   output: TerminateJobFlowsResponse,
   errors: [InternalServerError],
+  operationName: "TerminateJobFlows",
+}));
+export type TerminateSessionError =
+  | InternalServerException
+  | InvalidRequestException
+  | CommonErrors;
+/**
+ * Terminates an active session. After you call this operation, the session enters the `TERMINATING` state and then transitions to `TERMINATED`.
+ */
+export const terminateSession: API.OperationMethod<
+  TerminateSessionInput,
+  TerminateSessionOutput,
+  TerminateSessionError,
+  Creds | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: TerminateSessionInput,
+  output: TerminateSessionOutput,
+  errors: [InternalServerException, InvalidRequestException],
+  operationName: "TerminateSession",
 }));
 export type UpdateStudioError =
   | InternalServerException
@@ -6104,6 +6636,7 @@ export const updateStudio: API.OperationMethod<
   input: UpdateStudioInput,
   output: UpdateStudioResponse,
   errors: [InternalServerException, InvalidRequestException],
+  operationName: "UpdateStudio",
 }));
 export type UpdateStudioSessionMappingError =
   | InternalServerError
@@ -6121,4 +6654,5 @@ export const updateStudioSessionMapping: API.OperationMethod<
   input: UpdateStudioSessionMappingInput,
   output: UpdateStudioSessionMappingResponse,
   errors: [InternalServerError, InvalidRequestException],
+  operationName: "UpdateStudioSessionMapping",
 }));

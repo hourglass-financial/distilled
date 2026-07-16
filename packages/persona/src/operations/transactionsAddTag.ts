@@ -10,6 +10,23 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface TransactionsAddTagInput {
+  transactionId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  meta?: { "tag-name"?: string; "tag-id"?: string };
+}
 export const TransactionsAddTagInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     transactionId: Schema.String.pipe(T.PathParam()),
@@ -43,10 +60,31 @@ export const TransactionsAddTagInput =
     ),
   }).pipe(
     T.Http({ method: "POST", path: "/transactions/{transactionId}/add-tag" }),
-  );
-export type TransactionsAddTagInput = typeof TransactionsAddTagInput.Type;
+  ) as unknown as Schema.Codec<TransactionsAddTagInput>;
 
 // Output Schema
+export interface TransactionsAddTagOutput {
+  data: {
+    id?: string;
+    type?: string;
+    attributes?: {
+      status?: string;
+      "reference-id"?: string | null;
+      fields?: Record<string, unknown>;
+      tags?: ReadonlyArray<string>;
+      "created-at"?: string;
+      "updated-at"?: string | null;
+    };
+    relationships?: {
+      reviewer?: { data?: { type?: string; id?: string } | null };
+      "transaction-label"?: { data?: { type?: string; id?: string } | null };
+      "transaction-type"?: { data?: { type?: string; id?: string } };
+      "related-objects"?: {
+        data?: ReadonlyArray<{ type?: string; id?: string }>;
+      };
+    };
+  };
+}
 export const TransactionsAddTagOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -113,8 +151,7 @@ export const TransactionsAddTagOutput =
         }),
       ),
     }),
-  });
-export type TransactionsAddTagOutput = typeof TransactionsAddTagOutput.Type;
+  }) as unknown as Schema.Codec<TransactionsAddTagOutput>;
 
 // The operation
 /**

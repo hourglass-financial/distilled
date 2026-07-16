@@ -10,6 +10,21 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface CreateAPrivacyPassInput {
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  "blinded-token": string;
+  "key-id": string;
+}
 export const CreateAPrivacyPassInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     keyInflection: Schema.optional(
@@ -32,15 +47,18 @@ export const CreateAPrivacyPassInput =
     ).pipe(T.HttpHeader("Persona-Version")),
     "blinded-token": Schema.String,
     "key-id": Schema.String,
-  }).pipe(T.Http({ method: "POST", path: "/privacy-passes" }));
-export type CreateAPrivacyPassInput = typeof CreateAPrivacyPassInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/privacy-passes" }),
+  ) as unknown as Schema.Codec<CreateAPrivacyPassInput>;
 
 // Output Schema
+export interface CreateAPrivacyPassOutput {
+  "blind-sig": string;
+}
 export const CreateAPrivacyPassOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     "blind-sig": Schema.String,
-  });
-export type CreateAPrivacyPassOutput = typeof CreateAPrivacyPassOutput.Type;
+  }) as unknown as Schema.Codec<CreateAPrivacyPassOutput>;
 
 // The operation
 /**

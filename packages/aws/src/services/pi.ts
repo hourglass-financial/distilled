@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -118,7 +118,7 @@ export interface CreatePerformanceAnalysisReportRequest {
   ServiceType: ServiceType;
   Identifier: string;
   StartTime: Date;
-  EndTime: Date;
+  EndTime?: Date;
   Tags?: Tag[];
 }
 export const CreatePerformanceAnalysisReportRequest =
@@ -127,7 +127,7 @@ export const CreatePerformanceAnalysisReportRequest =
       ServiceType: ServiceType,
       Identifier: S.String,
       StartTime: S.Date.pipe(T.TimestampFormat("epoch-seconds")),
-      EndTime: S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+      EndTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
       Tags: S.optional(TagList),
     }).pipe(
       T.all(
@@ -424,11 +424,13 @@ export const Severity = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface Recommendation {
   RecommendationId?: string;
   RecommendationDescription?: string | redacted.Redacted<string>;
+  RecommendationDetails?: string | redacted.Redacted<string>;
 }
 export const Recommendation = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     RecommendationId: S.optional(S.String),
     RecommendationDescription: S.optional(SensitiveString),
+    RecommendationDetails: S.optional(SensitiveString),
   }),
 ).annotate({ identifier: "Recommendation" }) as any as S.Schema<Recommendation>;
 export type RecommendationList = Recommendation[];
@@ -864,6 +866,54 @@ export const ListAvailableResourceMetricsResponse =
   ).annotate({
     identifier: "ListAvailableResourceMetricsResponse",
   }) as any as S.Schema<ListAvailableResourceMetricsResponse>;
+export type RecommendationIdList = string[];
+export const RecommendationIdList = /*@__PURE__*/ /*#__PURE__*/ S.Array(
+  S.String,
+);
+export interface ListPerformanceAnalysisReportRecommendationsRequest {
+  ServiceType: ServiceType;
+  Identifier: string;
+  AnalysisReportId: string;
+  RecommendationIds?: string[];
+  MaxResults?: number;
+  NextToken?: string;
+}
+export const ListPerformanceAnalysisReportRecommendationsRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      ServiceType: ServiceType,
+      Identifier: S.String,
+      AnalysisReportId: S.String,
+      RecommendationIds: S.optional(RecommendationIdList),
+      MaxResults: S.optional(S.Number),
+      NextToken: S.optional(S.String),
+    }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "POST", uri: "/" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "ListPerformanceAnalysisReportRecommendationsRequest",
+  }) as any as S.Schema<ListPerformanceAnalysisReportRecommendationsRequest>;
+export interface ListPerformanceAnalysisReportRecommendationsResponse {
+  Recommendations?: Recommendation[];
+  NextToken?: string;
+}
+export const ListPerformanceAnalysisReportRecommendationsResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      Recommendations: S.optional(RecommendationList),
+      NextToken: S.optional(S.String),
+    }).pipe(ns),
+  ).annotate({
+    identifier: "ListPerformanceAnalysisReportRecommendationsResponse",
+  }) as any as S.Schema<ListPerformanceAnalysisReportRecommendationsResponse>;
 export interface ListPerformanceAnalysisReportsRequest {
   ServiceType: ServiceType;
   Identifier: string;
@@ -1059,6 +1109,7 @@ export const createPerformanceAnalysisReport: API.OperationMethod<
     InvalidArgumentException,
     NotAuthorizedException,
   ],
+  operationName: "CreatePerformanceAnalysisReport",
 }));
 export type DeletePerformanceAnalysisReportError =
   | InternalServiceError
@@ -1081,6 +1132,7 @@ export const deletePerformanceAnalysisReport: API.OperationMethod<
     InvalidArgumentException,
     NotAuthorizedException,
   ],
+  operationName: "DeletePerformanceAnalysisReport",
 }));
 export type DescribeDimensionKeysError =
   | InternalServiceError
@@ -1121,6 +1173,7 @@ export const describeDimensionKeys: API.OperationMethod<
     InvalidArgumentException,
     NotAuthorizedException,
   ],
+  operationName: "DescribeDimensionKeys",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -1151,6 +1204,7 @@ export const getDimensionKeyDetails: API.OperationMethod<
     InvalidArgumentException,
     NotAuthorizedException,
   ],
+  operationName: "GetDimensionKeyDetails",
 }));
 export type GetPerformanceAnalysisReportError =
   | InternalServiceError
@@ -1176,6 +1230,7 @@ export const getPerformanceAnalysisReport: API.OperationMethod<
     InvalidArgumentException,
     NotAuthorizedException,
   ],
+  operationName: "GetPerformanceAnalysisReport",
 }));
 export type GetResourceMetadataError =
   | InternalServiceError
@@ -1199,6 +1254,7 @@ export const getResourceMetadata: API.OperationMethod<
     InvalidArgumentException,
     NotAuthorizedException,
   ],
+  operationName: "GetResourceMetadata",
 }));
 export type GetResourceMetricsError =
   | InternalServiceError
@@ -1241,6 +1297,7 @@ export const getResourceMetrics: API.OperationMethod<
     InvalidArgumentException,
     NotAuthorizedException,
   ],
+  operationName: "GetResourceMetrics",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -1283,6 +1340,7 @@ export const listAvailableResourceDimensions: API.OperationMethod<
     InvalidArgumentException,
     NotAuthorizedException,
   ],
+  operationName: "ListAvailableResourceDimensions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -1325,9 +1383,54 @@ export const listAvailableResourceMetrics: API.OperationMethod<
     InvalidArgumentException,
     NotAuthorizedException,
   ],
+  operationName: "ListAvailableResourceMetrics",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
+    pageSize: "MaxResults",
+  } as const,
+}));
+export type ListPerformanceAnalysisReportRecommendationsError =
+  | InternalServiceError
+  | InvalidArgumentException
+  | NotAuthorizedException
+  | CommonErrors;
+/**
+ * Retrieves recommendations for a performance analysis report.
+ */
+export const listPerformanceAnalysisReportRecommendations: API.OperationMethod<
+  ListPerformanceAnalysisReportRecommendationsRequest,
+  ListPerformanceAnalysisReportRecommendationsResponse,
+  ListPerformanceAnalysisReportRecommendationsError,
+  Credentials | Region | HttpClient.HttpClient
+> & {
+  pages: (
+    input: ListPerformanceAnalysisReportRecommendationsRequest,
+  ) => stream.Stream<
+    ListPerformanceAnalysisReportRecommendationsResponse,
+    ListPerformanceAnalysisReportRecommendationsError,
+    Credentials | Region | HttpClient.HttpClient
+  >;
+  items: (
+    input: ListPerformanceAnalysisReportRecommendationsRequest,
+  ) => stream.Stream<
+    Recommendation,
+    ListPerformanceAnalysisReportRecommendationsError,
+    Credentials | Region | HttpClient.HttpClient
+  >;
+} = /*@__PURE__*/ /*#__PURE__*/ API.makePaginated(() => ({
+  input: ListPerformanceAnalysisReportRecommendationsRequest,
+  output: ListPerformanceAnalysisReportRecommendationsResponse,
+  errors: [
+    InternalServiceError,
+    InvalidArgumentException,
+    NotAuthorizedException,
+  ],
+  operationName: "ListPerformanceAnalysisReportRecommendations",
+  pagination: {
+    inputToken: "NextToken",
+    outputToken: "NextToken",
+    items: "Recommendations",
     pageSize: "MaxResults",
   } as const,
 }));
@@ -1367,6 +1470,7 @@ export const listPerformanceAnalysisReports: API.OperationMethod<
     InvalidArgumentException,
     NotAuthorizedException,
   ],
+  operationName: "ListPerformanceAnalysisReports",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -1394,6 +1498,7 @@ export const listTagsForResource: API.OperationMethod<
     InvalidArgumentException,
     NotAuthorizedException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type TagResourceError =
   | InternalServiceError
@@ -1416,6 +1521,7 @@ export const tagResource: API.OperationMethod<
     InvalidArgumentException,
     NotAuthorizedException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | InternalServiceError
@@ -1438,4 +1544,5 @@ export const untagResource: API.OperationMethod<
     InvalidArgumentException,
     NotAuthorizedException,
   ],
+  operationName: "UntagResource",
 }));

@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -98,6 +98,7 @@ export type RegionCode = string;
 export type ImplementationType = string;
 export type ImplementationIdentifier = string;
 export type GovernedResource = string;
+export type GovernedProvider = string;
 export type MaxListControlsResults = number;
 export type MaxListDomainsResults = number;
 export type MaxListObjectivesResults = number;
@@ -401,11 +402,26 @@ export const ImplementationDetails = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "ImplementationDetails",
 }) as any as S.Schema<ImplementationDetails>;
+export type ParameterRequirementSummary =
+  | "REQUIRED"
+  | "OPTIONAL"
+  | "NONE"
+  | (string & {});
+export const ParameterRequirementSummary = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export type ControlParameterRequirement =
+  | "REQUIRED"
+  | "OPTIONAL"
+  | (string & {});
+export const ControlParameterRequirement = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface ControlParameter {
   Name: string;
+  Requirement?: ControlParameterRequirement;
 }
 export const ControlParameter = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-  S.Struct({ Name: S.String }),
+  S.Struct({
+    Name: S.String,
+    Requirement: S.optional(ControlParameterRequirement),
+  }),
 ).annotate({
   identifier: "ControlParameter",
 }) as any as S.Schema<ControlParameter>;
@@ -414,6 +430,8 @@ export const ControlParameters =
   /*@__PURE__*/ /*#__PURE__*/ S.Array(ControlParameter);
 export type GovernedResources = string[];
 export const GovernedResources = /*@__PURE__*/ /*#__PURE__*/ S.Array(S.String);
+export type GovernedProviders = string[];
+export const GovernedProviders = /*@__PURE__*/ /*#__PURE__*/ S.Array(S.String);
 export interface GetControlResponse {
   Arn: string;
   Aliases?: string[];
@@ -423,9 +441,11 @@ export interface GetControlResponse {
   Severity?: ControlSeverity;
   RegionConfiguration: RegionConfiguration;
   Implementation?: ImplementationDetails;
+  ParameterRequirementSummary?: ParameterRequirementSummary;
   Parameters?: ControlParameter[];
   CreateTime?: Date;
   GovernedResources?: string[];
+  GovernedProviders?: string[];
 }
 export const GetControlResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -437,9 +457,11 @@ export const GetControlResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     Severity: S.optional(ControlSeverity),
     RegionConfiguration: RegionConfiguration,
     Implementation: S.optional(ImplementationDetails),
+    ParameterRequirementSummary: S.optional(ParameterRequirementSummary),
     Parameters: S.optional(ControlParameters),
     CreateTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
     GovernedResources: S.optional(GovernedResources),
+    GovernedProviders: S.optional(GovernedProviders),
   }),
 ).annotate({
   identifier: "GetControlResponse",
@@ -463,11 +485,19 @@ export const ImplementationFilter = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "ImplementationFilter",
 }) as any as S.Schema<ImplementationFilter>;
+export type GovernedProviderFilterList = string[];
+export const GovernedProviderFilterList = /*@__PURE__*/ /*#__PURE__*/ S.Array(
+  S.String,
+);
 export interface ControlFilter {
   Implementations?: ImplementationFilter;
+  GovernedProviders?: string[];
 }
 export const ControlFilter = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-  S.Struct({ Implementations: S.optional(ImplementationFilter) }),
+  S.Struct({
+    Implementations: S.optional(ImplementationFilter),
+    GovernedProviders: S.optional(GovernedProviderFilterList),
+  }),
 ).annotate({ identifier: "ControlFilter" }) as any as S.Schema<ControlFilter>;
 export interface ListControlsRequest {
   NextToken?: string;
@@ -508,9 +538,11 @@ export interface ControlSummary {
   Description: string;
   Behavior?: ControlBehavior;
   Severity?: ControlSeverity;
+  ParameterRequirementSummary?: ParameterRequirementSummary;
   Implementation?: ImplementationSummary;
   CreateTime?: Date;
   GovernedResources?: string[];
+  GovernedProviders?: string[];
 }
 export const ControlSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -520,9 +552,11 @@ export const ControlSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     Description: S.String,
     Behavior: S.optional(ControlBehavior),
     Severity: S.optional(ControlSeverity),
+    ParameterRequirementSummary: S.optional(ParameterRequirementSummary),
     Implementation: S.optional(ImplementationSummary),
     CreateTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
     GovernedResources: S.optional(GovernedResources),
+    GovernedProviders: S.optional(GovernedProviders),
   }),
 ).annotate({ identifier: "ControlSummary" }) as any as S.Schema<ControlSummary>;
 export type Controls = ControlSummary[];
@@ -727,6 +761,7 @@ export const listControlMappings: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListControlMappings",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -774,6 +809,7 @@ export const listCommonControls: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListCommonControls",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -808,6 +844,7 @@ export const getControl: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetControl",
 }));
 export type ListControlsError =
   | AccessDeniedException
@@ -847,6 +884,7 @@ export const listControls: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListControls",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -892,6 +930,7 @@ export const listDomains: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListDomains",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -939,6 +978,7 @@ export const listObjectives: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListObjectives",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",

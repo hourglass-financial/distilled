@@ -4,6 +4,13 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface UpdateOutboundRailTransferInput {
+  id: string;
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const UpdateOutboundRailTransferInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
@@ -17,11 +24,34 @@ export const UpdateOutboundRailTransferInput =
     custom_fields: Schema.optional(
       Schema.Record(Schema.String, Schema.Unknown),
     ),
-  }).pipe(T.Http({ method: "PATCH", path: "/rail_out/{id}" }));
-export type UpdateOutboundRailTransferInput =
-  typeof UpdateOutboundRailTransferInput.Type;
+  }).pipe(
+    T.Http({ method: "PATCH", path: "/rail_out/{id}" }),
+  ) as unknown as Schema.Codec<UpdateOutboundRailTransferInput>;
 
 // Output Schema
+export interface UpdateOutboundRailTransferOutput {
+  id: string;
+  type: "RAIL_OUT";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id?: string | null;
+  status: "CREATED" | "PENDING" | "SETTLED" | "FAILED";
+  from_deposit_account_id: string;
+  counterparty_rail_address_id?: string | null;
+  to_deposit_account_id?: string | null;
+  amount: {
+    currency: "USD";
+    exponent: number;
+    value: string;
+    display_value: string;
+  };
+  memo?: string | null;
+  internal_note?: string | null;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const UpdateOutboundRailTransferOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -43,11 +73,11 @@ export const UpdateOutboundRailTransferOutput =
     }),
     memo: Schema.optional(Schema.NullOr(Schema.String)),
     internal_note: Schema.optional(Schema.NullOr(Schema.String)),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type UpdateOutboundRailTransferOutput =
-  typeof UpdateOutboundRailTransferOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<UpdateOutboundRailTransferOutput>;
 
 // The operation
 /**

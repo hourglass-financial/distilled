@@ -4,6 +4,16 @@ import * as T from "../traits.ts";
 import { BadRequest, Conflict, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
+export interface CreateCounterpartyUsBankAccountInput {
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  counterparty_id: string;
+  description: string;
+  account_number: string;
+  routing_number: string;
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const CreateCounterpartyUsBankAccountInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     ereborVersion: Schema.optional(Schema.String).pipe(
@@ -20,11 +30,28 @@ export const CreateCounterpartyUsBankAccountInput =
     custom_fields: Schema.optional(
       Schema.Record(Schema.String, Schema.Unknown),
     ),
-  }).pipe(T.Http({ method: "POST", path: "/counterparty_us_bank_accounts" }));
-export type CreateCounterpartyUsBankAccountInput =
-  typeof CreateCounterpartyUsBankAccountInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/counterparty_us_bank_accounts" }),
+  ) as unknown as Schema.Codec<CreateCounterpartyUsBankAccountInput>;
 
 // Output Schema
+export interface CreateCounterpartyUsBankAccountOutput {
+  id: string;
+  type: "COUNTERPARTY_US_BANK_ACCOUNT";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  customer_id?: string | null;
+  program_id?: string | null;
+  counterparty_id?: string | null;
+  description: string | null;
+  account_number: string;
+  routing_number: string;
+  bank_name?: string | null;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const CreateCounterpartyUsBankAccountOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -40,11 +67,11 @@ export const CreateCounterpartyUsBankAccountOutput =
     account_number: Schema.String,
     routing_number: Schema.String,
     bank_name: Schema.optional(Schema.NullOr(Schema.String)),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type CreateCounterpartyUsBankAccountOutput =
-  typeof CreateCounterpartyUsBankAccountOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<CreateCounterpartyUsBankAccountOutput>;
 
 // The operation
 /**

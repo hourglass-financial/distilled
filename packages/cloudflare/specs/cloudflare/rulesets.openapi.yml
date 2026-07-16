@@ -2790,6 +2790,32 @@ paths:
                                   type: boolean
                                   description: Whether to strip Set-Cookie headers from the origin response before
                                     caching.
+                                vary:
+                                  type: object
+                                  properties:
+                                    default:
+                                      type: object
+                                      properties:
+                                        action:
+                                          type: string
+                                          enum:
+                                            - bypass
+                                            - passthrough
+                                            - normalize
+                                          description: How the header value is treated when building the cache key.
+                                      required:
+                                        - action
+                                      description: Controls how response Vary headers without a per-header override
+                                        contribute to the cache key.
+                                    headers:
+                                      type: object
+                                      additionalProperties: true
+                                      description: A mapping of lowercase request header names to their vary
+                                        configuration.
+                                  description: Controls how cached responses vary based on request headers.
+                                    `default` is required by the API and applies
+                                    to any Vary response header that does not
+                                    have a per-header override.
                               description: The parameters configuring the rule's action.
                             categories:
                               type: array
@@ -4652,12 +4678,6 @@ paths:
                                     description: Whether to keep the query string of the original request.
                                   status_code:
                                     type: number
-                                    enum:
-                                      - 301
-                                      - 302
-                                      - 303
-                                      - 307
-                                      - 308
                                     description: The status code to use for the redirect.
                                 required:
                                   - target_url
@@ -5981,6 +6001,32 @@ paths:
                                 type: boolean
                                 description: Whether to strip Set-Cookie headers from the origin response before
                                   caching.
+                              vary:
+                                type: object
+                                properties:
+                                  default:
+                                    type: object
+                                    properties:
+                                      action:
+                                        type: string
+                                        enum:
+                                          - bypass
+                                          - passthrough
+                                          - normalize
+                                        description: How the header value is treated when building the cache key.
+                                    required:
+                                      - action
+                                    description: Controls how response Vary headers without a per-header override
+                                      contribute to the cache key.
+                                  headers:
+                                    type: object
+                                    additionalProperties: true
+                                    description: A mapping of lowercase request header names to their vary
+                                      configuration.
+                                description: Controls how cached responses vary based on request headers.
+                                  `default` is required by the API and applies
+                                  to any Vary response header that does not have
+                                  a per-header override.
                             description: The parameters configuring the rule's action.
                           description:
                             type: string
@@ -7933,13 +7979,23 @@ paths:
                                       type: boolean
                                       description: Whether to keep the query string of the original request.
                                     status_code:
-                                      type: number
-                                      enum:
-                                        - 301
-                                        - 302
-                                        - 303
-                                        - 307
-                                        - 308
+                                      oneOf:
+                                        - type: number
+                                          enum:
+                                            - 301
+                                        - type: number
+                                          enum:
+                                            - 302
+                                        - type: number
+                                          enum:
+                                            - 303
+                                        - type: number
+                                          enum:
+                                            - 307
+                                        - type: number
+                                          enum:
+                                            - 308
+                                        - type: number
                                       description: The status code to use for the redirect.
                                   required:
                                     - target_url
@@ -9355,6 +9411,32 @@ paths:
                                   type: boolean
                                   description: Whether to strip Set-Cookie headers from the origin response before
                                     caching.
+                                vary:
+                                  type: object
+                                  properties:
+                                    default:
+                                      type: object
+                                      properties:
+                                        action:
+                                          type: string
+                                          enum:
+                                            - bypass
+                                            - passthrough
+                                            - normalize
+                                          description: How the header value is treated when building the cache key.
+                                      required:
+                                        - action
+                                      description: Controls how response Vary headers without a per-header override
+                                        contribute to the cache key.
+                                    headers:
+                                      type: object
+                                      additionalProperties: true
+                                      description: A mapping of lowercase request header names to their vary
+                                        configuration.
+                                  description: Controls how cached responses vary based on request headers.
+                                    `default` is required by the API and applies
+                                    to any Vary response header that does not
+                                    have a per-header override.
                               description: The parameters configuring the rule's action.
                             categories:
                               type: array
@@ -12832,6 +12914,32 @@ paths:
                                   type: boolean
                                   description: Whether to strip Set-Cookie headers from the origin response before
                                     caching.
+                                vary:
+                                  type: object
+                                  properties:
+                                    default:
+                                      type: object
+                                      properties:
+                                        action:
+                                          type: string
+                                          enum:
+                                            - bypass
+                                            - passthrough
+                                            - normalize
+                                          description: How the header value is treated when building the cache key.
+                                      required:
+                                        - action
+                                      description: Controls how response Vary headers without a per-header override
+                                        contribute to the cache key.
+                                    headers:
+                                      type: object
+                                      additionalProperties: true
+                                      description: A mapping of lowercase request header names to their vary
+                                        configuration.
+                                  description: Controls how cached responses vary based on request headers.
+                                    `default` is required by the API and applies
+                                    to any Vary response header that does not
+                                    have a per-header override.
                               description: The parameters configuring the rule's action.
                             categories:
                               type: array
@@ -14702,6 +14810,32 @@ paths:
                           type: boolean
                           description: Whether to strip Set-Cookie headers from the origin response before
                             caching.
+                        vary:
+                          type: object
+                          properties:
+                            default:
+                              type: object
+                              properties:
+                                action:
+                                  type: string
+                                  enum:
+                                    - bypass
+                                    - passthrough
+                                    - normalize
+                                  description: How the header value is treated when building the cache key.
+                              required:
+                                - action
+                              description: Controls how response Vary headers without a per-header override
+                                contribute to the cache key.
+                            headers:
+                              type: object
+                              additionalProperties: true
+                              description: A mapping of lowercase request header names to their vary
+                                configuration.
+                          description: Controls how cached responses vary based on request headers.
+                            `default` is required by the API and applies to any
+                            Vary response header that does not have a per-header
+                            override.
                     - type: object
                       properties:
                         operation:
@@ -17826,6 +17960,32 @@ paths:
                                   type: boolean
                                   description: Whether to strip Set-Cookie headers from the origin response before
                                     caching.
+                                vary:
+                                  type: object
+                                  properties:
+                                    default:
+                                      type: object
+                                      properties:
+                                        action:
+                                          type: string
+                                          enum:
+                                            - bypass
+                                            - passthrough
+                                            - normalize
+                                          description: How the header value is treated when building the cache key.
+                                      required:
+                                        - action
+                                      description: Controls how response Vary headers without a per-header override
+                                        contribute to the cache key.
+                                    headers:
+                                      type: object
+                                      additionalProperties: true
+                                      description: A mapping of lowercase request header names to their vary
+                                        configuration.
+                                  description: Controls how cached responses vary based on request headers.
+                                    `default` is required by the API and applies
+                                    to any Vary response header that does not
+                                    have a per-header override.
                               description: The parameters configuring the rule's action.
                             categories:
                               type: array
@@ -19610,6 +19770,32 @@ paths:
                           type: boolean
                           description: Whether to strip Set-Cookie headers from the origin response before
                             caching.
+                        vary:
+                          type: object
+                          properties:
+                            default:
+                              type: object
+                              properties:
+                                action:
+                                  type: string
+                                  enum:
+                                    - bypass
+                                    - passthrough
+                                    - normalize
+                                  description: How the header value is treated when building the cache key.
+                              required:
+                                - action
+                              description: Controls how response Vary headers without a per-header override
+                                contribute to the cache key.
+                            headers:
+                              type: object
+                              additionalProperties: true
+                              description: A mapping of lowercase request header names to their vary
+                                configuration.
+                          description: Controls how cached responses vary based on request headers.
+                            `default` is required by the API and applies to any
+                            Vary response header that does not have a per-header
+                            override.
                     - type: object
                       properties:
                         operation:
@@ -22734,6 +22920,32 @@ paths:
                                   type: boolean
                                   description: Whether to strip Set-Cookie headers from the origin response before
                                     caching.
+                                vary:
+                                  type: object
+                                  properties:
+                                    default:
+                                      type: object
+                                      properties:
+                                        action:
+                                          type: string
+                                          enum:
+                                            - bypass
+                                            - passthrough
+                                            - normalize
+                                          description: How the header value is treated when building the cache key.
+                                      required:
+                                        - action
+                                      description: Controls how response Vary headers without a per-header override
+                                        contribute to the cache key.
+                                    headers:
+                                      type: object
+                                      additionalProperties: true
+                                      description: A mapping of lowercase request header names to their vary
+                                        configuration.
+                                  description: Controls how cached responses vary based on request headers.
+                                    `default` is required by the API and applies
+                                    to any Vary response header that does not
+                                    have a per-header override.
                               description: The parameters configuring the rule's action.
                             categories:
                               type: array
@@ -26201,6 +26413,32 @@ paths:
                                   type: boolean
                                   description: Whether to strip Set-Cookie headers from the origin response before
                                     caching.
+                                vary:
+                                  type: object
+                                  properties:
+                                    default:
+                                      type: object
+                                      properties:
+                                        action:
+                                          type: string
+                                          enum:
+                                            - bypass
+                                            - passthrough
+                                            - normalize
+                                          description: How the header value is treated when building the cache key.
+                                      required:
+                                        - action
+                                      description: Controls how response Vary headers without a per-header override
+                                        contribute to the cache key.
+                                    headers:
+                                      type: object
+                                      additionalProperties: true
+                                      description: A mapping of lowercase request header names to their vary
+                                        configuration.
+                                  description: Controls how cached responses vary based on request headers.
+                                    `default` is required by the API and applies
+                                    to any Vary response header that does not
+                                    have a per-header override.
                               description: The parameters configuring the rule's action.
                             categories:
                               type: array
@@ -29664,6 +29902,32 @@ paths:
                                   type: boolean
                                   description: Whether to strip Set-Cookie headers from the origin response before
                                     caching.
+                                vary:
+                                  type: object
+                                  properties:
+                                    default:
+                                      type: object
+                                      properties:
+                                        action:
+                                          type: string
+                                          enum:
+                                            - bypass
+                                            - passthrough
+                                            - normalize
+                                          description: How the header value is treated when building the cache key.
+                                      required:
+                                        - action
+                                      description: Controls how response Vary headers without a per-header override
+                                        contribute to the cache key.
+                                    headers:
+                                      type: object
+                                      additionalProperties: true
+                                      description: A mapping of lowercase request header names to their vary
+                                        configuration.
+                                  description: Controls how cached responses vary based on request headers.
+                                    `default` is required by the API and applies
+                                    to any Vary response header that does not
+                                    have a per-header override.
                               description: The parameters configuring the rule's action.
                             categories:
                               type: array
@@ -32890,6 +33154,32 @@ paths:
                                 type: boolean
                                 description: Whether to strip Set-Cookie headers from the origin response before
                                   caching.
+                              vary:
+                                type: object
+                                properties:
+                                  default:
+                                    type: object
+                                    properties:
+                                      action:
+                                        type: string
+                                        enum:
+                                          - bypass
+                                          - passthrough
+                                          - normalize
+                                        description: How the header value is treated when building the cache key.
+                                    required:
+                                      - action
+                                    description: Controls how response Vary headers without a per-header override
+                                      contribute to the cache key.
+                                  headers:
+                                    type: object
+                                    additionalProperties: true
+                                    description: A mapping of lowercase request header names to their vary
+                                      configuration.
+                                description: Controls how cached responses vary based on request headers.
+                                  `default` is required by the API and applies
+                                  to any Vary response header that does not have
+                                  a per-header override.
                             description: The parameters configuring the rule's action.
                           description:
                             type: string
@@ -36264,6 +36554,32 @@ paths:
                                   type: boolean
                                   description: Whether to strip Set-Cookie headers from the origin response before
                                     caching.
+                                vary:
+                                  type: object
+                                  properties:
+                                    default:
+                                      type: object
+                                      properties:
+                                        action:
+                                          type: string
+                                          enum:
+                                            - bypass
+                                            - passthrough
+                                            - normalize
+                                          description: How the header value is treated when building the cache key.
+                                      required:
+                                        - action
+                                      description: Controls how response Vary headers without a per-header override
+                                        contribute to the cache key.
+                                    headers:
+                                      type: object
+                                      additionalProperties: true
+                                      description: A mapping of lowercase request header names to their vary
+                                        configuration.
+                                  description: Controls how cached responses vary based on request headers.
+                                    `default` is required by the API and applies
+                                    to any Vary response header that does not
+                                    have a per-header override.
                               description: The parameters configuring the rule's action.
                             categories:
                               type: array
@@ -39610,6 +39926,32 @@ paths:
                                 type: boolean
                                 description: Whether to strip Set-Cookie headers from the origin response before
                                   caching.
+                              vary:
+                                type: object
+                                properties:
+                                  default:
+                                    type: object
+                                    properties:
+                                      action:
+                                        type: string
+                                        enum:
+                                          - bypass
+                                          - passthrough
+                                          - normalize
+                                        description: How the header value is treated when building the cache key.
+                                    required:
+                                      - action
+                                    description: Controls how response Vary headers without a per-header override
+                                      contribute to the cache key.
+                                  headers:
+                                    type: object
+                                    additionalProperties: true
+                                    description: A mapping of lowercase request header names to their vary
+                                      configuration.
+                                description: Controls how cached responses vary based on request headers.
+                                  `default` is required by the API and applies
+                                  to any Vary response header that does not have
+                                  a per-header override.
                             description: The parameters configuring the rule's action.
                           description:
                             type: string
@@ -42988,6 +43330,32 @@ paths:
                                   type: boolean
                                   description: Whether to strip Set-Cookie headers from the origin response before
                                     caching.
+                                vary:
+                                  type: object
+                                  properties:
+                                    default:
+                                      type: object
+                                      properties:
+                                        action:
+                                          type: string
+                                          enum:
+                                            - bypass
+                                            - passthrough
+                                            - normalize
+                                          description: How the header value is treated when building the cache key.
+                                      required:
+                                        - action
+                                      description: Controls how response Vary headers without a per-header override
+                                        contribute to the cache key.
+                                    headers:
+                                      type: object
+                                      additionalProperties: true
+                                      description: A mapping of lowercase request header names to their vary
+                                        configuration.
+                                  description: Controls how cached responses vary based on request headers.
+                                    `default` is required by the API and applies
+                                    to any Vary response header that does not
+                                    have a per-header override.
                               description: The parameters configuring the rule's action.
                             categories:
                               type: array
@@ -46463,6 +46831,32 @@ paths:
                                   type: boolean
                                   description: Whether to strip Set-Cookie headers from the origin response before
                                     caching.
+                                vary:
+                                  type: object
+                                  properties:
+                                    default:
+                                      type: object
+                                      properties:
+                                        action:
+                                          type: string
+                                          enum:
+                                            - bypass
+                                            - passthrough
+                                            - normalize
+                                          description: How the header value is treated when building the cache key.
+                                      required:
+                                        - action
+                                      description: Controls how response Vary headers without a per-header override
+                                        contribute to the cache key.
+                                    headers:
+                                      type: object
+                                      additionalProperties: true
+                                      description: A mapping of lowercase request header names to their vary
+                                        configuration.
+                                  description: Controls how cached responses vary based on request headers.
+                                    `default` is required by the API and applies
+                                    to any Vary response header that does not
+                                    have a per-header override.
                               description: The parameters configuring the rule's action.
                             categories:
                               type: array

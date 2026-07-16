@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -92,6 +92,7 @@ export type IndexType = string;
 export type IndexState = string;
 export type OperationStatus = string;
 export type ServiceViewName = string;
+export type RecorderType = string;
 export type AccountId = string;
 export type QueryString = string | redacted.Redacted<string>;
 
@@ -541,6 +542,21 @@ export const GetServiceViewInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "GetServiceViewInput",
 }) as any as S.Schema<GetServiceViewInput>;
+export interface ServiceLinkedRecorderInfo {
+  ServicePrincipal?: string;
+  RecorderName?: string;
+  RecorderType?: string;
+}
+export const ServiceLinkedRecorderInfo = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      ServicePrincipal: S.optional(S.String),
+      RecorderName: S.optional(S.String),
+      RecorderType: S.optional(S.String),
+    }),
+).annotate({
+  identifier: "ServiceLinkedRecorderInfo",
+}) as any as S.Schema<ServiceLinkedRecorderInfo>;
 export interface ServiceView {
   ServiceViewArn: string;
   ServiceViewName?: string;
@@ -548,6 +564,7 @@ export interface ServiceView {
   IncludedProperties?: IncludedProperty[];
   StreamingAccessForService?: string;
   ScopeType?: string;
+  ServiceLinkedRecorder?: ServiceLinkedRecorderInfo;
 }
 export const ServiceView = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -557,6 +574,7 @@ export const ServiceView = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     IncludedProperties: S.optional(IncludedPropertyList),
     StreamingAccessForService: S.optional(S.String),
     ScopeType: S.optional(S.String),
+    ServiceLinkedRecorder: S.optional(ServiceLinkedRecorderInfo),
   }),
 ).annotate({ identifier: "ServiceView" }) as any as S.Schema<ServiceView>;
 export interface GetServiceViewOutput {
@@ -710,6 +728,7 @@ export interface Resource {
   Region?: string;
   ResourceType?: string;
   Service?: string;
+  CfnResourceType?: string;
   LastReportedAt?: Date;
   Properties?: ResourceProperty[];
 }
@@ -720,6 +739,7 @@ export const Resource = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     Region: S.optional(S.String),
     ResourceType: S.optional(S.String),
     Service: S.optional(S.String),
+    CfnResourceType: S.optional(S.String),
     LastReportedAt: S.optional(
       T.DateFromString.pipe(T.TimestampFormat("date-time")),
     ),
@@ -891,14 +911,20 @@ export const ListSupportedResourceTypesInput =
   ).annotate({
     identifier: "ListSupportedResourceTypesInput",
   }) as any as S.Schema<ListSupportedResourceTypesInput>;
+export type CFNResourceTypeList = string[];
+export const CFNResourceTypeList = /*@__PURE__*/ /*#__PURE__*/ S.Array(
+  S.String,
+);
 export interface SupportedResourceType {
   Service?: string;
   ResourceType?: string;
+  CFNResourceTypes?: string[];
 }
 export const SupportedResourceType = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     Service: S.optional(S.String),
     ResourceType: S.optional(S.String),
+    CFNResourceTypes: S.optional(CFNResourceTypeList),
   }),
 ).annotate({
   identifier: "SupportedResourceType",
@@ -1419,6 +1445,7 @@ export const batchGetView: API.OperationMethod<
     UnauthorizedException,
     ValidationException,
   ],
+  operationName: "BatchGetView",
 }));
 export type CreateResourceExplorerSetupError =
   | AccessDeniedException
@@ -1445,6 +1472,7 @@ export const createResourceExplorerSetup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateResourceExplorerSetup",
 }));
 export type DeleteResourceExplorerSetupError =
   | AccessDeniedException
@@ -1471,6 +1499,7 @@ export const deleteResourceExplorerSetup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteResourceExplorerSetup",
 }));
 export type DisassociateDefaultViewError =
   | AccessDeniedException
@@ -1499,6 +1528,7 @@ export const disassociateDefaultView: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DisassociateDefaultView",
 }));
 export type GetAccountLevelServiceConfigurationError =
   | AccessDeniedException
@@ -1523,6 +1553,7 @@ export const getAccountLevelServiceConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "GetAccountLevelServiceConfiguration",
 }));
 export type GetDefaultViewError =
   | AccessDeniedException
@@ -1549,6 +1580,7 @@ export const getDefaultView: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetDefaultView",
 }));
 export type GetIndexError =
   | AccessDeniedException
@@ -1575,6 +1607,7 @@ export const getIndex: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetIndex",
 }));
 export type GetManagedViewError =
   | AccessDeniedException
@@ -1603,6 +1636,7 @@ export const getManagedView: API.OperationMethod<
     UnauthorizedException,
     ValidationException,
   ],
+  operationName: "GetManagedView",
 }));
 export type GetResourceExplorerSetupError =
   | AccessDeniedException
@@ -1644,6 +1678,7 @@ export const getResourceExplorerSetup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetResourceExplorerSetup",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -1676,6 +1711,7 @@ export const getServiceIndex: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetServiceIndex",
 }));
 export type GetServiceViewError =
   | AccessDeniedException
@@ -1702,6 +1738,7 @@ export const getServiceView: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetServiceView",
 }));
 export type ListIndexesForMembersError =
   | AccessDeniedException
@@ -1741,6 +1778,7 @@ export const listIndexesForMembers: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListIndexesForMembers",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -1788,6 +1826,7 @@ export const listManagedViews: API.OperationMethod<
     UnauthorizedException,
     ValidationException,
   ],
+  operationName: "ListManagedViews",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -1837,6 +1876,7 @@ export const listResources: API.OperationMethod<
     UnauthorizedException,
     ValidationException,
   ],
+  operationName: "ListResources",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -1882,6 +1922,7 @@ export const listServiceIndexes: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListServiceIndexes",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -1927,6 +1968,7 @@ export const listServiceViews: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListServiceViews",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -1966,6 +2008,7 @@ export const listStreamingAccessForServices: API.OperationMethod<
   input: ListStreamingAccessForServicesInput,
   output: ListStreamingAccessForServicesOutput,
   errors: [AccessDeniedException, InternalServerException, ValidationException],
+  operationName: "ListStreamingAccessForServices",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -2011,6 +2054,7 @@ export const listSupportedResourceTypes: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListSupportedResourceTypes",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -2045,6 +2089,7 @@ export const listTagsForResource: API.OperationMethod<
     UnauthorizedException,
     ValidationException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type SearchError =
   | AccessDeniedException
@@ -2094,6 +2139,7 @@ export const search: API.OperationMethod<
     UnauthorizedException,
     ValidationException,
   ],
+  operationName: "Search",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -2128,6 +2174,7 @@ export const tagResource: API.OperationMethod<
     UnauthorizedException,
     ValidationException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | AccessDeniedException
@@ -2156,6 +2203,7 @@ export const untagResource: API.OperationMethod<
     UnauthorizedException,
     ValidationException,
   ],
+  operationName: "UntagResource",
 }));
 export type CreateIndexError =
   | AccessDeniedException
@@ -2202,6 +2250,7 @@ export const createIndex: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateIndex",
 }));
 export type UpdateIndexTypeError =
   | AccessDeniedException
@@ -2248,6 +2297,7 @@ export const updateIndexType: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateIndexType",
 }));
 export type DeleteIndexError =
   | AccessDeniedException
@@ -2276,6 +2326,7 @@ export const deleteIndex: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteIndex",
 }));
 export type ListIndexesError =
   | AccessDeniedException
@@ -2315,6 +2366,7 @@ export const listIndexes: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListIndexes",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -2353,6 +2405,7 @@ export const createView: API.OperationMethod<
     UnauthorizedException,
     ValidationException,
   ],
+  operationName: "CreateView",
 }));
 export type GetViewError =
   | AccessDeniedException
@@ -2381,6 +2434,7 @@ export const getView: API.OperationMethod<
     UnauthorizedException,
     ValidationException,
   ],
+  operationName: "GetView",
 }));
 export type UpdateViewError =
   | AccessDeniedException
@@ -2409,6 +2463,7 @@ export const updateView: API.OperationMethod<
     UnauthorizedException,
     ValidationException,
   ],
+  operationName: "UpdateView",
 }));
 export type DeleteViewError =
   | AccessDeniedException
@@ -2439,6 +2494,7 @@ export const deleteView: API.OperationMethod<
     UnauthorizedException,
     ValidationException,
   ],
+  operationName: "DeleteView",
 }));
 export type ListViewsError =
   | AccessDeniedException
@@ -2480,6 +2536,7 @@ export const listViews: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListViews",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -2514,4 +2571,5 @@ export const associateDefaultView: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssociateDefaultView",
 }));

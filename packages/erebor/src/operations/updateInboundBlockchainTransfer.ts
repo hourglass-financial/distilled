@@ -4,6 +4,13 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface UpdateInboundBlockchainTransferInput {
+  id: string;
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const UpdateInboundBlockchainTransferInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
@@ -17,11 +24,35 @@ export const UpdateInboundBlockchainTransferInput =
     custom_fields: Schema.optional(
       Schema.Record(Schema.String, Schema.Unknown),
     ),
-  }).pipe(T.Http({ method: "PATCH", path: "/blockchain_in/{id}" }));
-export type UpdateInboundBlockchainTransferInput =
-  typeof UpdateInboundBlockchainTransferInput.Type;
+  }).pipe(
+    T.Http({ method: "PATCH", path: "/blockchain_in/{id}" }),
+  ) as unknown as Schema.Codec<UpdateInboundBlockchainTransferInput>;
 
 // Output Schema
+export interface UpdateInboundBlockchainTransferOutput {
+  id: string;
+  type: "BLOCKCHAIN_IN";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id?: string | null;
+  status: "CREATED" | "PENDING" | "NEEDS_ATTRIBUTION" | "SETTLED" | "FAILED";
+  deposit_account_id: string;
+  counterparty_blockchain_address_id?: string | null;
+  amount: {
+    currency: "USAT" | "USDC" | "USDT";
+    exponent: number;
+    value: string;
+    display_value: string;
+  };
+  network: "BASE" | "ETHEREUM" | "INK" | "SOLANA" | "SUI";
+  transaction_hash?: string | null;
+  from_address?: string | null;
+  to_address?: string | null;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const UpdateInboundBlockchainTransferOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -52,11 +83,11 @@ export const UpdateInboundBlockchainTransferOutput =
     transaction_hash: Schema.optional(Schema.NullOr(Schema.String)),
     from_address: Schema.optional(Schema.NullOr(Schema.String)),
     to_address: Schema.optional(Schema.NullOr(Schema.String)),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type UpdateInboundBlockchainTransferOutput =
-  typeof UpdateInboundBlockchainTransferOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<UpdateInboundBlockchainTransferOutput>;
 
 // The operation
 /**

@@ -9,6 +9,20 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface PortalSessionsControllerCreateInput {
+  return_url?: string;
+  success_url?: string;
+  organization?: string;
+  intent?:
+    | "sso"
+    | "dsync"
+    | "audit_logs"
+    | "log_streams"
+    | "domain_verification"
+    | "certificate_renewal"
+    | "bring_your_own_key";
+  it_contact_emails?: ReadonlyArray<string>;
+}
 export const PortalSessionsControllerCreateInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     return_url: Schema.optional(Schema.String),
@@ -25,33 +39,19 @@ export const PortalSessionsControllerCreateInput =
         "bring_your_own_key",
       ]),
     ),
-    intent_options: Schema.optional(
-      Schema.Struct({
-        sso: Schema.optional(
-          Schema.Struct({
-            bookmark_slug: Schema.optional(Schema.String),
-            provider_type: Schema.optional(Schema.String),
-          }),
-        ),
-        domain_verification: Schema.optional(
-          Schema.Struct({
-            domain_name: Schema.optional(Schema.String),
-          }),
-        ),
-      }),
-    ),
     it_contact_emails: Schema.optional(Schema.Array(Schema.String)),
-  }).pipe(T.Http({ method: "POST", path: "/portal/generate_link" }));
-export type PortalSessionsControllerCreateInput =
-  typeof PortalSessionsControllerCreateInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/portal/generate_link" }),
+  ) as unknown as Schema.Codec<PortalSessionsControllerCreateInput>;
 
 // Output Schema
+export interface PortalSessionsControllerCreateOutput {
+  link?: string;
+}
 export const PortalSessionsControllerCreateOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     link: Schema.optional(Schema.String),
-  });
-export type PortalSessionsControllerCreateOutput =
-  typeof PortalSessionsControllerCreateOutput.Type;
+  }) as unknown as Schema.Codec<PortalSessionsControllerCreateOutput>;
 
 // The operation
 /**

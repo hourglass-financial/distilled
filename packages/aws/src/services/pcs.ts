@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -541,16 +541,26 @@ export const UpdateClusterSlurmConfigurationRequest =
   ).annotate({
     identifier: "UpdateClusterSlurmConfigurationRequest",
   }) as any as S.Schema<UpdateClusterSlurmConfigurationRequest>;
+export interface UpdateSchedulerRequest {
+  version: string;
+}
+export const UpdateSchedulerRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () => S.Struct({ version: S.String }),
+).annotate({
+  identifier: "UpdateSchedulerRequest",
+}) as any as S.Schema<UpdateSchedulerRequest>;
 export interface UpdateClusterRequest {
   clusterIdentifier: string;
   clientToken?: string;
   slurmConfiguration?: UpdateClusterSlurmConfigurationRequest;
+  scheduler?: UpdateSchedulerRequest;
 }
 export const UpdateClusterRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     clusterIdentifier: S.String,
     clientToken: S.optional(S.String).pipe(T.IdempotencyToken()),
     slurmConfiguration: S.optional(UpdateClusterSlurmConfigurationRequest),
+    scheduler: S.optional(UpdateSchedulerRequest),
   }).pipe(
     T.all(T.Http({ method: "POST", uri: "/" }), svc, auth, proto, ver, rules),
   ),
@@ -679,6 +689,7 @@ export type PurchaseOption =
   | "ONDEMAND"
   | "SPOT"
   | "CAPACITY_BLOCK"
+  | "INTERRUPTIBLE_CAPACITY_RESERVATION"
   | (string & {});
 export const PurchaseOption = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface CustomLaunchTemplate {
@@ -721,11 +732,15 @@ export const SpotOptions = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({ allocationStrategy: S.optional(SpotAllocationStrategy) }),
 ).annotate({ identifier: "SpotOptions" }) as any as S.Schema<SpotOptions>;
 export interface ComputeNodeGroupSlurmConfigurationRequest {
+  scaleDownIdleTimeInSeconds?: number;
   slurmCustomSettings?: SlurmCustomSetting[];
 }
 export const ComputeNodeGroupSlurmConfigurationRequest =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-    S.Struct({ slurmCustomSettings: S.optional(SlurmCustomSettings) }),
+    S.Struct({
+      scaleDownIdleTimeInSeconds: S.optional(S.Number),
+      slurmCustomSettings: S.optional(SlurmCustomSettings),
+    }),
   ).annotate({
     identifier: "ComputeNodeGroupSlurmConfigurationRequest",
   }) as any as S.Schema<ComputeNodeGroupSlurmConfigurationRequest>;
@@ -790,11 +805,15 @@ export const ScalingConfiguration = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   identifier: "ScalingConfiguration",
 }) as any as S.Schema<ScalingConfiguration>;
 export interface ComputeNodeGroupSlurmConfiguration {
+  scaleDownIdleTimeInSeconds?: number;
   slurmCustomSettings?: SlurmCustomSetting[];
 }
 export const ComputeNodeGroupSlurmConfiguration =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-    S.Struct({ slurmCustomSettings: S.optional(SlurmCustomSettings) }),
+    S.Struct({
+      scaleDownIdleTimeInSeconds: S.optional(S.Number),
+      slurmCustomSettings: S.optional(SlurmCustomSettings),
+    }),
   ).annotate({
     identifier: "ComputeNodeGroupSlurmConfiguration",
   }) as any as S.Schema<ComputeNodeGroupSlurmConfiguration>;
@@ -850,11 +869,15 @@ export const CreateComputeNodeGroupResponse =
     identifier: "CreateComputeNodeGroupResponse",
   }) as any as S.Schema<CreateComputeNodeGroupResponse>;
 export interface UpdateComputeNodeGroupSlurmConfigurationRequest {
+  scaleDownIdleTimeInSeconds?: number;
   slurmCustomSettings?: SlurmCustomSetting[];
 }
 export const UpdateComputeNodeGroupSlurmConfigurationRequest =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-    S.Struct({ slurmCustomSettings: S.optional(SlurmCustomSettings) }),
+    S.Struct({
+      scaleDownIdleTimeInSeconds: S.optional(S.Number),
+      slurmCustomSettings: S.optional(SlurmCustomSettings),
+    }),
   ).annotate({
     identifier: "UpdateComputeNodeGroupSlurmConfigurationRequest",
   }) as any as S.Schema<UpdateComputeNodeGroupSlurmConfigurationRequest>;
@@ -1292,6 +1315,7 @@ export const listTagsForResource: API.OperationMethod<
   input: ListTagsForResourceRequest,
   output: ListTagsForResourceResponse,
   errors: [ResourceNotFoundException],
+  operationName: "ListTagsForResource",
 }));
 export type TagResourceError =
   | ResourceNotFoundException
@@ -1309,6 +1333,7 @@ export const tagResource: API.OperationMethod<
   input: TagResourceRequest,
   output: TagResourceResponse,
   errors: [ResourceNotFoundException, ServiceQuotaExceededException],
+  operationName: "TagResource",
 }));
 export type UntagResourceError = ResourceNotFoundException | CommonErrors;
 /**
@@ -1323,6 +1348,7 @@ export const untagResource: API.OperationMethod<
   input: UntagResourceRequest,
   output: UntagResourceResponse,
   errors: [ResourceNotFoundException],
+  operationName: "UntagResource",
 }));
 export type CreateClusterError =
   | AccessDeniedException
@@ -1353,6 +1379,7 @@ export const createCluster: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateCluster",
 }));
 export type UpdateClusterError =
   | AccessDeniedException
@@ -1363,7 +1390,7 @@ export type UpdateClusterError =
   | ValidationException
   | CommonErrors;
 /**
- * Updates a cluster configuration. You can modify Slurm scheduler settings, accounting configuration, and security groups for an existing cluster.
+ * Updates a cluster configuration. You can upgrade the Slurm version, modify scheduler settings, and update accounting configuration for an existing cluster. For more information about upgrading the Slurm version, see Upgrading the Slurm version on a cluster in the *PCS User Guide*.
  *
  * You can only update clusters that are in `ACTIVE`, `UPDATE_FAILED`, or `SUSPENDED` state. All associated resources (queues and compute node groups) must be in `ACTIVE` state before you can update the cluster.
  */
@@ -1383,6 +1410,7 @@ export const updateCluster: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateCluster",
 }));
 export type DeleteClusterError =
   | AccessDeniedException
@@ -1411,6 +1439,7 @@ export const deleteCluster: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteCluster",
 }));
 export type GetClusterError =
   | AccessDeniedException
@@ -1439,6 +1468,7 @@ export const getCluster: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetCluster",
 }));
 export type RegisterComputeNodeGroupInstanceError =
   | AccessDeniedException
@@ -1458,6 +1488,7 @@ export const registerComputeNodeGroupInstance: API.OperationMethod<
   input: RegisterComputeNodeGroupInstanceRequest,
   output: RegisterComputeNodeGroupInstanceResponse,
   errors: [AccessDeniedException, InternalServerException],
+  operationName: "RegisterComputeNodeGroupInstance",
 }));
 export type ListClustersError =
   | AccessDeniedException
@@ -1501,6 +1532,7 @@ export const listClusters: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListClusters",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -1537,6 +1569,7 @@ export const createComputeNodeGroup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateComputeNodeGroup",
 }));
 export type UpdateComputeNodeGroupError =
   | AccessDeniedException
@@ -1567,6 +1600,7 @@ export const updateComputeNodeGroup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateComputeNodeGroup",
 }));
 export type DeleteComputeNodeGroupError =
   | AccessDeniedException
@@ -1595,6 +1629,7 @@ export const deleteComputeNodeGroup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteComputeNodeGroup",
 }));
 export type GetComputeNodeGroupError =
   | AccessDeniedException
@@ -1623,6 +1658,7 @@ export const getComputeNodeGroup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetComputeNodeGroup",
 }));
 export type ListComputeNodeGroupsError =
   | AccessDeniedException
@@ -1666,6 +1702,7 @@ export const listComputeNodeGroups: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListComputeNodeGroups",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -1702,6 +1739,7 @@ export const createQueue: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateQueue",
 }));
 export type UpdateQueueError =
   | AccessDeniedException
@@ -1732,6 +1770,7 @@ export const updateQueue: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateQueue",
 }));
 export type DeleteQueueError =
   | AccessDeniedException
@@ -1760,6 +1799,7 @@ export const deleteQueue: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteQueue",
 }));
 export type GetQueueError =
   | AccessDeniedException
@@ -1788,6 +1828,7 @@ export const getQueue: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetQueue",
 }));
 export type ListQueuesError =
   | AccessDeniedException
@@ -1831,6 +1872,7 @@ export const listQueues: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListQueues",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",

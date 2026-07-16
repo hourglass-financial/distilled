@@ -9,6 +9,22 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface ExpireInquirySessionsInput {
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  meta?: { "inquiry-ids": ReadonlyArray<string> };
+}
 export const ExpireInquirySessionsInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
@@ -38,10 +54,149 @@ export const ExpireInquirySessionsInput =
         "inquiry-ids": Schema.Array(Schema.String),
       }),
     ),
-  }).pipe(T.Http({ method: "POST", path: "/inquiry-sessions/expire-all" }));
-export type ExpireInquirySessionsInput = typeof ExpireInquirySessionsInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/inquiry-sessions/expire-all" }),
+  ) as unknown as Schema.Codec<ExpireInquirySessionsInput>;
 
 // Output Schema
+export interface ExpireInquirySessionsOutput {
+  data: ReadonlyArray<{
+    type?: string;
+    id?: string;
+    attributes?: {
+      status?: string;
+      "created-at"?: string;
+      "started-at"?: string | null;
+      "expired-at"?: string | null;
+      "ip-address"?: string | null;
+      "user-agent"?: string | null;
+      "os-name"?: string | null;
+      "os-full-version"?: string | null;
+      "device-type"?: string | null;
+      "device-name"?: string | null;
+      "browser-name"?: string | null;
+      "browser-full-version"?: string | null;
+      "mobile-sdk-name"?: string | null;
+      "mobile-sdk-full-version"?: string | null;
+      "device-handoff-method"?: string | null;
+      "is-proxy"?: boolean | null;
+      "is-tor"?: boolean | null;
+      "is-datacenter"?: boolean | null;
+      "is-vpn"?: boolean | null;
+      "threat-level"?: string | null;
+      "country-code"?: string | null;
+      "country-name"?: string | null;
+      "region-code"?: string | null;
+      "region-name"?: string | null;
+      latitude?: number | null;
+      longitude?: number | null;
+      "gps-latitude"?: number | null;
+      "gps-longitude"?: number | null;
+      "gps-precision"?: string | null;
+      "ip-connection-type"?: string | null;
+      "ip-isp"?: string | null;
+      "network-organization"?: string | null;
+    };
+    relationships?: {
+      inquiry?: { data?: { type?: string; id?: string } };
+      device?: { data?: { type?: string; id?: string } | null };
+      network?: { data?: { type?: string; id?: string } | null };
+    };
+  }>;
+  included?: ReadonlyArray<
+    | {
+        type?: string;
+        id?: string;
+        attributes?: {
+          "device-vendor-id"?: string | null;
+          "device-fingerprint"?: string | null;
+          "browser-fingerprint"?: string | null;
+        };
+      }
+    | {
+        type: string;
+        id: string;
+        attributes: {
+          status: string;
+          "reference-id": string | null;
+          note: string | null;
+          behaviors: Record<string, unknown> | null;
+          tags: ReadonlyArray<string | null>;
+          creator: string;
+          "reviewer-comment": string | null;
+          "created-at": string;
+          "updated-at": string;
+          "started-at": string | null;
+          "expires-at": string | null;
+          "completed-at": string | null;
+          "failed-at": string | null;
+          "marked-for-review-at": string | null;
+          "decisioned-at": string | null;
+          "expired-at": string | null;
+          "redacted-at": string | null;
+          "previous-step-name": string | null;
+          "next-step-name": string | null;
+          fields: Record<
+            string,
+            | { type: "string"; value: string | null }
+            | { type: "choices"; value: string | null }
+            | { type: "multi_choices"; value: ReadonlyArray<string> }
+            | { type: "boolean"; value: boolean | null }
+            | { type: "number"; value: number | null }
+            | { type: "date"; value: string | null }
+            | {
+                type: "generic";
+                value: { id: string; type: "Document::Generic" } | null;
+              }
+            | {
+                type: "government_id";
+                value: { id: string; type: "Document::GovernmentId" } | null;
+              }
+            | {
+                type: "selfie";
+                value: { id: string; type: "Selfie::ProfileAndCenter" } | null;
+              }
+            | { type: "json"; value: unknown }
+          >;
+        };
+        relationships: {
+          account?: { data?: { id?: string; type?: string } | null };
+          documents?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+          template?: { data?: { id?: string; type?: string } | null };
+          "inquiry-template"?: { data?: { id?: string; type?: string } | null };
+          "inquiry-template-version"?: {
+            data?: { id?: string; type?: string } | null;
+          };
+          reports?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+          transaction?: { data?: { id?: string; type?: string } | null };
+          reviewer?: { data?: { id?: string; type?: string } | null };
+          selfies?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+          sessions?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+          verifications?: {
+            data?: ReadonlyArray<{ id?: string; type?: string }>;
+          };
+        };
+      }
+    | {
+        type?: string;
+        id?: string;
+        attributes?: {
+          "created-at"?: string;
+          "ip-address"?: string | null;
+          "service-provider"?: string | null;
+          "service-type"?: string | null;
+          "proxy-type"?: string | null;
+          "threat-level"?: string | null;
+          "country-code"?: string | null;
+          "country-name"?: string | null;
+          "region-code"?: string | null;
+          "region-name"?: string | null;
+          latitude?: number | null;
+          longitude?: number | null;
+        };
+      }
+  >;
+}
 export const ExpireInquirySessionsOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Array(
@@ -133,9 +288,7 @@ export const ExpireInquirySessionsOutput =
       }),
     ),
     included: Schema.optional(Schema.Array(Schema.Unknown)),
-  });
-export type ExpireInquirySessionsOutput =
-  typeof ExpireInquirySessionsOutput.Type;
+  }) as unknown as Schema.Codec<ExpireInquirySessionsOutput>;
 
 // The operation
 /**

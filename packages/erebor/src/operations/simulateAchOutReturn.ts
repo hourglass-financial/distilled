@@ -4,6 +4,11 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface SimulateAchOutReturnInput {
+  id: string;
+  return_code?: string;
+  ereborVersion?: string;
+}
 export const SimulateAchOutReturnInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
@@ -11,16 +16,20 @@ export const SimulateAchOutReturnInput =
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
-  }).pipe(T.Http({ method: "POST", path: "/simulation/ach_out/{id}/return" }));
-export type SimulateAchOutReturnInput = typeof SimulateAchOutReturnInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/simulation/ach_out/{id}/return" }),
+  ) as unknown as Schema.Codec<SimulateAchOutReturnInput>;
 
 // Output Schema
+export interface SimulateAchOutReturnOutput {
+  id: string;
+  return_code: string;
+}
 export const SimulateAchOutReturnOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
     return_code: Schema.String,
-  });
-export type SimulateAchOutReturnOutput = typeof SimulateAchOutReturnOutput.Type;
+  }) as unknown as Schema.Codec<SimulateAchOutReturnOutput>;
 
 // The operation
 /**

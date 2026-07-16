@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -1983,11 +1983,18 @@ export const DescribeConfigRuleEvaluationStatusResponse =
   }) as any as S.Schema<DescribeConfigRuleEvaluationStatusResponse>;
 export type EvaluationMode = "DETECTIVE" | "PROACTIVE" | (string & {});
 export const EvaluationMode = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export type RuleEvaluationVisibility = "EXTERNAL" | "INTERNAL" | (string & {});
+export const RuleEvaluationVisibility = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface DescribeConfigRulesFilters {
   EvaluationMode?: EvaluationMode;
+  RuleEvaluationVisibility?: RuleEvaluationVisibility;
 }
 export const DescribeConfigRulesFilters = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
-  () => S.Struct({ EvaluationMode: S.optional(EvaluationMode) }),
+  () =>
+    S.Struct({
+      EvaluationMode: S.optional(EvaluationMode),
+      RuleEvaluationVisibility: S.optional(RuleEvaluationVisibility),
+    }),
 ).annotate({
   identifier: "DescribeConfigRulesFilters",
 }) as any as S.Schema<DescribeConfigRulesFilters>;
@@ -2020,11 +2027,14 @@ export type ComplianceResourceTypes = string[];
 export const ComplianceResourceTypes = /*@__PURE__*/ /*#__PURE__*/ S.Array(
   S.String,
 );
+export type ServicePrincipals = string[];
+export const ServicePrincipals = /*@__PURE__*/ /*#__PURE__*/ S.Array(S.String);
 export interface Scope {
   ComplianceResourceTypes?: string[];
   TagKey?: string;
   TagValue?: string;
   ComplianceResourceId?: string;
+  ServicePrincipals?: string[];
 }
 export const Scope = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -2032,6 +2042,7 @@ export const Scope = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     TagKey: S.optional(S.String),
     TagValue: S.optional(S.String),
     ComplianceResourceId: S.optional(S.String),
+    ServicePrincipals: S.optional(ServicePrincipals),
   }),
 ).annotate({ identifier: "Scope" }) as any as S.Schema<Scope>;
 export type Owner = "CUSTOM_LAMBDA" | "AWS" | "CUSTOM_POLICY" | (string & {});
@@ -2127,6 +2138,7 @@ export interface ConfigRule {
   ConfigRuleState?: ConfigRuleState;
   CreatedBy?: string;
   EvaluationModes?: EvaluationModeConfiguration[];
+  RuleEvaluationVisibility?: RuleEvaluationVisibility;
 }
 export const ConfigRule = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -2141,6 +2153,7 @@ export const ConfigRule = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     ConfigRuleState: S.optional(ConfigRuleState),
     CreatedBy: S.optional(S.String),
     EvaluationModes: S.optional(EvaluationModes),
+    RuleEvaluationVisibility: S.optional(RuleEvaluationVisibility),
   }),
 ).annotate({ identifier: "ConfigRule" }) as any as S.Schema<ConfigRule>;
 export type ConfigRules = ConfigRule[];
@@ -6764,6 +6777,7 @@ export const associateResourceTypes: API.OperationMethod<
     NoSuchConfigurationRecorderException,
     ValidationException,
   ],
+  operationName: "AssociateResourceTypes",
 }));
 export type BatchGetAggregateResourceConfigError =
   | NoSuchConfigurationAggregatorException
@@ -6786,6 +6800,7 @@ export const batchGetAggregateResourceConfig: API.OperationMethod<
   input: BatchGetAggregateResourceConfigRequest,
   output: BatchGetAggregateResourceConfigResponse,
   errors: [NoSuchConfigurationAggregatorException, ValidationException],
+  operationName: "BatchGetAggregateResourceConfig",
 }));
 export type BatchGetResourceConfigError =
   | NoAvailableConfigurationRecorderException
@@ -6815,6 +6830,7 @@ export const batchGetResourceConfig: API.OperationMethod<
   input: BatchGetResourceConfigRequest,
   output: BatchGetResourceConfigResponse,
   errors: [NoAvailableConfigurationRecorderException, ValidationException],
+  operationName: "BatchGetResourceConfig",
 }));
 export type DeleteAggregationAuthorizationError =
   | InvalidParameterValueException
@@ -6832,6 +6848,7 @@ export const deleteAggregationAuthorization: API.OperationMethod<
   input: DeleteAggregationAuthorizationRequest,
   output: DeleteAggregationAuthorizationResponse,
   errors: [InvalidParameterValueException],
+  operationName: "DeleteAggregationAuthorization",
 }));
 export type DeleteConfigRuleError =
   | NoSuchConfigRuleException
@@ -6871,6 +6888,7 @@ export const deleteConfigRule: API.OperationMethod<
   input: DeleteConfigRuleRequest,
   output: DeleteConfigRuleResponse,
   errors: [NoSuchConfigRuleException, ResourceInUseException],
+  operationName: "DeleteConfigRule",
 }));
 export type DeleteConfigurationAggregatorError =
   | NoSuchConfigurationAggregatorException
@@ -6888,6 +6906,7 @@ export const deleteConfigurationAggregator: API.OperationMethod<
   input: DeleteConfigurationAggregatorRequest,
   output: DeleteConfigurationAggregatorResponse,
   errors: [NoSuchConfigurationAggregatorException],
+  operationName: "DeleteConfigurationAggregator",
 }));
 export type DeleteConfigurationRecorderError =
   | NoSuchConfigurationRecorderException
@@ -6912,6 +6931,7 @@ export const deleteConfigurationRecorder: API.OperationMethod<
   input: DeleteConfigurationRecorderRequest,
   output: DeleteConfigurationRecorderResponse,
   errors: [NoSuchConfigurationRecorderException, UnmodifiableEntityException],
+  operationName: "DeleteConfigurationRecorder",
 }));
 export type DeleteConformancePackError =
   | NoSuchConformancePackException
@@ -6945,6 +6965,7 @@ export const deleteConformancePack: API.OperationMethod<
   input: DeleteConformancePackRequest,
   output: DeleteConformancePackResponse,
   errors: [NoSuchConformancePackException, ResourceInUseException],
+  operationName: "DeleteConformancePack",
 }));
 export type DeleteDeliveryChannelError =
   | LastDeliveryChannelDeleteFailedException
@@ -6967,6 +6988,7 @@ export const deleteDeliveryChannel: API.OperationMethod<
     LastDeliveryChannelDeleteFailedException,
     NoSuchDeliveryChannelException,
   ],
+  operationName: "DeleteDeliveryChannel",
 }));
 export type DeleteEvaluationResultsError =
   | NoSuchConfigRuleException
@@ -6987,6 +7009,7 @@ export const deleteEvaluationResults: API.OperationMethod<
   input: DeleteEvaluationResultsRequest,
   output: DeleteEvaluationResultsResponse,
   errors: [NoSuchConfigRuleException, ResourceInUseException],
+  operationName: "DeleteEvaluationResults",
 }));
 export type DeleteOrganizationConfigRuleError =
   | NoSuchOrganizationConfigRuleException
@@ -7028,6 +7051,7 @@ export const deleteOrganizationConfigRule: API.OperationMethod<
     OrganizationAccessDeniedException,
     ResourceInUseException,
   ],
+  operationName: "DeleteOrganizationConfigRule",
 }));
 export type DeleteOrganizationConformancePackError =
   | NoSuchOrganizationConformancePackException
@@ -7070,6 +7094,7 @@ export const deleteOrganizationConformancePack: API.OperationMethod<
     OrganizationAccessDeniedException,
     ResourceInUseException,
   ],
+  operationName: "DeleteOrganizationConformancePack",
 }));
 export type DeletePendingAggregationRequestError =
   | InvalidParameterValueException
@@ -7087,6 +7112,7 @@ export const deletePendingAggregationRequest: API.OperationMethod<
   input: DeletePendingAggregationRequestRequest,
   output: DeletePendingAggregationRequestResponse,
   errors: [InvalidParameterValueException],
+  operationName: "DeletePendingAggregationRequest",
 }));
 export type DeleteRemediationConfigurationError =
   | InsufficientPermissionsException
@@ -7111,6 +7137,7 @@ export const deleteRemediationConfiguration: API.OperationMethod<
     NoSuchRemediationConfigurationException,
     RemediationInProgressException,
   ],
+  operationName: "DeleteRemediationConfiguration",
 }));
 export type DeleteRemediationExceptionsError =
   | NoSuchRemediationExceptionException
@@ -7130,6 +7157,7 @@ export const deleteRemediationExceptions: API.OperationMethod<
   input: DeleteRemediationExceptionsRequest,
   output: DeleteRemediationExceptionsResponse,
   errors: [NoSuchRemediationExceptionException],
+  operationName: "DeleteRemediationExceptions",
 }));
 export type DeleteResourceConfigError =
   | NoRunningConfigurationRecorderException
@@ -7147,6 +7175,7 @@ export const deleteResourceConfig: API.OperationMethod<
   input: DeleteResourceConfigRequest,
   output: DeleteResourceConfigResponse,
   errors: [NoRunningConfigurationRecorderException, ValidationException],
+  operationName: "DeleteResourceConfig",
 }));
 export type DeleteRetentionConfigurationError =
   | InvalidParameterValueException
@@ -7167,6 +7196,7 @@ export const deleteRetentionConfiguration: API.OperationMethod<
     InvalidParameterValueException,
     NoSuchRetentionConfigurationException,
   ],
+  operationName: "DeleteRetentionConfiguration",
 }));
 export type DeleteServiceLinkedConfigurationRecorderError =
   | ConflictException
@@ -7199,6 +7229,7 @@ export const deleteServiceLinkedConfigurationRecorder: API.OperationMethod<
     NoSuchConfigurationRecorderException,
     ValidationException,
   ],
+  operationName: "DeleteServiceLinkedConfigurationRecorder",
 }));
 export type DeleteStoredQueryError =
   | ResourceNotFoundException
@@ -7216,6 +7247,7 @@ export const deleteStoredQuery: API.OperationMethod<
   input: DeleteStoredQueryRequest,
   output: DeleteStoredQueryResponse,
   errors: [ResourceNotFoundException, ValidationException],
+  operationName: "DeleteStoredQuery",
 }));
 export type DeliverConfigSnapshotError =
   | NoAvailableConfigurationRecorderException
@@ -7249,6 +7281,7 @@ export const deliverConfigSnapshot: API.OperationMethod<
     NoRunningConfigurationRecorderException,
     NoSuchDeliveryChannelException,
   ],
+  operationName: "DeliverConfigSnapshot",
 }));
 export type DescribeAggregateComplianceByConfigRulesError =
   | InvalidLimitException
@@ -7293,6 +7326,7 @@ export const describeAggregateComplianceByConfigRules: API.OperationMethod<
     NoSuchConfigurationAggregatorException,
     ValidationException,
   ],
+  operationName: "DescribeAggregateComplianceByConfigRules",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7340,6 +7374,7 @@ export const describeAggregateComplianceByConformancePacks: API.OperationMethod<
     NoSuchConfigurationAggregatorException,
     ValidationException,
   ],
+  operationName: "DescribeAggregateComplianceByConformancePacks",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7384,6 +7419,7 @@ export const describeAggregationAuthorizations: API.OperationMethod<
     InvalidNextTokenException,
     InvalidParameterValueException,
   ],
+  operationName: "DescribeAggregationAuthorizations",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7456,6 +7492,7 @@ export const describeComplianceByConfigRule: API.OperationMethod<
     InvalidParameterValueException,
     NoSuchConfigRuleException,
   ],
+  operationName: "DescribeComplianceByConfigRule",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7522,6 +7559,7 @@ export const describeComplianceByResource: API.OperationMethod<
   input: DescribeComplianceByResourceRequest,
   output: DescribeComplianceByResourceResponse,
   errors: [InvalidNextTokenException, InvalidParameterValueException],
+  operationName: "DescribeComplianceByResource",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7566,6 +7604,7 @@ export const describeConfigRuleEvaluationStatus: API.OperationMethod<
     InvalidParameterValueException,
     NoSuchConfigRuleException,
   ],
+  operationName: "DescribeConfigRuleEvaluationStatus",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7609,6 +7648,7 @@ export const describeConfigRules: API.OperationMethod<
     InvalidParameterValueException,
     NoSuchConfigRuleException,
   ],
+  operationName: "DescribeConfigRules",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7656,6 +7696,7 @@ export const describeConfigurationAggregators: API.OperationMethod<
     InvalidParameterValueException,
     NoSuchConfigurationAggregatorException,
   ],
+  operationName: "DescribeConfigurationAggregators",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7702,6 +7743,7 @@ export const describeConfigurationAggregatorSourcesStatus: API.OperationMethod<
     InvalidParameterValueException,
     NoSuchConfigurationAggregatorException,
   ],
+  operationName: "DescribeConfigurationAggregatorSourcesStatus",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7730,6 +7772,7 @@ export const describeConfigurationRecorders: API.OperationMethod<
   input: DescribeConfigurationRecordersRequest,
   output: DescribeConfigurationRecordersResponse,
   errors: [NoSuchConfigurationRecorderException, ValidationException],
+  operationName: "DescribeConfigurationRecorders",
 }));
 export type DescribeConfigurationRecorderStatusError =
   | NoSuchConfigurationRecorderException
@@ -7755,6 +7798,7 @@ export const describeConfigurationRecorderStatus: API.OperationMethod<
   input: DescribeConfigurationRecorderStatusRequest,
   output: DescribeConfigurationRecorderStatusResponse,
   errors: [NoSuchConfigurationRecorderException, ValidationException],
+  operationName: "DescribeConfigurationRecorderStatus",
 }));
 export type DescribeConformancePackComplianceError =
   | InvalidLimitException
@@ -7798,6 +7842,7 @@ export const describeConformancePackCompliance: API.OperationMethod<
     NoSuchConfigRuleInConformancePackException,
     NoSuchConformancePackException,
   ],
+  operationName: "DescribeConformancePackCompliance",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7843,6 +7888,7 @@ export const describeConformancePacks: API.OperationMethod<
     InvalidParameterValueException,
     NoSuchConformancePackException,
   ],
+  operationName: "DescribeConformancePacks",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7888,6 +7934,7 @@ export const describeConformancePackStatus: API.OperationMethod<
     InvalidNextTokenException,
     InvalidParameterValueException,
   ],
+  operationName: "DescribeConformancePackStatus",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7915,6 +7962,7 @@ export const describeDeliveryChannels: API.OperationMethod<
   input: DescribeDeliveryChannelsRequest,
   output: DescribeDeliveryChannelsResponse,
   errors: [NoSuchDeliveryChannelException],
+  operationName: "DescribeDeliveryChannels",
 }));
 export type DescribeDeliveryChannelStatusError =
   | NoSuchDeliveryChannelException
@@ -7937,6 +7985,7 @@ export const describeDeliveryChannelStatus: API.OperationMethod<
   input: DescribeDeliveryChannelStatusRequest,
   output: DescribeDeliveryChannelStatusResponse,
   errors: [NoSuchDeliveryChannelException],
+  operationName: "DescribeDeliveryChannelStatus",
 }));
 export type DescribeOrganizationConfigRulesError =
   | InvalidLimitException
@@ -7994,6 +8043,7 @@ export const describeOrganizationConfigRules: API.OperationMethod<
     NoSuchOrganizationConfigRuleException,
     OrganizationAccessDeniedException,
   ],
+  operationName: "DescribeOrganizationConfigRules",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8046,6 +8096,7 @@ export const describeOrganizationConfigRuleStatuses: API.OperationMethod<
     NoSuchOrganizationConfigRuleException,
     OrganizationAccessDeniedException,
   ],
+  operationName: "DescribeOrganizationConfigRuleStatuses",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8109,6 +8160,7 @@ export const describeOrganizationConformancePacks: API.OperationMethod<
     NoSuchOrganizationConformancePackException,
     OrganizationAccessDeniedException,
   ],
+  operationName: "DescribeOrganizationConformancePacks",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8161,6 +8213,7 @@ export const describeOrganizationConformancePackStatuses: API.OperationMethod<
     NoSuchOrganizationConformancePackException,
     OrganizationAccessDeniedException,
   ],
+  operationName: "DescribeOrganizationConformancePackStatuses",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8204,6 +8257,7 @@ export const describePendingAggregationRequests: API.OperationMethod<
     InvalidNextTokenException,
     InvalidParameterValueException,
   ],
+  operationName: "DescribePendingAggregationRequests",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8224,6 +8278,7 @@ export const describeRemediationConfigurations: API.OperationMethod<
   input: DescribeRemediationConfigurationsRequest,
   output: DescribeRemediationConfigurationsResponse,
   errors: [],
+  operationName: "DescribeRemediationConfigurations",
 }));
 export type DescribeRemediationExceptionsError =
   | InvalidNextTokenException
@@ -8264,6 +8319,7 @@ export const describeRemediationExceptions: API.OperationMethod<
   input: DescribeRemediationExceptionsRequest,
   output: DescribeRemediationExceptionsResponse,
   errors: [InvalidNextTokenException, InvalidParameterValueException],
+  operationName: "DescribeRemediationExceptions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8307,6 +8363,7 @@ export const describeRemediationExecutionStatus: API.OperationMethod<
     InvalidParameterValueException,
     NoSuchRemediationConfigurationException,
   ],
+  operationName: "DescribeRemediationExecutionStatus",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8356,6 +8413,7 @@ export const describeRetentionConfigurations: API.OperationMethod<
     InvalidParameterValueException,
     NoSuchRetentionConfigurationException,
   ],
+  operationName: "DescribeRetentionConfigurations",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8385,6 +8443,7 @@ export const disassociateResourceTypes: API.OperationMethod<
     NoSuchConfigurationRecorderException,
     ValidationException,
   ],
+  operationName: "DisassociateResourceTypes",
 }));
 export type GetAggregateComplianceDetailsByConfigRuleError =
   | InvalidLimitException
@@ -8431,6 +8490,7 @@ export const getAggregateComplianceDetailsByConfigRule: API.OperationMethod<
     NoSuchConfigurationAggregatorException,
     ValidationException,
   ],
+  operationName: "GetAggregateComplianceDetailsByConfigRule",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8481,6 +8541,7 @@ export const getAggregateConfigRuleComplianceSummary: API.OperationMethod<
     NoSuchConfigurationAggregatorException,
     ValidationException,
   ],
+  operationName: "GetAggregateConfigRuleComplianceSummary",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8527,6 +8588,7 @@ export const getAggregateConformancePackComplianceSummary: API.OperationMethod<
     NoSuchConfigurationAggregatorException,
     ValidationException,
   ],
+  operationName: "GetAggregateConformancePackComplianceSummary",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8574,6 +8636,7 @@ export const getAggregateDiscoveredResourceCounts: API.OperationMethod<
     NoSuchConfigurationAggregatorException,
     ValidationException,
   ],
+  operationName: "GetAggregateDiscoveredResourceCounts",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8605,6 +8668,7 @@ export const getAggregateResourceConfig: API.OperationMethod<
     ResourceNotDiscoveredException,
     ValidationException,
   ],
+  operationName: "GetAggregateResourceConfig",
 }));
 export type GetComplianceDetailsByConfigRuleError =
   | InvalidNextTokenException
@@ -8645,6 +8709,7 @@ export const getComplianceDetailsByConfigRule: API.OperationMethod<
     InvalidParameterValueException,
     NoSuchConfigRuleException,
   ],
+  operationName: "GetComplianceDetailsByConfigRule",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8685,6 +8750,7 @@ export const getComplianceDetailsByResource: API.OperationMethod<
   input: GetComplianceDetailsByResourceRequest,
   output: GetComplianceDetailsByResourceResponse,
   errors: [InvalidParameterValueException],
+  operationName: "GetComplianceDetailsByResource",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8705,6 +8771,7 @@ export const getComplianceSummaryByConfigRule: API.OperationMethod<
   input: GetComplianceSummaryByConfigRuleRequest,
   output: GetComplianceSummaryByConfigRuleResponse,
   errors: [],
+  operationName: "GetComplianceSummaryByConfigRule",
 }));
 export type GetComplianceSummaryByResourceTypeError =
   | InvalidParameterValueException
@@ -8724,6 +8791,7 @@ export const getComplianceSummaryByResourceType: API.OperationMethod<
   input: GetComplianceSummaryByResourceTypeRequest,
   output: GetComplianceSummaryByResourceTypeResponse,
   errors: [InvalidParameterValueException],
+  operationName: "GetComplianceSummaryByResourceType",
 }));
 export type GetConformancePackComplianceDetailsError =
   | InvalidLimitException
@@ -8765,6 +8833,7 @@ export const getConformancePackComplianceDetails: API.OperationMethod<
     NoSuchConfigRuleInConformancePackException,
     NoSuchConformancePackException,
   ],
+  operationName: "GetConformancePackComplianceDetails",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8807,6 +8876,7 @@ export const getConformancePackComplianceSummary: API.OperationMethod<
     InvalidNextTokenException,
     NoSuchConformancePackException,
   ],
+  operationName: "GetConformancePackComplianceSummary",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8827,6 +8897,7 @@ export const getCustomRulePolicy: API.OperationMethod<
   input: GetCustomRulePolicyRequest,
   output: GetCustomRulePolicyResponse,
   errors: [NoSuchConfigRuleException],
+  operationName: "GetCustomRulePolicy",
 }));
 export type GetDiscoveredResourceCountsError =
   | InvalidLimitException
@@ -8906,6 +8977,7 @@ export const getDiscoveredResourceCounts: API.OperationMethod<
     InvalidNextTokenException,
     ValidationException,
   ],
+  operationName: "GetDiscoveredResourceCounts",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -8950,6 +9022,7 @@ export const getOrganizationConfigRuleDetailedStatus: API.OperationMethod<
     NoSuchOrganizationConfigRuleException,
     OrganizationAccessDeniedException,
   ],
+  operationName: "GetOrganizationConfigRuleDetailedStatus",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8995,6 +9068,7 @@ export const getOrganizationConformancePackDetailedStatus: API.OperationMethod<
     NoSuchOrganizationConformancePackException,
     OrganizationAccessDeniedException,
   ],
+  operationName: "GetOrganizationConformancePackDetailedStatus",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -9021,6 +9095,7 @@ export const getOrganizationCustomRulePolicy: API.OperationMethod<
     NoSuchOrganizationConfigRuleException,
     OrganizationAccessDeniedException,
   ],
+  operationName: "GetOrganizationCustomRulePolicy",
 }));
 export type GetResourceConfigHistoryError =
   | InvalidLimitException
@@ -9092,6 +9167,7 @@ export const getResourceConfigHistory: API.OperationMethod<
     ResourceNotDiscoveredException,
     ValidationException,
   ],
+  operationName: "GetResourceConfigHistory",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -9119,6 +9195,7 @@ export const getResourceEvaluationSummary: API.OperationMethod<
   input: GetResourceEvaluationSummaryRequest,
   output: GetResourceEvaluationSummaryResponse,
   errors: [ResourceNotFoundException],
+  operationName: "GetResourceEvaluationSummary",
 }));
 export type GetStoredQueryError =
   | ResourceNotFoundException
@@ -9136,6 +9213,7 @@ export const getStoredQuery: API.OperationMethod<
   input: GetStoredQueryRequest,
   output: GetStoredQueryResponse,
   errors: [ResourceNotFoundException, ValidationException],
+  operationName: "GetStoredQuery",
 }));
 export type ListAggregateDiscoveredResourcesError =
   | InvalidLimitException
@@ -9179,6 +9257,7 @@ export const listAggregateDiscoveredResources: API.OperationMethod<
     NoSuchConfigurationAggregatorException,
     ValidationException,
   ],
+  operationName: "ListAggregateDiscoveredResources",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -9216,6 +9295,7 @@ export const listConfigurationRecorders: API.OperationMethod<
   input: ListConfigurationRecordersRequest,
   output: ListConfigurationRecordersResponse,
   errors: [ValidationException],
+  operationName: "ListConfigurationRecorders",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -9264,6 +9344,7 @@ export const listConformancePackComplianceScores: API.OperationMethod<
     InvalidNextTokenException,
     InvalidParameterValueException,
   ],
+  operationName: "ListConformancePackComplianceScores",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -9341,6 +9422,7 @@ export const listDiscoveredResources: API.OperationMethod<
     NoAvailableConfigurationRecorderException,
     ValidationException,
   ],
+  operationName: "ListDiscoveredResources",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -9384,6 +9466,7 @@ export const listResourceEvaluations: API.OperationMethod<
     InvalidParameterValueException,
     InvalidTimeRangeException,
   ],
+  operationName: "ListResourceEvaluations",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -9422,6 +9505,7 @@ export const listStoredQueries: API.OperationMethod<
   input: ListStoredQueriesRequest,
   output: ListStoredQueriesResponse,
   errors: [InvalidNextTokenException, ValidationException],
+  operationName: "ListStoredQueries",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -9466,6 +9550,7 @@ export const listTagsForResource: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "ListTagsForResource",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -9496,6 +9581,7 @@ export const putAggregationAuthorization: API.OperationMethod<
   input: PutAggregationAuthorizationRequest,
   output: PutAggregationAuthorizationResponse,
   errors: [InvalidParameterValueException],
+  operationName: "PutAggregationAuthorization",
 }));
 export type PutConfigRuleError =
   | InsufficientPermissionsException
@@ -9573,6 +9659,7 @@ export const putConfigRule: API.OperationMethod<
     NoAvailableConfigurationRecorderException,
     ResourceInUseException,
   ],
+  operationName: "PutConfigRule",
 }));
 export type PutConfigurationAggregatorError =
   | InvalidParameterValueException
@@ -9622,6 +9709,7 @@ export const putConfigurationAggregator: API.OperationMethod<
     OrganizationAccessDeniedException,
     OrganizationAllFeaturesNotEnabledException,
   ],
+  operationName: "PutConfigurationAggregator",
 }));
 export type PutConfigurationRecorderError =
   | InvalidConfigurationRecorderNameException
@@ -9675,6 +9763,7 @@ export const putConfigurationRecorder: API.OperationMethod<
     UnmodifiableEntityException,
     ValidationException,
   ],
+  operationName: "PutConfigurationRecorder",
 }));
 export type PutConformancePackError =
   | ConformancePackTemplateValidationException
@@ -9728,6 +9817,7 @@ export const putConformancePack: API.OperationMethod<
     MaxNumberOfConformancePacksExceededException,
     ResourceInUseException,
   ],
+  operationName: "PutConformancePack",
 }));
 export type PutDeliveryChannelError =
   | InsufficientDeliveryPolicyException
@@ -9772,6 +9862,7 @@ export const putDeliveryChannel: API.OperationMethod<
     NoAvailableConfigurationRecorderException,
     NoSuchBucketException,
   ],
+  operationName: "PutDeliveryChannel",
 }));
 export type PutEvaluationsError =
   | InvalidParameterValueException
@@ -9796,6 +9887,7 @@ export const putEvaluations: API.OperationMethod<
     InvalidResultTokenException,
     NoSuchConfigRuleException,
   ],
+  operationName: "PutEvaluations",
 }));
 export type PutExternalEvaluationError =
   | InvalidParameterValueException
@@ -9814,6 +9906,7 @@ export const putExternalEvaluation: API.OperationMethod<
   input: PutExternalEvaluationRequest,
   output: PutExternalEvaluationResponse,
   errors: [InvalidParameterValueException, NoSuchConfigRuleException],
+  operationName: "PutExternalEvaluation",
 }));
 export type PutOrganizationConfigRuleError =
   | InsufficientPermissionsException
@@ -9887,6 +9980,7 @@ export const putOrganizationConfigRule: API.OperationMethod<
     ResourceInUseException,
     ValidationException,
   ],
+  operationName: "PutOrganizationConfigRule",
 }));
 export type PutOrganizationConformancePackError =
   | InsufficientPermissionsException
@@ -9953,6 +10047,7 @@ export const putOrganizationConformancePack: API.OperationMethod<
     ResourceInUseException,
     ValidationException,
   ],
+  operationName: "PutOrganizationConformancePack",
 }));
 export type PutRemediationConfigurationsError =
   | InsufficientPermissionsException
@@ -9997,6 +10092,7 @@ export const putRemediationConfigurations: API.OperationMethod<
   input: PutRemediationConfigurationsRequest,
   output: PutRemediationConfigurationsResponse,
   errors: [InsufficientPermissionsException, InvalidParameterValueException],
+  operationName: "PutRemediationConfigurations",
 }));
 export type PutRemediationExceptionsError =
   | InsufficientPermissionsException
@@ -10047,6 +10143,7 @@ export const putRemediationExceptions: API.OperationMethod<
   input: PutRemediationExceptionsRequest,
   output: PutRemediationExceptionsResponse,
   errors: [InsufficientPermissionsException, InvalidParameterValueException],
+  operationName: "PutRemediationExceptions",
 }));
 export type PutResourceConfigError =
   | InsufficientPermissionsException
@@ -10080,6 +10177,7 @@ export const putResourceConfig: API.OperationMethod<
     NoRunningConfigurationRecorderException,
     ValidationException,
   ],
+  operationName: "PutResourceConfig",
 }));
 export type PutRetentionConfigurationError =
   | InvalidParameterValueException
@@ -10109,6 +10207,7 @@ export const putRetentionConfiguration: API.OperationMethod<
     InvalidParameterValueException,
     MaxNumberOfRetentionConfigurationsExceededException,
   ],
+  operationName: "PutRetentionConfiguration",
 }));
 export type PutServiceLinkedConfigurationRecorderError =
   | ConflictException
@@ -10149,6 +10248,7 @@ export const putServiceLinkedConfigurationRecorder: API.OperationMethod<
     LimitExceededException,
     ValidationException,
   ],
+  operationName: "PutServiceLinkedConfigurationRecorder",
 }));
 export type PutStoredQueryError =
   | ResourceConcurrentModificationException
@@ -10177,6 +10277,7 @@ export const putStoredQuery: API.OperationMethod<
     TooManyTagsException,
     ValidationException,
   ],
+  operationName: "PutStoredQuery",
 }));
 export type SelectAggregateResourceConfigError =
   | InvalidExpressionException
@@ -10228,6 +10329,7 @@ export const selectAggregateResourceConfig: API.OperationMethod<
     InvalidNextTokenException,
     NoSuchConfigurationAggregatorException,
   ],
+  operationName: "SelectAggregateResourceConfig",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -10276,6 +10378,7 @@ export const selectResourceConfig: API.OperationMethod<
     InvalidLimitException,
     InvalidNextTokenException,
   ],
+  operationName: "SelectResourceConfig",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -10345,6 +10448,7 @@ export const startConfigRulesEvaluation: API.OperationMethod<
     NoSuchConfigRuleException,
     ResourceInUseException,
   ],
+  operationName: "StartConfigRulesEvaluation",
 }));
 export type StartConfigurationRecorderError =
   | NoAvailableDeliveryChannelException
@@ -10370,6 +10474,7 @@ export const startConfigurationRecorder: API.OperationMethod<
     NoSuchConfigurationRecorderException,
     UnmodifiableEntityException,
   ],
+  operationName: "StartConfigurationRecorder",
 }));
 export type StartRemediationExecutionError =
   | InsufficientPermissionsException
@@ -10394,6 +10499,7 @@ export const startRemediationExecution: API.OperationMethod<
     InvalidParameterValueException,
     NoSuchRemediationConfigurationException,
   ],
+  operationName: "StartRemediationExecution",
 }));
 export type StartResourceEvaluationError =
   | IdempotentParameterMismatch
@@ -10422,6 +10528,7 @@ export const startResourceEvaluation: API.OperationMethod<
   input: StartResourceEvaluationRequest,
   output: StartResourceEvaluationResponse,
   errors: [IdempotentParameterMismatch, InvalidParameterValueException],
+  operationName: "StartResourceEvaluation",
 }));
 export type StopConfigurationRecorderError =
   | NoSuchConfigurationRecorderException
@@ -10439,6 +10546,7 @@ export const stopConfigurationRecorder: API.OperationMethod<
   input: StopConfigurationRecorderRequest,
   output: StopConfigurationRecorderResponse,
   errors: [NoSuchConfigurationRecorderException, UnmodifiableEntityException],
+  operationName: "StopConfigurationRecorder",
 }));
 export type TagResourceError =
   | ResourceNotFoundException
@@ -10462,6 +10570,7 @@ export const tagResource: API.OperationMethod<
     TooManyTagsException,
     ValidationException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | ResourceNotFoundException
@@ -10479,4 +10588,5 @@ export const untagResource: API.OperationMethod<
   input: UntagResourceRequest,
   output: UntagResourceResponse,
   errors: [ResourceNotFoundException, ValidationException],
+  operationName: "UntagResource",
 }));

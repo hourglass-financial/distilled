@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
 import * as C from "../category.ts";
@@ -765,6 +765,7 @@ export const deleteSession: API.OperationMethod<
     LimitExceededException,
     NotFoundException,
   ],
+  operationName: "DeleteSession",
 }));
 export type GetSessionError =
   | BadRequestException
@@ -790,6 +791,7 @@ export const getSession: API.OperationMethod<
     LimitExceededException,
     NotFoundException,
   ],
+  operationName: "GetSession",
 }));
 export type PostContentError =
   | BadGatewayException
@@ -886,6 +888,7 @@ export const postContent: API.OperationMethod<
     RequestTimeoutException,
     UnsupportedMediaTypeException,
   ],
+  operationName: "PostContent",
 }));
 export type PostTextError =
   | BadGatewayException
@@ -973,6 +976,7 @@ export const postText: API.OperationMethod<
     LoopDetectedException,
     NotFoundException,
   ],
+  operationName: "PostText",
 }));
 export type PutSessionError =
   | BadGatewayException
@@ -1010,4 +1014,5 @@ export const putSession: API.OperationMethod<
     NotAcceptableException,
     NotFoundException,
   ],
+  operationName: "PutSession",
 }));

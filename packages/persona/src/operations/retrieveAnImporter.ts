@@ -4,6 +4,22 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface RetrieveAnImporterInput {
+  importerId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const RetrieveAnImporterInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     importerId: Schema.String.pipe(T.PathParam()),
@@ -29,16 +45,44 @@ export const RetrieveAnImporterInput =
         "2020-05-18",
       ]),
     ).pipe(T.HttpHeader("Persona-Version")),
-  }).pipe(T.Http({ method: "GET", path: "/importers/{importerId}" }));
-export type RetrieveAnImporterInput = typeof RetrieveAnImporterInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/importers/{importerId}" }),
+  ) as unknown as Schema.Codec<RetrieveAnImporterInput>;
 
 // Output Schema
+export interface RetrieveAnImporterOutput {
+  data: {
+    id?: string;
+    type?: string;
+    attributes?: {
+      "completed-at"?: string | null;
+      "created-at"?: string;
+      "duplicate-count"?: number;
+      "error-count"?: number;
+      status?: string;
+      "successful-count"?: number;
+    };
+  };
+  included?: ReadonlyArray<unknown>;
+}
 export const RetrieveAnImporterOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    data: Schema.Unknown,
+    data: Schema.Struct({
+      id: Schema.optional(Schema.String),
+      type: Schema.optional(Schema.String),
+      attributes: Schema.optional(
+        Schema.Struct({
+          "completed-at": Schema.optional(Schema.NullOr(Schema.String)),
+          "created-at": Schema.optional(Schema.String),
+          "duplicate-count": Schema.optional(Schema.Number),
+          "error-count": Schema.optional(Schema.Number),
+          status: Schema.optional(Schema.String),
+          "successful-count": Schema.optional(Schema.Number),
+        }),
+      ),
+    }),
     included: Schema.optional(Schema.Array(Schema.Unknown)),
-  });
-export type RetrieveAnImporterOutput = typeof RetrieveAnImporterOutput.Type;
+  }) as unknown as Schema.Codec<RetrieveAnImporterOutput>;
 
 // The operation
 /**

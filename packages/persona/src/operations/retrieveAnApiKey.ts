@@ -4,6 +4,22 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden } from "../errors.ts";
 
 // Input Schema
+export interface RetrieveAnApiKeyInput {
+  apiKeyId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const RetrieveAnApiKeyInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   apiKeyId: Schema.String.pipe(T.PathParam()),
   include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
@@ -28,10 +44,40 @@ export const RetrieveAnApiKeyInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "2020-05-18",
     ]),
   ).pipe(T.HttpHeader("Persona-Version")),
-}).pipe(T.Http({ method: "GET", path: "/api-keys/{apiKeyId}" }));
-export type RetrieveAnApiKeyInput = typeof RetrieveAnApiKeyInput.Type;
+}).pipe(
+  T.Http({ method: "GET", path: "/api-keys/{apiKeyId}" }),
+) as unknown as Schema.Codec<RetrieveAnApiKeyInput>;
 
 // Output Schema
+export interface RetrieveAnApiKeyOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      name?: string;
+      note?: string | null;
+      "api-version"?:
+        | "2025-12-08"
+        | "2025-10-27"
+        | "2023-01-05"
+        | "2022-09-01"
+        | "2021-08-18"
+        | "2021-07-05"
+        | "2021-02-21"
+        | "2020-05-18";
+      "api-key-inflection"?: string;
+      "api-attributes-blocklist"?: ReadonlyArray<string | null>;
+      permissions?: ReadonlyArray<string>;
+      "ip-address-allowlist"?: ReadonlyArray<string>;
+      "file-access-token-expires-in"?: number;
+      "last-used-at"?: string | null;
+      "expires-at"?: string | null;
+      "created-at"?: string;
+      value?: string;
+    };
+  };
+  included?: ReadonlyArray<unknown>;
+}
 export const RetrieveAnApiKeyOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
   {
     data: Schema.Struct({
@@ -69,8 +115,7 @@ export const RetrieveAnApiKeyOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
     }),
     included: Schema.optional(Schema.Array(Schema.Unknown)),
   },
-);
-export type RetrieveAnApiKeyOutput = typeof RetrieveAnApiKeyOutput.Type;
+) as unknown as Schema.Codec<RetrieveAnApiKeyOutput>;
 
 // The operation
 /**

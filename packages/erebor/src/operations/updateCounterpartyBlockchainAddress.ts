@@ -4,6 +4,14 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface UpdateCounterpartyBlockchainAddressInput {
+  id: string;
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  description?: string;
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const UpdateCounterpartyBlockchainAddressInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
@@ -23,11 +31,64 @@ export const UpdateCounterpartyBlockchainAddressInput =
       method: "PATCH",
       path: "/counterparty_blockchain_addresses/{id}",
     }),
-  );
-export type UpdateCounterpartyBlockchainAddressInput =
-  typeof UpdateCounterpartyBlockchainAddressInput.Type;
+  ) as unknown as Schema.Codec<UpdateCounterpartyBlockchainAddressInput>;
 
 // Output Schema
+export interface UpdateCounterpartyBlockchainAddressOutput {
+  id: string;
+  type: "COUNTERPARTY_BLOCKCHAIN_ADDRESS";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  customer_id?: string | null;
+  program_id?: string | null;
+  counterparty_id?: string | null;
+  description: string | null;
+  address: string;
+  network: "BASE" | "ETHEREUM" | "INK" | "SOLANA" | "SUI";
+  custodian:
+    | "ANCHORAGE_SG"
+    | "ANCHORAGE_US"
+    | "AQUANOW_CA"
+    | "B2C2_UK"
+    | "B2C2_US"
+    | "BITGO_SG"
+    | "BITGO_US"
+    | "BITSTAMP_US"
+    | "BVNK_US"
+    | "CIRCLE_FR"
+    | "CIRCLE_US"
+    | "CITIBANK_US"
+    | "COINBASE_US"
+    | "COINSMART_CA"
+    | "COPPER_CH"
+    | "COPPER_UK"
+    | "CUMBERLAND_DRW_LLC_US"
+    | "CUMBERLAND_SG"
+    | "EREBOR_BANK_US"
+    | "FALCONX_US"
+    | "FIDELITY_UK"
+    | "FIDELITY_US"
+    | "FIREBLOCKS_APAC"
+    | "FIREBLOCKS_US"
+    | "GALAXY_KY"
+    | "GEMINI_US"
+    | "KRAKEN_BVI"
+    | "KRAKEN_EU_IE"
+    | "KRAKEN_UK"
+    | "KRAKEN_US"
+    | "NUBANK_BR"
+    | "PAXOS_US"
+    | "RAMP_NETWORK_US"
+    | "ROBINHOOD_US"
+    | "WINTERMUTE_GB"
+    | "SELF_HOSTED"
+    | "OTHER";
+  custodian_other?: string | null;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const UpdateCounterpartyBlockchainAddressOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -82,11 +143,11 @@ export const UpdateCounterpartyBlockchainAddressOutput =
       "OTHER",
     ]),
     custodian_other: Schema.optional(Schema.NullOr(Schema.String)),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type UpdateCounterpartyBlockchainAddressOutput =
-  typeof UpdateCounterpartyBlockchainAddressOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<UpdateCounterpartyBlockchainAddressOutput>;
 
 // The operation
 /**

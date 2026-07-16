@@ -3,6 +3,15 @@ import { API } from "../client.ts";
 import * as T from "../traits.ts";
 
 // Input Schema
+export interface ListCounterpartiesInput {
+  page_size?: number;
+  starting_after?: string;
+  ending_before?: string;
+  customer_id?: string;
+  program_id?: string;
+  custom_ref?: string;
+  ereborVersion?: string;
+}
 export const ListCounterpartiesInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     page_size: Schema.optional(Schema.Number),
@@ -14,10 +23,38 @@ export const ListCounterpartiesInput =
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
-  }).pipe(T.Http({ method: "GET", path: "/counterparties" }));
-export type ListCounterpartiesInput = typeof ListCounterpartiesInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/counterparties" }),
+  ) as unknown as Schema.Codec<ListCounterpartiesInput>;
 
 // Output Schema
+export interface ListCounterpartiesOutput {
+  data: ReadonlyArray<{
+    id: string;
+    type: "COUNTERPARTY";
+    url: string;
+    created_at: string;
+    updated_at: string;
+    archived_at?: string | null;
+    customer_id?: string | null;
+    program_id?: string | null;
+    name: string;
+    address: {
+      street_address: string;
+      city: string;
+      country_area?: string | null;
+      postal_code: string;
+      country: string;
+    };
+    custom_ref?: string | null;
+    custom_fields?: Record<string, unknown> | null;
+  }>;
+  has_more: boolean;
+  page_size: number;
+  page_next?: string | null;
+  page_prev?: string | null;
+  url: string;
+}
 export const ListCounterpartiesOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Array(
@@ -38,8 +75,10 @@ export const ListCounterpartiesOutput =
           postal_code: Schema.String,
           country: Schema.String,
         }),
-        custom_ref: Schema.optional(Schema.Unknown),
-        custom_fields: Schema.optional(Schema.Unknown),
+        custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+        custom_fields: Schema.optional(
+          Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+        ),
       }),
     ),
     has_more: Schema.Boolean,
@@ -47,8 +86,7 @@ export const ListCounterpartiesOutput =
     page_next: Schema.optional(Schema.NullOr(Schema.String)),
     page_prev: Schema.optional(Schema.NullOr(Schema.String)),
     url: Schema.String,
-  });
-export type ListCounterpartiesOutput = typeof ListCounterpartiesOutput.Type;
+  }) as unknown as Schema.Codec<ListCounterpartiesOutput>;
 
 // The operation
 /**

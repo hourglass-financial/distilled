@@ -9,6 +9,27 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface ImportNameListsInput {
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  data: {
+    attributes: {
+      file: { data?: string; filename?: string };
+      "list-id": string;
+    };
+  };
+}
 export const ImportNameListsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
   fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
@@ -41,10 +62,25 @@ export const ImportNameListsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "list-id": Schema.String,
     }),
   }),
-}).pipe(T.Http({ method: "POST", path: "/importer/list-item/names" }));
-export type ImportNameListsInput = typeof ImportNameListsInput.Type;
+}).pipe(
+  T.Http({ method: "POST", path: "/importer/list-item/names" }),
+) as unknown as Schema.Codec<ImportNameListsInput>;
 
 // Output Schema
+export interface ImportNameListsOutput {
+  data: {
+    id?: string;
+    type?: string;
+    attributes?: {
+      "completed-at"?: string | null;
+      "created-at"?: string;
+      "duplicate-count"?: number;
+      "error-count"?: number;
+      status?: string;
+      "successful-count"?: number;
+    };
+  };
+}
 export const ImportNameListsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Struct({
     id: Schema.optional(Schema.String),
@@ -60,8 +96,7 @@ export const ImportNameListsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       }),
     ),
   }),
-});
-export type ImportNameListsOutput = typeof ImportNameListsOutput.Type;
+}) as unknown as Schema.Codec<ImportNameListsOutput>;
 
 // The operation
 /**

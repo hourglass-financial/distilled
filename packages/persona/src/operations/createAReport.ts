@@ -11,6 +11,29 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface CreateAReportInput {
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  data?: unknown;
+  meta?: {
+    "auto-create-account"?: boolean;
+    "auto-create-account-type-id"?: string;
+    "auto-create-account-reference-id"?: string;
+    "processing-mode"?: string;
+    "request-flags"?: ReadonlyArray<string>;
+  };
+}
 export const CreateAReportInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
   fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
@@ -44,15 +67,19 @@ export const CreateAReportInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "request-flags": Schema.optional(Schema.Array(Schema.String)),
     }),
   ),
-}).pipe(T.Http({ method: "POST", path: "/reports" }));
-export type CreateAReportInput = typeof CreateAReportInput.Type;
+}).pipe(
+  T.Http({ method: "POST", path: "/reports" }),
+) as unknown as Schema.Codec<CreateAReportInput>;
 
 // Output Schema
+export interface CreateAReportOutput {
+  data: unknown;
+  included?: ReadonlyArray<unknown>;
+}
 export const CreateAReportOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Unknown,
   included: Schema.optional(Schema.Array(Schema.Unknown)),
-});
-export type CreateAReportOutput = typeof CreateAReportOutput.Type;
+}) as unknown as Schema.Codec<CreateAReportOutput>;
 
 // The operation
 /**

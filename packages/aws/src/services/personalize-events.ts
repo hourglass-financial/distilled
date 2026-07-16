@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
 import * as C from "../category.ts";
@@ -373,6 +373,7 @@ export const putActionInteractions: API.OperationMethod<
     ResourceInUseException,
     ResourceNotFoundException,
   ],
+  operationName: "PutActionInteractions",
 }));
 export type PutActionsError =
   | InvalidInputException
@@ -396,6 +397,7 @@ export const putActions: API.OperationMethod<
     ResourceInUseException,
     ResourceNotFoundException,
   ],
+  operationName: "PutActions",
 }));
 export type PutEventsError = InvalidInputException | CommonErrors;
 /**
@@ -411,6 +413,7 @@ export const putEvents: API.OperationMethod<
   input: PutEventsRequest,
   output: PutEventsResponse,
   errors: [InvalidInputException],
+  operationName: "PutEvents",
 }));
 export type PutItemsError =
   | InvalidInputException
@@ -434,6 +437,7 @@ export const putItems: API.OperationMethod<
     ResourceInUseException,
     ResourceNotFoundException,
   ],
+  operationName: "PutItems",
 }));
 export type PutUsersError =
   | InvalidInputException
@@ -457,4 +461,5 @@ export const putUsers: API.OperationMethod<
     ResourceInUseException,
     ResourceNotFoundException,
   ],
+  operationName: "PutUsers",
 }));

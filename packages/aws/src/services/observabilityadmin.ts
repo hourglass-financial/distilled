@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -89,6 +89,7 @@ export type Region = string;
 export type SourceFilterString = string;
 export type LogsFilterString = string;
 export type DataSourceFilterString = string;
+export type MetricsFilterString = string;
 export type AccountIdentifier = string;
 export type ResourceArn = string;
 export type LogGroupNamePattern = string;
@@ -135,10 +136,19 @@ export const SourceLogsConfiguration = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 ).annotate({
   identifier: "SourceLogsConfiguration",
 }) as any as S.Schema<SourceLogsConfiguration>;
+export interface SourceMetricsConfiguration {
+  MetricsSelectionCriteria?: string;
+}
+export const SourceMetricsConfiguration = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () => S.Struct({ MetricsSelectionCriteria: S.optional(S.String) }),
+).annotate({
+  identifier: "SourceMetricsConfiguration",
+}) as any as S.Schema<SourceMetricsConfiguration>;
 export interface CentralizationRuleSource {
   Regions: string[];
   Scope?: string;
   SourceLogsConfiguration?: SourceLogsConfiguration;
+  SourceMetricsConfiguration?: SourceMetricsConfiguration;
 }
 export const CentralizationRuleSource = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -146,6 +156,7 @@ export const CentralizationRuleSource = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       Regions: Regions,
       Scope: S.optional(S.String),
       SourceLogsConfiguration: S.optional(SourceLogsConfiguration),
+      SourceMetricsConfiguration: S.optional(SourceMetricsConfiguration),
     }),
 ).annotate({
   identifier: "CentralizationRuleSource",
@@ -210,10 +221,28 @@ export const DestinationLogsConfiguration =
   ).annotate({
     identifier: "DestinationLogsConfiguration",
   }) as any as S.Schema<DestinationLogsConfiguration>;
+export interface MetricsBackupConfiguration {
+  Region: string;
+}
+export const MetricsBackupConfiguration = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () => S.Struct({ Region: S.String }),
+).annotate({
+  identifier: "MetricsBackupConfiguration",
+}) as any as S.Schema<MetricsBackupConfiguration>;
+export interface DestinationMetricsConfiguration {
+  BackupConfiguration?: MetricsBackupConfiguration;
+}
+export const DestinationMetricsConfiguration =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ BackupConfiguration: S.optional(MetricsBackupConfiguration) }),
+  ).annotate({
+    identifier: "DestinationMetricsConfiguration",
+  }) as any as S.Schema<DestinationMetricsConfiguration>;
 export interface CentralizationRuleDestination {
   Region: string;
   Account?: string;
   DestinationLogsConfiguration?: DestinationLogsConfiguration;
+  DestinationMetricsConfiguration?: DestinationMetricsConfiguration;
 }
 export const CentralizationRuleDestination =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -221,6 +250,9 @@ export const CentralizationRuleDestination =
       Region: S.String,
       Account: S.optional(S.String),
       DestinationLogsConfiguration: S.optional(DestinationLogsConfiguration),
+      DestinationMetricsConfiguration: S.optional(
+        DestinationMetricsConfiguration,
+      ),
     }),
   ).annotate({
     identifier: "CentralizationRuleDestination",
@@ -356,8 +388,12 @@ export type ResourceType =
   | "AWS::BedrockAgentCore::CodeInterpreter"
   | "AWS::BedrockAgentCore::Gateway"
   | "AWS::BedrockAgentCore::Memory"
+  | "AWS::BedrockAgentCore::WorkloadIdentity"
   | "AWS::SecurityHub::Hub"
   | "AWS::CloudFront::Distribution"
+  | "AWS::SecurityHub::HubV2"
+  | "AWS::CloudWatch::OTelEnrichment"
+  | "AWS::MSK::Cluster"
   | (string & {});
 export const ResourceType = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export type TelemetryType = "Logs" | "Metrics" | "Traces" | (string & {});
@@ -576,6 +612,22 @@ export const LogDeliveryParameters = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "LogDeliveryParameters",
 }) as any as S.Schema<LogDeliveryParameters>;
+export type MskEnhancedMonitoringLevel =
+  | "DEFAULT"
+  | "PER_BROKER"
+  | "PER_TOPIC_PER_BROKER"
+  | "PER_TOPIC_PER_PARTITION"
+  | (string & {});
+export const MskEnhancedMonitoringLevel = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface MskMonitoringParameters {
+  EnhancedMonitoring?: MskEnhancedMonitoringLevel;
+}
+export const MskMonitoringParameters = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({ EnhancedMonitoring: S.optional(MskEnhancedMonitoringLevel) }),
+).annotate({
+  identifier: "MskMonitoringParameters",
+}) as any as S.Schema<MskMonitoringParameters>;
 export interface TelemetryDestinationConfiguration {
   DestinationType?: DestinationType;
   DestinationPattern?: string;
@@ -585,6 +637,7 @@ export interface TelemetryDestinationConfiguration {
   ELBLoadBalancerLoggingParameters?: ELBLoadBalancerLoggingParameters;
   WAFLoggingParameters?: WAFLoggingParameters;
   LogDeliveryParameters?: LogDeliveryParameters;
+  MskMonitoringParameters?: MskMonitoringParameters;
 }
 export const TelemetryDestinationConfiguration =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -599,6 +652,7 @@ export const TelemetryDestinationConfiguration =
       ),
       WAFLoggingParameters: S.optional(WAFLoggingParameters),
       LogDeliveryParameters: S.optional(LogDeliveryParameters),
+      MskMonitoringParameters: S.optional(MskMonitoringParameters),
     }),
   ).annotate({
     identifier: "TelemetryDestinationConfiguration",
@@ -610,6 +664,7 @@ export interface TelemetryRule {
   DestinationConfiguration?: TelemetryDestinationConfiguration;
   Scope?: string;
   SelectionCriteria?: string;
+  AllowFieldUpdates?: boolean;
   Regions?: string[];
   AllRegions?: boolean;
 }
@@ -621,6 +676,7 @@ export const TelemetryRule = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     DestinationConfiguration: S.optional(TelemetryDestinationConfiguration),
     Scope: S.optional(S.String),
     SelectionCriteria: S.optional(S.String),
+    AllowFieldUpdates: S.optional(S.Boolean),
     Regions: S.optional(Regions),
     AllRegions: S.optional(S.Boolean),
   }),
@@ -2175,6 +2231,7 @@ export const createCentralizationRuleForOrganization: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "CreateCentralizationRuleForOrganization",
 }));
 export type CreateS3TableIntegrationError =
   | AccessDeniedException
@@ -2203,6 +2260,7 @@ export const createS3TableIntegration: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "CreateS3TableIntegration",
 }));
 export type CreateTelemetryRuleError =
   | AccessDeniedException
@@ -2231,6 +2289,7 @@ export const createTelemetryRule: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "CreateTelemetryRule",
 }));
 export type CreateTelemetryRuleForOrganizationError =
   | AccessDeniedException
@@ -2259,6 +2318,7 @@ export const createTelemetryRuleForOrganization: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "CreateTelemetryRuleForOrganization",
 }));
 export type DeleteCentralizationRuleForOrganizationError =
   | AccessDeniedException
@@ -2285,6 +2345,7 @@ export const deleteCentralizationRuleForOrganization: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "DeleteCentralizationRuleForOrganization",
 }));
 export type DeleteS3TableIntegrationError =
   | AccessDeniedException
@@ -2313,6 +2374,7 @@ export const deleteS3TableIntegration: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "DeleteS3TableIntegration",
 }));
 export type DeleteTelemetryRuleError =
   | AccessDeniedException
@@ -2339,6 +2401,7 @@ export const deleteTelemetryRule: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "DeleteTelemetryRule",
 }));
 export type DeleteTelemetryRuleForOrganizationError =
   | AccessDeniedException
@@ -2365,6 +2428,7 @@ export const deleteTelemetryRuleForOrganization: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "DeleteTelemetryRuleForOrganization",
 }));
 export type GetCentralizationRuleForOrganizationError =
   | AccessDeniedException
@@ -2391,6 +2455,7 @@ export const getCentralizationRuleForOrganization: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "GetCentralizationRuleForOrganization",
 }));
 export type GetS3TableIntegrationError =
   | AccessDeniedException
@@ -2417,6 +2482,7 @@ export const getS3TableIntegration: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "GetS3TableIntegration",
 }));
 export type GetTelemetryEnrichmentStatusError =
   | AccessDeniedException
@@ -2441,6 +2507,7 @@ export const getTelemetryEnrichmentStatus: API.OperationMethod<
     ResourceNotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "GetTelemetryEnrichmentStatus",
 }));
 export type GetTelemetryEvaluationStatusError =
   | AccessDeniedException
@@ -2463,6 +2530,7 @@ export const getTelemetryEvaluationStatus: API.OperationMethod<
     InternalServerException,
     TooManyRequestsException,
   ],
+  operationName: "GetTelemetryEvaluationStatus",
 }));
 export type GetTelemetryEvaluationStatusForOrganizationError =
   | AccessDeniedException
@@ -2487,6 +2555,7 @@ export const getTelemetryEvaluationStatusForOrganization: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "GetTelemetryEvaluationStatusForOrganization",
 }));
 export type GetTelemetryRuleError =
   | AccessDeniedException
@@ -2513,6 +2582,7 @@ export const getTelemetryRule: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "GetTelemetryRule",
 }));
 export type GetTelemetryRuleForOrganizationError =
   | AccessDeniedException
@@ -2539,6 +2609,7 @@ export const getTelemetryRuleForOrganization: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "GetTelemetryRuleForOrganization",
 }));
 export type ListCentralizationRulesForOrganizationError =
   | AccessDeniedException
@@ -2578,6 +2649,7 @@ export const listCentralizationRulesForOrganization: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "ListCentralizationRulesForOrganization",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -2623,6 +2695,7 @@ export const listResourceTelemetry: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "ListResourceTelemetry",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -2668,6 +2741,7 @@ export const listResourceTelemetryForOrganization: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "ListResourceTelemetryForOrganization",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -2713,6 +2787,7 @@ export const listS3TableIntegrations: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "ListS3TableIntegrations",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -2745,6 +2820,7 @@ export const listTagsForResource: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type ListTelemetryRulesError =
   | AccessDeniedException
@@ -2784,6 +2860,7 @@ export const listTelemetryRules: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "ListTelemetryRules",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -2829,6 +2906,7 @@ export const listTelemetryRulesForOrganization: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "ListTelemetryRulesForOrganization",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -2859,6 +2937,7 @@ export const startTelemetryEnrichment: API.OperationMethod<
     InternalServerException,
     TooManyRequestsException,
   ],
+  operationName: "StartTelemetryEnrichment",
 }));
 export type StartTelemetryEvaluationError =
   | AccessDeniedException
@@ -2883,6 +2962,7 @@ export const startTelemetryEvaluation: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "StartTelemetryEvaluation",
 }));
 export type StartTelemetryEvaluationForOrganizationError =
   | AccessDeniedException
@@ -2907,6 +2987,7 @@ export const startTelemetryEvaluationForOrganization: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "StartTelemetryEvaluationForOrganization",
 }));
 export type StopTelemetryEnrichmentError =
   | AccessDeniedException
@@ -2931,6 +3012,7 @@ export const stopTelemetryEnrichment: API.OperationMethod<
     InternalServerException,
     TooManyRequestsException,
   ],
+  operationName: "StopTelemetryEnrichment",
 }));
 export type StopTelemetryEvaluationError =
   | AccessDeniedException
@@ -2955,6 +3037,7 @@ export const stopTelemetryEvaluation: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "StopTelemetryEvaluation",
 }));
 export type StopTelemetryEvaluationForOrganizationError =
   | AccessDeniedException
@@ -2979,6 +3062,7 @@ export const stopTelemetryEvaluationForOrganization: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "StopTelemetryEvaluationForOrganization",
 }));
 export type TagResourceError =
   | AccessDeniedException
@@ -3007,6 +3091,7 @@ export const tagResource: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "TagResource",
 }));
 export type TestTelemetryPipelineError =
   | AccessDeniedException
@@ -3031,6 +3116,7 @@ export const testTelemetryPipeline: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "TestTelemetryPipeline",
 }));
 export type UntagResourceError =
   | AccessDeniedException
@@ -3057,6 +3143,7 @@ export const untagResource: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "UntagResource",
 }));
 export type UpdateCentralizationRuleForOrganizationError =
   | AccessDeniedException
@@ -3085,6 +3172,7 @@ export const updateCentralizationRuleForOrganization: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "UpdateCentralizationRuleForOrganization",
 }));
 export type UpdateTelemetryRuleError =
   | AccessDeniedException
@@ -3115,6 +3203,7 @@ export const updateTelemetryRule: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "UpdateTelemetryRule",
 }));
 export type UpdateTelemetryRuleForOrganizationError =
   | AccessDeniedException
@@ -3143,6 +3232,7 @@ export const updateTelemetryRuleForOrganization: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "UpdateTelemetryRuleForOrganization",
 }));
 export type ValidateTelemetryPipelineConfigurationError =
   | AccessDeniedException
@@ -3167,6 +3257,7 @@ export const validateTelemetryPipelineConfiguration: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "ValidateTelemetryPipelineConfiguration",
 }));
 export type CreateTelemetryPipelineError =
   | AccessDeniedException
@@ -3195,6 +3286,7 @@ export const createTelemetryPipeline: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "CreateTelemetryPipeline",
 }));
 export type GetTelemetryPipelineError =
   | AccessDeniedException
@@ -3221,6 +3313,7 @@ export const getTelemetryPipeline: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "GetTelemetryPipeline",
 }));
 export type UpdateTelemetryPipelineError =
   | AccessDeniedException
@@ -3295,6 +3388,7 @@ export const updateTelemetryPipeline: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "UpdateTelemetryPipeline",
 }));
 export type DeleteTelemetryPipelineError =
   | AccessDeniedException
@@ -3323,6 +3417,7 @@ export const deleteTelemetryPipeline: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "DeleteTelemetryPipeline",
 }));
 export type ListTelemetryPipelinesError =
   | AccessDeniedException
@@ -3362,6 +3457,7 @@ export const listTelemetryPipelines: API.OperationMethod<
     TooManyRequestsException,
     ValidationException,
   ],
+  operationName: "ListTelemetryPipelines",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",

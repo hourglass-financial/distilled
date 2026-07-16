@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -112,6 +112,7 @@ export type TagKey = string;
 export type TagValue = string;
 export type ClientToken = string;
 export type ApplicationArn = string;
+export type IdentityStoreArn = string;
 export type NameType = string;
 export type AccessControlAttributeKey = string;
 export type AccessControlAttributeValueSource = string;
@@ -372,9 +373,16 @@ export const CreateApplicationRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 }) as any as S.Schema<CreateApplicationRequest>;
 export interface CreateApplicationResponse {
   ApplicationArn?: string;
+  InstanceArn?: string;
+  IdentityStoreArn?: string;
 }
 export const CreateApplicationResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
-  () => S.Struct({ ApplicationArn: S.optional(S.String) }),
+  () =>
+    S.Struct({
+      ApplicationArn: S.optional(S.String),
+      InstanceArn: S.optional(S.String),
+      IdentityStoreArn: S.optional(S.String),
+    }),
 ).annotate({
   identifier: "CreateApplicationResponse",
 }) as any as S.Schema<CreateApplicationResponse>;
@@ -835,6 +843,7 @@ export interface DescribeApplicationResponse {
   Name?: string;
   ApplicationAccount?: string;
   InstanceArn?: string;
+  IdentityStoreArn?: string;
   Status?: ApplicationStatus;
   PortalOptions?: PortalOptions;
   Description?: string;
@@ -849,6 +858,7 @@ export const DescribeApplicationResponse =
       Name: S.optional(S.String),
       ApplicationAccount: S.optional(S.String),
       InstanceArn: S.optional(S.String),
+      IdentityStoreArn: S.optional(S.String),
       Status: S.optional(ApplicationStatus),
       PortalOptions: S.optional(PortalOptions),
       Description: S.optional(S.String),
@@ -1795,6 +1805,7 @@ export interface Application {
   Name?: string;
   ApplicationAccount?: string;
   InstanceArn?: string;
+  IdentityStoreArn?: string;
   Status?: ApplicationStatus;
   PortalOptions?: PortalOptions;
   Description?: string;
@@ -1808,6 +1819,7 @@ export const Application = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     Name: S.optional(S.String),
     ApplicationAccount: S.optional(S.String),
     InstanceArn: S.optional(S.String),
+    IdentityStoreArn: S.optional(S.String),
     Status: S.optional(ApplicationStatus),
     PortalOptions: S.optional(PortalOptions),
     Description: S.optional(S.String),
@@ -3034,6 +3046,7 @@ export const addRegion: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AddRegion",
 }));
 export type AttachCustomerManagedPolicyReferenceToPermissionSetError =
   | AccessDeniedException
@@ -3064,6 +3077,7 @@ export const attachCustomerManagedPolicyReferenceToPermissionSet: API.OperationM
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AttachCustomerManagedPolicyReferenceToPermissionSet",
 }));
 export type AttachManagedPolicyToPermissionSetError =
   | AccessDeniedException
@@ -3096,6 +3110,7 @@ export const attachManagedPolicyToPermissionSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AttachManagedPolicyToPermissionSet",
 }));
 export type CreateAccountAssignmentError =
   | AccessDeniedException
@@ -3132,6 +3147,7 @@ export const createAccountAssignment: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateAccountAssignment",
 }));
 export type CreateApplicationError =
   | AccessDeniedException
@@ -3164,6 +3180,7 @@ export const createApplication: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateApplication",
 }));
 export type CreateApplicationAssignmentError =
   | AccessDeniedException
@@ -3194,6 +3211,7 @@ export const createApplicationAssignment: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateApplicationAssignment",
 }));
 export type CreateInstanceError =
   | AccessDeniedException
@@ -3228,6 +3246,7 @@ export const createInstance: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateInstance",
 }));
 export type CreateInstanceAccessControlAttributeConfigurationError =
   | AccessDeniedException
@@ -3258,6 +3277,7 @@ export const createInstanceAccessControlAttributeConfiguration: API.OperationMet
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateInstanceAccessControlAttributeConfiguration",
 }));
 export type CreatePermissionSetError =
   | AccessDeniedException
@@ -3290,6 +3310,7 @@ export const createPermissionSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreatePermissionSet",
 }));
 export type CreateTrustedTokenIssuerError =
   | AccessDeniedException
@@ -3320,6 +3341,7 @@ export const createTrustedTokenIssuer: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateTrustedTokenIssuer",
 }));
 export type DeleteAccountAssignmentError =
   | AccessDeniedException
@@ -3350,6 +3372,7 @@ export const deleteAccountAssignment: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteAccountAssignment",
 }));
 export type DeleteApplicationError =
   | AccessDeniedException
@@ -3378,6 +3401,7 @@ export const deleteApplication: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteApplication",
 }));
 export type DeleteApplicationAssignmentError =
   | AccessDeniedException
@@ -3406,6 +3430,7 @@ export const deleteApplicationAssignment: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteApplicationAssignment",
 }));
 export type DeleteInlinePolicyFromPermissionSetError =
   | AccessDeniedException
@@ -3434,6 +3459,7 @@ export const deleteInlinePolicyFromPermissionSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteInlinePolicyFromPermissionSet",
 }));
 export type DeleteInstanceError =
   | AccessDeniedException
@@ -3460,6 +3486,7 @@ export const deleteInstance: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteInstance",
 }));
 export type DeleteInstanceAccessControlAttributeConfigurationError =
   | AccessDeniedException
@@ -3488,6 +3515,7 @@ export const deleteInstanceAccessControlAttributeConfiguration: API.OperationMet
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteInstanceAccessControlAttributeConfiguration",
 }));
 export type DeletePermissionsBoundaryFromPermissionSetError =
   | AccessDeniedException
@@ -3516,6 +3544,7 @@ export const deletePermissionsBoundaryFromPermissionSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeletePermissionsBoundaryFromPermissionSet",
 }));
 export type DeletePermissionSetError =
   | AccessDeniedException
@@ -3544,6 +3573,7 @@ export const deletePermissionSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeletePermissionSet",
 }));
 export type DeleteTrustedTokenIssuerError =
   | AccessDeniedException
@@ -3574,6 +3604,7 @@ export const deleteTrustedTokenIssuer: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteTrustedTokenIssuer",
 }));
 export type DescribeAccountAssignmentCreationStatusError =
   | AccessDeniedException
@@ -3600,6 +3631,7 @@ export const describeAccountAssignmentCreationStatus: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeAccountAssignmentCreationStatus",
 }));
 export type DescribeAccountAssignmentDeletionStatusError =
   | AccessDeniedException
@@ -3626,6 +3658,7 @@ export const describeAccountAssignmentDeletionStatus: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeAccountAssignmentDeletionStatus",
 }));
 export type DescribeApplicationError =
   | AccessDeniedException
@@ -3652,6 +3685,7 @@ export const describeApplication: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeApplication",
 }));
 export type DescribeApplicationAssignmentError =
   | AccessDeniedException
@@ -3678,6 +3712,7 @@ export const describeApplicationAssignment: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeApplicationAssignment",
 }));
 export type DescribeApplicationProviderError =
   | AccessDeniedException
@@ -3704,6 +3739,7 @@ export const describeApplicationProvider: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeApplicationProvider",
 }));
 export type DescribeInstanceError =
   | AccessDeniedException
@@ -3734,6 +3770,7 @@ export const describeInstance: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeInstance",
 }));
 export type DescribeInstanceAccessControlAttributeConfigurationError =
   | AccessDeniedException
@@ -3760,6 +3797,7 @@ export const describeInstanceAccessControlAttributeConfiguration: API.OperationM
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeInstanceAccessControlAttributeConfiguration",
 }));
 export type DescribePermissionSetError =
   | AccessDeniedException
@@ -3786,6 +3824,7 @@ export const describePermissionSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribePermissionSet",
 }));
 export type DescribePermissionSetProvisioningStatusError =
   | AccessDeniedException
@@ -3812,6 +3851,7 @@ export const describePermissionSetProvisioningStatus: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribePermissionSetProvisioningStatus",
 }));
 export type DescribeRegionError =
   | AccessDeniedException
@@ -3846,6 +3886,7 @@ export const describeRegion: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeRegion",
 }));
 export type DescribeTrustedTokenIssuerError =
   | AccessDeniedException
@@ -3872,6 +3913,7 @@ export const describeTrustedTokenIssuer: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DescribeTrustedTokenIssuer",
 }));
 export type DetachCustomerManagedPolicyReferenceFromPermissionSetError =
   | AccessDeniedException
@@ -3900,6 +3942,7 @@ export const detachCustomerManagedPolicyReferenceFromPermissionSet: API.Operatio
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DetachCustomerManagedPolicyReferenceFromPermissionSet",
 }));
 export type DetachManagedPolicyFromPermissionSetError =
   | AccessDeniedException
@@ -3928,6 +3971,7 @@ export const detachManagedPolicyFromPermissionSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DetachManagedPolicyFromPermissionSet",
 }));
 export type GetApplicationAssignmentConfigurationError =
   | AccessDeniedException
@@ -3954,6 +3998,7 @@ export const getApplicationAssignmentConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetApplicationAssignmentConfiguration",
 }));
 export type GetApplicationSessionConfigurationError =
   | AccessDeniedException
@@ -3982,6 +4027,7 @@ export const getApplicationSessionConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetApplicationSessionConfiguration",
 }));
 export type GetInlinePolicyForPermissionSetError =
   | AccessDeniedException
@@ -4008,6 +4054,7 @@ export const getInlinePolicyForPermissionSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetInlinePolicyForPermissionSet",
 }));
 export type GetPermissionsBoundaryForPermissionSetError =
   | AccessDeniedException
@@ -4034,6 +4081,7 @@ export const getPermissionsBoundaryForPermissionSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetPermissionsBoundaryForPermissionSet",
 }));
 export type ListAccountAssignmentCreationStatusError =
   | AccessDeniedException
@@ -4075,6 +4123,7 @@ export const listAccountAssignmentCreationStatus: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListAccountAssignmentCreationStatus",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4122,6 +4171,7 @@ export const listAccountAssignmentDeletionStatus: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListAccountAssignmentDeletionStatus",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4169,6 +4219,7 @@ export const listAccountAssignments: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListAccountAssignments",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4216,6 +4267,7 @@ export const listAccountAssignmentsForPrincipal: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListAccountAssignmentsForPrincipal",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4263,6 +4315,7 @@ export const listAccountsForProvisionedPermissionSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListAccountsForProvisionedPermissionSet",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4310,6 +4363,7 @@ export const listApplicationAssignments: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListApplicationAssignments",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4357,6 +4411,7 @@ export const listApplicationAssignmentsForPrincipal: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListApplicationAssignmentsForPrincipal",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4402,6 +4457,7 @@ export const listApplicationProviders: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListApplicationProviders",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4447,6 +4503,7 @@ export const listApplications: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListApplications",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4494,6 +4551,7 @@ export const listCustomerManagedPolicyReferencesInPermissionSet: API.OperationMe
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListCustomerManagedPolicyReferencesInPermissionSet",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4539,6 +4597,7 @@ export const listInstances: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListInstances",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4586,6 +4645,7 @@ export const listManagedPoliciesInPermissionSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListManagedPoliciesInPermissionSet",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4633,6 +4693,7 @@ export const listPermissionSetProvisioningStatus: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListPermissionSetProvisioningStatus",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4680,6 +4741,7 @@ export const listPermissionSets: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListPermissionSets",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4727,6 +4789,7 @@ export const listPermissionSetsProvisionedToAccount: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListPermissionSetsProvisionedToAccount",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4780,6 +4843,7 @@ export const listRegions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListRegions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4827,6 +4891,7 @@ export const listTagsForResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListTagsForResource",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4871,6 +4936,7 @@ export const listTrustedTokenIssuers: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListTrustedTokenIssuers",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4905,6 +4971,7 @@ export const provisionPermissionSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ProvisionPermissionSet",
 }));
 export type PutApplicationAssignmentConfigurationError =
   | AccessDeniedException
@@ -4933,6 +5000,7 @@ export const putApplicationAssignmentConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutApplicationAssignmentConfiguration",
 }));
 export type PutApplicationSessionConfigurationError =
   | AccessDeniedException
@@ -4963,6 +5031,7 @@ export const putApplicationSessionConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutApplicationSessionConfiguration",
 }));
 export type PutInlinePolicyToPermissionSetError =
   | AccessDeniedException
@@ -4995,6 +5064,7 @@ export const putInlinePolicyToPermissionSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutInlinePolicyToPermissionSet",
 }));
 export type PutPermissionsBoundaryToPermissionSetError =
   | AccessDeniedException
@@ -5023,6 +5093,7 @@ export const putPermissionsBoundaryToPermissionSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutPermissionsBoundaryToPermissionSet",
 }));
 export type RemoveRegionError =
   | AccessDeniedException
@@ -5059,6 +5130,7 @@ export const removeRegion: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "RemoveRegion",
 }));
 export type TagResourceError =
   | AccessDeniedException
@@ -5089,6 +5161,7 @@ export const tagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | AccessDeniedException
@@ -5117,6 +5190,7 @@ export const untagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UntagResource",
 }));
 export type UpdateApplicationError =
   | AccessDeniedException
@@ -5145,6 +5219,7 @@ export const updateApplication: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateApplication",
 }));
 export type UpdateInstanceError =
   | AccessDeniedException
@@ -5173,6 +5248,7 @@ export const updateInstance: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateInstance",
 }));
 export type UpdateInstanceAccessControlAttributeConfigurationError =
   | AccessDeniedException
@@ -5201,6 +5277,7 @@ export const updateInstanceAccessControlAttributeConfiguration: API.OperationMet
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateInstanceAccessControlAttributeConfiguration",
 }));
 export type UpdatePermissionSetError =
   | AccessDeniedException
@@ -5229,6 +5306,7 @@ export const updatePermissionSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdatePermissionSet",
 }));
 export type UpdateTrustedTokenIssuerError =
   | AccessDeniedException
@@ -5259,6 +5337,7 @@ export const updateTrustedTokenIssuer: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateTrustedTokenIssuer",
 }));
 export type PutApplicationAccessScopeError =
   | AccessDeniedException
@@ -5287,6 +5366,7 @@ export const putApplicationAccessScope: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutApplicationAccessScope",
 }));
 export type GetApplicationAccessScopeError =
   | AccessDeniedException
@@ -5313,6 +5393,7 @@ export const getApplicationAccessScope: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetApplicationAccessScope",
 }));
 export type DeleteApplicationAccessScopeError =
   | AccessDeniedException
@@ -5341,6 +5422,7 @@ export const deleteApplicationAccessScope: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteApplicationAccessScope",
 }));
 export type ListApplicationAccessScopesError =
   | AccessDeniedException
@@ -5382,6 +5464,7 @@ export const listApplicationAccessScopes: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListApplicationAccessScopes",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5416,6 +5499,7 @@ export const putApplicationAuthenticationMethod: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutApplicationAuthenticationMethod",
 }));
 export type GetApplicationAuthenticationMethodError =
   | AccessDeniedException
@@ -5442,6 +5526,7 @@ export const getApplicationAuthenticationMethod: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetApplicationAuthenticationMethod",
 }));
 export type DeleteApplicationAuthenticationMethodError =
   | AccessDeniedException
@@ -5470,6 +5555,7 @@ export const deleteApplicationAuthenticationMethod: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteApplicationAuthenticationMethod",
 }));
 export type ListApplicationAuthenticationMethodsError =
   | AccessDeniedException
@@ -5511,6 +5597,7 @@ export const listApplicationAuthenticationMethods: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListApplicationAuthenticationMethods",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5569,6 +5656,7 @@ export const putApplicationGrant: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutApplicationGrant",
 }));
 export type GetApplicationGrantError =
   | AccessDeniedException
@@ -5595,6 +5683,7 @@ export const getApplicationGrant: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetApplicationGrant",
 }));
 export type DeleteApplicationGrantError =
   | AccessDeniedException
@@ -5623,6 +5712,7 @@ export const deleteApplicationGrant: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteApplicationGrant",
 }));
 export type ListApplicationGrantsError =
   | AccessDeniedException
@@ -5664,6 +5754,7 @@ export const listApplicationGrants: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListApplicationGrants",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",

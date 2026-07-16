@@ -4,6 +4,55 @@ import * as T from "../traits.ts";
 import { BadRequest, Conflict, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
+export interface CreateCounterpartyBlockchainAddressInput {
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  counterparty_id: string;
+  description: string;
+  address: string;
+  network: "BASE" | "ETHEREUM" | "INK" | "SOLANA" | "SUI";
+  custodian:
+    | "ANCHORAGE_SG"
+    | "ANCHORAGE_US"
+    | "AQUANOW_CA"
+    | "B2C2_UK"
+    | "B2C2_US"
+    | "BITGO_SG"
+    | "BITGO_US"
+    | "BITSTAMP_US"
+    | "BVNK_US"
+    | "CIRCLE_FR"
+    | "CIRCLE_US"
+    | "CITIBANK_US"
+    | "COINBASE_US"
+    | "COINSMART_CA"
+    | "COPPER_CH"
+    | "COPPER_UK"
+    | "CUMBERLAND_DRW_LLC_US"
+    | "CUMBERLAND_SG"
+    | "EREBOR_BANK_US"
+    | "FALCONX_US"
+    | "FIDELITY_UK"
+    | "FIDELITY_US"
+    | "FIREBLOCKS_APAC"
+    | "FIREBLOCKS_US"
+    | "GALAXY_KY"
+    | "GEMINI_US"
+    | "KRAKEN_BVI"
+    | "KRAKEN_EU_IE"
+    | "KRAKEN_UK"
+    | "KRAKEN_US"
+    | "NUBANK_BR"
+    | "PAXOS_US"
+    | "RAMP_NETWORK_US"
+    | "ROBINHOOD_US"
+    | "WINTERMUTE_GB"
+    | "SELF_HOSTED"
+    | "OTHER";
+  custodian_other?: string | null;
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const CreateCounterpartyBlockchainAddressInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     ereborVersion: Schema.optional(Schema.String).pipe(
@@ -62,11 +111,64 @@ export const CreateCounterpartyBlockchainAddressInput =
     ),
   }).pipe(
     T.Http({ method: "POST", path: "/counterparty_blockchain_addresses" }),
-  );
-export type CreateCounterpartyBlockchainAddressInput =
-  typeof CreateCounterpartyBlockchainAddressInput.Type;
+  ) as unknown as Schema.Codec<CreateCounterpartyBlockchainAddressInput>;
 
 // Output Schema
+export interface CreateCounterpartyBlockchainAddressOutput {
+  id: string;
+  type: "COUNTERPARTY_BLOCKCHAIN_ADDRESS";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  customer_id?: string | null;
+  program_id?: string | null;
+  counterparty_id?: string | null;
+  description: string | null;
+  address: string;
+  network: "BASE" | "ETHEREUM" | "INK" | "SOLANA" | "SUI";
+  custodian:
+    | "ANCHORAGE_SG"
+    | "ANCHORAGE_US"
+    | "AQUANOW_CA"
+    | "B2C2_UK"
+    | "B2C2_US"
+    | "BITGO_SG"
+    | "BITGO_US"
+    | "BITSTAMP_US"
+    | "BVNK_US"
+    | "CIRCLE_FR"
+    | "CIRCLE_US"
+    | "CITIBANK_US"
+    | "COINBASE_US"
+    | "COINSMART_CA"
+    | "COPPER_CH"
+    | "COPPER_UK"
+    | "CUMBERLAND_DRW_LLC_US"
+    | "CUMBERLAND_SG"
+    | "EREBOR_BANK_US"
+    | "FALCONX_US"
+    | "FIDELITY_UK"
+    | "FIDELITY_US"
+    | "FIREBLOCKS_APAC"
+    | "FIREBLOCKS_US"
+    | "GALAXY_KY"
+    | "GEMINI_US"
+    | "KRAKEN_BVI"
+    | "KRAKEN_EU_IE"
+    | "KRAKEN_UK"
+    | "KRAKEN_US"
+    | "NUBANK_BR"
+    | "PAXOS_US"
+    | "RAMP_NETWORK_US"
+    | "ROBINHOOD_US"
+    | "WINTERMUTE_GB"
+    | "SELF_HOSTED"
+    | "OTHER";
+  custodian_other?: string | null;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const CreateCounterpartyBlockchainAddressOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -121,11 +223,11 @@ export const CreateCounterpartyBlockchainAddressOutput =
       "OTHER",
     ]),
     custodian_other: Schema.optional(Schema.NullOr(Schema.String)),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type CreateCounterpartyBlockchainAddressOutput =
-  typeof CreateCounterpartyBlockchainAddressOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<CreateCounterpartyBlockchainAddressOutput>;
 
 // The operation
 /**

@@ -4,6 +4,21 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface RetrieveInquiryTemplateTranslationsInput {
+  inquiryTemplateId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const RetrieveInquiryTemplateTranslationsInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     inquiryTemplateId: Schema.String.pipe(T.PathParam()),
@@ -31,11 +46,27 @@ export const RetrieveInquiryTemplateTranslationsInput =
       method: "GET",
       path: "/inquiry-templates/{inquiryTemplateId}/translations",
     }),
-  );
-export type RetrieveInquiryTemplateTranslationsInput =
-  typeof RetrieveInquiryTemplateTranslationsInput.Type;
+  ) as unknown as Schema.Codec<RetrieveInquiryTemplateTranslationsInput>;
 
 // Output Schema
+export interface RetrieveInquiryTemplateTranslationsOutput {
+  data: {
+    type: string;
+    id: string;
+    attributes: {
+      translations: ReadonlyArray<{
+        step: string;
+        "step-display-name": string;
+        component: string;
+        "attribute-name": string;
+        "locale-values": ReadonlyArray<{
+          locale: string;
+          value: string | null;
+        }>;
+      }>;
+    };
+  };
+}
 export const RetrieveInquiryTemplateTranslationsOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -58,9 +89,7 @@ export const RetrieveInquiryTemplateTranslationsOutput =
         ),
       }),
     }),
-  });
-export type RetrieveInquiryTemplateTranslationsOutput =
-  typeof RetrieveInquiryTemplateTranslationsOutput.Type;
+  }) as unknown as Schema.Codec<RetrieveInquiryTemplateTranslationsOutput>;
 
 // The operation
 /**

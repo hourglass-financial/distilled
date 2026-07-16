@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -97,6 +97,7 @@ export type __integerMin0Max100 = number;
 export type __stringMin1 = string;
 export type __integerMin1Max65535 = number;
 export type __doubleMinNegative59Max0 = number;
+export type __doubleMinNegative8Max0 = number;
 export type __stringMin2Max2 = string;
 export type __stringMin1Max7 = string;
 export type __doubleMin1Max65535 = number;
@@ -167,6 +168,7 @@ export type __integerMin0Max8000000 = number;
 export type __integerMin100 = number;
 export type __doubleMin0Max1 = number;
 export type __integerMin0Max8191 = number;
+export type __doubleMinNegative60Max60 = number;
 export type __integerMin1Max5 = number;
 export type __doubleMin0Max100 = number;
 export type __integerMin32Max8191 = number;
@@ -1572,6 +1574,8 @@ export const __listOfOutputDestination =
 export type AudioNormalizationAlgorithm =
   | "ITU_1770_1"
   | "ITU_1770_2"
+  | "ITU_1770_3"
+  | "ITU_1770_4"
   | (string & {});
 export const AudioNormalizationAlgorithm = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export type AudioNormalizationAlgorithmControl =
@@ -1579,10 +1583,18 @@ export type AudioNormalizationAlgorithmControl =
   | (string & {});
 export const AudioNormalizationAlgorithmControl =
   /*@__PURE__*/ /*#__PURE__*/ S.String;
+export type AudioNormalizationPeakCalculation =
+  | "NONE"
+  | "TRUE_PEAK"
+  | (string & {});
+export const AudioNormalizationPeakCalculation =
+  /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface AudioNormalizationSettings {
   Algorithm?: AudioNormalizationAlgorithm;
   AlgorithmControl?: AudioNormalizationAlgorithmControl;
   TargetLkfs?: number;
+  PeakCalculation?: AudioNormalizationPeakCalculation;
+  PeakLimiterThreshold?: number;
 }
 export const AudioNormalizationSettings = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -1590,11 +1602,15 @@ export const AudioNormalizationSettings = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       Algorithm: S.optional(AudioNormalizationAlgorithm),
       AlgorithmControl: S.optional(AudioNormalizationAlgorithmControl),
       TargetLkfs: S.optional(S.Number),
+      PeakCalculation: S.optional(AudioNormalizationPeakCalculation),
+      PeakLimiterThreshold: S.optional(S.Number),
     }).pipe(
       S.encodeKeys({
         Algorithm: "algorithm",
         AlgorithmControl: "algorithmControl",
         TargetLkfs: "targetLkfs",
+        PeakCalculation: "peakCalculation",
+        PeakLimiterThreshold: "peakLimiterThreshold",
       }),
     ),
 ).annotate({
@@ -6422,25 +6438,6 @@ export const AudioLanguageSelection = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 ).annotate({
   identifier: "AudioLanguageSelection",
 }) as any as S.Schema<AudioLanguageSelection>;
-export interface AudioPidSelection {
-  Pid?: number;
-}
-export const AudioPidSelection = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-  S.Struct({ Pid: S.optional(S.Number) }).pipe(S.encodeKeys({ Pid: "pid" })),
-).annotate({
-  identifier: "AudioPidSelection",
-}) as any as S.Schema<AudioPidSelection>;
-export interface AudioTrack {
-  Track?: number;
-}
-export const AudioTrack = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-  S.Struct({ Track: S.optional(S.Number) }).pipe(
-    S.encodeKeys({ Track: "track" }),
-  ),
-).annotate({ identifier: "AudioTrack" }) as any as S.Schema<AudioTrack>;
-export type __listOfAudioTrack = AudioTrack[];
-export const __listOfAudioTrack =
-  /*@__PURE__*/ /*#__PURE__*/ S.Array(AudioTrack);
 export type DolbyEProgramSelection =
   | "ALL_CHANNELS"
   | "PROGRAM_1"
@@ -6463,6 +6460,74 @@ export const AudioDolbyEDecode = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "AudioDolbyEDecode",
 }) as any as S.Schema<AudioDolbyEDecode>;
+export interface AudioPreMixerSettings {
+  AudioNormalizationSettings?: AudioNormalizationSettings;
+  Channels?: number;
+  GainDb?: number;
+  RemixSettings?: RemixSettings;
+}
+export const AudioPreMixerSettings = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    AudioNormalizationSettings: S.optional(AudioNormalizationSettings),
+    Channels: S.optional(S.Number),
+    GainDb: S.optional(S.Number),
+    RemixSettings: S.optional(RemixSettings),
+  }).pipe(
+    S.encodeKeys({
+      AudioNormalizationSettings: "audioNormalizationSettings",
+      Channels: "channels",
+      GainDb: "gainDb",
+      RemixSettings: "remixSettings",
+    }),
+  ),
+).annotate({
+  identifier: "AudioPreMixerSettings",
+}) as any as S.Schema<AudioPreMixerSettings>;
+export interface AudioPid {
+  DolbyEDecode?: AudioDolbyEDecode;
+  Pid?: number;
+  PremixSettings?: AudioPreMixerSettings;
+}
+export const AudioPid = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    DolbyEDecode: S.optional(AudioDolbyEDecode),
+    Pid: S.optional(S.Number),
+    PremixSettings: S.optional(AudioPreMixerSettings),
+  }).pipe(
+    S.encodeKeys({
+      DolbyEDecode: "dolbyEDecode",
+      Pid: "pid",
+      PremixSettings: "premixSettings",
+    }),
+  ),
+).annotate({ identifier: "AudioPid" }) as any as S.Schema<AudioPid>;
+export type __listOfAudioPid = AudioPid[];
+export const __listOfAudioPid = /*@__PURE__*/ /*#__PURE__*/ S.Array(AudioPid);
+export interface AudioPidSelection {
+  Pid?: number;
+  Pids?: AudioPid[];
+}
+export const AudioPidSelection = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    Pid: S.optional(S.Number),
+    Pids: S.optional(__listOfAudioPid),
+  }).pipe(S.encodeKeys({ Pid: "pid", Pids: "pids" })),
+).annotate({
+  identifier: "AudioPidSelection",
+}) as any as S.Schema<AudioPidSelection>;
+export interface AudioTrack {
+  Track?: number;
+  PremixSettings?: AudioPreMixerSettings;
+}
+export const AudioTrack = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    Track: S.optional(S.Number),
+    PremixSettings: S.optional(AudioPreMixerSettings),
+  }).pipe(S.encodeKeys({ Track: "track", PremixSettings: "premixSettings" })),
+).annotate({ identifier: "AudioTrack" }) as any as S.Schema<AudioTrack>;
+export type __listOfAudioTrack = AudioTrack[];
+export const __listOfAudioTrack =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(AudioTrack);
 export interface AudioTrackSelection {
   Tracks?: AudioTrack[];
   DolbyEDecode?: AudioDolbyEDecode;
@@ -6660,6 +6725,29 @@ export const TeletextSourceSettings = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 ).annotate({
   identifier: "TeletextSourceSettings",
 }) as any as S.Schema<TeletextSourceSettings>;
+export type CaptionSynchronizationMode =
+  | "NO_VIDEO_DELAY"
+  | "VIDEO_ALIGNED_CAPTIONS"
+  | (string & {});
+export const CaptionSynchronizationMode = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface SmartSubtitleSourceSettings {
+  CaptionSynchronizationMode?: CaptionSynchronizationMode;
+  InferenceFeedOutput?: string;
+}
+export const SmartSubtitleSourceSettings =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      CaptionSynchronizationMode: S.optional(CaptionSynchronizationMode),
+      InferenceFeedOutput: S.optional(S.String),
+    }).pipe(
+      S.encodeKeys({
+        CaptionSynchronizationMode: "captionSynchronizationMode",
+        InferenceFeedOutput: "inferenceFeedOutput",
+      }),
+    ),
+  ).annotate({
+    identifier: "SmartSubtitleSourceSettings",
+  }) as any as S.Schema<SmartSubtitleSourceSettings>;
 export interface CaptionSelectorSettings {
   AncillarySourceSettings?: AncillarySourceSettings;
   AribSourceSettings?: AribSourceSettings;
@@ -6668,6 +6756,7 @@ export interface CaptionSelectorSettings {
   Scte20SourceSettings?: Scte20SourceSettings;
   Scte27SourceSettings?: Scte27SourceSettings;
   TeletextSourceSettings?: TeletextSourceSettings;
+  SmartSubtitleSourceSettings?: SmartSubtitleSourceSettings;
 }
 export const CaptionSelectorSettings = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -6679,6 +6768,7 @@ export const CaptionSelectorSettings = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       Scte20SourceSettings: S.optional(Scte20SourceSettings),
       Scte27SourceSettings: S.optional(Scte27SourceSettings),
       TeletextSourceSettings: S.optional(TeletextSourceSettings),
+      SmartSubtitleSourceSettings: S.optional(SmartSubtitleSourceSettings),
     }).pipe(
       S.encodeKeys({
         AncillarySourceSettings: "ancillarySourceSettings",
@@ -6688,6 +6778,7 @@ export const CaptionSelectorSettings = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
         Scte20SourceSettings: "scte20SourceSettings",
         Scte27SourceSettings: "scte27SourceSettings",
         TeletextSourceSettings: "teletextSourceSettings",
+        SmartSubtitleSourceSettings: "smartSubtitleSourceSettings",
       }),
     ),
 ).annotate({
@@ -7111,12 +7202,34 @@ export const LinkedChannelSettings = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "LinkedChannelSettings",
 }) as any as S.Schema<LinkedChannelSettings>;
+export interface AudioFeedInput {
+  AudioSelectorName?: string;
+  FeedInput?: string;
+}
+export const AudioFeedInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    AudioSelectorName: S.optional(S.String),
+    FeedInput: S.optional(S.String),
+  }).pipe(
+    S.encodeKeys({
+      AudioSelectorName: "audioSelectorName",
+      FeedInput: "feedInput",
+    }),
+  ),
+).annotate({ identifier: "AudioFeedInput" }) as any as S.Schema<AudioFeedInput>;
+export type __listOfAudioFeedInput = AudioFeedInput[];
+export const __listOfAudioFeedInput =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(AudioFeedInput);
 export interface InferenceSettings {
   FeedArn?: string;
+  AudioFeedInputs?: AudioFeedInput[];
 }
 export const InferenceSettings = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-  S.Struct({ FeedArn: S.optional(S.String) }).pipe(
-    S.encodeKeys({ FeedArn: "feedArn" }),
+  S.Struct({
+    FeedArn: S.optional(S.String),
+    AudioFeedInputs: S.optional(__listOfAudioFeedInput),
+  }).pipe(
+    S.encodeKeys({ FeedArn: "feedArn", AudioFeedInputs: "audioFeedInputs" }),
   ),
 ).annotate({
   identifier: "InferenceSettings",
@@ -7256,6 +7369,25 @@ export const ChannelEngineVersionResponse =
   ).annotate({
     identifier: "ChannelEngineVersionResponse",
   }) as any as S.Schema<ChannelEngineVersionResponse>;
+export interface MediaConnectRouterOutputConnection {
+  RouterInputArn?: string;
+}
+export const MediaConnectRouterOutputConnection =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ RouterInputArn: S.optional(S.String) }).pipe(
+      S.encodeKeys({ RouterInputArn: "routerInputArn" }),
+    ),
+  ).annotate({
+    identifier: "MediaConnectRouterOutputConnection",
+  }) as any as S.Schema<MediaConnectRouterOutputConnection>;
+export type MediaConnectRouterOutputConnections = {
+  [key: string]: MediaConnectRouterOutputConnection | undefined;
+};
+export const MediaConnectRouterOutputConnections =
+  /*@__PURE__*/ /*#__PURE__*/ S.Record(
+    S.String,
+    MediaConnectRouterOutputConnection.pipe(S.optional),
+  );
 export interface PipelineDetail {
   ActiveInputAttachmentName?: string;
   ActiveInputSwitchActionName?: string;
@@ -7263,6 +7395,9 @@ export interface PipelineDetail {
   ActiveMotionGraphicsUri?: string;
   PipelineId?: string;
   ChannelEngineVersion?: ChannelEngineVersionResponse;
+  MediaConnectRouterOutputConnectionMap?: {
+    [key: string]: MediaConnectRouterOutputConnection | undefined;
+  };
 }
 export const PipelineDetail = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -7272,6 +7407,9 @@ export const PipelineDetail = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     ActiveMotionGraphicsUri: S.optional(S.String),
     PipelineId: S.optional(S.String),
     ChannelEngineVersion: S.optional(ChannelEngineVersionResponse),
+    MediaConnectRouterOutputConnectionMap: S.optional(
+      MediaConnectRouterOutputConnections,
+    ),
   }).pipe(
     S.encodeKeys({
       ActiveInputAttachmentName: "activeInputAttachmentName",
@@ -7280,6 +7418,8 @@ export const PipelineDetail = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
       ActiveMotionGraphicsUri: "activeMotionGraphicsUri",
       PipelineId: "pipelineId",
       ChannelEngineVersion: "channelEngineVersion",
+      MediaConnectRouterOutputConnectionMap:
+        "mediaConnectRouterOutputConnectionMap",
     }),
   ),
 ).annotate({ identifier: "PipelineDetail" }) as any as S.Schema<PipelineDetail>;
@@ -7398,11 +7538,15 @@ export const DescribeLinkedChannelSettings =
   }) as any as S.Schema<DescribeLinkedChannelSettings>;
 export interface DescribeInferenceSettings {
   FeedArn?: string;
+  AudioFeedInputs?: AudioFeedInput[];
 }
 export const DescribeInferenceSettings = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
-    S.Struct({ FeedArn: S.optional(S.String) }).pipe(
-      S.encodeKeys({ FeedArn: "feedArn" }),
+    S.Struct({
+      FeedArn: S.optional(S.String),
+      AudioFeedInputs: S.optional(__listOfAudioFeedInput),
+    }).pipe(
+      S.encodeKeys({ FeedArn: "feedArn", AudioFeedInputs: "audioFeedInputs" }),
     ),
 ).annotate({
   identifier: "DescribeInferenceSettings",
@@ -7739,9 +7883,39 @@ export interface CreateChannelResponse {
             };
             AudioPidSelection: AudioPidSelection & {
               Pid: __integerMin0Max8191;
+              Pids: (AudioPid & {
+                Pid: __integerMin0Max8191;
+                DolbyEDecode: AudioDolbyEDecode & {
+                  ProgramSelection: DolbyEProgramSelection;
+                };
+                PremixSettings: AudioPreMixerSettings & {
+                  RemixSettings: RemixSettings & {
+                    ChannelMappings: (AudioChannelMapping & {
+                      InputChannelLevels: (InputChannelLevel & {
+                        Gain: __integerMinNegative60Max6;
+                        InputChannel: __integerMin0Max15;
+                      })[];
+                      OutputChannel: __integerMin0Max7;
+                    })[];
+                  };
+                };
+              })[];
             };
             AudioTrackSelection: AudioTrackSelection & {
-              Tracks: (AudioTrack & { Track: __integerMin1 })[];
+              Tracks: (AudioTrack & {
+                Track: __integerMin1;
+                PremixSettings: AudioPreMixerSettings & {
+                  RemixSettings: RemixSettings & {
+                    ChannelMappings: (AudioChannelMapping & {
+                      InputChannelLevels: (InputChannelLevel & {
+                        Gain: __integerMinNegative60Max6;
+                        InputChannel: __integerMin0Max15;
+                      })[];
+                      OutputChannel: __integerMin0Max7;
+                    })[];
+                  };
+                };
+              })[];
               DolbyEDecode: AudioDolbyEDecode & {
                 ProgramSelection: DolbyEProgramSelection;
               };
@@ -10839,9 +11013,41 @@ export interface DeleteChannelResponse {
           AudioLanguageSelection: AudioLanguageSelection & {
             LanguageCode: string;
           };
-          AudioPidSelection: AudioPidSelection & { Pid: __integerMin0Max8191 };
+          AudioPidSelection: AudioPidSelection & {
+            Pid: __integerMin0Max8191;
+            Pids: (AudioPid & {
+              Pid: __integerMin0Max8191;
+              DolbyEDecode: AudioDolbyEDecode & {
+                ProgramSelection: DolbyEProgramSelection;
+              };
+              PremixSettings: AudioPreMixerSettings & {
+                RemixSettings: RemixSettings & {
+                  ChannelMappings: (AudioChannelMapping & {
+                    InputChannelLevels: (InputChannelLevel & {
+                      Gain: __integerMinNegative60Max6;
+                      InputChannel: __integerMin0Max15;
+                    })[];
+                    OutputChannel: __integerMin0Max7;
+                  })[];
+                };
+              };
+            })[];
+          };
           AudioTrackSelection: AudioTrackSelection & {
-            Tracks: (AudioTrack & { Track: __integerMin1 })[];
+            Tracks: (AudioTrack & {
+              Track: __integerMin1;
+              PremixSettings: AudioPreMixerSettings & {
+                RemixSettings: RemixSettings & {
+                  ChannelMappings: (AudioChannelMapping & {
+                    InputChannelLevels: (InputChannelLevel & {
+                      Gain: __integerMinNegative60Max6;
+                      InputChannel: __integerMin0Max15;
+                    })[];
+                    OutputChannel: __integerMin0Max7;
+                  })[];
+                };
+              };
+            })[];
             DolbyEDecode: AudioDolbyEDecode & {
               ProgramSelection: DolbyEProgramSelection;
             };
@@ -12053,9 +12259,41 @@ export interface DescribeChannelResponse {
           AudioLanguageSelection: AudioLanguageSelection & {
             LanguageCode: string;
           };
-          AudioPidSelection: AudioPidSelection & { Pid: __integerMin0Max8191 };
+          AudioPidSelection: AudioPidSelection & {
+            Pid: __integerMin0Max8191;
+            Pids: (AudioPid & {
+              Pid: __integerMin0Max8191;
+              DolbyEDecode: AudioDolbyEDecode & {
+                ProgramSelection: DolbyEProgramSelection;
+              };
+              PremixSettings: AudioPreMixerSettings & {
+                RemixSettings: RemixSettings & {
+                  ChannelMappings: (AudioChannelMapping & {
+                    InputChannelLevels: (InputChannelLevel & {
+                      Gain: __integerMinNegative60Max6;
+                      InputChannel: __integerMin0Max15;
+                    })[];
+                    OutputChannel: __integerMin0Max7;
+                  })[];
+                };
+              };
+            })[];
+          };
           AudioTrackSelection: AudioTrackSelection & {
-            Tracks: (AudioTrack & { Track: __integerMin1 })[];
+            Tracks: (AudioTrack & {
+              Track: __integerMin1;
+              PremixSettings: AudioPreMixerSettings & {
+                RemixSettings: RemixSettings & {
+                  ChannelMappings: (AudioChannelMapping & {
+                    InputChannelLevels: (InputChannelLevel & {
+                      Gain: __integerMinNegative60Max6;
+                      InputChannel: __integerMin0Max15;
+                    })[];
+                    OutputChannel: __integerMin0Max7;
+                  })[];
+                };
+              };
+            })[];
             DolbyEDecode: AudioDolbyEDecode & {
               ProgramSelection: DolbyEProgramSelection;
             };
@@ -14049,9 +14287,39 @@ export interface ListChannelsResponse {
             };
             AudioPidSelection: AudioPidSelection & {
               Pid: __integerMin0Max8191;
+              Pids: (AudioPid & {
+                Pid: __integerMin0Max8191;
+                DolbyEDecode: AudioDolbyEDecode & {
+                  ProgramSelection: DolbyEProgramSelection;
+                };
+                PremixSettings: AudioPreMixerSettings & {
+                  RemixSettings: RemixSettings & {
+                    ChannelMappings: (AudioChannelMapping & {
+                      InputChannelLevels: (InputChannelLevel & {
+                        Gain: __integerMinNegative60Max6;
+                        InputChannel: __integerMin0Max15;
+                      })[];
+                      OutputChannel: __integerMin0Max7;
+                    })[];
+                  };
+                };
+              })[];
             };
             AudioTrackSelection: AudioTrackSelection & {
-              Tracks: (AudioTrack & { Track: __integerMin1 })[];
+              Tracks: (AudioTrack & {
+                Track: __integerMin1;
+                PremixSettings: AudioPreMixerSettings & {
+                  RemixSettings: RemixSettings & {
+                    ChannelMappings: (AudioChannelMapping & {
+                      InputChannelLevels: (InputChannelLevel & {
+                        Gain: __integerMinNegative60Max6;
+                        InputChannel: __integerMin0Max15;
+                      })[];
+                      OutputChannel: __integerMin0Max7;
+                    })[];
+                  };
+                };
+              })[];
               DolbyEDecode: AudioDolbyEDecode & {
                 ProgramSelection: DolbyEProgramSelection;
               };
@@ -16180,9 +16448,41 @@ export interface RestartChannelPipelinesResponse {
           AudioLanguageSelection: AudioLanguageSelection & {
             LanguageCode: string;
           };
-          AudioPidSelection: AudioPidSelection & { Pid: __integerMin0Max8191 };
+          AudioPidSelection: AudioPidSelection & {
+            Pid: __integerMin0Max8191;
+            Pids: (AudioPid & {
+              Pid: __integerMin0Max8191;
+              DolbyEDecode: AudioDolbyEDecode & {
+                ProgramSelection: DolbyEProgramSelection;
+              };
+              PremixSettings: AudioPreMixerSettings & {
+                RemixSettings: RemixSettings & {
+                  ChannelMappings: (AudioChannelMapping & {
+                    InputChannelLevels: (InputChannelLevel & {
+                      Gain: __integerMinNegative60Max6;
+                      InputChannel: __integerMin0Max15;
+                    })[];
+                    OutputChannel: __integerMin0Max7;
+                  })[];
+                };
+              };
+            })[];
+          };
           AudioTrackSelection: AudioTrackSelection & {
-            Tracks: (AudioTrack & { Track: __integerMin1 })[];
+            Tracks: (AudioTrack & {
+              Track: __integerMin1;
+              PremixSettings: AudioPreMixerSettings & {
+                RemixSettings: RemixSettings & {
+                  ChannelMappings: (AudioChannelMapping & {
+                    InputChannelLevels: (InputChannelLevel & {
+                      Gain: __integerMinNegative60Max6;
+                      InputChannel: __integerMin0Max15;
+                    })[];
+                    OutputChannel: __integerMin0Max7;
+                  })[];
+                };
+              };
+            })[];
             DolbyEDecode: AudioDolbyEDecode & {
               ProgramSelection: DolbyEProgramSelection;
             };
@@ -16551,9 +16851,41 @@ export interface StartChannelResponse {
           AudioLanguageSelection: AudioLanguageSelection & {
             LanguageCode: string;
           };
-          AudioPidSelection: AudioPidSelection & { Pid: __integerMin0Max8191 };
+          AudioPidSelection: AudioPidSelection & {
+            Pid: __integerMin0Max8191;
+            Pids: (AudioPid & {
+              Pid: __integerMin0Max8191;
+              DolbyEDecode: AudioDolbyEDecode & {
+                ProgramSelection: DolbyEProgramSelection;
+              };
+              PremixSettings: AudioPreMixerSettings & {
+                RemixSettings: RemixSettings & {
+                  ChannelMappings: (AudioChannelMapping & {
+                    InputChannelLevels: (InputChannelLevel & {
+                      Gain: __integerMinNegative60Max6;
+                      InputChannel: __integerMin0Max15;
+                    })[];
+                    OutputChannel: __integerMin0Max7;
+                  })[];
+                };
+              };
+            })[];
+          };
           AudioTrackSelection: AudioTrackSelection & {
-            Tracks: (AudioTrack & { Track: __integerMin1 })[];
+            Tracks: (AudioTrack & {
+              Track: __integerMin1;
+              PremixSettings: AudioPreMixerSettings & {
+                RemixSettings: RemixSettings & {
+                  ChannelMappings: (AudioChannelMapping & {
+                    InputChannelLevels: (InputChannelLevel & {
+                      Gain: __integerMinNegative60Max6;
+                      InputChannel: __integerMin0Max15;
+                    })[];
+                    OutputChannel: __integerMin0Max7;
+                  })[];
+                };
+              };
+            })[];
             DolbyEDecode: AudioDolbyEDecode & {
               ProgramSelection: DolbyEProgramSelection;
             };
@@ -17443,9 +17775,41 @@ export interface StopChannelResponse {
           AudioLanguageSelection: AudioLanguageSelection & {
             LanguageCode: string;
           };
-          AudioPidSelection: AudioPidSelection & { Pid: __integerMin0Max8191 };
+          AudioPidSelection: AudioPidSelection & {
+            Pid: __integerMin0Max8191;
+            Pids: (AudioPid & {
+              Pid: __integerMin0Max8191;
+              DolbyEDecode: AudioDolbyEDecode & {
+                ProgramSelection: DolbyEProgramSelection;
+              };
+              PremixSettings: AudioPreMixerSettings & {
+                RemixSettings: RemixSettings & {
+                  ChannelMappings: (AudioChannelMapping & {
+                    InputChannelLevels: (InputChannelLevel & {
+                      Gain: __integerMinNegative60Max6;
+                      InputChannel: __integerMin0Max15;
+                    })[];
+                    OutputChannel: __integerMin0Max7;
+                  })[];
+                };
+              };
+            })[];
+          };
           AudioTrackSelection: AudioTrackSelection & {
-            Tracks: (AudioTrack & { Track: __integerMin1 })[];
+            Tracks: (AudioTrack & {
+              Track: __integerMin1;
+              PremixSettings: AudioPreMixerSettings & {
+                RemixSettings: RemixSettings & {
+                  ChannelMappings: (AudioChannelMapping & {
+                    InputChannelLevels: (InputChannelLevel & {
+                      Gain: __integerMinNegative60Max6;
+                      InputChannel: __integerMin0Max15;
+                    })[];
+                    OutputChannel: __integerMin0Max7;
+                  })[];
+                };
+              };
+            })[];
             DolbyEDecode: AudioDolbyEDecode & {
               ProgramSelection: DolbyEProgramSelection;
             };
@@ -18058,9 +18422,39 @@ export interface UpdateChannelResponse {
             };
             AudioPidSelection: AudioPidSelection & {
               Pid: __integerMin0Max8191;
+              Pids: (AudioPid & {
+                Pid: __integerMin0Max8191;
+                DolbyEDecode: AudioDolbyEDecode & {
+                  ProgramSelection: DolbyEProgramSelection;
+                };
+                PremixSettings: AudioPreMixerSettings & {
+                  RemixSettings: RemixSettings & {
+                    ChannelMappings: (AudioChannelMapping & {
+                      InputChannelLevels: (InputChannelLevel & {
+                        Gain: __integerMinNegative60Max6;
+                        InputChannel: __integerMin0Max15;
+                      })[];
+                      OutputChannel: __integerMin0Max7;
+                    })[];
+                  };
+                };
+              })[];
             };
             AudioTrackSelection: AudioTrackSelection & {
-              Tracks: (AudioTrack & { Track: __integerMin1 })[];
+              Tracks: (AudioTrack & {
+                Track: __integerMin1;
+                PremixSettings: AudioPreMixerSettings & {
+                  RemixSettings: RemixSettings & {
+                    ChannelMappings: (AudioChannelMapping & {
+                      InputChannelLevels: (InputChannelLevel & {
+                        Gain: __integerMinNegative60Max6;
+                        InputChannel: __integerMin0Max15;
+                      })[];
+                      OutputChannel: __integerMin0Max7;
+                    })[];
+                  };
+                };
+              })[];
               DolbyEDecode: AudioDolbyEDecode & {
                 ProgramSelection: DolbyEProgramSelection;
               };
@@ -18379,9 +18773,39 @@ export interface UpdateChannelClassResponse {
             };
             AudioPidSelection: AudioPidSelection & {
               Pid: __integerMin0Max8191;
+              Pids: (AudioPid & {
+                Pid: __integerMin0Max8191;
+                DolbyEDecode: AudioDolbyEDecode & {
+                  ProgramSelection: DolbyEProgramSelection;
+                };
+                PremixSettings: AudioPreMixerSettings & {
+                  RemixSettings: RemixSettings & {
+                    ChannelMappings: (AudioChannelMapping & {
+                      InputChannelLevels: (InputChannelLevel & {
+                        Gain: __integerMinNegative60Max6;
+                        InputChannel: __integerMin0Max15;
+                      })[];
+                      OutputChannel: __integerMin0Max7;
+                    })[];
+                  };
+                };
+              })[];
             };
             AudioTrackSelection: AudioTrackSelection & {
-              Tracks: (AudioTrack & { Track: __integerMin1 })[];
+              Tracks: (AudioTrack & {
+                Track: __integerMin1;
+                PremixSettings: AudioPreMixerSettings & {
+                  RemixSettings: RemixSettings & {
+                    ChannelMappings: (AudioChannelMapping & {
+                      InputChannelLevels: (InputChannelLevel & {
+                        Gain: __integerMinNegative60Max6;
+                        InputChannel: __integerMin0Max15;
+                      })[];
+                      OutputChannel: __integerMin0Max7;
+                    })[];
+                  };
+                };
+              })[];
               DolbyEDecode: AudioDolbyEDecode & {
                 ProgramSelection: DolbyEProgramSelection;
               };
@@ -19802,6 +20226,7 @@ export const acceptInputDeviceTransfer: API.OperationMethod<
     TooManyRequestsException,
     UnprocessableEntityException,
   ],
+  operationName: "AcceptInputDeviceTransfer",
 }));
 export type BatchDeleteError =
   | BadGatewayException
@@ -19834,6 +20259,7 @@ export const batchDelete: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "BatchDelete",
 }));
 export type BatchStartError =
   | BadGatewayException
@@ -19866,6 +20292,7 @@ export const batchStart: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "BatchStart",
 }));
 export type BatchStopError =
   | BadGatewayException
@@ -19898,6 +20325,7 @@ export const batchStop: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "BatchStop",
 }));
 export type BatchUpdateScheduleError =
   | BadGatewayException
@@ -19930,6 +20358,7 @@ export const batchUpdateSchedule: API.OperationMethod<
     TooManyRequestsException,
     UnprocessableEntityException,
   ],
+  operationName: "BatchUpdateSchedule",
 }));
 export type CancelInputDeviceTransferError =
   | BadGatewayException
@@ -19964,6 +20393,7 @@ export const cancelInputDeviceTransfer: API.OperationMethod<
     TooManyRequestsException,
     UnprocessableEntityException,
   ],
+  operationName: "CancelInputDeviceTransfer",
 }));
 export type ClaimDeviceError =
   | BadGatewayException
@@ -19996,6 +20426,7 @@ export const claimDevice: API.OperationMethod<
     TooManyRequestsException,
     UnprocessableEntityException,
   ],
+  operationName: "ClaimDevice",
 }));
 export type CreateChannelError =
   | BadGatewayException
@@ -20028,6 +20459,7 @@ export const createChannel: API.OperationMethod<
     TooManyRequestsException,
     UnprocessableEntityException,
   ],
+  operationName: "CreateChannel",
 }));
 export type CreateChannelPlacementGroupError =
   | BadGatewayException
@@ -20058,6 +20490,7 @@ export const createChannelPlacementGroup: API.OperationMethod<
     TooManyRequestsException,
     UnprocessableEntityException,
   ],
+  operationName: "CreateChannelPlacementGroup",
 }));
 export type CreateCloudWatchAlarmTemplateError =
   | BadRequestException
@@ -20086,6 +20519,7 @@ export const createCloudWatchAlarmTemplate: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "CreateCloudWatchAlarmTemplate",
 }));
 export type CreateCloudWatchAlarmTemplateGroupError =
   | BadRequestException
@@ -20114,6 +20548,7 @@ export const createCloudWatchAlarmTemplateGroup: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "CreateCloudWatchAlarmTemplateGroup",
 }));
 export type CreateClusterError =
   | BadGatewayException
@@ -20144,6 +20579,7 @@ export const createCluster: API.OperationMethod<
     InternalServerErrorException,
     TooManyRequestsException,
   ],
+  operationName: "CreateCluster",
 }));
 export type CreateEventBridgeRuleTemplateError =
   | BadRequestException
@@ -20172,6 +20608,7 @@ export const createEventBridgeRuleTemplate: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "CreateEventBridgeRuleTemplate",
 }));
 export type CreateEventBridgeRuleTemplateGroupError =
   | BadRequestException
@@ -20200,6 +20637,7 @@ export const createEventBridgeRuleTemplateGroup: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "CreateEventBridgeRuleTemplateGroup",
 }));
 export type CreateInputError =
   | BadGatewayException
@@ -20228,6 +20666,7 @@ export const createInput: API.OperationMethod<
     InternalServerErrorException,
     TooManyRequestsException,
   ],
+  operationName: "CreateInput",
 }));
 export type CreateInputSecurityGroupError =
   | BadGatewayException
@@ -20256,6 +20695,7 @@ export const createInputSecurityGroup: API.OperationMethod<
     InternalServerErrorException,
     TooManyRequestsException,
   ],
+  operationName: "CreateInputSecurityGroup",
 }));
 export type CreateMultiplexError =
   | BadGatewayException
@@ -20288,6 +20728,7 @@ export const createMultiplex: API.OperationMethod<
     TooManyRequestsException,
     UnprocessableEntityException,
   ],
+  operationName: "CreateMultiplex",
 }));
 export type CreateMultiplexProgramError =
   | BadGatewayException
@@ -20320,6 +20761,7 @@ export const createMultiplexProgram: API.OperationMethod<
     TooManyRequestsException,
     UnprocessableEntityException,
   ],
+  operationName: "CreateMultiplexProgram",
 }));
 export type CreateNetworkError =
   | BadGatewayException
@@ -20350,6 +20792,7 @@ export const createNetwork: API.OperationMethod<
     InternalServerErrorException,
     TooManyRequestsException,
   ],
+  operationName: "CreateNetwork",
 }));
 export type CreateNodeError =
   | BadGatewayException
@@ -20380,6 +20823,7 @@ export const createNode: API.OperationMethod<
     TooManyRequestsException,
     UnprocessableEntityException,
   ],
+  operationName: "CreateNode",
 }));
 export type CreateNodeRegistrationScriptError =
   | BadGatewayException
@@ -20410,6 +20854,7 @@ export const createNodeRegistrationScript: API.OperationMethod<
     InternalServerErrorException,
     TooManyRequestsException,
   ],
+  operationName: "CreateNodeRegistrationScript",
 }));
 export type CreatePartnerInputError =
   | BadGatewayException
@@ -20438,6 +20883,7 @@ export const createPartnerInput: API.OperationMethod<
     InternalServerErrorException,
     TooManyRequestsException,
   ],
+  operationName: "CreatePartnerInput",
 }));
 export type CreateSdiSourceError =
   | BadGatewayException
@@ -20468,6 +20914,7 @@ export const createSdiSource: API.OperationMethod<
     InternalServerErrorException,
     TooManyRequestsException,
   ],
+  operationName: "CreateSdiSource",
 }));
 export type CreateSignalMapError =
   | BadRequestException
@@ -20496,6 +20943,7 @@ export const createSignalMap: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "CreateSignalMap",
 }));
 export type CreateTagsError =
   | BadRequestException
@@ -20520,6 +20968,7 @@ export const createTags: API.OperationMethod<
     InternalServerErrorException,
     NotFoundException,
   ],
+  operationName: "CreateTags",
 }));
 export type DeleteChannelError =
   | BadGatewayException
@@ -20552,6 +21001,7 @@ export const deleteChannel: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DeleteChannel",
 }));
 export type DeleteChannelPlacementGroupError =
   | BadGatewayException
@@ -20584,6 +21034,7 @@ export const deleteChannelPlacementGroup: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DeleteChannelPlacementGroup",
 }));
 export type DeleteCloudWatchAlarmTemplateError =
   | BadRequestException
@@ -20612,6 +21063,7 @@ export const deleteCloudWatchAlarmTemplate: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DeleteCloudWatchAlarmTemplate",
 }));
 export type DeleteCloudWatchAlarmTemplateGroupError =
   | BadRequestException
@@ -20640,6 +21092,7 @@ export const deleteCloudWatchAlarmTemplateGroup: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DeleteCloudWatchAlarmTemplateGroup",
 }));
 export type DeleteClusterError =
   | BadGatewayException
@@ -20672,6 +21125,7 @@ export const deleteCluster: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DeleteCluster",
 }));
 export type DeleteEventBridgeRuleTemplateError =
   | BadRequestException
@@ -20700,6 +21154,7 @@ export const deleteEventBridgeRuleTemplate: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DeleteEventBridgeRuleTemplate",
 }));
 export type DeleteEventBridgeRuleTemplateGroupError =
   | BadRequestException
@@ -20728,6 +21183,7 @@ export const deleteEventBridgeRuleTemplateGroup: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DeleteEventBridgeRuleTemplateGroup",
 }));
 export type DeleteInputError =
   | BadGatewayException
@@ -20760,6 +21216,7 @@ export const deleteInput: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DeleteInput",
 }));
 export type DeleteInputSecurityGroupError =
   | BadGatewayException
@@ -20790,6 +21247,7 @@ export const deleteInputSecurityGroup: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DeleteInputSecurityGroup",
 }));
 export type DeleteMultiplexError =
   | BadGatewayException
@@ -20822,6 +21280,7 @@ export const deleteMultiplex: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DeleteMultiplex",
 }));
 export type DeleteMultiplexProgramError =
   | BadGatewayException
@@ -20854,6 +21313,7 @@ export const deleteMultiplexProgram: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DeleteMultiplexProgram",
 }));
 export type DeleteNetworkError =
   | BadGatewayException
@@ -20886,6 +21346,7 @@ export const deleteNetwork: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DeleteNetwork",
 }));
 export type DeleteNodeError =
   | BadGatewayException
@@ -20918,6 +21379,7 @@ export const deleteNode: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DeleteNode",
 }));
 export type DeleteReservationError =
   | BadGatewayException
@@ -20950,6 +21412,7 @@ export const deleteReservation: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DeleteReservation",
 }));
 export type DeleteScheduleError =
   | BadGatewayException
@@ -20980,6 +21443,7 @@ export const deleteSchedule: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DeleteSchedule",
 }));
 export type DeleteSdiSourceError =
   | BadGatewayException
@@ -21012,6 +21476,7 @@ export const deleteSdiSource: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DeleteSdiSource",
 }));
 export type DeleteSignalMapError =
   | BadRequestException
@@ -21040,6 +21505,7 @@ export const deleteSignalMap: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DeleteSignalMap",
 }));
 export type DeleteTagsError =
   | BadRequestException
@@ -21064,6 +21530,7 @@ export const deleteTags: API.OperationMethod<
     InternalServerErrorException,
     NotFoundException,
   ],
+  operationName: "DeleteTags",
 }));
 export type DescribeAccountConfigurationError =
   | BadGatewayException
@@ -21092,6 +21559,7 @@ export const describeAccountConfiguration: API.OperationMethod<
     InternalServerErrorException,
     TooManyRequestsException,
   ],
+  operationName: "DescribeAccountConfiguration",
 }));
 export type DescribeChannelError =
   | BadGatewayException
@@ -21122,6 +21590,7 @@ export const describeChannel: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DescribeChannel",
 }));
 export type DescribeChannelPlacementGroupError =
   | BadGatewayException
@@ -21152,6 +21621,7 @@ export const describeChannelPlacementGroup: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DescribeChannelPlacementGroup",
 }));
 export type DescribeClusterError =
   | BadGatewayException
@@ -21182,6 +21652,7 @@ export const describeCluster: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DescribeCluster",
 }));
 export type DescribeInputError =
   | BadGatewayException
@@ -21212,6 +21683,7 @@ export const describeInput: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DescribeInput",
 }));
 export type DescribeInputDeviceError =
   | BadGatewayException
@@ -21242,6 +21714,7 @@ export const describeInputDevice: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DescribeInputDevice",
 }));
 export type DescribeInputDeviceThumbnailError =
   | BadGatewayException
@@ -21272,6 +21745,7 @@ export const describeInputDeviceThumbnail: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DescribeInputDeviceThumbnail",
 }));
 export type DescribeInputSecurityGroupError =
   | BadGatewayException
@@ -21302,6 +21776,7 @@ export const describeInputSecurityGroup: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DescribeInputSecurityGroup",
 }));
 export type DescribeMultiplexError =
   | BadGatewayException
@@ -21332,6 +21807,7 @@ export const describeMultiplex: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DescribeMultiplex",
 }));
 export type DescribeMultiplexProgramError =
   | BadGatewayException
@@ -21362,6 +21838,7 @@ export const describeMultiplexProgram: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DescribeMultiplexProgram",
 }));
 export type DescribeNetworkError =
   | BadGatewayException
@@ -21392,6 +21869,7 @@ export const describeNetwork: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DescribeNetwork",
 }));
 export type DescribeNodeError =
   | BadGatewayException
@@ -21422,6 +21900,7 @@ export const describeNode: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DescribeNode",
 }));
 export type DescribeOfferingError =
   | BadGatewayException
@@ -21452,6 +21931,7 @@ export const describeOffering: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DescribeOffering",
 }));
 export type DescribeReservationError =
   | BadGatewayException
@@ -21482,6 +21962,7 @@ export const describeReservation: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DescribeReservation",
 }));
 export type DescribeScheduleError =
   | BadGatewayException
@@ -21527,6 +22008,7 @@ export const describeSchedule: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DescribeSchedule",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -21563,6 +22045,7 @@ export const describeSdiSource: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DescribeSdiSource",
 }));
 export type DescribeThumbnailsError =
   | BadGatewayException
@@ -21595,6 +22078,7 @@ export const describeThumbnails: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "DescribeThumbnails",
 }));
 export type GetCloudWatchAlarmTemplateError =
   | BadRequestException
@@ -21621,6 +22105,7 @@ export const getCloudWatchAlarmTemplate: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "GetCloudWatchAlarmTemplate",
 }));
 export type GetCloudWatchAlarmTemplateGroupError =
   | BadRequestException
@@ -21647,6 +22132,7 @@ export const getCloudWatchAlarmTemplateGroup: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "GetCloudWatchAlarmTemplateGroup",
 }));
 export type GetEventBridgeRuleTemplateError =
   | BadRequestException
@@ -21673,6 +22159,7 @@ export const getEventBridgeRuleTemplate: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "GetEventBridgeRuleTemplate",
 }));
 export type GetEventBridgeRuleTemplateGroupError =
   | BadRequestException
@@ -21699,6 +22186,7 @@ export const getEventBridgeRuleTemplateGroup: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "GetEventBridgeRuleTemplateGroup",
 }));
 export type GetSignalMapError =
   | BadRequestException
@@ -21725,6 +22213,7 @@ export const getSignalMap: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "GetSignalMap",
 }));
 export type ListAlertsError =
   | BadGatewayException
@@ -21770,6 +22259,7 @@ export const listAlerts: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "ListAlerts",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -21819,6 +22309,7 @@ export const listChannelPlacementGroups: API.OperationMethod<
     InternalServerErrorException,
     TooManyRequestsException,
   ],
+  operationName: "ListChannelPlacementGroups",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -21868,6 +22359,7 @@ export const listChannels: API.OperationMethod<
     InternalServerErrorException,
     TooManyRequestsException,
   ],
+  operationName: "ListChannels",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -21915,6 +22407,7 @@ export const listCloudWatchAlarmTemplateGroups: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "ListCloudWatchAlarmTemplateGroups",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -21962,6 +22455,7 @@ export const listCloudWatchAlarmTemplates: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "ListCloudWatchAlarmTemplates",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -22013,6 +22507,7 @@ export const listClusterAlerts: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "ListClusterAlerts",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -22062,6 +22557,7 @@ export const listClusters: API.OperationMethod<
     InternalServerErrorException,
     TooManyRequestsException,
   ],
+  operationName: "ListClusters",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -22109,6 +22605,7 @@ export const listEventBridgeRuleTemplateGroups: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "ListEventBridgeRuleTemplateGroups",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -22156,6 +22653,7 @@ export const listEventBridgeRuleTemplates: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "ListEventBridgeRuleTemplates",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -22205,6 +22703,7 @@ export const listInputDevices: API.OperationMethod<
     InternalServerErrorException,
     TooManyRequestsException,
   ],
+  operationName: "ListInputDevices",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -22256,6 +22755,7 @@ export const listInputDeviceTransfers: API.OperationMethod<
     TooManyRequestsException,
     UnprocessableEntityException,
   ],
+  operationName: "ListInputDeviceTransfers",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -22305,6 +22805,7 @@ export const listInputs: API.OperationMethod<
     InternalServerErrorException,
     TooManyRequestsException,
   ],
+  operationName: "ListInputs",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -22354,6 +22855,7 @@ export const listInputSecurityGroups: API.OperationMethod<
     InternalServerErrorException,
     TooManyRequestsException,
   ],
+  operationName: "ListInputSecurityGroups",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -22405,6 +22907,7 @@ export const listMultiplexAlerts: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "ListMultiplexAlerts",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -22454,6 +22957,7 @@ export const listMultiplexes: API.OperationMethod<
     InternalServerErrorException,
     TooManyRequestsException,
   ],
+  operationName: "ListMultiplexes",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -22505,6 +23009,7 @@ export const listMultiplexPrograms: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "ListMultiplexPrograms",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -22554,6 +23059,7 @@ export const listNetworks: API.OperationMethod<
     InternalServerErrorException,
     TooManyRequestsException,
   ],
+  operationName: "ListNetworks",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -22603,6 +23109,7 @@ export const listNodes: API.OperationMethod<
     InternalServerErrorException,
     TooManyRequestsException,
   ],
+  operationName: "ListNodes",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -22652,6 +23159,7 @@ export const listOfferings: API.OperationMethod<
     InternalServerErrorException,
     TooManyRequestsException,
   ],
+  operationName: "ListOfferings",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -22701,6 +23209,7 @@ export const listReservations: API.OperationMethod<
     InternalServerErrorException,
     TooManyRequestsException,
   ],
+  operationName: "ListReservations",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -22750,6 +23259,7 @@ export const listSdiSources: API.OperationMethod<
     InternalServerErrorException,
     TooManyRequestsException,
   ],
+  operationName: "ListSdiSources",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -22797,6 +23307,7 @@ export const listSignalMaps: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "ListSignalMaps",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -22827,6 +23338,7 @@ export const listTagsForResource: API.OperationMethod<
     InternalServerErrorException,
     NotFoundException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type ListVersionsError =
   | BadGatewayException
@@ -22859,6 +23371,7 @@ export const listVersions: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "ListVersions",
 }));
 export type PurchaseOfferingError =
   | BadGatewayException
@@ -22891,6 +23404,7 @@ export const purchaseOffering: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "PurchaseOffering",
 }));
 export type RebootInputDeviceError =
   | BadGatewayException
@@ -22923,6 +23437,7 @@ export const rebootInputDevice: API.OperationMethod<
     TooManyRequestsException,
     UnprocessableEntityException,
   ],
+  operationName: "RebootInputDevice",
 }));
 export type RejectInputDeviceTransferError =
   | BadGatewayException
@@ -22957,6 +23472,7 @@ export const rejectInputDeviceTransfer: API.OperationMethod<
     TooManyRequestsException,
     UnprocessableEntityException,
   ],
+  operationName: "RejectInputDeviceTransfer",
 }));
 export type RestartChannelPipelinesError =
   | BadGatewayException
@@ -22989,6 +23505,7 @@ export const restartChannelPipelines: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "RestartChannelPipelines",
 }));
 export type StartChannelError =
   | BadGatewayException
@@ -23021,6 +23538,7 @@ export const startChannel: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "StartChannel",
 }));
 export type StartDeleteMonitorDeploymentError =
   | BadRequestException
@@ -23049,6 +23567,7 @@ export const startDeleteMonitorDeployment: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "StartDeleteMonitorDeployment",
 }));
 export type StartInputDeviceError =
   | BadGatewayException
@@ -23081,6 +23600,7 @@ export const startInputDevice: API.OperationMethod<
     TooManyRequestsException,
     UnprocessableEntityException,
   ],
+  operationName: "StartInputDevice",
 }));
 export type StartInputDeviceMaintenanceWindowError =
   | BadGatewayException
@@ -23113,6 +23633,7 @@ export const startInputDeviceMaintenanceWindow: API.OperationMethod<
     TooManyRequestsException,
     UnprocessableEntityException,
   ],
+  operationName: "StartInputDeviceMaintenanceWindow",
 }));
 export type StartMonitorDeploymentError =
   | BadRequestException
@@ -23141,6 +23662,7 @@ export const startMonitorDeployment: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "StartMonitorDeployment",
 }));
 export type StartMultiplexError =
   | BadGatewayException
@@ -23173,6 +23695,7 @@ export const startMultiplex: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "StartMultiplex",
 }));
 export type StartUpdateSignalMapError =
   | BadRequestException
@@ -23201,6 +23724,7 @@ export const startUpdateSignalMap: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "StartUpdateSignalMap",
 }));
 export type StopChannelError =
   | BadGatewayException
@@ -23233,6 +23757,7 @@ export const stopChannel: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "StopChannel",
 }));
 export type StopInputDeviceError =
   | BadGatewayException
@@ -23265,6 +23790,7 @@ export const stopInputDevice: API.OperationMethod<
     TooManyRequestsException,
     UnprocessableEntityException,
   ],
+  operationName: "StopInputDevice",
 }));
 export type StopMultiplexError =
   | BadGatewayException
@@ -23297,6 +23823,7 @@ export const stopMultiplex: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "StopMultiplex",
 }));
 export type TransferInputDeviceError =
   | BadGatewayException
@@ -23331,6 +23858,7 @@ export const transferInputDevice: API.OperationMethod<
     TooManyRequestsException,
     UnprocessableEntityException,
   ],
+  operationName: "TransferInputDevice",
 }));
 export type UpdateAccountConfigurationError =
   | BadGatewayException
@@ -23361,6 +23889,7 @@ export const updateAccountConfiguration: API.OperationMethod<
     TooManyRequestsException,
     UnprocessableEntityException,
   ],
+  operationName: "UpdateAccountConfiguration",
 }));
 export type UpdateChannelError =
   | BadGatewayException
@@ -23391,6 +23920,7 @@ export const updateChannel: API.OperationMethod<
     InternalServerErrorException,
     UnprocessableEntityException,
   ],
+  operationName: "UpdateChannel",
 }));
 export type UpdateChannelClassError =
   | BadGatewayException
@@ -23425,6 +23955,7 @@ export const updateChannelClass: API.OperationMethod<
     TooManyRequestsException,
     UnprocessableEntityException,
   ],
+  operationName: "UpdateChannelClass",
 }));
 export type UpdateChannelPlacementGroupError =
   | BadGatewayException
@@ -23457,6 +23988,7 @@ export const updateChannelPlacementGroup: API.OperationMethod<
     TooManyRequestsException,
     UnprocessableEntityException,
   ],
+  operationName: "UpdateChannelPlacementGroup",
 }));
 export type UpdateCloudWatchAlarmTemplateError =
   | BadRequestException
@@ -23485,6 +24017,7 @@ export const updateCloudWatchAlarmTemplate: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "UpdateCloudWatchAlarmTemplate",
 }));
 export type UpdateCloudWatchAlarmTemplateGroupError =
   | BadRequestException
@@ -23513,6 +24046,7 @@ export const updateCloudWatchAlarmTemplateGroup: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "UpdateCloudWatchAlarmTemplateGroup",
 }));
 export type UpdateClusterError =
   | BadGatewayException
@@ -23543,6 +24077,7 @@ export const updateCluster: API.OperationMethod<
     InternalServerErrorException,
     TooManyRequestsException,
   ],
+  operationName: "UpdateCluster",
 }));
 export type UpdateEventBridgeRuleTemplateError =
   | BadRequestException
@@ -23571,6 +24106,7 @@ export const updateEventBridgeRuleTemplate: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "UpdateEventBridgeRuleTemplate",
 }));
 export type UpdateEventBridgeRuleTemplateGroupError =
   | BadRequestException
@@ -23599,6 +24135,7 @@ export const updateEventBridgeRuleTemplateGroup: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "UpdateEventBridgeRuleTemplateGroup",
 }));
 export type UpdateInputError =
   | BadGatewayException
@@ -23629,6 +24166,7 @@ export const updateInput: API.OperationMethod<
     InternalServerErrorException,
     NotFoundException,
   ],
+  operationName: "UpdateInput",
 }));
 export type UpdateInputDeviceError =
   | BadGatewayException
@@ -23661,6 +24199,7 @@ export const updateInputDevice: API.OperationMethod<
     TooManyRequestsException,
     UnprocessableEntityException,
   ],
+  operationName: "UpdateInputDevice",
 }));
 export type UpdateInputSecurityGroupError =
   | BadGatewayException
@@ -23691,6 +24230,7 @@ export const updateInputSecurityGroup: API.OperationMethod<
     InternalServerErrorException,
     NotFoundException,
   ],
+  operationName: "UpdateInputSecurityGroup",
 }));
 export type UpdateMultiplexError =
   | BadGatewayException
@@ -23723,6 +24263,7 @@ export const updateMultiplex: API.OperationMethod<
     NotFoundException,
     UnprocessableEntityException,
   ],
+  operationName: "UpdateMultiplex",
 }));
 export type UpdateMultiplexProgramError =
   | BadGatewayException
@@ -23755,6 +24296,7 @@ export const updateMultiplexProgram: API.OperationMethod<
     NotFoundException,
     UnprocessableEntityException,
   ],
+  operationName: "UpdateMultiplexProgram",
 }));
 export type UpdateNetworkError =
   | BadGatewayException
@@ -23785,6 +24327,7 @@ export const updateNetwork: API.OperationMethod<
     InternalServerErrorException,
     TooManyRequestsException,
   ],
+  operationName: "UpdateNetwork",
 }));
 export type UpdateNodeError =
   | BadGatewayException
@@ -23815,6 +24358,7 @@ export const updateNode: API.OperationMethod<
     InternalServerErrorException,
     TooManyRequestsException,
   ],
+  operationName: "UpdateNode",
 }));
 export type UpdateNodeStateError =
   | BadGatewayException
@@ -23847,6 +24391,7 @@ export const updateNodeState: API.OperationMethod<
     TooManyRequestsException,
     UnprocessableEntityException,
   ],
+  operationName: "UpdateNodeState",
 }));
 export type UpdateReservationError =
   | BadGatewayException
@@ -23879,6 +24424,7 @@ export const updateReservation: API.OperationMethod<
     NotFoundException,
     TooManyRequestsException,
   ],
+  operationName: "UpdateReservation",
 }));
 export type UpdateSdiSourceError =
   | BadGatewayException
@@ -23909,4 +24455,5 @@ export const updateSdiSource: API.OperationMethod<
     InternalServerErrorException,
     TooManyRequestsException,
   ],
+  operationName: "UpdateSdiSource",
 }));

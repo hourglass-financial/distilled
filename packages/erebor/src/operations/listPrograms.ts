@@ -3,6 +3,12 @@ import { API } from "../client.ts";
 import * as T from "../traits.ts";
 
 // Input Schema
+export interface ListProgramsInput {
+  page_size?: number;
+  starting_after?: string;
+  ending_before?: string;
+  ereborVersion?: string;
+}
 export const ListProgramsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   page_size: Schema.optional(Schema.Number),
   starting_after: Schema.optional(Schema.String),
@@ -10,10 +16,29 @@ export const ListProgramsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   ereborVersion: Schema.optional(Schema.String).pipe(
     T.HttpHeader("Erebor-Version"),
   ),
-}).pipe(T.Http({ method: "GET", path: "/programs" }));
-export type ListProgramsInput = typeof ListProgramsInput.Type;
+}).pipe(
+  T.Http({ method: "GET", path: "/programs" }),
+) as unknown as Schema.Codec<ListProgramsInput>;
 
 // Output Schema
+export interface ListProgramsOutput {
+  data: ReadonlyArray<{
+    id: string;
+    type: "PROGRAM";
+    url: string;
+    created_at: string;
+    updated_at: string;
+    archived_at?: string | null;
+    name: string;
+    billing_deposit_account_id?: string;
+    program_type?: string | null;
+  }>;
+  has_more: boolean;
+  page_size: number;
+  page_next?: string | null;
+  page_prev?: string | null;
+  url: string;
+}
 export const ListProgramsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Array(
     Schema.Struct({
@@ -33,8 +58,7 @@ export const ListProgramsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   page_next: Schema.optional(Schema.NullOr(Schema.String)),
   page_prev: Schema.optional(Schema.NullOr(Schema.String)),
   url: Schema.String,
-});
-export type ListProgramsOutput = typeof ListProgramsOutput.Type;
+}) as unknown as Schema.Codec<ListProgramsOutput>;
 
 // The operation
 /**

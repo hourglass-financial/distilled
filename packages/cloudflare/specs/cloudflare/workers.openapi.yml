@@ -10989,6 +10989,8 @@ paths:
                   - pattern
       x-distilled-response-path: result
       x-distilled-errors:
+        RouteScriptNotFound:
+          - code: 10019
         InvalidRoutePattern:
           - code: 10022
         InvalidRoute:
@@ -11949,7 +11951,9 @@ paths:
                     keep_assets:
                       type: boolean
                       description: Retain assets which exist for a previously uploaded Worker version;
-                        used in lieu of providing a completion token.
+                        used in lieu of providing a completion token. An
+                        explicit `assets` upload takes precedence over
+                        `keep_assets`.
                     keep_bindings:
                       type: array
                       items:
@@ -12317,6 +12321,13 @@ paths:
                             type: string
                         required:
                           - class_name
+                    cache_options:
+                      type: object
+                      properties:
+                        enabled:
+                          type: boolean
+                        cross_version_cache:
+                          type: boolean
                   description: "Body param: JSON-encoded metadata about the uploaded parts and
                     Worker configuration."
                 files:
@@ -12774,6 +12785,28 @@ paths:
           - code: 10021
             message:
               includes: No such module
+        SecretsStoreBindingNotFound:
+          - code: 10182
+        KVNamespaceNotFound:
+          - code: 10041
+        R2BucketNotFound:
+          - code: 10085
+        D1DatabaseNotFound:
+          - code: 10181
+        QueueNotFound:
+          - code: 11000
+        ServiceBindingNotFound:
+          - code: 10144
+        DurableObjectClassNotFound:
+          - code: 10061
+        HyperdriveConfigNotFound:
+          - code: 10157
+        VectorizeIndexNotFound:
+          - code: 10159
+        DispatchNamespaceNotFound:
+          - code: 100119
+        MtlsCertificateNotFound:
+          - code: 100143
     delete:
       operationId: deleteScript
       description: "Delete your worker. This call has no response body on a successful
@@ -18917,6 +18950,10 @@ paths:
       x-distilled-errors:
         WorkerNotFound:
           - code: 10007
+        WorkerHasNoVersions:
+          - status: 404
+            message:
+              includes: has no versions
     patch:
       operationId: patchScriptSetting
       description: "Patch script-level settings when using [Worker
@@ -21336,6 +21373,13 @@ paths:
                         - bundled
                         - unbound
                       description: Usage model for the Worker invocations.
+                    cache_options:
+                      type: object
+                      properties:
+                        enabled:
+                          type: boolean
+                        cross_version_cache:
+                          type: boolean
                   required:
                     - main_module
                   description: "Body param: JSON-encoded metadata about the uploaded parts and

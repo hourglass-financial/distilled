@@ -4,6 +4,21 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden } from "../errors.ts";
 
 // Input Schema
+export interface ListAllInquiryTemplatesInput {
+  page?: { after?: string; before?: string; size?: number };
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const ListAllInquiryTemplatesInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     page: Schema.optional(
@@ -12,7 +27,7 @@ export const ListAllInquiryTemplatesInput =
         before: Schema.optional(Schema.String),
         size: Schema.optional(Schema.Number),
       }),
-    ).pipe(T.HttpQuery("page")),
+    ),
     fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
       T.HttpQuery("fields"),
     ),
@@ -34,11 +49,219 @@ export const ListAllInquiryTemplatesInput =
         "2020-05-18",
       ]),
     ).pipe(T.HttpHeader("Persona-Version")),
-  }).pipe(T.Http({ method: "GET", path: "/inquiry-templates" }));
-export type ListAllInquiryTemplatesInput =
-  typeof ListAllInquiryTemplatesInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/inquiry-templates" }),
+  ) as unknown as Schema.Codec<ListAllInquiryTemplatesInput>;
 
 // Output Schema
+export interface ListAllInquiryTemplatesOutput {
+  data: ReadonlyArray<{
+    type?: string;
+    id?: string;
+    attributes?: {
+      name?: string;
+      status?: string;
+      "embedded-flow-domain-allowlist"?: ReadonlyArray<string>;
+      "hosted-flow-subdomains"?: ReadonlyArray<string>;
+      "hosted-flow-redirect-uri-schemes"?: ReadonlyArray<string>;
+      "field-schemas"?: ReadonlyArray<
+        | {
+            type?: string;
+            key?: string;
+            label?: string | null;
+            config?: {
+              required?: boolean;
+              "archived-at"?: string | null;
+              "deactivated-at"?: string | null;
+              "source-key-path"?: string | null;
+              "redaction-policy"?: string;
+              "write-policy"?: string;
+              "item-schema"?: unknown;
+            };
+          }
+        | {
+            type?: string;
+            key?: string;
+            label?: string | null;
+            "default-value"?: boolean | null;
+            config?: {
+              required?: boolean;
+              "archived-at"?: string | null;
+              "deactivated-at"?: string | null;
+              "source-key-path"?: string | null;
+              "redaction-policy"?: string;
+              "write-policy"?: string;
+            };
+          }
+        | {
+            type?: string;
+            key?: string;
+            label?: string | null;
+            "default-value"?: string | null;
+            config?: {
+              required?: boolean;
+              "archived-at"?: string | null;
+              "deactivated-at"?: string | null;
+              "source-key-path"?: string | null;
+              "redaction-policy"?: string;
+              "write-policy"?: string;
+              "allow-empty"?: boolean;
+              options?: ReadonlyArray<string>;
+              "option-labels"?: ReadonlyArray<string>;
+            };
+          }
+        | {
+            type?: string;
+            key?: string;
+            label?: string | null;
+            "default-value"?: string | null;
+            config?: {
+              required?: boolean;
+              "archived-at"?: string | null;
+              "deactivated-at"?: string | null;
+              "source-key-path"?: string | null;
+              "redaction-policy"?: string;
+              "write-policy"?: string;
+              "min-date"?: string | null;
+              "max-date"?: string | null;
+            };
+          }
+        | {
+            type?: string;
+            key?: string;
+            label?: string | null;
+            "default-value"?: string | null;
+            config?: {
+              required?: boolean;
+              "archived-at"?: string | null;
+              "deactivated-at"?: string | null;
+              "source-key-path"?: string | null;
+              "redaction-policy"?: string;
+              "write-policy"?: string;
+            };
+          }
+        | {
+            type?: string;
+            key?: string;
+            label?: string | null;
+            config?: {
+              required?: boolean;
+              "archived-at"?: string | null;
+              "deactivated-at"?: string | null;
+              "source-key-path"?: string | null;
+              "redaction-policy"?: string;
+              "write-policy"?: string;
+              "max-file-size-bytes"?: number;
+              "min-file-size-bytes"?: number;
+              "supported-mime-types"?: ReadonlyArray<string>;
+              "page-count-limit-enabled"?: boolean;
+              "page-count-min"?: number | null;
+              "page-count-max"?: number | null;
+            };
+          }
+        | {
+            type?: string;
+            key?: string;
+            label?: string | null;
+            config?: {
+              required?: boolean;
+              "archived-at"?: string | null;
+              "deactivated-at"?: string | null;
+              "source-key-path"?: string | null;
+              "redaction-policy"?: string;
+              "write-policy"?: string;
+              "ignore-unknown-keys"?: boolean;
+              "item-schemas"?: ReadonlyArray<unknown>;
+            };
+          }
+        | {
+            type?: string;
+            key?: string;
+            label?: string | null;
+            "default-value"?: number | null;
+            config?: {
+              required?: boolean;
+              "archived-at"?: string | null;
+              "deactivated-at"?: string | null;
+              "source-key-path"?: string | null;
+              "redaction-policy"?: string;
+              "write-policy"?: string;
+              min?: number;
+              max?: number;
+            };
+          }
+        | {
+            type?: string;
+            key?: string;
+            label?: string | null;
+            "default-value"?: unknown;
+            config?: {
+              required?: boolean;
+              "archived-at"?: string | null;
+              "deactivated-at"?: string | null;
+              "source-key-path"?: string | null;
+              "redaction-policy"?: string;
+              "write-policy"?: string;
+              "json-schema"?: Record<string, unknown>;
+            };
+          }
+        | {
+            type?: string;
+            key?: string;
+            label?: string | null;
+            "default-value"?: ReadonlyArray<string> | null;
+            config?: {
+              required?: boolean;
+              "archived-at"?: string | null;
+              "deactivated-at"?: string | null;
+              "source-key-path"?: string | null;
+              "redaction-policy"?: string;
+              "write-policy"?: string;
+              "allow-empty"?: boolean;
+              options?: ReadonlyArray<string>;
+              "option-labels"?: ReadonlyArray<string>;
+            };
+          }
+        | {
+            type?: string;
+            key?: string;
+            label?: string | null;
+            "default-value"?: string | null;
+            config?: {
+              required?: boolean;
+              "archived-at"?: string | null;
+              "deactivated-at"?: string | null;
+              "source-key-path"?: string | null;
+              "redaction-policy"?: string;
+              "write-policy"?: string;
+              "max-char-length"?: number;
+              sanitize?: ReadonlyArray<string>;
+            };
+          }
+        | {
+            type?: string;
+            key?: string;
+            label?: string | null;
+            config?: {
+              required?: boolean;
+              "archived-at"?: string | null;
+              "deactivated-at"?: string | null;
+              "source-key-path"?: string | null;
+              "redaction-policy"?: string;
+              "write-policy"?: string;
+              target?: string;
+            };
+          }
+      >;
+    };
+    relationships?: {
+      "latest-published-version"?: {
+        data?: { type?: string; id?: string } | null;
+      };
+    };
+  }>;
+  links: { prev: string | null; next: string | null };
+}
 export const ListAllInquiryTemplatesOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Array(
@@ -83,9 +306,7 @@ export const ListAllInquiryTemplatesOutput =
       prev: Schema.NullOr(Schema.String),
       next: Schema.NullOr(Schema.String),
     }),
-  });
-export type ListAllInquiryTemplatesOutput =
-  typeof ListAllInquiryTemplatesOutput.Type;
+  }) as unknown as Schema.Codec<ListAllInquiryTemplatesOutput>;
 
 // The operation
 /**

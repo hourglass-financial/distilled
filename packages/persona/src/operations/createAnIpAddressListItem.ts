@@ -10,6 +10,22 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface CreateAnIpAddressListItemInput {
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  data?: { attributes?: { "list-id"?: string; value?: string } };
+}
 export const CreateAnIpAddressListItemInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
@@ -44,11 +60,29 @@ export const CreateAnIpAddressListItemInput =
         ),
       }),
     ),
-  }).pipe(T.Http({ method: "POST", path: "/list-item/ip-addresses" }));
-export type CreateAnIpAddressListItemInput =
-  typeof CreateAnIpAddressListItemInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/list-item/ip-addresses" }),
+  ) as unknown as Schema.Codec<CreateAnIpAddressListItemInput>;
 
 // Output Schema
+export interface CreateAnIpAddressListItemOutput {
+  data: {
+    id?: string;
+    type?: string;
+    attributes?: {
+      status?: string;
+      "archived-at"?: string | null;
+      "updated-at"?: string | null;
+      "created-at"?: string;
+      "redacted-at"?: string | null;
+      "match-count"?: number;
+      value?: string;
+    };
+    relationships?: {
+      creator?: { data?: { type?: string; id?: string } | null };
+    };
+  };
+}
 export const CreateAnIpAddressListItemOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -69,15 +103,20 @@ export const CreateAnIpAddressListItemOutput =
         Schema.Struct({
           creator: Schema.optional(
             Schema.Struct({
-              data: Schema.optional(Schema.Unknown),
+              data: Schema.optional(
+                Schema.NullOr(
+                  Schema.Struct({
+                    type: Schema.optional(Schema.String),
+                    id: Schema.optional(Schema.String),
+                  }),
+                ),
+              ),
             }),
           ),
         }),
       ),
     }),
-  });
-export type CreateAnIpAddressListItemOutput =
-  typeof CreateAnIpAddressListItemOutput.Type;
+  }) as unknown as Schema.Codec<CreateAnIpAddressListItemOutput>;
 
 // The operation
 /**

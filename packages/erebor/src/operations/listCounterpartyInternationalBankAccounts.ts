@@ -3,6 +3,16 @@ import { API } from "../client.ts";
 import * as T from "../traits.ts";
 
 // Input Schema
+export interface ListCounterpartyInternationalBankAccountsInput {
+  page_size?: number;
+  starting_after?: string;
+  ending_before?: string;
+  counterparty_id?: string;
+  customer_id?: string;
+  program_id?: string;
+  custom_ref?: string;
+  ereborVersion?: string;
+}
 export const ListCounterpartyInternationalBankAccountsInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     page_size: Schema.optional(Schema.Number),
@@ -20,11 +30,40 @@ export const ListCounterpartyInternationalBankAccountsInput =
       method: "GET",
       path: "/counterparty_international_bank_accounts",
     }),
-  );
-export type ListCounterpartyInternationalBankAccountsInput =
-  typeof ListCounterpartyInternationalBankAccountsInput.Type;
+  ) as unknown as Schema.Codec<ListCounterpartyInternationalBankAccountsInput>;
 
 // Output Schema
+export interface ListCounterpartyInternationalBankAccountsOutput {
+  data: ReadonlyArray<{
+    id: string;
+    type: "COUNTERPARTY_INTERNATIONAL_BANK_ACCOUNT";
+    url: string;
+    created_at: string;
+    updated_at: string;
+    archived_at?: string | null;
+    customer_id?: string | null;
+    program_id?: string | null;
+    counterparty_id?: string | null;
+    description: string | null;
+    account_number: string;
+    bic: string;
+    country_code: string;
+    additional_account_number_data?: {
+      canada?: {
+        institution_number: string;
+        transit_number: string;
+        account_number?: string;
+      } | null;
+    } | null;
+    custom_ref?: string | null;
+    custom_fields?: Record<string, unknown> | null;
+  }>;
+  has_more: boolean;
+  page_size: number;
+  page_next?: string | null;
+  page_prev?: string | null;
+  url: string;
+}
 export const ListCounterpartyInternationalBankAccountsOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Array(
@@ -42,9 +81,25 @@ export const ListCounterpartyInternationalBankAccountsOutput =
         account_number: Schema.String,
         bic: Schema.String,
         country_code: Schema.String,
-        additional_account_number_data: Schema.optional(Schema.Unknown),
-        custom_ref: Schema.optional(Schema.Unknown),
-        custom_fields: Schema.optional(Schema.Unknown),
+        additional_account_number_data: Schema.optional(
+          Schema.NullOr(
+            Schema.Struct({
+              canada: Schema.optional(
+                Schema.NullOr(
+                  Schema.Struct({
+                    institution_number: Schema.String,
+                    transit_number: Schema.String,
+                    account_number: Schema.optional(Schema.String),
+                  }),
+                ),
+              ),
+            }),
+          ),
+        ),
+        custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+        custom_fields: Schema.optional(
+          Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+        ),
       }),
     ),
     has_more: Schema.Boolean,
@@ -52,9 +107,7 @@ export const ListCounterpartyInternationalBankAccountsOutput =
     page_next: Schema.optional(Schema.NullOr(Schema.String)),
     page_prev: Schema.optional(Schema.NullOr(Schema.String)),
     url: Schema.String,
-  });
-export type ListCounterpartyInternationalBankAccountsOutput =
-  typeof ListCounterpartyInternationalBankAccountsOutput.Type;
+  }) as unknown as Schema.Codec<ListCounterpartyInternationalBankAccountsOutput>;
 
 // The operation
 /**

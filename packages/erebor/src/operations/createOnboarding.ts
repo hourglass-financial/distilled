@@ -9,6 +9,18 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface CreateOnboardingInput {
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  ereborSimulationScenario?: "ONBOARDING_REJECTED" | "ONBOARDING_UNDER_REVIEW";
+  program_id?: string;
+  person_applicant_id?: string | null;
+  business_applicant_id?: string | null;
+  deposit_account_template_id?: string;
+  disclosures: { disclosures_signed_externally: boolean };
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const CreateOnboardingInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   ereborVersion: Schema.optional(Schema.String).pipe(
     T.HttpHeader("Erebor-Version"),
@@ -28,10 +40,31 @@ export const CreateOnboardingInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   }),
   custom_ref: Schema.optional(Schema.String),
   custom_fields: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
-}).pipe(T.Http({ method: "POST", path: "/onboardings" }));
-export type CreateOnboardingInput = typeof CreateOnboardingInput.Type;
+}).pipe(
+  T.Http({ method: "POST", path: "/onboardings" }),
+) as unknown as Schema.Codec<CreateOnboardingInput>;
 
 // Output Schema
+export interface CreateOnboardingOutput {
+  id: string;
+  type: "ONBOARDING";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id: string;
+  status: "SUBMITTED" | "UNDER_REVIEW" | "APPROVED" | "REJECTED";
+  applicant_type: "PERSON" | "BUSINESS";
+  person_applicant_id?: string | null;
+  business_applicant_id?: string | null;
+  deposit_account_template_id?: string | null;
+  disclosures?: { disclosures_signed_externally: boolean };
+  customer_id?: string | null;
+  deposit_account_id?: string | null;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+  rejection_reason?: string | null;
+}
 export const CreateOnboardingOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
   {
     id: Schema.String,
@@ -58,12 +91,13 @@ export const CreateOnboardingOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
     ),
     customer_id: Schema.optional(Schema.NullOr(Schema.String)),
     deposit_account_id: Schema.optional(Schema.NullOr(Schema.String)),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
     rejection_reason: Schema.optional(Schema.NullOr(Schema.String)),
   },
-);
-export type CreateOnboardingOutput = typeof CreateOnboardingOutput.Type;
+) as unknown as Schema.Codec<CreateOnboardingOutput>;
 
 // The operation
 /**

@@ -4,17 +4,78 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface GetDepositAccountTemplateInput {
+  id: string;
+  ereborVersion?: string;
+}
 export const GetDepositAccountTemplateInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
-  }).pipe(T.Http({ method: "GET", path: "/deposit_account_templates/{id}" }));
-export type GetDepositAccountTemplateInput =
-  typeof GetDepositAccountTemplateInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/deposit_account_templates/{id}" }),
+  ) as unknown as Schema.Codec<GetDepositAccountTemplateInput>;
 
 // Output Schema
+export interface GetDepositAccountTemplateOutput {
+  id: string;
+  type: "DEPOSIT_ACCOUNT_TEMPLATE";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id?: string | null;
+  name: string;
+  deposit_account_type: "DDA" | "FBO" | "OMNIBUS" | "VIRTUAL_DDA";
+  ownership_types: ReadonlyArray<"BUSINESS" | "INDIVIDUAL">;
+  status: "ENABLED" | "DISABLED";
+  interest_rates: {
+    rate_config: {
+      rate_type: "FIXED" | "VARIABLE";
+      fixed_rate?: {
+        tiers: ReadonlyArray<{
+          balance_min: {
+            currency: string;
+            exponent?: number;
+            value: string;
+            display_value?: string;
+          };
+          balance_max?: {
+            currency: string;
+            exponent?: number;
+            value: string;
+            display_value?: string;
+          } | null;
+          rate_bps: number;
+        }>;
+      } | null;
+      variable_rate?: {
+        benchmark: "EFFR";
+        tiers: ReadonlyArray<{
+          balance_min: {
+            currency: string;
+            exponent?: number;
+            value: string;
+            display_value?: string;
+          };
+          balance_max?: {
+            currency: string;
+            exponent?: number;
+            value: string;
+            display_value?: string;
+          } | null;
+          calculation_method: "SPREAD" | "PERCENTAGE";
+          spread_bps?: number | null;
+          percentage_bps?: number | null;
+        }>;
+      } | null;
+    };
+    starting_on?: string | null;
+    ending_on?: string | null;
+  };
+}
 export const GetDepositAccountTemplateOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -36,15 +97,68 @@ export const GetDepositAccountTemplateOutput =
     interest_rates: Schema.Struct({
       rate_config: Schema.Struct({
         rate_type: Schema.Literals(["FIXED", "VARIABLE"]),
-        fixed_rate: Schema.optional(Schema.Unknown),
-        variable_rate: Schema.optional(Schema.Unknown),
+        fixed_rate: Schema.optional(
+          Schema.NullOr(
+            Schema.Struct({
+              tiers: Schema.Array(
+                Schema.Struct({
+                  balance_min: Schema.Struct({
+                    currency: Schema.String,
+                    exponent: Schema.optional(Schema.Number),
+                    value: Schema.String,
+                    display_value: Schema.optional(Schema.String),
+                  }),
+                  balance_max: Schema.optional(
+                    Schema.NullOr(
+                      Schema.Struct({
+                        currency: Schema.String,
+                        exponent: Schema.optional(Schema.Number),
+                        value: Schema.String,
+                        display_value: Schema.optional(Schema.String),
+                      }),
+                    ),
+                  ),
+                  rate_bps: Schema.Number,
+                }),
+              ),
+            }),
+          ),
+        ),
+        variable_rate: Schema.optional(
+          Schema.NullOr(
+            Schema.Struct({
+              benchmark: Schema.Literals(["EFFR"]),
+              tiers: Schema.Array(
+                Schema.Struct({
+                  balance_min: Schema.Struct({
+                    currency: Schema.String,
+                    exponent: Schema.optional(Schema.Number),
+                    value: Schema.String,
+                    display_value: Schema.optional(Schema.String),
+                  }),
+                  balance_max: Schema.optional(
+                    Schema.NullOr(
+                      Schema.Struct({
+                        currency: Schema.String,
+                        exponent: Schema.optional(Schema.Number),
+                        value: Schema.String,
+                        display_value: Schema.optional(Schema.String),
+                      }),
+                    ),
+                  ),
+                  calculation_method: Schema.Literals(["SPREAD", "PERCENTAGE"]),
+                  spread_bps: Schema.optional(Schema.NullOr(Schema.Number)),
+                  percentage_bps: Schema.optional(Schema.NullOr(Schema.Number)),
+                }),
+              ),
+            }),
+          ),
+        ),
       }),
       starting_on: Schema.optional(Schema.NullOr(Schema.String)),
       ending_on: Schema.optional(Schema.NullOr(Schema.String)),
     }),
-  });
-export type GetDepositAccountTemplateOutput =
-  typeof GetDepositAccountTemplateOutput.Type;
+  }) as unknown as Schema.Codec<GetDepositAccountTemplateOutput>;
 
 // The operation
 /**

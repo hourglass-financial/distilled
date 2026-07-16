@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -76,6 +76,7 @@ export type ListVectorsNextToken = string;
 export type ListVectorsSegmentCount = number;
 export type ListVectorsSegmentIndex = number;
 export type TopK = number;
+export type QueryVectorsNextToken = string;
 
 //# Schemas
 export interface ListTagsForResourceInput {
@@ -824,6 +825,7 @@ export interface QueryVectorsInput {
   filter?: any;
   returnMetadata?: boolean;
   returnDistance?: boolean;
+  nextToken?: string;
 }
 export const QueryVectorsInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -835,6 +837,7 @@ export const QueryVectorsInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     filter: S.optional(S.Any),
     returnMetadata: S.optional(S.Boolean),
     returnDistance: S.optional(S.Boolean),
+    nextToken: S.optional(S.String),
   }).pipe(
     T.all(
       T.Http({ method: "POST", uri: "/QueryVectors" }),
@@ -868,11 +871,13 @@ export const QueryVectorsOutputList =
 export interface QueryVectorsOutput {
   vectors: QueryOutputVector[];
   distanceMetric: DistanceMetric;
+  nextToken?: string;
 }
 export const QueryVectorsOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     vectors: QueryVectorsOutputList,
     distanceMetric: S.optional(DistanceMetric),
+    nextToken: S.optional(S.String),
   }),
 ).annotate({
   identifier: "QueryVectorsOutput",
@@ -940,6 +945,7 @@ export const listTagsForResource: API.OperationMethod<
   input: ListTagsForResourceInput,
   output: ListTagsForResourceOutput,
   errors: [NotFoundException, ServiceUnavailableException],
+  operationName: "ListTagsForResource",
 }));
 export type TagResourceError =
   | ConflictException
@@ -964,6 +970,7 @@ export const tagResource: API.OperationMethod<
   input: TagResourceInput,
   output: TagResourceOutput,
   errors: [ConflictException, NotFoundException, ServiceUnavailableException],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | ConflictException
@@ -988,6 +995,7 @@ export const untagResource: API.OperationMethod<
   input: UntagResourceInput,
   output: UntagResourceOutput,
   errors: [ConflictException, NotFoundException, ServiceUnavailableException],
+  operationName: "UntagResource",
 }));
 export type CreateVectorBucketError =
   | ConflictException
@@ -1016,6 +1024,7 @@ export const createVectorBucket: API.OperationMethod<
     ServiceQuotaExceededException,
     ServiceUnavailableException,
   ],
+  operationName: "CreateVectorBucket",
 }));
 export type DeleteVectorBucketError =
   | ConflictException
@@ -1038,6 +1047,7 @@ export const deleteVectorBucket: API.OperationMethod<
   input: DeleteVectorBucketInput,
   output: DeleteVectorBucketOutput,
   errors: [ConflictException, NotFoundException, ServiceUnavailableException],
+  operationName: "DeleteVectorBucket",
 }));
 export type DeleteVectorBucketPolicyError =
   | NotFoundException
@@ -1059,6 +1069,7 @@ export const deleteVectorBucketPolicy: API.OperationMethod<
   input: DeleteVectorBucketPolicyInput,
   output: DeleteVectorBucketPolicyOutput,
   errors: [NotFoundException, ServiceUnavailableException],
+  operationName: "DeleteVectorBucketPolicy",
 }));
 export type GetVectorBucketError =
   | NotFoundException
@@ -1080,6 +1091,7 @@ export const getVectorBucket: API.OperationMethod<
   input: GetVectorBucketInput,
   output: GetVectorBucketOutput,
   errors: [NotFoundException, ServiceUnavailableException],
+  operationName: "GetVectorBucket",
 }));
 export type GetVectorBucketPolicyError =
   | NotFoundException
@@ -1101,6 +1113,7 @@ export const getVectorBucketPolicy: API.OperationMethod<
   input: GetVectorBucketPolicyInput,
   output: GetVectorBucketPolicyOutput,
   errors: [NotFoundException, ServiceUnavailableException],
+  operationName: "GetVectorBucketPolicy",
 }));
 export type ListVectorBucketsError = ServiceUnavailableException | CommonErrors;
 /**
@@ -1134,6 +1147,7 @@ export const listVectorBuckets: API.OperationMethod<
   input: ListVectorBucketsInput,
   output: ListVectorBucketsOutput,
   errors: [ServiceUnavailableException],
+  operationName: "ListVectorBuckets",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -1161,6 +1175,7 @@ export const putVectorBucketPolicy: API.OperationMethod<
   input: PutVectorBucketPolicyInput,
   output: PutVectorBucketPolicyOutput,
   errors: [NotFoundException, ServiceUnavailableException],
+  operationName: "PutVectorBucketPolicy",
 }));
 export type CreateIndexError =
   | ConflictException
@@ -1191,6 +1206,7 @@ export const createIndex: API.OperationMethod<
     ServiceQuotaExceededException,
     ServiceUnavailableException,
   ],
+  operationName: "CreateIndex",
 }));
 export type DeleteIndexError =
   | NotFoundException
@@ -1212,6 +1228,7 @@ export const deleteIndex: API.OperationMethod<
   input: DeleteIndexInput,
   output: DeleteIndexOutput,
   errors: [NotFoundException, ServiceUnavailableException],
+  operationName: "DeleteIndex",
 }));
 export type GetIndexError =
   | NotFoundException
@@ -1233,6 +1250,7 @@ export const getIndex: API.OperationMethod<
   input: GetIndexInput,
   output: GetIndexOutput,
   errors: [NotFoundException, ServiceUnavailableException],
+  operationName: "GetIndex",
 }));
 export type ListIndexesError =
   | NotFoundException
@@ -1269,6 +1287,7 @@ export const listIndexes: API.OperationMethod<
   input: ListIndexesInput,
   output: ListIndexesOutput,
   errors: [NotFoundException, ServiceUnavailableException],
+  operationName: "ListIndexes",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -1309,6 +1328,7 @@ export const deleteVectors: API.OperationMethod<
     NotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "DeleteVectors",
 }));
 export type GetVectorsError =
   | KmsDisabledException
@@ -1341,6 +1361,7 @@ export const getVectors: API.OperationMethod<
     NotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "GetVectors",
 }));
 export type ListVectorsError =
   | AccessDeniedException
@@ -1388,6 +1409,7 @@ export const listVectors: API.OperationMethod<
     NotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "ListVectors",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -1434,6 +1456,7 @@ export const putVectors: API.OperationMethod<
     ServiceQuotaExceededException,
     ServiceUnavailableException,
   ],
+  operationName: "PutVectors",
 }));
 export type QueryVectorsError =
   | KmsDisabledException
@@ -1444,7 +1467,7 @@ export type QueryVectorsError =
   | ServiceUnavailableException
   | CommonErrors;
 /**
- * Performs an approximate nearest neighbor search query in a vector index using a query vector. By default, it returns the keys of approximate nearest neighbors. You can optionally include the computed distance (between the query vector and each vector in the response), the vector data, and metadata of each vector in the response.
+ * Performs an approximate nearest neighbor search query in a vector index using a query vector. By default, it returns the keys of approximate nearest neighbors. You can optionally include the computed distance (between the query vector and each vector in the response) and metadata of each vector in the response.
  *
  * To specify the vector index, you can either use both the vector bucket name and the vector index name, or use the vector index Amazon Resource Name (ARN).
  *
@@ -1452,16 +1475,31 @@ export type QueryVectorsError =
  *
  * You must have the `s3vectors:QueryVectors` permission to use this operation. Additional permissions are required based on the request parameters you specify:
  *
- * - With only `s3vectors:QueryVectors` permission, you can retrieve vector keys of approximate nearest neighbors and computed distances between these vectors. This permission is sufficient only when you don't set any metadata filters and don't request vector data or metadata (by keeping the `returnMetadata` parameter set to `false` or not specified).
+ * - With only `s3vectors:QueryVectors` permission, you can retrieve vector keys of approximate nearest neighbors and computed distances between these vectors. This permission is sufficient only when you don't set any metadata filters and don't request metadata (by keeping the `returnMetadata` parameter set to `false` or not specified).
  *
- * - If you specify a metadata filter or set `returnMetadata` to true, you must have both `s3vectors:QueryVectors` and `s3vectors:GetVectors` permissions. The request fails with a `403 Forbidden error` if you request metadata filtering, vector data, or metadata without the `s3vectors:GetVectors` permission.
+ * - If you specify a metadata filter or set `returnMetadata` to true, you must have both `s3vectors:QueryVectors` and `s3vectors:GetVectors` permissions. The request fails with a `403 Forbidden error` if you request metadata filtering or metadata without the `s3vectors:GetVectors` permission.
  */
 export const queryVectors: API.OperationMethod<
   QueryVectorsInput,
   QueryVectorsOutput,
   QueryVectorsError,
   Credentials | Region | HttpClient.HttpClient
-> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+> & {
+  pages: (
+    input: QueryVectorsInput,
+  ) => stream.Stream<
+    QueryVectorsOutput,
+    QueryVectorsError,
+    Credentials | Region | HttpClient.HttpClient
+  >;
+  items: (
+    input: QueryVectorsInput,
+  ) => stream.Stream<
+    QueryOutputVector,
+    QueryVectorsError,
+    Credentials | Region | HttpClient.HttpClient
+  >;
+} = /*@__PURE__*/ /*#__PURE__*/ API.makePaginated(() => ({
   input: QueryVectorsInput,
   output: QueryVectorsOutput,
   errors: [
@@ -1472,4 +1510,10 @@ export const queryVectors: API.OperationMethod<
     NotFoundException,
     ServiceUnavailableException,
   ],
+  operationName: "QueryVectors",
+  pagination: {
+    inputToken: "nextToken",
+    outputToken: "nextToken",
+    items: "vectors",
+  } as const,
 }));

@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -119,15 +119,15 @@ export type LastUpdated = Date;
 export type PackageVersion = string;
 export type ReferencePath = string;
 export type ErrorType = string;
+export type Id = string;
+export type ClientToken = string;
 export type AWSAccount = string;
 export type DryRun = boolean;
 export type GUID = string;
 export type DeploymentCloseDateTimeStamp = Date;
-export type ClientToken = string;
 export type ApplicationName = string;
 export type AppConfigValue = string;
 export type KmsKeyArn = string;
-export type Id = string;
 export type VersionString = string;
 export type IntegerClass = number;
 export type UserPoolId = string;
@@ -142,6 +142,7 @@ export type SAMLEntityId = string;
 export type BackendRole = string;
 export type SubjectKey = string;
 export type RolesKey = string;
+export type JwksUrl = string;
 export type IAMFederationSubjectKey = string;
 export type IAMFederationRolesKey = string;
 export type IdentityCenterInstanceARN = string;
@@ -668,14 +669,90 @@ export const AssociatePackagesResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 ).annotate({
   identifier: "AssociatePackagesResponse",
 }) as any as S.Schema<AssociatePackagesResponse>;
+export interface WorkspaceConfigurationInput {
+  name: string;
+  workspaceType: string;
+}
+export const WorkspaceConfigurationInput =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ name: S.String, workspaceType: S.String }),
+  ).annotate({
+    identifier: "WorkspaceConfigurationInput",
+  }) as any as S.Schema<WorkspaceConfigurationInput>;
+export interface AttachDataSourceRequest {
+  id: string;
+  dataSourceArn: string;
+  workspaceId?: string;
+  workspaceConfiguration?: WorkspaceConfigurationInput;
+  clientToken?: string;
+}
+export const AttachDataSourceRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      id: S.String.pipe(T.HttpLabel("id")),
+      dataSourceArn: S.String,
+      workspaceId: S.optional(S.String),
+      workspaceConfiguration: S.optional(WorkspaceConfigurationInput),
+      clientToken: S.optional(S.String),
+    }).pipe(
+      T.all(
+        ns,
+        T.Http({
+          method: "POST",
+          uri: "/2021-01-01/opensearch/application/{id}/attachDataSource",
+        }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+).annotate({
+  identifier: "AttachDataSourceRequest",
+}) as any as S.Schema<AttachDataSourceRequest>;
+export type DataSourceAttachmentStatus =
+  | "PENDING"
+  | "ATTACHED"
+  | "FAILED"
+  | (string & {});
+export const DataSourceAttachmentStatus = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface AttachDataSourceResponse {
+  attachmentId?: string;
+  id?: string;
+  arn?: string;
+  dataSourceArn?: string;
+  status?: DataSourceAttachmentStatus;
+}
+export const AttachDataSourceResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      attachmentId: S.optional(S.String),
+      id: S.optional(S.String),
+      arn: S.optional(S.String),
+      dataSourceArn: S.optional(S.String),
+      status: S.optional(DataSourceAttachmentStatus),
+    }).pipe(ns),
+).annotate({
+  identifier: "AttachDataSourceResponse",
+}) as any as S.Schema<AttachDataSourceResponse>;
 export type AWSServicePrincipal =
   | "application.opensearchservice.amazonaws.com"
   | (string & {});
 export const AWSServicePrincipal = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export type RegionsList = string[];
+export const RegionsList = /*@__PURE__*/ /*#__PURE__*/ S.Array(S.String);
+export interface ServiceOptions {
+  SupportedRegions?: string[];
+}
+export const ServiceOptions = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ SupportedRegions: S.optional(RegionsList) }),
+).annotate({ identifier: "ServiceOptions" }) as any as S.Schema<ServiceOptions>;
 export interface AuthorizeVpcEndpointAccessRequest {
   DomainName: string;
   Account?: string;
   Service?: AWSServicePrincipal;
+  ServiceOptions?: ServiceOptions;
 }
 export const AuthorizeVpcEndpointAccessRequest =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -683,6 +760,7 @@ export const AuthorizeVpcEndpointAccessRequest =
       DomainName: S.String.pipe(T.HttpLabel("DomainName")),
       Account: S.optional(S.String),
       Service: S.optional(AWSServicePrincipal),
+      ServiceOptions: S.optional(ServiceOptions),
     }).pipe(
       T.all(
         ns,
@@ -705,11 +783,13 @@ export const PrincipalType = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface AuthorizedPrincipal {
   PrincipalType?: PrincipalType;
   Principal?: string;
+  ServiceOptions?: ServiceOptions;
 }
 export const AuthorizedPrincipal = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     PrincipalType: S.optional(PrincipalType),
     Principal: S.optional(S.String),
+    ServiceOptions: S.optional(ServiceOptions),
   }),
 ).annotate({
   identifier: "AuthorizedPrincipal",
@@ -1194,11 +1274,13 @@ export const StringList = /*@__PURE__*/ /*#__PURE__*/ S.Array(S.String);
 export interface VPCOptions {
   SubnetIds?: string[];
   SecurityGroupIds?: string[];
+  EgressEnabled?: boolean;
 }
 export const VPCOptions = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     SubnetIds: S.optional(StringList),
     SecurityGroupIds: S.optional(StringList),
+    EgressEnabled: S.optional(S.Boolean),
   }),
 ).annotate({ identifier: "VPCOptions" }) as any as S.Schema<VPCOptions>;
 export interface CognitoOptions {
@@ -1338,6 +1420,7 @@ export interface JWTOptionsInput {
   Enabled?: boolean;
   SubjectKey?: string;
   RolesKey?: string;
+  JwksUrl?: string;
   PublicKey?: string;
 }
 export const JWTOptionsInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -1345,6 +1428,7 @@ export const JWTOptionsInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     Enabled: S.optional(S.Boolean),
     SubjectKey: S.optional(S.String),
     RolesKey: S.optional(S.String),
+    JwksUrl: S.optional(S.String),
     PublicKey: S.optional(S.String),
   }),
 ).annotate({
@@ -1399,6 +1483,7 @@ export const RolesKeyIdCOption = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface IdentityCenterOptionsInput {
   EnabledAPIAccess?: boolean;
   IdentityCenterInstanceARN?: string;
+  IdentityCenterInstanceRegion?: string;
   SubjectKey?: SubjectKeyIdCOption;
   RolesKey?: RolesKeyIdCOption;
 }
@@ -1407,6 +1492,7 @@ export const IdentityCenterOptionsInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
     S.Struct({
       EnabledAPIAccess: S.optional(S.Boolean),
       IdentityCenterInstanceARN: S.optional(S.String),
+      IdentityCenterInstanceRegion: S.optional(S.String),
       SubjectKey: S.optional(SubjectKeyIdCOption),
       RolesKey: S.optional(RolesKeyIdCOption),
     }),
@@ -1485,9 +1571,13 @@ export const OffPeakWindowOptions = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 }) as any as S.Schema<OffPeakWindowOptions>;
 export interface SoftwareUpdateOptions {
   AutoSoftwareUpdateEnabled?: boolean;
+  UseLatestServiceSoftwareForBlueGreen?: boolean;
 }
 export const SoftwareUpdateOptions = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-  S.Struct({ AutoSoftwareUpdateEnabled: S.optional(S.Boolean) }),
+  S.Struct({
+    AutoSoftwareUpdateEnabled: S.optional(S.Boolean),
+    UseLatestServiceSoftwareForBlueGreen: S.optional(S.Boolean),
+  }),
 ).annotate({
   identifier: "SoftwareUpdateOptions",
 }) as any as S.Schema<SoftwareUpdateOptions>;
@@ -1554,6 +1644,21 @@ export const DeploymentStrategyOptions = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 ).annotate({
   identifier: "DeploymentStrategyOptions",
 }) as any as S.Schema<DeploymentStrategyOptions>;
+export interface AutomatedSnapshotPauseRequestOptions {
+  Enabled: boolean;
+  StartTime?: Date;
+  EndTime?: Date;
+}
+export const AutomatedSnapshotPauseRequestOptions =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      Enabled: S.Boolean,
+      StartTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+      EndTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    }),
+  ).annotate({
+    identifier: "AutomatedSnapshotPauseRequestOptions",
+  }) as any as S.Schema<AutomatedSnapshotPauseRequestOptions>;
 export interface CreateDomainRequest {
   DomainName: string;
   EngineVersion?: string;
@@ -1577,6 +1682,7 @@ export interface CreateDomainRequest {
   SoftwareUpdateOptions?: SoftwareUpdateOptions;
   AIMLOptions?: AIMLOptionsInput;
   DeploymentStrategyOptions?: DeploymentStrategyOptions;
+  AutomatedSnapshotPauseOptions?: AutomatedSnapshotPauseRequestOptions;
 }
 export const CreateDomainRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -1602,6 +1708,9 @@ export const CreateDomainRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     SoftwareUpdateOptions: S.optional(SoftwareUpdateOptions),
     AIMLOptions: S.optional(AIMLOptionsInput),
     DeploymentStrategyOptions: S.optional(DeploymentStrategyOptions),
+    AutomatedSnapshotPauseOptions: S.optional(
+      AutomatedSnapshotPauseRequestOptions,
+    ),
   }).pipe(
     T.all(
       ns,
@@ -1626,6 +1735,7 @@ export interface VPCDerivedInfo {
   SubnetIds?: string[];
   AvailabilityZones?: string[];
   SecurityGroupIds?: string[];
+  EgressEnabled?: boolean;
 }
 export const VPCDerivedInfo = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -1633,6 +1743,7 @@ export const VPCDerivedInfo = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     SubnetIds: S.optional(StringList),
     AvailabilityZones: S.optional(StringList),
     SecurityGroupIds: S.optional(StringList),
+    EgressEnabled: S.optional(S.Boolean),
   }),
 ).annotate({ identifier: "VPCDerivedInfo" }) as any as S.Schema<VPCDerivedInfo>;
 export interface SAMLOptionsOutput {
@@ -1657,6 +1768,7 @@ export interface JWTOptionsOutput {
   Enabled?: boolean;
   SubjectKey?: string;
   RolesKey?: string;
+  JwksUrl?: string;
   PublicKey?: string;
 }
 export const JWTOptionsOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -1664,6 +1776,7 @@ export const JWTOptionsOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     Enabled: S.optional(S.Boolean),
     SubjectKey: S.optional(S.String),
     RolesKey: S.optional(S.String),
+    JwksUrl: S.optional(S.String),
     PublicKey: S.optional(S.String),
   }),
 ).annotate({
@@ -1712,6 +1825,7 @@ export const AdvancedSecurityOptions = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 export interface IdentityCenterOptions {
   EnabledAPIAccess?: boolean;
   IdentityCenterInstanceARN?: string;
+  IdentityCenterInstanceRegion?: string;
   SubjectKey?: SubjectKeyIdCOption;
   RolesKey?: RolesKeyIdCOption;
   IdentityCenterApplicationARN?: string;
@@ -1721,6 +1835,7 @@ export const IdentityCenterOptions = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     EnabledAPIAccess: S.optional(S.Boolean),
     IdentityCenterInstanceARN: S.optional(S.String),
+    IdentityCenterInstanceRegion: S.optional(S.String),
     SubjectKey: S.optional(SubjectKeyIdCOption),
     RolesKey: S.optional(RolesKeyIdCOption),
     IdentityCenterApplicationARN: S.optional(S.String),
@@ -1864,6 +1979,30 @@ export const AIMLOptionsOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "AIMLOptionsOutput",
 }) as any as S.Schema<AIMLOptionsOutput>;
+export type PauseState =
+  | "Active"
+  | "Completed"
+  | "Scheduled"
+  | "Disabled"
+  | (string & {});
+export const PauseState = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface AutomatedSnapshotPauseOptions {
+  Enabled: boolean;
+  StartTime?: Date;
+  EndTime?: Date;
+  State?: PauseState;
+}
+export const AutomatedSnapshotPauseOptions =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      Enabled: S.Boolean,
+      StartTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+      EndTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+      State: S.optional(PauseState),
+    }),
+  ).annotate({
+    identifier: "AutomatedSnapshotPauseOptions",
+  }) as any as S.Schema<AutomatedSnapshotPauseOptions>;
 export interface DomainStatus {
   DomainId: string;
   DomainName: string;
@@ -1900,6 +2039,7 @@ export interface DomainStatus {
   ModifyingProperties?: ModifyingProperties[];
   AIMLOptions?: AIMLOptionsOutput;
   DeploymentStrategyOptions?: DeploymentStrategyOptions;
+  AutomatedSnapshotPauseOptions?: AutomatedSnapshotPauseOptions;
 }
 export const DomainStatus = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -1938,6 +2078,7 @@ export const DomainStatus = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     ModifyingProperties: S.optional(ModifyingPropertiesList),
     AIMLOptions: S.optional(AIMLOptionsOutput),
     DeploymentStrategyOptions: S.optional(DeploymentStrategyOptions),
+    AutomatedSnapshotPauseOptions: S.optional(AutomatedSnapshotPauseOptions),
   }),
 ).annotate({ identifier: "DomainStatus" }) as any as S.Schema<DomainStatus>;
 export interface CreateDomainResponse {
@@ -2664,6 +2805,51 @@ export const DeregisterCapabilityResponse =
   ).annotate({
     identifier: "DeregisterCapabilityResponse",
   }) as any as S.Schema<DeregisterCapabilityResponse>;
+export interface DescribeDataSourceAttachmentRequest {
+  id: string;
+  dataSourceArn: string;
+}
+export const DescribeDataSourceAttachmentRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      id: S.String.pipe(T.HttpLabel("id")),
+      dataSourceArn: S.String,
+    }).pipe(
+      T.all(
+        ns,
+        T.Http({
+          method: "POST",
+          uri: "/2021-01-01/opensearch/application/{id}/describeDataSourceAttachment",
+        }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "DescribeDataSourceAttachmentRequest",
+  }) as any as S.Schema<DescribeDataSourceAttachmentRequest>;
+export interface DescribeDataSourceAttachmentResponse {
+  attachmentId?: string;
+  id?: string;
+  arn?: string;
+  dataSourceArn?: string;
+  status?: DataSourceAttachmentStatus;
+}
+export const DescribeDataSourceAttachmentResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      attachmentId: S.optional(S.String),
+      id: S.optional(S.String),
+      arn: S.optional(S.String),
+      dataSourceArn: S.optional(S.String),
+      status: S.optional(DataSourceAttachmentStatus),
+    }).pipe(ns),
+  ).annotate({
+    identifier: "DescribeDataSourceAttachmentResponse",
+  }) as any as S.Schema<DescribeDataSourceAttachmentResponse>;
 export interface DescribeDomainRequest {
   DomainName: string;
 }
@@ -3164,6 +3350,16 @@ export const DeploymentStrategyOptionsStatus =
   ).annotate({
     identifier: "DeploymentStrategyOptionsStatus",
   }) as any as S.Schema<DeploymentStrategyOptionsStatus>;
+export interface AutomatedSnapshotPauseOptionsStatus {
+  Options: AutomatedSnapshotPauseOptions;
+  Status: OptionStatus;
+}
+export const AutomatedSnapshotPauseOptionsStatus =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ Options: AutomatedSnapshotPauseOptions, Status: OptionStatus }),
+  ).annotate({
+    identifier: "AutomatedSnapshotPauseOptionsStatus",
+  }) as any as S.Schema<AutomatedSnapshotPauseOptionsStatus>;
 export interface DomainConfig {
   EngineVersion?: VersionStatus;
   ClusterConfig?: ClusterConfigStatus;
@@ -3187,6 +3383,7 @@ export interface DomainConfig {
   ModifyingProperties?: ModifyingProperties[];
   AIMLOptions?: AIMLOptionsStatus;
   DeploymentStrategyOptions?: DeploymentStrategyOptionsStatus;
+  AutomatedSnapshotPauseOptions?: AutomatedSnapshotPauseOptionsStatus;
 }
 export const DomainConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -3212,6 +3409,9 @@ export const DomainConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     ModifyingProperties: S.optional(ModifyingPropertiesList),
     AIMLOptions: S.optional(AIMLOptionsStatus),
     DeploymentStrategyOptions: S.optional(DeploymentStrategyOptionsStatus),
+    AutomatedSnapshotPauseOptions: S.optional(
+      AutomatedSnapshotPauseOptionsStatus,
+    ),
   }),
 ).annotate({ identifier: "DomainConfig" }) as any as S.Schema<DomainConfig>;
 export interface DescribeDomainConfigResponse {
@@ -4105,6 +4305,47 @@ export const DescribeVpcEndpointsResponse =
   ).annotate({
     identifier: "DescribeVpcEndpointsResponse",
   }) as any as S.Schema<DescribeVpcEndpointsResponse>;
+export interface DetachDataSourceRequest {
+  id: string;
+  dataSourceArn: string;
+}
+export const DetachDataSourceRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      id: S.String.pipe(T.HttpLabel("id")),
+      dataSourceArn: S.String,
+    }).pipe(
+      T.all(
+        ns,
+        T.Http({
+          method: "POST",
+          uri: "/2021-01-01/opensearch/application/{id}/detachDataSource",
+        }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+).annotate({
+  identifier: "DetachDataSourceRequest",
+}) as any as S.Schema<DetachDataSourceRequest>;
+export interface DetachDataSourceResponse {
+  id?: string;
+  arn?: string;
+  dataSourceArn?: string;
+}
+export const DetachDataSourceResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      id: S.optional(S.String),
+      arn: S.optional(S.String),
+      dataSourceArn: S.optional(S.String),
+    }).pipe(ns),
+).annotate({
+  identifier: "DetachDataSourceResponse",
+}) as any as S.Schema<DetachDataSourceResponse>;
 export interface DissociatePackageRequest {
   PackageID: string;
   DomainName: string;
@@ -4831,6 +5072,65 @@ export const ListApplicationsResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 ).annotate({
   identifier: "ListApplicationsResponse",
 }) as any as S.Schema<ListApplicationsResponse>;
+export interface ListDataSourceAttachmentsRequest {
+  id: string;
+  nextToken?: string;
+  maxResults?: number;
+}
+export const ListDataSourceAttachmentsRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      id: S.String.pipe(T.HttpLabel("id")),
+      nextToken: S.optional(S.String),
+      maxResults: S.optional(S.Number),
+    }).pipe(
+      T.all(
+        ns,
+        T.Http({
+          method: "POST",
+          uri: "/2021-01-01/opensearch/application/{id}/listDataSourceAttachments",
+        }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "ListDataSourceAttachmentsRequest",
+  }) as any as S.Schema<ListDataSourceAttachmentsRequest>;
+export interface DataSourceAttachmentSummary {
+  attachmentId?: string;
+  dataSourceArn?: string;
+  status?: DataSourceAttachmentStatus;
+}
+export const DataSourceAttachmentSummary =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      attachmentId: S.optional(S.String),
+      dataSourceArn: S.optional(S.String),
+      status: S.optional(DataSourceAttachmentStatus),
+    }),
+  ).annotate({
+    identifier: "DataSourceAttachmentSummary",
+  }) as any as S.Schema<DataSourceAttachmentSummary>;
+export type DataSourceAttachmentSummaryList = DataSourceAttachmentSummary[];
+export const DataSourceAttachmentSummaryList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(DataSourceAttachmentSummary);
+export interface ListDataSourceAttachmentsResponse {
+  attachments?: DataSourceAttachmentSummary[];
+  nextToken?: string;
+}
+export const ListDataSourceAttachmentsResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      attachments: S.optional(DataSourceAttachmentSummaryList),
+      nextToken: S.optional(S.String),
+    }).pipe(ns),
+  ).annotate({
+    identifier: "ListDataSourceAttachmentsResponse",
+  }) as any as S.Schema<ListDataSourceAttachmentsResponse>;
 export interface ListDataSourcesRequest {
   DomainName: string;
 }
@@ -5759,6 +6059,7 @@ export interface RevokeVpcEndpointAccessRequest {
   DomainName: string;
   Account?: string;
   Service?: AWSServicePrincipal;
+  ServiceOptions?: ServiceOptions;
 }
 export const RevokeVpcEndpointAccessRequest =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -5766,6 +6067,7 @@ export const RevokeVpcEndpointAccessRequest =
       DomainName: S.String.pipe(T.HttpLabel("DomainName")),
       Account: S.optional(S.String),
       Service: S.optional(AWSServicePrincipal),
+      ServiceOptions: S.optional(ServiceOptions),
     }).pipe(
       T.all(
         ns,
@@ -5788,6 +6090,58 @@ export const RevokeVpcEndpointAccessResponse =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() => S.Struct({}).pipe(ns)).annotate({
     identifier: "RevokeVpcEndpointAccessResponse",
   }) as any as S.Schema<RevokeVpcEndpointAccessResponse>;
+export interface RollbackServiceSoftwareUpdateRequest {
+  DomainName: string;
+}
+export const RollbackServiceSoftwareUpdateRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ DomainName: S.String }).pipe(
+      T.all(
+        ns,
+        T.Http({
+          method: "POST",
+          uri: "/2021-01-01/opensearch/serviceSoftwareUpdate/rollback",
+        }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "RollbackServiceSoftwareUpdateRequest",
+  }) as any as S.Schema<RollbackServiceSoftwareUpdateRequest>;
+export interface RollbackServiceSoftwareOptions {
+  CurrentVersion?: string;
+  NewVersion?: string;
+  RollbackAvailable?: boolean;
+  Description?: string;
+}
+export const RollbackServiceSoftwareOptions =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      CurrentVersion: S.optional(S.String),
+      NewVersion: S.optional(S.String),
+      RollbackAvailable: S.optional(S.Boolean),
+      Description: S.optional(S.String),
+    }),
+  ).annotate({
+    identifier: "RollbackServiceSoftwareOptions",
+  }) as any as S.Schema<RollbackServiceSoftwareOptions>;
+export interface RollbackServiceSoftwareUpdateResponse {
+  RollbackServiceSoftwareOptions?: RollbackServiceSoftwareOptions;
+}
+export const RollbackServiceSoftwareUpdateResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      RollbackServiceSoftwareOptions: S.optional(
+        RollbackServiceSoftwareOptions,
+      ),
+    }).pipe(ns),
+  ).annotate({
+    identifier: "RollbackServiceSoftwareUpdateResponse",
+  }) as any as S.Schema<RollbackServiceSoftwareUpdateResponse>;
 export interface StartDomainMaintenanceRequest {
   DomainName: string;
   Action: MaintenanceType;
@@ -5874,6 +6228,7 @@ export interface UpdateApplicationRequest {
   id: string;
   dataSources?: DataSource[];
   appConfigs?: AppConfig[];
+  iamIdentityCenterOptions?: IamIdentityCenterOptionsInput;
 }
 export const UpdateApplicationRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -5881,6 +6236,7 @@ export const UpdateApplicationRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       id: S.String.pipe(T.HttpLabel("id")),
       dataSources: S.optional(DataSources),
       appConfigs: S.optional(AppConfigs),
+      iamIdentityCenterOptions: S.optional(IamIdentityCenterOptionsInput),
     }).pipe(
       T.all(
         ns,
@@ -6031,6 +6387,7 @@ export interface UpdateDomainConfigRequest {
   SoftwareUpdateOptions?: SoftwareUpdateOptions;
   AIMLOptions?: AIMLOptionsInput;
   DeploymentStrategyOptions?: DeploymentStrategyOptions;
+  AutomatedSnapshotPauseOptions?: AutomatedSnapshotPauseRequestOptions;
 }
 export const UpdateDomainConfigRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -6057,6 +6414,9 @@ export const UpdateDomainConfigRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       SoftwareUpdateOptions: S.optional(SoftwareUpdateOptions),
       AIMLOptions: S.optional(AIMLOptionsInput),
       DeploymentStrategyOptions: S.optional(DeploymentStrategyOptions),
+      AutomatedSnapshotPauseOptions: S.optional(
+        AutomatedSnapshotPauseRequestOptions,
+      ),
     }).pipe(
       T.all(
         ns,
@@ -6414,6 +6774,7 @@ export const acceptInboundConnection: API.OperationMethod<
     LimitExceededException,
     ResourceNotFoundException,
   ],
+  operationName: "AcceptInboundConnection",
 }));
 export type AddDataSourceError =
   | BaseException
@@ -6446,6 +6807,7 @@ export const addDataSource: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "AddDataSource",
 }));
 export type AddDirectQueryDataSourceError =
   | BaseException
@@ -6475,6 +6837,7 @@ export const addDirectQueryDataSource: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "AddDirectQueryDataSource",
 }));
 export type AddTagsError =
   | BaseException
@@ -6503,6 +6866,7 @@ export const addTags: API.OperationMethod<
     LimitExceededException,
     ValidationException,
   ],
+  operationName: "AddTags",
 }));
 export type AssociatePackageError =
   | AccessDeniedException
@@ -6533,6 +6897,7 @@ export const associatePackage: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "AssociatePackage",
 }));
 export type AssociatePackagesError =
   | BaseException
@@ -6562,6 +6927,36 @@ export const associatePackages: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "AssociatePackages",
+}));
+export type AttachDataSourceError =
+  | AccessDeniedException
+  | ConflictException
+  | DisabledOperationException
+  | InternalException
+  | ResourceNotFoundException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Attaches a data source to an OpenSearch application. The data source can be an Amazon OpenSearch Service domain or an Amazon OpenSearch Serverless collection. If both the application and data source are in the `ACTIVE` state, the attachment completes immediately and returns a status of `ATTACHED`. If either resource is not yet active, the operation stores the request and returns a status of `PENDING`. A background process then completes the attachment when both resources become active. Pending attachments that are not completed within 24 hours are marked as `FAILED`. This operation is idempotent. If a data source is already attached or pending for the same application, the existing attachment is returned.
+ */
+export const attachDataSource: API.OperationMethod<
+  AttachDataSourceRequest,
+  AttachDataSourceResponse,
+  AttachDataSourceError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: AttachDataSourceRequest,
+  output: AttachDataSourceResponse,
+  errors: [
+    AccessDeniedException,
+    ConflictException,
+    DisabledOperationException,
+    InternalException,
+    ResourceNotFoundException,
+    ValidationException,
+  ],
+  operationName: "AttachDataSource",
 }));
 export type AuthorizeVpcEndpointAccessError =
   | BaseException
@@ -6591,6 +6986,7 @@ export const authorizeVpcEndpointAccess: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "AuthorizeVpcEndpointAccess",
 }));
 export type CancelDomainConfigChangeError =
   | BaseException
@@ -6617,6 +7013,7 @@ export const cancelDomainConfigChange: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "CancelDomainConfigChange",
 }));
 export type CancelServiceSoftwareUpdateError =
   | BaseException
@@ -6645,6 +7042,7 @@ export const cancelServiceSoftwareUpdate: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "CancelServiceSoftwareUpdate",
 }));
 export type CreateApplicationError =
   | AccessDeniedException
@@ -6673,6 +7071,7 @@ export const createApplication: API.OperationMethod<
     InternalException,
     ValidationException,
   ],
+  operationName: "CreateApplication",
 }));
 export type CreateDomainError =
   | BaseException
@@ -6704,6 +7103,7 @@ export const createDomain: API.OperationMethod<
     ResourceAlreadyExistsException,
     ValidationException,
   ],
+  operationName: "CreateDomain",
 }));
 export type CreateIndexError =
   | AccessDeniedException
@@ -6736,6 +7136,7 @@ export const createIndex: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateIndex",
 }));
 export type CreateOutboundConnectionError =
   | DisabledOperationException
@@ -6762,6 +7163,7 @@ export const createOutboundConnection: API.OperationMethod<
     LimitExceededException,
     ResourceAlreadyExistsException,
   ],
+  operationName: "CreateOutboundConnection",
 }));
 export type CreatePackageError =
   | AccessDeniedException
@@ -6794,6 +7196,7 @@ export const createPackage: API.OperationMethod<
     ResourceAlreadyExistsException,
     ValidationException,
   ],
+  operationName: "CreatePackage",
 }));
 export type CreateVpcEndpointError =
   | BaseException
@@ -6822,6 +7225,7 @@ export const createVpcEndpoint: API.OperationMethod<
     LimitExceededException,
     ValidationException,
   ],
+  operationName: "CreateVpcEndpoint",
 }));
 export type DeleteApplicationError =
   | AccessDeniedException
@@ -6852,6 +7256,7 @@ export const deleteApplication: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteApplication",
 }));
 export type DeleteDataSourceError =
   | BaseException
@@ -6881,6 +7286,7 @@ export const deleteDataSource: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteDataSource",
 }));
 export type DeleteDirectQueryDataSourceError =
   | BaseException
@@ -6908,6 +7314,7 @@ export const deleteDirectQueryDataSource: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteDirectQueryDataSource",
 }));
 export type DeleteDomainError =
   | BaseException
@@ -6933,6 +7340,7 @@ export const deleteDomain: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteDomain",
 }));
 export type DeleteInboundConnectionError =
   | DisabledOperationException
@@ -6951,6 +7359,7 @@ export const deleteInboundConnection: API.OperationMethod<
   input: DeleteInboundConnectionRequest,
   output: DeleteInboundConnectionResponse,
   errors: [DisabledOperationException, ResourceNotFoundException],
+  operationName: "DeleteInboundConnection",
 }));
 export type DeleteIndexError =
   | AccessDeniedException
@@ -6981,6 +7390,7 @@ export const deleteIndex: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteIndex",
 }));
 export type DeleteOutboundConnectionError =
   | DisabledOperationException
@@ -6999,6 +7409,7 @@ export const deleteOutboundConnection: API.OperationMethod<
   input: DeleteOutboundConnectionRequest,
   output: DeleteOutboundConnectionResponse,
   errors: [DisabledOperationException, ResourceNotFoundException],
+  operationName: "DeleteOutboundConnection",
 }));
 export type DeletePackageError =
   | AccessDeniedException
@@ -7028,6 +7439,7 @@ export const deletePackage: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeletePackage",
 }));
 export type DeleteVpcEndpointError =
   | BaseException
@@ -7052,6 +7464,7 @@ export const deleteVpcEndpoint: API.OperationMethod<
     InternalException,
     ResourceNotFoundException,
   ],
+  operationName: "DeleteVpcEndpoint",
 }));
 export type DeregisterCapabilityError =
   | AccessDeniedException
@@ -7080,6 +7493,34 @@ export const deregisterCapability: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeregisterCapability",
+}));
+export type DescribeDataSourceAttachmentError =
+  | AccessDeniedException
+  | DisabledOperationException
+  | InternalException
+  | ResourceNotFoundException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Returns the current status and details of a specific data source attachment for an OpenSearch application. Throws a `ResourceNotFoundException` if no attachment record exists for the specified application and data source combination.
+ */
+export const describeDataSourceAttachment: API.OperationMethod<
+  DescribeDataSourceAttachmentRequest,
+  DescribeDataSourceAttachmentResponse,
+  DescribeDataSourceAttachmentError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: DescribeDataSourceAttachmentRequest,
+  output: DescribeDataSourceAttachmentResponse,
+  errors: [
+    AccessDeniedException,
+    DisabledOperationException,
+    InternalException,
+    ResourceNotFoundException,
+    ValidationException,
+  ],
+  operationName: "DescribeDataSourceAttachment",
 }));
 export type DescribeDomainError =
   | BaseException
@@ -7105,6 +7546,7 @@ export const describeDomain: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DescribeDomain",
 }));
 export type DescribeDomainAutoTunesError =
   | BaseException
@@ -7146,6 +7588,7 @@ export const describeDomainAutoTunes: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DescribeDomainAutoTunes",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7176,6 +7619,7 @@ export const describeDomainChangeProgress: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DescribeDomainChangeProgress",
 }));
 export type DescribeDomainConfigError =
   | BaseException
@@ -7200,6 +7644,7 @@ export const describeDomainConfig: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DescribeDomainConfig",
 }));
 export type DescribeDomainHealthError =
   | BaseException
@@ -7227,6 +7672,7 @@ export const describeDomainHealth: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DescribeDomainHealth",
 }));
 export type DescribeDomainNodesError =
   | BaseException
@@ -7257,6 +7703,7 @@ export const describeDomainNodes: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DescribeDomainNodes",
 }));
 export type DescribeDomainsError =
   | BaseException
@@ -7276,6 +7723,7 @@ export const describeDomains: API.OperationMethod<
   input: DescribeDomainsRequest,
   output: DescribeDomainsResponse,
   errors: [BaseException, InternalException, ValidationException],
+  operationName: "DescribeDomains",
 }));
 export type DescribeDryRunProgressError =
   | BaseException
@@ -7303,6 +7751,7 @@ export const describeDryRunProgress: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DescribeDryRunProgress",
 }));
 export type DescribeInboundConnectionsError =
   | DisabledOperationException
@@ -7336,6 +7785,7 @@ export const describeInboundConnections: API.OperationMethod<
   input: DescribeInboundConnectionsRequest,
   output: DescribeInboundConnectionsResponse,
   errors: [DisabledOperationException, InvalidPaginationTokenException],
+  operationName: "DescribeInboundConnections",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7371,6 +7821,7 @@ export const describeInsightDetails: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DescribeInsightDetails",
 }));
 export type DescribeInstanceTypeLimitsError =
   | BaseException
@@ -7400,6 +7851,7 @@ export const describeInstanceTypeLimits: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DescribeInstanceTypeLimits",
 }));
 export type DescribeOutboundConnectionsError =
   | DisabledOperationException
@@ -7433,6 +7885,7 @@ export const describeOutboundConnections: API.OperationMethod<
   input: DescribeOutboundConnectionsRequest,
   output: DescribeOutboundConnectionsResponse,
   errors: [DisabledOperationException, InvalidPaginationTokenException],
+  operationName: "DescribeOutboundConnections",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7481,6 +7934,7 @@ export const describePackages: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DescribePackages",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7527,6 +7981,7 @@ export const describeReservedInstanceOfferings: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DescribeReservedInstanceOfferings",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7573,6 +8028,7 @@ export const describeReservedInstances: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DescribeReservedInstances",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7602,6 +8058,36 @@ export const describeVpcEndpoints: API.OperationMethod<
     InternalException,
     ValidationException,
   ],
+  operationName: "DescribeVpcEndpoints",
+}));
+export type DetachDataSourceError =
+  | AccessDeniedException
+  | ConflictException
+  | DisabledOperationException
+  | InternalException
+  | ResourceNotFoundException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Removes a data source from an OpenSearch application. The application must be in the `ACTIVE` state. This operation removes the data source saved object from the application and deletes the attachment record. Throws a `ConflictException` if the specified data source has a `PENDING` attachment, and a `ResourceNotFoundException` if the data source is not currently attached to the application.
+ */
+export const detachDataSource: API.OperationMethod<
+  DetachDataSourceRequest,
+  DetachDataSourceResponse,
+  DetachDataSourceError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: DetachDataSourceRequest,
+  output: DetachDataSourceResponse,
+  errors: [
+    AccessDeniedException,
+    ConflictException,
+    DisabledOperationException,
+    InternalException,
+    ResourceNotFoundException,
+    ValidationException,
+  ],
+  operationName: "DetachDataSource",
 }));
 export type DissociatePackageError =
   | AccessDeniedException
@@ -7634,6 +8120,7 @@ export const dissociatePackage: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DissociatePackage",
 }));
 export type DissociatePackagesError =
   | BaseException
@@ -7662,6 +8149,7 @@ export const dissociatePackages: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DissociatePackages",
 }));
 export type GetApplicationError =
   | AccessDeniedException
@@ -7690,6 +8178,7 @@ export const getApplication: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetApplication",
 }));
 export type GetCapabilityError =
   | AccessDeniedException
@@ -7716,6 +8205,7 @@ export const getCapability: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetCapability",
 }));
 export type GetCompatibleVersionsError =
   | BaseException
@@ -7743,6 +8233,7 @@ export const getCompatibleVersions: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetCompatibleVersions",
 }));
 export type GetDataSourceError =
   | BaseException
@@ -7771,6 +8262,7 @@ export const getDataSource: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetDataSource",
 }));
 export type GetDefaultApplicationSettingError =
   | AccessDeniedException
@@ -7798,6 +8290,7 @@ export const getDefaultApplicationSetting: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetDefaultApplicationSetting",
 }));
 export type GetDirectQueryDataSourceError =
   | BaseException
@@ -7825,6 +8318,7 @@ export const getDirectQueryDataSource: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetDirectQueryDataSource",
 }));
 export type GetDomainMaintenanceStatusError =
   | BaseException
@@ -7851,6 +8345,7 @@ export const getDomainMaintenanceStatus: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetDomainMaintenanceStatus",
 }));
 export type GetIndexError =
   | AccessDeniedException
@@ -7881,6 +8376,7 @@ export const getIndex: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetIndex",
 }));
 export type GetPackageVersionHistoryError =
   | AccessDeniedException
@@ -7925,6 +8421,7 @@ export const getPackageVersionHistory: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetPackageVersionHistory",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7972,6 +8469,7 @@ export const getUpgradeHistory: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetUpgradeHistory",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8004,6 +8502,7 @@ export const getUpgradeStatus: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetUpgradeStatus",
 }));
 export type ListApplicationsError =
   | AccessDeniedException
@@ -8047,12 +8546,40 @@ export const listApplications: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "ListApplications",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
     items: "ApplicationSummaries",
     pageSize: "maxResults",
   } as const,
+}));
+export type ListDataSourceAttachmentsError =
+  | AccessDeniedException
+  | DisabledOperationException
+  | InternalException
+  | ResourceNotFoundException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Returns a paginated list of all data source attachments for an OpenSearch application, including attachments in all states (`PENDING`, `ATTACHED`, and `FAILED`).
+ */
+export const listDataSourceAttachments: API.OperationMethod<
+  ListDataSourceAttachmentsRequest,
+  ListDataSourceAttachmentsResponse,
+  ListDataSourceAttachmentsError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: ListDataSourceAttachmentsRequest,
+  output: ListDataSourceAttachmentsResponse,
+  errors: [
+    AccessDeniedException,
+    DisabledOperationException,
+    InternalException,
+    ResourceNotFoundException,
+    ValidationException,
+  ],
+  operationName: "ListDataSourceAttachments",
 }));
 export type ListDataSourcesError =
   | BaseException
@@ -8083,6 +8610,7 @@ export const listDataSources: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "ListDataSources",
 }));
 export type ListDirectQueryDataSourcesError =
   | BaseException
@@ -8110,6 +8638,7 @@ export const listDirectQueryDataSources: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "ListDirectQueryDataSources",
 }));
 export type ListDomainMaintenancesError =
   | BaseException
@@ -8151,6 +8680,7 @@ export const listDomainMaintenances: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "ListDomainMaintenances",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8174,6 +8704,7 @@ export const listDomainNames: API.OperationMethod<
   input: ListDomainNamesRequest,
   output: ListDomainNamesResponse,
   errors: [BaseException, ValidationException],
+  operationName: "ListDomainNames",
 }));
 export type ListDomainsForPackageError =
   | AccessDeniedException
@@ -8217,6 +8748,7 @@ export const listDomainsForPackage: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "ListDomainsForPackage",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8252,6 +8784,7 @@ export const listInsights: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "ListInsights",
 }));
 export type ListInstanceTypeDetailsError =
   | BaseException
@@ -8292,6 +8825,7 @@ export const listInstanceTypeDetails: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "ListInstanceTypeDetails",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8340,6 +8874,7 @@ export const listPackagesForDomain: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "ListPackagesForDomain",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8388,6 +8923,7 @@ export const listScheduledActions: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "ListScheduledActions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8418,6 +8954,7 @@ export const listTags: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "ListTags",
 }));
 export type ListVersionsError =
   | BaseException
@@ -8458,6 +8995,7 @@ export const listVersions: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "ListVersions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8489,6 +9027,7 @@ export const listVpcEndpointAccess: API.OperationMethod<
     InternalException,
     ResourceNotFoundException,
   ],
+  operationName: "ListVpcEndpointAccess",
 }));
 export type ListVpcEndpointsError =
   | BaseException
@@ -8507,6 +9046,7 @@ export const listVpcEndpoints: API.OperationMethod<
   input: ListVpcEndpointsRequest,
   output: ListVpcEndpointsResponse,
   errors: [BaseException, DisabledOperationException, InternalException],
+  operationName: "ListVpcEndpoints",
 }));
 export type ListVpcEndpointsForDomainError =
   | BaseException
@@ -8532,6 +9072,7 @@ export const listVpcEndpointsForDomain: API.OperationMethod<
     InternalException,
     ResourceNotFoundException,
   ],
+  operationName: "ListVpcEndpointsForDomain",
 }));
 export type PurchaseReservedInstanceOfferingError =
   | DisabledOperationException
@@ -8560,6 +9101,7 @@ export const purchaseReservedInstanceOffering: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "PurchaseReservedInstanceOffering",
 }));
 export type PutDefaultApplicationSettingError =
   | AccessDeniedException
@@ -8589,6 +9131,7 @@ export const putDefaultApplicationSetting: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "PutDefaultApplicationSetting",
 }));
 export type RegisterCapabilityError =
   | AccessDeniedException
@@ -8619,6 +9162,7 @@ export const registerCapability: API.OperationMethod<
     ServiceQuotaExceededException,
     ValidationException,
   ],
+  operationName: "RegisterCapability",
 }));
 export type RejectInboundConnectionError =
   | DisabledOperationException
@@ -8637,6 +9181,7 @@ export const rejectInboundConnection: API.OperationMethod<
   input: RejectInboundConnectionRequest,
   output: RejectInboundConnectionResponse,
   errors: [DisabledOperationException, ResourceNotFoundException],
+  operationName: "RejectInboundConnection",
 }));
 export type RemoveTagsError =
   | BaseException
@@ -8656,6 +9201,7 @@ export const removeTags: API.OperationMethod<
   input: RemoveTagsRequest,
   output: RemoveTagsResponse,
   errors: [BaseException, InternalException, ValidationException],
+  operationName: "RemoveTags",
 }));
 export type RevokeVpcEndpointAccessError =
   | BaseException
@@ -8683,6 +9229,36 @@ export const revokeVpcEndpointAccess: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "RevokeVpcEndpointAccess",
+}));
+export type RollbackServiceSoftwareUpdateError =
+  | BaseException
+  | DisabledOperationException
+  | InternalException
+  | ResourceNotFoundException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Rolls back a service software update for a domain to the previous version. For more
+ * information, see Service
+ * software updates in Amazon OpenSearch Service.
+ */
+export const rollbackServiceSoftwareUpdate: API.OperationMethod<
+  RollbackServiceSoftwareUpdateRequest,
+  RollbackServiceSoftwareUpdateResponse,
+  RollbackServiceSoftwareUpdateError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: RollbackServiceSoftwareUpdateRequest,
+  output: RollbackServiceSoftwareUpdateResponse,
+  errors: [
+    BaseException,
+    DisabledOperationException,
+    InternalException,
+    ResourceNotFoundException,
+    ValidationException,
+  ],
+  operationName: "RollbackServiceSoftwareUpdate",
 }));
 export type StartDomainMaintenanceError =
   | BaseException
@@ -8711,6 +9287,7 @@ export const startDomainMaintenance: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "StartDomainMaintenance",
 }));
 export type StartServiceSoftwareUpdateError =
   | BaseException
@@ -8737,6 +9314,7 @@ export const startServiceSoftwareUpdate: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "StartServiceSoftwareUpdate",
 }));
 export type UpdateApplicationError =
   | AccessDeniedException
@@ -8767,6 +9345,7 @@ export const updateApplication: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpdateApplication",
 }));
 export type UpdateDataSourceError =
   | BaseException
@@ -8797,6 +9376,7 @@ export const updateDataSource: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpdateDataSource",
 }));
 export type UpdateDirectQueryDataSourceError =
   | BaseException
@@ -8826,6 +9406,7 @@ export const updateDirectQueryDataSource: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpdateDirectQueryDataSource",
 }));
 export type UpdateDomainConfigError =
   | BaseException
@@ -8855,6 +9436,7 @@ export const updateDomainConfig: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpdateDomainConfig",
 }));
 export type UpdateIndexError =
   | AccessDeniedException
@@ -8885,6 +9467,7 @@ export const updateIndex: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateIndex",
 }));
 export type UpdatePackageError =
   | AccessDeniedException
@@ -8915,6 +9498,7 @@ export const updatePackage: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpdatePackage",
 }));
 export type UpdatePackageScopeError =
   | BaseException
@@ -8942,6 +9526,7 @@ export const updatePackageScope: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpdatePackageScope",
 }));
 export type UpdateScheduledActionError =
   | BaseException
@@ -8974,6 +9559,7 @@ export const updateScheduledAction: API.OperationMethod<
     SlotNotAvailableException,
     ValidationException,
   ],
+  operationName: "UpdateScheduledAction",
 }));
 export type UpdateVpcEndpointError =
   | BaseException
@@ -9002,6 +9588,7 @@ export const updateVpcEndpoint: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpdateVpcEndpoint",
 }));
 export type UpgradeDomainError =
   | BaseException
@@ -9031,4 +9618,5 @@ export const upgradeDomain: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpgradeDomain",
 }));

@@ -1,6 +1,6 @@
 {
   "name": "@distilled.cloud/core",
-  "version": "0.27.0",
+  "version": "0.29.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/alchemy-run/distilled",
@@ -49,6 +49,11 @@
       "bun": "./src/retry-after.ts",
       "default": "./lib/retry-after.js"
     },
+    "./schema": {
+      "types": "./lib/schema.d.ts",
+      "bun": "./src/schema.ts",
+      "default": "./lib/schema.js"
+    },
     "./schemas": {
       "types": "./lib/schemas.d.ts",
       "bun": "./src/schemas.ts",
@@ -79,11 +84,11 @@
     }
   },
   "scripts": {
-    "typecheck": "tsgo",
-    "build": "tsgo -b",
+    "typecheck": "tsc",
+    "build": "tsc -b",
     "fmt": "oxfmt --write src",
     "lint": "oxlint --fix src",
-    "check": "tsgo && oxlint src && oxfmt --check src",
+    "check": "tsc && oxlint src && oxfmt --check src",
     "test": "bunx vitest run test --exclude specs --passWithNoTests",
     "publish:npm": "bun run build && bun publish --access public"
   },

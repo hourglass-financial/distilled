@@ -4,15 +4,36 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface GetAccountNumberInput {
+  id: string;
+  ereborVersion?: string;
+}
 export const GetAccountNumberInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String.pipe(T.PathParam()),
   ereborVersion: Schema.optional(Schema.String).pipe(
     T.HttpHeader("Erebor-Version"),
   ),
-}).pipe(T.Http({ method: "GET", path: "/account_numbers/{id}" }));
-export type GetAccountNumberInput = typeof GetAccountNumberInput.Type;
+}).pipe(
+  T.Http({ method: "GET", path: "/account_numbers/{id}" }),
+) as unknown as Schema.Codec<GetAccountNumberInput>;
 
 // Output Schema
+export interface GetAccountNumberOutput {
+  id: string;
+  type: "ACCOUNT_NUMBER";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id?: string | null;
+  deposit_account_id: string;
+  name?: string | null;
+  account_number: string;
+  routing_number: string;
+  default: boolean;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const GetAccountNumberOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
   {
     id: Schema.String,
@@ -27,11 +48,12 @@ export const GetAccountNumberOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
     account_number: Schema.String,
     routing_number: Schema.String,
     default: Schema.Boolean,
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
   },
-);
-export type GetAccountNumberOutput = typeof GetAccountNumberOutput.Type;
+) as unknown as Schema.Codec<GetAccountNumberOutput>;
 
 // The operation
 /**

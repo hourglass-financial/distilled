@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -579,6 +579,12 @@ export const ReplicationGroupOutpostArnList =
   /*@__PURE__*/ /*#__PURE__*/ S.Array(
     S.String.pipe(T.XmlName("ReplicationGroupOutpostArn")),
   );
+export type StorageEncryptionType =
+  | "none"
+  | "sse-elasticache"
+  | "sse-kms"
+  | (string & {});
+export const StorageEncryptionType = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export type LogDeliveryConfigurationStatus =
   | "active"
   | "enabling"
@@ -621,6 +627,15 @@ export type NetworkType = "ipv4" | "ipv6" | "dual_stack" | (string & {});
 export const NetworkType = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export type IpDiscovery = "ipv4" | "ipv6" | (string & {});
 export const IpDiscovery = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export type Durability =
+  | "default"
+  | "async"
+  | "sync"
+  | "disabled"
+  | (string & {});
+export const Durability = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export type EffectiveDurability = "async" | "sync" | "disabled" | (string & {});
+export const EffectiveDurability = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface ReplicationGroup {
   ReplicationGroupId?: string;
   Description?: string;
@@ -643,6 +658,7 @@ export interface ReplicationGroup {
   AtRestEncryptionEnabled?: boolean;
   MemberClustersOutpostArns?: string[];
   KmsKeyId?: string;
+  StorageEncryptionType?: StorageEncryptionType;
   ARN?: string;
   UserGroupIds?: string[];
   LogDeliveryConfigurations?: LogDeliveryConfiguration[];
@@ -654,6 +670,8 @@ export interface ReplicationGroup {
   TransitEncryptionMode?: TransitEncryptionMode;
   ClusterMode?: ClusterMode;
   Engine?: string;
+  Durability?: Durability;
+  EffectiveDurability?: EffectiveDurability;
 }
 export const ReplicationGroup = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -680,6 +698,7 @@ export const ReplicationGroup = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     AtRestEncryptionEnabled: S.optional(S.Boolean),
     MemberClustersOutpostArns: S.optional(ReplicationGroupOutpostArnList),
     KmsKeyId: S.optional(S.String),
+    StorageEncryptionType: S.optional(StorageEncryptionType),
     ARN: S.optional(S.String),
     UserGroupIds: S.optional(UserGroupIdList),
     LogDeliveryConfigurations: S.optional(LogDeliveryConfigurationList),
@@ -693,6 +712,8 @@ export const ReplicationGroup = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     TransitEncryptionMode: S.optional(TransitEncryptionMode),
     ClusterMode: S.optional(ClusterMode),
     Engine: S.optional(S.String),
+    Durability: S.optional(Durability),
+    EffectiveDurability: S.optional(EffectiveDurability),
   }),
 ).annotate({
   identifier: "ReplicationGroup",
@@ -907,6 +928,7 @@ export interface Snapshot {
   KmsKeyId?: string;
   ARN?: string;
   DataTiering?: DataTieringStatus;
+  Durability?: Durability;
 }
 export const Snapshot = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -940,6 +962,7 @@ export const Snapshot = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     KmsKeyId: S.optional(S.String),
     ARN: S.optional(S.String),
     DataTiering: S.optional(DataTieringStatus),
+    Durability: S.optional(Durability),
   }),
 ).annotate({ identifier: "Snapshot" }) as any as S.Schema<Snapshot>;
 export interface CopySnapshotResult {
@@ -1647,6 +1670,7 @@ export interface CreateReplicationGroupMessage {
   TransitEncryptionMode?: TransitEncryptionMode;
   ClusterMode?: ClusterMode;
   ServerlessCacheSnapshotName?: string;
+  Durability?: Durability;
 }
 export const CreateReplicationGroupMessage =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -1692,6 +1716,7 @@ export const CreateReplicationGroupMessage =
       TransitEncryptionMode: S.optional(TransitEncryptionMode),
       ClusterMode: S.optional(ClusterMode),
       ServerlessCacheSnapshotName: S.optional(S.String),
+      Durability: S.optional(Durability),
     }).pipe(
       T.all(
         ns,
@@ -1809,6 +1834,7 @@ export interface ServerlessCache {
   FullEngineVersion?: string;
   CacheUsageLimits?: CacheUsageLimits;
   KmsKeyId?: string;
+  StorageEncryptionType?: StorageEncryptionType;
   SecurityGroupIds?: string[];
   Endpoint?: Endpoint;
   ReaderEndpoint?: Endpoint;
@@ -1832,6 +1858,7 @@ export const ServerlessCache = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     FullEngineVersion: S.optional(S.String),
     CacheUsageLimits: S.optional(CacheUsageLimits),
     KmsKeyId: S.optional(S.String),
+    StorageEncryptionType: S.optional(StorageEncryptionType),
     SecurityGroupIds: S.optional(SecurityGroupIdsList),
     Endpoint: S.optional(Endpoint),
     ReaderEndpoint: S.optional(Endpoint),
@@ -4369,6 +4396,7 @@ export interface ModifyReplicationGroupMessage {
   TransitEncryptionEnabled?: boolean;
   TransitEncryptionMode?: TransitEncryptionMode;
   ClusterMode?: ClusterMode;
+  Durability?: Durability;
 }
 export const ModifyReplicationGroupMessage =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -4405,6 +4433,7 @@ export const ModifyReplicationGroupMessage =
       TransitEncryptionEnabled: S.optional(S.Boolean),
       TransitEncryptionMode: S.optional(TransitEncryptionMode),
       ClusterMode: S.optional(ClusterMode),
+      Durability: S.optional(Durability),
     }).pipe(
       T.all(
         ns,
@@ -5465,6 +5494,7 @@ export const addTagsToResource: API.OperationMethod<
     UserGroupNotFoundFault,
     UserNotFoundFault,
   ],
+  operationName: "AddTagsToResource",
 }));
 export type AuthorizeCacheSecurityGroupIngressError =
   | AuthorizationAlreadyExistsFault
@@ -5496,6 +5526,7 @@ export const authorizeCacheSecurityGroupIngress: API.OperationMethod<
     InvalidParameterCombinationException,
     InvalidParameterValueException,
   ],
+  operationName: "AuthorizeCacheSecurityGroupIngress",
 }));
 export type BatchApplyUpdateActionError =
   | InvalidParameterValueException
@@ -5515,6 +5546,7 @@ export const batchApplyUpdateAction: API.OperationMethod<
   input: BatchApplyUpdateActionMessage,
   output: UpdateActionResultsMessage,
   errors: [InvalidParameterValueException, ServiceUpdateNotFoundFault],
+  operationName: "BatchApplyUpdateAction",
 }));
 export type BatchStopUpdateActionError =
   | InvalidParameterValueException
@@ -5534,6 +5566,7 @@ export const batchStopUpdateAction: API.OperationMethod<
   input: BatchStopUpdateActionMessage,
   output: UpdateActionResultsMessage,
   errors: [InvalidParameterValueException, ServiceUpdateNotFoundFault],
+  operationName: "BatchStopUpdateAction",
 }));
 export type CompleteMigrationError =
   | InvalidReplicationGroupStateFault
@@ -5556,6 +5589,7 @@ export const completeMigration: API.OperationMethod<
     ReplicationGroupNotFoundFault,
     ReplicationGroupNotUnderMigrationFault,
   ],
+  operationName: "CompleteMigration",
 }));
 export type CopyServerlessCacheSnapshotError =
   | InvalidParameterCombinationException
@@ -5588,6 +5622,7 @@ export const copyServerlessCacheSnapshot: API.OperationMethod<
     ServiceLinkedRoleNotFoundFault,
     TagQuotaPerResourceExceeded,
   ],
+  operationName: "CopyServerlessCacheSnapshot",
 }));
 export type CopySnapshotError =
   | InvalidParameterCombinationException
@@ -5688,6 +5723,7 @@ export const copySnapshot: API.OperationMethod<
     SnapshotQuotaExceededFault,
     TagQuotaPerResourceExceeded,
   ],
+  operationName: "CopySnapshot",
 }));
 export type CreateCacheClusterError =
   | CacheClusterAlreadyExistsFault
@@ -5735,6 +5771,7 @@ export const createCacheCluster: API.OperationMethod<
     ReplicationGroupNotFoundFault,
     TagQuotaPerResourceExceeded,
   ],
+  operationName: "CreateCacheCluster",
 }));
 export type CreateCacheParameterGroupError =
   | CacheParameterGroupAlreadyExistsFault
@@ -5775,6 +5812,7 @@ export const createCacheParameterGroup: API.OperationMethod<
     InvalidParameterValueException,
     TagQuotaPerResourceExceeded,
   ],
+  operationName: "CreateCacheParameterGroup",
 }));
 export type CreateCacheSecurityGroupError =
   | CacheSecurityGroupAlreadyExistsFault
@@ -5806,6 +5844,7 @@ export const createCacheSecurityGroup: API.OperationMethod<
     InvalidParameterValueException,
     TagQuotaPerResourceExceeded,
   ],
+  operationName: "CreateCacheSecurityGroup",
 }));
 export type CreateCacheSubnetGroupError =
   | CacheSubnetGroupAlreadyExistsFault
@@ -5837,6 +5876,7 @@ export const createCacheSubnetGroup: API.OperationMethod<
     SubnetNotAllowedFault,
     TagQuotaPerResourceExceeded,
   ],
+  operationName: "CreateCacheSubnetGroup",
 }));
 export type CreateGlobalReplicationGroupError =
   | GlobalReplicationGroupAlreadyExistsFault
@@ -5874,6 +5914,7 @@ export const createGlobalReplicationGroup: API.OperationMethod<
     ReplicationGroupNotFoundFault,
     ServiceLinkedRoleNotFoundFault,
   ],
+  operationName: "CreateGlobalReplicationGroup",
 }));
 export type CreateReplicationGroupError =
   | CacheClusterNotFoundFault
@@ -5962,6 +6003,7 @@ export const createReplicationGroup: API.OperationMethod<
     TagQuotaPerResourceExceeded,
     UserGroupNotFoundFault,
   ],
+  operationName: "CreateReplicationGroup",
 }));
 export type CreateServerlessCacheError =
   | InvalidCredentialsException
@@ -6000,6 +6042,7 @@ export const createServerlessCache: API.OperationMethod<
     TagQuotaPerResourceExceeded,
     UserGroupNotFoundFault,
   ],
+  operationName: "CreateServerlessCache",
 }));
 export type CreateServerlessCacheSnapshotError =
   | InvalidParameterCombinationException
@@ -6032,6 +6075,7 @@ export const createServerlessCacheSnapshot: API.OperationMethod<
     ServiceLinkedRoleNotFoundFault,
     TagQuotaPerResourceExceeded,
   ],
+  operationName: "CreateServerlessCacheSnapshot",
 }));
 export type CreateSnapshotError =
   | CacheClusterNotFoundFault
@@ -6071,6 +6115,7 @@ export const createSnapshot: API.OperationMethod<
     SnapshotQuotaExceededFault,
     TagQuotaPerResourceExceeded,
   ],
+  operationName: "CreateSnapshot",
 }));
 export type CreateUserError =
   | DuplicateUserNameFault
@@ -6102,6 +6147,7 @@ export const createUser: API.OperationMethod<
     UserAlreadyExistsFault,
     UserQuotaExceededFault,
   ],
+  operationName: "CreateUser",
 }));
 export type CreateUserGroupError =
   | DefaultUserRequired
@@ -6135,6 +6181,7 @@ export const createUserGroup: API.OperationMethod<
     UserGroupQuotaExceededFault,
     UserNotFoundFault,
   ],
+  operationName: "CreateUserGroup",
 }));
 export type DecreaseNodeGroupsInGlobalReplicationGroupError =
   | GlobalReplicationGroupNotFoundFault
@@ -6159,6 +6206,7 @@ export const decreaseNodeGroupsInGlobalReplicationGroup: API.OperationMethod<
     InvalidParameterCombinationException,
     InvalidParameterValueException,
   ],
+  operationName: "DecreaseNodeGroupsInGlobalReplicationGroup",
 }));
 export type DecreaseReplicaCountError =
   | ClusterQuotaForCustomerExceededFault
@@ -6202,6 +6250,7 @@ export const decreaseReplicaCount: API.OperationMethod<
     ReplicationGroupNotFoundFault,
     ServiceLinkedRoleNotFoundFault,
   ],
+  operationName: "DecreaseReplicaCount",
 }));
 export type DeleteCacheClusterError =
   | CacheClusterNotFoundFault
@@ -6251,6 +6300,7 @@ export const deleteCacheCluster: API.OperationMethod<
     SnapshotFeatureNotSupportedFault,
     SnapshotQuotaExceededFault,
   ],
+  operationName: "DeleteCacheCluster",
 }));
 export type DeleteCacheParameterGroupError =
   | CacheParameterGroupNotFoundFault
@@ -6277,6 +6327,7 @@ export const deleteCacheParameterGroup: API.OperationMethod<
     InvalidParameterCombinationException,
     InvalidParameterValueException,
   ],
+  operationName: "DeleteCacheParameterGroup",
 }));
 export type DeleteCacheSecurityGroupError =
   | CacheSecurityGroupNotFoundFault
@@ -6304,6 +6355,7 @@ export const deleteCacheSecurityGroup: API.OperationMethod<
     InvalidParameterCombinationException,
     InvalidParameterValueException,
   ],
+  operationName: "DeleteCacheSecurityGroup",
 }));
 export type DeleteCacheSubnetGroupError =
   | CacheSubnetGroupInUse
@@ -6324,6 +6376,7 @@ export const deleteCacheSubnetGroup: API.OperationMethod<
   input: DeleteCacheSubnetGroupMessage,
   output: DeleteCacheSubnetGroupResponse,
   errors: [CacheSubnetGroupInUse, CacheSubnetGroupNotFoundFault],
+  operationName: "DeleteCacheSubnetGroup",
 }));
 export type DeleteGlobalReplicationGroupError =
   | GlobalReplicationGroupNotFoundFault
@@ -6364,6 +6417,7 @@ export const deleteGlobalReplicationGroup: API.OperationMethod<
     InvalidGlobalReplicationGroupStateFault,
     InvalidParameterValueException,
   ],
+  operationName: "DeleteGlobalReplicationGroup",
 }));
 export type DeleteReplicationGroupError =
   | InvalidParameterCombinationException
@@ -6407,6 +6461,7 @@ export const deleteReplicationGroup: API.OperationMethod<
     SnapshotFeatureNotSupportedFault,
     SnapshotQuotaExceededFault,
   ],
+  operationName: "DeleteReplicationGroup",
 }));
 export type DeleteServerlessCacheError =
   | InvalidCredentialsException
@@ -6440,6 +6495,7 @@ export const deleteServerlessCache: API.OperationMethod<
     ServerlessCacheSnapshotAlreadyExistsFault,
     ServiceLinkedRoleNotFoundFault,
   ],
+  operationName: "DeleteServerlessCache",
 }));
 export type DeleteServerlessCacheSnapshotError =
   | InvalidParameterValueException
@@ -6464,6 +6520,7 @@ export const deleteServerlessCacheSnapshot: API.OperationMethod<
     ServerlessCacheSnapshotNotFoundFault,
     ServiceLinkedRoleNotFoundFault,
   ],
+  operationName: "DeleteServerlessCacheSnapshot",
 }));
 export type DeleteSnapshotError =
   | InvalidParameterCombinationException
@@ -6492,6 +6549,7 @@ export const deleteSnapshot: API.OperationMethod<
     InvalidSnapshotStateFault,
     SnapshotNotFoundFault,
   ],
+  operationName: "DeleteSnapshot",
 }));
 export type DeleteUserError =
   | DefaultUserAssociatedToUserGroupFault
@@ -6520,6 +6578,7 @@ export const deleteUser: API.OperationMethod<
     ServiceLinkedRoleNotFoundFault,
     UserNotFoundFault,
   ],
+  operationName: "DeleteUser",
 }));
 export type DeleteUserGroupError =
   | InvalidParameterValueException
@@ -6546,6 +6605,7 @@ export const deleteUserGroup: API.OperationMethod<
     ServiceLinkedRoleNotFoundFault,
     UserGroupNotFoundFault,
   ],
+  operationName: "DeleteUserGroup",
 }));
 export type DescribeCacheClustersError =
   | CacheClusterNotFoundFault
@@ -6603,6 +6663,7 @@ export const describeCacheClusters: API.OperationMethod<
     InvalidParameterCombinationException,
     InvalidParameterValueException,
   ],
+  operationName: "DescribeCacheClusters",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -6638,6 +6699,7 @@ export const describeCacheEngineVersions: API.OperationMethod<
   input: DescribeCacheEngineVersionsMessage,
   output: CacheEngineVersionMessage,
   errors: [],
+  operationName: "DescribeCacheEngineVersions",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -6682,6 +6744,7 @@ export const describeCacheParameterGroups: API.OperationMethod<
     InvalidParameterCombinationException,
     InvalidParameterValueException,
   ],
+  operationName: "DescribeCacheParameterGroups",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -6725,6 +6788,7 @@ export const describeCacheParameters: API.OperationMethod<
     InvalidParameterCombinationException,
     InvalidParameterValueException,
   ],
+  operationName: "DescribeCacheParameters",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -6770,6 +6834,7 @@ export const describeCacheSecurityGroups: API.OperationMethod<
     InvalidParameterCombinationException,
     InvalidParameterValueException,
   ],
+  operationName: "DescribeCacheSecurityGroups",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -6810,6 +6875,7 @@ export const describeCacheSubnetGroups: API.OperationMethod<
   input: DescribeCacheSubnetGroupsMessage,
   output: CacheSubnetGroupMessage,
   errors: [CacheSubnetGroupNotFoundFault],
+  operationName: "DescribeCacheSubnetGroups",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -6852,6 +6918,7 @@ export const describeEngineDefaultParameters: API.OperationMethod<
     InvalidParameterCombinationException,
     InvalidParameterValueException,
   ],
+  operationName: "DescribeEngineDefaultParameters",
   pagination: {
     inputToken: "Marker",
     outputToken: "EngineDefaults.Marker",
@@ -6898,6 +6965,7 @@ export const describeEvents: API.OperationMethod<
     InvalidParameterCombinationException,
     InvalidParameterValueException,
   ],
+  operationName: "DescribeEvents",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -6942,6 +7010,7 @@ export const describeGlobalReplicationGroups: API.OperationMethod<
     InvalidParameterCombinationException,
     InvalidParameterValueException,
   ],
+  operationName: "DescribeGlobalReplicationGroups",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -6989,6 +7058,7 @@ export const describeReplicationGroups: API.OperationMethod<
     InvalidParameterValueException,
     ReplicationGroupNotFoundFault,
   ],
+  operationName: "DescribeReplicationGroups",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -7033,6 +7103,7 @@ export const describeReservedCacheNodes: API.OperationMethod<
     InvalidParameterValueException,
     ReservedCacheNodeNotFoundFault,
   ],
+  operationName: "DescribeReservedCacheNodes",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -7076,6 +7147,7 @@ export const describeReservedCacheNodesOfferings: API.OperationMethod<
     InvalidParameterValueException,
     ReservedCacheNodesOfferingNotFoundFault,
   ],
+  operationName: "DescribeReservedCacheNodesOfferings",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -7121,6 +7193,7 @@ export const describeServerlessCaches: API.OperationMethod<
     InvalidParameterValueException,
     ServerlessCacheNotFoundFault,
   ],
+  operationName: "DescribeServerlessCaches",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7169,6 +7242,7 @@ export const describeServerlessCacheSnapshots: API.OperationMethod<
     ServerlessCacheNotFoundFault,
     ServerlessCacheSnapshotNotFoundFault,
   ],
+  operationName: "DescribeServerlessCacheSnapshots",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7212,6 +7286,7 @@ export const describeServiceUpdates: API.OperationMethod<
     InvalidParameterValueException,
     ServiceUpdateNotFoundFault,
   ],
+  operationName: "DescribeServiceUpdates",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -7262,6 +7337,7 @@ export const describeSnapshots: API.OperationMethod<
     InvalidParameterValueException,
     SnapshotNotFoundFault,
   ],
+  operationName: "DescribeSnapshots",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -7303,6 +7379,7 @@ export const describeUpdateActions: API.OperationMethod<
     InvalidParameterCombinationException,
     InvalidParameterValueException,
   ],
+  operationName: "DescribeUpdateActions",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -7346,6 +7423,7 @@ export const describeUserGroups: API.OperationMethod<
     ServiceLinkedRoleNotFoundFault,
     UserGroupNotFoundFault,
   ],
+  operationName: "DescribeUserGroups",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -7389,6 +7467,7 @@ export const describeUsers: API.OperationMethod<
     ServiceLinkedRoleNotFoundFault,
     UserNotFoundFault,
   ],
+  operationName: "DescribeUsers",
   pagination: {
     inputToken: "Marker",
     outputToken: "Marker",
@@ -7421,6 +7500,7 @@ export const disassociateGlobalReplicationGroup: API.OperationMethod<
     InvalidParameterCombinationException,
     InvalidParameterValueException,
   ],
+  operationName: "DisassociateGlobalReplicationGroup",
 }));
 export type ExportServerlessCacheSnapshotError =
   | InvalidParameterValueException
@@ -7445,6 +7525,7 @@ export const exportServerlessCacheSnapshot: API.OperationMethod<
     ServerlessCacheSnapshotNotFoundFault,
     ServiceLinkedRoleNotFoundFault,
   ],
+  operationName: "ExportServerlessCacheSnapshot",
 }));
 export type FailoverGlobalReplicationGroupError =
   | GlobalReplicationGroupNotFoundFault
@@ -7470,6 +7551,7 @@ export const failoverGlobalReplicationGroup: API.OperationMethod<
     InvalidParameterCombinationException,
     InvalidParameterValueException,
   ],
+  operationName: "FailoverGlobalReplicationGroup",
 }));
 export type IncreaseNodeGroupsInGlobalReplicationGroupError =
   | GlobalReplicationGroupNotFoundFault
@@ -7492,6 +7574,7 @@ export const increaseNodeGroupsInGlobalReplicationGroup: API.OperationMethod<
     InvalidGlobalReplicationGroupStateFault,
     InvalidParameterValueException,
   ],
+  operationName: "IncreaseNodeGroupsInGlobalReplicationGroup",
 }));
 export type IncreaseReplicaCountError =
   | ClusterQuotaForCustomerExceededFault
@@ -7535,6 +7618,7 @@ export const increaseReplicaCount: API.OperationMethod<
     NoOperationFault,
     ReplicationGroupNotFoundFault,
   ],
+  operationName: "IncreaseReplicaCount",
 }));
 export type ListAllowedNodeTypeModificationsError =
   | CacheClusterNotFoundFault
@@ -7565,6 +7649,7 @@ export const listAllowedNodeTypeModifications: API.OperationMethod<
     InvalidParameterValueException,
     ReplicationGroupNotFoundFault,
   ],
+  operationName: "ListAllowedNodeTypeModifications",
 }));
 export type ListTagsForResourceError =
   | CacheClusterNotFoundFault
@@ -7620,6 +7705,7 @@ export const listTagsForResource: API.OperationMethod<
     UserGroupNotFoundFault,
     UserNotFoundFault,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type ModifyCacheClusterError =
   | CacheClusterNotFoundFault
@@ -7659,6 +7745,7 @@ export const modifyCacheCluster: API.OperationMethod<
     NodeQuotaForClusterExceededFault,
     NodeQuotaForCustomerExceededFault,
   ],
+  operationName: "ModifyCacheCluster",
 }));
 export type ModifyCacheParameterGroupError =
   | CacheParameterGroupNotFoundFault
@@ -7686,6 +7773,7 @@ export const modifyCacheParameterGroup: API.OperationMethod<
     InvalidParameterCombinationException,
     InvalidParameterValueException,
   ],
+  operationName: "ModifyCacheParameterGroup",
 }));
 export type ModifyCacheSubnetGroupError =
   | CacheSubnetGroupNotFoundFault
@@ -7712,6 +7800,7 @@ export const modifyCacheSubnetGroup: API.OperationMethod<
     SubnetInUse,
     SubnetNotAllowedFault,
   ],
+  operationName: "ModifyCacheSubnetGroup",
 }));
 export type ModifyGlobalReplicationGroupError =
   | GlobalReplicationGroupNotFoundFault
@@ -7734,6 +7823,7 @@ export const modifyGlobalReplicationGroup: API.OperationMethod<
     InvalidGlobalReplicationGroupStateFault,
     InvalidParameterValueException,
   ],
+  operationName: "ModifyGlobalReplicationGroup",
 }));
 export type ModifyReplicationGroupError =
   | CacheClusterNotFoundFault
@@ -7790,6 +7880,7 @@ export const modifyReplicationGroup: API.OperationMethod<
     ReplicationGroupNotFoundFault,
     UserGroupNotFoundFault,
   ],
+  operationName: "ModifyReplicationGroup",
 }));
 export type ModifyReplicationGroupShardConfigurationError =
   | InsufficientCacheClusterCapacityFault
@@ -7827,6 +7918,7 @@ export const modifyReplicationGroupShardConfiguration: API.OperationMethod<
     NodeQuotaForCustomerExceededFault,
     ReplicationGroupNotFoundFault,
   ],
+  operationName: "ModifyReplicationGroupShardConfiguration",
 }));
 export type ModifyServerlessCacheError =
   | InvalidCredentialsException
@@ -7859,6 +7951,7 @@ export const modifyServerlessCache: API.OperationMethod<
     ServiceLinkedRoleNotFoundFault,
     UserGroupNotFoundFault,
   ],
+  operationName: "ModifyServerlessCache",
 }));
 export type ModifyUserError =
   | InvalidParameterCombinationException
@@ -7885,6 +7978,7 @@ export const modifyUser: API.OperationMethod<
     ServiceLinkedRoleNotFoundFault,
     UserNotFoundFault,
   ],
+  operationName: "ModifyUser",
 }));
 export type ModifyUserGroupError =
   | DefaultUserRequired
@@ -7917,6 +8011,7 @@ export const modifyUserGroup: API.OperationMethod<
     UserGroupNotFoundFault,
     UserNotFoundFault,
   ],
+  operationName: "ModifyUserGroup",
 }));
 export type PurchaseReservedCacheNodesOfferingError =
   | InvalidParameterCombinationException
@@ -7946,6 +8041,7 @@ export const purchaseReservedCacheNodesOffering: API.OperationMethod<
     ReservedCacheNodesOfferingNotFoundFault,
     TagQuotaPerResourceExceeded,
   ],
+  operationName: "PurchaseReservedCacheNodesOffering",
 }));
 export type RebalanceSlotsInGlobalReplicationGroupError =
   | GlobalReplicationGroupNotFoundFault
@@ -7969,6 +8065,7 @@ export const rebalanceSlotsInGlobalReplicationGroup: API.OperationMethod<
     InvalidGlobalReplicationGroupStateFault,
     InvalidParameterValueException,
   ],
+  operationName: "RebalanceSlotsInGlobalReplicationGroup",
 }));
 export type RebootCacheClusterError =
   | CacheClusterNotFoundFault
@@ -8001,6 +8098,7 @@ export const rebootCacheCluster: API.OperationMethod<
   input: RebootCacheClusterMessage,
   output: RebootCacheClusterResult,
   errors: [CacheClusterNotFoundFault, InvalidCacheClusterStateFault],
+  operationName: "RebootCacheCluster",
 }));
 export type RemoveTagsFromResourceError =
   | CacheClusterNotFoundFault
@@ -8053,6 +8151,7 @@ export const removeTagsFromResource: API.OperationMethod<
     UserGroupNotFoundFault,
     UserNotFoundFault,
   ],
+  operationName: "RemoveTagsFromResource",
 }));
 export type ResetCacheParameterGroupError =
   | CacheParameterGroupNotFoundFault
@@ -8082,6 +8181,7 @@ export const resetCacheParameterGroup: API.OperationMethod<
     InvalidParameterCombinationException,
     InvalidParameterValueException,
   ],
+  operationName: "ResetCacheParameterGroup",
 }));
 export type RevokeCacheSecurityGroupIngressError =
   | AuthorizationNotFoundFault
@@ -8109,6 +8209,7 @@ export const revokeCacheSecurityGroupIngress: API.OperationMethod<
     InvalidParameterCombinationException,
     InvalidParameterValueException,
   ],
+  operationName: "RevokeCacheSecurityGroupIngress",
 }));
 export type StartMigrationError =
   | InvalidParameterValueException
@@ -8133,6 +8234,7 @@ export const startMigration: API.OperationMethod<
     ReplicationGroupAlreadyUnderMigrationFault,
     ReplicationGroupNotFoundFault,
   ],
+  operationName: "StartMigration",
 }));
 export type TestFailoverError =
   | APICallRateForCustomerExceededFault
@@ -8217,6 +8319,7 @@ export const testFailover: API.OperationMethod<
     ReplicationGroupNotFoundFault,
     TestFailoverNotAvailableFault,
   ],
+  operationName: "TestFailover",
 }));
 export type TestMigrationError =
   | InvalidParameterValueException
@@ -8241,4 +8344,5 @@ export const testMigration: API.OperationMethod<
     ReplicationGroupAlreadyUnderMigrationFault,
     ReplicationGroupNotFoundFault,
   ],
+  operationName: "TestMigration",
 }));

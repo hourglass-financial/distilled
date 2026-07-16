@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -271,6 +271,7 @@ export type CaptureTimeAccuracy = number;
 export type Coordinate = number;
 export type Use2DSolver = boolean;
 export type CreationDate = Date;
+export type ConfidencePercent = number;
 export type ResourceIdentifier = string;
 export type EndPoint = string;
 export type CertificatePEM = string;
@@ -3239,12 +3240,27 @@ export const Gnss = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     Use2DSolver: S.optional(S.Boolean),
   }),
 ).annotate({ identifier: "Gnss" }) as any as S.Schema<Gnss>;
+export interface WiFiCellular {
+  ConfidencePercent?: number;
+}
+export const WiFiCellular = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ ConfidencePercent: S.optional(S.Number) }),
+).annotate({ identifier: "WiFiCellular" }) as any as S.Schema<WiFiCellular>;
+export interface AdvancedConfiguration {
+  WiFiCellular?: WiFiCellular;
+}
+export const AdvancedConfiguration = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ WiFiCellular: S.optional(WiFiCellular) }),
+).annotate({
+  identifier: "AdvancedConfiguration",
+}) as any as S.Schema<AdvancedConfiguration>;
 export interface GetPositionEstimateRequest {
   WiFiAccessPoints?: WiFiAccessPoint[];
   CellTowers?: CellTowers;
   Ip?: Ip;
   Gnss?: Gnss;
   Timestamp?: Date;
+  AdvancedConfiguration?: AdvancedConfiguration;
 }
 export const GetPositionEstimateRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -3254,6 +3270,7 @@ export const GetPositionEstimateRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       Ip: S.optional(Ip),
       Gnss: S.optional(Gnss),
       Timestamp: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+      AdvancedConfiguration: S.optional(AdvancedConfiguration),
     }).pipe(
       T.all(
         T.Http({ method: "POST", uri: "/position-estimate" }),
@@ -6494,6 +6511,7 @@ export const associateAwsAccountWithPartnerAccount: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssociateAwsAccountWithPartnerAccount",
 }));
 export type AssociateMulticastGroupWithFuotaTaskError =
   | AccessDeniedException
@@ -6522,6 +6540,7 @@ export const associateMulticastGroupWithFuotaTask: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssociateMulticastGroupWithFuotaTask",
 }));
 export type AssociateWirelessDeviceWithFuotaTaskError =
   | AccessDeniedException
@@ -6550,6 +6569,7 @@ export const associateWirelessDeviceWithFuotaTask: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssociateWirelessDeviceWithFuotaTask",
 }));
 export type AssociateWirelessDeviceWithMulticastGroupError =
   | AccessDeniedException
@@ -6578,6 +6598,7 @@ export const associateWirelessDeviceWithMulticastGroup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssociateWirelessDeviceWithMulticastGroup",
 }));
 export type AssociateWirelessDeviceWithThingError =
   | AccessDeniedException
@@ -6606,6 +6627,7 @@ export const associateWirelessDeviceWithThing: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssociateWirelessDeviceWithThing",
 }));
 export type AssociateWirelessGatewayWithCertificateError =
   | AccessDeniedException
@@ -6634,6 +6656,7 @@ export const associateWirelessGatewayWithCertificate: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssociateWirelessGatewayWithCertificate",
 }));
 export type AssociateWirelessGatewayWithThingError =
   | AccessDeniedException
@@ -6662,6 +6685,7 @@ export const associateWirelessGatewayWithThing: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssociateWirelessGatewayWithThing",
 }));
 export type CancelMulticastGroupSessionError =
   | AccessDeniedException
@@ -6690,6 +6714,7 @@ export const cancelMulticastGroupSession: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CancelMulticastGroupSession",
 }));
 export type CreateDestinationError =
   | AccessDeniedException
@@ -6718,6 +6743,7 @@ export const createDestination: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateDestination",
 }));
 export type CreateDeviceProfileError =
   | AccessDeniedException
@@ -6744,6 +6770,7 @@ export const createDeviceProfile: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateDeviceProfile",
 }));
 export type CreateFuotaTaskError =
   | AccessDeniedException
@@ -6772,6 +6799,7 @@ export const createFuotaTask: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateFuotaTask",
 }));
 export type CreateMulticastGroupError =
   | AccessDeniedException
@@ -6800,6 +6828,7 @@ export const createMulticastGroup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateMulticastGroup",
 }));
 export type CreateNetworkAnalyzerConfigurationError =
   | AccessDeniedException
@@ -6828,6 +6857,7 @@ export const createNetworkAnalyzerConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateNetworkAnalyzerConfiguration",
 }));
 export type CreateServiceProfileError =
   | AccessDeniedException
@@ -6854,6 +6884,7 @@ export const createServiceProfile: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateServiceProfile",
 }));
 export type CreateWirelessDeviceError =
   | AccessDeniedException
@@ -6882,6 +6913,7 @@ export const createWirelessDevice: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateWirelessDevice",
 }));
 export type CreateWirelessGatewayError =
   | AccessDeniedException
@@ -6919,6 +6951,7 @@ export const createWirelessGateway: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateWirelessGateway",
 }));
 export type CreateWirelessGatewayTaskError =
   | AccessDeniedException
@@ -6947,6 +6980,7 @@ export const createWirelessGatewayTask: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateWirelessGatewayTask",
 }));
 export type CreateWirelessGatewayTaskDefinitionError =
   | AccessDeniedException
@@ -6975,6 +7009,7 @@ export const createWirelessGatewayTaskDefinition: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateWirelessGatewayTaskDefinition",
 }));
 export type DeleteDestinationError =
   | AccessDeniedException
@@ -7003,6 +7038,7 @@ export const deleteDestination: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteDestination",
 }));
 export type DeleteDeviceProfileError =
   | AccessDeniedException
@@ -7031,6 +7067,7 @@ export const deleteDeviceProfile: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteDeviceProfile",
 }));
 export type DeleteFuotaTaskError =
   | AccessDeniedException
@@ -7057,6 +7094,7 @@ export const deleteFuotaTask: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteFuotaTask",
 }));
 export type DeleteMulticastGroupError =
   | AccessDeniedException
@@ -7085,6 +7123,7 @@ export const deleteMulticastGroup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteMulticastGroup",
 }));
 export type DeleteNetworkAnalyzerConfigurationError =
   | AccessDeniedException
@@ -7113,6 +7152,7 @@ export const deleteNetworkAnalyzerConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteNetworkAnalyzerConfiguration",
 }));
 export type DeleteQueuedMessagesError =
   | AccessDeniedException
@@ -7139,6 +7179,7 @@ export const deleteQueuedMessages: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteQueuedMessages",
 }));
 export type DeleteServiceProfileError =
   | AccessDeniedException
@@ -7167,6 +7208,7 @@ export const deleteServiceProfile: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteServiceProfile",
 }));
 export type DeleteWirelessDeviceError =
   | AccessDeniedException
@@ -7193,6 +7235,7 @@ export const deleteWirelessDevice: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteWirelessDevice",
 }));
 export type DeleteWirelessDeviceImportTaskError =
   | AccessDeniedException
@@ -7221,6 +7264,7 @@ export const deleteWirelessDeviceImportTask: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteWirelessDeviceImportTask",
 }));
 export type DeleteWirelessGatewayError =
   | AccessDeniedException
@@ -7258,6 +7302,7 @@ export const deleteWirelessGateway: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteWirelessGateway",
 }));
 export type DeleteWirelessGatewayTaskError =
   | AccessDeniedException
@@ -7284,6 +7329,7 @@ export const deleteWirelessGatewayTask: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteWirelessGatewayTask",
 }));
 export type DeleteWirelessGatewayTaskDefinitionError =
   | AccessDeniedException
@@ -7311,6 +7357,7 @@ export const deleteWirelessGatewayTaskDefinition: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteWirelessGatewayTaskDefinition",
 }));
 export type DeregisterWirelessDeviceError =
   | InternalServerException
@@ -7335,6 +7382,7 @@ export const deregisterWirelessDevice: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeregisterWirelessDevice",
 }));
 export type DisassociateAwsAccountFromPartnerAccountError =
   | InternalServerException
@@ -7361,6 +7409,7 @@ export const disassociateAwsAccountFromPartnerAccount: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DisassociateAwsAccountFromPartnerAccount",
 }));
 export type DisassociateMulticastGroupFromFuotaTaskError =
   | AccessDeniedException
@@ -7387,6 +7436,7 @@ export const disassociateMulticastGroupFromFuotaTask: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DisassociateMulticastGroupFromFuotaTask",
 }));
 export type DisassociateWirelessDeviceFromFuotaTaskError =
   | AccessDeniedException
@@ -7415,6 +7465,7 @@ export const disassociateWirelessDeviceFromFuotaTask: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DisassociateWirelessDeviceFromFuotaTask",
 }));
 export type DisassociateWirelessDeviceFromMulticastGroupError =
   | AccessDeniedException
@@ -7441,6 +7492,7 @@ export const disassociateWirelessDeviceFromMulticastGroup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DisassociateWirelessDeviceFromMulticastGroup",
 }));
 export type DisassociateWirelessDeviceFromThingError =
   | AccessDeniedException
@@ -7469,6 +7521,7 @@ export const disassociateWirelessDeviceFromThing: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DisassociateWirelessDeviceFromThing",
 }));
 export type DisassociateWirelessGatewayFromCertificateError =
   | AccessDeniedException
@@ -7495,6 +7548,7 @@ export const disassociateWirelessGatewayFromCertificate: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DisassociateWirelessGatewayFromCertificate",
 }));
 export type DisassociateWirelessGatewayFromThingError =
   | AccessDeniedException
@@ -7523,6 +7577,7 @@ export const disassociateWirelessGatewayFromThing: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DisassociateWirelessGatewayFromThing",
 }));
 export type GetDestinationError =
   | AccessDeniedException
@@ -7549,6 +7604,7 @@ export const getDestination: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetDestination",
 }));
 export type GetDeviceProfileError =
   | AccessDeniedException
@@ -7575,6 +7631,7 @@ export const getDeviceProfile: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetDeviceProfile",
 }));
 export type GetEventConfigurationByResourceTypesError =
   | AccessDeniedException
@@ -7593,6 +7650,7 @@ export const getEventConfigurationByResourceTypes: API.OperationMethod<
   input: GetEventConfigurationByResourceTypesRequest,
   output: GetEventConfigurationByResourceTypesResponse,
   errors: [AccessDeniedException, InternalServerException, ThrottlingException],
+  operationName: "GetEventConfigurationByResourceTypes",
 }));
 export type GetFuotaTaskError =
   | AccessDeniedException
@@ -7619,6 +7677,7 @@ export const getFuotaTask: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetFuotaTask",
 }));
 export type GetLogLevelsByResourceTypesError =
   | AccessDeniedException
@@ -7647,6 +7706,7 @@ export const getLogLevelsByResourceTypes: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetLogLevelsByResourceTypes",
 }));
 export type GetMetricConfigurationError =
   | AccessDeniedException
@@ -7675,6 +7735,7 @@ export const getMetricConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetMetricConfiguration",
 }));
 export type GetMetricsError =
   | AccessDeniedException
@@ -7703,6 +7764,7 @@ export const getMetrics: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetMetrics",
 }));
 export type GetMulticastGroupError =
   | AccessDeniedException
@@ -7729,6 +7791,7 @@ export const getMulticastGroup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetMulticastGroup",
 }));
 export type GetMulticastGroupSessionError =
   | AccessDeniedException
@@ -7755,6 +7818,7 @@ export const getMulticastGroupSession: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetMulticastGroupSession",
 }));
 export type GetNetworkAnalyzerConfigurationError =
   | AccessDeniedException
@@ -7781,6 +7845,7 @@ export const getNetworkAnalyzerConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetNetworkAnalyzerConfiguration",
 }));
 export type GetPartnerAccountError =
   | InternalServerException
@@ -7806,6 +7871,7 @@ export const getPartnerAccount: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetPartnerAccount",
 }));
 export type GetPositionError =
   | AccessDeniedException
@@ -7835,6 +7901,7 @@ export const getPosition: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetPosition",
 }));
 export type GetPositionConfigurationError =
   | AccessDeniedException
@@ -7864,6 +7931,7 @@ export const getPositionConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetPositionConfiguration",
 }));
 export type GetPositionEstimateError =
   | AccessDeniedException
@@ -7892,6 +7960,7 @@ export const getPositionEstimate: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetPositionEstimate",
 }));
 export type GetResourceEventConfigurationError =
   | AccessDeniedException
@@ -7918,6 +7987,7 @@ export const getResourceEventConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetResourceEventConfiguration",
 }));
 export type GetResourceLogLevelError =
   | AccessDeniedException
@@ -7945,6 +8015,7 @@ export const getResourceLogLevel: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetResourceLogLevel",
 }));
 export type GetResourcePositionError =
   | AccessDeniedException
@@ -7973,6 +8044,7 @@ export const getResourcePosition: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetResourcePosition",
 }));
 export type GetServiceEndpointError =
   | AccessDeniedException
@@ -7998,6 +8070,7 @@ export const getServiceEndpoint: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetServiceEndpoint",
 }));
 export type GetServiceProfileError =
   | AccessDeniedException
@@ -8024,6 +8097,7 @@ export const getServiceProfile: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetServiceProfile",
 }));
 export type GetWirelessDeviceError =
   | AccessDeniedException
@@ -8050,6 +8124,7 @@ export const getWirelessDevice: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetWirelessDevice",
 }));
 export type GetWirelessDeviceImportTaskError =
   | AccessDeniedException
@@ -8079,6 +8154,7 @@ export const getWirelessDeviceImportTask: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetWirelessDeviceImportTask",
 }));
 export type GetWirelessDeviceStatisticsError =
   | AccessDeniedException
@@ -8105,6 +8181,7 @@ export const getWirelessDeviceStatistics: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetWirelessDeviceStatistics",
 }));
 export type GetWirelessGatewayError =
   | AccessDeniedException
@@ -8131,6 +8208,7 @@ export const getWirelessGateway: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetWirelessGateway",
 }));
 export type GetWirelessGatewayCertificateError =
   | AccessDeniedException
@@ -8158,6 +8236,7 @@ export const getWirelessGatewayCertificate: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetWirelessGatewayCertificate",
 }));
 export type GetWirelessGatewayFirmwareInformationError =
   | AccessDeniedException
@@ -8184,6 +8263,7 @@ export const getWirelessGatewayFirmwareInformation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetWirelessGatewayFirmwareInformation",
 }));
 export type GetWirelessGatewayStatisticsError =
   | AccessDeniedException
@@ -8210,6 +8290,7 @@ export const getWirelessGatewayStatistics: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetWirelessGatewayStatistics",
 }));
 export type GetWirelessGatewayTaskError =
   | AccessDeniedException
@@ -8236,6 +8317,7 @@ export const getWirelessGatewayTask: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetWirelessGatewayTask",
 }));
 export type GetWirelessGatewayTaskDefinitionError =
   | AccessDeniedException
@@ -8262,6 +8344,7 @@ export const getWirelessGatewayTaskDefinition: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetWirelessGatewayTaskDefinition",
 }));
 export type ListDestinationsError =
   | AccessDeniedException
@@ -8301,6 +8384,7 @@ export const listDestinations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListDestinations",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8345,6 +8429,7 @@ export const listDeviceProfiles: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListDeviceProfiles",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8378,6 +8463,7 @@ export const listDevicesForWirelessDeviceImportTask: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListDevicesForWirelessDeviceImportTask",
 }));
 export type ListEventConfigurationsError =
   | AccessDeniedException
@@ -8402,6 +8488,7 @@ export const listEventConfigurations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListEventConfigurations",
 }));
 export type ListFuotaTasksError =
   | AccessDeniedException
@@ -8441,6 +8528,7 @@ export const listFuotaTasks: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListFuotaTasks",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8485,6 +8573,7 @@ export const listMulticastGroups: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListMulticastGroups",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8531,6 +8620,7 @@ export const listMulticastGroupsByFuotaTask: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListMulticastGroupsByFuotaTask",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8575,6 +8665,7 @@ export const listNetworkAnalyzerConfigurations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListNetworkAnalyzerConfigurations",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8604,6 +8695,7 @@ export const listPartnerAccounts: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListPartnerAccounts",
 }));
 export type ListPositionConfigurationsError =
   | AccessDeniedException
@@ -8646,6 +8738,7 @@ export const listPositionConfigurations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListPositionConfigurations",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8692,6 +8785,7 @@ export const listQueuedMessages: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListQueuedMessages",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8736,6 +8830,7 @@ export const listServiceProfiles: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListServiceProfiles",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8767,6 +8862,7 @@ export const listTagsForResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type ListWirelessDeviceImportTasksError =
   | AccessDeniedException
@@ -8796,6 +8892,7 @@ export const listWirelessDeviceImportTasks: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListWirelessDeviceImportTasks",
 }));
 export type ListWirelessDevicesError =
   | AccessDeniedException
@@ -8835,6 +8932,7 @@ export const listWirelessDevices: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListWirelessDevices",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8879,6 +8977,7 @@ export const listWirelessGateways: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListWirelessGateways",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -8908,6 +9007,7 @@ export const listWirelessGatewayTaskDefinitions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListWirelessGatewayTaskDefinitions",
 }));
 export type PutPositionConfigurationError =
   | AccessDeniedException
@@ -8937,6 +9037,7 @@ export const putPositionConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutPositionConfiguration",
 }));
 export type PutResourceLogLevelError =
   | AccessDeniedException
@@ -8964,6 +9065,7 @@ export const putResourceLogLevel: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutResourceLogLevel",
 }));
 export type ResetAllResourceLogLevelsError =
   | AccessDeniedException
@@ -8991,6 +9093,7 @@ export const resetAllResourceLogLevels: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ResetAllResourceLogLevels",
 }));
 export type ResetResourceLogLevelError =
   | AccessDeniedException
@@ -9018,6 +9121,7 @@ export const resetResourceLogLevel: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ResetResourceLogLevel",
 }));
 export type SendDataToMulticastGroupError =
   | AccessDeniedException
@@ -9046,6 +9150,7 @@ export const sendDataToMulticastGroup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SendDataToMulticastGroup",
 }));
 export type SendDataToWirelessDeviceError =
   | InternalServerException
@@ -9070,6 +9175,7 @@ export const sendDataToWirelessDevice: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SendDataToWirelessDevice",
 }));
 export type StartBulkAssociateWirelessDeviceWithMulticastGroupError =
   | AccessDeniedException
@@ -9097,6 +9203,7 @@ export const startBulkAssociateWirelessDeviceWithMulticastGroup: API.OperationMe
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartBulkAssociateWirelessDeviceWithMulticastGroup",
 }));
 export type StartBulkDisassociateWirelessDeviceFromMulticastGroupError =
   | AccessDeniedException
@@ -9124,6 +9231,7 @@ export const startBulkDisassociateWirelessDeviceFromMulticastGroup: API.Operatio
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartBulkDisassociateWirelessDeviceFromMulticastGroup",
 }));
 export type StartFuotaTaskError =
   | AccessDeniedException
@@ -9152,6 +9260,7 @@ export const startFuotaTask: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartFuotaTask",
 }));
 export type StartMulticastGroupSessionError =
   | AccessDeniedException
@@ -9180,6 +9289,7 @@ export const startMulticastGroupSession: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartMulticastGroupSession",
 }));
 export type StartSingleWirelessDeviceImportTaskError =
   | AccessDeniedException
@@ -9208,6 +9318,7 @@ export const startSingleWirelessDeviceImportTask: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartSingleWirelessDeviceImportTask",
 }));
 export type StartWirelessDeviceImportTaskError =
   | AccessDeniedException
@@ -9237,6 +9348,7 @@ export const startWirelessDeviceImportTask: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartWirelessDeviceImportTask",
 }));
 export type TagResourceError =
   | ConflictException
@@ -9265,6 +9377,7 @@ export const tagResource: API.OperationMethod<
     TooManyTagsException,
     ValidationException,
   ],
+  operationName: "TagResource",
 }));
 export type TestWirelessDeviceError =
   | InternalServerException
@@ -9290,6 +9403,7 @@ export const testWirelessDevice: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "TestWirelessDevice",
 }));
 export type UntagResourceError =
   | ConflictException
@@ -9316,6 +9430,7 @@ export const untagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UntagResource",
 }));
 export type UpdateDestinationError =
   | AccessDeniedException
@@ -9342,6 +9457,7 @@ export const updateDestination: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateDestination",
 }));
 export type UpdateEventConfigurationByResourceTypesError =
   | AccessDeniedException
@@ -9366,6 +9482,7 @@ export const updateEventConfigurationByResourceTypes: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateEventConfigurationByResourceTypes",
 }));
 export type UpdateFuotaTaskError =
   | AccessDeniedException
@@ -9394,6 +9511,7 @@ export const updateFuotaTask: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateFuotaTask",
 }));
 export type UpdateLogLevelsByResourceTypesError =
   | AccessDeniedException
@@ -9424,6 +9542,7 @@ export const updateLogLevelsByResourceTypes: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateLogLevelsByResourceTypes",
 }));
 export type UpdateMetricConfigurationError =
   | AccessDeniedException
@@ -9452,6 +9571,7 @@ export const updateMetricConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateMetricConfiguration",
 }));
 export type UpdateMulticastGroupError =
   | AccessDeniedException
@@ -9480,6 +9600,7 @@ export const updateMulticastGroup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateMulticastGroup",
 }));
 export type UpdateNetworkAnalyzerConfigurationError =
   | AccessDeniedException
@@ -9506,6 +9627,7 @@ export const updateNetworkAnalyzerConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateNetworkAnalyzerConfiguration",
 }));
 export type UpdatePartnerAccountError =
   | InternalServerException
@@ -9530,6 +9652,7 @@ export const updatePartnerAccount: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdatePartnerAccount",
 }));
 export type UpdatePositionError =
   | AccessDeniedException
@@ -9559,6 +9682,7 @@ export const updatePosition: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdatePosition",
 }));
 export type UpdateResourceEventConfigurationError =
   | AccessDeniedException
@@ -9587,6 +9711,7 @@ export const updateResourceEventConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateResourceEventConfiguration",
 }));
 export type UpdateResourcePositionError =
   | AccessDeniedException
@@ -9615,6 +9740,7 @@ export const updateResourcePosition: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateResourcePosition",
 }));
 export type UpdateWirelessDeviceError =
   | AccessDeniedException
@@ -9641,6 +9767,7 @@ export const updateWirelessDevice: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateWirelessDevice",
 }));
 export type UpdateWirelessDeviceImportTaskError =
   | AccessDeniedException
@@ -9669,6 +9796,7 @@ export const updateWirelessDeviceImportTask: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateWirelessDeviceImportTask",
 }));
 export type UpdateWirelessGatewayError =
   | AccessDeniedException
@@ -9695,4 +9823,5 @@ export const updateWirelessGateway: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateWirelessGateway",
 }));

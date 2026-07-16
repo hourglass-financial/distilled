@@ -4,6 +4,21 @@ import * as T from "../traits.ts";
 import { BadRequest, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface CreateCounterpartyInput {
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  customer_id?: string | null;
+  name: string;
+  address: {
+    street_address: string;
+    city: string;
+    country_area?: string | null;
+    postal_code: string;
+    country: string;
+  };
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const CreateCounterpartyInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     ereborVersion: Schema.optional(Schema.String).pipe(
@@ -25,10 +40,31 @@ export const CreateCounterpartyInput =
     custom_fields: Schema.optional(
       Schema.Record(Schema.String, Schema.Unknown),
     ),
-  }).pipe(T.Http({ method: "POST", path: "/counterparties" }));
-export type CreateCounterpartyInput = typeof CreateCounterpartyInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/counterparties" }),
+  ) as unknown as Schema.Codec<CreateCounterpartyInput>;
 
 // Output Schema
+export interface CreateCounterpartyOutput {
+  id: string;
+  type: "COUNTERPARTY";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  customer_id?: string | null;
+  program_id?: string | null;
+  name: string;
+  address: {
+    street_address: string;
+    city: string;
+    country_area?: string | null;
+    postal_code: string;
+    country: string;
+  };
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const CreateCounterpartyOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -47,10 +83,11 @@ export const CreateCounterpartyOutput =
       postal_code: Schema.String,
       country: Schema.String,
     }),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type CreateCounterpartyOutput = typeof CreateCounterpartyOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<CreateCounterpartyOutput>;
 
 // The operation
 /**

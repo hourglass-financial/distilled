@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -134,6 +134,8 @@ export type Username = string;
 export type GlueConnectionName = string;
 export type S3Uri = string;
 export type S3AccessGrantLocationId = string;
+export type VpcId = string;
+export type SecurityGroupId = string;
 export type EnvironmentProfileId = string;
 export type EnvironmentConfigurationName = string | redacted.Redacted<string>;
 export type EnvironmentName = string | redacted.Redacted<string>;
@@ -146,6 +148,7 @@ export type EnvironmentProfileName = string | redacted.Redacted<string>;
 export type TagKey = string;
 export type TagValue = string;
 export type ProjectProfileId = string;
+export type RoleArn = string;
 export type ProjectProfileName = string | redacted.Redacted<string>;
 export type ParameterStorePath = string;
 export type EnvironmentConfigurationParameterName = string;
@@ -156,9 +159,9 @@ export type SubscriptionGrantId = string;
 export type SubscriptionTargetName = string | redacted.Redacted<string>;
 export type AuthorizedPrincipalIdentifier = string;
 export type IamRoleArn = string;
+export type LineageEventIdentifier = string;
 export type TimeSeriesFormName = string;
 export type RunIdentifier = string;
-export type LineageEventIdentifier = string;
 export type LineageNodeIdentifier = string;
 export type LineageNodeId = string;
 export type TimeSeriesDataPointIdentifier = string;
@@ -191,12 +194,14 @@ export type AggregationAttributeValue = string;
 export type AggregationAttributeDisplayValue = string;
 export type Smithy = string;
 export type UserSearchText = string | redacted.Redacted<string>;
+export type S3SourceLocation = string | redacted.Redacted<string>;
+export type NotebookName = string | redacted.Redacted<string>;
+export type NotebookId = string;
 export type DataSourceType = string;
 export type SageMakerAssetType = string;
 export type SageMakerResourceArn = string;
 export type CronString = string;
 export type DataSourceId = string;
-export type RoleArn = string;
 export type KmsKeyArn = string;
 export type DomainName = string | redacted.Redacted<string>;
 export type DomainDescription = string | redacted.Redacted<string>;
@@ -205,6 +210,18 @@ export type DomainUnitDescription = string | redacted.Redacted<string>;
 export type PolicyArn = string;
 export type S3Location = string;
 export type MetadataGenerationRunIdentifier = string;
+export type MetadataKey = string;
+export type MetadataValue = string | redacted.Redacted<string>;
+export type ParameterKey = string;
+export type ParameterValue = string;
+export type ComputeId = string;
+export type ExportId = string;
+export type NotebookS3Uri = string | redacted.Redacted<string>;
+export type CompletedAt = Date;
+export type ScheduleId = string;
+export type InstanceType = string;
+export type NotebookRunId = string;
+export type S3Path = string;
 export type RuleName = string | redacted.Redacted<string>;
 export type RuleId = string;
 
@@ -361,9 +378,16 @@ export const SubscribedProject = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 export interface IamUserProfileDetails {
   arn?: string;
   principalId?: string;
+  sessionName?: string;
+  groupProfileId?: string;
 }
 export const IamUserProfileDetails = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-  S.Struct({ arn: S.optional(S.String), principalId: S.optional(S.String) }),
+  S.Struct({
+    arn: S.optional(S.String),
+    principalId: S.optional(S.String),
+    sessionName: S.optional(S.String),
+    groupProfileId: S.optional(S.String),
+  }),
 ).annotate({
   identifier: "IamUserProfileDetails",
 }) as any as S.Schema<IamUserProfileDetails>;
@@ -2457,6 +2481,32 @@ export const WorkflowsServerlessPropertiesInput =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() => S.Struct({})).annotate({
     identifier: "WorkflowsServerlessPropertiesInput",
   }) as any as S.Schema<WorkflowsServerlessPropertiesInput>;
+export interface LakehousePropertiesInput {
+  glueLineageSyncEnabled?: boolean;
+}
+export const LakehousePropertiesInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () => S.Struct({ glueLineageSyncEnabled: S.optional(S.Boolean) }),
+).annotate({
+  identifier: "LakehousePropertiesInput",
+}) as any as S.Schema<LakehousePropertiesInput>;
+export type VpcConnectionSubnetIdList = string[];
+export const VpcConnectionSubnetIdList = /*@__PURE__*/ /*#__PURE__*/ S.Array(
+  S.String,
+);
+export interface VpcPropertiesInput {
+  vpcId: string;
+  subnetIds: string[];
+  securityGroupId?: string;
+}
+export const VpcPropertiesInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    vpcId: S.String,
+    subnetIds: VpcConnectionSubnetIdList,
+    securityGroupId: S.optional(S.String),
+  }),
+).annotate({
+  identifier: "VpcPropertiesInput",
+}) as any as S.Schema<VpcPropertiesInput>;
 export type ConnectionPropertiesInput =
   | {
       athenaProperties: AthenaPropertiesInput;
@@ -2471,6 +2521,8 @@ export type ConnectionPropertiesInput =
       mlflowProperties?: never;
       workflowsMwaaProperties?: never;
       workflowsServerlessProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -2485,6 +2537,8 @@ export type ConnectionPropertiesInput =
       mlflowProperties?: never;
       workflowsMwaaProperties?: never;
       workflowsServerlessProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -2499,6 +2553,8 @@ export type ConnectionPropertiesInput =
       mlflowProperties?: never;
       workflowsMwaaProperties?: never;
       workflowsServerlessProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -2513,6 +2569,8 @@ export type ConnectionPropertiesInput =
       mlflowProperties?: never;
       workflowsMwaaProperties?: never;
       workflowsServerlessProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -2527,6 +2585,8 @@ export type ConnectionPropertiesInput =
       mlflowProperties?: never;
       workflowsMwaaProperties?: never;
       workflowsServerlessProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -2541,6 +2601,8 @@ export type ConnectionPropertiesInput =
       mlflowProperties?: never;
       workflowsMwaaProperties?: never;
       workflowsServerlessProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -2555,6 +2617,8 @@ export type ConnectionPropertiesInput =
       mlflowProperties?: never;
       workflowsMwaaProperties?: never;
       workflowsServerlessProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -2569,6 +2633,8 @@ export type ConnectionPropertiesInput =
       mlflowProperties?: never;
       workflowsMwaaProperties?: never;
       workflowsServerlessProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -2583,6 +2649,8 @@ export type ConnectionPropertiesInput =
       mlflowProperties?: never;
       workflowsMwaaProperties?: never;
       workflowsServerlessProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -2597,6 +2665,8 @@ export type ConnectionPropertiesInput =
       mlflowProperties: MlflowPropertiesInput;
       workflowsMwaaProperties?: never;
       workflowsServerlessProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -2611,6 +2681,8 @@ export type ConnectionPropertiesInput =
       mlflowProperties?: never;
       workflowsMwaaProperties: WorkflowsMwaaPropertiesInput;
       workflowsServerlessProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -2625,6 +2697,40 @@ export type ConnectionPropertiesInput =
       mlflowProperties?: never;
       workflowsMwaaProperties?: never;
       workflowsServerlessProperties: WorkflowsServerlessPropertiesInput;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
+    }
+  | {
+      athenaProperties?: never;
+      glueProperties?: never;
+      hyperPodProperties?: never;
+      iamProperties?: never;
+      redshiftProperties?: never;
+      sparkEmrProperties?: never;
+      sparkGlueProperties?: never;
+      s3Properties?: never;
+      amazonQProperties?: never;
+      mlflowProperties?: never;
+      workflowsMwaaProperties?: never;
+      workflowsServerlessProperties?: never;
+      lakehouseProperties: LakehousePropertiesInput;
+      vpcProperties?: never;
+    }
+  | {
+      athenaProperties?: never;
+      glueProperties?: never;
+      hyperPodProperties?: never;
+      iamProperties?: never;
+      redshiftProperties?: never;
+      sparkEmrProperties?: never;
+      sparkGlueProperties?: never;
+      s3Properties?: never;
+      amazonQProperties?: never;
+      mlflowProperties?: never;
+      workflowsMwaaProperties?: never;
+      workflowsServerlessProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties: VpcPropertiesInput;
     };
 export const ConnectionPropertiesInput = /*@__PURE__*/ /*#__PURE__*/ S.Union([
   S.Struct({ athenaProperties: AthenaPropertiesInput }),
@@ -2641,6 +2747,8 @@ export const ConnectionPropertiesInput = /*@__PURE__*/ /*#__PURE__*/ S.Union([
   S.Struct({
     workflowsServerlessProperties: WorkflowsServerlessPropertiesInput,
   }),
+  S.Struct({ lakehouseProperties: LakehousePropertiesInput }),
+  S.Struct({ vpcProperties: VpcPropertiesInput }),
 ]);
 export type ConnectionScope = "DOMAIN" | "PROJECT" | (string & {});
 export const ConnectionScope = /*@__PURE__*/ /*#__PURE__*/ S.String;
@@ -2707,6 +2815,7 @@ export type ConnectionType =
   | "WORKFLOWS_MWAA"
   | "AMAZON_Q"
   | "MLFLOW"
+  | "VPC"
   | (string & {});
 export const ConnectionType = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export type MatchCriteria = string[];
@@ -3045,6 +3154,32 @@ export const WorkflowsServerlessPropertiesOutput =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() => S.Struct({})).annotate({
     identifier: "WorkflowsServerlessPropertiesOutput",
   }) as any as S.Schema<WorkflowsServerlessPropertiesOutput>;
+export interface LakehousePropertiesOutput {
+  glueLineageSyncEnabled?: boolean;
+}
+export const LakehousePropertiesOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () => S.Struct({ glueLineageSyncEnabled: S.optional(S.Boolean) }),
+).annotate({
+  identifier: "LakehousePropertiesOutput",
+}) as any as S.Schema<LakehousePropertiesOutput>;
+export interface VpcPropertiesOutput {
+  vpcId: string;
+  subnetIds: string[];
+  status: ConnectionStatus;
+  securityGroupId?: string;
+  glueConnectionNames?: string[];
+}
+export const VpcPropertiesOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    vpcId: S.String,
+    subnetIds: VpcConnectionSubnetIdList,
+    status: ConnectionStatus,
+    securityGroupId: S.optional(S.String),
+    glueConnectionNames: S.optional(GlueConnectionNames),
+  }),
+).annotate({
+  identifier: "VpcPropertiesOutput",
+}) as any as S.Schema<VpcPropertiesOutput>;
 export type ConnectionPropertiesOutput =
   | {
       athenaProperties: AthenaPropertiesOutput;
@@ -3059,6 +3194,8 @@ export type ConnectionPropertiesOutput =
       mlflowProperties?: never;
       workflowsMwaaProperties?: never;
       workflowsServerlessProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -3073,6 +3210,8 @@ export type ConnectionPropertiesOutput =
       mlflowProperties?: never;
       workflowsMwaaProperties?: never;
       workflowsServerlessProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -3087,6 +3226,8 @@ export type ConnectionPropertiesOutput =
       mlflowProperties?: never;
       workflowsMwaaProperties?: never;
       workflowsServerlessProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -3101,6 +3242,8 @@ export type ConnectionPropertiesOutput =
       mlflowProperties?: never;
       workflowsMwaaProperties?: never;
       workflowsServerlessProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -3115,6 +3258,8 @@ export type ConnectionPropertiesOutput =
       mlflowProperties?: never;
       workflowsMwaaProperties?: never;
       workflowsServerlessProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -3129,6 +3274,8 @@ export type ConnectionPropertiesOutput =
       mlflowProperties?: never;
       workflowsMwaaProperties?: never;
       workflowsServerlessProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -3143,6 +3290,8 @@ export type ConnectionPropertiesOutput =
       mlflowProperties?: never;
       workflowsMwaaProperties?: never;
       workflowsServerlessProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -3157,6 +3306,8 @@ export type ConnectionPropertiesOutput =
       mlflowProperties?: never;
       workflowsMwaaProperties?: never;
       workflowsServerlessProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -3171,6 +3322,8 @@ export type ConnectionPropertiesOutput =
       mlflowProperties?: never;
       workflowsMwaaProperties?: never;
       workflowsServerlessProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -3185,6 +3338,8 @@ export type ConnectionPropertiesOutput =
       mlflowProperties: MlflowPropertiesOutput;
       workflowsMwaaProperties?: never;
       workflowsServerlessProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -3199,6 +3354,8 @@ export type ConnectionPropertiesOutput =
       mlflowProperties?: never;
       workflowsMwaaProperties: WorkflowsMwaaPropertiesOutput;
       workflowsServerlessProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -3213,6 +3370,40 @@ export type ConnectionPropertiesOutput =
       mlflowProperties?: never;
       workflowsMwaaProperties?: never;
       workflowsServerlessProperties: WorkflowsServerlessPropertiesOutput;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
+    }
+  | {
+      athenaProperties?: never;
+      glueProperties?: never;
+      hyperPodProperties?: never;
+      iamProperties?: never;
+      redshiftProperties?: never;
+      sparkEmrProperties?: never;
+      sparkGlueProperties?: never;
+      s3Properties?: never;
+      amazonQProperties?: never;
+      mlflowProperties?: never;
+      workflowsMwaaProperties?: never;
+      workflowsServerlessProperties?: never;
+      lakehouseProperties: LakehousePropertiesOutput;
+      vpcProperties?: never;
+    }
+  | {
+      athenaProperties?: never;
+      glueProperties?: never;
+      hyperPodProperties?: never;
+      iamProperties?: never;
+      redshiftProperties?: never;
+      sparkEmrProperties?: never;
+      sparkGlueProperties?: never;
+      s3Properties?: never;
+      amazonQProperties?: never;
+      mlflowProperties?: never;
+      workflowsMwaaProperties?: never;
+      workflowsServerlessProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties: VpcPropertiesOutput;
     };
 export const ConnectionPropertiesOutput = /*@__PURE__*/ /*#__PURE__*/ S.Union([
   S.Struct({ athenaProperties: AthenaPropertiesOutput }),
@@ -3229,6 +3420,8 @@ export const ConnectionPropertiesOutput = /*@__PURE__*/ /*#__PURE__*/ S.Union([
   S.Struct({
     workflowsServerlessProperties: WorkflowsServerlessPropertiesOutput,
   }),
+  S.Struct({ lakehouseProperties: LakehousePropertiesOutput }),
+  S.Struct({ vpcProperties: VpcPropertiesOutput }),
 ]);
 export interface CreateConnectionOutput {
   connectionId: string;
@@ -3750,14 +3943,16 @@ export const CreateEnvironmentProfileOutput =
   }) as any as S.Schema<CreateEnvironmentProfileOutput>;
 export interface CreateGroupProfileInput {
   domainIdentifier: string;
-  groupIdentifier: string;
+  groupIdentifier?: string;
+  rolePrincipalArn?: string;
   clientToken?: string;
 }
 export const CreateGroupProfileInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
     S.Struct({
       domainIdentifier: S.String.pipe(T.HttpLabel("domainIdentifier")),
-      groupIdentifier: S.String,
+      groupIdentifier: S.optional(S.String),
+      rolePrincipalArn: S.optional(S.String),
       clientToken: S.optional(S.String).pipe(T.IdempotencyToken()),
     }).pipe(
       T.all(
@@ -3782,6 +3977,8 @@ export interface CreateGroupProfileOutput {
   id?: string;
   status?: GroupProfileStatus;
   groupName?: string | redacted.Redacted<string>;
+  rolePrincipalArn?: string;
+  rolePrincipalId?: string;
 }
 export const CreateGroupProfileOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -3790,6 +3987,8 @@ export const CreateGroupProfileOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       id: S.optional(S.String),
       status: S.optional(GroupProfileStatus),
       groupName: S.optional(SensitiveString),
+      rolePrincipalArn: S.optional(S.String),
+      rolePrincipalId: S.optional(S.String),
     }),
 ).annotate({
   identifier: "CreateGroupProfileOutput",
@@ -3889,6 +4088,35 @@ export type EnvironmentConfigurationUserParametersList =
   EnvironmentConfigurationUserParameter[];
 export const EnvironmentConfigurationUserParametersList =
   /*@__PURE__*/ /*#__PURE__*/ S.Array(EnvironmentConfigurationUserParameter);
+export type Member =
+  | { userIdentifier: string; groupIdentifier?: never }
+  | { userIdentifier?: never; groupIdentifier: string };
+export const Member = /*@__PURE__*/ /*#__PURE__*/ S.Union([
+  S.Struct({ userIdentifier: S.String }),
+  S.Struct({ groupIdentifier: S.String }),
+]);
+export type UserDesignation =
+  | "PROJECT_OWNER"
+  | "PROJECT_CONTRIBUTOR"
+  | "PROJECT_CATALOG_VIEWER"
+  | "PROJECT_CATALOG_CONSUMER"
+  | "PROJECT_CATALOG_STEWARD"
+  | (string & {});
+export const UserDesignation = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface ProjectMembershipAssignment {
+  member: Member;
+  designation: UserDesignation;
+}
+export const ProjectMembershipAssignment =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ member: Member, designation: UserDesignation }),
+  ).annotate({
+    identifier: "ProjectMembershipAssignment",
+  }) as any as S.Schema<ProjectMembershipAssignment>;
+export type ProjectMembershipAssignments = ProjectMembershipAssignment[];
+export const ProjectMembershipAssignments = /*@__PURE__*/ /*#__PURE__*/ S.Array(
+  ProjectMembershipAssignment,
+);
 export interface CreateProjectInput {
   domainIdentifier: string;
   name: string | redacted.Redacted<string>;
@@ -3898,6 +4126,9 @@ export interface CreateProjectInput {
   domainUnitId?: string;
   projectProfileId?: string;
   userParameters?: EnvironmentConfigurationUserParameter[];
+  projectCategory?: string;
+  projectExecutionRole?: string;
+  membershipAssignments?: ProjectMembershipAssignment[];
 }
 export const CreateProjectInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -3909,6 +4140,9 @@ export const CreateProjectInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     domainUnitId: S.optional(S.String),
     projectProfileId: S.optional(S.String),
     userParameters: S.optional(EnvironmentConfigurationUserParametersList),
+    projectCategory: S.optional(S.String),
+    projectExecutionRole: S.optional(S.String),
+    membershipAssignments: S.optional(ProjectMembershipAssignments),
   }).pipe(
     T.all(
       T.Http({
@@ -4005,6 +4239,7 @@ export interface CreateProjectOutput {
   projectProfileId?: string;
   userParameters?: EnvironmentConfigurationUserParameter[];
   environmentDeploymentDetails?: EnvironmentDeploymentDetails;
+  projectCategory?: string;
 }
 export const CreateProjectOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -4027,25 +4262,11 @@ export const CreateProjectOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     projectProfileId: S.optional(S.String),
     userParameters: S.optional(EnvironmentConfigurationUserParametersList),
     environmentDeploymentDetails: S.optional(EnvironmentDeploymentDetails),
+    projectCategory: S.optional(S.String),
   }),
 ).annotate({
   identifier: "CreateProjectOutput",
 }) as any as S.Schema<CreateProjectOutput>;
-export type Member =
-  | { userIdentifier: string; groupIdentifier?: never }
-  | { userIdentifier?: never; groupIdentifier: string };
-export const Member = /*@__PURE__*/ /*#__PURE__*/ S.Union([
-  S.Struct({ userIdentifier: S.String }),
-  S.Struct({ groupIdentifier: S.String }),
-]);
-export type UserDesignation =
-  | "PROJECT_OWNER"
-  | "PROJECT_CONTRIBUTOR"
-  | "PROJECT_CATALOG_VIEWER"
-  | "PROJECT_CATALOG_CONSUMER"
-  | "PROJECT_CATALOG_STEWARD"
-  | (string & {});
-export const UserDesignation = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface CreateProjectMembershipInput {
   domainIdentifier: string;
   projectIdentifier: string;
@@ -4683,12 +4904,18 @@ export const CreateSubscriptionTargetOutput =
   ).annotate({
     identifier: "CreateSubscriptionTargetOutput",
   }) as any as S.Schema<CreateSubscriptionTargetOutput>;
-export type UserType = "IAM_USER" | "IAM_ROLE" | "SSO_USER" | (string & {});
+export type UserType =
+  | "IAM_USER"
+  | "IAM_ROLE"
+  | "SSO_USER"
+  | "IAM_ROLE_SESSION"
+  | (string & {});
 export const UserType = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface CreateUserProfileInput {
   domainIdentifier: string;
   userIdentifier: string;
   userType?: UserType;
+  sessionName?: string;
   clientToken?: string;
 }
 export const CreateUserProfileInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
@@ -4697,6 +4924,7 @@ export const CreateUserProfileInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       domainIdentifier: S.String.pipe(T.HttpLabel("domainIdentifier")),
       userIdentifier: S.String,
       userType: S.optional(UserType),
+      sessionName: S.optional(S.String),
       clientToken: S.optional(S.String).pipe(T.IdempotencyToken()),
     }).pipe(
       T.all(
@@ -4991,6 +5219,54 @@ export const DeleteEnvironmentProfileResponse =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() => S.Struct({})).annotate({
     identifier: "DeleteEnvironmentProfileResponse",
   }) as any as S.Schema<DeleteEnvironmentProfileResponse>;
+export interface DeleteLineageEventInput {
+  domainIdentifier: string;
+  identifier: string;
+}
+export const DeleteLineageEventInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      domainIdentifier: S.String.pipe(T.HttpLabel("domainIdentifier")),
+      identifier: S.String.pipe(T.HttpLabel("identifier")),
+    }).pipe(
+      T.all(
+        T.Http({
+          method: "DELETE",
+          uri: "/v2/domains/{domainIdentifier}/lineage/events/{identifier}",
+        }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+).annotate({
+  identifier: "DeleteLineageEventInput",
+}) as any as S.Schema<DeleteLineageEventInput>;
+export type LineageEventProcessingStatus =
+  | "REQUESTED"
+  | "PROCESSING"
+  | "SUCCESS"
+  | "FAILED"
+  | (string & {});
+export const LineageEventProcessingStatus =
+  /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface DeleteLineageEventOutput {
+  id?: string;
+  domainId?: string;
+  processingStatus?: LineageEventProcessingStatus;
+}
+export const DeleteLineageEventOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      id: S.optional(S.String),
+      domainId: S.optional(S.String),
+      processingStatus: S.optional(LineageEventProcessingStatus),
+    }),
+).annotate({
+  identifier: "DeleteLineageEventOutput",
+}) as any as S.Schema<DeleteLineageEventOutput>;
 export interface DeleteProjectInput {
   domainIdentifier: string;
   identifier: string;
@@ -5899,6 +6175,8 @@ export interface GetGroupProfileOutput {
   id?: string;
   status?: GroupProfileStatus;
   groupName?: string | redacted.Redacted<string>;
+  rolePrincipalArn?: string;
+  rolePrincipalId?: string;
 }
 export const GetGroupProfileOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -5906,6 +6184,8 @@ export const GetGroupProfileOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     id: S.optional(S.String),
     status: S.optional(GroupProfileStatus),
     groupName: S.optional(SensitiveString),
+    rolePrincipalArn: S.optional(S.String),
+    rolePrincipalId: S.optional(S.String),
   }),
 ).annotate({
   identifier: "GetGroupProfileOutput",
@@ -6078,14 +6358,6 @@ export const GetLineageEventInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "GetLineageEventInput",
 }) as any as S.Schema<GetLineageEventInput>;
-export type LineageEventProcessingStatus =
-  | "REQUESTED"
-  | "PROCESSING"
-  | "SUCCESS"
-  | "FAILED"
-  | (string & {});
-export const LineageEventProcessingStatus =
-  /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface GetLineageEventOutput {
   domainId?: string;
   id?: string;
@@ -6235,6 +6507,7 @@ export interface GetProjectOutput {
   projectProfileId?: string;
   userParameters?: EnvironmentConfigurationUserParameter[];
   environmentDeploymentDetails?: EnvironmentDeploymentDetails;
+  projectCategory?: string;
 }
 export const GetProjectOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -6257,6 +6530,7 @@ export const GetProjectOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     projectProfileId: S.optional(S.String),
     userParameters: S.optional(EnvironmentConfigurationUserParametersList),
     environmentDeploymentDetails: S.optional(EnvironmentDeploymentDetails),
+    projectCategory: S.optional(S.String),
   }),
 ).annotate({
   identifier: "GetProjectOutput",
@@ -6644,12 +6918,14 @@ export interface GetUserProfileInput {
   domainIdentifier: string;
   userIdentifier: string;
   type?: UserProfileType;
+  sessionName?: string;
 }
 export const GetUserProfileInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     domainIdentifier: S.String.pipe(T.HttpLabel("domainIdentifier")),
     userIdentifier: S.String.pipe(T.HttpLabel("userIdentifier")),
     type: S.optional(UserProfileType).pipe(T.HttpQuery("type")),
+    sessionName: S.optional(S.String).pipe(T.HttpQuery("sessionName")),
   }).pipe(
     T.all(
       T.Http({
@@ -8256,6 +8532,7 @@ export interface ListProjectsInput {
   userIdentifier?: string;
   groupIdentifier?: string;
   name?: string | redacted.Redacted<string>;
+  projectCategory?: string;
   nextToken?: string;
   maxResults?: number;
 }
@@ -8265,6 +8542,7 @@ export const ListProjectsInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     userIdentifier: S.optional(S.String).pipe(T.HttpQuery("userIdentifier")),
     groupIdentifier: S.optional(S.String).pipe(T.HttpQuery("groupIdentifier")),
     name: S.optional(SensitiveString).pipe(T.HttpQuery("name")),
+    projectCategory: S.optional(S.String).pipe(T.HttpQuery("projectCategory")),
     nextToken: S.optional(S.String).pipe(T.HttpQuery("nextToken")),
     maxResults: S.optional(S.Number).pipe(T.HttpQuery("maxResults")),
   }).pipe(
@@ -8291,6 +8569,7 @@ export interface ProjectSummary {
   createdAt?: Date;
   updatedAt?: Date;
   domainUnitId?: string;
+  projectCategory?: string;
 }
 export const ProjectSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -8308,6 +8587,7 @@ export const ProjectSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
       T.DateFromString.pipe(T.TimestampFormat("date-time")),
     ),
     domainUnitId: S.optional(S.String),
+    projectCategory: S.optional(S.String),
   }),
 ).annotate({ identifier: "ProjectSummary" }) as any as S.Schema<ProjectSummary>;
 export type ProjectSummaries = ProjectSummary[];
@@ -9796,6 +10076,7 @@ export const SearchOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 export type GroupSearchType =
   | "SSO_GROUP"
   | "DATAZONE_SSO_GROUP"
+  | "IAM_ROLE_SESSION_GROUP"
   | (string & {});
 export const GroupSearchType = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface SearchGroupProfilesInput {
@@ -9834,6 +10115,8 @@ export interface GroupProfileSummary {
   id?: string;
   status?: GroupProfileStatus;
   groupName?: string | redacted.Redacted<string>;
+  rolePrincipalArn?: string;
+  rolePrincipalId?: string;
 }
 export const GroupProfileSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -9841,6 +10124,8 @@ export const GroupProfileSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     id: S.optional(S.String),
     status: S.optional(GroupProfileStatus),
     groupName: S.optional(SensitiveString),
+    rolePrincipalArn: S.optional(S.String),
+    rolePrincipalId: S.optional(S.String),
   }),
 ).annotate({
   identifier: "GroupProfileSummary",
@@ -10367,6 +10652,72 @@ export const SearchUserProfilesOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 ).annotate({
   identifier: "SearchUserProfilesOutput",
 }) as any as S.Schema<SearchUserProfilesOutput>;
+export type SourceLocation = { s3: string | redacted.Redacted<string> };
+export const SourceLocation = /*@__PURE__*/ /*#__PURE__*/ S.Union([
+  S.Struct({ s3: SensitiveString }),
+]);
+export interface StartNotebookImportInput {
+  domainIdentifier: string;
+  owningProjectIdentifier: string;
+  sourceLocation: SourceLocation;
+  name: string | redacted.Redacted<string>;
+  description?: string | redacted.Redacted<string>;
+  clientToken?: string;
+}
+export const StartNotebookImportInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      domainIdentifier: S.String.pipe(T.HttpLabel("domainIdentifier")),
+      owningProjectIdentifier: S.String,
+      sourceLocation: SourceLocation,
+      name: SensitiveString,
+      description: S.optional(SensitiveString),
+      clientToken: S.optional(S.String).pipe(T.IdempotencyToken()),
+    }).pipe(
+      T.all(
+        T.Http({
+          method: "POST",
+          uri: "/v2/domains/{domainIdentifier}/notebook-imports",
+        }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+).annotate({
+  identifier: "StartNotebookImportInput",
+}) as any as S.Schema<StartNotebookImportInput>;
+export type NotebookStatus = "ACTIVE" | "ARCHIVED" | (string & {});
+export const NotebookStatus = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface StartNotebookImportOutput {
+  notebookId?: string;
+  status?: NotebookStatus;
+  domainId?: string;
+  owningProjectId?: string;
+  name?: string | redacted.Redacted<string>;
+  description?: string | redacted.Redacted<string>;
+  sourceLocation?: SourceLocation;
+  createdAt?: Date;
+  createdBy?: string;
+}
+export const StartNotebookImportOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      notebookId: S.optional(S.String),
+      status: S.optional(NotebookStatus),
+      domainId: S.optional(S.String),
+      owningProjectId: S.optional(S.String),
+      name: S.optional(SensitiveString),
+      description: S.optional(SensitiveString),
+      sourceLocation: S.optional(SourceLocation),
+      createdAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+      createdBy: S.optional(S.String),
+    }),
+).annotate({
+  identifier: "StartNotebookImportOutput",
+}) as any as S.Schema<StartNotebookImportOutput>;
 export interface TagResourceRequest {
   resourceArn: string;
   tags: { [key: string]: string | undefined };
@@ -10691,6 +11042,28 @@ export const MlflowPropertiesPatch = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "MlflowPropertiesPatch",
 }) as any as S.Schema<MlflowPropertiesPatch>;
+export interface LakehousePropertiesPatch {
+  glueLineageSyncEnabled?: boolean;
+}
+export const LakehousePropertiesPatch = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () => S.Struct({ glueLineageSyncEnabled: S.optional(S.Boolean) }),
+).annotate({
+  identifier: "LakehousePropertiesPatch",
+}) as any as S.Schema<LakehousePropertiesPatch>;
+export interface VpcPropertiesPatch {
+  vpcId?: string;
+  subnetIds?: string[];
+  securityGroupId?: string;
+}
+export const VpcPropertiesPatch = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    vpcId: S.optional(S.String),
+    subnetIds: S.optional(VpcConnectionSubnetIdList),
+    securityGroupId: S.optional(S.String),
+  }),
+).annotate({
+  identifier: "VpcPropertiesPatch",
+}) as any as S.Schema<VpcPropertiesPatch>;
 export type ConnectionPropertiesPatch =
   | {
       athenaProperties: AthenaPropertiesPatch;
@@ -10701,6 +11074,8 @@ export type ConnectionPropertiesPatch =
       s3Properties?: never;
       amazonQProperties?: never;
       mlflowProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -10711,6 +11086,8 @@ export type ConnectionPropertiesPatch =
       s3Properties?: never;
       amazonQProperties?: never;
       mlflowProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -10721,6 +11098,8 @@ export type ConnectionPropertiesPatch =
       s3Properties?: never;
       amazonQProperties?: never;
       mlflowProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -10731,6 +11110,8 @@ export type ConnectionPropertiesPatch =
       s3Properties?: never;
       amazonQProperties?: never;
       mlflowProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -10741,6 +11122,8 @@ export type ConnectionPropertiesPatch =
       s3Properties?: never;
       amazonQProperties?: never;
       mlflowProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -10751,6 +11134,8 @@ export type ConnectionPropertiesPatch =
       s3Properties: S3PropertiesPatch;
       amazonQProperties?: never;
       mlflowProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -10761,6 +11146,8 @@ export type ConnectionPropertiesPatch =
       s3Properties?: never;
       amazonQProperties: AmazonQPropertiesPatch;
       mlflowProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
     }
   | {
       athenaProperties?: never;
@@ -10771,6 +11158,32 @@ export type ConnectionPropertiesPatch =
       s3Properties?: never;
       amazonQProperties?: never;
       mlflowProperties: MlflowPropertiesPatch;
+      lakehouseProperties?: never;
+      vpcProperties?: never;
+    }
+  | {
+      athenaProperties?: never;
+      glueProperties?: never;
+      iamProperties?: never;
+      redshiftProperties?: never;
+      sparkEmrProperties?: never;
+      s3Properties?: never;
+      amazonQProperties?: never;
+      mlflowProperties?: never;
+      lakehouseProperties: LakehousePropertiesPatch;
+      vpcProperties?: never;
+    }
+  | {
+      athenaProperties?: never;
+      glueProperties?: never;
+      iamProperties?: never;
+      redshiftProperties?: never;
+      sparkEmrProperties?: never;
+      s3Properties?: never;
+      amazonQProperties?: never;
+      mlflowProperties?: never;
+      lakehouseProperties?: never;
+      vpcProperties: VpcPropertiesPatch;
     };
 export const ConnectionPropertiesPatch = /*@__PURE__*/ /*#__PURE__*/ S.Union([
   S.Struct({ athenaProperties: AthenaPropertiesPatch }),
@@ -10781,6 +11194,8 @@ export const ConnectionPropertiesPatch = /*@__PURE__*/ /*#__PURE__*/ S.Union([
   S.Struct({ s3Properties: S3PropertiesPatch }),
   S.Struct({ amazonQProperties: AmazonQPropertiesPatch }),
   S.Struct({ mlflowProperties: MlflowPropertiesPatch }),
+  S.Struct({ lakehouseProperties: LakehousePropertiesPatch }),
+  S.Struct({ vpcProperties: VpcPropertiesPatch }),
 ]);
 export interface UpdateConnectionInput {
   configurations?: Configuration[];
@@ -11167,6 +11582,8 @@ export interface UpdateGroupProfileOutput {
   id?: string;
   status?: GroupProfileStatus;
   groupName?: string | redacted.Redacted<string>;
+  rolePrincipalArn?: string;
+  rolePrincipalId?: string;
 }
 export const UpdateGroupProfileOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -11175,6 +11592,8 @@ export const UpdateGroupProfileOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       id: S.optional(S.String),
       status: S.optional(GroupProfileStatus),
       groupName: S.optional(SensitiveString),
+      rolePrincipalArn: S.optional(S.String),
+      rolePrincipalId: S.optional(S.String),
     }),
 ).annotate({
   identifier: "UpdateGroupProfileOutput",
@@ -11235,6 +11654,7 @@ export interface UpdateProjectOutput {
   projectProfileId?: string;
   userParameters?: EnvironmentConfigurationUserParameter[];
   environmentDeploymentDetails?: EnvironmentDeploymentDetails;
+  projectCategory?: string;
 }
 export const UpdateProjectOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -11257,6 +11677,7 @@ export const UpdateProjectOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     projectProfileId: S.optional(S.String),
     userParameters: S.optional(EnvironmentConfigurationUserParametersList),
     environmentDeploymentDetails: S.optional(EnvironmentDeploymentDetails),
+    projectCategory: S.optional(S.String),
   }),
 ).annotate({
   identifier: "UpdateProjectOutput",
@@ -11594,6 +12015,7 @@ export interface UpdateUserProfileInput {
   userIdentifier: string;
   type?: UserProfileType;
   status: UserProfileStatus;
+  sessionName?: string;
 }
 export const UpdateUserProfileInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -11602,6 +12024,7 @@ export const UpdateUserProfileInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       userIdentifier: S.String.pipe(T.HttpLabel("userIdentifier")),
       type: S.optional(UserProfileType),
       status: UserProfileStatus,
+      sessionName: S.optional(S.String),
     }).pipe(
       T.all(
         T.Http({
@@ -13543,7 +13966,7 @@ export interface CreateDomainInput {
   name: string;
   description?: string;
   singleSignOn?: SingleSignOn;
-  domainExecutionRole: string;
+  domainExecutionRole?: string;
   kmsKeyIdentifier?: string;
   tags?: { [key: string]: string | undefined };
   domainVersion?: DomainVersion;
@@ -13555,7 +13978,7 @@ export const CreateDomainInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     name: S.String,
     description: S.optional(S.String),
     singleSignOn: S.optional(SingleSignOn),
-    domainExecutionRole: S.String,
+    domainExecutionRole: S.optional(S.String),
     kmsKeyIdentifier: S.optional(S.String),
     tags: S.optional(Tags),
     domainVersion: S.optional(DomainVersion),
@@ -14119,6 +14542,32 @@ export const RegionalParameterMap = /*@__PURE__*/ /*#__PURE__*/ S.Record(
   S.String,
   RegionalParameter.pipe(S.optional),
 );
+export type ResourceConfigurationParameterMap = {
+  [key: string]: string | undefined;
+};
+export const ResourceConfigurationParameterMap =
+  /*@__PURE__*/ /*#__PURE__*/ S.Record(S.String, S.String.pipe(S.optional));
+export interface PutResourceConfiguration {
+  name: string;
+  description?: string;
+  region: string;
+  parameters: { [key: string]: string | undefined };
+}
+export const PutResourceConfiguration = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      name: S.String,
+      description: S.optional(S.String),
+      region: S.String,
+      parameters: ResourceConfigurationParameterMap,
+    }),
+).annotate({
+  identifier: "PutResourceConfiguration",
+}) as any as S.Schema<PutResourceConfiguration>;
+export type PutResourceConfigurations = PutResourceConfiguration[];
+export const PutResourceConfigurations = /*@__PURE__*/ /*#__PURE__*/ S.Array(
+  PutResourceConfiguration,
+);
 export type GlobalParameterMap = { [key: string]: string | undefined };
 export const GlobalParameterMap = /*@__PURE__*/ /*#__PURE__*/ S.Record(
   S.String,
@@ -14158,6 +14607,8 @@ export interface PutEnvironmentBlueprintConfigurationInput {
   regionalParameters?: {
     [key: string]: { [key: string]: string | undefined } | undefined;
   };
+  resourceConfigurations?: PutResourceConfiguration[];
+  allowUserProvidedConfigurations?: boolean;
   globalParameters?: { [key: string]: string | undefined };
   provisioningConfigurations?: ProvisioningConfiguration[];
 }
@@ -14173,6 +14624,8 @@ export const PutEnvironmentBlueprintConfigurationInput =
       environmentRolePermissionBoundary: S.optional(S.String),
       enabledRegions: EnabledRegionList,
       regionalParameters: S.optional(RegionalParameterMap),
+      resourceConfigurations: S.optional(PutResourceConfigurations),
+      allowUserProvidedConfigurations: S.optional(S.Boolean),
       globalParameters: S.optional(GlobalParameterMap),
       provisioningConfigurations: S.optional(ProvisioningConfigurationList),
     }).pipe(
@@ -14191,6 +14644,28 @@ export const PutEnvironmentBlueprintConfigurationInput =
   ).annotate({
     identifier: "PutEnvironmentBlueprintConfigurationInput",
   }) as any as S.Schema<PutEnvironmentBlueprintConfigurationInput>;
+export interface ResourceConfiguration {
+  identifier: string;
+  name: string;
+  description?: string;
+  region: string;
+  parameters: { [key: string]: string | undefined };
+}
+export const ResourceConfiguration = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    identifier: S.String,
+    name: S.String,
+    description: S.optional(S.String),
+    region: S.String,
+    parameters: ResourceConfigurationParameterMap,
+  }),
+).annotate({
+  identifier: "ResourceConfiguration",
+}) as any as S.Schema<ResourceConfiguration>;
+export type ResourceConfigurations = ResourceConfiguration[];
+export const ResourceConfigurations = /*@__PURE__*/ /*#__PURE__*/ S.Array(
+  ResourceConfiguration,
+);
 export interface PutEnvironmentBlueprintConfigurationOutput {
   domainId: string;
   environmentBlueprintId: string;
@@ -14201,8 +14676,10 @@ export interface PutEnvironmentBlueprintConfigurationOutput {
   regionalParameters?: {
     [key: string]: { [key: string]: string | undefined } | undefined;
   };
+  allowUserProvidedConfigurations?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+  resourceConfigurations?: ResourceConfiguration[];
   provisioningConfigurations?: ProvisioningConfiguration[];
 }
 export const PutEnvironmentBlueprintConfigurationOutput =
@@ -14215,12 +14692,14 @@ export const PutEnvironmentBlueprintConfigurationOutput =
       manageAccessRoleArn: S.optional(S.String),
       enabledRegions: S.optional(EnabledRegionList),
       regionalParameters: S.optional(RegionalParameterMap),
+      allowUserProvidedConfigurations: S.optional(S.Boolean),
       createdAt: S.optional(
         T.DateFromString.pipe(T.TimestampFormat("date-time")),
       ),
       updatedAt: S.optional(
         T.DateFromString.pipe(T.TimestampFormat("date-time")),
       ),
+      resourceConfigurations: S.optional(ResourceConfigurations),
       provisioningConfigurations: S.optional(ProvisioningConfigurationList),
     }),
   ).annotate({
@@ -14263,8 +14742,10 @@ export interface GetEnvironmentBlueprintConfigurationOutput {
   regionalParameters?: {
     [key: string]: { [key: string]: string | undefined } | undefined;
   };
+  allowUserProvidedConfigurations?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+  resourceConfigurations?: ResourceConfiguration[];
   provisioningConfigurations?: ProvisioningConfiguration[];
 }
 export const GetEnvironmentBlueprintConfigurationOutput =
@@ -14277,12 +14758,14 @@ export const GetEnvironmentBlueprintConfigurationOutput =
       manageAccessRoleArn: S.optional(S.String),
       enabledRegions: S.optional(EnabledRegionList),
       regionalParameters: S.optional(RegionalParameterMap),
+      allowUserProvidedConfigurations: S.optional(S.Boolean),
       createdAt: S.optional(
         T.DateFromString.pipe(T.TimestampFormat("date-time")),
       ),
       updatedAt: S.optional(
         T.DateFromString.pipe(T.TimestampFormat("date-time")),
       ),
+      resourceConfigurations: S.optional(ResourceConfigurations),
       provisioningConfigurations: S.optional(ProvisioningConfigurationList),
     }),
   ).annotate({
@@ -14357,8 +14840,10 @@ export interface EnvironmentBlueprintConfigurationItem {
   regionalParameters?: {
     [key: string]: { [key: string]: string | undefined } | undefined;
   };
+  allowUserProvidedConfigurations?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+  resourceConfigurations?: ResourceConfiguration[];
   provisioningConfigurations?: ProvisioningConfiguration[];
 }
 export const EnvironmentBlueprintConfigurationItem =
@@ -14371,12 +14856,14 @@ export const EnvironmentBlueprintConfigurationItem =
       manageAccessRoleArn: S.optional(S.String),
       enabledRegions: S.optional(EnabledRegionList),
       regionalParameters: S.optional(RegionalParameterMap),
+      allowUserProvidedConfigurations: S.optional(S.Boolean),
       createdAt: S.optional(
         T.DateFromString.pipe(T.TimestampFormat("date-time")),
       ),
       updatedAt: S.optional(
         T.DateFromString.pipe(T.TimestampFormat("date-time")),
       ),
+      resourceConfigurations: S.optional(ResourceConfigurations),
       provisioningConfigurations: S.optional(ProvisioningConfigurationList),
     }),
   ).annotate({
@@ -15388,6 +15875,924 @@ export const ListMetadataGenerationRunsOutput =
   ).annotate({
     identifier: "ListMetadataGenerationRunsOutput",
   }) as any as S.Schema<ListMetadataGenerationRunsOutput>;
+export type Metadata = {
+  [key: string]: string | redacted.Redacted<string> | undefined;
+};
+export const Metadata = /*@__PURE__*/ /*#__PURE__*/ S.Record(
+  S.String,
+  SensitiveString.pipe(S.optional),
+);
+export type Parameters = { [key: string]: string | undefined };
+export const Parameters = /*@__PURE__*/ /*#__PURE__*/ S.Record(
+  S.String,
+  S.String.pipe(S.optional),
+);
+export interface CreateNotebookInput {
+  domainIdentifier: string;
+  owningProjectIdentifier: string;
+  name: string | redacted.Redacted<string>;
+  description?: string | redacted.Redacted<string>;
+  metadata?: { [key: string]: string | redacted.Redacted<string> | undefined };
+  parameters?: { [key: string]: string | undefined };
+  clientToken?: string;
+}
+export const CreateNotebookInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    domainIdentifier: S.String.pipe(T.HttpLabel("domainIdentifier")),
+    owningProjectIdentifier: S.String,
+    name: SensitiveString,
+    description: S.optional(SensitiveString),
+    metadata: S.optional(Metadata),
+    parameters: S.optional(Parameters),
+    clientToken: S.optional(S.String).pipe(T.IdempotencyToken()),
+  }).pipe(
+    T.all(
+      T.Http({
+        method: "POST",
+        uri: "/v2/domains/{domainIdentifier}/notebooks",
+      }),
+      svc,
+      auth,
+      proto,
+      ver,
+      rules,
+    ),
+  ),
+).annotate({
+  identifier: "CreateNotebookInput",
+}) as any as S.Schema<CreateNotebookInput>;
+export interface CellInformation {}
+export const CellInformation = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({}),
+).annotate({
+  identifier: "CellInformation",
+}) as any as S.Schema<CellInformation>;
+export type CellOrder = CellInformation[];
+export const CellOrder = /*@__PURE__*/ /*#__PURE__*/ S.Array(CellInformation);
+export type PackageManager = "UV" | (string & {});
+export const PackageManager = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface PackageConfig {
+  packageManager: PackageManager;
+  packageSpecification?: string;
+}
+export const PackageConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    packageManager: PackageManager,
+    packageSpecification: S.optional(S.String),
+  }),
+).annotate({ identifier: "PackageConfig" }) as any as S.Schema<PackageConfig>;
+export interface EnvironmentConfig {
+  imageVersion?: string;
+  packageConfig?: PackageConfig;
+}
+export const EnvironmentConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    imageVersion: S.optional(S.String),
+    packageConfig: S.optional(PackageConfig),
+  }),
+).annotate({
+  identifier: "EnvironmentConfig",
+}) as any as S.Schema<EnvironmentConfig>;
+export interface NotebookError {
+  message: string;
+}
+export const NotebookError = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ message: S.String }),
+).annotate({ identifier: "NotebookError" }) as any as S.Schema<NotebookError>;
+export interface CreateNotebookOutput {
+  id: string;
+  name: string | redacted.Redacted<string>;
+  owningProjectId: string;
+  domainId: string;
+  cellOrder: CellInformation[];
+  status: NotebookStatus;
+  description?: string | redacted.Redacted<string>;
+  createdAt?: Date;
+  createdBy?: string;
+  updatedAt?: Date;
+  updatedBy?: string;
+  lockedBy?: string;
+  lockedAt?: Date;
+  lockExpiresAt?: Date;
+  computeId?: string;
+  metadata?: { [key: string]: string | redacted.Redacted<string> | undefined };
+  parameters?: { [key: string]: string | undefined };
+  environmentConfiguration?: EnvironmentConfig;
+  error?: NotebookError;
+}
+export const CreateNotebookOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    id: S.String,
+    name: SensitiveString,
+    owningProjectId: S.String,
+    domainId: S.String,
+    cellOrder: CellOrder,
+    status: NotebookStatus,
+    description: S.optional(SensitiveString),
+    createdAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    createdBy: S.optional(S.String),
+    updatedAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    updatedBy: S.optional(S.String),
+    lockedBy: S.optional(S.String),
+    lockedAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    lockExpiresAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    computeId: S.optional(S.String),
+    metadata: S.optional(Metadata),
+    parameters: S.optional(Parameters),
+    environmentConfiguration: S.optional(EnvironmentConfig),
+    error: S.optional(NotebookError),
+  }),
+).annotate({
+  identifier: "CreateNotebookOutput",
+}) as any as S.Schema<CreateNotebookOutput>;
+export interface GetNotebookInput {
+  domainIdentifier: string;
+  identifier: string;
+}
+export const GetNotebookInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    domainIdentifier: S.String.pipe(T.HttpLabel("domainIdentifier")),
+    identifier: S.String.pipe(T.HttpLabel("identifier")),
+  }).pipe(
+    T.all(
+      T.Http({
+        method: "GET",
+        uri: "/v2/domains/{domainIdentifier}/notebooks/{identifier}",
+      }),
+      svc,
+      auth,
+      proto,
+      ver,
+      rules,
+    ),
+  ),
+).annotate({
+  identifier: "GetNotebookInput",
+}) as any as S.Schema<GetNotebookInput>;
+export interface GetNotebookOutput {
+  id: string;
+  name: string | redacted.Redacted<string>;
+  owningProjectId: string;
+  domainId: string;
+  cellOrder: CellInformation[];
+  status: NotebookStatus;
+  description?: string | redacted.Redacted<string>;
+  createdAt?: Date;
+  createdBy?: string;
+  updatedAt?: Date;
+  updatedBy?: string;
+  lockedBy?: string;
+  lockedAt?: Date;
+  lockExpiresAt?: Date;
+  computeId?: string;
+  metadata?: { [key: string]: string | redacted.Redacted<string> | undefined };
+  parameters?: { [key: string]: string | undefined };
+  environmentConfiguration?: EnvironmentConfig;
+  error?: NotebookError;
+}
+export const GetNotebookOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    id: S.String,
+    name: SensitiveString,
+    owningProjectId: S.String,
+    domainId: S.String,
+    cellOrder: CellOrder,
+    status: NotebookStatus,
+    description: S.optional(SensitiveString),
+    createdAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    createdBy: S.optional(S.String),
+    updatedAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    updatedBy: S.optional(S.String),
+    lockedBy: S.optional(S.String),
+    lockedAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    lockExpiresAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    computeId: S.optional(S.String),
+    metadata: S.optional(Metadata),
+    parameters: S.optional(Parameters),
+    environmentConfiguration: S.optional(EnvironmentConfig),
+    error: S.optional(NotebookError),
+  }),
+).annotate({
+  identifier: "GetNotebookOutput",
+}) as any as S.Schema<GetNotebookOutput>;
+export interface UpdateNotebookInput {
+  domainIdentifier: string;
+  identifier: string;
+  description?: string | redacted.Redacted<string>;
+  status?: NotebookStatus;
+  name?: string | redacted.Redacted<string>;
+  cellOrder?: CellInformation[];
+  metadata?: { [key: string]: string | redacted.Redacted<string> | undefined };
+  parameters?: { [key: string]: string | undefined };
+  environmentConfiguration?: EnvironmentConfig;
+  clientToken?: string;
+}
+export const UpdateNotebookInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    domainIdentifier: S.String.pipe(T.HttpLabel("domainIdentifier")),
+    identifier: S.String.pipe(T.HttpLabel("identifier")),
+    description: S.optional(SensitiveString),
+    status: S.optional(NotebookStatus),
+    name: S.optional(SensitiveString),
+    cellOrder: S.optional(CellOrder),
+    metadata: S.optional(Metadata),
+    parameters: S.optional(Parameters),
+    environmentConfiguration: S.optional(EnvironmentConfig),
+    clientToken: S.optional(S.String).pipe(T.IdempotencyToken()),
+  }).pipe(
+    T.all(
+      T.Http({
+        method: "PATCH",
+        uri: "/v2/domains/{domainIdentifier}/notebooks/{identifier}",
+      }),
+      svc,
+      auth,
+      proto,
+      ver,
+      rules,
+    ),
+  ),
+).annotate({
+  identifier: "UpdateNotebookInput",
+}) as any as S.Schema<UpdateNotebookInput>;
+export interface UpdateNotebookOutput {
+  id: string;
+  name: string | redacted.Redacted<string>;
+  owningProjectId: string;
+  domainId: string;
+  cellOrder: CellInformation[];
+  status: NotebookStatus;
+  description?: string | redacted.Redacted<string>;
+  createdAt?: Date;
+  createdBy?: string;
+  updatedAt?: Date;
+  updatedBy?: string;
+  lockedBy?: string;
+  lockedAt?: Date;
+  lockExpiresAt?: Date;
+  computeId?: string;
+  metadata?: { [key: string]: string | redacted.Redacted<string> | undefined };
+  parameters?: { [key: string]: string | undefined };
+  environmentConfiguration?: EnvironmentConfig;
+  error?: NotebookError;
+}
+export const UpdateNotebookOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    id: S.String,
+    name: SensitiveString,
+    owningProjectId: S.String,
+    domainId: S.String,
+    cellOrder: CellOrder,
+    status: NotebookStatus,
+    description: S.optional(SensitiveString),
+    createdAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    createdBy: S.optional(S.String),
+    updatedAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    updatedBy: S.optional(S.String),
+    lockedBy: S.optional(S.String),
+    lockedAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    lockExpiresAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    computeId: S.optional(S.String),
+    metadata: S.optional(Metadata),
+    parameters: S.optional(Parameters),
+    environmentConfiguration: S.optional(EnvironmentConfig),
+    error: S.optional(NotebookError),
+  }),
+).annotate({
+  identifier: "UpdateNotebookOutput",
+}) as any as S.Schema<UpdateNotebookOutput>;
+export interface DeleteNotebookInput {
+  domainIdentifier: string;
+  identifier: string;
+}
+export const DeleteNotebookInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    domainIdentifier: S.String.pipe(T.HttpLabel("domainIdentifier")),
+    identifier: S.String.pipe(T.HttpLabel("identifier")),
+  }).pipe(
+    T.all(
+      T.Http({
+        method: "DELETE",
+        uri: "/v2/domains/{domainIdentifier}/notebooks/{identifier}",
+      }),
+      svc,
+      auth,
+      proto,
+      ver,
+      rules,
+    ),
+  ),
+).annotate({
+  identifier: "DeleteNotebookInput",
+}) as any as S.Schema<DeleteNotebookInput>;
+export interface DeleteNotebookOutput {}
+export const DeleteNotebookOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({}),
+).annotate({
+  identifier: "DeleteNotebookOutput",
+}) as any as S.Schema<DeleteNotebookOutput>;
+export interface ListNotebooksInput {
+  domainIdentifier: string;
+  owningProjectIdentifier: string;
+  maxResults?: number;
+  sortOrder?: SortOrder;
+  sortBy?: SortKey;
+  status?: NotebookStatus;
+  nextToken?: string;
+}
+export const ListNotebooksInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    domainIdentifier: S.String.pipe(T.HttpLabel("domainIdentifier")),
+    owningProjectIdentifier: S.String.pipe(
+      T.HttpQuery("owningProjectIdentifier"),
+    ),
+    maxResults: S.optional(S.Number).pipe(T.HttpQuery("maxResults")),
+    sortOrder: S.optional(SortOrder).pipe(T.HttpQuery("sortOrder")),
+    sortBy: S.optional(SortKey).pipe(T.HttpQuery("sortBy")),
+    status: S.optional(NotebookStatus).pipe(T.HttpQuery("status")),
+    nextToken: S.optional(S.String).pipe(T.HttpQuery("nextToken")),
+  }).pipe(
+    T.all(
+      T.Http({
+        method: "GET",
+        uri: "/v2/domains/{domainIdentifier}/notebooks",
+      }),
+      svc,
+      auth,
+      proto,
+      ver,
+      rules,
+    ),
+  ),
+).annotate({
+  identifier: "ListNotebooksInput",
+}) as any as S.Schema<ListNotebooksInput>;
+export interface NotebookSummary {
+  id: string;
+  name: string | redacted.Redacted<string>;
+  owningProjectId: string;
+  domainId: string;
+  status: NotebookStatus;
+  description?: string | redacted.Redacted<string>;
+  createdAt?: Date;
+  createdBy?: string;
+  updatedAt?: Date;
+  updatedBy?: string;
+}
+export const NotebookSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    id: S.String,
+    name: SensitiveString,
+    owningProjectId: S.String,
+    domainId: S.String,
+    status: NotebookStatus,
+    description: S.optional(SensitiveString),
+    createdAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    createdBy: S.optional(S.String),
+    updatedAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    updatedBy: S.optional(S.String),
+  }),
+).annotate({
+  identifier: "NotebookSummary",
+}) as any as S.Schema<NotebookSummary>;
+export type NotebookSummaryList = NotebookSummary[];
+export const NotebookSummaryList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(NotebookSummary);
+export interface ListNotebooksOutput {
+  items?: NotebookSummary[];
+  nextToken?: string;
+}
+export const ListNotebooksOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    items: S.optional(NotebookSummaryList),
+    nextToken: S.optional(S.String),
+  }),
+).annotate({
+  identifier: "ListNotebooksOutput",
+}) as any as S.Schema<ListNotebooksOutput>;
+export type FileFormat = "PDF" | "IPYNB" | (string & {});
+export const FileFormat = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface StartNotebookExportInput {
+  domainIdentifier: string;
+  notebookIdentifier: string;
+  owningProjectIdentifier: string;
+  fileFormat: FileFormat;
+  clientToken?: string;
+}
+export const StartNotebookExportInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      domainIdentifier: S.String.pipe(T.HttpLabel("domainIdentifier")),
+      notebookIdentifier: S.String,
+      owningProjectIdentifier: S.String,
+      fileFormat: FileFormat,
+      clientToken: S.optional(S.String).pipe(T.IdempotencyToken()),
+    }).pipe(
+      T.all(
+        T.Http({
+          method: "POST",
+          uri: "/v2/domains/{domainIdentifier}/notebook-exports",
+        }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+).annotate({
+  identifier: "StartNotebookExportInput",
+}) as any as S.Schema<StartNotebookExportInput>;
+export type NotebookExportStatus =
+  | "IN_PROGRESS"
+  | "SUCCEEDED"
+  | "FAILED"
+  | (string & {});
+export const NotebookExportStatus = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface StartNotebookExportOutput {
+  id: string;
+  domainId: string;
+  owningProjectId: string;
+  notebookId: string;
+  fileFormat: FileFormat;
+  status: NotebookExportStatus;
+  createdAt?: Date;
+  createdBy?: string;
+}
+export const StartNotebookExportOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      id: S.String,
+      domainId: S.String,
+      owningProjectId: S.String,
+      notebookId: S.String,
+      fileFormat: FileFormat,
+      status: NotebookExportStatus,
+      createdAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+      createdBy: S.optional(S.String),
+    }),
+).annotate({
+  identifier: "StartNotebookExportOutput",
+}) as any as S.Schema<StartNotebookExportOutput>;
+export interface GetNotebookExportInput {
+  domainIdentifier: string;
+  identifier: string;
+}
+export const GetNotebookExportInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      domainIdentifier: S.String.pipe(T.HttpLabel("domainIdentifier")),
+      identifier: S.String.pipe(T.HttpLabel("identifier")),
+    }).pipe(
+      T.all(
+        T.Http({
+          method: "GET",
+          uri: "/v2/domains/{domainIdentifier}/notebook-exports/{identifier}",
+        }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+).annotate({
+  identifier: "GetNotebookExportInput",
+}) as any as S.Schema<GetNotebookExportInput>;
+export interface S3Destination {
+  uri?: string | redacted.Redacted<string>;
+}
+export const S3Destination = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ uri: S.optional(SensitiveString) }),
+).annotate({ identifier: "S3Destination" }) as any as S.Schema<S3Destination>;
+export type OutputLocation = { s3: S3Destination };
+export const OutputLocation = /*@__PURE__*/ /*#__PURE__*/ S.Union([
+  S.Struct({ s3: S3Destination }),
+]);
+export interface NotebookExportError {
+  message: string;
+}
+export const NotebookExportError = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ message: S.String }),
+).annotate({
+  identifier: "NotebookExportError",
+}) as any as S.Schema<NotebookExportError>;
+export interface GetNotebookExportOutput {
+  id: string;
+  domainId: string;
+  owningProjectId: string;
+  notebookId: string;
+  fileFormat: FileFormat;
+  status: NotebookExportStatus;
+  outputLocation?: OutputLocation;
+  error?: NotebookExportError;
+  completedAt?: Date;
+  createdAt?: Date;
+  createdBy?: string;
+}
+export const GetNotebookExportOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      id: S.String,
+      domainId: S.String,
+      owningProjectId: S.String,
+      notebookId: S.String,
+      fileFormat: FileFormat,
+      status: NotebookExportStatus,
+      outputLocation: S.optional(OutputLocation),
+      error: S.optional(NotebookExportError),
+      completedAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+      createdAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+      createdBy: S.optional(S.String),
+    }),
+).annotate({
+  identifier: "GetNotebookExportOutput",
+}) as any as S.Schema<GetNotebookExportOutput>;
+export interface ComputeConfig {
+  instanceType?: string;
+  environmentVersion?: string;
+}
+export const ComputeConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    instanceType: S.optional(S.String),
+    environmentVersion: S.optional(S.String),
+  }),
+).annotate({ identifier: "ComputeConfig" }) as any as S.Schema<ComputeConfig>;
+export type NetworkAccessType =
+  | "PUBLIC_INTERNET_ONLY"
+  | "VPC_ONLY"
+  | (string & {});
+export const NetworkAccessType = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export type SubnetIds = string[];
+export const SubnetIds = /*@__PURE__*/ /*#__PURE__*/ S.Array(S.String);
+export type SecurityGroupIds = string[];
+export const SecurityGroupIds = /*@__PURE__*/ /*#__PURE__*/ S.Array(S.String);
+export interface NetworkConfig {
+  networkAccessType: NetworkAccessType;
+  vpcId?: string;
+  subnetIds?: string[];
+  securityGroupIds?: string[];
+}
+export const NetworkConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    networkAccessType: NetworkAccessType,
+    vpcId: S.optional(S.String),
+    subnetIds: S.optional(SubnetIds),
+    securityGroupIds: S.optional(SecurityGroupIds),
+  }),
+).annotate({ identifier: "NetworkConfig" }) as any as S.Schema<NetworkConfig>;
+export interface TimeoutConfig {
+  runTimeoutInMinutes?: number;
+}
+export const TimeoutConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ runTimeoutInMinutes: S.optional(S.Number) }),
+).annotate({ identifier: "TimeoutConfig" }) as any as S.Schema<TimeoutConfig>;
+export type TriggerSourceType =
+  | "MANUAL"
+  | "SCHEDULED"
+  | "WORKFLOW"
+  | (string & {});
+export const TriggerSourceType = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface TriggerSource {
+  type?: TriggerSourceType;
+  name?: string;
+}
+export const TriggerSource = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ type: S.optional(TriggerSourceType), name: S.optional(S.String) }),
+).annotate({ identifier: "TriggerSource" }) as any as S.Schema<TriggerSource>;
+export interface StartNotebookRunInput {
+  domainIdentifier: string;
+  owningProjectIdentifier: string;
+  notebookIdentifier: string;
+  scheduleIdentifier?: string;
+  computeConfiguration?: ComputeConfig;
+  networkConfiguration?: NetworkConfig;
+  timeoutConfiguration?: TimeoutConfig;
+  triggerSource?: TriggerSource;
+  metadata?: { [key: string]: string | redacted.Redacted<string> | undefined };
+  parameters?: { [key: string]: string | undefined };
+  clientToken?: string;
+}
+export const StartNotebookRunInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    domainIdentifier: S.String.pipe(T.HttpLabel("domainIdentifier")),
+    owningProjectIdentifier: S.String,
+    notebookIdentifier: S.String,
+    scheduleIdentifier: S.optional(S.String),
+    computeConfiguration: S.optional(ComputeConfig),
+    networkConfiguration: S.optional(NetworkConfig),
+    timeoutConfiguration: S.optional(TimeoutConfig),
+    triggerSource: S.optional(TriggerSource),
+    metadata: S.optional(Metadata),
+    parameters: S.optional(Parameters),
+    clientToken: S.optional(S.String).pipe(T.IdempotencyToken()),
+  }).pipe(
+    T.all(
+      T.Http({
+        method: "POST",
+        uri: "/v2/domains/{domainIdentifier}/notebook-runs",
+      }),
+      svc,
+      auth,
+      proto,
+      ver,
+      rules,
+    ),
+  ),
+).annotate({
+  identifier: "StartNotebookRunInput",
+}) as any as S.Schema<StartNotebookRunInput>;
+export type NotebookRunStatus =
+  | "QUEUED"
+  | "STARTING"
+  | "RUNNING"
+  | "STOPPING"
+  | "STOPPED"
+  | "SUCCEEDED"
+  | "FAILED"
+  | (string & {});
+export const NotebookRunStatus = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface StorageConfig {
+  projectS3Path?: string;
+  kmsKeyArn?: string;
+}
+export const StorageConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    projectS3Path: S.optional(S.String),
+    kmsKeyArn: S.optional(S.String),
+  }),
+).annotate({ identifier: "StorageConfig" }) as any as S.Schema<StorageConfig>;
+export interface NotebookRunError {
+  message: string;
+}
+export const NotebookRunError = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ message: S.String }),
+).annotate({
+  identifier: "NotebookRunError",
+}) as any as S.Schema<NotebookRunError>;
+export interface StartNotebookRunOutput {
+  id: string;
+  domainId: string;
+  owningProjectId: string;
+  notebookId: string;
+  scheduleId?: string;
+  status: NotebookRunStatus;
+  cellOrder?: CellInformation[];
+  metadata?: { [key: string]: string | redacted.Redacted<string> | undefined };
+  parameters?: { [key: string]: string | undefined };
+  computeConfiguration?: ComputeConfig;
+  networkConfiguration?: NetworkConfig;
+  timeoutConfiguration?: TimeoutConfig;
+  environmentConfiguration?: EnvironmentConfig;
+  storageConfiguration?: StorageConfig;
+  triggerSource?: TriggerSource;
+  error?: NotebookRunError;
+  createdAt?: Date;
+  createdBy?: string;
+  updatedAt?: Date;
+  updatedBy?: string;
+  startedAt?: Date;
+  completedAt?: Date;
+}
+export const StartNotebookRunOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      id: S.String,
+      domainId: S.String,
+      owningProjectId: S.String,
+      notebookId: S.String,
+      scheduleId: S.optional(S.String),
+      status: NotebookRunStatus,
+      cellOrder: S.optional(CellOrder),
+      metadata: S.optional(Metadata),
+      parameters: S.optional(Parameters),
+      computeConfiguration: S.optional(ComputeConfig),
+      networkConfiguration: S.optional(NetworkConfig),
+      timeoutConfiguration: S.optional(TimeoutConfig),
+      environmentConfiguration: S.optional(EnvironmentConfig),
+      storageConfiguration: S.optional(StorageConfig),
+      triggerSource: S.optional(TriggerSource),
+      error: S.optional(NotebookRunError),
+      createdAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+      createdBy: S.optional(S.String),
+      updatedAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+      updatedBy: S.optional(S.String),
+      startedAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+      completedAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    }),
+).annotate({
+  identifier: "StartNotebookRunOutput",
+}) as any as S.Schema<StartNotebookRunOutput>;
+export interface GetNotebookRunInput {
+  domainIdentifier: string;
+  identifier: string;
+}
+export const GetNotebookRunInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    domainIdentifier: S.String.pipe(T.HttpLabel("domainIdentifier")),
+    identifier: S.String.pipe(T.HttpLabel("identifier")),
+  }).pipe(
+    T.all(
+      T.Http({
+        method: "GET",
+        uri: "/v2/domains/{domainIdentifier}/notebook-runs/{identifier}",
+      }),
+      svc,
+      auth,
+      proto,
+      ver,
+      rules,
+    ),
+  ),
+).annotate({
+  identifier: "GetNotebookRunInput",
+}) as any as S.Schema<GetNotebookRunInput>;
+export interface GetNotebookRunOutput {
+  id: string;
+  domainId: string;
+  owningProjectId: string;
+  notebookId: string;
+  scheduleId?: string;
+  status: NotebookRunStatus;
+  cellOrder?: CellInformation[];
+  metadata?: { [key: string]: string | redacted.Redacted<string> | undefined };
+  parameters?: { [key: string]: string | undefined };
+  computeConfiguration?: ComputeConfig;
+  networkConfiguration?: NetworkConfig;
+  timeoutConfiguration?: TimeoutConfig;
+  environmentConfiguration?: EnvironmentConfig;
+  storageConfiguration?: StorageConfig;
+  triggerSource?: TriggerSource;
+  error?: NotebookRunError;
+  createdAt?: Date;
+  createdBy?: string;
+  updatedAt?: Date;
+  updatedBy?: string;
+  startedAt?: Date;
+  completedAt?: Date;
+}
+export const GetNotebookRunOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    id: S.String,
+    domainId: S.String,
+    owningProjectId: S.String,
+    notebookId: S.String,
+    scheduleId: S.optional(S.String),
+    status: NotebookRunStatus,
+    cellOrder: S.optional(CellOrder),
+    metadata: S.optional(Metadata),
+    parameters: S.optional(Parameters),
+    computeConfiguration: S.optional(ComputeConfig),
+    networkConfiguration: S.optional(NetworkConfig),
+    timeoutConfiguration: S.optional(TimeoutConfig),
+    environmentConfiguration: S.optional(EnvironmentConfig),
+    storageConfiguration: S.optional(StorageConfig),
+    triggerSource: S.optional(TriggerSource),
+    error: S.optional(NotebookRunError),
+    createdAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    createdBy: S.optional(S.String),
+    updatedAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    updatedBy: S.optional(S.String),
+    startedAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    completedAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+  }),
+).annotate({
+  identifier: "GetNotebookRunOutput",
+}) as any as S.Schema<GetNotebookRunOutput>;
+export interface ListNotebookRunsInput {
+  domainIdentifier: string;
+  owningProjectIdentifier: string;
+  notebookIdentifier?: string;
+  status?: NotebookRunStatus;
+  scheduleIdentifier?: string;
+  maxResults?: number;
+  sortOrder?: SortOrder;
+  nextToken?: string;
+}
+export const ListNotebookRunsInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    domainIdentifier: S.String.pipe(T.HttpLabel("domainIdentifier")),
+    owningProjectIdentifier: S.String.pipe(
+      T.HttpQuery("owningProjectIdentifier"),
+    ),
+    notebookIdentifier: S.optional(S.String).pipe(
+      T.HttpQuery("notebookIdentifier"),
+    ),
+    status: S.optional(NotebookRunStatus).pipe(T.HttpQuery("status")),
+    scheduleIdentifier: S.optional(S.String).pipe(
+      T.HttpQuery("scheduleIdentifier"),
+    ),
+    maxResults: S.optional(S.Number).pipe(T.HttpQuery("maxResults")),
+    sortOrder: S.optional(SortOrder).pipe(T.HttpQuery("sortOrder")),
+    nextToken: S.optional(S.String).pipe(T.HttpQuery("nextToken")),
+  }).pipe(
+    T.all(
+      T.Http({
+        method: "GET",
+        uri: "/v2/domains/{domainIdentifier}/notebook-runs",
+      }),
+      svc,
+      auth,
+      proto,
+      ver,
+      rules,
+    ),
+  ),
+).annotate({
+  identifier: "ListNotebookRunsInput",
+}) as any as S.Schema<ListNotebookRunsInput>;
+export interface NotebookRunSummary {
+  id: string;
+  domainId: string;
+  owningProjectId: string;
+  notebookId: string;
+  scheduleId?: string;
+  status: NotebookRunStatus;
+  triggerSource?: TriggerSource;
+  createdAt?: Date;
+  createdBy?: string;
+  updatedAt?: Date;
+  updatedBy?: string;
+  startedAt?: Date;
+  completedAt?: Date;
+}
+export const NotebookRunSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    id: S.String,
+    domainId: S.String,
+    owningProjectId: S.String,
+    notebookId: S.String,
+    scheduleId: S.optional(S.String),
+    status: NotebookRunStatus,
+    triggerSource: S.optional(TriggerSource),
+    createdAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    createdBy: S.optional(S.String),
+    updatedAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    updatedBy: S.optional(S.String),
+    startedAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    completedAt: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+  }),
+).annotate({
+  identifier: "NotebookRunSummary",
+}) as any as S.Schema<NotebookRunSummary>;
+export type NotebookRunSummaryList = NotebookRunSummary[];
+export const NotebookRunSummaryList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(NotebookRunSummary);
+export interface ListNotebookRunsOutput {
+  items?: NotebookRunSummary[];
+  nextToken?: string;
+}
+export const ListNotebookRunsOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      items: S.optional(NotebookRunSummaryList),
+      nextToken: S.optional(S.String),
+    }),
+).annotate({
+  identifier: "ListNotebookRunsOutput",
+}) as any as S.Schema<ListNotebookRunsOutput>;
+export interface StopNotebookRunInput {
+  domainIdentifier: string;
+  identifier: string;
+  clientToken?: string;
+}
+export const StopNotebookRunInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    domainIdentifier: S.String.pipe(T.HttpLabel("domainIdentifier")),
+    identifier: S.String.pipe(T.HttpLabel("identifier")),
+    clientToken: S.optional(S.String).pipe(T.IdempotencyToken()),
+  }).pipe(
+    T.all(
+      T.Http({
+        method: "PUT",
+        uri: "/v2/domains/{domainIdentifier}/notebook-runs/{identifier}/stop",
+      }),
+      svc,
+      auth,
+      proto,
+      ver,
+      rules,
+    ),
+  ),
+).annotate({
+  identifier: "StopNotebookRunInput",
+}) as any as S.Schema<StopNotebookRunInput>;
+export interface StopNotebookRunOutput {
+  id: string;
+  domainId: string;
+  owningProjectId: string;
+  status: NotebookRunStatus;
+}
+export const StopNotebookRunOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    id: S.String,
+    domainId: S.String,
+    owningProjectId: S.String,
+    status: NotebookRunStatus,
+  }),
+).annotate({
+  identifier: "StopNotebookRunOutput",
+}) as any as S.Schema<StopNotebookRunOutput>;
 export interface DomainUnitTarget {
   domainUnitId: string;
   includeChildDomainUnits?: boolean;
@@ -15873,6 +17278,7 @@ export const acceptPredictions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AcceptPredictions",
 }));
 export type AcceptSubscriptionRequestError =
   | AccessDeniedException
@@ -15903,6 +17309,7 @@ export const acceptSubscriptionRequest: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AcceptSubscriptionRequest",
 }));
 export type AddEntityOwnerError =
   | AccessDeniedException
@@ -15933,6 +17340,7 @@ export const addEntityOwner: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AddEntityOwner",
 }));
 export type AddPolicyGrantError =
   | AccessDeniedException
@@ -15961,6 +17369,7 @@ export const addPolicyGrant: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AddPolicyGrant",
 }));
 export type AssociateEnvironmentRoleError =
   | AccessDeniedException
@@ -15989,6 +17398,7 @@ export const associateEnvironmentRole: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssociateEnvironmentRole",
 }));
 export type AssociateGovernedTermsError =
   | AccessDeniedException
@@ -16017,6 +17427,7 @@ export const associateGovernedTerms: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssociateGovernedTerms",
 }));
 export type BatchGetAttributesMetadataError =
   | AccessDeniedException
@@ -16043,6 +17454,7 @@ export const batchGetAttributesMetadata: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchGetAttributesMetadata",
 }));
 export type BatchPutAttributesMetadataError =
   | AccessDeniedException
@@ -16071,6 +17483,7 @@ export const batchPutAttributesMetadata: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchPutAttributesMetadata",
 }));
 export type CancelSubscriptionError =
   | AccessDeniedException
@@ -16099,6 +17512,7 @@ export const cancelSubscription: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CancelSubscription",
 }));
 export type CreateAccountPoolError =
   | AccessDeniedException
@@ -16129,6 +17543,7 @@ export const createAccountPool: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateAccountPool",
 }));
 export type CreateAssetFilterError =
   | AccessDeniedException
@@ -16171,6 +17586,7 @@ export const createAssetFilter: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateAssetFilter",
 }));
 export type CreateConnectionError =
   | AccessDeniedException
@@ -16201,6 +17617,7 @@ export const createConnection: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateConnection",
 }));
 export type CreateEnvironmentError =
   | AccessDeniedException
@@ -16229,6 +17646,7 @@ export const createEnvironment: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateEnvironment",
 }));
 export type CreateEnvironmentActionError =
   | AccessDeniedException
@@ -16257,6 +17675,7 @@ export const createEnvironmentAction: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateEnvironmentAction",
 }));
 export type CreateEnvironmentBlueprintError =
   | AccessDeniedException
@@ -16287,6 +17706,7 @@ export const createEnvironmentBlueprint: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateEnvironmentBlueprint",
 }));
 export type CreateEnvironmentProfileError =
   | AccessDeniedException
@@ -16317,6 +17737,7 @@ export const createEnvironmentProfile: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateEnvironmentProfile",
 }));
 export type CreateGroupProfileError =
   | AccessDeniedException
@@ -16341,6 +17762,7 @@ export const createGroupProfile: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "CreateGroupProfile",
 }));
 export type CreateListingChangeSetError =
   | AccessDeniedException
@@ -16371,6 +17793,7 @@ export const createListingChangeSet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateListingChangeSet",
 }));
 export type CreateProjectError =
   | AccessDeniedException
@@ -16401,6 +17824,7 @@ export const createProject: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateProject",
 }));
 export type CreateProjectMembershipError =
   | AccessDeniedException
@@ -16425,6 +17849,7 @@ export const createProjectMembership: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "CreateProjectMembership",
 }));
 export type CreateProjectProfileError =
   | AccessDeniedException
@@ -16455,6 +17880,7 @@ export const createProjectProfile: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateProjectProfile",
 }));
 export type CreateSubscriptionGrantError =
   | AccessDeniedException
@@ -16483,6 +17909,7 @@ export const createSubscriptionGrant: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateSubscriptionGrant",
 }));
 export type CreateSubscriptionRequestError =
   | AccessDeniedException
@@ -16513,6 +17940,7 @@ export const createSubscriptionRequest: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateSubscriptionRequest",
 }));
 export type CreateSubscriptionTargetError =
   | AccessDeniedException
@@ -16541,6 +17969,7 @@ export const createSubscriptionTarget: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateSubscriptionTarget",
 }));
 export type CreateUserProfileError =
   | AccessDeniedException
@@ -16565,6 +17994,7 @@ export const createUserProfile: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "CreateUserProfile",
 }));
 export type DeleteAccountPoolError =
   | AccessDeniedException
@@ -16591,6 +18021,7 @@ export const deleteAccountPool: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteAccountPool",
 }));
 export type DeleteAssetFilterError =
   | AccessDeniedException
@@ -16627,6 +18058,7 @@ export const deleteAssetFilter: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteAssetFilter",
 }));
 export type DeleteConnectionError =
   | AccessDeniedException
@@ -16653,6 +18085,7 @@ export const deleteConnection: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteConnection",
 }));
 export type DeleteDataExportConfigurationError =
   | AccessDeniedException
@@ -16685,6 +18118,7 @@ export const deleteDataExportConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteDataExportConfiguration",
 }));
 export type DeleteEnvironmentError =
   | AccessDeniedException
@@ -16711,6 +18145,7 @@ export const deleteEnvironment: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteEnvironment",
 }));
 export type DeleteEnvironmentActionError =
   | AccessDeniedException
@@ -16739,6 +18174,7 @@ export const deleteEnvironmentAction: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteEnvironmentAction",
 }));
 export type DeleteEnvironmentBlueprintError =
   | AccessDeniedException
@@ -16767,6 +18203,7 @@ export const deleteEnvironmentBlueprint: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteEnvironmentBlueprint",
 }));
 export type DeleteEnvironmentProfileError =
   | AccessDeniedException
@@ -16793,6 +18230,34 @@ export const deleteEnvironmentProfile: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteEnvironmentProfile",
+}));
+export type DeleteLineageEventError =
+  | AccessDeniedException
+  | InternalServerException
+  | ResourceNotFoundException
+  | ThrottlingException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Deletes the specified lineage event.
+ */
+export const deleteLineageEvent: API.OperationMethod<
+  DeleteLineageEventInput,
+  DeleteLineageEventOutput,
+  DeleteLineageEventError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: DeleteLineageEventInput,
+  output: DeleteLineageEventOutput,
+  errors: [
+    AccessDeniedException,
+    InternalServerException,
+    ResourceNotFoundException,
+    ThrottlingException,
+    ValidationException,
+  ],
+  operationName: "DeleteLineageEvent",
 }));
 export type DeleteProjectError =
   | AccessDeniedException
@@ -16819,6 +18284,7 @@ export const deleteProject: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteProject",
 }));
 export type DeleteProjectMembershipError =
   | AccessDeniedException
@@ -16847,6 +18313,7 @@ export const deleteProjectMembership: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteProjectMembership",
 }));
 export type DeleteProjectProfileError =
   | AccessDeniedException
@@ -16873,6 +18340,7 @@ export const deleteProjectProfile: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteProjectProfile",
 }));
 export type DeleteSubscriptionGrantError =
   | AccessDeniedException
@@ -16901,6 +18369,7 @@ export const deleteSubscriptionGrant: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteSubscriptionGrant",
 }));
 export type DeleteSubscriptionRequestError =
   | AccessDeniedException
@@ -16929,6 +18398,7 @@ export const deleteSubscriptionRequest: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteSubscriptionRequest",
 }));
 export type DeleteSubscriptionTargetError =
   | AccessDeniedException
@@ -16957,6 +18427,7 @@ export const deleteSubscriptionTarget: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteSubscriptionTarget",
 }));
 export type DeleteTimeSeriesDataPointsError =
   | AccessDeniedException
@@ -16983,6 +18454,7 @@ export const deleteTimeSeriesDataPoints: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteTimeSeriesDataPoints",
 }));
 export type DisassociateEnvironmentRoleError =
   | AccessDeniedException
@@ -17011,6 +18483,7 @@ export const disassociateEnvironmentRole: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DisassociateEnvironmentRole",
 }));
 export type DisassociateGovernedTermsError =
   | AccessDeniedException
@@ -17039,6 +18512,7 @@ export const disassociateGovernedTerms: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DisassociateGovernedTerms",
 }));
 export type GetAccountPoolError =
   | AccessDeniedException
@@ -17065,6 +18539,7 @@ export const getAccountPool: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetAccountPool",
 }));
 export type GetAssetFilterError =
   | AccessDeniedException
@@ -17099,6 +18574,7 @@ export const getAssetFilter: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetAssetFilter",
 }));
 export type GetConnectionError =
   | AccessDeniedException
@@ -17125,6 +18601,7 @@ export const getConnection: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetConnection",
 }));
 export type GetDataExportConfigurationError =
   | AccessDeniedException
@@ -17151,6 +18628,7 @@ export const getDataExportConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetDataExportConfiguration",
 }));
 export type GetEnvironmentError =
   | AccessDeniedException
@@ -17177,6 +18655,7 @@ export const getEnvironment: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetEnvironment",
 }));
 export type GetEnvironmentActionError =
   | AccessDeniedException
@@ -17203,6 +18682,7 @@ export const getEnvironmentAction: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetEnvironmentAction",
 }));
 export type GetEnvironmentBlueprintError =
   | AccessDeniedException
@@ -17229,6 +18709,7 @@ export const getEnvironmentBlueprint: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetEnvironmentBlueprint",
 }));
 export type GetEnvironmentCredentialsError =
   | AccessDeniedException
@@ -17255,6 +18736,7 @@ export const getEnvironmentCredentials: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetEnvironmentCredentials",
 }));
 export type GetEnvironmentProfileError =
   | AccessDeniedException
@@ -17281,6 +18763,7 @@ export const getEnvironmentProfile: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetEnvironmentProfile",
 }));
 export type GetGroupProfileError =
   | AccessDeniedException
@@ -17305,6 +18788,7 @@ export const getGroupProfile: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetGroupProfile",
 }));
 export type GetIamPortalLoginUrlError =
   | AccessDeniedException
@@ -17333,6 +18817,7 @@ export const getIamPortalLoginUrl: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetIamPortalLoginUrl",
 }));
 export type GetJobRunError =
   | AccessDeniedException
@@ -17359,6 +18844,7 @@ export const getJobRun: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetJobRun",
 }));
 export type GetLineageEventError =
   | AccessDeniedException
@@ -17385,6 +18871,7 @@ export const getLineageEvent: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetLineageEvent",
 }));
 export type GetLineageNodeError =
   | AccessDeniedException
@@ -17411,6 +18898,7 @@ export const getLineageNode: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetLineageNode",
 }));
 export type GetProjectError =
   | AccessDeniedException
@@ -17437,6 +18925,7 @@ export const getProject: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetProject",
 }));
 export type GetProjectProfileError =
   | AccessDeniedException
@@ -17463,6 +18952,7 @@ export const getProjectProfile: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetProjectProfile",
 }));
 export type GetSubscriptionError =
   | AccessDeniedException
@@ -17489,6 +18979,7 @@ export const getSubscription: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetSubscription",
 }));
 export type GetSubscriptionGrantError =
   | AccessDeniedException
@@ -17515,6 +19006,7 @@ export const getSubscriptionGrant: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetSubscriptionGrant",
 }));
 export type GetSubscriptionRequestDetailsError =
   | AccessDeniedException
@@ -17541,6 +19033,7 @@ export const getSubscriptionRequestDetails: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetSubscriptionRequestDetails",
 }));
 export type GetSubscriptionTargetError =
   | AccessDeniedException
@@ -17567,6 +19060,7 @@ export const getSubscriptionTarget: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetSubscriptionTarget",
 }));
 export type GetTimeSeriesDataPointError =
   | AccessDeniedException
@@ -17593,6 +19087,7 @@ export const getTimeSeriesDataPoint: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetTimeSeriesDataPoint",
 }));
 export type GetUserProfileError =
   | AccessDeniedException
@@ -17617,6 +19112,7 @@ export const getUserProfile: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetUserProfile",
 }));
 export type ListAccountPoolsError =
   | AccessDeniedException
@@ -17656,6 +19152,7 @@ export const listAccountPools: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListAccountPools",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -17703,6 +19200,7 @@ export const listAccountsInAccountPool: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListAccountsInAccountPool",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -17756,6 +19254,7 @@ export const listAssetFilters: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListAssetFilters",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -17813,6 +19312,7 @@ export const listAssetRevisions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListAssetRevisions",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -17857,6 +19357,7 @@ export const listConnections: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListConnections",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -17912,6 +19413,7 @@ export const listDataProductRevisions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListDataProductRevisions",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -17963,6 +19465,7 @@ export const listDataSourceRunActivities: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListDataSourceRunActivities",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -18008,6 +19511,7 @@ export const listEntityOwners: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListEntityOwners",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -18053,6 +19557,7 @@ export const listEnvironmentActions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListEnvironmentActions",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -18100,6 +19605,7 @@ export const listEnvironmentBlueprints: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListEnvironmentBlueprints",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -18145,6 +19651,7 @@ export const listEnvironmentProfiles: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListEnvironmentProfiles",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -18190,6 +19697,7 @@ export const listEnvironments: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListEnvironments",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -18237,6 +19745,7 @@ export const listJobRuns: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListJobRuns",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -18282,6 +19791,7 @@ export const listLineageEvents: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListLineageEvents",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -18329,6 +19839,7 @@ export const listLineageNodeHistory: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListLineageNodeHistory",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -18374,6 +19885,7 @@ export const listNotifications: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "ListNotifications",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -18419,6 +19931,7 @@ export const listPolicyGrants: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListPolicyGrants",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -18466,6 +19979,7 @@ export const listProjectMemberships: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListProjectMemberships",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -18511,6 +20025,7 @@ export const listProjectProfiles: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListProjectProfiles",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -18556,6 +20071,7 @@ export const listProjects: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListProjects",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -18603,6 +20119,7 @@ export const listSubscriptionGrants: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListSubscriptionGrants",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -18650,6 +20167,7 @@ export const listSubscriptionRequests: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListSubscriptionRequests",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -18697,6 +20215,7 @@ export const listSubscriptions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListSubscriptions",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -18744,6 +20263,7 @@ export const listSubscriptionTargets: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListSubscriptionTargets",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -18772,6 +20292,7 @@ export const listTagsForResource: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type ListTimeSeriesDataPointsError =
   | AccessDeniedException
@@ -18813,6 +20334,7 @@ export const listTimeSeriesDataPoints: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListTimeSeriesDataPoints",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -18849,6 +20371,7 @@ export const postLineageEvent: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PostLineageEvent",
 }));
 export type PostTimeSeriesDataPointsError =
   | AccessDeniedException
@@ -18879,6 +20402,7 @@ export const postTimeSeriesDataPoints: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PostTimeSeriesDataPoints",
 }));
 export type PutDataExportConfigurationError =
   | AccessDeniedException
@@ -18919,6 +20443,7 @@ export const putDataExportConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutDataExportConfiguration",
 }));
 export type QueryGraphError =
   | AccessDeniedException
@@ -18958,6 +20483,7 @@ export const queryGraph: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "QueryGraph",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -18992,6 +20518,7 @@ export const rejectPredictions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "RejectPredictions",
 }));
 export type RejectSubscriptionRequestError =
   | AccessDeniedException
@@ -19020,6 +20547,7 @@ export const rejectSubscriptionRequest: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "RejectSubscriptionRequest",
 }));
 export type RemoveEntityOwnerError =
   | AccessDeniedException
@@ -19046,6 +20574,7 @@ export const removeEntityOwner: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "RemoveEntityOwner",
 }));
 export type RemovePolicyGrantError =
   | AccessDeniedException
@@ -19070,6 +20599,7 @@ export const removePolicyGrant: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "RemovePolicyGrant",
 }));
 export type RevokeSubscriptionError =
   | AccessDeniedException
@@ -19098,6 +20628,7 @@ export const revokeSubscription: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "RevokeSubscription",
 }));
 export type SearchError =
   | AccessDeniedException
@@ -19159,6 +20690,7 @@ export const search: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "Search",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -19204,6 +20736,7 @@ export const searchGroupProfiles: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "SearchGroupProfiles",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -19261,6 +20794,7 @@ export const searchListings: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SearchListings",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -19320,6 +20854,7 @@ export const searchTypes: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SearchTypes",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -19365,12 +20900,44 @@ export const searchUserProfiles: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "SearchUserProfiles",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
     items: "items",
     pageSize: "maxResults",
   } as const,
+}));
+export type StartNotebookImportError =
+  | AccessDeniedException
+  | ConflictException
+  | InternalServerException
+  | ResourceNotFoundException
+  | ServiceQuotaExceededException
+  | ThrottlingException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Starts a notebook import in Amazon SageMaker Unified Studio. This operation imports a notebook from an Amazon Simple Storage Service location into a project.
+ */
+export const startNotebookImport: API.OperationMethod<
+  StartNotebookImportInput,
+  StartNotebookImportOutput,
+  StartNotebookImportError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: StartNotebookImportInput,
+  output: StartNotebookImportOutput,
+  errors: [
+    AccessDeniedException,
+    ConflictException,
+    InternalServerException,
+    ResourceNotFoundException,
+    ServiceQuotaExceededException,
+    ThrottlingException,
+    ValidationException,
+  ],
+  operationName: "StartNotebookImport",
 }));
 export type TagResourceError =
   | InternalServerException
@@ -19393,6 +20960,7 @@ export const tagResource: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | InternalServerException
@@ -19410,6 +20978,7 @@ export const untagResource: API.OperationMethod<
   input: UntagResourceRequest,
   output: UntagResourceResponse,
   errors: [InternalServerException, ResourceNotFoundException],
+  operationName: "UntagResource",
 }));
 export type UpdateAccountPoolError =
   | AccessDeniedException
@@ -19440,6 +21009,7 @@ export const updateAccountPool: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateAccountPool",
 }));
 export type UpdateAssetFilterError =
   | AccessDeniedException
@@ -19476,6 +21046,7 @@ export const updateAssetFilter: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateAssetFilter",
 }));
 export type UpdateConnectionError =
   | AccessDeniedException
@@ -19506,6 +21077,7 @@ export const updateConnection: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateConnection",
 }));
 export type UpdateEnvironmentError =
   | AccessDeniedException
@@ -19534,6 +21106,7 @@ export const updateEnvironment: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateEnvironment",
 }));
 export type UpdateEnvironmentActionError =
   | AccessDeniedException
@@ -19562,6 +21135,7 @@ export const updateEnvironmentAction: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateEnvironmentAction",
 }));
 export type UpdateEnvironmentBlueprintError =
   | AccessDeniedException
@@ -19592,6 +21166,7 @@ export const updateEnvironmentBlueprint: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateEnvironmentBlueprint",
 }));
 export type UpdateEnvironmentProfileError =
   | AccessDeniedException
@@ -19622,6 +21197,7 @@ export const updateEnvironmentProfile: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateEnvironmentProfile",
 }));
 export type UpdateGroupProfileError =
   | AccessDeniedException
@@ -19646,6 +21222,7 @@ export const updateGroupProfile: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpdateGroupProfile",
 }));
 export type UpdateProjectError =
   | AccessDeniedException
@@ -19676,6 +21253,7 @@ export const updateProject: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateProject",
 }));
 export type UpdateProjectProfileError =
   | AccessDeniedException
@@ -19706,6 +21284,7 @@ export const updateProjectProfile: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateProjectProfile",
 }));
 export type UpdateRootDomainUnitOwnerError =
   | AccessDeniedException
@@ -19734,6 +21313,7 @@ export const updateRootDomainUnitOwner: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateRootDomainUnitOwner",
 }));
 export type UpdateSubscriptionGrantStatusError =
   | AccessDeniedException
@@ -19762,6 +21342,7 @@ export const updateSubscriptionGrantStatus: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateSubscriptionGrantStatus",
 }));
 export type UpdateSubscriptionRequestError =
   | AccessDeniedException
@@ -19790,6 +21371,7 @@ export const updateSubscriptionRequest: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateSubscriptionRequest",
 }));
 export type UpdateSubscriptionTargetError =
   | AccessDeniedException
@@ -19818,6 +21400,7 @@ export const updateSubscriptionTarget: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateSubscriptionTarget",
 }));
 export type UpdateUserProfileError =
   | AccessDeniedException
@@ -19842,6 +21425,7 @@ export const updateUserProfile: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpdateUserProfile",
 }));
 export type CreateAssetError =
   | AccessDeniedException
@@ -19892,6 +21476,7 @@ export const createAsset: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateAsset",
 }));
 export type GetAssetError =
   | AccessDeniedException
@@ -19928,6 +21513,7 @@ export const getAsset: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetAsset",
 }));
 export type DeleteAssetError =
   | AccessDeniedException
@@ -19966,6 +21552,7 @@ export const deleteAsset: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteAsset",
 }));
 export type CreateAssetRevisionError =
   | AccessDeniedException
@@ -20008,6 +21595,7 @@ export const createAssetRevision: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateAssetRevision",
 }));
 export type CreateAssetTypeError =
   | AccessDeniedException
@@ -20048,6 +21636,7 @@ export const createAssetType: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateAssetType",
 }));
 export type DeleteAssetTypeError =
   | AccessDeniedException
@@ -20086,6 +21675,7 @@ export const deleteAssetType: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteAssetType",
 }));
 export type GetAssetTypeError =
   | AccessDeniedException
@@ -20122,6 +21712,7 @@ export const getAssetType: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetAssetType",
 }));
 export type CreateDataProductError =
   | AccessDeniedException
@@ -20164,6 +21755,7 @@ export const createDataProduct: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateDataProduct",
 }));
 export type GetDataProductError =
   | AccessDeniedException
@@ -20198,6 +21790,7 @@ export const getDataProduct: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetDataProduct",
 }));
 export type DeleteDataProductError =
   | AccessDeniedException
@@ -20234,6 +21827,7 @@ export const deleteDataProduct: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteDataProduct",
 }));
 export type CreateDataProductRevisionError =
   | AccessDeniedException
@@ -20272,6 +21866,7 @@ export const createDataProductRevision: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateDataProductRevision",
 }));
 export type CreateDataSourceError =
   | AccessDeniedException
@@ -20302,6 +21897,7 @@ export const createDataSource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateDataSource",
 }));
 export type GetDataSourceError =
   | AccessDeniedException
@@ -20332,6 +21928,7 @@ export const getDataSource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetDataSource",
 }));
 export type UpdateDataSourceError =
   | AccessDeniedException
@@ -20362,6 +21959,7 @@ export const updateDataSource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateDataSource",
 }));
 export type DeleteDataSourceError =
   | AccessDeniedException
@@ -20392,6 +21990,7 @@ export const deleteDataSource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteDataSource",
 }));
 export type ListDataSourcesError =
   | AccessDeniedException
@@ -20437,6 +22036,7 @@ export const listDataSources: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListDataSources",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -20473,6 +22073,7 @@ export const startDataSourceRun: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartDataSourceRun",
 }));
 export type GetDataSourceRunError =
   | AccessDeniedException
@@ -20503,6 +22104,7 @@ export const getDataSourceRun: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetDataSourceRun",
 }));
 export type ListDataSourceRunsError =
   | AccessDeniedException
@@ -20548,6 +22150,7 @@ export const listDataSourceRuns: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListDataSourceRuns",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -20584,6 +22187,7 @@ export const createDomain: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateDomain",
 }));
 export type GetDomainError =
   | AccessDeniedException
@@ -20612,6 +22216,7 @@ export const getDomain: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetDomain",
 }));
 export type UpdateDomainError =
   | AccessDeniedException
@@ -20642,6 +22247,7 @@ export const updateDomain: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateDomain",
 }));
 export type DeleteDomainError =
   | AccessDeniedException
@@ -20670,6 +22276,7 @@ export const deleteDomain: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteDomain",
 }));
 export type ListDomainsError =
   | AccessDeniedException
@@ -20715,6 +22322,7 @@ export const listDomains: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListDomains",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -20749,6 +22357,7 @@ export const createDomainUnit: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateDomainUnit",
 }));
 export type GetDomainUnitError =
   | AccessDeniedException
@@ -20775,6 +22384,7 @@ export const getDomainUnit: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetDomainUnit",
 }));
 export type UpdateDomainUnitError =
   | AccessDeniedException
@@ -20803,6 +22413,7 @@ export const updateDomainUnit: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateDomainUnit",
 }));
 export type DeleteDomainUnitError =
   | AccessDeniedException
@@ -20831,6 +22442,7 @@ export const deleteDomainUnit: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteDomainUnit",
 }));
 export type ListDomainUnitsForParentError =
   | AccessDeniedException
@@ -20870,6 +22482,7 @@ export const listDomainUnitsForParent: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListDomainUnitsForParent",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -20902,6 +22515,7 @@ export const putEnvironmentBlueprintConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "PutEnvironmentBlueprintConfiguration",
 }));
 export type GetEnvironmentBlueprintConfigurationError =
   | AccessDeniedException
@@ -20926,6 +22540,7 @@ export const getEnvironmentBlueprintConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetEnvironmentBlueprintConfiguration",
 }));
 export type DeleteEnvironmentBlueprintConfigurationError =
   | AccessDeniedException
@@ -20944,6 +22559,7 @@ export const deleteEnvironmentBlueprintConfiguration: API.OperationMethod<
   input: DeleteEnvironmentBlueprintConfigurationInput,
   output: DeleteEnvironmentBlueprintConfigurationOutput,
   errors: [AccessDeniedException, InternalServerException, ValidationException],
+  operationName: "DeleteEnvironmentBlueprintConfiguration",
 }));
 export type ListEnvironmentBlueprintConfigurationsError =
   | AccessDeniedException
@@ -20983,6 +22599,7 @@ export const listEnvironmentBlueprintConfigurations: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "ListEnvironmentBlueprintConfigurations",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -21029,6 +22646,7 @@ export const createFormType: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateFormType",
 }));
 export type DeleteFormTypeError =
   | AccessDeniedException
@@ -21069,6 +22687,7 @@ export const deleteFormType: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteFormType",
 }));
 export type GetFormTypeError =
   | AccessDeniedException
@@ -21111,6 +22730,7 @@ export const getFormType: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetFormType",
 }));
 export type CreateGlossaryError =
   | AccessDeniedException
@@ -21151,6 +22771,7 @@ export const createGlossary: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateGlossary",
 }));
 export type GetGlossaryError =
   | AccessDeniedException
@@ -21183,6 +22804,7 @@ export const getGlossary: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetGlossary",
 }));
 export type UpdateGlossaryError =
   | AccessDeniedException
@@ -21221,6 +22843,7 @@ export const updateGlossary: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateGlossary",
 }));
 export type DeleteGlossaryError =
   | AccessDeniedException
@@ -21261,6 +22884,7 @@ export const deleteGlossary: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteGlossary",
 }));
 export type CreateGlossaryTermError =
   | AccessDeniedException
@@ -21303,6 +22927,7 @@ export const createGlossaryTerm: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateGlossaryTerm",
 }));
 export type GetGlossaryTermError =
   | AccessDeniedException
@@ -21337,6 +22962,7 @@ export const getGlossaryTerm: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetGlossaryTerm",
 }));
 export type UpdateGlossaryTermError =
   | AccessDeniedException
@@ -21375,6 +23001,7 @@ export const updateGlossaryTerm: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateGlossaryTerm",
 }));
 export type DeleteGlossaryTermError =
   | AccessDeniedException
@@ -21413,6 +23040,7 @@ export const deleteGlossaryTerm: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteGlossaryTerm",
 }));
 export type GetListingError =
   | AccessDeniedException
@@ -21439,6 +23067,7 @@ export const getListing: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetListing",
 }));
 export type DeleteListingError =
   | AccessDeniedException
@@ -21467,6 +23096,7 @@ export const deleteListing: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteListing",
 }));
 export type StartMetadataGenerationRunError =
   | AccessDeniedException
@@ -21509,6 +23139,7 @@ export const startMetadataGenerationRun: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartMetadataGenerationRun",
 }));
 export type GetMetadataGenerationRunError =
   | AccessDeniedException
@@ -21543,6 +23174,7 @@ export const getMetadataGenerationRun: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetMetadataGenerationRun",
 }));
 export type CancelMetadataGenerationRunError =
   | AccessDeniedException
@@ -21579,6 +23211,7 @@ export const cancelMetadataGenerationRun: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CancelMetadataGenerationRun",
 }));
 export type ListMetadataGenerationRunsError =
   | AccessDeniedException
@@ -21628,12 +23261,364 @@ export const listMetadataGenerationRuns: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListMetadataGenerationRuns",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
     items: "items",
     pageSize: "maxResults",
   } as const,
+}));
+export type CreateNotebookError =
+  | AccessDeniedException
+  | ConflictException
+  | InternalServerException
+  | ResourceNotFoundException
+  | ServiceQuotaExceededException
+  | ThrottlingException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Creates a notebook in Amazon SageMaker Unified Studio. A notebook is a collaborative document within a project that contains code cells for interactive computing.
+ */
+export const createNotebook: API.OperationMethod<
+  CreateNotebookInput,
+  CreateNotebookOutput,
+  CreateNotebookError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: CreateNotebookInput,
+  output: CreateNotebookOutput,
+  errors: [
+    AccessDeniedException,
+    ConflictException,
+    InternalServerException,
+    ResourceNotFoundException,
+    ServiceQuotaExceededException,
+    ThrottlingException,
+    ValidationException,
+  ],
+  operationName: "CreateNotebook",
+}));
+export type GetNotebookError =
+  | AccessDeniedException
+  | InternalServerException
+  | ResourceNotFoundException
+  | ThrottlingException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Gets the details of a notebook in Amazon SageMaker Unified Studio.
+ */
+export const getNotebook: API.OperationMethod<
+  GetNotebookInput,
+  GetNotebookOutput,
+  GetNotebookError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: GetNotebookInput,
+  output: GetNotebookOutput,
+  errors: [
+    AccessDeniedException,
+    InternalServerException,
+    ResourceNotFoundException,
+    ThrottlingException,
+    ValidationException,
+  ],
+  operationName: "GetNotebook",
+}));
+export type UpdateNotebookError =
+  | AccessDeniedException
+  | ConflictException
+  | InternalServerException
+  | ResourceNotFoundException
+  | ThrottlingException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Updates a notebook in Amazon SageMaker Unified Studio.
+ */
+export const updateNotebook: API.OperationMethod<
+  UpdateNotebookInput,
+  UpdateNotebookOutput,
+  UpdateNotebookError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: UpdateNotebookInput,
+  output: UpdateNotebookOutput,
+  errors: [
+    AccessDeniedException,
+    ConflictException,
+    InternalServerException,
+    ResourceNotFoundException,
+    ThrottlingException,
+    ValidationException,
+  ],
+  operationName: "UpdateNotebook",
+}));
+export type DeleteNotebookError =
+  | AccessDeniedException
+  | ConflictException
+  | InternalServerException
+  | ThrottlingException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Deletes a notebook in Amazon SageMaker Unified Studio.
+ */
+export const deleteNotebook: API.OperationMethod<
+  DeleteNotebookInput,
+  DeleteNotebookOutput,
+  DeleteNotebookError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: DeleteNotebookInput,
+  output: DeleteNotebookOutput,
+  errors: [
+    AccessDeniedException,
+    ConflictException,
+    InternalServerException,
+    ThrottlingException,
+    ValidationException,
+  ],
+  operationName: "DeleteNotebook",
+}));
+export type ListNotebooksError =
+  | AccessDeniedException
+  | InternalServerException
+  | ThrottlingException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Lists notebooks in Amazon SageMaker Unified Studio.
+ */
+export const listNotebooks: API.OperationMethod<
+  ListNotebooksInput,
+  ListNotebooksOutput,
+  ListNotebooksError,
+  Credentials | Rgn | HttpClient.HttpClient
+> & {
+  pages: (
+    input: ListNotebooksInput,
+  ) => stream.Stream<
+    ListNotebooksOutput,
+    ListNotebooksError,
+    Credentials | Rgn | HttpClient.HttpClient
+  >;
+  items: (
+    input: ListNotebooksInput,
+  ) => stream.Stream<
+    NotebookSummary,
+    ListNotebooksError,
+    Credentials | Rgn | HttpClient.HttpClient
+  >;
+} = /*@__PURE__*/ /*#__PURE__*/ API.makePaginated(() => ({
+  input: ListNotebooksInput,
+  output: ListNotebooksOutput,
+  errors: [
+    AccessDeniedException,
+    InternalServerException,
+    ThrottlingException,
+    ValidationException,
+  ],
+  operationName: "ListNotebooks",
+  pagination: {
+    inputToken: "nextToken",
+    outputToken: "nextToken",
+    items: "items",
+    pageSize: "maxResults",
+  } as const,
+}));
+export type StartNotebookExportError =
+  | AccessDeniedException
+  | ConflictException
+  | InternalServerException
+  | ResourceNotFoundException
+  | ServiceQuotaExceededException
+  | ThrottlingException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Starts a notebook export in Amazon SageMaker Unified Studio. This operation exports a notebook to a specified file format and stores the output in Amazon Simple Storage Service.
+ */
+export const startNotebookExport: API.OperationMethod<
+  StartNotebookExportInput,
+  StartNotebookExportOutput,
+  StartNotebookExportError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: StartNotebookExportInput,
+  output: StartNotebookExportOutput,
+  errors: [
+    AccessDeniedException,
+    ConflictException,
+    InternalServerException,
+    ResourceNotFoundException,
+    ServiceQuotaExceededException,
+    ThrottlingException,
+    ValidationException,
+  ],
+  operationName: "StartNotebookExport",
+}));
+export type GetNotebookExportError =
+  | AccessDeniedException
+  | InternalServerException
+  | ResourceNotFoundException
+  | ThrottlingException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Gets the details of a notebook export in Amazon SageMaker Unified Studio.
+ */
+export const getNotebookExport: API.OperationMethod<
+  GetNotebookExportInput,
+  GetNotebookExportOutput,
+  GetNotebookExportError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: GetNotebookExportInput,
+  output: GetNotebookExportOutput,
+  errors: [
+    AccessDeniedException,
+    InternalServerException,
+    ResourceNotFoundException,
+    ThrottlingException,
+    ValidationException,
+  ],
+  operationName: "GetNotebookExport",
+}));
+export type StartNotebookRunError =
+  | AccessDeniedException
+  | ConflictException
+  | InternalServerException
+  | ResourceNotFoundException
+  | ServiceQuotaExceededException
+  | ThrottlingException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Starts a notebook run in Amazon SageMaker Unified Studio. A notebook run represents the execution of an Amazon SageMaker notebook within a project. You can configure compute, network, timeout, and environment settings for the run.
+ */
+export const startNotebookRun: API.OperationMethod<
+  StartNotebookRunInput,
+  StartNotebookRunOutput,
+  StartNotebookRunError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: StartNotebookRunInput,
+  output: StartNotebookRunOutput,
+  errors: [
+    AccessDeniedException,
+    ConflictException,
+    InternalServerException,
+    ResourceNotFoundException,
+    ServiceQuotaExceededException,
+    ThrottlingException,
+    ValidationException,
+  ],
+  operationName: "StartNotebookRun",
+}));
+export type GetNotebookRunError =
+  | AccessDeniedException
+  | InternalServerException
+  | ResourceNotFoundException
+  | ThrottlingException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Gets the details of a notebook run in Amazon SageMaker Unified Studio.
+ */
+export const getNotebookRun: API.OperationMethod<
+  GetNotebookRunInput,
+  GetNotebookRunOutput,
+  GetNotebookRunError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: GetNotebookRunInput,
+  output: GetNotebookRunOutput,
+  errors: [
+    AccessDeniedException,
+    InternalServerException,
+    ResourceNotFoundException,
+    ThrottlingException,
+    ValidationException,
+  ],
+  operationName: "GetNotebookRun",
+}));
+export type ListNotebookRunsError =
+  | AccessDeniedException
+  | InternalServerException
+  | ThrottlingException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Lists notebook runs in Amazon SageMaker Unified Studio.
+ */
+export const listNotebookRuns: API.OperationMethod<
+  ListNotebookRunsInput,
+  ListNotebookRunsOutput,
+  ListNotebookRunsError,
+  Credentials | Rgn | HttpClient.HttpClient
+> & {
+  pages: (
+    input: ListNotebookRunsInput,
+  ) => stream.Stream<
+    ListNotebookRunsOutput,
+    ListNotebookRunsError,
+    Credentials | Rgn | HttpClient.HttpClient
+  >;
+  items: (
+    input: ListNotebookRunsInput,
+  ) => stream.Stream<
+    NotebookRunSummary,
+    ListNotebookRunsError,
+    Credentials | Rgn | HttpClient.HttpClient
+  >;
+} = /*@__PURE__*/ /*#__PURE__*/ API.makePaginated(() => ({
+  input: ListNotebookRunsInput,
+  output: ListNotebookRunsOutput,
+  errors: [
+    AccessDeniedException,
+    InternalServerException,
+    ThrottlingException,
+    ValidationException,
+  ],
+  operationName: "ListNotebookRuns",
+  pagination: {
+    inputToken: "nextToken",
+    outputToken: "nextToken",
+    items: "items",
+    pageSize: "maxResults",
+  } as const,
+}));
+export type StopNotebookRunError =
+  | AccessDeniedException
+  | ConflictException
+  | InternalServerException
+  | ResourceNotFoundException
+  | ThrottlingException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Stops a running notebook run in Amazon SageMaker Unified Studio.
+ */
+export const stopNotebookRun: API.OperationMethod<
+  StopNotebookRunInput,
+  StopNotebookRunOutput,
+  StopNotebookRunError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: StopNotebookRunInput,
+  output: StopNotebookRunOutput,
+  errors: [
+    AccessDeniedException,
+    ConflictException,
+    InternalServerException,
+    ResourceNotFoundException,
+    ThrottlingException,
+    ValidationException,
+  ],
+  operationName: "StopNotebookRun",
 }));
 export type CreateRuleError =
   | AccessDeniedException
@@ -21664,6 +23649,7 @@ export const createRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateRule",
 }));
 export type GetRuleError =
   | AccessDeniedException
@@ -21690,6 +23676,7 @@ export const getRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetRule",
 }));
 export type UpdateRuleError =
   | AccessDeniedException
@@ -21720,6 +23707,7 @@ export const updateRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateRule",
 }));
 export type DeleteRuleError =
   | AccessDeniedException
@@ -21748,6 +23736,7 @@ export const deleteRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteRule",
 }));
 export type ListRulesError =
   | AccessDeniedException
@@ -21789,6 +23778,7 @@ export const listRules: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListRules",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",

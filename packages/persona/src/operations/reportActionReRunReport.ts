@@ -10,6 +10,22 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface ReportActionReRunReportInput {
+  reportId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const ReportActionReRunReportInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     reportId: Schema.String.pipe(T.PathParam()),
@@ -35,18 +51,20 @@ export const ReportActionReRunReportInput =
         "2020-05-18",
       ]),
     ).pipe(T.HttpHeader("Persona-Version")),
-  }).pipe(T.Http({ method: "POST", path: "/reports/{reportId}/run" }));
-export type ReportActionReRunReportInput =
-  typeof ReportActionReRunReportInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/reports/{reportId}/run" }),
+  ) as unknown as Schema.Codec<ReportActionReRunReportInput>;
 
 // Output Schema
+export interface ReportActionReRunReportOutput {
+  data: unknown;
+  included?: ReadonlyArray<unknown>;
+}
 export const ReportActionReRunReportOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Unknown,
     included: Schema.optional(Schema.Array(Schema.Unknown)),
-  });
-export type ReportActionReRunReportOutput =
-  typeof ReportActionReRunReportOutput.Type;
+  }) as unknown as Schema.Codec<ReportActionReRunReportOutput>;
 
 // The operation
 /**

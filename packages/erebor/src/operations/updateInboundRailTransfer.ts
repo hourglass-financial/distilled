@@ -4,6 +4,13 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface UpdateInboundRailTransferInput {
+  id: string;
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const UpdateInboundRailTransferInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
@@ -17,11 +24,33 @@ export const UpdateInboundRailTransferInput =
     custom_fields: Schema.optional(
       Schema.Record(Schema.String, Schema.Unknown),
     ),
-  }).pipe(T.Http({ method: "PATCH", path: "/rail_in/{id}" }));
-export type UpdateInboundRailTransferInput =
-  typeof UpdateInboundRailTransferInput.Type;
+  }).pipe(
+    T.Http({ method: "PATCH", path: "/rail_in/{id}" }),
+  ) as unknown as Schema.Codec<UpdateInboundRailTransferInput>;
 
 // Output Schema
+export interface UpdateInboundRailTransferOutput {
+  id: string;
+  type: "RAIL_IN";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id?: string | null;
+  status: "CREATED" | "PENDING" | "SETTLED" | "FAILED";
+  to_deposit_account_id: string;
+  from_deposit_account_id?: string | null;
+  counterparty_rail_address_id?: string | null;
+  amount: {
+    currency: "USD";
+    exponent: number;
+    value: string;
+    display_value: string;
+  };
+  memo?: string | null;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const UpdateInboundRailTransferOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -42,11 +71,11 @@ export const UpdateInboundRailTransferOutput =
       display_value: Schema.String,
     }),
     memo: Schema.optional(Schema.NullOr(Schema.String)),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type UpdateInboundRailTransferOutput =
-  typeof UpdateInboundRailTransferOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<UpdateInboundRailTransferOutput>;
 
 // The operation
 /**

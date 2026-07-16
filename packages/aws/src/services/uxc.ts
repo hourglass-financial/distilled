@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -235,6 +235,7 @@ export const getAccountCustomizations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetAccountCustomizations",
 }));
 export type ListServicesError =
   | AccessDeniedException
@@ -276,6 +277,7 @@ export const listServices: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListServices",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -307,4 +309,5 @@ export const updateAccountCustomizations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateAccountCustomizations",
 }));

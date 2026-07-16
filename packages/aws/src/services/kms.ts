@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -105,9 +105,11 @@ export type XksProxyAuthenticationRawSecretAccessKeyType =
 export type PrincipalIdType = string;
 export type EncryptionContextKey = string;
 export type EncryptionContextValue = string;
+export type GrantConstraintSourceArnType = string;
 export type GrantTokenType = string;
 export type GrantNameType = string;
 export type NullableBooleanType = boolean;
+export type ServicePrincipalType = string;
 export type GrantIdType = string;
 export type PolicyType = string;
 export type DescriptionType = string;
@@ -128,6 +130,8 @@ export type LimitType = number;
 export type MarkerType = string;
 export type RotationPeriodInDaysType = number;
 export type NumberOfBytesType = number;
+export type CloudTrailEventIdType = string;
+export type KmsRequestIdType = string;
 export type PolicyNameType = string;
 export type KeyMaterialDescriptionType = string;
 
@@ -314,11 +318,13 @@ export const EncryptionContextType = /*@__PURE__*/ /*#__PURE__*/ S.Record(
 export interface GrantConstraints {
   EncryptionContextSubset?: { [key: string]: string | undefined };
   EncryptionContextEquals?: { [key: string]: string | undefined };
+  SourceArn?: string;
 }
 export const GrantConstraints = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     EncryptionContextSubset: S.optional(EncryptionContextType),
     EncryptionContextEquals: S.optional(EncryptionContextType),
+    SourceArn: S.optional(S.String),
   }),
 ).annotate({
   identifier: "GrantConstraints",
@@ -327,24 +333,28 @@ export type GrantTokenList = string[];
 export const GrantTokenList = /*@__PURE__*/ /*#__PURE__*/ S.Array(S.String);
 export interface CreateGrantRequest {
   KeyId: string;
-  GranteePrincipal: string;
+  GranteePrincipal?: string;
   RetiringPrincipal?: string;
   Operations: GrantOperation[];
   Constraints?: GrantConstraints;
   GrantTokens?: string[];
   Name?: string;
   DryRun?: boolean;
+  GranteeServicePrincipal?: string;
+  RetiringServicePrincipal?: string;
 }
 export const CreateGrantRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     KeyId: S.String,
-    GranteePrincipal: S.String,
+    GranteePrincipal: S.optional(S.String),
     RetiringPrincipal: S.optional(S.String),
     Operations: GrantOperationList,
     Constraints: S.optional(GrantConstraints),
     GrantTokens: S.optional(GrantTokenList),
     Name: S.optional(S.String),
     DryRun: S.optional(S.Boolean),
+    GranteeServicePrincipal: S.optional(S.String),
+    RetiringServicePrincipal: S.optional(S.String),
   }).pipe(
     T.all(
       ns,
@@ -1443,6 +1453,78 @@ export const GenerateRandomResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 ).annotate({
   identifier: "GenerateRandomResponse",
 }) as any as S.Schema<GenerateRandomResponse>;
+export interface GetKeyLastUsageRequest {
+  KeyId: string;
+}
+export const GetKeyLastUsageRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({ KeyId: S.String }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "POST", uri: "/" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+).annotate({
+  identifier: "GetKeyLastUsageRequest",
+}) as any as S.Schema<GetKeyLastUsageRequest>;
+export type KeyLastUsageTrackingOperation =
+  | "Decrypt"
+  | "DeriveSharedSecret"
+  | "Encrypt"
+  | "GenerateDataKey"
+  | "GenerateDataKeyPair"
+  | "GenerateDataKeyPairWithoutPlaintext"
+  | "GenerateDataKeyWithoutPlaintext"
+  | "GenerateMac"
+  | "ReEncrypt"
+  | "Sign"
+  | "Verify"
+  | "VerifyMac"
+  | (string & {});
+export const KeyLastUsageTrackingOperation =
+  /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface KeyLastUsageData {
+  Operation?: KeyLastUsageTrackingOperation;
+  Timestamp?: Date;
+  CloudTrailEventId?: string;
+  KmsRequestId?: string;
+}
+export const KeyLastUsageData = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    Operation: S.optional(KeyLastUsageTrackingOperation),
+    Timestamp: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    CloudTrailEventId: S.optional(S.String),
+    KmsRequestId: S.optional(S.String),
+  }),
+).annotate({
+  identifier: "KeyLastUsageData",
+}) as any as S.Schema<KeyLastUsageData>;
+export interface GetKeyLastUsageResponse {
+  KeyId?: string;
+  KeyLastUsage?: KeyLastUsageData;
+  TrackingStartDate?: Date;
+  KeyCreationDate?: Date;
+}
+export const GetKeyLastUsageResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      KeyId: S.optional(S.String),
+      KeyLastUsage: S.optional(KeyLastUsageData),
+      TrackingStartDate: S.optional(
+        S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+      ),
+      KeyCreationDate: S.optional(
+        S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+      ),
+    }).pipe(ns),
+).annotate({
+  identifier: "GetKeyLastUsageResponse",
+}) as any as S.Schema<GetKeyLastUsageResponse>;
 export interface GetKeyPolicyRequest {
   KeyId: string;
   PolicyName?: string;
@@ -1736,6 +1818,7 @@ export interface ListGrantsRequest {
   KeyId: string;
   GrantId?: string;
   GranteePrincipal?: string;
+  GranteeServicePrincipal?: string;
 }
 export const ListGrantsRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -1744,6 +1827,7 @@ export const ListGrantsRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     KeyId: S.String,
     GrantId: S.optional(S.String),
     GranteePrincipal: S.optional(S.String),
+    GranteeServicePrincipal: S.optional(S.String),
   }).pipe(
     T.all(
       ns,
@@ -1768,6 +1852,8 @@ export interface GrantListEntry {
   IssuingAccount?: string;
   Operations?: GrantOperation[];
   Constraints?: GrantConstraints;
+  GranteeServicePrincipal?: string;
+  RetiringServicePrincipal?: string;
 }
 export const GrantListEntry = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -1780,6 +1866,8 @@ export const GrantListEntry = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     IssuingAccount: S.optional(S.String),
     Operations: S.optional(GrantOperationList),
     Constraints: S.optional(GrantConstraints),
+    GranteeServicePrincipal: S.optional(S.String),
+    RetiringServicePrincipal: S.optional(S.String),
   }),
 ).annotate({ identifier: "GrantListEntry" }) as any as S.Schema<GrantListEntry>;
 export type GrantList = GrantListEntry[];
@@ -2012,14 +2100,16 @@ export const ListResourceTagsResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 export interface ListRetirableGrantsRequest {
   Limit?: number;
   Marker?: string;
-  RetiringPrincipal: string;
+  RetiringPrincipal?: string;
+  RetiringServicePrincipal?: string;
 }
 export const ListRetirableGrantsRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
     S.Struct({
       Limit: S.optional(S.Number),
       Marker: S.optional(S.String),
-      RetiringPrincipal: S.String,
+      RetiringPrincipal: S.optional(S.String),
+      RetiringServicePrincipal: S.optional(S.String),
     }).pipe(
       T.all(
         ns,
@@ -2951,6 +3041,7 @@ export const cancelKeyDeletion: API.OperationMethod<
     KMSInvalidStateException,
     NotFoundException,
   ],
+  operationName: "CancelKeyDeletion",
 }));
 export type ConnectCustomKeyStoreError =
   | CloudHsmClusterInvalidConfigurationException
@@ -3058,6 +3149,7 @@ export const connectCustomKeyStore: API.OperationMethod<
     CustomKeyStoreNotFoundException,
     KMSInternalException,
   ],
+  operationName: "ConnectCustomKeyStore",
 }));
 export type CreateAliasError =
   | AlreadyExistsException
@@ -3132,6 +3224,7 @@ export const createAlias: API.OperationMethod<
     LimitExceededException,
     NotFoundException,
   ],
+  operationName: "CreateAlias",
 }));
 export type CreateCustomKeyStoreError =
   | CloudHsmClusterInUseException
@@ -3254,6 +3347,7 @@ export const createCustomKeyStore: API.OperationMethod<
     XksProxyVpcEndpointServiceInvalidConfigurationException,
     XksProxyVpcEndpointServiceNotFoundException,
   ],
+  operationName: "CreateCustomKeyStore",
 }));
 export type CreateGrantError =
   | DependencyTimeoutException
@@ -3274,6 +3368,11 @@ export type CreateGrantError =
  * grants are considered along with key policies and IAM policies. Grants are often used for
  * temporary permissions because you can create one, use its permissions, and delete it without
  * changing your key policies or IAM policies.
+ *
+ * You can create a grant for an Amazon Web Services principal (IAM user, IAM role, or Amazon Web Services account) by
+ * specifying the `GranteePrincipal` parameter. You can also create a grant for an
+ * Amazon Web Services service principal by specifying the `GranteeServicePrincipal`
+ * parameter.
  *
  * For detailed information about grants, including grant terminology, see Grants in KMS in the
  *
@@ -3338,6 +3437,7 @@ export const createGrant: API.OperationMethod<
     LimitExceededException,
     NotFoundException,
   ],
+  operationName: "CreateGrant",
 }));
 export type CreateKeyError =
   | CloudHsmClusterInvalidConfigurationException
@@ -3544,6 +3644,7 @@ export const createKey: API.OperationMethod<
     XksKeyInvalidConfigurationException,
     XksKeyNotFoundException,
   ],
+  operationName: "CreateKey",
 }));
 export type DecryptError =
   | DependencyTimeoutException
@@ -3611,9 +3712,11 @@ export type DecryptError =
  * The KMS key that you use for this operation must be in a compatible key state. For
  * details, see Key states of KMS keys in the *Key Management Service Developer Guide*.
  *
- * **Cross-account use**: Yes. If you use the `KeyId`
- * parameter to identify a KMS key in a different Amazon Web Services account, specify the key ARN or the alias
- * ARN of the KMS key.
+ * **Cross-account use**: Yes. To specify a KMS key
+ * in a different Amazon Web Services account, use the key ARN or alias
+ * ARN. A short key ID is also acceptable
+ * when decrypting symmetric ciphertexts, though using a full key ARN is recommended
+ * to be more explicit about the intended KMS key.
  *
  * **Required permissions**: kms:Decrypt (key policy)
  *
@@ -3651,6 +3754,7 @@ export const decrypt: API.OperationMethod<
     KMSInvalidStateException,
     NotFoundException,
   ],
+  operationName: "Decrypt",
 }));
 export type DeleteAliasError =
   | DependencyTimeoutException
@@ -3708,6 +3812,7 @@ export const deleteAlias: API.OperationMethod<
     KMSInvalidStateException,
     NotFoundException,
   ],
+  operationName: "DeleteAlias",
 }));
 export type DeleteCustomKeyStoreError =
   | CustomKeyStoreHasCMKsException
@@ -3780,6 +3885,7 @@ export const deleteCustomKeyStore: API.OperationMethod<
     CustomKeyStoreNotFoundException,
     KMSInternalException,
   ],
+  operationName: "DeleteCustomKeyStore",
 }));
 export type DeleteImportedKeyMaterialError =
   | DependencyTimeoutException
@@ -3842,6 +3948,7 @@ export const deleteImportedKeyMaterial: API.OperationMethod<
     NotFoundException,
     UnsupportedOperationException,
   ],
+  operationName: "DeleteImportedKeyMaterial",
 }));
 export type DeriveSharedSecretError =
   | DependencyTimeoutException
@@ -3949,6 +4056,7 @@ export const deriveSharedSecret: API.OperationMethod<
     KMSInvalidStateException,
     NotFoundException,
   ],
+  operationName: "DeriveSharedSecret",
 }));
 export type DescribeCustomKeyStoresError =
   | CustomKeyStoreNotFoundException
@@ -4034,6 +4142,7 @@ export const describeCustomKeyStores: API.OperationMethod<
     InvalidMarkerException,
     KMSInternalException,
   ],
+  operationName: "DescribeCustomKeyStores",
   pagination: {
     inputToken: "Marker",
     outputToken: "NextMarker",
@@ -4120,6 +4229,7 @@ export const describeKey: API.OperationMethod<
     KMSInternalException,
     NotFoundException,
   ],
+  operationName: "DescribeKey",
 }));
 export type DisableKeyError =
   | DependencyTimeoutException
@@ -4162,6 +4272,7 @@ export const disableKey: API.OperationMethod<
     KMSInvalidStateException,
     NotFoundException,
   ],
+  operationName: "DisableKey",
 }));
 export type DisableKeyRotationError =
   | DependencyTimeoutException
@@ -4224,6 +4335,7 @@ export const disableKeyRotation: API.OperationMethod<
     NotFoundException,
     UnsupportedOperationException,
   ],
+  operationName: "DisableKeyRotation",
 }));
 export type DisconnectCustomKeyStoreError =
   | CustomKeyStoreInvalidStateException
@@ -4285,6 +4397,7 @@ export const disconnectCustomKeyStore: API.OperationMethod<
     CustomKeyStoreNotFoundException,
     KMSInternalException,
   ],
+  operationName: "DisconnectCustomKeyStore",
 }));
 export type EnableKeyError =
   | DependencyTimeoutException
@@ -4326,6 +4439,7 @@ export const enableKey: API.OperationMethod<
     LimitExceededException,
     NotFoundException,
   ],
+  operationName: "EnableKey",
 }));
 export type EnableKeyRotationError =
   | DependencyTimeoutException
@@ -4408,6 +4522,7 @@ export const enableKeyRotation: API.OperationMethod<
     NotFoundException,
     UnsupportedOperationException,
   ],
+  operationName: "EnableKeyRotation",
 }));
 export type EncryptError =
   | DependencyTimeoutException
@@ -4510,6 +4625,7 @@ export const encrypt: API.OperationMethod<
     KMSInvalidStateException,
     NotFoundException,
   ],
+  operationName: "Encrypt",
 }));
 export type GenerateDataKeyError =
   | DependencyTimeoutException
@@ -4630,6 +4746,7 @@ export const generateDataKey: API.OperationMethod<
     KMSInvalidStateException,
     NotFoundException,
   ],
+  operationName: "GenerateDataKey",
 }));
 export type GenerateDataKeyPairError =
   | DependencyTimeoutException
@@ -4738,6 +4855,7 @@ export const generateDataKeyPair: API.OperationMethod<
     NotFoundException,
     UnsupportedOperationException,
   ],
+  operationName: "GenerateDataKeyPair",
 }));
 export type GenerateDataKeyPairWithoutPlaintextError =
   | DependencyTimeoutException
@@ -4827,6 +4945,7 @@ export const generateDataKeyPairWithoutPlaintext: API.OperationMethod<
     NotFoundException,
     UnsupportedOperationException,
   ],
+  operationName: "GenerateDataKeyPairWithoutPlaintext",
 }));
 export type GenerateDataKeyWithoutPlaintextError =
   | DependencyTimeoutException
@@ -4927,6 +5046,7 @@ export const generateDataKeyWithoutPlaintext: API.OperationMethod<
     KMSInvalidStateException,
     NotFoundException,
   ],
+  operationName: "GenerateDataKeyWithoutPlaintext",
 }));
 export type GenerateMacError =
   | DisabledException
@@ -4990,6 +5110,7 @@ export const generateMac: API.OperationMethod<
     KMSInvalidStateException,
     NotFoundException,
   ],
+  operationName: "GenerateMac",
 }));
 export type GenerateRandomError =
   | CustomKeyStoreInvalidStateException
@@ -5041,6 +5162,84 @@ export const generateRandom: API.OperationMethod<
     KMSInternalException,
     UnsupportedOperationException,
   ],
+  operationName: "GenerateRandom",
+}));
+export type GetKeyLastUsageError =
+  | DependencyTimeoutException
+  | InvalidArnException
+  | KMSInternalException
+  | NotFoundException
+  | CommonErrors;
+/**
+ * Returns usage information about the last successful cryptographic operation performed with a
+ * specified KMS key, including the operation type, timestamp, and associated CloudTrail event
+ * ID.
+ *
+ * The `TrackingStartDate` in the `GetKeyLastUsage` response indicates
+ * the date from which KMS began recording cryptographic activity for a given key. Use this
+ * value together with `KeyCreationDate` to understand the key's usage
+ * history:
+ *
+ * - If the `KeyLastUsage` response element is *present*,
+ * the key has been used for a successful cryptographic operation since the
+ * `TrackingStartDate`. The response includes the operation type, timestamp, and
+ * associated CloudTrail event ID.
+ *
+ * - If the `KeyLastUsage` response element is *empty* and
+ * `KeyCreationDate` is on or after `TrackingStartDate`, the key has
+ * not been used for a successful cryptographic operation since it was created.
+ *
+ * - If the `KeyLastUsage` response element is *empty* and
+ * `KeyCreationDate` is before `TrackingStartDate`, there is no record
+ * of the key being used for a successful cryptographic operation since the
+ * `TrackingStartDate`. However, the key may have been used before tracking
+ * began. To determine whether the key was used before the `TrackingStartDate`,
+ * examine your past CloudTrail logs.
+ *
+ * For multi-Region KMS keys, primary and replica keys track last usage independently. Each
+ * key in a multi-Region key set maintains its own usage information.
+ *
+ * The `ReEncrypt` operation uses two keys: a source key for decryption and a
+ * destination key for encryption. Usage information is recorded for both keys independently,
+ * each with the CloudTrail event ID from the respective key owner's account.
+ *
+ * Do not use `GetKeyLastUsage` as the sole indicator when scheduling a key for
+ * deletion. Instead, first disable the key and monitor CloudTrail for
+ * `DisabledException` entries, as there could be infrequent workflows that are
+ * dependent on the key. By looking for this exception, you can identify potential dependencies
+ * and workload failures before they occur.
+ *
+ * **Cross-account use**: No. You cannot perform this operation
+ * on a KMS key in a different Amazon Web Services account.
+ *
+ * **Required permissions**: kms:GetKeyLastUsage (key policy)
+ *
+ * **Related operations:**
+ *
+ * - DescribeKey
+ *
+ * - DisableKey
+ *
+ * - ScheduleKeyDeletion
+ *
+ * **Eventual consistency**: The KMS API follows an eventual consistency model.
+ * For more information, see KMS eventual consistency.
+ */
+export const getKeyLastUsage: API.OperationMethod<
+  GetKeyLastUsageRequest,
+  GetKeyLastUsageResponse,
+  GetKeyLastUsageError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: GetKeyLastUsageRequest,
+  output: GetKeyLastUsageResponse,
+  errors: [
+    DependencyTimeoutException,
+    InvalidArnException,
+    KMSInternalException,
+    NotFoundException,
+  ],
+  operationName: "GetKeyLastUsage",
 }));
 export type GetKeyPolicyError =
   | DependencyTimeoutException
@@ -5076,6 +5275,7 @@ export const getKeyPolicy: API.OperationMethod<
     KMSInvalidStateException,
     NotFoundException,
   ],
+  operationName: "GetKeyPolicy",
 }));
 export type GetKeyRotationStatusError =
   | DependencyTimeoutException
@@ -5156,6 +5356,7 @@ export const getKeyRotationStatus: API.OperationMethod<
     NotFoundException,
     UnsupportedOperationException,
   ],
+  operationName: "GetKeyRotationStatus",
 }));
 export type GetParametersForImportError =
   | DependencyTimeoutException
@@ -5248,6 +5449,7 @@ export const getParametersForImport: API.OperationMethod<
     NotFoundException,
     UnsupportedOperationException,
   ],
+  operationName: "GetParametersForImport",
 }));
 export type GetPublicKeyError =
   | DependencyTimeoutException
@@ -5331,6 +5533,7 @@ export const getPublicKey: API.OperationMethod<
     NotFoundException,
     UnsupportedOperationException,
   ],
+  operationName: "GetPublicKey",
 }));
 export type ImportKeyMaterialError =
   | DependencyTimeoutException
@@ -5480,6 +5683,7 @@ export const importKeyMaterial: API.OperationMethod<
     NotFoundException,
     UnsupportedOperationException,
   ],
+  operationName: "ImportKeyMaterial",
 }));
 export type ListAliasesError =
   | DependencyTimeoutException
@@ -5555,6 +5759,7 @@ export const listAliases: API.OperationMethod<
     KMSInternalException,
     NotFoundException,
   ],
+  operationName: "ListAliases",
   pagination: {
     inputToken: "Marker",
     outputToken: "NextMarker",
@@ -5574,8 +5779,8 @@ export type ListGrantsError =
 /**
  * Gets a list of all grants for the specified KMS key.
  *
- * You must specify the KMS key in all requests. You can filter the grant list by grant ID or
- * grantee principal.
+ * You must specify the KMS key in all requests. You can filter the grant list by grant ID,
+ * grantee principal, or grantee service principal.
  *
  * For detailed information about grants, including grant terminology, see Grants in KMS in the
  *
@@ -5583,11 +5788,14 @@ export type ListGrantsError =
  * . For examples of creating grants in several
  * programming languages, see Use CreateGrant with an Amazon Web Services SDK or CLI.
  *
- * The `GranteePrincipal` field in the `ListGrants` response usually contains the
- * user or role designated as the grantee principal in the grant. However, when the grantee
- * principal in the grant is an Amazon Web Services service, the `GranteePrincipal` field contains
- * the service
- * principal, which might represent several different grantee principals.
+ * When a grant is created with the `GranteePrincipal` field, the `ListGrants`
+ * response usually contains the user or role designated as the grantee principal in the grant. However, if the grantee principal
+ * is an Amazon Web Services service, the `GranteePrincipal` field contains an Amazon Web Services service principal, which
+ * might correspond to several different grantee principals, such as an IAM user, IAM role, or Amazon Web Services account.
+ *
+ * When a grant is created with the `GranteeServicePrincipal` field, the `ListGrants`
+ * response always includes a `GranteeServicePrincipal` that indicates the grantee is actually
+ * an Amazon Web Services service principal.
  *
  * **Cross-account use**: Yes. To perform this operation on a KMS key in a different Amazon Web Services account, specify the key
  * ARN in the value of the `KeyId` parameter.
@@ -5639,6 +5847,7 @@ export const listGrants: API.OperationMethod<
     KMSInvalidStateException,
     NotFoundException,
   ],
+  operationName: "ListGrants",
   pagination: {
     inputToken: "Marker",
     outputToken: "NextMarker",
@@ -5701,6 +5910,7 @@ export const listKeyPolicies: API.OperationMethod<
     KMSInvalidStateException,
     NotFoundException,
   ],
+  operationName: "ListKeyPolicies",
   pagination: {
     inputToken: "Marker",
     outputToken: "NextMarker",
@@ -5779,6 +5989,7 @@ export const listKeyRotations: API.OperationMethod<
     NotFoundException,
     UnsupportedOperationException,
   ],
+  operationName: "ListKeyRotations",
   pagination: {
     inputToken: "Marker",
     outputToken: "NextMarker",
@@ -5839,6 +6050,7 @@ export const listKeys: API.OperationMethod<
     InvalidMarkerException,
     KMSInternalException,
   ],
+  operationName: "ListKeys",
   pagination: {
     inputToken: "Marker",
     outputToken: "NextMarker",
@@ -5906,6 +6118,7 @@ export const listResourceTags: API.OperationMethod<
     KMSInternalException,
     NotFoundException,
   ],
+  operationName: "ListResourceTags",
   pagination: {
     inputToken: "Marker",
     outputToken: "NextMarker",
@@ -5922,7 +6135,7 @@ export type ListRetirableGrantsError =
   | CommonErrors;
 /**
  * Returns information about all grants in the Amazon Web Services account and Region that have the
- * specified retiring principal.
+ * specified retiring principal or retiring service principal.
  *
  * You can specify any principal in your Amazon Web Services account. The grants that are returned include
  * grants for KMS keys in your Amazon Web Services account and other Amazon Web Services accounts. You might use this
@@ -5944,11 +6157,15 @@ export type ListRetirableGrantsError =
  * **Required permissions**: kms:ListRetirableGrants (IAM policy) in your
  * Amazon Web Services account.
  *
- * KMS authorizes `ListRetirableGrants` requests by evaluating the caller
+ * When listing retirable grants by `RetiringPrincipal`, KMS authorizes
+ * `ListRetirableGrants` requests by evaluating the caller
  * account's kms:ListRetirableGrants permissions. The authorized resource in
  * `ListRetirableGrants` calls is the retiring principal specified in the request.
  * KMS does not evaluate the caller's permissions to verify their access to any KMS keys or
  * grants that might be returned by the `ListRetirableGrants` call.
+ *
+ * The `RetiringServicePrincipal` filter is only usable by callers in a
+ * service principal.
  *
  * **Related operations:**
  *
@@ -5993,6 +6210,7 @@ export const listRetirableGrants: API.OperationMethod<
     KMSInternalException,
     NotFoundException,
   ],
+  operationName: "ListRetirableGrants",
   pagination: {
     inputToken: "Marker",
     outputToken: "NextMarker",
@@ -6047,6 +6265,7 @@ export const putKeyPolicy: API.OperationMethod<
     NotFoundException,
     UnsupportedOperationException,
   ],
+  operationName: "PutKeyPolicy",
 }));
 export type ReEncryptError =
   | DependencyTimeoutException
@@ -6105,10 +6324,17 @@ export type ReEncryptError =
  * The KMS key that you use for this operation must be in a compatible key state. For
  * details, see Key states of KMS keys in the *Key Management Service Developer Guide*.
  *
+ * When using grants with `SourceArn` constraints for
+ * `ReEncrypt` operations, the grants on both the source KMS key (for
+ * `ReEncryptFrom`) and the destination KMS key (for `ReEncryptTo`)
+ * must specify the same `SourceArn` value.
+ *
  * **Cross-account use**: Yes. The source KMS key and
  * destination KMS key can be in different Amazon Web Services accounts. Either or both KMS keys can be in a
- * different account than the caller. To specify a KMS key in a different account, you must use
- * its key ARN or alias ARN.
+ * different account than the caller. To specify a KMS key in a different account, use the key ARN
+ * or alias ARN. A short key ID
+ * is also acceptable for the source key when decrypting symmetric ciphertexts, though
+ * using a full key ARN is recommended to be more explicit about the intended KMS key.
  *
  * **Required permissions**:
  *
@@ -6157,6 +6383,7 @@ export const reEncrypt: API.OperationMethod<
     KMSInvalidStateException,
     NotFoundException,
   ],
+  operationName: "ReEncrypt",
 }));
 export type ReplicateKeyError =
   | AlreadyExistsException
@@ -6263,6 +6490,7 @@ export const replicateKey: API.OperationMethod<
     TagException,
     UnsupportedOperationException,
   ],
+  operationName: "ReplicateKey",
 }));
 export type RetireGrantError =
   | DependencyTimeoutException
@@ -6329,6 +6557,7 @@ export const retireGrant: API.OperationMethod<
     KMSInvalidStateException,
     NotFoundException,
   ],
+  operationName: "RetireGrant",
 }));
 export type RevokeGrantError =
   | DependencyTimeoutException
@@ -6392,6 +6621,7 @@ export const revokeGrant: API.OperationMethod<
     KMSInvalidStateException,
     NotFoundException,
   ],
+  operationName: "RevokeGrant",
 }));
 export type RotateKeyOnDemandError =
   | ConflictException
@@ -6480,6 +6710,7 @@ export const rotateKeyOnDemand: API.OperationMethod<
     NotFoundException,
     UnsupportedOperationException,
   ],
+  operationName: "RotateKeyOnDemand",
 }));
 export type ScheduleKeyDeletionError =
   | DependencyTimeoutException
@@ -6559,6 +6790,7 @@ export const scheduleKeyDeletion: API.OperationMethod<
     KMSInvalidStateException,
     NotFoundException,
   ],
+  operationName: "ScheduleKeyDeletion",
 }));
 export type SignError =
   | DependencyTimeoutException
@@ -6643,6 +6875,7 @@ export const sign: API.OperationMethod<
     KMSInvalidStateException,
     NotFoundException,
   ],
+  operationName: "Sign",
 }));
 export type TagResourceError =
   | InvalidArnException
@@ -6708,6 +6941,7 @@ export const tagResource: API.OperationMethod<
     NotFoundException,
     TagException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | InvalidArnException
@@ -6765,6 +6999,7 @@ export const untagResource: API.OperationMethod<
     NotFoundException,
     TagException,
   ],
+  operationName: "UntagResource",
 }));
 export type UpdateAliasError =
   | DependencyTimeoutException
@@ -6839,6 +7074,7 @@ export const updateAlias: API.OperationMethod<
     LimitExceededException,
     NotFoundException,
   ],
+  operationName: "UpdateAlias",
 }));
 export type UpdateCustomKeyStoreError =
   | CloudHsmClusterInvalidConfigurationException
@@ -6894,8 +7130,10 @@ export type UpdateCustomKeyStoreError =
  * name (`NewCustomKeyStoreName`), to tell KMS about a change to the
  * `kmsuser` crypto user password (`KeyStorePassword`), or to associate
  * the custom key store with a different, but related, CloudHSM cluster
- * (`CloudHsmClusterId`). To update any property of an CloudHSM key store, the
+ * (`CloudHsmClusterId`). To update most properties of an CloudHSM key store, the
  * `ConnectionState` of the CloudHSM key store must be `DISCONNECTED`.
+ * However, you can update the `CustomKeyStoreName` of an AWS CloudHSM key store
+ * when it is in the `CONNECTED` or `DISCONNECTED` state.
  *
  * For an external key store, you can use this operation to change the custom key store
  * friendly name (`NewCustomKeyStoreName`), or to tell KMS about a change to the
@@ -6971,6 +7209,7 @@ export const updateCustomKeyStore: API.OperationMethod<
     XksProxyVpcEndpointServiceInvalidConfigurationException,
     XksProxyVpcEndpointServiceNotFoundException,
   ],
+  operationName: "UpdateCustomKeyStore",
 }));
 export type UpdateKeyDescriptionError =
   | DependencyTimeoutException
@@ -7013,6 +7252,7 @@ export const updateKeyDescription: API.OperationMethod<
     KMSInvalidStateException,
     NotFoundException,
   ],
+  operationName: "UpdateKeyDescription",
 }));
 export type UpdatePrimaryRegionError =
   | DisabledException
@@ -7101,6 +7341,7 @@ export const updatePrimaryRegion: API.OperationMethod<
     NotFoundException,
     UnsupportedOperationException,
   ],
+  operationName: "UpdatePrimaryRegion",
 }));
 export type VerifyError =
   | DependencyTimeoutException
@@ -7178,6 +7419,7 @@ export const verify: API.OperationMethod<
     KMSInvalidStateException,
     NotFoundException,
   ],
+  operationName: "Verify",
 }));
 export type VerifyMacError =
   | DisabledException
@@ -7237,4 +7479,5 @@ export const verifyMac: API.OperationMethod<
     KMSInvalidStateException,
     NotFoundException,
   ],
+  operationName: "VerifyMac",
 }));

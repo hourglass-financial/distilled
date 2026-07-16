@@ -4,6 +4,15 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface SimulateAchInInput {
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  deposit_account_id?: string;
+  account_number?: string;
+  routing_number?: string;
+  amount: { currency: "USD"; value: string };
+  addenda?: ReadonlyArray<string> | null;
+}
 export const SimulateAchInInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   ereborVersion: Schema.optional(Schema.String).pipe(
     T.HttpHeader("Erebor-Version"),
@@ -19,18 +28,22 @@ export const SimulateAchInInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     value: Schema.String,
   }),
   addenda: Schema.optional(Schema.NullOr(Schema.Array(Schema.String))),
-}).pipe(T.Http({ method: "POST", path: "/simulation/ach_in" }));
-export type SimulateAchInInput = typeof SimulateAchInInput.Type;
+}).pipe(
+  T.Http({ method: "POST", path: "/simulation/ach_in" }),
+) as unknown as Schema.Codec<SimulateAchInInput>;
 
 // Output Schema
+export interface SimulateAchInOutput {
+  deposit_account_id: string;
+  amount: { currency: "USD"; value: string };
+}
 export const SimulateAchInOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   deposit_account_id: Schema.String,
   amount: Schema.Struct({
     currency: Schema.Literals(["USD"]),
     value: Schema.String,
   }),
-});
-export type SimulateAchInOutput = typeof SimulateAchInOutput.Type;
+}) as unknown as Schema.Codec<SimulateAchInOutput>;
 
 // The operation
 /**

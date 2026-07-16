@@ -10,6 +10,27 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface SearchCasesInput {
+  fields?: Record<string, string>;
+  page?: { after?: string; before?: string; size?: number };
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  query?:
+    | { and: ReadonlyArray<Record<string, unknown>> }
+    | { or: ReadonlyArray<Record<string, unknown>> }
+    | { not: Record<string, unknown> }
+    | { attribute: string; operator: string; value: string | number | boolean };
+  sort?: { attribute: string; direction: string };
+}
 export const SearchCasesInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
     T.HttpQuery("fields"),
@@ -20,7 +41,7 @@ export const SearchCasesInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       before: Schema.optional(Schema.String),
       size: Schema.optional(Schema.Number),
     }),
-  ).pipe(T.HttpQuery("page")),
+  ),
   keyInflection: Schema.optional(
     Schema.Literals(["camel", "kebab", "snake"]),
   ).pipe(T.HttpHeader("Key-Inflection")),
@@ -39,17 +60,81 @@ export const SearchCasesInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "2020-05-18",
     ]),
   ).pipe(T.HttpHeader("Persona-Version")),
-  query: Schema.optional(Schema.Unknown),
+  query: Schema.optional(
+    Schema.Union([
+      Schema.Struct({
+        and: Schema.Array(Schema.Record(Schema.String, Schema.Unknown)),
+      }),
+      Schema.Struct({
+        or: Schema.Array(Schema.Record(Schema.String, Schema.Unknown)),
+      }),
+      Schema.Struct({
+        not: Schema.Record(Schema.String, Schema.Unknown),
+      }),
+      Schema.Struct({
+        attribute: Schema.String,
+        operator: Schema.String,
+        value: Schema.Union([Schema.String, Schema.Number, Schema.Boolean]),
+      }),
+    ]),
+  ),
   sort: Schema.optional(
     Schema.Struct({
       attribute: Schema.String,
       direction: Schema.String,
     }),
   ),
-}).pipe(T.Http({ method: "POST", path: "/cases/search" }));
-export type SearchCasesInput = typeof SearchCasesInput.Type;
+}).pipe(
+  T.Http({ method: "POST", path: "/cases/search" }),
+) as unknown as Schema.Codec<SearchCasesInput>;
 
 // Output Schema
+export interface SearchCasesOutput {
+  data: ReadonlyArray<{
+    type?: string;
+    id?: string;
+    attributes?: {
+      status?: string;
+      name?: string;
+      resolution?: string | null;
+      "created-at"?: string;
+      "updated-at"?: string | null;
+      "assigned-at"?: string | null;
+      "resolved-at"?: string | null;
+      "redacted-at"?: string | null;
+      "sla-expires-at"?: string | null;
+      "creator-id"?: string | null;
+      "creator-type"?: string | null;
+      "assignee-id"?: string | null;
+      "assigner-id"?: string | null;
+      "assigner-type"?: string | null;
+      "resolver-id"?: string | null;
+      "resolver-type"?: string | null;
+      "updater-id"?: string | null;
+      "updater-type"?: string | null;
+      tags?: ReadonlyArray<unknown>;
+      fields?: Record<string, unknown>;
+      attachments?: ReadonlyArray<{
+        filename?: string;
+        url?: string;
+        "byte-size"?: number;
+      }>;
+    };
+    relationships?: {
+      accounts?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      "case-comments"?: {
+        data?: ReadonlyArray<{ id?: string; type?: string }>;
+      };
+      "case-template"?: { data?: { id?: string; type?: string } };
+      "case-queue"?: { data?: { id?: string; type?: string } | null };
+      inquiries?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      reports?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      verifications?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      txns?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+    };
+  }>;
+  links: { prev: string | null; next: string | null };
+}
 export const SearchCasesOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Array(
     Schema.Struct({
@@ -192,8 +277,7 @@ export const SearchCasesOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     prev: Schema.NullOr(Schema.String),
     next: Schema.NullOr(Schema.String),
   }),
-});
-export type SearchCasesOutput = typeof SearchCasesOutput.Type;
+}) as unknown as Schema.Codec<SearchCasesOutput>;
 
 // The operation
 /**

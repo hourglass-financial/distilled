@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -1129,11 +1129,13 @@ export type ModificationResourceEnum =
   | "ROOT_VOLUME"
   | "USER_VOLUME"
   | "COMPUTE_TYPE"
+  | "PROTOCOL"
   | (string & {});
 export const ModificationResourceEnum = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export type ModificationStateEnum =
   | "UPDATE_INITIATED"
   | "UPDATE_IN_PROGRESS"
+  | "UPDATE_FAILED"
   | (string & {});
 export const ModificationStateEnum = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface ModificationState {
@@ -5368,6 +5370,7 @@ export const acceptAccountLinkInvitation: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "AcceptAccountLinkInvitation",
 }));
 export type AssociateConnectionAliasError =
   | AccessDeniedException
@@ -5402,6 +5405,7 @@ export const associateConnectionAlias: API.OperationMethod<
     ResourceAssociatedException,
     ResourceNotFoundException,
   ],
+  operationName: "AssociateConnectionAlias",
 }));
 export type AssociateIpGroupsError =
   | AccessDeniedException
@@ -5430,6 +5434,7 @@ export const associateIpGroups: API.OperationMethod<
     ResourceLimitExceededException,
     ResourceNotFoundException,
   ],
+  operationName: "AssociateIpGroups",
 }));
 export type AssociateWorkspaceApplicationError =
   | AccessDeniedException
@@ -5466,6 +5471,7 @@ export const associateWorkspaceApplication: API.OperationMethod<
     ResourceInUseException,
     ResourceNotFoundException,
   ],
+  operationName: "AssociateWorkspaceApplication",
 }));
 export type AuthorizeIpRulesError =
   | AccessDeniedException
@@ -5495,6 +5501,7 @@ export const authorizeIpRules: API.OperationMethod<
     ResourceLimitExceededException,
     ResourceNotFoundException,
   ],
+  operationName: "AuthorizeIpRules",
 }));
 export type CopyWorkspaceImageError =
   | AccessDeniedException
@@ -5535,6 +5542,7 @@ export const copyWorkspaceImage: API.OperationMethod<
     ResourceNotFoundException,
     ResourceUnavailableException,
   ],
+  operationName: "CopyWorkspaceImage",
 }));
 export type CreateAccountLinkInvitationError =
   | AccessDeniedException
@@ -5559,6 +5567,7 @@ export const createAccountLinkInvitation: API.OperationMethod<
     InternalServerException,
     ValidationException,
   ],
+  operationName: "CreateAccountLinkInvitation",
 }));
 export type CreateConnectClientAddInError =
   | AccessDeniedException
@@ -5568,10 +5577,10 @@ export type CreateConnectClientAddInError =
   | ResourceNotFoundException
   | CommonErrors;
 /**
- * Creates a client-add-in for Amazon Connect within a directory. You can create only
- * one Amazon Connect client add-in within a directory.
+ * Creates a client-add-in for Connect Customer within a directory. You can create only
+ * one Connect Customer client add-in within a directory.
  *
- * This client add-in allows WorkSpaces users to seamlessly connect to Amazon Connect.
+ * This client add-in allows WorkSpaces users to seamlessly connect to Connect Customer.
  */
 export const createConnectClientAddIn: API.OperationMethod<
   CreateConnectClientAddInRequest,
@@ -5588,6 +5597,7 @@ export const createConnectClientAddIn: API.OperationMethod<
     ResourceCreationFailedException,
     ResourceNotFoundException,
   ],
+  operationName: "CreateConnectClientAddIn",
 }));
 export type CreateConnectionAliasError =
   | AccessDeniedException
@@ -5618,6 +5628,7 @@ export const createConnectionAlias: API.OperationMethod<
     ResourceAlreadyExistsException,
     ResourceLimitExceededException,
   ],
+  operationName: "CreateConnectionAlias",
 }));
 export type CreateIpGroupError =
   | AccessDeniedException
@@ -5654,6 +5665,7 @@ export const createIpGroup: API.OperationMethod<
     ResourceCreationFailedException,
     ResourceLimitExceededException,
   ],
+  operationName: "CreateIpGroup",
 }));
 export type CreateStandbyWorkspacesError =
   | AccessDeniedException
@@ -5680,6 +5692,7 @@ export const createStandbyWorkspaces: API.OperationMethod<
     ResourceLimitExceededException,
     ResourceNotFoundException,
   ],
+  operationName: "CreateStandbyWorkspaces",
 }));
 export type CreateTagsError =
   | InvalidParameterValuesException
@@ -5702,6 +5715,7 @@ export const createTags: API.OperationMethod<
     ResourceLimitExceededException,
     ResourceNotFoundException,
   ],
+  operationName: "CreateTags",
 }));
 export type CreateUpdatedWorkspaceImageError =
   | AccessDeniedException
@@ -5747,6 +5761,7 @@ export const createUpdatedWorkspaceImage: API.OperationMethod<
     ResourceLimitExceededException,
     ResourceNotFoundException,
   ],
+  operationName: "CreateUpdatedWorkspaceImage",
 }));
 export type CreateWorkspaceBundleError =
   | AccessDeniedException
@@ -5777,6 +5792,7 @@ export const createWorkspaceBundle: API.OperationMethod<
     ResourceNotFoundException,
     ResourceUnavailableException,
   ],
+  operationName: "CreateWorkspaceBundle",
 }));
 export type CreateWorkspaceImageError =
   | AccessDeniedException
@@ -5807,6 +5823,7 @@ export const createWorkspaceImage: API.OperationMethod<
     ResourceLimitExceededException,
     ResourceNotFoundException,
   ],
+  operationName: "CreateWorkspaceImage",
 }));
 export type CreateWorkspacesError =
   | InvalidParameterValuesException
@@ -5842,6 +5859,7 @@ export const createWorkspaces: API.OperationMethod<
   input: CreateWorkspacesRequest,
   output: CreateWorkspacesResult,
   errors: [InvalidParameterValuesException, ResourceLimitExceededException],
+  operationName: "CreateWorkspaces",
 }));
 export type CreateWorkspacesPoolError =
   | AccessDeniedException
@@ -5870,6 +5888,7 @@ export const createWorkspacesPool: API.OperationMethod<
     ResourceLimitExceededException,
     ResourceNotFoundException,
   ],
+  operationName: "CreateWorkspacesPool",
 }));
 export type DeleteAccountLinkInvitationError =
   | AccessDeniedException
@@ -5896,6 +5915,7 @@ export const deleteAccountLinkInvitation: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteAccountLinkInvitation",
 }));
 export type DeleteClientBrandingError =
   | AccessDeniedException
@@ -5924,6 +5944,7 @@ export const deleteClientBranding: API.OperationMethod<
     InvalidParameterValuesException,
     ResourceNotFoundException,
   ],
+  operationName: "DeleteClientBranding",
 }));
 export type DeleteConnectClientAddInError =
   | AccessDeniedException
@@ -5931,7 +5952,7 @@ export type DeleteConnectClientAddInError =
   | ResourceNotFoundException
   | CommonErrors;
 /**
- * Deletes a client-add-in for Amazon Connect that is configured within a
+ * Deletes a client-add-in for Connect Customer that is configured within a
  * directory.
  */
 export const deleteConnectClientAddIn: API.OperationMethod<
@@ -5947,6 +5968,7 @@ export const deleteConnectClientAddIn: API.OperationMethod<
     InvalidParameterValuesException,
     ResourceNotFoundException,
   ],
+  operationName: "DeleteConnectClientAddIn",
 }));
 export type DeleteConnectionAliasError =
   | AccessDeniedException
@@ -5987,6 +6009,7 @@ export const deleteConnectionAlias: API.OperationMethod<
     ResourceAssociatedException,
     ResourceNotFoundException,
   ],
+  operationName: "DeleteConnectionAlias",
 }));
 export type DeleteIpGroupError =
   | AccessDeniedException
@@ -6013,6 +6036,7 @@ export const deleteIpGroup: API.OperationMethod<
     ResourceAssociatedException,
     ResourceNotFoundException,
   ],
+  operationName: "DeleteIpGroup",
 }));
 export type DeleteTagsError =
   | InvalidParameterValuesException
@@ -6030,6 +6054,7 @@ export const deleteTags: API.OperationMethod<
   input: DeleteTagsRequest,
   output: DeleteTagsResult,
   errors: [InvalidParameterValuesException, ResourceNotFoundException],
+  operationName: "DeleteTags",
 }));
 export type DeleteWorkspaceBundleError =
   | AccessDeniedException
@@ -6056,6 +6081,7 @@ export const deleteWorkspaceBundle: API.OperationMethod<
     ResourceAssociatedException,
     ResourceNotFoundException,
   ],
+  operationName: "DeleteWorkspaceBundle",
 }));
 export type DeleteWorkspaceImageError =
   | AccessDeniedException
@@ -6080,6 +6106,7 @@ export const deleteWorkspaceImage: API.OperationMethod<
     InvalidResourceStateException,
     ResourceAssociatedException,
   ],
+  operationName: "DeleteWorkspaceImage",
 }));
 export type DeployWorkspaceApplicationsError =
   | AccessDeniedException
@@ -6108,6 +6135,7 @@ export const deployWorkspaceApplications: API.OperationMethod<
     ResourceInUseException,
     ResourceNotFoundException,
   ],
+  operationName: "DeployWorkspaceApplications",
 }));
 export type DeregisterWorkspaceDirectoryError =
   | AccessDeniedException
@@ -6147,6 +6175,7 @@ export const deregisterWorkspaceDirectory: API.OperationMethod<
     OperationNotSupportedException,
     ResourceNotFoundException,
   ],
+  operationName: "DeregisterWorkspaceDirectory",
 }));
 export type DescribeAccountError = AccessDeniedException | CommonErrors;
 /**
@@ -6162,6 +6191,7 @@ export const describeAccount: API.OperationMethod<
   input: DescribeAccountRequest,
   output: DescribeAccountResult,
   errors: [AccessDeniedException],
+  operationName: "DescribeAccount",
 }));
 export type DescribeAccountModificationsError =
   | AccessDeniedException
@@ -6179,6 +6209,7 @@ export const describeAccountModifications: API.OperationMethod<
   input: DescribeAccountModificationsRequest,
   output: DescribeAccountModificationsResult,
   errors: [AccessDeniedException],
+  operationName: "DescribeAccountModifications",
 }));
 export type DescribeApplicationAssociationsError =
   | AccessDeniedException
@@ -6218,6 +6249,7 @@ export const describeApplicationAssociations: API.OperationMethod<
     OperationNotSupportedException,
     ResourceNotFoundException,
   ],
+  operationName: "DescribeApplicationAssociations",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -6262,6 +6294,7 @@ export const describeApplications: API.OperationMethod<
     OperationNotSupportedException,
     ResourceNotFoundException,
   ],
+  operationName: "DescribeApplications",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -6291,6 +6324,7 @@ export const describeBundleAssociations: API.OperationMethod<
     OperationNotSupportedException,
     ResourceNotFoundException,
   ],
+  operationName: "DescribeBundleAssociations",
 }));
 export type DescribeClientBrandingError =
   | AccessDeniedException
@@ -6319,6 +6353,7 @@ export const describeClientBranding: API.OperationMethod<
     InvalidParameterValuesException,
     ResourceNotFoundException,
   ],
+  operationName: "DescribeClientBranding",
 }));
 export type DescribeClientPropertiesError =
   | AccessDeniedException
@@ -6341,6 +6376,7 @@ export const describeClientProperties: API.OperationMethod<
     InvalidParameterValuesException,
     ResourceNotFoundException,
   ],
+  operationName: "DescribeClientProperties",
 }));
 export type DescribeConnectClientAddInsError =
   | AccessDeniedException
@@ -6348,7 +6384,7 @@ export type DescribeConnectClientAddInsError =
   | ResourceNotFoundException
   | CommonErrors;
 /**
- * Retrieves a list of Amazon Connect client add-ins that have been created.
+ * Retrieves a list of Connect Customer client add-ins that have been created.
  */
 export const describeConnectClientAddIns: API.OperationMethod<
   DescribeConnectClientAddInsRequest,
@@ -6363,6 +6399,7 @@ export const describeConnectClientAddIns: API.OperationMethod<
     InvalidParameterValuesException,
     ResourceNotFoundException,
   ],
+  operationName: "DescribeConnectClientAddIns",
 }));
 export type DescribeConnectionAliasesError =
   | AccessDeniedException
@@ -6387,6 +6424,7 @@ export const describeConnectionAliases: API.OperationMethod<
     InvalidParameterValuesException,
     OperationNotSupportedException,
   ],
+  operationName: "DescribeConnectionAliases",
 }));
 export type DescribeConnectionAliasPermissionsError =
   | AccessDeniedException
@@ -6414,6 +6452,7 @@ export const describeConnectionAliasPermissions: API.OperationMethod<
     OperationNotSupportedException,
     ResourceNotFoundException,
   ],
+  operationName: "DescribeConnectionAliasPermissions",
 }));
 export type DescribeCustomWorkspaceImageImportError =
   | AccessDeniedException
@@ -6431,6 +6470,7 @@ export const describeCustomWorkspaceImageImport: API.OperationMethod<
   input: DescribeCustomWorkspaceImageImportRequest,
   output: DescribeCustomWorkspaceImageImportResult,
   errors: [AccessDeniedException, ResourceNotFoundException],
+  operationName: "DescribeCustomWorkspaceImageImport",
 }));
 export type DescribeImageAssociationsError =
   | AccessDeniedException
@@ -6455,6 +6495,7 @@ export const describeImageAssociations: API.OperationMethod<
     OperationNotSupportedException,
     ResourceNotFoundException,
   ],
+  operationName: "DescribeImageAssociations",
 }));
 export type DescribeIpGroupsError =
   | AccessDeniedException
@@ -6472,6 +6513,7 @@ export const describeIpGroups: API.OperationMethod<
   input: DescribeIpGroupsRequest,
   output: DescribeIpGroupsResult,
   errors: [AccessDeniedException, InvalidParameterValuesException],
+  operationName: "DescribeIpGroups",
 }));
 export type DescribeTagsError = ResourceNotFoundException | CommonErrors;
 /**
@@ -6486,6 +6528,7 @@ export const describeTags: API.OperationMethod<
   input: DescribeTagsRequest,
   output: DescribeTagsResult,
   errors: [ResourceNotFoundException],
+  operationName: "DescribeTags",
 }));
 export type DescribeWorkspaceAssociationsError =
   | AccessDeniedException
@@ -6510,6 +6553,7 @@ export const describeWorkspaceAssociations: API.OperationMethod<
     OperationNotSupportedException,
     ResourceNotFoundException,
   ],
+  operationName: "DescribeWorkspaceAssociations",
 }));
 export type DescribeWorkspaceBundlesError =
   | InvalidParameterValuesException
@@ -6543,6 +6587,7 @@ export const describeWorkspaceBundles: API.OperationMethod<
   input: DescribeWorkspaceBundlesRequest,
   output: DescribeWorkspaceBundlesResult,
   errors: [InvalidParameterValuesException],
+  operationName: "DescribeWorkspaceBundles",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -6579,6 +6624,7 @@ export const describeWorkspaceDirectories: API.OperationMethod<
   input: DescribeWorkspaceDirectoriesRequest,
   output: DescribeWorkspaceDirectoriesResult,
   errors: [InvalidParameterValuesException],
+  operationName: "DescribeWorkspaceDirectories",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -6606,6 +6652,7 @@ export const describeWorkspaceImagePermissions: API.OperationMethod<
     InvalidParameterValuesException,
     ResourceNotFoundException,
   ],
+  operationName: "DescribeWorkspaceImagePermissions",
 }));
 export type DescribeWorkspaceImagesError = AccessDeniedException | CommonErrors;
 /**
@@ -6621,6 +6668,7 @@ export const describeWorkspaceImages: API.OperationMethod<
   input: DescribeWorkspaceImagesRequest,
   output: DescribeWorkspaceImagesResult,
   errors: [AccessDeniedException],
+  operationName: "DescribeWorkspaceImages",
 }));
 export type DescribeWorkspacesError =
   | InvalidParameterValuesException
@@ -6656,6 +6704,7 @@ export const describeWorkspaces: API.OperationMethod<
   input: DescribeWorkspacesRequest,
   output: DescribeWorkspacesResult,
   errors: [InvalidParameterValuesException, ResourceUnavailableException],
+  operationName: "DescribeWorkspaces",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -6678,6 +6727,7 @@ export const describeWorkspacesConnectionStatus: API.OperationMethod<
   input: DescribeWorkspacesConnectionStatusRequest,
   output: DescribeWorkspacesConnectionStatusResult,
   errors: [InvalidParameterValuesException],
+  operationName: "DescribeWorkspacesConnectionStatus",
 }));
 export type DescribeWorkspaceSnapshotsError =
   | AccessDeniedException
@@ -6700,6 +6750,7 @@ export const describeWorkspaceSnapshots: API.OperationMethod<
     InvalidParameterValuesException,
     ResourceNotFoundException,
   ],
+  operationName: "DescribeWorkspaceSnapshots",
 }));
 export type DescribeWorkspacesPoolsError =
   | AccessDeniedException
@@ -6722,6 +6773,7 @@ export const describeWorkspacesPools: API.OperationMethod<
     InvalidParameterValuesException,
     ResourceNotFoundException,
   ],
+  operationName: "DescribeWorkspacesPools",
 }));
 export type DescribeWorkspacesPoolSessionsError =
   | AccessDeniedException
@@ -6744,6 +6796,7 @@ export const describeWorkspacesPoolSessions: API.OperationMethod<
     InvalidParameterValuesException,
     ResourceNotFoundException,
   ],
+  operationName: "DescribeWorkspacesPoolSessions",
 }));
 export type DisassociateConnectionAliasError =
   | AccessDeniedException
@@ -6777,6 +6830,7 @@ export const disassociateConnectionAlias: API.OperationMethod<
     OperationNotSupportedException,
     ResourceNotFoundException,
   ],
+  operationName: "DisassociateConnectionAlias",
 }));
 export type DisassociateIpGroupsError =
   | AccessDeniedException
@@ -6803,6 +6857,7 @@ export const disassociateIpGroups: API.OperationMethod<
     OperationNotSupportedException,
     ResourceNotFoundException,
   ],
+  operationName: "DisassociateIpGroups",
 }));
 export type DisassociateWorkspaceApplicationError =
   | AccessDeniedException
@@ -6829,6 +6884,7 @@ export const disassociateWorkspaceApplication: API.OperationMethod<
     ResourceInUseException,
     ResourceNotFoundException,
   ],
+  operationName: "DisassociateWorkspaceApplication",
 }));
 export type GetAccountLinkError =
   | AccessDeniedException
@@ -6853,6 +6909,7 @@ export const getAccountLink: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetAccountLink",
 }));
 export type ImportClientBrandingError =
   | AccessDeniedException
@@ -6897,6 +6954,7 @@ export const importClientBranding: API.OperationMethod<
     ResourceLimitExceededException,
     ResourceNotFoundException,
   ],
+  operationName: "ImportClientBranding",
 }));
 export type ImportCustomWorkspaceImageError =
   | AccessDeniedException
@@ -6929,6 +6987,7 @@ export const importCustomWorkspaceImage: API.OperationMethod<
     ResourceLimitExceededException,
     ResourceNotFoundException,
   ],
+  operationName: "ImportCustomWorkspaceImage",
 }));
 export type ImportWorkspaceImageError =
   | AccessDeniedException
@@ -6961,6 +7020,7 @@ export const importWorkspaceImage: API.OperationMethod<
     ResourceLimitExceededException,
     ResourceNotFoundException,
   ],
+  operationName: "ImportWorkspaceImage",
 }));
 export type ListAccountLinksError =
   | AccessDeniedException
@@ -6994,6 +7054,7 @@ export const listAccountLinks: API.OperationMethod<
   input: ListAccountLinksRequest,
   output: ListAccountLinksResult,
   errors: [AccessDeniedException, InternalServerException, ValidationException],
+  operationName: "ListAccountLinks",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -7026,6 +7087,7 @@ export const listAvailableManagementCidrRanges: API.OperationMethod<
   input: ListAvailableManagementCidrRangesRequest,
   output: ListAvailableManagementCidrRangesResult,
   errors: [AccessDeniedException, InvalidParameterValuesException],
+  operationName: "ListAvailableManagementCidrRanges",
 }));
 export type MigrateWorkspaceError =
   | AccessDeniedException
@@ -7066,6 +7128,7 @@ export const migrateWorkspace: API.OperationMethod<
     ResourceNotFoundException,
     ResourceUnavailableException,
   ],
+  operationName: "MigrateWorkspace",
 }));
 export type ModifyAccountError =
   | AccessDeniedException
@@ -7093,6 +7156,7 @@ export const modifyAccount: API.OperationMethod<
     ResourceNotFoundException,
     ResourceUnavailableException,
   ],
+  operationName: "ModifyAccount",
 }));
 export type ModifyCertificateBasedAuthPropertiesError =
   | AccessDeniedException
@@ -7118,6 +7182,7 @@ export const modifyCertificateBasedAuthProperties: API.OperationMethod<
     OperationNotSupportedException,
     ResourceNotFoundException,
   ],
+  operationName: "ModifyCertificateBasedAuthProperties",
 }));
 export type ModifyClientPropertiesError =
   | AccessDeniedException
@@ -7142,6 +7207,7 @@ export const modifyClientProperties: API.OperationMethod<
     OperationNotSupportedException,
     ResourceNotFoundException,
   ],
+  operationName: "ModifyClientProperties",
 }));
 export type ModifyEndpointEncryptionModeError =
   | AccessDeniedException
@@ -7165,6 +7231,7 @@ export const modifyEndpointEncryptionMode: API.OperationMethod<
     OperationNotSupportedException,
     ResourceNotFoundException,
   ],
+  operationName: "ModifyEndpointEncryptionMode",
 }));
 export type ModifySamlPropertiesError =
   | AccessDeniedException
@@ -7191,6 +7258,7 @@ export const modifySamlProperties: API.OperationMethod<
     OperationNotSupportedException,
     ResourceNotFoundException,
   ],
+  operationName: "ModifySamlProperties",
 }));
 export type ModifySelfservicePermissionsError =
   | AccessDeniedException
@@ -7216,6 +7284,7 @@ export const modifySelfservicePermissions: API.OperationMethod<
     OperationNotSupportedException,
     ResourceNotFoundException,
   ],
+  operationName: "ModifySelfservicePermissions",
 }));
 export type ModifyStreamingPropertiesError =
   | AccessDeniedException
@@ -7240,6 +7309,7 @@ export const modifyStreamingProperties: API.OperationMethod<
     OperationNotSupportedException,
     ResourceNotFoundException,
   ],
+  operationName: "ModifyStreamingProperties",
 }));
 export type ModifyWorkspaceAccessPropertiesError =
   | AccessDeniedException
@@ -7268,6 +7338,7 @@ export const modifyWorkspaceAccessProperties: API.OperationMethod<
     OperationNotSupportedException,
     ResourceNotFoundException,
   ],
+  operationName: "ModifyWorkspaceAccessProperties",
 }));
 export type ModifyWorkspaceCreationPropertiesError =
   | AccessDeniedException
@@ -7292,6 +7363,7 @@ export const modifyWorkspaceCreationProperties: API.OperationMethod<
     OperationNotSupportedException,
     ResourceNotFoundException,
   ],
+  operationName: "ModifyWorkspaceCreationProperties",
 }));
 export type ModifyWorkspacePropertiesError =
   | AccessDeniedException
@@ -7328,6 +7400,7 @@ export const modifyWorkspaceProperties: API.OperationMethod<
     ResourceUnavailableException,
     UnsupportedWorkspaceConfigurationException,
   ],
+  operationName: "ModifyWorkspaceProperties",
 }));
 export type ModifyWorkspaceStateError =
   | InvalidParameterValuesException
@@ -7358,6 +7431,7 @@ export const modifyWorkspaceState: API.OperationMethod<
     OperationNotSupportedException,
     ResourceNotFoundException,
   ],
+  operationName: "ModifyWorkspaceState",
 }));
 export type RebootWorkspacesError =
   | OperationNotSupportedException
@@ -7380,6 +7454,7 @@ export const rebootWorkspaces: API.OperationMethod<
   input: RebootWorkspacesRequest,
   output: RebootWorkspacesResult,
   errors: [OperationNotSupportedException],
+  operationName: "RebootWorkspaces",
 }));
 export type RebuildWorkspacesError =
   | OperationNotSupportedException
@@ -7407,6 +7482,7 @@ export const rebuildWorkspaces: API.OperationMethod<
   input: RebuildWorkspacesRequest,
   output: RebuildWorkspacesResult,
   errors: [OperationNotSupportedException],
+  operationName: "RebuildWorkspaces",
 }));
 export type RegisterWorkspaceDirectoryError =
   | AccessDeniedException
@@ -7445,6 +7521,7 @@ export const registerWorkspaceDirectory: API.OperationMethod<
     UnsupportedNetworkConfigurationException,
     WorkspacesDefaultRoleNotFoundException,
   ],
+  operationName: "RegisterWorkspaceDirectory",
 }));
 export type RejectAccountLinkInvitationError =
   | AccessDeniedException
@@ -7471,6 +7548,7 @@ export const rejectAccountLinkInvitation: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "RejectAccountLinkInvitation",
 }));
 export type RestoreWorkspaceError =
   | AccessDeniedException
@@ -7505,6 +7583,7 @@ export const restoreWorkspace: API.OperationMethod<
     OperationNotSupportedException,
     ResourceNotFoundException,
   ],
+  operationName: "RestoreWorkspace",
 }));
 export type RevokeIpRulesError =
   | AccessDeniedException
@@ -7529,6 +7608,7 @@ export const revokeIpRules: API.OperationMethod<
     InvalidResourceStateException,
     ResourceNotFoundException,
   ],
+  operationName: "RevokeIpRules",
 }));
 export type StartWorkspacesError = CommonErrors;
 /**
@@ -7546,6 +7626,7 @@ export const startWorkspaces: API.OperationMethod<
   input: StartWorkspacesRequest,
   output: StartWorkspacesResult,
   errors: [],
+  operationName: "StartWorkspaces",
 }));
 export type StartWorkspacesPoolError =
   | AccessDeniedException
@@ -7579,6 +7660,7 @@ export const startWorkspacesPool: API.OperationMethod<
     ResourceLimitExceededException,
     ResourceNotFoundException,
   ],
+  operationName: "StartWorkspacesPool",
 }));
 export type StopWorkspacesError = CommonErrors;
 /**
@@ -7597,6 +7679,7 @@ export const stopWorkspaces: API.OperationMethod<
   input: StopWorkspacesRequest,
   output: StopWorkspacesResult,
   errors: [],
+  operationName: "StopWorkspaces",
 }));
 export type StopWorkspacesPoolError =
   | AccessDeniedException
@@ -7626,6 +7709,7 @@ export const stopWorkspacesPool: API.OperationMethod<
     OperationInProgressException,
     ResourceNotFoundException,
   ],
+  operationName: "StopWorkspacesPool",
 }));
 export type TerminateWorkspacesError = CommonErrors;
 /**
@@ -7665,6 +7749,7 @@ export const terminateWorkspaces: API.OperationMethod<
   input: TerminateWorkspacesRequest,
   output: TerminateWorkspacesResult,
   errors: [],
+  operationName: "TerminateWorkspaces",
 }));
 export type TerminateWorkspacesPoolError =
   | AccessDeniedException
@@ -7691,6 +7776,7 @@ export const terminateWorkspacesPool: API.OperationMethod<
     OperationInProgressException,
     ResourceNotFoundException,
   ],
+  operationName: "TerminateWorkspacesPool",
 }));
 export type TerminateWorkspacesPoolSessionError =
   | AccessDeniedException
@@ -7717,6 +7803,7 @@ export const terminateWorkspacesPoolSession: API.OperationMethod<
     OperationNotSupportedException,
     ResourceNotFoundException,
   ],
+  operationName: "TerminateWorkspacesPoolSession",
 }));
 export type UpdateConnectClientAddInError =
   | AccessDeniedException
@@ -7724,8 +7811,8 @@ export type UpdateConnectClientAddInError =
   | ResourceNotFoundException
   | CommonErrors;
 /**
- * Updates a Amazon Connect client add-in. Use this action to update the name and
- * endpoint URL of a Amazon Connect client add-in.
+ * Updates a Connect Customer client add-in. Use this action to update the name and
+ * endpoint URL of a Connect Customer client add-in.
  */
 export const updateConnectClientAddIn: API.OperationMethod<
   UpdateConnectClientAddInRequest,
@@ -7740,6 +7827,7 @@ export const updateConnectClientAddIn: API.OperationMethod<
     InvalidParameterValuesException,
     ResourceNotFoundException,
   ],
+  operationName: "UpdateConnectClientAddIn",
 }));
 export type UpdateConnectionAliasPermissionError =
   | AccessDeniedException
@@ -7785,6 +7873,7 @@ export const updateConnectionAliasPermission: API.OperationMethod<
     ResourceLimitExceededException,
     ResourceNotFoundException,
   ],
+  operationName: "UpdateConnectionAliasPermission",
 }));
 export type UpdateRulesOfIpGroupError =
   | AccessDeniedException
@@ -7812,6 +7901,7 @@ export const updateRulesOfIpGroup: API.OperationMethod<
     ResourceLimitExceededException,
     ResourceNotFoundException,
   ],
+  operationName: "UpdateRulesOfIpGroup",
 }));
 export type UpdateWorkspaceBundleError =
   | AccessDeniedException
@@ -7844,6 +7934,7 @@ export const updateWorkspaceBundle: API.OperationMethod<
     ResourceNotFoundException,
     ResourceUnavailableException,
   ],
+  operationName: "UpdateWorkspaceBundle",
 }));
 export type UpdateWorkspaceImagePermissionError =
   | AccessDeniedException
@@ -7890,6 +7981,7 @@ export const updateWorkspaceImagePermission: API.OperationMethod<
     ResourceNotFoundException,
     ResourceUnavailableException,
   ],
+  operationName: "UpdateWorkspaceImagePermission",
 }));
 export type UpdateWorkspacesPoolError =
   | AccessDeniedException
@@ -7920,4 +8012,5 @@ export const updateWorkspacesPool: API.OperationMethod<
     ResourceLimitExceededException,
     ResourceNotFoundException,
   ],
+  operationName: "UpdateWorkspacesPool",
 }));

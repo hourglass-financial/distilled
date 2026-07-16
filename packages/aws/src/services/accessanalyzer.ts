@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -138,10 +138,11 @@ export type S3ExpressDirectoryAccessPointArn = string;
 export type DynamodbStreamPolicy = string;
 export type DynamodbTablePolicy = string;
 export type AccessPreviewId = string;
+export type Type = string;
+export type ResourceType = string;
 export type AccessPreviewStatus = string;
 export type AccessPreviewStatusReasonCode = string;
 export type ResourceArn = string;
-export type ResourceType = string;
 export type FindingStatus = string;
 export type FindingId = string;
 export type FindingSourceType = string;
@@ -170,7 +171,7 @@ export type ValidatePolicyResourceType = string;
 export type ValidatePolicyFindingType = string;
 export type IssueCode = string;
 export type LearnMoreLink = string;
-export type Type = string;
+export type AnalyzerName = string;
 export type AnalyzerStatus = string;
 export type ReasonCode = string;
 
@@ -998,6 +999,167 @@ export const CreateAccessPreviewResponse =
   ).annotate({
     identifier: "CreateAccessPreviewResponse",
   }) as any as S.Schema<CreateAccessPreviewResponse>;
+export type ValueList = string[];
+export const ValueList = /*@__PURE__*/ /*#__PURE__*/ S.Array(S.String);
+export interface Criterion {
+  eq?: string[];
+  neq?: string[];
+  contains?: string[];
+  exists?: boolean;
+}
+export const Criterion = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    eq: S.optional(ValueList),
+    neq: S.optional(ValueList),
+    contains: S.optional(ValueList),
+    exists: S.optional(S.Boolean),
+  }),
+).annotate({ identifier: "Criterion" }) as any as S.Schema<Criterion>;
+export type FilterCriteriaMap = { [key: string]: Criterion | undefined };
+export const FilterCriteriaMap = /*@__PURE__*/ /*#__PURE__*/ S.Record(
+  S.String,
+  Criterion.pipe(S.optional),
+);
+export interface InlineArchiveRule {
+  ruleName: string;
+  filter: { [key: string]: Criterion | undefined };
+}
+export const InlineArchiveRule = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ ruleName: S.String, filter: FilterCriteriaMap }),
+).annotate({
+  identifier: "InlineArchiveRule",
+}) as any as S.Schema<InlineArchiveRule>;
+export type InlineArchiveRulesList = InlineArchiveRule[];
+export const InlineArchiveRulesList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(InlineArchiveRule);
+export type AccountIdsList = string[];
+export const AccountIdsList = /*@__PURE__*/ /*#__PURE__*/ S.Array(S.String);
+export type TagsMap = { [key: string]: string | undefined };
+export const TagsMap = /*@__PURE__*/ /*#__PURE__*/ S.Record(
+  S.String,
+  S.String.pipe(S.optional),
+);
+export type TagsList = { [key: string]: string | undefined }[];
+export const TagsList = /*@__PURE__*/ /*#__PURE__*/ S.Array(TagsMap);
+export interface AnalysisRuleCriteria {
+  accountIds?: string[];
+  resourceTags?: { [key: string]: string | undefined }[];
+}
+export const AnalysisRuleCriteria = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    accountIds: S.optional(AccountIdsList),
+    resourceTags: S.optional(TagsList),
+  }),
+).annotate({
+  identifier: "AnalysisRuleCriteria",
+}) as any as S.Schema<AnalysisRuleCriteria>;
+export type AnalysisRuleCriteriaList = AnalysisRuleCriteria[];
+export const AnalysisRuleCriteriaList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(AnalysisRuleCriteria);
+export interface AnalysisRule {
+  exclusions?: AnalysisRuleCriteria[];
+}
+export const AnalysisRule = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ exclusions: S.optional(AnalysisRuleCriteriaList) }),
+).annotate({ identifier: "AnalysisRule" }) as any as S.Schema<AnalysisRule>;
+export interface UnusedAccessConfiguration {
+  unusedAccessAge?: number;
+  analysisRule?: AnalysisRule;
+}
+export const UnusedAccessConfiguration = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      unusedAccessAge: S.optional(S.Number),
+      analysisRule: S.optional(AnalysisRule),
+    }),
+).annotate({
+  identifier: "UnusedAccessConfiguration",
+}) as any as S.Schema<UnusedAccessConfiguration>;
+export type ResourceTypeList = string[];
+export const ResourceTypeList = /*@__PURE__*/ /*#__PURE__*/ S.Array(S.String);
+export type ResourceArnsList = string[];
+export const ResourceArnsList = /*@__PURE__*/ /*#__PURE__*/ S.Array(S.String);
+export interface InternalAccessAnalysisRuleCriteria {
+  accountIds?: string[];
+  resourceTypes?: string[];
+  resourceArns?: string[];
+}
+export const InternalAccessAnalysisRuleCriteria =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      accountIds: S.optional(AccountIdsList),
+      resourceTypes: S.optional(ResourceTypeList),
+      resourceArns: S.optional(ResourceArnsList),
+    }),
+  ).annotate({
+    identifier: "InternalAccessAnalysisRuleCriteria",
+  }) as any as S.Schema<InternalAccessAnalysisRuleCriteria>;
+export type InternalAccessAnalysisRuleCriteriaList =
+  InternalAccessAnalysisRuleCriteria[];
+export const InternalAccessAnalysisRuleCriteriaList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(InternalAccessAnalysisRuleCriteria);
+export interface InternalAccessAnalysisRule {
+  inclusions?: InternalAccessAnalysisRuleCriteria[];
+}
+export const InternalAccessAnalysisRule = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      inclusions: S.optional(InternalAccessAnalysisRuleCriteriaList),
+    }),
+).annotate({
+  identifier: "InternalAccessAnalysisRule",
+}) as any as S.Schema<InternalAccessAnalysisRule>;
+export interface InternalAccessConfiguration {
+  analysisRule?: InternalAccessAnalysisRule;
+}
+export const InternalAccessConfiguration =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ analysisRule: S.optional(InternalAccessAnalysisRule) }),
+  ).annotate({
+    identifier: "InternalAccessConfiguration",
+  }) as any as S.Schema<InternalAccessConfiguration>;
+export type AnalyzerConfiguration =
+  | { unusedAccess: UnusedAccessConfiguration; internalAccess?: never }
+  | { unusedAccess?: never; internalAccess: InternalAccessConfiguration };
+export const AnalyzerConfiguration = /*@__PURE__*/ /*#__PURE__*/ S.Union([
+  S.Struct({ unusedAccess: UnusedAccessConfiguration }),
+  S.Struct({ internalAccess: InternalAccessConfiguration }),
+]);
+export interface CreateServiceLinkedAnalyzerRequest {
+  type: string;
+  archiveRules?: InlineArchiveRule[];
+  clientToken?: string;
+  configuration?: AnalyzerConfiguration;
+}
+export const CreateServiceLinkedAnalyzerRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      type: S.String,
+      archiveRules: S.optional(InlineArchiveRulesList),
+      clientToken: S.optional(S.String).pipe(T.IdempotencyToken()),
+      configuration: S.optional(AnalyzerConfiguration),
+    }).pipe(
+      T.all(
+        T.Http({ method: "PUT", uri: "/service-linked-analyzer" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "CreateServiceLinkedAnalyzerRequest",
+  }) as any as S.Schema<CreateServiceLinkedAnalyzerRequest>;
+export interface CreateServiceLinkedAnalyzerResponse {
+  arn?: string;
+}
+export const CreateServiceLinkedAnalyzerResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ arn: S.optional(S.String) }),
+  ).annotate({
+    identifier: "CreateServiceLinkedAnalyzerResponse",
+  }) as any as S.Schema<CreateServiceLinkedAnalyzerResponse>;
 export interface GenerateFindingRecommendationRequest {
   analyzerArn: string;
   id: string;
@@ -1909,27 +2071,6 @@ export const GetGeneratedPolicyResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 ).annotate({
   identifier: "GetGeneratedPolicyResponse",
 }) as any as S.Schema<GetGeneratedPolicyResponse>;
-export type ValueList = string[];
-export const ValueList = /*@__PURE__*/ /*#__PURE__*/ S.Array(S.String);
-export interface Criterion {
-  eq?: string[];
-  neq?: string[];
-  contains?: string[];
-  exists?: boolean;
-}
-export const Criterion = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-  S.Struct({
-    eq: S.optional(ValueList),
-    neq: S.optional(ValueList),
-    contains: S.optional(ValueList),
-    exists: S.optional(S.Boolean),
-  }),
-).annotate({ identifier: "Criterion" }) as any as S.Schema<Criterion>;
-export type FilterCriteriaMap = { [key: string]: Criterion | undefined };
-export const FilterCriteriaMap = /*@__PURE__*/ /*#__PURE__*/ S.Record(
-  S.String,
-  Criterion.pipe(S.optional),
-);
 export interface ListAccessPreviewFindingsRequest {
   accessPreviewId: string;
   analyzerArn: string;
@@ -2359,11 +2500,6 @@ export const ListTagsForResourceRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 ).annotate({
   identifier: "ListTagsForResourceRequest",
 }) as any as S.Schema<ListTagsForResourceRequest>;
-export type TagsMap = { [key: string]: string | undefined };
-export const TagsMap = /*@__PURE__*/ /*#__PURE__*/ S.Record(
-  S.String,
-  S.String.pipe(S.optional),
-);
 export interface ListTagsForResourceResponse {
   tags?: { [key: string]: string | undefined };
 }
@@ -2673,106 +2809,6 @@ export const ValidatePolicyResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 ).annotate({
   identifier: "ValidatePolicyResponse",
 }) as any as S.Schema<ValidatePolicyResponse>;
-export interface InlineArchiveRule {
-  ruleName: string;
-  filter: { [key: string]: Criterion | undefined };
-}
-export const InlineArchiveRule = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-  S.Struct({ ruleName: S.String, filter: FilterCriteriaMap }),
-).annotate({
-  identifier: "InlineArchiveRule",
-}) as any as S.Schema<InlineArchiveRule>;
-export type InlineArchiveRulesList = InlineArchiveRule[];
-export const InlineArchiveRulesList =
-  /*@__PURE__*/ /*#__PURE__*/ S.Array(InlineArchiveRule);
-export type AccountIdsList = string[];
-export const AccountIdsList = /*@__PURE__*/ /*#__PURE__*/ S.Array(S.String);
-export type TagsList = { [key: string]: string | undefined }[];
-export const TagsList = /*@__PURE__*/ /*#__PURE__*/ S.Array(TagsMap);
-export interface AnalysisRuleCriteria {
-  accountIds?: string[];
-  resourceTags?: { [key: string]: string | undefined }[];
-}
-export const AnalysisRuleCriteria = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-  S.Struct({
-    accountIds: S.optional(AccountIdsList),
-    resourceTags: S.optional(TagsList),
-  }),
-).annotate({
-  identifier: "AnalysisRuleCriteria",
-}) as any as S.Schema<AnalysisRuleCriteria>;
-export type AnalysisRuleCriteriaList = AnalysisRuleCriteria[];
-export const AnalysisRuleCriteriaList =
-  /*@__PURE__*/ /*#__PURE__*/ S.Array(AnalysisRuleCriteria);
-export interface AnalysisRule {
-  exclusions?: AnalysisRuleCriteria[];
-}
-export const AnalysisRule = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-  S.Struct({ exclusions: S.optional(AnalysisRuleCriteriaList) }),
-).annotate({ identifier: "AnalysisRule" }) as any as S.Schema<AnalysisRule>;
-export interface UnusedAccessConfiguration {
-  unusedAccessAge?: number;
-  analysisRule?: AnalysisRule;
-}
-export const UnusedAccessConfiguration = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
-  () =>
-    S.Struct({
-      unusedAccessAge: S.optional(S.Number),
-      analysisRule: S.optional(AnalysisRule),
-    }),
-).annotate({
-  identifier: "UnusedAccessConfiguration",
-}) as any as S.Schema<UnusedAccessConfiguration>;
-export type ResourceTypeList = string[];
-export const ResourceTypeList = /*@__PURE__*/ /*#__PURE__*/ S.Array(S.String);
-export type ResourceArnsList = string[];
-export const ResourceArnsList = /*@__PURE__*/ /*#__PURE__*/ S.Array(S.String);
-export interface InternalAccessAnalysisRuleCriteria {
-  accountIds?: string[];
-  resourceTypes?: string[];
-  resourceArns?: string[];
-}
-export const InternalAccessAnalysisRuleCriteria =
-  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-    S.Struct({
-      accountIds: S.optional(AccountIdsList),
-      resourceTypes: S.optional(ResourceTypeList),
-      resourceArns: S.optional(ResourceArnsList),
-    }),
-  ).annotate({
-    identifier: "InternalAccessAnalysisRuleCriteria",
-  }) as any as S.Schema<InternalAccessAnalysisRuleCriteria>;
-export type InternalAccessAnalysisRuleCriteriaList =
-  InternalAccessAnalysisRuleCriteria[];
-export const InternalAccessAnalysisRuleCriteriaList =
-  /*@__PURE__*/ /*#__PURE__*/ S.Array(InternalAccessAnalysisRuleCriteria);
-export interface InternalAccessAnalysisRule {
-  inclusions?: InternalAccessAnalysisRuleCriteria[];
-}
-export const InternalAccessAnalysisRule = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
-  () =>
-    S.Struct({
-      inclusions: S.optional(InternalAccessAnalysisRuleCriteriaList),
-    }),
-).annotate({
-  identifier: "InternalAccessAnalysisRule",
-}) as any as S.Schema<InternalAccessAnalysisRule>;
-export interface InternalAccessConfiguration {
-  analysisRule?: InternalAccessAnalysisRule;
-}
-export const InternalAccessConfiguration =
-  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-    S.Struct({ analysisRule: S.optional(InternalAccessAnalysisRule) }),
-  ).annotate({
-    identifier: "InternalAccessConfiguration",
-  }) as any as S.Schema<InternalAccessConfiguration>;
-export type AnalyzerConfiguration =
-  | { unusedAccess: UnusedAccessConfiguration; internalAccess?: never }
-  | { unusedAccess?: never; internalAccess: InternalAccessConfiguration };
-export const AnalyzerConfiguration = /*@__PURE__*/ /*#__PURE__*/ S.Union([
-  S.Struct({ unusedAccess: UnusedAccessConfiguration }),
-  S.Struct({ internalAccess: InternalAccessConfiguration }),
-]);
 export interface CreateAnalyzerRequest {
   analyzerName: string;
   type: string;
@@ -2844,6 +2880,7 @@ export interface AnalyzerSummary {
   status: string;
   statusReason?: StatusReason;
   configuration?: AnalyzerConfiguration;
+  managedBy?: string;
 }
 export const AnalyzerSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -2859,6 +2896,7 @@ export const AnalyzerSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     status: S.String,
     statusReason: S.optional(StatusReason),
     configuration: S.optional(AnalyzerConfiguration),
+    managedBy: S.optional(S.String),
   }),
 ).annotate({
   identifier: "AnalyzerSummary",
@@ -2965,6 +3003,39 @@ export const ListAnalyzersResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "ListAnalyzersResponse",
 }) as any as S.Schema<ListAnalyzersResponse>;
+export interface DeleteServiceLinkedAnalyzerRequest {
+  analyzerName: string;
+  clientToken?: string;
+}
+export const DeleteServiceLinkedAnalyzerRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      analyzerName: S.String.pipe(T.HttpLabel("analyzerName")),
+      clientToken: S.optional(S.String).pipe(
+        T.HttpQuery("clientToken"),
+        T.IdempotencyToken(),
+      ),
+    }).pipe(
+      T.all(
+        T.Http({
+          method: "DELETE",
+          uri: "/service-linked-analyzer/{analyzerName}",
+        }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "DeleteServiceLinkedAnalyzerRequest",
+  }) as any as S.Schema<DeleteServiceLinkedAnalyzerRequest>;
+export interface DeleteServiceLinkedAnalyzerResponse {}
+export const DeleteServiceLinkedAnalyzerResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() => S.Struct({})).annotate({
+    identifier: "DeleteServiceLinkedAnalyzerResponse",
+  }) as any as S.Schema<DeleteServiceLinkedAnalyzerResponse>;
 export interface CreateArchiveRuleRequest {
   analyzerName: string;
   ruleName: string;
@@ -3234,6 +3305,7 @@ export const applyArchiveRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ApplyArchiveRule",
 }));
 export type CancelPolicyGenerationError =
   | AccessDeniedException
@@ -3258,6 +3330,7 @@ export const cancelPolicyGeneration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CancelPolicyGeneration",
 }));
 export type CheckAccessNotGrantedError =
   | AccessDeniedException
@@ -3286,6 +3359,7 @@ export const checkAccessNotGranted: API.OperationMethod<
     UnprocessableEntityException,
     ValidationException,
   ],
+  operationName: "CheckAccessNotGranted",
 }));
 export type CheckNoNewAccessError =
   | AccessDeniedException
@@ -3316,6 +3390,7 @@ export const checkNoNewAccess: API.OperationMethod<
     UnprocessableEntityException,
     ValidationException,
   ],
+  operationName: "CheckNoNewAccess",
 }));
 export type CheckNoPublicAccessError =
   | AccessDeniedException
@@ -3344,6 +3419,7 @@ export const checkNoPublicAccess: API.OperationMethod<
     UnprocessableEntityException,
     ValidationException,
   ],
+  operationName: "CheckNoPublicAccess",
 }));
 export type CreateAccessPreviewError =
   | AccessDeniedException
@@ -3374,6 +3450,38 @@ export const createAccessPreview: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateAccessPreview",
+}));
+export type CreateServiceLinkedAnalyzerError =
+  | AccessDeniedException
+  | ConflictException
+  | InternalServerException
+  | ServiceQuotaExceededException
+  | ThrottlingException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Creates a service-linked analyzer managed by an Amazon Web Services service. This operation can only be invoked by authorized Amazon Web Services services. Direct customer invocation returns `AccessDeniedException`.
+ *
+ * Service-linked analyzers enable Amazon Web Services services to create and manage analyzers on behalf of customers. The lifecycle of these analyzers is managed by the calling service.
+ */
+export const createServiceLinkedAnalyzer: API.OperationMethod<
+  CreateServiceLinkedAnalyzerRequest,
+  CreateServiceLinkedAnalyzerResponse,
+  CreateServiceLinkedAnalyzerError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: CreateServiceLinkedAnalyzerRequest,
+  output: CreateServiceLinkedAnalyzerResponse,
+  errors: [
+    AccessDeniedException,
+    ConflictException,
+    InternalServerException,
+    ServiceQuotaExceededException,
+    ThrottlingException,
+    ValidationException,
+  ],
+  operationName: "CreateServiceLinkedAnalyzer",
 }));
 export type GenerateFindingRecommendationError =
   | AccessDeniedException
@@ -3398,6 +3506,7 @@ export const generateFindingRecommendation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GenerateFindingRecommendation",
 }));
 export type GetAccessPreviewError =
   | AccessDeniedException
@@ -3424,6 +3533,7 @@ export const getAccessPreview: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetAccessPreview",
 }));
 export type GetAnalyzedResourceError =
   | AccessDeniedException
@@ -3452,6 +3562,7 @@ export const getAnalyzedResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetAnalyzedResource",
 }));
 export type GetFindingError =
   | AccessDeniedException
@@ -3480,6 +3591,7 @@ export const getFinding: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetFinding",
 }));
 export type GetFindingRecommendationError =
   | AccessDeniedException
@@ -3521,6 +3633,7 @@ export const getFindingRecommendation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetFindingRecommendation",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3553,6 +3666,7 @@ export const getFindingsStatistics: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetFindingsStatistics",
 }));
 export type GetFindingV2Error =
   | AccessDeniedException
@@ -3594,6 +3708,7 @@ export const getFindingV2: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetFindingV2",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3624,6 +3739,7 @@ export const getGeneratedPolicy: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetGeneratedPolicy",
 }));
 export type ListAccessPreviewFindingsError =
   | AccessDeniedException
@@ -3667,6 +3783,7 @@ export const listAccessPreviewFindings: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListAccessPreviewFindings",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3714,6 +3831,7 @@ export const listAccessPreviews: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListAccessPreviews",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3761,6 +3879,7 @@ export const listAnalyzedResources: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListAnalyzedResources",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3812,6 +3931,7 @@ export const listFindings: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListFindings",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3861,6 +3981,7 @@ export const listFindingsV2: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListFindingsV2",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3906,6 +4027,7 @@ export const listPolicyGenerations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListPolicyGenerations",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3938,6 +4060,7 @@ export const listTagsForResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type StartPolicyGenerationError =
   | AccessDeniedException
@@ -3966,6 +4089,7 @@ export const startPolicyGeneration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartPolicyGeneration",
 }));
 export type StartResourceScanError =
   | AccessDeniedException
@@ -3994,6 +4118,7 @@ export const startResourceScan: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartResourceScan",
 }));
 export type TagResourceError =
   | AccessDeniedException
@@ -4020,6 +4145,7 @@ export const tagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | AccessDeniedException
@@ -4046,6 +4172,7 @@ export const untagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UntagResource",
 }));
 export type UpdateFindingsError =
   | AccessDeniedException
@@ -4072,6 +4199,7 @@ export const updateFindings: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateFindings",
 }));
 export type ValidatePolicyError =
   | AccessDeniedException
@@ -4111,6 +4239,7 @@ export const validatePolicy: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ValidatePolicy",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -4145,6 +4274,7 @@ export const createAnalyzer: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateAnalyzer",
 }));
 export type GetAnalyzerError =
   | AccessDeniedException
@@ -4171,6 +4301,7 @@ export const getAnalyzer: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetAnalyzer",
 }));
 export type UpdateAnalyzerError =
   | AccessDeniedException
@@ -4201,6 +4332,7 @@ export const updateAnalyzer: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateAnalyzer",
 }));
 export type DeleteAnalyzerError =
   | AccessDeniedException
@@ -4227,6 +4359,7 @@ export const deleteAnalyzer: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteAnalyzer",
 }));
 export type ListAnalyzersError =
   | AccessDeniedException
@@ -4266,12 +4399,44 @@ export const listAnalyzers: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListAnalyzers",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
     items: "analyzers",
     pageSize: "maxResults",
   } as const,
+}));
+export type DeleteServiceLinkedAnalyzerError =
+  | AccessDeniedException
+  | ConflictException
+  | InternalServerException
+  | ResourceNotFoundException
+  | ThrottlingException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Deletes a service-linked analyzer. This operation can be invoked by both authorized Amazon Web Services services and customers.
+ *
+ * When invoked by a customer, IAM Access Analyzer performs a callback to the managing service to verify whether the analyzer is still in use and can be deleted. If the service indicates the analyzer is still in use, the deletion is rejected with `ConflictException`.
+ */
+export const deleteServiceLinkedAnalyzer: API.OperationMethod<
+  DeleteServiceLinkedAnalyzerRequest,
+  DeleteServiceLinkedAnalyzerResponse,
+  DeleteServiceLinkedAnalyzerError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: DeleteServiceLinkedAnalyzerRequest,
+  output: DeleteServiceLinkedAnalyzerResponse,
+  errors: [
+    AccessDeniedException,
+    ConflictException,
+    InternalServerException,
+    ResourceNotFoundException,
+    ThrottlingException,
+    ValidationException,
+  ],
+  operationName: "DeleteServiceLinkedAnalyzer",
 }));
 export type CreateArchiveRuleError =
   | AccessDeniedException
@@ -4304,6 +4469,7 @@ export const createArchiveRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateArchiveRule",
 }));
 export type GetArchiveRuleError =
   | AccessDeniedException
@@ -4332,6 +4498,7 @@ export const getArchiveRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetArchiveRule",
 }));
 export type UpdateArchiveRuleError =
   | AccessDeniedException
@@ -4358,6 +4525,7 @@ export const updateArchiveRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateArchiveRule",
 }));
 export type DeleteArchiveRuleError =
   | AccessDeniedException
@@ -4384,6 +4552,7 @@ export const deleteArchiveRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteArchiveRule",
 }));
 export type ListArchiveRulesError =
   | AccessDeniedException
@@ -4423,6 +4592,7 @@ export const listArchiveRules: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListArchiveRules",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",

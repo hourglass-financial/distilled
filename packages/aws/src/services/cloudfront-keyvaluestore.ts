@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -467,6 +467,7 @@ export const deleteKey: API.OperationMethod<
     ServiceQuotaExceededException,
     ValidationException,
   ],
+  operationName: "DeleteKey",
 }));
 export type DescribeKeyValueStoreError =
   | AccessDeniedException
@@ -491,6 +492,7 @@ export const describeKeyValueStore: API.OperationMethod<
     InternalServerException,
     ResourceNotFoundException,
   ],
+  operationName: "DescribeKeyValueStore",
 }));
 export type GetKeyError =
   | AccessDeniedException
@@ -515,6 +517,7 @@ export const getKey: API.OperationMethod<
     InternalServerException,
     ResourceNotFoundException,
   ],
+  operationName: "GetKey",
 }));
 export type ListKeysError =
   | AccessDeniedException
@@ -556,6 +559,7 @@ export const listKeys: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "ListKeys",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -590,6 +594,7 @@ export const putKey: API.OperationMethod<
     ServiceQuotaExceededException,
     ValidationException,
   ],
+  operationName: "PutKey",
 }));
 export type UpdateKeysError =
   | AccessDeniedException
@@ -618,4 +623,5 @@ export const updateKeys: API.OperationMethod<
     ServiceQuotaExceededException,
     ValidationException,
   ],
+  operationName: "UpdateKeys",
 }));

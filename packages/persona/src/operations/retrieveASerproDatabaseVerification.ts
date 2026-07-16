@@ -4,6 +4,22 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface RetrieveASerproDatabaseVerificationInput {
+  verificationId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const RetrieveASerproDatabaseVerificationInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     verificationId: Schema.String.pipe(T.PathParam()),
@@ -34,11 +50,56 @@ export const RetrieveASerproDatabaseVerificationInput =
       method: "GET",
       path: "/verification/database-serpros/{verificationId}",
     }),
-  );
-export type RetrieveASerproDatabaseVerificationInput =
-  typeof RetrieveASerproDatabaseVerificationInput.Type;
+  ) as unknown as Schema.Codec<RetrieveASerproDatabaseVerificationInput>;
 
 // Output Schema
+export interface RetrieveASerproDatabaseVerificationOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      status?: string;
+      "created-at"?: string;
+      "created-at-ts"?: number;
+      "submitted-at"?: string | null;
+      "submitted-at-ts"?: number | null;
+      "completed-at"?: string | null;
+      "completed-at-ts"?: number | null;
+      "redacted-at"?: string | null;
+      "country-code"?: string | null;
+      tags?: ReadonlyArray<string>;
+      checks?: ReadonlyArray<{
+        name?: string;
+        status?: string;
+        reasons?: ReadonlyArray<string | null>;
+        requirement?: string;
+        metadata?: Record<string, unknown>;
+      }>;
+      birthdate?: string | null;
+      cpf?: string;
+      "name-first"?: string;
+      "name-full"?: string;
+      "name-last"?: string;
+    };
+    relationships?: {
+      inquiry?: { data?: { id?: string; type?: string } | null };
+      template?: { data?: { type?: string; id?: string } | null };
+      "inquiry-template-version"?: {
+        data?: { type?: string; id?: string } | null;
+      };
+      "inquiry-template"?: { data?: { type?: string; id?: string } | null };
+      transaction?: { data?: { type?: string; id?: string } | null };
+      "verification-template"?: {
+        data?: { type?: string; id?: string } | null;
+      };
+      "verification-template-version"?: {
+        data?: { type?: string; id?: string } | null;
+      };
+      accounts?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      selfie?: { data?: { id?: string; type?: string } | null };
+    };
+  };
+}
 export const RetrieveASerproDatabaseVerificationOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -191,9 +252,7 @@ export const RetrieveASerproDatabaseVerificationOutput =
         }),
       ),
     }),
-  });
-export type RetrieveASerproDatabaseVerificationOutput =
-  typeof RetrieveASerproDatabaseVerificationOutput.Type;
+  }) as unknown as Schema.Codec<RetrieveASerproDatabaseVerificationOutput>;
 
 // The operation
 /**

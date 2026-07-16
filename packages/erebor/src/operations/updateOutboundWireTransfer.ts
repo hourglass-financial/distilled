@@ -4,6 +4,13 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface UpdateOutboundWireTransferInput {
+  id: string;
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const UpdateOutboundWireTransferInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
@@ -17,11 +24,40 @@ export const UpdateOutboundWireTransferInput =
     custom_fields: Schema.optional(
       Schema.Record(Schema.String, Schema.Unknown),
     ),
-  }).pipe(T.Http({ method: "PATCH", path: "/wire_out/{id}" }));
-export type UpdateOutboundWireTransferInput =
-  typeof UpdateOutboundWireTransferInput.Type;
+  }).pipe(
+    T.Http({ method: "PATCH", path: "/wire_out/{id}" }),
+  ) as unknown as Schema.Codec<UpdateOutboundWireTransferInput>;
 
 // Output Schema
+export interface UpdateOutboundWireTransferOutput {
+  id: string;
+  type: "WIRE_OUT";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id?: string | null;
+  status: "CREATED" | "PENDING" | "SETTLED" | "FAILED" | "RETURNED";
+  deposit_account_id: string;
+  counterparty_us_bank_account_id: string;
+  bank_name?: string | null;
+  creditor_routing_number?: string;
+  creditor_account_number?: string;
+  creditor_name?: string;
+  amount: {
+    currency: "USD";
+    exponent: number;
+    value: string;
+    display_value: string;
+  };
+  end_to_end_id: string;
+  imad: string;
+  instruction_id: string;
+  uetr: string;
+  memo?: string | null;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const UpdateOutboundWireTransferOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -55,11 +91,11 @@ export const UpdateOutboundWireTransferOutput =
     instruction_id: Schema.String,
     uetr: Schema.String,
     memo: Schema.optional(Schema.NullOr(Schema.String)),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type UpdateOutboundWireTransferOutput =
-  typeof UpdateOutboundWireTransferOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<UpdateOutboundWireTransferOutput>;
 
 // The operation
 /**

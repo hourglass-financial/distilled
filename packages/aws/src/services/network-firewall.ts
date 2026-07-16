@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -908,6 +908,7 @@ export interface FirewallPolicyResponse {
   Tags?: Tag[];
   ConsumedStatelessRuleCapacity?: number;
   ConsumedStatefulRuleCapacity?: number;
+  ConsumedStatefulDomainCapacity?: number;
   NumberOfAssociations?: number;
   EncryptionConfiguration?: EncryptionConfiguration;
   LastModifiedTime?: Date;
@@ -923,6 +924,7 @@ export const FirewallPolicyResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       Tags: S.optional(TagList),
       ConsumedStatelessRuleCapacity: S.optional(S.Number),
       ConsumedStatefulRuleCapacity: S.optional(S.Number),
+      ConsumedStatefulDomainCapacity: S.optional(S.Number),
       NumberOfAssociations: S.optional(S.Number),
       EncryptionConfiguration: S.optional(EncryptionConfiguration),
       LastModifiedTime: S.optional(
@@ -1562,7 +1564,11 @@ export const RuleGroup = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     StatefulRuleOptions: S.optional(StatefulRuleOptions),
   }),
 ).annotate({ identifier: "RuleGroup" }) as any as S.Schema<RuleGroup>;
-export type RuleGroupType = "STATELESS" | "STATEFUL" | (string & {});
+export type RuleGroupType =
+  | "STATELESS"
+  | "STATEFUL"
+  | "STATEFUL_DOMAIN"
+  | (string & {});
 export const RuleGroupType = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface SourceMetadata {
   SourceArn?: string;
@@ -4513,6 +4519,7 @@ export const acceptNetworkFirewallTransitGatewayAttachment: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "AcceptNetworkFirewallTransitGatewayAttachment",
 }));
 export type AssociateAvailabilityZonesError =
   | InsufficientCapacityException
@@ -4545,6 +4552,7 @@ export const associateAvailabilityZones: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "AssociateAvailabilityZones",
 }));
 export type AssociateFirewallPolicyError =
   | InternalServerError
@@ -4578,6 +4586,7 @@ export const associateFirewallPolicy: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "AssociateFirewallPolicy",
 }));
 export type AssociateSubnetsError =
   | InsufficientCapacityException
@@ -4614,6 +4623,7 @@ export const associateSubnets: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "AssociateSubnets",
 }));
 export type AttachRuleGroupsToProxyConfigurationError =
   | InternalServerError
@@ -4640,6 +4650,7 @@ export const attachRuleGroupsToProxyConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "AttachRuleGroupsToProxyConfiguration",
 }));
 export type CreateFirewallError =
   | InsufficientCapacityException
@@ -4681,6 +4692,7 @@ export const createFirewall: API.OperationMethod<
     LimitExceededException,
     ThrottlingException,
   ],
+  operationName: "CreateFirewall",
 }));
 export type CreateFirewallPolicyError =
   | InsufficientCapacityException
@@ -4711,6 +4723,7 @@ export const createFirewallPolicy: API.OperationMethod<
     LimitExceededException,
     ThrottlingException,
   ],
+  operationName: "CreateFirewallPolicy",
 }));
 export type CreateProxyError =
   | InternalServerError
@@ -4745,6 +4758,7 @@ export const createProxy: API.OperationMethod<
     ThrottlingException,
     UnsupportedOperationException,
   ],
+  operationName: "CreateProxy",
 }));
 export type CreateProxyConfigurationError =
   | InternalServerError
@@ -4777,6 +4791,7 @@ export const createProxyConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "CreateProxyConfiguration",
 }));
 export type CreateProxyRuleGroupError =
   | InternalServerError
@@ -4809,6 +4824,7 @@ export const createProxyRuleGroup: API.OperationMethod<
     LimitExceededException,
     ThrottlingException,
   ],
+  operationName: "CreateProxyRuleGroup",
 }));
 export type CreateProxyRulesError =
   | InternalServerError
@@ -4831,6 +4847,7 @@ export const createProxyRules: API.OperationMethod<
   input: CreateProxyRulesRequest,
   output: CreateProxyRulesResponse,
   errors: [InternalServerError, InvalidRequestException, ThrottlingException],
+  operationName: "CreateProxyRules",
 }));
 export type CreateRuleGroupError =
   | InsufficientCapacityException
@@ -4861,6 +4878,7 @@ export const createRuleGroup: API.OperationMethod<
     LimitExceededException,
     ThrottlingException,
   ],
+  operationName: "CreateRuleGroup",
 }));
 export type CreateTLSInspectionConfigurationError =
   | InsufficientCapacityException
@@ -4896,6 +4914,7 @@ export const createTLSInspectionConfiguration: API.OperationMethod<
     LimitExceededException,
     ThrottlingException,
   ],
+  operationName: "CreateTLSInspectionConfiguration",
 }));
 export type CreateVpcEndpointAssociationError =
   | InsufficientCapacityException
@@ -4926,6 +4945,7 @@ export const createVpcEndpointAssociation: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "CreateVpcEndpointAssociation",
 }));
 export type DeleteFirewallError =
   | InternalServerError
@@ -4966,6 +4986,7 @@ export const deleteFirewall: API.OperationMethod<
     ThrottlingException,
     UnsupportedOperationException,
   ],
+  operationName: "DeleteFirewall",
 }));
 export type DeleteFirewallPolicyError =
   | InternalServerError
@@ -4994,6 +5015,7 @@ export const deleteFirewallPolicy: API.OperationMethod<
     ThrottlingException,
     UnsupportedOperationException,
   ],
+  operationName: "DeleteFirewallPolicy",
 }));
 export type DeleteNetworkFirewallTransitGatewayAttachmentError =
   | InternalServerError
@@ -5022,6 +5044,7 @@ export const deleteNetworkFirewallTransitGatewayAttachment: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DeleteNetworkFirewallTransitGatewayAttachment",
 }));
 export type DeleteProxyError =
   | InternalServerError
@@ -5050,6 +5073,7 @@ export const deleteProxy: API.OperationMethod<
     ThrottlingException,
     UnsupportedOperationException,
   ],
+  operationName: "DeleteProxy",
 }));
 export type DeleteProxyConfigurationError =
   | InternalServerError
@@ -5074,6 +5098,7 @@ export const deleteProxyConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DeleteProxyConfiguration",
 }));
 export type DeleteProxyRuleGroupError =
   | InternalServerError
@@ -5098,6 +5123,7 @@ export const deleteProxyRuleGroup: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DeleteProxyRuleGroup",
 }));
 export type DeleteProxyRulesError =
   | InternalServerError
@@ -5122,6 +5148,7 @@ export const deleteProxyRules: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DeleteProxyRules",
 }));
 export type DeleteResourcePolicyError =
   | InternalServerError
@@ -5148,6 +5175,7 @@ export const deleteResourcePolicy: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DeleteResourcePolicy",
 }));
 export type DeleteRuleGroupError =
   | InternalServerError
@@ -5176,6 +5204,7 @@ export const deleteRuleGroup: API.OperationMethod<
     ThrottlingException,
     UnsupportedOperationException,
   ],
+  operationName: "DeleteRuleGroup",
 }));
 export type DeleteTLSInspectionConfigurationError =
   | InternalServerError
@@ -5202,6 +5231,7 @@ export const deleteTLSInspectionConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DeleteTLSInspectionConfiguration",
 }));
 export type DeleteVpcEndpointAssociationError =
   | InternalServerError
@@ -5235,6 +5265,7 @@ export const deleteVpcEndpointAssociation: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DeleteVpcEndpointAssociation",
 }));
 export type DescribeFirewallError =
   | InternalServerError
@@ -5259,6 +5290,7 @@ export const describeFirewall: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeFirewall",
 }));
 export type DescribeFirewallMetadataError =
   | InternalServerError
@@ -5284,6 +5316,7 @@ export const describeFirewallMetadata: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeFirewallMetadata",
 }));
 export type DescribeFirewallPolicyError =
   | InternalServerError
@@ -5308,6 +5341,7 @@ export const describeFirewallPolicy: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeFirewallPolicy",
 }));
 export type DescribeFlowOperationError =
   | InternalServerError
@@ -5332,6 +5366,7 @@ export const describeFlowOperation: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeFlowOperation",
 }));
 export type DescribeLoggingConfigurationError =
   | InternalServerError
@@ -5356,6 +5391,7 @@ export const describeLoggingConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeLoggingConfiguration",
 }));
 export type DescribeProxyError =
   | InternalServerError
@@ -5380,6 +5416,7 @@ export const describeProxy: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeProxy",
 }));
 export type DescribeProxyConfigurationError =
   | InternalServerError
@@ -5404,6 +5441,7 @@ export const describeProxyConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeProxyConfiguration",
 }));
 export type DescribeProxyRuleError =
   | InternalServerError
@@ -5428,6 +5466,7 @@ export const describeProxyRule: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeProxyRule",
 }));
 export type DescribeProxyRuleGroupError =
   | InternalServerError
@@ -5452,6 +5491,7 @@ export const describeProxyRuleGroup: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeProxyRuleGroup",
 }));
 export type DescribeResourcePolicyError =
   | InternalServerError
@@ -5476,6 +5516,7 @@ export const describeResourcePolicy: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeResourcePolicy",
 }));
 export type DescribeRuleGroupError =
   | InternalServerError
@@ -5500,6 +5541,7 @@ export const describeRuleGroup: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeRuleGroup",
 }));
 export type DescribeRuleGroupMetadataError =
   | InternalServerError
@@ -5526,6 +5568,7 @@ export const describeRuleGroupMetadata: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeRuleGroupMetadata",
 }));
 export type DescribeRuleGroupSummaryError =
   | InternalServerError
@@ -5554,6 +5597,7 @@ export const describeRuleGroupSummary: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeRuleGroupSummary",
 }));
 export type DescribeTLSInspectionConfigurationError =
   | InternalServerError
@@ -5578,6 +5622,7 @@ export const describeTLSInspectionConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeTLSInspectionConfiguration",
 }));
 export type DescribeVpcEndpointAssociationError =
   | InternalServerError
@@ -5602,6 +5647,7 @@ export const describeVpcEndpointAssociation: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeVpcEndpointAssociation",
 }));
 export type DetachRuleGroupsFromProxyConfigurationError =
   | InternalServerError
@@ -5628,6 +5674,7 @@ export const detachRuleGroupsFromProxyConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DetachRuleGroupsFromProxyConfiguration",
 }));
 export type DisassociateAvailabilityZonesError =
   | InternalServerError
@@ -5660,6 +5707,7 @@ export const disassociateAvailabilityZones: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DisassociateAvailabilityZones",
 }));
 export type DisassociateSubnetsError =
   | InternalServerError
@@ -5690,6 +5738,7 @@ export const disassociateSubnets: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DisassociateSubnets",
 }));
 export type GetAnalysisReportResultsError =
   | InternalServerError
@@ -5731,6 +5780,7 @@ export const getAnalysisReportResults: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "GetAnalysisReportResults",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5776,6 +5826,7 @@ export const listAnalysisReports: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "ListAnalysisReports",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5817,6 +5868,7 @@ export const listFirewallPolicies: API.OperationMethod<
   input: ListFirewallPoliciesRequest,
   output: ListFirewallPoliciesResponse,
   errors: [InternalServerError, InvalidRequestException, ThrottlingException],
+  operationName: "ListFirewallPolicies",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5860,6 +5912,7 @@ export const listFirewalls: API.OperationMethod<
   input: ListFirewallsRequest,
   output: ListFirewallsResponse,
   errors: [InternalServerError, InvalidRequestException, ThrottlingException],
+  operationName: "ListFirewalls",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5910,6 +5963,7 @@ export const listFlowOperationResults: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "ListFlowOperationResults",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -5961,6 +6015,7 @@ export const listFlowOperations: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "ListFlowOperations",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -6002,6 +6057,7 @@ export const listProxies: API.OperationMethod<
   input: ListProxiesRequest,
   output: ListProxiesResponse,
   errors: [InternalServerError, InvalidRequestException, ThrottlingException],
+  operationName: "ListProxies",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -6049,6 +6105,7 @@ export const listProxyConfigurations: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "ListProxyConfigurations",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -6096,6 +6153,7 @@ export const listProxyRuleGroups: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "ListProxyRuleGroups",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -6137,6 +6195,7 @@ export const listRuleGroups: API.OperationMethod<
   input: ListRuleGroupsRequest,
   output: ListRuleGroupsResponse,
   errors: [InternalServerError, InvalidRequestException, ThrottlingException],
+  operationName: "ListRuleGroups",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -6189,6 +6248,7 @@ export const listTagsForResource: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "ListTagsForResource",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -6228,6 +6288,7 @@ export const listTLSInspectionConfigurations: API.OperationMethod<
   input: ListTLSInspectionConfigurationsRequest,
   output: ListTLSInspectionConfigurationsResponse,
   errors: [InternalServerError, InvalidRequestException, ThrottlingException],
+  operationName: "ListTLSInspectionConfigurations",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -6271,6 +6332,7 @@ export const listVpcEndpointAssociations: API.OperationMethod<
   input: ListVpcEndpointAssociationsRequest,
   output: ListVpcEndpointAssociationsResponse,
   errors: [InternalServerError, InvalidRequestException, ThrottlingException],
+  operationName: "ListVpcEndpointAssociations",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -6316,6 +6378,7 @@ export const putResourcePolicy: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "PutResourcePolicy",
 }));
 export type RejectNetworkFirewallTransitGatewayAttachmentError =
   | InternalServerError
@@ -6346,6 +6409,7 @@ export const rejectNetworkFirewallTransitGatewayAttachment: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "RejectNetworkFirewallTransitGatewayAttachment",
 }));
 export type StartAnalysisReportError =
   | InternalServerError
@@ -6372,6 +6436,7 @@ export const startAnalysisReport: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "StartAnalysisReport",
 }));
 export type StartFlowCaptureError =
   | InternalServerError
@@ -6404,6 +6469,7 @@ export const startFlowCapture: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "StartFlowCapture",
 }));
 export type StartFlowFlushError =
   | InternalServerError
@@ -6434,6 +6500,7 @@ export const startFlowFlush: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "StartFlowFlush",
 }));
 export type TagResourceError =
   | InternalServerError
@@ -6464,6 +6531,7 @@ export const tagResource: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | InternalServerError
@@ -6495,6 +6563,7 @@ export const untagResource: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "UntagResource",
 }));
 export type UpdateAvailabilityZoneChangeProtectionError =
   | InternalServerError
@@ -6525,6 +6594,7 @@ export const updateAvailabilityZoneChangeProtection: API.OperationMethod<
     ResourceOwnerCheckException,
     ThrottlingException,
   ],
+  operationName: "UpdateAvailabilityZoneChangeProtection",
 }));
 export type UpdateFirewallAnalysisSettingsError =
   | InternalServerError
@@ -6551,6 +6621,7 @@ export const updateFirewallAnalysisSettings: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "UpdateFirewallAnalysisSettings",
 }));
 export type UpdateFirewallDeleteProtectionError =
   | InternalServerError
@@ -6582,6 +6653,7 @@ export const updateFirewallDeleteProtection: API.OperationMethod<
     ResourceOwnerCheckException,
     ThrottlingException,
   ],
+  operationName: "UpdateFirewallDeleteProtection",
 }));
 export type UpdateFirewallDescriptionError =
   | InternalServerError
@@ -6609,6 +6681,7 @@ export const updateFirewallDescription: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "UpdateFirewallDescription",
 }));
 export type UpdateFirewallEncryptionConfigurationError =
   | InternalServerError
@@ -6637,6 +6710,7 @@ export const updateFirewallEncryptionConfiguration: API.OperationMethod<
     ResourceOwnerCheckException,
     ThrottlingException,
   ],
+  operationName: "UpdateFirewallEncryptionConfiguration",
 }));
 export type UpdateFirewallPolicyError =
   | InternalServerError
@@ -6663,6 +6737,7 @@ export const updateFirewallPolicy: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "UpdateFirewallPolicy",
 }));
 export type UpdateFirewallPolicyChangeProtectionError =
   | InternalServerError
@@ -6693,6 +6768,7 @@ export const updateFirewallPolicyChangeProtection: API.OperationMethod<
     ResourceOwnerCheckException,
     ThrottlingException,
   ],
+  operationName: "UpdateFirewallPolicyChangeProtection",
 }));
 export type UpdateLoggingConfigurationError =
   | InternalServerError
@@ -6744,6 +6820,7 @@ export const updateLoggingConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "UpdateLoggingConfiguration",
 }));
 export type UpdateProxyError =
   | InternalServerError
@@ -6770,6 +6847,7 @@ export const updateProxy: API.OperationMethod<
     ThrottlingException,
     UnsupportedOperationException,
   ],
+  operationName: "UpdateProxy",
 }));
 export type UpdateProxyConfigurationError =
   | InternalServerError
@@ -6794,6 +6872,7 @@ export const updateProxyConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "UpdateProxyConfiguration",
 }));
 export type UpdateProxyRuleError =
   | InternalServerError
@@ -6818,6 +6897,7 @@ export const updateProxyRule: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "UpdateProxyRule",
 }));
 export type UpdateProxyRuleGroupPrioritiesError =
   | InternalServerError
@@ -6842,6 +6922,7 @@ export const updateProxyRuleGroupPriorities: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "UpdateProxyRuleGroupPriorities",
 }));
 export type UpdateProxyRulePrioritiesError =
   | InternalServerError
@@ -6866,6 +6947,7 @@ export const updateProxyRulePriorities: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "UpdateProxyRulePriorities",
 }));
 export type UpdateRuleGroupError =
   | InternalServerError
@@ -6898,6 +6980,7 @@ export const updateRuleGroup: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "UpdateRuleGroup",
 }));
 export type UpdateSubnetChangeProtectionError =
   | InternalServerError
@@ -6926,6 +7009,7 @@ export const updateSubnetChangeProtection: API.OperationMethod<
     ResourceOwnerCheckException,
     ThrottlingException,
   ],
+  operationName: "UpdateSubnetChangeProtection",
 }));
 export type UpdateTLSInspectionConfigurationError =
   | InternalServerError
@@ -6958,4 +7042,5 @@ export const updateTLSInspectionConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "UpdateTLSInspectionConfiguration",
 }));

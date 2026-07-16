@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -251,6 +251,18 @@ export type MLInputChannelStatus =
   | "INACTIVE"
   | (string & {});
 export const MLInputChannelStatus = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface PayerConfiguration {
+  computePayerAccountId?: string;
+  syntheticDataPayerAccountId?: string;
+}
+export const PayerConfiguration = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    computePayerAccountId: S.optional(S.String),
+    syntheticDataPayerAccountId: S.optional(S.String),
+  }),
+).annotate({
+  identifier: "PayerConfiguration",
+}) as any as S.Schema<PayerConfiguration>;
 export interface CollaborationMLInputChannelSummary {
   createTime: Date;
   updateTime: Date;
@@ -262,6 +274,7 @@ export interface CollaborationMLInputChannelSummary {
   status: MLInputChannelStatus;
   creatorAccountId: string;
   description?: string;
+  payerConfiguration?: PayerConfiguration;
 }
 export const CollaborationMLInputChannelSummary =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -277,6 +290,7 @@ export const CollaborationMLInputChannelSummary =
       status: MLInputChannelStatus,
       creatorAccountId: S.String,
       description: S.optional(S.String),
+      payerConfiguration: S.optional(PayerConfiguration),
     }),
   ).annotate({
     identifier: "CollaborationMLInputChannelSummary",
@@ -518,6 +532,7 @@ export interface CollaborationTrainedModelInferenceJobSummary {
   metricsStatusDetails?: string;
   logsStatus?: LogsStatus;
   logsStatusDetails?: string;
+  mlModelInferencePayerAccountId?: string;
   createTime: Date;
   updateTime: Date;
   creatorAccountId: string;
@@ -539,6 +554,7 @@ export const CollaborationTrainedModelInferenceJobSummary =
       metricsStatusDetails: S.optional(S.String),
       logsStatus: S.optional(LogsStatus),
       logsStatusDetails: S.optional(S.String),
+      mlModelInferencePayerAccountId: S.optional(S.String),
       createTime: T.DateFromString.pipe(T.TimestampFormat("date-time")),
       updateTime: T.DateFromString.pipe(T.TimestampFormat("date-time")),
       creatorAccountId: S.String,
@@ -641,6 +657,7 @@ export interface CollaborationTrainedModelSummary {
   status: TrainedModelStatus;
   configuredModelAlgorithmAssociationArn: string;
   creatorAccountId: string;
+  mlModelTrainingPayerAccountId?: string;
 }
 export const CollaborationTrainedModelSummary =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -659,6 +676,7 @@ export const CollaborationTrainedModelSummary =
       status: TrainedModelStatus,
       configuredModelAlgorithmAssociationArn: S.String,
       creatorAccountId: S.String,
+      mlModelTrainingPayerAccountId: S.optional(S.String),
     }),
   ).annotate({
     identifier: "CollaborationTrainedModelSummary",
@@ -2621,6 +2639,7 @@ export interface CreateMLInputChannelRequest {
   description?: string;
   kmsKeyArn?: string;
   tags?: { [key: string]: string | undefined };
+  payerConfiguration?: PayerConfiguration;
 }
 export const CreateMLInputChannelRequest =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -2634,6 +2653,7 @@ export const CreateMLInputChannelRequest =
       description: S.optional(S.String),
       kmsKeyArn: S.optional(S.String),
       tags: S.optional(TagMap),
+      payerConfiguration: S.optional(PayerConfiguration),
     }).pipe(
       T.all(
         T.Http({
@@ -2849,6 +2869,7 @@ export interface GetMLInputChannelResponse {
   privacyBudgets?: PrivacyBudgets;
   description?: string;
   syntheticDataConfiguration?: SyntheticDataConfiguration;
+  payerConfiguration?: PayerConfiguration;
   createTime: Date;
   updateTime: Date;
   inputChannel: InputChannel;
@@ -2874,6 +2895,7 @@ export const GetMLInputChannelResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       privacyBudgets: S.optional(PrivacyBudgets),
       description: S.optional(S.String),
       syntheticDataConfiguration: S.optional(SyntheticDataConfiguration),
+      payerConfiguration: S.optional(PayerConfiguration),
       createTime: T.DateFromString.pipe(T.TimestampFormat("date-time")),
       updateTime: T.DateFromString.pipe(T.TimestampFormat("date-time")),
       inputChannel: InputChannel,
@@ -2954,6 +2976,7 @@ export interface MLInputChannelSummary {
   mlInputChannelArn: string;
   status: MLInputChannelStatus;
   description?: string;
+  payerConfiguration?: PayerConfiguration;
 }
 export const MLInputChannelSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -2968,6 +2991,7 @@ export const MLInputChannelSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     mlInputChannelArn: S.String,
     status: MLInputChannelStatus,
     description: S.optional(S.String),
+    payerConfiguration: S.optional(PayerConfiguration),
   }),
 ).annotate({
   identifier: "MLInputChannelSummary",
@@ -3029,6 +3053,7 @@ export interface GetCollaborationMLInputChannelResponse {
   privacyBudgets?: PrivacyBudgets;
   description?: string;
   syntheticDataConfiguration?: SyntheticDataConfiguration;
+  payerConfiguration?: PayerConfiguration;
   createTime: Date;
   updateTime: Date;
   creatorAccountId: string;
@@ -3049,6 +3074,7 @@ export const GetCollaborationMLInputChannelResponse =
       privacyBudgets: S.optional(PrivacyBudgets),
       description: S.optional(S.String),
       syntheticDataConfiguration: S.optional(SyntheticDataConfiguration),
+      payerConfiguration: S.optional(PayerConfiguration),
       createTime: T.DateFromString.pipe(T.TimestampFormat("date-time")),
       updateTime: T.DateFromString.pipe(T.TimestampFormat("date-time")),
       creatorAccountId: S.String,
@@ -3280,6 +3306,7 @@ export interface CreateTrainedModelRequest {
   description?: string;
   kmsKeyArn?: string;
   tags?: { [key: string]: string | undefined };
+  mlModelTrainingPayerAccountId?: string;
 }
 export const CreateTrainedModelRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -3299,6 +3326,7 @@ export const CreateTrainedModelRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       description: S.optional(S.String),
       kmsKeyArn: S.optional(S.String),
       tags: S.optional(TagMap),
+      mlModelTrainingPayerAccountId: S.optional(S.String),
     }).pipe(
       T.all(
         T.Http({
@@ -3376,6 +3404,7 @@ export interface GetTrainedModelResponse {
   logsStatus?: LogsStatus;
   logsStatusDetails?: string;
   trainingContainerImageDigest?: string;
+  mlModelTrainingPayerAccountId?: string;
   createTime: Date;
   updateTime: Date;
   hyperparameters?: { [key: string]: string | undefined };
@@ -3407,6 +3436,7 @@ export const GetTrainedModelResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       logsStatus: S.optional(LogsStatus),
       logsStatusDetails: S.optional(S.String),
       trainingContainerImageDigest: S.optional(S.String),
+      mlModelTrainingPayerAccountId: S.optional(S.String),
       createTime: T.DateFromString.pipe(T.TimestampFormat("date-time")),
       updateTime: T.DateFromString.pipe(T.TimestampFormat("date-time")),
       hyperparameters: S.optional(HyperParameters),
@@ -3491,6 +3521,7 @@ export interface TrainedModelSummary {
   collaborationIdentifier: string;
   status: TrainedModelStatus;
   configuredModelAlgorithmAssociationArn: string;
+  mlModelTrainingPayerAccountId?: string;
 }
 export const TrainedModelSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -3507,6 +3538,7 @@ export const TrainedModelSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     collaborationIdentifier: S.String,
     status: TrainedModelStatus,
     configuredModelAlgorithmAssociationArn: S.String,
+    mlModelTrainingPayerAccountId: S.optional(S.String),
   }),
 ).annotate({
   identifier: "TrainedModelSummary",
@@ -3612,6 +3644,7 @@ export interface GetCollaborationTrainedModelResponse {
   logsStatus?: LogsStatus;
   logsStatusDetails?: string;
   trainingContainerImageDigest?: string;
+  mlModelTrainingPayerAccountId?: string;
   createTime: Date;
   updateTime: Date;
   creatorAccountId: string;
@@ -3639,6 +3672,7 @@ export const GetCollaborationTrainedModelResponse =
       logsStatus: S.optional(LogsStatus),
       logsStatusDetails: S.optional(S.String),
       trainingContainerImageDigest: S.optional(S.String),
+      mlModelTrainingPayerAccountId: S.optional(S.String),
       createTime: T.DateFromString.pipe(T.TimestampFormat("date-time")),
       updateTime: T.DateFromString.pipe(T.TimestampFormat("date-time")),
       creatorAccountId: S.String,
@@ -3874,6 +3908,7 @@ export interface StartTrainedModelInferenceJobRequest {
   environment?: { [key: string]: string | undefined };
   kmsKeyArn?: string;
   tags?: { [key: string]: string | undefined };
+  mlModelInferencePayerAccountId?: string;
 }
 export const StartTrainedModelInferenceJobRequest =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -3893,6 +3928,7 @@ export const StartTrainedModelInferenceJobRequest =
       environment: S.optional(InferenceEnvironmentMap),
       kmsKeyArn: S.optional(S.String),
       tags: S.optional(TagMap),
+      mlModelInferencePayerAccountId: S.optional(S.String),
     }).pipe(
       T.all(
         T.Http({
@@ -3969,6 +4005,7 @@ export interface GetTrainedModelInferenceJobResponse {
   logsStatus?: LogsStatus;
   logsStatusDetails?: string;
   tags?: { [key: string]: string | undefined };
+  mlModelInferencePayerAccountId?: string;
 }
 export const GetTrainedModelInferenceJobResponse =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -3998,6 +4035,7 @@ export const GetTrainedModelInferenceJobResponse =
       logsStatus: S.optional(LogsStatus),
       logsStatusDetails: S.optional(S.String),
       tags: S.optional(TagMap),
+      mlModelInferencePayerAccountId: S.optional(S.String),
     }),
   ).annotate({
     identifier: "GetTrainedModelInferenceJobResponse",
@@ -4052,6 +4090,7 @@ export interface TrainedModelInferenceJobSummary {
   metricsStatusDetails?: string;
   logsStatus?: LogsStatus;
   logsStatusDetails?: string;
+  mlModelInferencePayerAccountId?: string;
   createTime: Date;
   updateTime: Date;
 }
@@ -4072,6 +4111,7 @@ export const TrainedModelInferenceJobSummary =
       metricsStatusDetails: S.optional(S.String),
       logsStatus: S.optional(LogsStatus),
       logsStatusDetails: S.optional(S.String),
+      mlModelInferencePayerAccountId: S.optional(S.String),
       createTime: T.DateFromString.pipe(T.TimestampFormat("date-time")),
       updateTime: T.DateFromString.pipe(T.TimestampFormat("date-time")),
     }),
@@ -4430,6 +4470,7 @@ export const listCollaborationConfiguredModelAlgorithmAssociations: API.Operatio
   input: ListCollaborationConfiguredModelAlgorithmAssociationsRequest,
   output: ListCollaborationConfiguredModelAlgorithmAssociationsResponse,
   errors: [AccessDeniedException, ThrottlingException, ValidationException],
+  operationName: "ListCollaborationConfiguredModelAlgorithmAssociations",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -4469,6 +4510,7 @@ export const listCollaborationMLInputChannels: API.OperationMethod<
   input: ListCollaborationMLInputChannelsRequest,
   output: ListCollaborationMLInputChannelsResponse,
   errors: [AccessDeniedException, ThrottlingException, ValidationException],
+  operationName: "ListCollaborationMLInputChannels",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -4508,6 +4550,7 @@ export const listCollaborationTrainedModelExportJobs: API.OperationMethod<
   input: ListCollaborationTrainedModelExportJobsRequest,
   output: ListCollaborationTrainedModelExportJobsResponse,
   errors: [AccessDeniedException, ThrottlingException, ValidationException],
+  operationName: "ListCollaborationTrainedModelExportJobs",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -4547,6 +4590,7 @@ export const listCollaborationTrainedModelInferenceJobs: API.OperationMethod<
   input: ListCollaborationTrainedModelInferenceJobsRequest,
   output: ListCollaborationTrainedModelInferenceJobsResponse,
   errors: [AccessDeniedException, ThrottlingException, ValidationException],
+  operationName: "ListCollaborationTrainedModelInferenceJobs",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -4586,6 +4630,7 @@ export const listCollaborationTrainedModels: API.OperationMethod<
   input: ListCollaborationTrainedModelsRequest,
   output: ListCollaborationTrainedModelsResponse,
   errors: [AccessDeniedException, ThrottlingException, ValidationException],
+  operationName: "ListCollaborationTrainedModels",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -4614,6 +4659,7 @@ export const listTagsForResource: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type TagResourceError =
   | AccessDeniedException
@@ -4636,6 +4682,7 @@ export const tagResource: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | AccessDeniedException
@@ -4658,6 +4705,7 @@ export const untagResource: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UntagResource",
 }));
 export type StartAudienceExportJobError =
   | AccessDeniedException
@@ -4684,6 +4732,7 @@ export const startAudienceExportJob: API.OperationMethod<
     ServiceQuotaExceededException,
     ValidationException,
   ],
+  operationName: "StartAudienceExportJob",
 }));
 export type ListAudienceExportJobsError =
   | AccessDeniedException
@@ -4716,6 +4765,7 @@ export const listAudienceExportJobs: API.OperationMethod<
   input: ListAudienceExportJobsRequest,
   output: ListAudienceExportJobsResponse,
   errors: [AccessDeniedException, ValidationException],
+  operationName: "ListAudienceExportJobs",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -4750,6 +4800,7 @@ export const startAudienceGenerationJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartAudienceGenerationJob",
 }));
 export type GetAudienceGenerationJobError =
   | AccessDeniedException
@@ -4772,6 +4823,7 @@ export const getAudienceGenerationJob: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetAudienceGenerationJob",
 }));
 export type DeleteAudienceGenerationJobError =
   | AccessDeniedException
@@ -4796,6 +4848,7 @@ export const deleteAudienceGenerationJob: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteAudienceGenerationJob",
 }));
 export type ListAudienceGenerationJobsError =
   | AccessDeniedException
@@ -4828,6 +4881,7 @@ export const listAudienceGenerationJobs: API.OperationMethod<
   input: ListAudienceGenerationJobsRequest,
   output: ListAudienceGenerationJobsResponse,
   errors: [AccessDeniedException, ValidationException],
+  operationName: "ListAudienceGenerationJobs",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -4860,6 +4914,7 @@ export const createAudienceModel: API.OperationMethod<
     ServiceQuotaExceededException,
     ValidationException,
   ],
+  operationName: "CreateAudienceModel",
 }));
 export type GetAudienceModelError =
   | AccessDeniedException
@@ -4882,6 +4937,7 @@ export const getAudienceModel: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetAudienceModel",
 }));
 export type DeleteAudienceModelError =
   | AccessDeniedException
@@ -4906,6 +4962,7 @@ export const deleteAudienceModel: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteAudienceModel",
 }));
 export type ListAudienceModelsError =
   | AccessDeniedException
@@ -4938,6 +4995,7 @@ export const listAudienceModels: API.OperationMethod<
   input: ListAudienceModelsRequest,
   output: ListAudienceModelsResponse,
   errors: [AccessDeniedException, ValidationException],
+  operationName: "ListAudienceModels",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -4970,6 +5028,7 @@ export const createConfiguredAudienceModel: API.OperationMethod<
     ServiceQuotaExceededException,
     ValidationException,
   ],
+  operationName: "CreateConfiguredAudienceModel",
 }));
 export type GetConfiguredAudienceModelError =
   | AccessDeniedException
@@ -4992,6 +5051,7 @@ export const getConfiguredAudienceModel: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetConfiguredAudienceModel",
 }));
 export type UpdateConfiguredAudienceModelError =
   | AccessDeniedException
@@ -5016,6 +5076,7 @@ export const updateConfiguredAudienceModel: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UpdateConfiguredAudienceModel",
 }));
 export type DeleteConfiguredAudienceModelError =
   | AccessDeniedException
@@ -5040,6 +5101,7 @@ export const deleteConfiguredAudienceModel: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteConfiguredAudienceModel",
 }));
 export type ListConfiguredAudienceModelsError =
   | AccessDeniedException
@@ -5072,6 +5134,7 @@ export const listConfiguredAudienceModels: API.OperationMethod<
   input: ListConfiguredAudienceModelsRequest,
   output: ListConfiguredAudienceModelsResponse,
   errors: [AccessDeniedException, ValidationException],
+  operationName: "ListConfiguredAudienceModels",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -5100,6 +5163,7 @@ export const putConfiguredAudienceModelPolicy: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "PutConfiguredAudienceModelPolicy",
 }));
 export type GetConfiguredAudienceModelPolicyError =
   | AccessDeniedException
@@ -5122,6 +5186,7 @@ export const getConfiguredAudienceModelPolicy: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetConfiguredAudienceModelPolicy",
 }));
 export type DeleteConfiguredAudienceModelPolicyError =
   | AccessDeniedException
@@ -5144,6 +5209,7 @@ export const deleteConfiguredAudienceModelPolicy: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteConfiguredAudienceModelPolicy",
 }));
 export type CreateConfiguredModelAlgorithmError =
   | AccessDeniedException
@@ -5168,6 +5234,7 @@ export const createConfiguredModelAlgorithm: API.OperationMethod<
     ServiceQuotaExceededException,
     ValidationException,
   ],
+  operationName: "CreateConfiguredModelAlgorithm",
 }));
 export type GetConfiguredModelAlgorithmError =
   | AccessDeniedException
@@ -5190,6 +5257,7 @@ export const getConfiguredModelAlgorithm: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetConfiguredModelAlgorithm",
 }));
 export type DeleteConfiguredModelAlgorithmError =
   | AccessDeniedException
@@ -5214,6 +5282,7 @@ export const deleteConfiguredModelAlgorithm: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteConfiguredModelAlgorithm",
 }));
 export type ListConfiguredModelAlgorithmsError =
   | AccessDeniedException
@@ -5246,6 +5315,7 @@ export const listConfiguredModelAlgorithms: API.OperationMethod<
   input: ListConfiguredModelAlgorithmsRequest,
   output: ListConfiguredModelAlgorithmsResponse,
   errors: [AccessDeniedException, ValidationException],
+  operationName: "ListConfiguredModelAlgorithms",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -5280,6 +5350,7 @@ export const createConfiguredModelAlgorithmAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateConfiguredModelAlgorithmAssociation",
 }));
 export type GetConfiguredModelAlgorithmAssociationError =
   | AccessDeniedException
@@ -5304,6 +5375,7 @@ export const getConfiguredModelAlgorithmAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetConfiguredModelAlgorithmAssociation",
 }));
 export type DeleteConfiguredModelAlgorithmAssociationError =
   | AccessDeniedException
@@ -5330,6 +5402,7 @@ export const deleteConfiguredModelAlgorithmAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteConfiguredModelAlgorithmAssociation",
 }));
 export type ListConfiguredModelAlgorithmAssociationsError =
   | AccessDeniedException
@@ -5363,6 +5436,7 @@ export const listConfiguredModelAlgorithmAssociations: API.OperationMethod<
   input: ListConfiguredModelAlgorithmAssociationsRequest,
   output: ListConfiguredModelAlgorithmAssociationsResponse,
   errors: [AccessDeniedException, ThrottlingException, ValidationException],
+  operationName: "ListConfiguredModelAlgorithmAssociations",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -5393,6 +5467,7 @@ export const getCollaborationConfiguredModelAlgorithmAssociation: API.OperationM
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetCollaborationConfiguredModelAlgorithmAssociation",
 }));
 export type PutMLConfigurationError =
   | AccessDeniedException
@@ -5411,6 +5486,7 @@ export const putMLConfiguration: API.OperationMethod<
   input: PutMLConfigurationRequest,
   output: PutMLConfigurationResponse,
   errors: [AccessDeniedException, ThrottlingException, ValidationException],
+  operationName: "PutMLConfiguration",
 }));
 export type GetMLConfigurationError =
   | AccessDeniedException
@@ -5435,6 +5511,7 @@ export const getMLConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetMLConfiguration",
 }));
 export type DeleteMLConfigurationError =
   | AccessDeniedException
@@ -5459,6 +5536,7 @@ export const deleteMLConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteMLConfiguration",
 }));
 export type CreateMLInputChannelError =
   | AccessDeniedException
@@ -5487,6 +5565,7 @@ export const createMLInputChannel: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateMLInputChannel",
 }));
 export type GetMLInputChannelError =
   | AccessDeniedException
@@ -5511,6 +5590,7 @@ export const getMLInputChannel: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetMLInputChannel",
 }));
 export type DeleteMLInputChannelDataError =
   | AccessDeniedException
@@ -5537,6 +5617,7 @@ export const deleteMLInputChannelData: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteMLInputChannelData",
 }));
 export type ListMLInputChannelsError =
   | AccessDeniedException
@@ -5570,6 +5651,7 @@ export const listMLInputChannels: API.OperationMethod<
   input: ListMLInputChannelsRequest,
   output: ListMLInputChannelsResponse,
   errors: [AccessDeniedException, ThrottlingException, ValidationException],
+  operationName: "ListMLInputChannels",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -5600,6 +5682,7 @@ export const getCollaborationMLInputChannel: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetCollaborationMLInputChannel",
 }));
 export type CreateTrainedModelError =
   | AccessDeniedException
@@ -5630,6 +5713,7 @@ export const createTrainedModel: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateTrainedModel",
 }));
 export type GetTrainedModelError =
   | AccessDeniedException
@@ -5654,6 +5738,7 @@ export const getTrainedModel: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetTrainedModel",
 }));
 export type DeleteTrainedModelOutputError =
   | AccessDeniedException
@@ -5680,6 +5765,7 @@ export const deleteTrainedModelOutput: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteTrainedModelOutput",
 }));
 export type ListTrainedModelsError =
   | AccessDeniedException
@@ -5713,6 +5799,7 @@ export const listTrainedModels: API.OperationMethod<
   input: ListTrainedModelsRequest,
   output: ListTrainedModelsResponse,
   errors: [AccessDeniedException, ThrottlingException, ValidationException],
+  operationName: "ListTrainedModels",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -5745,6 +5832,7 @@ export const cancelTrainedModel: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CancelTrainedModel",
 }));
 export type GetCollaborationTrainedModelError =
   | AccessDeniedException
@@ -5769,6 +5857,7 @@ export const getCollaborationTrainedModel: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetCollaborationTrainedModel",
 }));
 export type ListTrainedModelVersionsError =
   | AccessDeniedException
@@ -5808,6 +5897,7 @@ export const listTrainedModelVersions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListTrainedModelVersions",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -5840,6 +5930,7 @@ export const startTrainedModelExportJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartTrainedModelExportJob",
 }));
 export type StartTrainedModelInferenceJobError =
   | AccessDeniedException
@@ -5868,6 +5959,7 @@ export const startTrainedModelInferenceJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartTrainedModelInferenceJob",
 }));
 export type GetTrainedModelInferenceJobError =
   | AccessDeniedException
@@ -5892,6 +5984,7 @@ export const getTrainedModelInferenceJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetTrainedModelInferenceJob",
 }));
 export type ListTrainedModelInferenceJobsError =
   | AccessDeniedException
@@ -5925,6 +6018,7 @@ export const listTrainedModelInferenceJobs: API.OperationMethod<
   input: ListTrainedModelInferenceJobsRequest,
   output: ListTrainedModelInferenceJobsResponse,
   errors: [AccessDeniedException, ThrottlingException, ValidationException],
+  operationName: "ListTrainedModelInferenceJobs",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -5957,6 +6051,7 @@ export const cancelTrainedModelInferenceJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CancelTrainedModelInferenceJob",
 }));
 export type CreateTrainingDatasetError =
   | AccessDeniedException
@@ -5975,6 +6070,7 @@ export const createTrainingDataset: API.OperationMethod<
   input: CreateTrainingDatasetRequest,
   output: CreateTrainingDatasetResponse,
   errors: [AccessDeniedException, ConflictException, ValidationException],
+  operationName: "CreateTrainingDataset",
 }));
 export type GetTrainingDatasetError =
   | AccessDeniedException
@@ -5997,6 +6093,7 @@ export const getTrainingDataset: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetTrainingDataset",
 }));
 export type DeleteTrainingDatasetError =
   | AccessDeniedException
@@ -6021,6 +6118,7 @@ export const deleteTrainingDataset: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "DeleteTrainingDataset",
 }));
 export type ListTrainingDatasetsError =
   | AccessDeniedException
@@ -6053,6 +6151,7 @@ export const listTrainingDatasets: API.OperationMethod<
   input: ListTrainingDatasetsRequest,
   output: ListTrainingDatasetsResponse,
   errors: [AccessDeniedException, ValidationException],
+  operationName: "ListTrainingDatasets",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",

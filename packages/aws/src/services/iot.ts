@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -383,6 +383,7 @@ export type EnableBatching = boolean;
 export type MaxBatchOpenMs = number;
 export type MaxBatchSize = number;
 export type MaxBatchSizeBytes = number;
+export type BatchAcrossTopics = boolean;
 export type KafkaHeaderKey = string;
 export type KafkaHeaderValue = string;
 export type IsDisabled = boolean;
@@ -498,6 +499,13 @@ export type SumOfSquares = number;
 export type Variance = number;
 export type StdDeviation = number;
 export type ConnectivityApiThingName = string | redacted.Redacted<string>;
+export type SourceIp = string | redacted.Redacted<string>;
+export type SourcePort = number;
+export type TargetIp = string | redacted.Redacted<string>;
+export type TargetPort = number;
+export type VpcEndpointId = string | redacted.Redacted<string>;
+export type KeepAliveDuration = number;
+export type SessionExpiry = number;
 export type RuleArn = string;
 export type VerboseFlag = boolean;
 export type DisableAllLogs = boolean;
@@ -4141,12 +4149,14 @@ export interface BatchConfig {
   maxBatchOpenMs?: number;
   maxBatchSize?: number;
   maxBatchSizeBytes?: number;
+  batchAcrossTopics?: boolean;
 }
 export const BatchConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     maxBatchOpenMs: S.optional(S.Number),
     maxBatchSize: S.optional(S.Number),
     maxBatchSizeBytes: S.optional(S.Number),
+    batchAcrossTopics: S.optional(S.Boolean),
   }),
 ).annotate({ identifier: "BatchConfig" }) as any as S.Schema<BatchConfig>;
 export interface HttpAction {
@@ -8473,14 +8483,29 @@ export const GeoLocationTarget = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 export type GeoLocationsFilter = GeoLocationTarget[];
 export const GeoLocationsFilter =
   /*@__PURE__*/ /*#__PURE__*/ S.Array(GeoLocationTarget);
+export type FleetIndexingApi = "GET_THING_CONNECTIVITY_DATA" | (string & {});
+export const FleetIndexingApi = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export type FleetIndexingApiList = FleetIndexingApi[];
+export const FleetIndexingApiList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(FleetIndexingApi);
+export interface ConnectivityFilter {
+  includeSocketInformation?: FleetIndexingApi[];
+}
+export const ConnectivityFilter = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ includeSocketInformation: S.optional(FleetIndexingApiList) }),
+).annotate({
+  identifier: "ConnectivityFilter",
+}) as any as S.Schema<ConnectivityFilter>;
 export interface IndexingFilter {
   namedShadowNames?: string[];
   geoLocations?: GeoLocationTarget[];
+  connectivity?: ConnectivityFilter;
 }
 export const IndexingFilter = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     namedShadowNames: S.optional(NamedShadowNamesFilter),
     geoLocations: S.optional(GeoLocationsFilter),
+    connectivity: S.optional(ConnectivityFilter),
   }),
 ).annotate({ identifier: "IndexingFilter" }) as any as S.Schema<IndexingFilter>;
 export interface ThingIndexingConfiguration {
@@ -9026,11 +9051,13 @@ export const GetStatisticsResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 }) as any as S.Schema<GetStatisticsResponse>;
 export interface GetThingConnectivityDataRequest {
   thingName: string | redacted.Redacted<string>;
+  includeSocketInformation?: boolean;
 }
 export const GetThingConnectivityDataRequest =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     S.Struct({
       thingName: SensitiveString.pipe(T.HttpLabel("thingName")),
+      includeSocketInformation: S.optional(S.Boolean),
     }).pipe(
       T.all(
         T.Http({
@@ -9057,6 +9084,7 @@ export type DisconnectReasonValue =
   | "MQTT_KEEP_ALIVE_TIMEOUT"
   | "SERVER_ERROR"
   | "SERVER_INITIATED_DISCONNECT"
+  | "API_INITIATED_DISCONNECT"
   | "THROTTLED"
   | "WEBSOCKET_TTL_EXPIRATION"
   | "CUSTOMAUTH_TTL_EXPIRATION"
@@ -9069,6 +9097,15 @@ export interface GetThingConnectivityDataResponse {
   connected?: boolean;
   timestamp?: Date;
   disconnectReason?: DisconnectReasonValue;
+  sourceIp?: string | redacted.Redacted<string>;
+  sourcePort?: number;
+  targetIp?: string | redacted.Redacted<string>;
+  targetPort?: number;
+  vpcEndpointId?: string | redacted.Redacted<string>;
+  keepAliveDuration?: number;
+  cleanSession?: boolean;
+  sessionExpiry?: number;
+  clientId?: string;
 }
 export const GetThingConnectivityDataResponse =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -9077,6 +9114,15 @@ export const GetThingConnectivityDataResponse =
       connected: S.optional(S.Boolean),
       timestamp: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
       disconnectReason: S.optional(DisconnectReasonValue),
+      sourceIp: S.optional(SensitiveString),
+      sourcePort: S.optional(S.Number),
+      targetIp: S.optional(SensitiveString),
+      targetPort: S.optional(S.Number),
+      vpcEndpointId: S.optional(SensitiveString),
+      keepAliveDuration: S.optional(S.Number),
+      cleanSession: S.optional(S.Boolean),
+      sessionExpiry: S.optional(S.Number),
+      clientId: S.optional(S.String),
     }),
   ).annotate({
     identifier: "GetThingConnectivityDataResponse",
@@ -13169,12 +13215,20 @@ export interface ThingConnectivity {
   connected?: boolean;
   timestamp?: number;
   disconnectReason?: string;
+  keepAliveDuration?: number;
+  cleanSession?: boolean;
+  sessionExpiry?: number;
+  clientId?: string;
 }
 export const ThingConnectivity = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     connected: S.optional(S.Boolean),
     timestamp: S.optional(S.Number),
     disconnectReason: S.optional(S.String),
+    keepAliveDuration: S.optional(S.Number),
+    cleanSession: S.optional(S.Boolean),
+    sessionExpiry: S.optional(S.Number),
+    clientId: S.optional(S.String),
   }),
 ).annotate({
   identifier: "ThingConnectivity",
@@ -15256,6 +15310,7 @@ export const acceptCertificateTransfer: API.OperationMethod<
     TransferAlreadyCompletedException,
     UnauthorizedException,
   ],
+  operationName: "AcceptCertificateTransfer",
 }));
 export type AddThingToBillingGroupError =
   | InternalFailureException
@@ -15282,6 +15337,7 @@ export const addThingToBillingGroup: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "AddThingToBillingGroup",
 }));
 export type AddThingToThingGroupError =
   | InternalFailureException
@@ -15308,6 +15364,7 @@ export const addThingToThingGroup: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "AddThingToThingGroup",
 }));
 export type AssociateSbomWithPackageVersionError =
   | ConflictException
@@ -15338,6 +15395,7 @@ export const associateSbomWithPackageVersion: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssociateSbomWithPackageVersion",
 }));
 export type AssociateTargetsWithJobError =
   | InvalidRequestException
@@ -15374,6 +15432,7 @@ export const associateTargetsWithJob: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "AssociateTargetsWithJob",
 }));
 export type AttachPolicyError =
   | InternalFailureException
@@ -15407,6 +15466,7 @@ export const attachPolicy: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "AttachPolicy",
 }));
 export type AttachPrincipalPolicyError =
   | InternalFailureException
@@ -15443,6 +15503,7 @@ export const attachPrincipalPolicy: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "AttachPrincipalPolicy",
 }));
 export type AttachSecurityProfileError =
   | InternalFailureException
@@ -15474,6 +15535,7 @@ export const attachSecurityProfile: API.OperationMethod<
     ThrottlingException,
     VersionConflictException,
   ],
+  operationName: "AttachSecurityProfile",
 }));
 export type AttachThingPrincipalError =
   | InternalFailureException
@@ -15505,6 +15567,7 @@ export const attachThingPrincipal: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "AttachThingPrincipal",
 }));
 export type CancelAuditMitigationActionsTaskError =
   | InternalFailureException
@@ -15533,6 +15596,7 @@ export const cancelAuditMitigationActionsTask: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "CancelAuditMitigationActionsTask",
 }));
 export type CancelAuditTaskError =
   | InternalFailureException
@@ -15559,6 +15623,7 @@ export const cancelAuditTask: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "CancelAuditTask",
 }));
 export type CancelCertificateTransferError =
   | InternalFailureException
@@ -15599,6 +15664,7 @@ export const cancelCertificateTransfer: API.OperationMethod<
     TransferAlreadyCompletedException,
     UnauthorizedException,
   ],
+  operationName: "CancelCertificateTransfer",
 }));
 export type CancelDetectMitigationActionsTaskError =
   | InternalFailureException
@@ -15625,6 +15691,7 @@ export const cancelDetectMitigationActionsTask: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "CancelDetectMitigationActionsTask",
 }));
 export type CancelJobError =
   | InvalidRequestException
@@ -15653,6 +15720,7 @@ export const cancelJob: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "CancelJob",
 }));
 export type CancelJobExecutionError =
   | InvalidRequestException
@@ -15683,6 +15751,7 @@ export const cancelJobExecution: API.OperationMethod<
     ThrottlingException,
     VersionConflictException,
   ],
+  operationName: "CancelJobExecution",
 }));
 export type ClearDefaultAuthorizerError =
   | InternalFailureException
@@ -15713,6 +15782,7 @@ export const clearDefaultAuthorizer: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ClearDefaultAuthorizer",
 }));
 export type ConfirmTopicRuleDestinationError =
   | ConflictingResourceUpdateException
@@ -15744,6 +15814,7 @@ export const confirmTopicRuleDestination: API.OperationMethod<
     ServiceUnavailableException,
     UnauthorizedException,
   ],
+  operationName: "ConfirmTopicRuleDestination",
 }));
 export type CreateAuditSuppressionError =
   | InternalFailureException
@@ -15772,6 +15843,7 @@ export const createAuditSuppression: API.OperationMethod<
     ResourceAlreadyExistsException,
     ThrottlingException,
   ],
+  operationName: "CreateAuditSuppression",
 }));
 export type CreateAuthorizerError =
   | InternalFailureException
@@ -15804,6 +15876,7 @@ export const createAuthorizer: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "CreateAuthorizer",
 }));
 export type CreateBillingGroupError =
   | InternalFailureException
@@ -15832,6 +15905,7 @@ export const createBillingGroup: API.OperationMethod<
     ResourceAlreadyExistsException,
     ThrottlingException,
   ],
+  operationName: "CreateBillingGroup",
 }));
 export type CreateCertificateFromCsrError =
   | InternalFailureException
@@ -15901,6 +15975,7 @@ export const createCertificateFromCsr: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "CreateCertificateFromCsr",
 }));
 export type CreateCertificateProviderError =
   | InternalFailureException
@@ -15943,6 +16018,7 @@ export const createCertificateProvider: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "CreateCertificateProvider",
 }));
 export type CreateCommandError =
   | ConflictException
@@ -15970,6 +16046,7 @@ export const createCommand: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateCommand",
 }));
 export type CreateCustomMetricError =
   | InternalFailureException
@@ -16001,6 +16078,7 @@ export const createCustomMetric: API.OperationMethod<
     ResourceAlreadyExistsException,
     ThrottlingException,
   ],
+  operationName: "CreateCustomMetric",
 }));
 export type CreateDimensionError =
   | InternalFailureException
@@ -16030,6 +16108,7 @@ export const createDimension: API.OperationMethod<
     ResourceAlreadyExistsException,
     ThrottlingException,
   ],
+  operationName: "CreateDimension",
 }));
 export type CreateDomainConfigurationError =
   | CertificateValidationException
@@ -16064,6 +16143,7 @@ export const createDomainConfiguration: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "CreateDomainConfiguration",
 }));
 export type CreateDynamicThingGroupError =
   | InternalFailureException
@@ -16096,6 +16176,7 @@ export const createDynamicThingGroup: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "CreateDynamicThingGroup",
 }));
 export type CreateFleetMetricError =
   | IndexNotReadyException
@@ -16136,6 +16217,7 @@ export const createFleetMetric: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "CreateFleetMetric",
 }));
 export type CreateJobError =
   | InvalidRequestException
@@ -16166,6 +16248,7 @@ export const createJob: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "CreateJob",
 }));
 export type CreateJobTemplateError =
   | ConflictException
@@ -16196,6 +16279,7 @@ export const createJobTemplate: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "CreateJobTemplate",
 }));
 export type CreateKeysAndCertificateError =
   | InternalFailureException
@@ -16229,6 +16313,7 @@ export const createKeysAndCertificate: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "CreateKeysAndCertificate",
 }));
 export type CreateMitigationActionError =
   | InternalFailureException
@@ -16258,6 +16343,7 @@ export const createMitigationAction: API.OperationMethod<
     ResourceAlreadyExistsException,
     ThrottlingException,
   ],
+  operationName: "CreateMitigationAction",
 }));
 export type CreateOTAUpdateError =
   | InternalFailureException
@@ -16292,6 +16378,7 @@ export const createOTAUpdate: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "CreateOTAUpdate",
 }));
 export type CreatePackageError =
   | ConflictException
@@ -16320,6 +16407,7 @@ export const createPackage: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreatePackage",
 }));
 export type CreatePackageVersionError =
   | ConflictException
@@ -16348,6 +16436,7 @@ export const createPackageVersion: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreatePackageVersion",
 }));
 export type CreatePolicyError =
   | InternalFailureException
@@ -16384,6 +16473,7 @@ export const createPolicy: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "CreatePolicy",
 }));
 export type CreatePolicyVersionError =
   | InternalFailureException
@@ -16425,6 +16515,7 @@ export const createPolicyVersion: API.OperationMethod<
     UnauthorizedException,
     VersionsLimitExceededException,
   ],
+  operationName: "CreatePolicyVersion",
 }));
 export type CreateProvisioningClaimError =
   | InternalFailureException
@@ -16455,6 +16546,7 @@ export const createProvisioningClaim: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "CreateProvisioningClaim",
 }));
 export type CreateProvisioningTemplateError =
   | InternalFailureException
@@ -16485,6 +16577,7 @@ export const createProvisioningTemplate: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "CreateProvisioningTemplate",
 }));
 export type CreateProvisioningTemplateVersionError =
   | ConflictingResourceUpdateException
@@ -16517,6 +16610,7 @@ export const createProvisioningTemplateVersion: API.OperationMethod<
     UnauthorizedException,
     VersionsLimitExceededException,
   ],
+  operationName: "CreateProvisioningTemplateVersion",
 }));
 export type CreateRoleAliasError =
   | InternalFailureException
@@ -16556,6 +16650,7 @@ export const createRoleAlias: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "CreateRoleAlias",
 }));
 export type CreateScheduledAuditError =
   | InternalFailureException
@@ -16585,6 +16680,7 @@ export const createScheduledAudit: API.OperationMethod<
     ResourceAlreadyExistsException,
     ThrottlingException,
   ],
+  operationName: "CreateScheduledAudit",
 }));
 export type CreateSecurityProfileError =
   | InternalFailureException
@@ -16611,6 +16707,7 @@ export const createSecurityProfile: API.OperationMethod<
     ResourceAlreadyExistsException,
     ThrottlingException,
   ],
+  operationName: "CreateSecurityProfile",
 }));
 export type CreateStreamError =
   | InternalFailureException
@@ -16647,6 +16744,7 @@ export const createStream: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "CreateStream",
 }));
 export type CreateThingError =
   | InternalFailureException
@@ -16685,6 +16783,7 @@ export const createThing: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "CreateThing",
 }));
 export type CreateThingGroupError =
   | InternalFailureException
@@ -16717,6 +16816,7 @@ export const createThingGroup: API.OperationMethod<
     ResourceAlreadyExistsException,
     ThrottlingException,
   ],
+  operationName: "CreateThingGroup",
 }));
 export type CreateThingTypeError =
   | InternalFailureException
@@ -16749,6 +16849,7 @@ export const createThingType: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "CreateThingType",
 }));
 export type CreateTopicRuleError =
   | ConflictingResourceUpdateException
@@ -16782,6 +16883,7 @@ export const createTopicRule: API.OperationMethod<
     SqlParseException,
     UnauthorizedException,
   ],
+  operationName: "CreateTopicRule",
 }));
 export type CreateTopicRuleDestinationError =
   | ConflictingResourceUpdateException
@@ -16812,6 +16914,7 @@ export const createTopicRuleDestination: API.OperationMethod<
     ServiceUnavailableException,
     UnauthorizedException,
   ],
+  operationName: "CreateTopicRuleDestination",
 }));
 export type DeleteAccountAuditConfigurationError =
   | InternalFailureException
@@ -16840,6 +16943,7 @@ export const deleteAccountAuditConfiguration: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DeleteAccountAuditConfiguration",
 }));
 export type DeleteAuditSuppressionError =
   | InternalFailureException
@@ -16864,6 +16968,7 @@ export const deleteAuditSuppression: API.OperationMethod<
     InvalidRequestException,
     ThrottlingException,
   ],
+  operationName: "DeleteAuditSuppression",
 }));
 export type DeleteAuthorizerError =
   | DeleteConflictException
@@ -16896,6 +17001,7 @@ export const deleteAuthorizer: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DeleteAuthorizer",
 }));
 export type DeleteBillingGroupError =
   | InternalFailureException
@@ -16922,6 +17028,7 @@ export const deleteBillingGroup: API.OperationMethod<
     ThrottlingException,
     VersionConflictException,
   ],
+  operationName: "DeleteBillingGroup",
 }));
 export type DeleteCACertificateError =
   | CertificateStateException
@@ -16954,6 +17061,7 @@ export const deleteCACertificate: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DeleteCACertificate",
 }));
 export type DeleteCertificateError =
   | CertificateStateException
@@ -16992,6 +17100,7 @@ export const deleteCertificate: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DeleteCertificate",
 }));
 export type DeleteCertificateProviderError =
   | DeleteConflictException
@@ -17028,6 +17137,7 @@ export const deleteCertificateProvider: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DeleteCertificateProvider",
 }));
 export type DeleteCommandError =
   | ConflictException
@@ -17052,6 +17162,7 @@ export const deleteCommand: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteCommand",
 }));
 export type DeleteCommandExecutionError =
   | ConflictException
@@ -17079,6 +17190,7 @@ export const deleteCommandExecution: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteCommandExecution",
 }));
 export type DeleteCustomMetricError =
   | InternalFailureException
@@ -17110,6 +17222,7 @@ export const deleteCustomMetric: API.OperationMethod<
     InvalidRequestException,
     ThrottlingException,
   ],
+  operationName: "DeleteCustomMetric",
 }));
 export type DeleteDimensionError =
   | InternalFailureException
@@ -17134,6 +17247,7 @@ export const deleteDimension: API.OperationMethod<
     InvalidRequestException,
     ThrottlingException,
   ],
+  operationName: "DeleteDimension",
 }));
 export type DeleteDomainConfigurationError =
   | InternalFailureException
@@ -17164,6 +17278,7 @@ export const deleteDomainConfiguration: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DeleteDomainConfiguration",
 }));
 export type DeleteDynamicThingGroupError =
   | InternalFailureException
@@ -17190,6 +17305,7 @@ export const deleteDynamicThingGroup: API.OperationMethod<
     ThrottlingException,
     VersionConflictException,
   ],
+  operationName: "DeleteDynamicThingGroup",
 }));
 export type DeleteFleetMetricError =
   | InternalFailureException
@@ -17221,6 +17337,7 @@ export const deleteFleetMetric: API.OperationMethod<
     UnauthorizedException,
     VersionConflictException,
   ],
+  operationName: "DeleteFleetMetric",
 }));
 export type DeleteJobError =
   | InvalidRequestException
@@ -17259,6 +17376,7 @@ export const deleteJob: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "DeleteJob",
 }));
 export type DeleteJobExecutionError =
   | InvalidRequestException
@@ -17287,6 +17405,7 @@ export const deleteJobExecution: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "DeleteJobExecution",
 }));
 export type DeleteJobTemplateError =
   | InternalFailureException
@@ -17311,6 +17430,7 @@ export const deleteJobTemplate: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DeleteJobTemplate",
 }));
 export type DeleteMitigationActionError =
   | InternalFailureException
@@ -17335,6 +17455,7 @@ export const deleteMitigationAction: API.OperationMethod<
     InvalidRequestException,
     ThrottlingException,
   ],
+  operationName: "DeleteMitigationAction",
 }));
 export type DeleteOTAUpdateError =
   | InternalFailureException
@@ -17367,6 +17488,7 @@ export const deleteOTAUpdate: API.OperationMethod<
     UnauthorizedException,
     VersionConflictException,
   ],
+  operationName: "DeleteOTAUpdate",
 }));
 export type DeletePackageError =
   | InternalServerException
@@ -17389,6 +17511,7 @@ export const deletePackage: API.OperationMethod<
   input: DeletePackageRequest,
   output: DeletePackageResponse,
   errors: [InternalServerException, ThrottlingException, ValidationException],
+  operationName: "DeletePackage",
 }));
 export type DeletePackageVersionError =
   | InternalServerException
@@ -17409,6 +17532,7 @@ export const deletePackageVersion: API.OperationMethod<
   input: DeletePackageVersionRequest,
   output: DeletePackageVersionResponse,
   errors: [InternalServerException, ThrottlingException, ValidationException],
+  operationName: "DeletePackageVersion",
 }));
 export type DeletePolicyError =
   | DeleteConflictException
@@ -17454,6 +17578,7 @@ export const deletePolicy: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DeletePolicy",
 }));
 export type DeletePolicyVersionError =
   | DeleteConflictException
@@ -17488,6 +17613,7 @@ export const deletePolicyVersion: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DeletePolicyVersion",
 }));
 export type DeleteProvisioningTemplateError =
   | ConflictingResourceUpdateException
@@ -17520,6 +17646,7 @@ export const deleteProvisioningTemplate: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DeleteProvisioningTemplate",
 }));
 export type DeleteProvisioningTemplateVersionError =
   | ConflictingResourceUpdateException
@@ -17552,6 +17679,7 @@ export const deleteProvisioningTemplateVersion: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DeleteProvisioningTemplateVersion",
 }));
 export type DeleteRegistrationCodeError =
   | InternalFailureException
@@ -17580,6 +17708,7 @@ export const deleteRegistrationCode: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DeleteRegistrationCode",
 }));
 export type DeleteRoleAliasError =
   | DeleteConflictException
@@ -17612,6 +17741,7 @@ export const deleteRoleAlias: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DeleteRoleAlias",
 }));
 export type DeleteScheduledAuditError =
   | InternalFailureException
@@ -17638,6 +17768,7 @@ export const deleteScheduledAudit: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DeleteScheduledAudit",
 }));
 export type DeleteSecurityProfileError =
   | InternalFailureException
@@ -17664,6 +17795,7 @@ export const deleteSecurityProfile: API.OperationMethod<
     ThrottlingException,
     VersionConflictException,
   ],
+  operationName: "DeleteSecurityProfile",
 }));
 export type DeleteStreamError =
   | DeleteConflictException
@@ -17696,6 +17828,7 @@ export const deleteStream: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DeleteStream",
 }));
 export type DeleteThingError =
   | InternalFailureException
@@ -17729,6 +17862,7 @@ export const deleteThing: API.OperationMethod<
     UnauthorizedException,
     VersionConflictException,
   ],
+  operationName: "DeleteThing",
 }));
 export type DeleteThingGroupError =
   | InternalFailureException
@@ -17755,6 +17889,7 @@ export const deleteThingGroup: API.OperationMethod<
     ThrottlingException,
     VersionConflictException,
   ],
+  operationName: "DeleteThingGroup",
 }));
 export type DeleteThingTypeError =
   | InternalFailureException
@@ -17787,6 +17922,7 @@ export const deleteThingType: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DeleteThingType",
 }));
 export type DeleteTopicRuleError =
   | ConflictingResourceUpdateException
@@ -17815,6 +17951,7 @@ export const deleteTopicRule: API.OperationMethod<
     ServiceUnavailableException,
     UnauthorizedException,
   ],
+  operationName: "DeleteTopicRule",
 }));
 export type DeleteTopicRuleDestinationError =
   | ConflictingResourceUpdateException
@@ -17843,6 +17980,7 @@ export const deleteTopicRuleDestination: API.OperationMethod<
     ServiceUnavailableException,
     UnauthorizedException,
   ],
+  operationName: "DeleteTopicRuleDestination",
 }));
 export type DeleteV2LoggingLevelError =
   | InternalException
@@ -17867,6 +18005,7 @@ export const deleteV2LoggingLevel: API.OperationMethod<
     InvalidRequestException,
     ServiceUnavailableException,
   ],
+  operationName: "DeleteV2LoggingLevel",
 }));
 export type DeprecateThingTypeError =
   | InternalFailureException
@@ -17898,6 +18037,7 @@ export const deprecateThingType: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DeprecateThingType",
 }));
 export type DescribeAccountAuditConfigurationError =
   | InternalFailureException
@@ -17919,6 +18059,7 @@ export const describeAccountAuditConfiguration: API.OperationMethod<
   input: DescribeAccountAuditConfigurationRequest,
   output: DescribeAccountAuditConfigurationResponse,
   errors: [InternalFailureException, ThrottlingException],
+  operationName: "DescribeAccountAuditConfiguration",
 }));
 export type DescribeAuditFindingError =
   | InternalFailureException
@@ -17949,6 +18090,7 @@ export const describeAuditFinding: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeAuditFinding",
 }));
 export type DescribeAuditMitigationActionsTaskError =
   | InternalFailureException
@@ -17973,6 +18115,7 @@ export const describeAuditMitigationActionsTask: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeAuditMitigationActionsTask",
 }));
 export type DescribeAuditSuppressionError =
   | InternalFailureException
@@ -17997,6 +18140,7 @@ export const describeAuditSuppression: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeAuditSuppression",
 }));
 export type DescribeAuditTaskError =
   | InternalFailureException
@@ -18023,6 +18167,7 @@ export const describeAuditTask: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeAuditTask",
 }));
 export type DescribeAuthorizerError =
   | InternalFailureException
@@ -18053,6 +18198,7 @@ export const describeAuthorizer: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DescribeAuthorizer",
 }));
 export type DescribeBillingGroupError =
   | InternalFailureException
@@ -18079,6 +18225,7 @@ export const describeBillingGroup: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeBillingGroup",
 }));
 export type DescribeCACertificateError =
   | InternalFailureException
@@ -18109,6 +18256,7 @@ export const describeCACertificate: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DescribeCACertificate",
 }));
 export type DescribeCertificateError =
   | InternalFailureException
@@ -18139,6 +18287,7 @@ export const describeCertificate: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DescribeCertificate",
 }));
 export type DescribeCertificateProviderError =
   | InternalFailureException
@@ -18169,6 +18318,7 @@ export const describeCertificateProvider: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DescribeCertificateProvider",
 }));
 export type DescribeCustomMetricError =
   | InternalFailureException
@@ -18195,6 +18345,7 @@ export const describeCustomMetric: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeCustomMetric",
 }));
 export type DescribeDefaultAuthorizerError =
   | InternalFailureException
@@ -18225,6 +18376,7 @@ export const describeDefaultAuthorizer: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DescribeDefaultAuthorizer",
 }));
 export type DescribeDetectMitigationActionsTaskError =
   | InternalFailureException
@@ -18251,6 +18403,7 @@ export const describeDetectMitigationActionsTask: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeDetectMitigationActionsTask",
 }));
 export type DescribeDimensionError =
   | InternalFailureException
@@ -18277,6 +18430,7 @@ export const describeDimension: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeDimension",
 }));
 export type DescribeDomainConfigurationError =
   | InternalFailureException
@@ -18307,6 +18461,7 @@ export const describeDomainConfiguration: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DescribeDomainConfiguration",
 }));
 export type DescribeEncryptionConfigurationError =
   | InternalFailureException
@@ -18335,6 +18490,7 @@ export const describeEncryptionConfiguration: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DescribeEncryptionConfiguration",
 }));
 export type DescribeEndpointError =
   | InternalFailureException
@@ -18364,6 +18520,7 @@ export const describeEndpoint: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DescribeEndpoint",
 }));
 export type DescribeEventConfigurationsError =
   | InternalFailureException
@@ -18383,6 +18540,7 @@ export const describeEventConfigurations: API.OperationMethod<
   input: DescribeEventConfigurationsRequest,
   output: DescribeEventConfigurationsResponse,
   errors: [InternalFailureException, ThrottlingException],
+  operationName: "DescribeEventConfigurations",
 }));
 export type DescribeFleetMetricError =
   | InternalFailureException
@@ -18413,6 +18571,7 @@ export const describeFleetMetric: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DescribeFleetMetric",
 }));
 export type DescribeIndexError =
   | InternalFailureException
@@ -18443,6 +18602,7 @@ export const describeIndex: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DescribeIndex",
 }));
 export type DescribeJobError =
   | InvalidRequestException
@@ -18469,6 +18629,7 @@ export const describeJob: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "DescribeJob",
 }));
 export type DescribeJobExecutionError =
   | InvalidRequestException
@@ -18495,6 +18656,7 @@ export const describeJobExecution: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "DescribeJobExecution",
 }));
 export type DescribeJobTemplateError =
   | InternalFailureException
@@ -18519,6 +18681,7 @@ export const describeJobTemplate: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeJobTemplate",
 }));
 export type DescribeManagedJobTemplateError =
   | InternalServerException
@@ -18543,6 +18706,7 @@ export const describeManagedJobTemplate: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeManagedJobTemplate",
 }));
 export type DescribeMitigationActionError =
   | InternalFailureException
@@ -18569,6 +18733,7 @@ export const describeMitigationAction: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeMitigationAction",
 }));
 export type DescribeProvisioningTemplateError =
   | InternalFailureException
@@ -18597,6 +18762,7 @@ export const describeProvisioningTemplate: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DescribeProvisioningTemplate",
 }));
 export type DescribeProvisioningTemplateVersionError =
   | InternalFailureException
@@ -18625,6 +18791,7 @@ export const describeProvisioningTemplateVersion: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DescribeProvisioningTemplateVersion",
 }));
 export type DescribeRoleAliasError =
   | InternalFailureException
@@ -18655,6 +18822,7 @@ export const describeRoleAlias: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DescribeRoleAlias",
 }));
 export type DescribeScheduledAuditError =
   | InternalFailureException
@@ -18681,6 +18849,7 @@ export const describeScheduledAudit: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeScheduledAudit",
 }));
 export type DescribeSecurityProfileError =
   | InternalFailureException
@@ -18707,6 +18876,7 @@ export const describeSecurityProfile: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeSecurityProfile",
 }));
 export type DescribeStreamError =
   | InternalFailureException
@@ -18737,6 +18907,7 @@ export const describeStream: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DescribeStream",
 }));
 export type DescribeThingError =
   | InternalFailureException
@@ -18767,6 +18938,7 @@ export const describeThing: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DescribeThing",
 }));
 export type DescribeThingGroupError =
   | InternalFailureException
@@ -18793,6 +18965,7 @@ export const describeThingGroup: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DescribeThingGroup",
 }));
 export type DescribeThingRegistrationTaskError =
   | InternalFailureException
@@ -18821,6 +18994,7 @@ export const describeThingRegistrationTask: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DescribeThingRegistrationTask",
 }));
 export type DescribeThingTypeError =
   | InternalFailureException
@@ -18851,6 +19025,7 @@ export const describeThingType: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DescribeThingType",
 }));
 export type DetachPolicyError =
   | InternalFailureException
@@ -18884,6 +19059,7 @@ export const detachPolicy: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DetachPolicy",
 }));
 export type DetachPrincipalPolicyError =
   | InternalFailureException
@@ -18917,6 +19093,7 @@ export const detachPrincipalPolicy: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DetachPrincipalPolicy",
 }));
 export type DetachSecurityProfileError =
   | InternalFailureException
@@ -18943,6 +19120,7 @@ export const detachSecurityProfile: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DetachSecurityProfile",
 }));
 export type DetachThingPrincipalError =
   | InternalFailureException
@@ -18978,6 +19156,7 @@ export const detachThingPrincipal: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "DetachThingPrincipal",
 }));
 export type DisableTopicRuleError =
   | ConflictingResourceUpdateException
@@ -19006,6 +19185,7 @@ export const disableTopicRule: API.OperationMethod<
     ServiceUnavailableException,
     UnauthorizedException,
   ],
+  operationName: "DisableTopicRule",
 }));
 export type DisassociateSbomFromPackageVersionError =
   | ConflictException
@@ -19034,6 +19214,7 @@ export const disassociateSbomFromPackageVersion: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DisassociateSbomFromPackageVersion",
 }));
 export type EnableTopicRuleError =
   | ConflictingResourceUpdateException
@@ -19062,6 +19243,7 @@ export const enableTopicRule: API.OperationMethod<
     ServiceUnavailableException,
     UnauthorizedException,
   ],
+  operationName: "EnableTopicRule",
 }));
 export type GetBehaviorModelTrainingSummariesError =
   | InternalFailureException
@@ -19103,6 +19285,7 @@ export const getBehaviorModelTrainingSummaries: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "GetBehaviorModelTrainingSummaries",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -19145,6 +19328,7 @@ export const getBucketsAggregation: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "GetBucketsAggregation",
 }));
 export type GetCardinalityError =
   | IndexNotReadyException
@@ -19181,6 +19365,7 @@ export const getCardinality: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "GetCardinality",
 }));
 export type GetCommandError =
   | InternalServerException
@@ -19205,6 +19390,7 @@ export const getCommand: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetCommand",
 }));
 export type GetCommandExecutionError =
   | InternalServerException
@@ -19229,6 +19415,7 @@ export const getCommandExecution: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetCommandExecution",
 }));
 export type GetEffectivePoliciesError =
   | InternalFailureException
@@ -19262,6 +19449,7 @@ export const getEffectivePolicies: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "GetEffectivePolicies",
 }));
 export type GetIndexingConfigurationError =
   | InternalFailureException
@@ -19290,6 +19478,7 @@ export const getIndexingConfiguration: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "GetIndexingConfiguration",
 }));
 export type GetJobDocumentError =
   | InvalidRequestException
@@ -19316,6 +19505,7 @@ export const getJobDocument: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "GetJobDocument",
 }));
 export type GetLoggingOptionsError =
   | InternalException
@@ -19343,6 +19533,7 @@ export const getLoggingOptions: API.OperationMethod<
     InvalidRequestException,
     ServiceUnavailableException,
   ],
+  operationName: "GetLoggingOptions",
 }));
 export type GetOTAUpdateError =
   | InternalFailureException
@@ -19373,6 +19564,7 @@ export const getOTAUpdate: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "GetOTAUpdate",
 }));
 export type GetPackageError =
   | InternalServerException
@@ -19399,6 +19591,7 @@ export const getPackage: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetPackage",
 }));
 export type GetPackageConfigurationError =
   | InternalServerException
@@ -19418,6 +19611,7 @@ export const getPackageConfiguration: API.OperationMethod<
   input: GetPackageConfigurationRequest,
   output: GetPackageConfigurationResponse,
   errors: [InternalServerException, ThrottlingException],
+  operationName: "GetPackageConfiguration",
 }));
 export type GetPackageVersionError =
   | InternalServerException
@@ -19444,6 +19638,7 @@ export const getPackageVersion: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetPackageVersion",
 }));
 export type GetPercentilesError =
   | IndexNotReadyException
@@ -19488,6 +19683,7 @@ export const getPercentiles: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "GetPercentiles",
 }));
 export type GetPolicyError =
   | InternalFailureException
@@ -19519,6 +19715,7 @@ export const getPolicy: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "GetPolicy",
 }));
 export type GetPolicyVersionError =
   | InternalFailureException
@@ -19549,6 +19746,7 @@ export const getPolicyVersion: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "GetPolicyVersion",
 }));
 export type GetRegistrationCodeError =
   | InternalFailureException
@@ -19581,6 +19779,7 @@ export const getRegistrationCode: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "GetRegistrationCode",
 }));
 export type GetStatisticsError =
   | IndexNotReadyException
@@ -19619,6 +19818,7 @@ export const getStatistics: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "GetStatistics",
 }));
 export type GetThingConnectivityDataError =
   | IndexNotReadyException
@@ -19630,7 +19830,7 @@ export type GetThingConnectivityDataError =
   | UnauthorizedException
   | CommonErrors;
 /**
- * Retrieves the live connectivity status per device.
+ * Retrieves the live connectivity status per device. If a device has never connected to IoT Core or was disconnected for more than 1 hour before fleet indexing's `thingConnectivityIndexingMode` was enabled, the response will have the `connected` field set to `false` with no additional session details.
  */
 export const getThingConnectivityData: API.OperationMethod<
   GetThingConnectivityDataRequest,
@@ -19649,6 +19849,7 @@ export const getThingConnectivityData: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "GetThingConnectivityData",
 }));
 export type GetTopicRuleError =
   | InternalException
@@ -19675,6 +19876,7 @@ export const getTopicRule: API.OperationMethod<
     ServiceUnavailableException,
     UnauthorizedException,
   ],
+  operationName: "GetTopicRule",
 }));
 export type GetTopicRuleDestinationError =
   | InternalException
@@ -19701,6 +19903,7 @@ export const getTopicRuleDestination: API.OperationMethod<
     ServiceUnavailableException,
     UnauthorizedException,
   ],
+  operationName: "GetTopicRuleDestination",
 }));
 export type GetV2LoggingOptionsError =
   | InternalException
@@ -19725,6 +19928,7 @@ export const getV2LoggingOptions: API.OperationMethod<
     NotConfiguredException,
     ServiceUnavailableException,
   ],
+  operationName: "GetV2LoggingOptions",
 }));
 export type ListActiveViolationsError =
   | InternalFailureException
@@ -19766,6 +19970,7 @@ export const listActiveViolations: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "ListActiveViolations",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -19819,6 +20024,7 @@ export const listAttachedPolicies: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListAttachedPolicies",
   pagination: {
     inputToken: "marker",
     outputToken: "nextMarker",
@@ -19865,6 +20071,7 @@ export const listAuditFindings: API.OperationMethod<
     InvalidRequestException,
     ThrottlingException,
   ],
+  operationName: "ListAuditFindings",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -19911,6 +20118,7 @@ export const listAuditMitigationActionsExecutions: API.OperationMethod<
     InvalidRequestException,
     ThrottlingException,
   ],
+  operationName: "ListAuditMitigationActionsExecutions",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -19956,6 +20164,7 @@ export const listAuditMitigationActionsTasks: API.OperationMethod<
     InvalidRequestException,
     ThrottlingException,
   ],
+  operationName: "ListAuditMitigationActionsTasks",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -20001,6 +20210,7 @@ export const listAuditSuppressions: API.OperationMethod<
     InvalidRequestException,
     ThrottlingException,
   ],
+  operationName: "ListAuditSuppressions",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -20047,6 +20257,7 @@ export const listAuditTasks: API.OperationMethod<
     InvalidRequestException,
     ThrottlingException,
   ],
+  operationName: "ListAuditTasks",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -20096,6 +20307,7 @@ export const listAuthorizers: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListAuthorizers",
   pagination: {
     inputToken: "marker",
     outputToken: "nextMarker",
@@ -20143,6 +20355,7 @@ export const listBillingGroups: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "ListBillingGroups",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -20195,6 +20408,7 @@ export const listCACertificates: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListCACertificates",
   pagination: {
     inputToken: "marker",
     outputToken: "nextMarker",
@@ -20229,6 +20443,7 @@ export const listCertificateProviders: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListCertificateProviders",
 }));
 export type ListCertificatesError =
   | InternalFailureException
@@ -20275,6 +20490,7 @@ export const listCertificates: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListCertificates",
   pagination: {
     inputToken: "marker",
     outputToken: "nextMarker",
@@ -20324,6 +20540,7 @@ export const listCertificatesByCA: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListCertificatesByCA",
   pagination: {
     inputToken: "marker",
     outputToken: "nextMarker",
@@ -20384,6 +20601,7 @@ export const listCommandExecutions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListCommandExecutions",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -20423,6 +20641,7 @@ export const listCommands: API.OperationMethod<
   input: ListCommandsRequest,
   output: ListCommandsResponse,
   errors: [InternalServerException, ThrottlingException, ValidationException],
+  operationName: "ListCommands",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -20468,6 +20687,7 @@ export const listCustomMetrics: API.OperationMethod<
     InvalidRequestException,
     ThrottlingException,
   ],
+  operationName: "ListCustomMetrics",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -20513,6 +20733,7 @@ export const listDetectMitigationActionsExecutions: API.OperationMethod<
     InvalidRequestException,
     ThrottlingException,
   ],
+  operationName: "ListDetectMitigationActionsExecutions",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -20558,6 +20779,7 @@ export const listDetectMitigationActionsTasks: API.OperationMethod<
     InvalidRequestException,
     ThrottlingException,
   ],
+  operationName: "ListDetectMitigationActionsTasks",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -20603,6 +20825,7 @@ export const listDimensions: API.OperationMethod<
     InvalidRequestException,
     ThrottlingException,
   ],
+  operationName: "ListDimensions",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -20653,6 +20876,7 @@ export const listDomainConfigurations: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListDomainConfigurations",
   pagination: {
     inputToken: "marker",
     outputToken: "nextMarker",
@@ -20702,6 +20926,7 @@ export const listFleetMetrics: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListFleetMetrics",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -20751,6 +20976,7 @@ export const listIndices: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListIndices",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -20798,6 +21024,7 @@ export const listJobExecutionsForJob: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "ListJobExecutionsForJob",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -20845,6 +21072,7 @@ export const listJobExecutionsForThing: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "ListJobExecutionsForThing",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -20892,6 +21120,7 @@ export const listJobs: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "ListJobs",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -20937,6 +21166,7 @@ export const listJobTemplates: API.OperationMethod<
     InvalidRequestException,
     ThrottlingException,
   ],
+  operationName: "ListJobTemplates",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -20982,6 +21212,7 @@ export const listManagedJobTemplates: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "ListManagedJobTemplates",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -21028,6 +21259,7 @@ export const listMetricValues: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "ListMetricValues",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -21073,6 +21305,7 @@ export const listMitigationActions: API.OperationMethod<
     InvalidRequestException,
     ThrottlingException,
   ],
+  operationName: "ListMitigationActions",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -21122,6 +21355,7 @@ export const listOTAUpdates: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListOTAUpdates",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -21171,6 +21405,7 @@ export const listOutgoingCertificates: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListOutgoingCertificates",
   pagination: {
     inputToken: "marker",
     outputToken: "nextMarker",
@@ -21212,6 +21447,7 @@ export const listPackages: API.OperationMethod<
   input: ListPackagesRequest,
   output: ListPackagesResponse,
   errors: [InternalServerException, ThrottlingException, ValidationException],
+  operationName: "ListPackages",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -21253,6 +21489,7 @@ export const listPackageVersions: API.OperationMethod<
   input: ListPackageVersionsRequest,
   output: ListPackageVersionsResponse,
   errors: [InternalServerException, ThrottlingException, ValidationException],
+  operationName: "ListPackageVersions",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -21302,6 +21539,7 @@ export const listPolicies: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListPolicies",
   pagination: {
     inputToken: "marker",
     outputToken: "nextMarker",
@@ -21356,6 +21594,7 @@ export const listPolicyPrincipals: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListPolicyPrincipals",
   pagination: {
     inputToken: "marker",
     outputToken: "nextMarker",
@@ -21393,6 +21632,7 @@ export const listPolicyVersions: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListPolicyVersions",
 }));
 export type ListPrincipalPoliciesError =
   | InternalFailureException
@@ -21442,6 +21682,7 @@ export const listPrincipalPolicies: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListPrincipalPolicies",
   pagination: {
     inputToken: "marker",
     outputToken: "nextMarker",
@@ -21495,6 +21736,7 @@ export const listPrincipalThings: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListPrincipalThings",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -21547,6 +21789,7 @@ export const listPrincipalThingsV2: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListPrincipalThingsV2",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -21594,6 +21837,7 @@ export const listProvisioningTemplates: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListProvisioningTemplates",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -21643,6 +21887,7 @@ export const listProvisioningTemplateVersions: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListProvisioningTemplateVersions",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -21712,6 +21957,7 @@ export const listRelatedResourcesForAuditFinding: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "ListRelatedResourcesForAuditFinding",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -21761,6 +22007,7 @@ export const listRoleAliases: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListRoleAliases",
   pagination: {
     inputToken: "marker",
     outputToken: "nextMarker",
@@ -21808,6 +22055,7 @@ export const listSbomValidationResults: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListSbomValidationResults",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -21853,6 +22101,7 @@ export const listScheduledAudits: API.OperationMethod<
     InvalidRequestException,
     ThrottlingException,
   ],
+  operationName: "ListScheduledAudits",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -21904,6 +22153,7 @@ export const listSecurityProfiles: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "ListSecurityProfiles",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -21951,6 +22201,7 @@ export const listSecurityProfilesForTarget: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "ListSecurityProfilesForTarget",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -22000,6 +22251,7 @@ export const listStreams: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListStreams",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -22047,6 +22299,7 @@ export const listTagsForResource: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "ListTagsForResource",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -22099,6 +22352,7 @@ export const listTargetsForPolicy: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListTargetsForPolicy",
   pagination: {
     inputToken: "marker",
     outputToken: "nextMarker",
@@ -22146,6 +22400,7 @@ export const listTargetsForSecurityProfile: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "ListTargetsForSecurityProfile",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -22193,6 +22448,7 @@ export const listThingGroups: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "ListThingGroups",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -22240,6 +22496,7 @@ export const listThingGroupsForThing: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "ListThingGroupsForThing",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -22293,6 +22550,7 @@ export const listThingPrincipals: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListThingPrincipals",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -22345,6 +22603,7 @@ export const listThingPrincipalsV2: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListThingPrincipalsV2",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -22390,6 +22649,7 @@ export const listThingRegistrationTaskReports: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListThingRegistrationTaskReports",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -22437,6 +22697,7 @@ export const listThingRegistrationTasks: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListThingRegistrationTasks",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -22492,6 +22753,7 @@ export const listThings: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListThings",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -22539,6 +22801,7 @@ export const listThingsInBillingGroup: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "ListThingsInBillingGroup",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -22586,6 +22849,7 @@ export const listThingsInThingGroup: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "ListThingsInThingGroup",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -22635,6 +22899,7 @@ export const listThingTypes: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "ListThingTypes",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -22682,6 +22947,7 @@ export const listTopicRuleDestinations: API.OperationMethod<
     ServiceUnavailableException,
     UnauthorizedException,
   ],
+  operationName: "ListTopicRuleDestinations",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -22729,6 +22995,7 @@ export const listTopicRules: API.OperationMethod<
     ServiceUnavailableException,
     UnauthorizedException,
   ],
+  operationName: "ListTopicRules",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -22776,6 +23043,7 @@ export const listV2LoggingLevels: API.OperationMethod<
     NotConfiguredException,
     ServiceUnavailableException,
   ],
+  operationName: "ListV2LoggingLevels",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -22823,6 +23091,7 @@ export const listViolationEvents: API.OperationMethod<
     InvalidRequestException,
     ThrottlingException,
   ],
+  operationName: "ListViolationEvents",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -22851,6 +23120,7 @@ export const putVerificationStateOnViolation: API.OperationMethod<
     InvalidRequestException,
     ThrottlingException,
   ],
+  operationName: "PutVerificationStateOnViolation",
 }));
 export type RegisterCACertificateError =
   | CertificateValidationException
@@ -22891,6 +23161,7 @@ export const registerCACertificate: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "RegisterCACertificate",
 }));
 export type RegisterCertificateError =
   | CertificateConflictException
@@ -22929,6 +23200,7 @@ export const registerCertificate: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "RegisterCertificate",
 }));
 export type RegisterCertificateWithoutCAError =
   | CertificateStateException
@@ -22963,6 +23235,7 @@ export const registerCertificateWithoutCA: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "RegisterCertificateWithoutCA",
 }));
 export type RegisterThingError =
   | ConflictingResourceUpdateException
@@ -22998,6 +23271,7 @@ export const registerThing: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "RegisterThing",
 }));
 export type RejectCertificateTransferError =
   | InternalFailureException
@@ -23038,6 +23312,7 @@ export const rejectCertificateTransfer: API.OperationMethod<
     TransferAlreadyCompletedException,
     UnauthorizedException,
   ],
+  operationName: "RejectCertificateTransfer",
 }));
 export type RemoveThingFromBillingGroupError =
   | InternalFailureException
@@ -23066,6 +23341,7 @@ export const removeThingFromBillingGroup: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "RemoveThingFromBillingGroup",
 }));
 export type RemoveThingFromThingGroupError =
   | InternalFailureException
@@ -23097,6 +23373,7 @@ export const removeThingFromThingGroup: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "RemoveThingFromThingGroup",
 }));
 export type ReplaceTopicRuleError =
   | ConflictingResourceUpdateException
@@ -23129,6 +23406,7 @@ export const replaceTopicRule: API.OperationMethod<
     SqlParseException,
     UnauthorizedException,
   ],
+  operationName: "ReplaceTopicRule",
 }));
 export type SearchIndexError =
   | IndexNotReadyException
@@ -23141,7 +23419,9 @@ export type SearchIndexError =
   | UnauthorizedException
   | CommonErrors;
 /**
- * The query search index.
+ * Searches the specified index.
+ *
+ * If a device has never connected to IoT Core or was disconnected for more than 1 hour before fleet indexing's `thingConnectivityIndexingMode` was enabled, the `connectivity` object for this device in the response will have the `connected` field set to `false` with no additional session details.
  *
  * Requires permission to access the SearchIndex action.
  */
@@ -23163,6 +23443,7 @@ export const searchIndex: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "SearchIndex",
 }));
 export type SetDefaultAuthorizerError =
   | InternalFailureException
@@ -23196,6 +23477,7 @@ export const setDefaultAuthorizer: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "SetDefaultAuthorizer",
 }));
 export type SetDefaultPolicyVersionError =
   | InternalFailureException
@@ -23229,6 +23511,7 @@ export const setDefaultPolicyVersion: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "SetDefaultPolicyVersion",
 }));
 export type SetLoggingOptionsError =
   | InternalException
@@ -23256,6 +23539,7 @@ export const setLoggingOptions: API.OperationMethod<
     InvalidRequestException,
     ServiceUnavailableException,
   ],
+  operationName: "SetLoggingOptions",
 }));
 export type SetV2LoggingLevelError =
   | InternalException
@@ -23284,6 +23568,7 @@ export const setV2LoggingLevel: API.OperationMethod<
     NotConfiguredException,
     ServiceUnavailableException,
   ],
+  operationName: "SetV2LoggingLevel",
 }));
 export type SetV2LoggingOptionsError =
   | InternalException
@@ -23308,6 +23593,7 @@ export const setV2LoggingOptions: API.OperationMethod<
     InvalidRequestException,
     ServiceUnavailableException,
   ],
+  operationName: "SetV2LoggingOptions",
 }));
 export type StartAuditMitigationActionsTaskError =
   | InternalFailureException
@@ -23336,6 +23622,7 @@ export const startAuditMitigationActionsTask: API.OperationMethod<
     TaskAlreadyExistsException,
     ThrottlingException,
   ],
+  operationName: "StartAuditMitigationActionsTask",
 }));
 export type StartDetectMitigationActionsTaskError =
   | InternalFailureException
@@ -23364,6 +23651,7 @@ export const startDetectMitigationActionsTask: API.OperationMethod<
     TaskAlreadyExistsException,
     ThrottlingException,
   ],
+  operationName: "StartDetectMitigationActionsTask",
 }));
 export type StartOnDemandAuditTaskError =
   | InternalFailureException
@@ -23390,6 +23678,7 @@ export const startOnDemandAuditTask: API.OperationMethod<
     LimitExceededException,
     ThrottlingException,
   ],
+  operationName: "StartOnDemandAuditTask",
 }));
 export type StartThingRegistrationTaskError =
   | InternalFailureException
@@ -23416,6 +23705,7 @@ export const startThingRegistrationTask: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "StartThingRegistrationTask",
 }));
 export type StopThingRegistrationTaskError =
   | InternalFailureException
@@ -23444,6 +23734,7 @@ export const stopThingRegistrationTask: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "StopThingRegistrationTask",
 }));
 export type TagResourceError =
   | InternalFailureException
@@ -23473,6 +23764,7 @@ export const tagResource: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "TagResource",
 }));
 export type TestAuthorizationError =
   | InternalFailureException
@@ -23507,6 +23799,7 @@ export const testAuthorization: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "TestAuthorization",
 }));
 export type TestInvokeAuthorizerError =
   | InternalFailureException
@@ -23541,6 +23834,7 @@ export const testInvokeAuthorizer: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "TestInvokeAuthorizer",
 }));
 export type TransferCertificateError =
   | CertificateStateException
@@ -23599,6 +23893,7 @@ export const transferCertificate: API.OperationMethod<
     TransferConflictException,
     UnauthorizedException,
   ],
+  operationName: "TransferCertificate",
 }));
 export type UntagResourceError =
   | InternalFailureException
@@ -23625,6 +23920,7 @@ export const untagResource: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "UntagResource",
 }));
 export type UpdateAccountAuditConfigurationError =
   | InternalFailureException
@@ -23651,6 +23947,7 @@ export const updateAccountAuditConfiguration: API.OperationMethod<
     InvalidRequestException,
     ThrottlingException,
   ],
+  operationName: "UpdateAccountAuditConfiguration",
 }));
 export type UpdateAuditSuppressionError =
   | InternalFailureException
@@ -23675,6 +23972,7 @@ export const updateAuditSuppression: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "UpdateAuditSuppression",
 }));
 export type UpdateAuthorizerError =
   | InternalFailureException
@@ -23707,6 +24005,7 @@ export const updateAuthorizer: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "UpdateAuthorizer",
 }));
 export type UpdateBillingGroupError =
   | InternalFailureException
@@ -23735,6 +24034,7 @@ export const updateBillingGroup: API.OperationMethod<
     ThrottlingException,
     VersionConflictException,
   ],
+  operationName: "UpdateBillingGroup",
 }));
 export type UpdateCACertificateError =
   | InternalFailureException
@@ -23765,6 +24065,7 @@ export const updateCACertificate: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "UpdateCACertificate",
 }));
 export type UpdateCertificateError =
   | CertificateStateException
@@ -23805,6 +24106,7 @@ export const updateCertificate: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "UpdateCertificate",
 }));
 export type UpdateCertificateProviderError =
   | InternalFailureException
@@ -23835,6 +24137,7 @@ export const updateCertificateProvider: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "UpdateCertificateProvider",
 }));
 export type UpdateCommandError =
   | ConflictException
@@ -23861,6 +24164,7 @@ export const updateCommand: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateCommand",
 }));
 export type UpdateCustomMetricError =
   | InternalFailureException
@@ -23888,6 +24192,7 @@ export const updateCustomMetric: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "UpdateCustomMetric",
 }));
 export type UpdateDimensionError =
   | InternalFailureException
@@ -23919,6 +24224,7 @@ export const updateDimension: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "UpdateDimension",
 }));
 export type UpdateDomainConfigurationError =
   | CertificateValidationException
@@ -23952,6 +24258,7 @@ export const updateDomainConfiguration: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "UpdateDomainConfiguration",
 }));
 export type UpdateDynamicThingGroupError =
   | InternalFailureException
@@ -23982,6 +24289,7 @@ export const updateDynamicThingGroup: API.OperationMethod<
     ThrottlingException,
     VersionConflictException,
   ],
+  operationName: "UpdateDynamicThingGroup",
 }));
 export type UpdateEncryptionConfigurationError =
   | InternalFailureException
@@ -24012,6 +24320,7 @@ export const updateEncryptionConfiguration: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "UpdateEncryptionConfiguration",
 }));
 export type UpdateEventConfigurationsError =
   | InternalFailureException
@@ -24036,6 +24345,7 @@ export const updateEventConfigurations: API.OperationMethod<
     InvalidRequestException,
     ThrottlingException,
   ],
+  operationName: "UpdateEventConfigurations",
 }));
 export type UpdateFleetMetricError =
   | IndexNotReadyException
@@ -24074,6 +24384,7 @@ export const updateFleetMetric: API.OperationMethod<
     UnauthorizedException,
     VersionConflictException,
   ],
+  operationName: "UpdateFleetMetric",
 }));
 export type UpdateIndexingConfigurationError =
   | InternalFailureException
@@ -24102,6 +24413,7 @@ export const updateIndexingConfiguration: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "UpdateIndexingConfiguration",
 }));
 export type UpdateJobError =
   | InvalidRequestException
@@ -24128,6 +24440,7 @@ export const updateJob: API.OperationMethod<
     ServiceUnavailableException,
     ThrottlingException,
   ],
+  operationName: "UpdateJob",
 }));
 export type UpdateMitigationActionError =
   | InternalFailureException
@@ -24154,6 +24467,7 @@ export const updateMitigationAction: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "UpdateMitigationAction",
 }));
 export type UpdatePackageError =
   | ConflictException
@@ -24182,6 +24496,7 @@ export const updatePackage: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdatePackage",
 }));
 export type UpdatePackageConfigurationError =
   | ConflictException
@@ -24208,6 +24523,7 @@ export const updatePackageConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdatePackageConfiguration",
 }));
 export type UpdatePackageVersionError =
   | ConflictException
@@ -24236,6 +24552,7 @@ export const updatePackageVersion: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdatePackageVersion",
 }));
 export type UpdateProvisioningTemplateError =
   | ConflictingResourceUpdateException
@@ -24264,6 +24581,7 @@ export const updateProvisioningTemplate: API.OperationMethod<
     ResourceNotFoundException,
     UnauthorizedException,
   ],
+  operationName: "UpdateProvisioningTemplate",
 }));
 export type UpdateRoleAliasError =
   | InternalFailureException
@@ -24301,6 +24619,7 @@ export const updateRoleAlias: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "UpdateRoleAlias",
 }));
 export type UpdateScheduledAuditError =
   | InternalFailureException
@@ -24328,6 +24647,7 @@ export const updateScheduledAudit: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "UpdateScheduledAudit",
 }));
 export type UpdateSecurityProfileError =
   | InternalFailureException
@@ -24356,6 +24676,7 @@ export const updateSecurityProfile: API.OperationMethod<
     ThrottlingException,
     VersionConflictException,
   ],
+  operationName: "UpdateSecurityProfile",
 }));
 export type UpdateStreamError =
   | InternalFailureException
@@ -24388,6 +24709,7 @@ export const updateStream: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "UpdateStream",
 }));
 export type UpdateThingError =
   | InternalFailureException
@@ -24420,6 +24742,7 @@ export const updateThing: API.OperationMethod<
     UnauthorizedException,
     VersionConflictException,
   ],
+  operationName: "UpdateThing",
 }));
 export type UpdateThingGroupError =
   | InternalFailureException
@@ -24448,6 +24771,7 @@ export const updateThingGroup: API.OperationMethod<
     ThrottlingException,
     VersionConflictException,
   ],
+  operationName: "UpdateThingGroup",
 }));
 export type UpdateThingGroupsForThingError =
   | InternalFailureException
@@ -24474,6 +24798,7 @@ export const updateThingGroupsForThing: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "UpdateThingGroupsForThing",
 }));
 export type UpdateThingTypeError =
   | InternalFailureException
@@ -24502,6 +24827,7 @@ export const updateThingType: API.OperationMethod<
     ThrottlingException,
     UnauthorizedException,
   ],
+  operationName: "UpdateThingType",
 }));
 export type UpdateTopicRuleDestinationError =
   | ConflictingResourceUpdateException
@@ -24531,6 +24857,7 @@ export const updateTopicRuleDestination: API.OperationMethod<
     ServiceUnavailableException,
     UnauthorizedException,
   ],
+  operationName: "UpdateTopicRuleDestination",
 }));
 export type ValidateSecurityProfileBehaviorsError =
   | InternalFailureException
@@ -24555,4 +24882,5 @@ export const validateSecurityProfileBehaviors: API.OperationMethod<
     InvalidRequestException,
     ThrottlingException,
   ],
+  operationName: "ValidateSecurityProfileBehaviors",
 }));

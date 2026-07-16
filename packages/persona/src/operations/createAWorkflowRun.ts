@@ -10,6 +10,23 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface CreateAWorkflowRunInput {
+  workflowId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  data: { attributes: { fields: Record<string, unknown> } };
+}
 export const CreateAWorkflowRunInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     workflowId: Schema.String.pipe(T.PathParam()),
@@ -40,10 +57,96 @@ export const CreateAWorkflowRunInput =
         fields: Schema.Record(Schema.String, Schema.Unknown),
       }),
     }),
-  }).pipe(T.Http({ method: "POST", path: "/workflows/{workflowId}/trigger" }));
-export type CreateAWorkflowRunInput = typeof CreateAWorkflowRunInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/workflows/{workflowId}/trigger" }),
+  ) as unknown as Schema.Codec<CreateAWorkflowRunInput>;
 
 // Output Schema
+export interface CreateAWorkflowRunOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      "completed-at"?: string | null;
+      "created-at"?: string;
+      status?: string;
+    };
+    relationships?: {
+      creator?: { data?: { type?: string; id?: string } | null };
+      workflow?: { data?: { type?: string; id?: string } };
+      "workflow-version"?: { data?: { type?: string; id?: string } };
+    };
+    meta?: { "processing-time-seconds"?: number | null };
+  };
+  included?: ReadonlyArray<
+    | {
+        type?: string;
+        id?: string;
+        attributes?: { status?: string; name?: string; "created-at"?: string };
+        relationships?: {
+          "latest-published-version"?: {
+            data?: { type?: string; id?: string };
+          };
+          "active-deployment"?: {
+            data?: {
+              type?: string;
+              id?: string;
+              attributes?: {
+                status?: string;
+                configuration?: {
+                  versions?: ReadonlyArray<{
+                    token?: string;
+                    percentage?: number;
+                    label?: string;
+                  }>;
+                };
+                "created-at"?: string;
+                "updated-at"?: string;
+              };
+            } | null;
+          };
+        };
+      }
+    | {
+        type?: string;
+        id?: string;
+        attributes?: {
+          description?: string;
+          status?: string;
+          "created-at"?: string;
+        };
+        relationships?: {
+          workflow?: { data?: { type?: string; id?: string } };
+        };
+      }
+    | {
+        type?: string;
+        id?: string;
+        attributes?: {
+          name?: string;
+          payload?: {
+            data?: {
+              type?: string;
+              id?: string;
+              attributes?: Record<string, unknown>;
+              relationships?: Record<string, unknown>;
+            };
+          };
+          "created-at"?: string;
+          context?: Record<string, unknown>;
+        };
+      }
+    | {
+        type?: string;
+        id?: string;
+        attributes?: {
+          "email-address"?: string;
+          "name-first"?: string;
+          "name-last"?: string;
+        };
+      }
+  >;
+}
 export const CreateAWorkflowRunOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -60,7 +163,14 @@ export const CreateAWorkflowRunOutput =
         Schema.Struct({
           creator: Schema.optional(
             Schema.Struct({
-              data: Schema.optional(Schema.Unknown),
+              data: Schema.optional(
+                Schema.NullOr(
+                  Schema.Struct({
+                    type: Schema.optional(Schema.String),
+                    id: Schema.optional(Schema.String),
+                  }),
+                ),
+              ),
             }),
           ),
           workflow: Schema.optional(
@@ -93,9 +203,137 @@ export const CreateAWorkflowRunOutput =
         }),
       ),
     }),
-    included: Schema.optional(Schema.Array(Schema.Unknown)),
-  });
-export type CreateAWorkflowRunOutput = typeof CreateAWorkflowRunOutput.Type;
+    included: Schema.optional(
+      Schema.Array(
+        Schema.Union([
+          Schema.Struct({
+            type: Schema.optional(Schema.String),
+            id: Schema.optional(Schema.String),
+            attributes: Schema.optional(
+              Schema.Struct({
+                status: Schema.optional(Schema.String),
+                name: Schema.optional(Schema.String),
+                "created-at": Schema.optional(Schema.String),
+              }),
+            ),
+            relationships: Schema.optional(
+              Schema.Struct({
+                "latest-published-version": Schema.optional(
+                  Schema.Struct({
+                    data: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        id: Schema.optional(Schema.String),
+                      }),
+                    ),
+                  }),
+                ),
+                "active-deployment": Schema.optional(
+                  Schema.Struct({
+                    data: Schema.optional(
+                      Schema.NullOr(
+                        Schema.Struct({
+                          type: Schema.optional(Schema.String),
+                          id: Schema.optional(Schema.String),
+                          attributes: Schema.optional(
+                            Schema.Struct({
+                              status: Schema.optional(Schema.String),
+                              configuration: Schema.optional(
+                                Schema.Struct({
+                                  versions: Schema.optional(
+                                    Schema.Array(
+                                      Schema.Struct({
+                                        token: Schema.optional(Schema.String),
+                                        percentage: Schema.optional(
+                                          Schema.Number,
+                                        ),
+                                        label: Schema.optional(Schema.String),
+                                      }),
+                                    ),
+                                  ),
+                                }),
+                              ),
+                              "created-at": Schema.optional(Schema.String),
+                              "updated-at": Schema.optional(Schema.String),
+                            }),
+                          ),
+                        }),
+                      ),
+                    ),
+                  }),
+                ),
+              }),
+            ),
+          }),
+          Schema.Struct({
+            type: Schema.optional(Schema.String),
+            id: Schema.optional(Schema.String),
+            attributes: Schema.optional(
+              Schema.Struct({
+                description: Schema.optional(Schema.String),
+                status: Schema.optional(Schema.String),
+                "created-at": Schema.optional(Schema.String),
+              }),
+            ),
+            relationships: Schema.optional(
+              Schema.Struct({
+                workflow: Schema.optional(
+                  Schema.Struct({
+                    data: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        id: Schema.optional(Schema.String),
+                      }),
+                    ),
+                  }),
+                ),
+              }),
+            ),
+          }),
+          Schema.Struct({
+            type: Schema.optional(Schema.String),
+            id: Schema.optional(Schema.String),
+            attributes: Schema.optional(
+              Schema.Struct({
+                name: Schema.optional(Schema.String),
+                payload: Schema.optional(
+                  Schema.Struct({
+                    data: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        id: Schema.optional(Schema.String),
+                        attributes: Schema.optional(
+                          Schema.Record(Schema.String, Schema.Unknown),
+                        ),
+                        relationships: Schema.optional(
+                          Schema.Record(Schema.String, Schema.Unknown),
+                        ),
+                      }),
+                    ),
+                  }),
+                ),
+                "created-at": Schema.optional(Schema.String),
+                context: Schema.optional(
+                  Schema.Record(Schema.String, Schema.Unknown),
+                ),
+              }),
+            ),
+          }),
+          Schema.Struct({
+            type: Schema.optional(Schema.String),
+            id: Schema.optional(Schema.String),
+            attributes: Schema.optional(
+              Schema.Struct({
+                "email-address": Schema.optional(Schema.String),
+                "name-first": Schema.optional(Schema.String),
+                "name-last": Schema.optional(Schema.String),
+              }),
+            ),
+          }),
+        ]),
+      ),
+    ),
+  }) as unknown as Schema.Codec<CreateAWorkflowRunOutput>;
 
 // The operation
 /**

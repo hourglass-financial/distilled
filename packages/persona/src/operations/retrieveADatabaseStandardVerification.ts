@@ -4,6 +4,22 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface RetrieveADatabaseStandardVerificationInput {
+  verificationId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const RetrieveADatabaseStandardVerificationInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     verificationId: Schema.String.pipe(T.PathParam()),
@@ -34,11 +50,55 @@ export const RetrieveADatabaseStandardVerificationInput =
       method: "GET",
       path: "/verification/database-standards/{verificationId}",
     }),
-  );
-export type RetrieveADatabaseStandardVerificationInput =
-  typeof RetrieveADatabaseStandardVerificationInput.Type;
+  ) as unknown as Schema.Codec<RetrieveADatabaseStandardVerificationInput>;
 
 // Output Schema
+export interface RetrieveADatabaseStandardVerificationOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      status?: string;
+      "created-at"?: string;
+      "created-at-ts"?: number;
+      "submitted-at"?: string | null;
+      "submitted-at-ts"?: number | null;
+      "completed-at"?: string | null;
+      "completed-at-ts"?: number | null;
+      "redacted-at"?: string | null;
+      "country-code"?: string | null;
+      tags?: ReadonlyArray<string>;
+      checks?: ReadonlyArray<{
+        name?: string;
+        status?: string;
+        reasons?: ReadonlyArray<string | null>;
+        requirement?: string;
+        metadata?: Record<string, unknown>;
+      }>;
+      "normalized-address-city"?: string;
+      "normalized-address-postal-code"?: string;
+      "normalized-address-street-1"?: string;
+      "normalized-address-street-2"?: string;
+      "normalized-address-subdivision"?: string;
+    };
+    relationships?: {
+      inquiry?: { data?: { id?: string; type?: string } | null };
+      template?: { data?: { type?: string; id?: string } | null };
+      "inquiry-template-version"?: {
+        data?: { type?: string; id?: string } | null;
+      };
+      "inquiry-template"?: { data?: { type?: string; id?: string } | null };
+      transaction?: { data?: { type?: string; id?: string } | null };
+      "verification-template"?: {
+        data?: { type?: string; id?: string } | null;
+      };
+      "verification-template-version"?: {
+        data?: { type?: string; id?: string } | null;
+      };
+      accounts?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+    };
+  };
+}
 export const RetrieveADatabaseStandardVerificationOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -179,9 +239,7 @@ export const RetrieveADatabaseStandardVerificationOutput =
         }),
       ),
     }),
-  });
-export type RetrieveADatabaseStandardVerificationOutput =
-  typeof RetrieveADatabaseStandardVerificationOutput.Type;
+  }) as unknown as Schema.Codec<RetrieveADatabaseStandardVerificationOutput>;
 
 // The operation
 /**

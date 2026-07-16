@@ -128,6 +128,14 @@ export interface HttpTrait {
    */
   contentType?: string;
   /**
+   * Explicit `Content-Type` for a `contentType: "binary"` request body when the
+   * API requires a specific media type rather than the generic
+   * `application/octet-stream` (e.g. `application/x-ndjson` for Vectorize
+   * insert/upsert). Ignored unless `contentType === "binary"`; a caller-supplied
+   * `content-type` header still wins.
+   */
+  bodyMediaType?: string;
+  /**
    * Response body content type. Recognized values:
    *   - `"binary"`  — `application/octet-stream` download. The runtime
    *                   bypasses JSON decoding and returns the body as an
@@ -477,6 +485,15 @@ export const getAnnotation = <T>(
   // Follow encoding chain (replaces v3 Transformation handling)
   if (ast.encoding && ast.encoding.length > 0) {
     return getAnnotation<T>(ast.encoding[0].to, symbol);
+  }
+
+  // Follow `Schema.suspend` thunks. Generated SDKs defer schema construction
+  // by wrapping structs in `Schema.suspend(() => ...)`; a trait applied to an
+  // already-suspended schema (e.g. `T.ResponsePath` on a shared, suspended
+  // response struct) lands on the Suspend node itself, so we must force the
+  // thunk to discover annotations attached beneath it.
+  if (ast._tag === "Suspend") {
+    return getAnnotation<T>(ast.thunk(), symbol);
   }
 
   return undefined;

@@ -4,22 +4,28 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface SimulateWireOutReturnInput {
+  id: string;
+  ereborVersion?: string;
+}
 export const SimulateWireOutReturnInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
-  }).pipe(T.Http({ method: "POST", path: "/simulation/wire_out/{id}/return" }));
-export type SimulateWireOutReturnInput = typeof SimulateWireOutReturnInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/simulation/wire_out/{id}/return" }),
+  ) as unknown as Schema.Codec<SimulateWireOutReturnInput>;
 
 // Output Schema
+export interface SimulateWireOutReturnOutput {
+  id: string;
+}
 export const SimulateWireOutReturnOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
-  });
-export type SimulateWireOutReturnOutput =
-  typeof SimulateWireOutReturnOutput.Type;
+  }) as unknown as Schema.Codec<SimulateWireOutReturnOutput>;
 
 // The operation
 /**

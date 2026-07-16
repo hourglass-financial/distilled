@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -3073,6 +3073,7 @@ export const listTagsForResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type TagResourceError =
   | AccessDeniedException
@@ -3099,6 +3100,7 @@ export const tagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | AccessDeniedException
@@ -3125,6 +3127,7 @@ export const untagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UntagResource",
 }));
 export type CreateCaseError =
   | AccessDeniedException
@@ -3163,6 +3166,7 @@ export const createCase: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateCase",
 }));
 export type GetCaseError =
   | AccessDeniedException
@@ -3204,6 +3208,7 @@ export const getCase: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetCase",
   pagination: { inputToken: "nextToken", outputToken: "nextToken" } as const,
 }));
 export type UpdateCaseError =
@@ -3235,6 +3240,7 @@ export const updateCase: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateCase",
 }));
 export type DeleteCaseError =
   | AccessDeniedException
@@ -3269,6 +3275,7 @@ export const deleteCase: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteCase",
 }));
 export type GetCaseAuditEventsError =
   | AccessDeniedException
@@ -3310,6 +3317,7 @@ export const getCaseAuditEvents: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetCaseAuditEvents",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3356,6 +3364,7 @@ export const listCasesForContact: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListCasesForContact",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3404,6 +3413,7 @@ export const searchCases: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SearchCases",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3468,11 +3478,13 @@ export const createRelatedItem: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateRelatedItem",
 }));
 export type UpdateRelatedItemError =
   | AccessDeniedException
   | InternalServerException
   | ResourceNotFoundException
+  | ServiceQuotaExceededException
   | ThrottlingException
   | ValidationException
   | CommonErrors;
@@ -3505,9 +3517,11 @@ export const updateRelatedItem: API.OperationMethod<
     AccessDeniedException,
     InternalServerException,
     ResourceNotFoundException,
+    ServiceQuotaExceededException,
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateRelatedItem",
 }));
 export type DeleteRelatedItemError =
   | AccessDeniedException
@@ -3536,6 +3550,7 @@ export const deleteRelatedItem: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteRelatedItem",
 }));
 export type SearchRelatedItemsError =
   | AccessDeniedException
@@ -3579,6 +3594,7 @@ export const searchRelatedItems: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SearchRelatedItems",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3615,6 +3631,7 @@ export const createCaseRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateCaseRule",
 }));
 export type UpdateCaseRuleError =
   | AccessDeniedException
@@ -3645,6 +3662,7 @@ export const updateCaseRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateCaseRule",
 }));
 export type DeleteCaseRuleError =
   | AccessDeniedException
@@ -3671,6 +3689,7 @@ export const deleteCaseRule: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "DeleteCaseRule",
 }));
 export type ListCaseRulesError =
   | AccessDeniedException
@@ -3712,6 +3731,7 @@ export const listCaseRules: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListCaseRules",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3744,6 +3764,7 @@ export const batchGetCaseRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchGetCaseRule",
 }));
 export type CreateDomainError =
   | AccessDeniedException
@@ -3774,6 +3795,7 @@ export const createDomain: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateDomain",
 }));
 export type GetDomainError =
   | AccessDeniedException
@@ -3800,6 +3822,7 @@ export const getDomain: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetDomain",
 }));
 export type DeleteDomainError =
   | AccessDeniedException
@@ -3830,6 +3853,7 @@ export const deleteDomain: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteDomain",
 }));
 export type ListDomainsError =
   | AccessDeniedException
@@ -3869,6 +3893,7 @@ export const listDomains: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListDomains",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3900,6 +3925,7 @@ export const getCaseEventConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetCaseEventConfiguration",
 }));
 export type PutCaseEventConfigurationError =
   | AccessDeniedException
@@ -3928,6 +3954,7 @@ export const putCaseEventConfiguration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutCaseEventConfiguration",
 }));
 export type SearchAllRelatedItemsError =
   | AccessDeniedException
@@ -3987,6 +4014,7 @@ export const searchAllRelatedItems: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SearchAllRelatedItems",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -4023,6 +4051,7 @@ export const createField: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateField",
 }));
 export type UpdateFieldError =
   | AccessDeniedException
@@ -4051,6 +4080,7 @@ export const updateField: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateField",
 }));
 export type DeleteFieldError =
   | AccessDeniedException
@@ -4107,6 +4137,7 @@ export const deleteField: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteField",
 }));
 export type ListFieldsError =
   | AccessDeniedException
@@ -4148,6 +4179,7 @@ export const listFields: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListFields",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -4181,6 +4213,7 @@ export const batchPutFieldOptions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchPutFieldOptions",
 }));
 export type ListFieldOptionsError =
   | AccessDeniedException
@@ -4222,6 +4255,7 @@ export const listFieldOptions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListFieldOptions",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -4253,6 +4287,7 @@ export const batchGetField: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchGetField",
 }));
 export type CreateLayoutError =
   | AccessDeniedException
@@ -4289,6 +4324,7 @@ export const createLayout: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateLayout",
 }));
 export type GetLayoutError =
   | AccessDeniedException
@@ -4315,6 +4351,7 @@ export const getLayout: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetLayout",
 }));
 export type UpdateLayoutError =
   | AccessDeniedException
@@ -4351,6 +4388,7 @@ export const updateLayout: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateLayout",
 }));
 export type DeleteLayoutError =
   | AccessDeniedException
@@ -4387,6 +4425,7 @@ export const deleteLayout: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteLayout",
 }));
 export type ListLayoutsError =
   | AccessDeniedException
@@ -4428,6 +4467,7 @@ export const listLayouts: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListLayouts",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -4473,6 +4513,7 @@ export const createTemplate: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateTemplate",
 }));
 export type GetTemplateError =
   | AccessDeniedException
@@ -4507,6 +4548,7 @@ export const getTemplate: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetTemplate",
 }));
 export type UpdateTemplateError =
   | AccessDeniedException
@@ -4547,6 +4589,7 @@ export const updateTemplate: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateTemplate",
 }));
 export type DeleteTemplateError =
   | AccessDeniedException
@@ -4585,6 +4628,7 @@ export const deleteTemplate: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteTemplate",
 }));
 export type ListTemplatesError =
   | AccessDeniedException
@@ -4636,6 +4680,7 @@ export const listTemplates: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListTemplates",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",

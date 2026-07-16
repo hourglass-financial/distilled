@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -169,11 +169,11 @@ export type MembershipStatus = string;
 export type ProtectedJobIdentifier = string;
 export type JobParameterName = string;
 export type JobParameterValue = string;
+export type SparkPropertyKey = string;
+export type SparkPropertyValue = string;
 export type ProtectedQueryIdentifier = string;
 export type ProtectedQueryStatus = string;
 export type DifferentialPrivacyAggregationExpression = string;
-export type SparkPropertyKey = string;
-export type SparkPropertyValue = string;
 export type ProtectedQueryType = string;
 export type TargetProtectedQueryStatus = string;
 
@@ -2040,6 +2040,8 @@ export const ChangeSpecificationType = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface MemberChangeSpecification {
   accountId: string;
   memberAbilities: MemberAbility[];
+  mlMemberAbilities?: MLMemberAbilities;
+  paymentConfiguration?: PaymentConfiguration;
   displayName?: string;
 }
 export const MemberChangeSpecification = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
@@ -2047,6 +2049,8 @@ export const MemberChangeSpecification = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
     S.Struct({
       accountId: S.String,
       memberAbilities: MemberAbilities,
+      mlMemberAbilities: S.optional(MLMemberAbilities),
+      paymentConfiguration: S.optional(PaymentConfiguration),
       displayName: S.optional(S.String),
     }),
 ).annotate({
@@ -2122,6 +2126,12 @@ export type ChangeType =
   | "GRANT_RECEIVE_RESULTS_ABILITY"
   | "REVOKE_RECEIVE_RESULTS_ABILITY"
   | "EDIT_AUTO_APPROVED_CHANGE_TYPES"
+  | "ADD_PAYER_CANDIDATE"
+  | "REMOVE_PAYER_CANDIDATE"
+  | "GRANT_CAN_RECEIVE_MODEL_OUTPUT"
+  | "GRANT_CAN_RECEIVE_INFERENCE_OUTPUT"
+  | "REVOKE_CAN_RECEIVE_MODEL_OUTPUT"
+  | "REVOKE_CAN_RECEIVE_INFERENCE_OUTPUT"
   | (string & {});
 export const ChangeType = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export type ChangeTypeList = ChangeType[];
@@ -5571,12 +5581,28 @@ export const GetMembershipOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "GetMembershipOutput",
 }) as any as S.Schema<GetMembershipOutput>;
+export interface UpdateMembershipPaymentConfiguration {
+  queryCompute?: MembershipQueryComputePaymentConfig;
+  machineLearning?: MembershipMLPaymentConfig;
+  jobCompute?: MembershipJobComputePaymentConfig;
+}
+export const UpdateMembershipPaymentConfiguration =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      queryCompute: S.optional(MembershipQueryComputePaymentConfig),
+      machineLearning: S.optional(MembershipMLPaymentConfig),
+      jobCompute: S.optional(MembershipJobComputePaymentConfig),
+    }),
+  ).annotate({
+    identifier: "UpdateMembershipPaymentConfiguration",
+  }) as any as S.Schema<UpdateMembershipPaymentConfiguration>;
 export interface UpdateMembershipInput {
   membershipIdentifier: string;
   queryLogStatus?: MembershipQueryLogStatus;
   jobLogStatus?: MembershipJobLogStatus;
   defaultResultConfiguration?: MembershipProtectedQueryResultConfiguration;
   defaultJobResultConfiguration?: MembershipProtectedJobResultConfiguration;
+  membershipPaymentConfiguration?: UpdateMembershipPaymentConfiguration;
 }
 export const UpdateMembershipInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -5588,6 +5614,9 @@ export const UpdateMembershipInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     ),
     defaultJobResultConfiguration: S.optional(
       MembershipProtectedJobResultConfiguration,
+    ),
+    membershipPaymentConfiguration: S.optional(
+      UpdateMembershipPaymentConfiguration,
     ),
   }).pipe(
     T.all(
@@ -5866,13 +5895,28 @@ export const ProtectedJobError = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 export type ProtectedJobWorkerComputeType = "CR.1X" | "CR.4X" | (string & {});
 export const ProtectedJobWorkerComputeType =
   /*@__PURE__*/ /*#__PURE__*/ S.String;
+export type SparkProperties = { [key: string]: string | undefined };
+export const SparkProperties = /*@__PURE__*/ /*#__PURE__*/ S.Record(
+  S.String,
+  S.String.pipe(S.optional),
+);
+export type WorkerComputeConfigurationProperties = {
+  spark: { [key: string]: string | undefined };
+};
+export const WorkerComputeConfigurationProperties =
+  /*@__PURE__*/ /*#__PURE__*/ S.Union([S.Struct({ spark: SparkProperties })]);
 export interface ProtectedJobWorkerComputeConfiguration {
   type: ProtectedJobWorkerComputeType;
   number: number;
+  properties?: WorkerComputeConfigurationProperties;
 }
 export const ProtectedJobWorkerComputeConfiguration =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-    S.Struct({ type: ProtectedJobWorkerComputeType, number: S.Number }),
+    S.Struct({
+      type: ProtectedJobWorkerComputeType,
+      number: S.Number,
+      properties: S.optional(WorkerComputeConfigurationProperties),
+    }),
   ).annotate({
     identifier: "ProtectedJobWorkerComputeConfiguration",
   }) as any as S.Schema<ProtectedJobWorkerComputeConfiguration>;
@@ -5895,6 +5939,7 @@ export interface ProtectedJob {
   result?: ProtectedJobResult;
   error?: ProtectedJobError;
   computeConfiguration?: ProtectedJobComputeConfiguration;
+  jobComputePayerAccountId?: string;
 }
 export const ProtectedJob = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -5909,6 +5954,7 @@ export const ProtectedJob = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     result: S.optional(ProtectedJobResult),
     error: S.optional(ProtectedJobError),
     computeConfiguration: S.optional(ProtectedJobComputeConfiguration),
+    jobComputePayerAccountId: S.optional(S.String),
   }),
 ).annotate({ identifier: "ProtectedJob" }) as any as S.Schema<ProtectedJob>;
 export interface GetProtectedJobOutput {
@@ -6155,16 +6201,6 @@ export const DifferentialPrivacyParameters =
   }) as any as S.Schema<DifferentialPrivacyParameters>;
 export type WorkerComputeType = "CR.1X" | "CR.4X" | (string & {});
 export const WorkerComputeType = /*@__PURE__*/ /*#__PURE__*/ S.String;
-export type SparkProperties = { [key: string]: string | undefined };
-export const SparkProperties = /*@__PURE__*/ /*#__PURE__*/ S.Record(
-  S.String,
-  S.String.pipe(S.optional),
-);
-export type WorkerComputeConfigurationProperties = {
-  spark: { [key: string]: string | undefined };
-};
-export const WorkerComputeConfigurationProperties =
-  /*@__PURE__*/ /*#__PURE__*/ S.Union([S.Struct({ spark: SparkProperties })]);
 export interface WorkerComputeConfiguration {
   type?: WorkerComputeType;
   number?: number;
@@ -6197,6 +6233,7 @@ export interface ProtectedQuery {
   error?: ProtectedQueryError;
   differentialPrivacy?: DifferentialPrivacyParameters;
   computeConfiguration?: ComputeConfiguration;
+  queryComputePayerAccountId?: string;
 }
 export const ProtectedQuery = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -6212,6 +6249,7 @@ export const ProtectedQuery = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     error: S.optional(ProtectedQueryError),
     differentialPrivacy: S.optional(DifferentialPrivacyParameters),
     computeConfiguration: S.optional(ComputeConfiguration),
+    queryComputePayerAccountId: S.optional(S.String),
   }),
 ).annotate({ identifier: "ProtectedQuery" }) as any as S.Schema<ProtectedQuery>;
 export interface GetProtectedQueryOutput {
@@ -6382,6 +6420,7 @@ export interface ProtectedJobSummary {
   createTime: Date;
   status: ProtectedJobStatus;
   receiverConfigurations: ProtectedJobReceiverConfiguration[];
+  jobComputePayerAccountId?: string;
 }
 export const ProtectedJobSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -6391,6 +6430,7 @@ export const ProtectedJobSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     createTime: S.Date.pipe(T.TimestampFormat("epoch-seconds")),
     status: ProtectedJobStatus,
     receiverConfigurations: ProtectedJobReceiverConfigurations,
+    jobComputePayerAccountId: S.optional(S.String),
   }),
 ).annotate({
   identifier: "ProtectedJobSummary",
@@ -6482,6 +6522,7 @@ export interface ProtectedQuerySummary {
   createTime: Date;
   status: string;
   receiverConfigurations: ReceiverConfiguration[];
+  queryComputePayerAccountId?: string;
 }
 export const ProtectedQuerySummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -6491,6 +6532,7 @@ export const ProtectedQuerySummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     createTime: S.Date.pipe(T.TimestampFormat("epoch-seconds")),
     status: S.String,
     receiverConfigurations: ReceiverConfigurationsList,
+    queryComputePayerAccountId: S.optional(S.String),
   }),
 ).annotate({
   identifier: "ProtectedQuerySummary",
@@ -6626,6 +6668,7 @@ export interface StartProtectedJobInput {
   jobParameters: ProtectedJobParameters;
   resultConfiguration?: ProtectedJobResultConfigurationInput;
   computeConfiguration?: ProtectedJobComputeConfiguration;
+  jobComputePayerAccountId?: string;
 }
 export const StartProtectedJobInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -6635,6 +6678,7 @@ export const StartProtectedJobInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       jobParameters: ProtectedJobParameters,
       resultConfiguration: S.optional(ProtectedJobResultConfigurationInput),
       computeConfiguration: S.optional(ProtectedJobComputeConfiguration),
+      jobComputePayerAccountId: S.optional(S.String),
     }).pipe(
       T.all(
         T.Http({
@@ -6665,6 +6709,7 @@ export interface StartProtectedQueryInput {
   sqlParameters: ProtectedQuerySQLParameters;
   resultConfiguration?: ProtectedQueryResultConfiguration;
   computeConfiguration?: ComputeConfiguration;
+  queryComputePayerAccountId?: string;
 }
 export const StartProtectedQueryInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -6674,6 +6719,7 @@ export const StartProtectedQueryInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       sqlParameters: ProtectedQuerySQLParameters,
       resultConfiguration: S.optional(ProtectedQueryResultConfiguration),
       computeConfiguration: S.optional(ComputeConfiguration),
+      queryComputePayerAccountId: S.optional(S.String),
     }).pipe(
       T.all(
         T.Http({
@@ -7153,6 +7199,7 @@ export const listTagsForResource: API.OperationMethod<
   input: ListTagsForResourceInput,
   output: ListTagsForResourceOutput,
   errors: [ResourceNotFoundException, ValidationException],
+  operationName: "ListTagsForResource",
 }));
 export type TagResourceError =
   | ResourceNotFoundException
@@ -7170,6 +7217,7 @@ export const tagResource: API.OperationMethod<
   input: TagResourceInput,
   output: TagResourceOutput,
   errors: [ResourceNotFoundException, ValidationException],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | ResourceNotFoundException
@@ -7187,6 +7235,7 @@ export const untagResource: API.OperationMethod<
   input: UntagResourceInput,
   output: UntagResourceOutput,
   errors: [ResourceNotFoundException, ValidationException],
+  operationName: "UntagResource",
 }));
 export type CreateAnalysisTemplateError =
   | AccessDeniedException
@@ -7217,6 +7266,7 @@ export const createAnalysisTemplate: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateAnalysisTemplate",
 }));
 export type GetAnalysisTemplateError =
   | AccessDeniedException
@@ -7243,6 +7293,7 @@ export const getAnalysisTemplate: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetAnalysisTemplate",
 }));
 export type UpdateAnalysisTemplateError =
   | AccessDeniedException
@@ -7269,6 +7320,7 @@ export const updateAnalysisTemplate: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateAnalysisTemplate",
 }));
 export type DeleteAnalysisTemplateError =
   | AccessDeniedException
@@ -7295,6 +7347,7 @@ export const deleteAnalysisTemplate: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteAnalysisTemplate",
 }));
 export type ListAnalysisTemplatesError =
   | AccessDeniedException
@@ -7336,6 +7389,7 @@ export const listAnalysisTemplates: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListAnalysisTemplates",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -7368,6 +7422,7 @@ export const createCollaboration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateCollaboration",
 }));
 export type GetCollaborationError =
   | AccessDeniedException
@@ -7392,6 +7447,7 @@ export const getCollaboration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetCollaboration",
 }));
 export type UpdateCollaborationError =
   | AccessDeniedException
@@ -7416,6 +7472,7 @@ export const updateCollaboration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateCollaboration",
 }));
 export type DeleteCollaborationError =
   | AccessDeniedException
@@ -7440,6 +7497,7 @@ export const deleteCollaboration: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteCollaboration",
 }));
 export type ListCollaborationsError =
   | AccessDeniedException
@@ -7479,6 +7537,7 @@ export const listCollaborations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListCollaborations",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -7511,6 +7570,7 @@ export const batchGetCollaborationAnalysisTemplate: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchGetCollaborationAnalysisTemplate",
 }));
 export type BatchGetSchemaError =
   | AccessDeniedException
@@ -7537,6 +7597,7 @@ export const batchGetSchema: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchGetSchema",
 }));
 export type BatchGetSchemaAnalysisRuleError =
   | AccessDeniedException
@@ -7563,6 +7624,7 @@ export const batchGetSchemaAnalysisRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchGetSchemaAnalysisRule",
 }));
 export type CreateCollaborationChangeRequestError =
   | AccessDeniedException
@@ -7593,6 +7655,7 @@ export const createCollaborationChangeRequest: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateCollaborationChangeRequest",
 }));
 export type DeleteMemberError =
   | AccessDeniedException
@@ -7621,6 +7684,7 @@ export const deleteMember: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteMember",
 }));
 export type GetCollaborationAnalysisTemplateError =
   | AccessDeniedException
@@ -7647,6 +7711,7 @@ export const getCollaborationAnalysisTemplate: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetCollaborationAnalysisTemplate",
 }));
 export type GetCollaborationChangeRequestError =
   | AccessDeniedException
@@ -7673,6 +7738,7 @@ export const getCollaborationChangeRequest: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetCollaborationChangeRequest",
 }));
 export type GetCollaborationConfiguredAudienceModelAssociationError =
   | AccessDeniedException
@@ -7699,6 +7765,7 @@ export const getCollaborationConfiguredAudienceModelAssociation: API.OperationMe
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetCollaborationConfiguredAudienceModelAssociation",
 }));
 export type GetCollaborationIdNamespaceAssociationError =
   | AccessDeniedException
@@ -7725,6 +7792,7 @@ export const getCollaborationIdNamespaceAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetCollaborationIdNamespaceAssociation",
 }));
 export type GetCollaborationPrivacyBudgetTemplateError =
   | AccessDeniedException
@@ -7751,6 +7819,7 @@ export const getCollaborationPrivacyBudgetTemplate: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetCollaborationPrivacyBudgetTemplate",
 }));
 export type GetSchemaError =
   | AccessDeniedException
@@ -7777,6 +7846,7 @@ export const getSchema: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetSchema",
 }));
 export type GetSchemaAnalysisRuleError =
   | AccessDeniedException
@@ -7803,6 +7873,7 @@ export const getSchemaAnalysisRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetSchemaAnalysisRule",
 }));
 export type ListCollaborationAnalysisTemplatesError =
   | AccessDeniedException
@@ -7844,6 +7915,7 @@ export const listCollaborationAnalysisTemplates: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListCollaborationAnalysisTemplates",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -7891,6 +7963,7 @@ export const listCollaborationChangeRequests: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListCollaborationChangeRequests",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -7938,6 +8011,7 @@ export const listCollaborationConfiguredAudienceModelAssociations: API.Operation
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListCollaborationConfiguredAudienceModelAssociations",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -7985,6 +8059,7 @@ export const listCollaborationIdNamespaceAssociations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListCollaborationIdNamespaceAssociations",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -8032,6 +8107,7 @@ export const listCollaborationPrivacyBudgets: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListCollaborationPrivacyBudgets",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -8079,6 +8155,7 @@ export const listCollaborationPrivacyBudgetTemplates: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListCollaborationPrivacyBudgetTemplates",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -8126,6 +8203,7 @@ export const listMembers: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListMembers",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -8173,6 +8251,7 @@ export const listSchemas: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListSchemas",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -8209,6 +8288,7 @@ export const updateCollaborationChangeRequest: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateCollaborationChangeRequest",
 }));
 export type CreateConfiguredAudienceModelAssociationError =
   | AccessDeniedException
@@ -8239,6 +8319,7 @@ export const createConfiguredAudienceModelAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateConfiguredAudienceModelAssociation",
 }));
 export type GetConfiguredAudienceModelAssociationError =
   | AccessDeniedException
@@ -8265,6 +8346,7 @@ export const getConfiguredAudienceModelAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetConfiguredAudienceModelAssociation",
 }));
 export type UpdateConfiguredAudienceModelAssociationError =
   | AccessDeniedException
@@ -8291,6 +8373,7 @@ export const updateConfiguredAudienceModelAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateConfiguredAudienceModelAssociation",
 }));
 export type DeleteConfiguredAudienceModelAssociationError =
   | AccessDeniedException
@@ -8317,6 +8400,7 @@ export const deleteConfiguredAudienceModelAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteConfiguredAudienceModelAssociation",
 }));
 export type ListConfiguredAudienceModelAssociationsError =
   | AccessDeniedException
@@ -8358,6 +8442,7 @@ export const listConfiguredAudienceModelAssociations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListConfiguredAudienceModelAssociations",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -8394,6 +8479,7 @@ export const createConfiguredTableAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateConfiguredTableAssociation",
 }));
 export type GetConfiguredTableAssociationError =
   | AccessDeniedException
@@ -8420,6 +8506,7 @@ export const getConfiguredTableAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetConfiguredTableAssociation",
 }));
 export type UpdateConfiguredTableAssociationError =
   | AccessDeniedException
@@ -8448,6 +8535,7 @@ export const updateConfiguredTableAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateConfiguredTableAssociation",
 }));
 export type DeleteConfiguredTableAssociationError =
   | AccessDeniedException
@@ -8476,6 +8564,7 @@ export const deleteConfiguredTableAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteConfiguredTableAssociation",
 }));
 export type ListConfiguredTableAssociationsError =
   | AccessDeniedException
@@ -8517,6 +8606,7 @@ export const listConfiguredTableAssociations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListConfiguredTableAssociations",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -8551,6 +8641,7 @@ export const createConfiguredTableAssociationAnalysisRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateConfiguredTableAssociationAnalysisRule",
 }));
 export type DeleteConfiguredTableAssociationAnalysisRuleError =
   | AccessDeniedException
@@ -8579,6 +8670,7 @@ export const deleteConfiguredTableAssociationAnalysisRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteConfiguredTableAssociationAnalysisRule",
 }));
 export type GetConfiguredTableAssociationAnalysisRuleError =
   | AccessDeniedException
@@ -8605,6 +8697,7 @@ export const getConfiguredTableAssociationAnalysisRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetConfiguredTableAssociationAnalysisRule",
 }));
 export type UpdateConfiguredTableAssociationAnalysisRuleError =
   | AccessDeniedException
@@ -8633,6 +8726,7 @@ export const updateConfiguredTableAssociationAnalysisRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateConfiguredTableAssociationAnalysisRule",
 }));
 export type CreateConfiguredTableError =
   | AccessDeniedException
@@ -8663,6 +8757,7 @@ export const createConfiguredTable: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateConfiguredTable",
 }));
 export type GetConfiguredTableError =
   | AccessDeniedException
@@ -8689,6 +8784,7 @@ export const getConfiguredTable: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetConfiguredTable",
 }));
 export type UpdateConfiguredTableError =
   | AccessDeniedException
@@ -8719,6 +8815,7 @@ export const updateConfiguredTable: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateConfiguredTable",
 }));
 export type DeleteConfiguredTableError =
   | AccessDeniedException
@@ -8747,6 +8844,7 @@ export const deleteConfiguredTable: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteConfiguredTable",
 }));
 export type ListConfiguredTablesError =
   | AccessDeniedException
@@ -8786,6 +8884,7 @@ export const listConfiguredTables: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListConfiguredTables",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -8822,6 +8921,7 @@ export const createConfiguredTableAnalysisRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateConfiguredTableAnalysisRule",
 }));
 export type DeleteConfiguredTableAnalysisRuleError =
   | AccessDeniedException
@@ -8850,6 +8950,7 @@ export const deleteConfiguredTableAnalysisRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteConfiguredTableAnalysisRule",
 }));
 export type GetConfiguredTableAnalysisRuleError =
   | AccessDeniedException
@@ -8876,6 +8977,7 @@ export const getConfiguredTableAnalysisRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetConfiguredTableAnalysisRule",
 }));
 export type UpdateConfiguredTableAnalysisRuleError =
   | AccessDeniedException
@@ -8904,6 +9006,7 @@ export const updateConfiguredTableAnalysisRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateConfiguredTableAnalysisRule",
 }));
 export type CreateIdMappingTableError =
   | AccessDeniedException
@@ -8934,6 +9037,7 @@ export const createIdMappingTable: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateIdMappingTable",
 }));
 export type GetIdMappingTableError =
   | AccessDeniedException
@@ -8960,6 +9064,7 @@ export const getIdMappingTable: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetIdMappingTable",
 }));
 export type UpdateIdMappingTableError =
   | AccessDeniedException
@@ -8986,6 +9091,7 @@ export const updateIdMappingTable: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateIdMappingTable",
 }));
 export type DeleteIdMappingTableError =
   | AccessDeniedException
@@ -9012,6 +9118,7 @@ export const deleteIdMappingTable: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteIdMappingTable",
 }));
 export type ListIdMappingTablesError =
   | AccessDeniedException
@@ -9053,6 +9160,7 @@ export const listIdMappingTables: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListIdMappingTables",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -9089,6 +9197,7 @@ export const populateIdMappingTable: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PopulateIdMappingTable",
 }));
 export type CreateIdNamespaceAssociationError =
   | AccessDeniedException
@@ -9119,6 +9228,7 @@ export const createIdNamespaceAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateIdNamespaceAssociation",
 }));
 export type GetIdNamespaceAssociationError =
   | AccessDeniedException
@@ -9145,6 +9255,7 @@ export const getIdNamespaceAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetIdNamespaceAssociation",
 }));
 export type UpdateIdNamespaceAssociationError =
   | AccessDeniedException
@@ -9171,6 +9282,7 @@ export const updateIdNamespaceAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateIdNamespaceAssociation",
 }));
 export type DeleteIdNamespaceAssociationError =
   | AccessDeniedException
@@ -9197,6 +9309,7 @@ export const deleteIdNamespaceAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteIdNamespaceAssociation",
 }));
 export type ListIdNamespaceAssociationsError =
   | AccessDeniedException
@@ -9238,6 +9351,7 @@ export const listIdNamespaceAssociations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListIdNamespaceAssociations",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -9274,6 +9388,7 @@ export const createMembership: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateMembership",
 }));
 export type GetMembershipError =
   | AccessDeniedException
@@ -9300,6 +9415,7 @@ export const getMembership: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetMembership",
 }));
 export type UpdateMembershipError =
   | AccessDeniedException
@@ -9328,6 +9444,7 @@ export const updateMembership: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateMembership",
 }));
 export type DeleteMembershipError =
   | AccessDeniedException
@@ -9356,6 +9473,7 @@ export const deleteMembership: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteMembership",
 }));
 export type ListMembershipsError =
   | AccessDeniedException
@@ -9395,6 +9513,7 @@ export const listMemberships: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListMemberships",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -9427,6 +9546,7 @@ export const getProtectedJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetProtectedJob",
 }));
 export type GetProtectedQueryError =
   | AccessDeniedException
@@ -9453,6 +9573,7 @@ export const getProtectedQuery: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetProtectedQuery",
 }));
 export type ListPrivacyBudgetsError =
   | AccessDeniedException
@@ -9494,6 +9615,7 @@ export const listPrivacyBudgets: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListPrivacyBudgets",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -9541,6 +9663,7 @@ export const listProtectedJobs: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListProtectedJobs",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -9588,6 +9711,7 @@ export const listProtectedQueries: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListProtectedQueries",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -9620,6 +9744,7 @@ export const previewPrivacyImpact: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PreviewPrivacyImpact",
 }));
 export type StartProtectedJobError =
   | AccessDeniedException
@@ -9648,6 +9773,7 @@ export const startProtectedJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartProtectedJob",
 }));
 export type StartProtectedQueryError =
   | AccessDeniedException
@@ -9676,6 +9802,7 @@ export const startProtectedQuery: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartProtectedQuery",
 }));
 export type UpdateProtectedJobError =
   | AccessDeniedException
@@ -9704,6 +9831,7 @@ export const updateProtectedJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateProtectedJob",
 }));
 export type UpdateProtectedQueryError =
   | AccessDeniedException
@@ -9732,6 +9860,7 @@ export const updateProtectedQuery: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateProtectedQuery",
 }));
 export type CreatePrivacyBudgetTemplateError =
   | AccessDeniedException
@@ -9762,6 +9891,7 @@ export const createPrivacyBudgetTemplate: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreatePrivacyBudgetTemplate",
 }));
 export type GetPrivacyBudgetTemplateError =
   | AccessDeniedException
@@ -9788,6 +9918,7 @@ export const getPrivacyBudgetTemplate: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetPrivacyBudgetTemplate",
 }));
 export type UpdatePrivacyBudgetTemplateError =
   | AccessDeniedException
@@ -9816,6 +9947,7 @@ export const updatePrivacyBudgetTemplate: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdatePrivacyBudgetTemplate",
 }));
 export type DeletePrivacyBudgetTemplateError =
   | AccessDeniedException
@@ -9842,6 +9974,7 @@ export const deletePrivacyBudgetTemplate: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeletePrivacyBudgetTemplate",
 }));
 export type ListPrivacyBudgetTemplatesError =
   | AccessDeniedException
@@ -9883,6 +10016,7 @@ export const listPrivacyBudgetTemplates: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListPrivacyBudgetTemplates",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",

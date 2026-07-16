@@ -10,6 +10,31 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface UpdateATransactionInput {
+  transactionId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  data?: {
+    attributes?: {
+      fields?: Record<string, unknown>;
+      status?: string;
+      "reference-id"?: string;
+      label?: string;
+      tags?: ReadonlyArray<string>;
+    };
+  };
+}
 export const UpdateATransactionInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     transactionId: Schema.String.pipe(T.PathParam()),
@@ -50,10 +75,43 @@ export const UpdateATransactionInput =
         ),
       }),
     ),
-  }).pipe(T.Http({ method: "PATCH", path: "/transactions/{transactionId}" }));
-export type UpdateATransactionInput = typeof UpdateATransactionInput.Type;
+  }).pipe(
+    T.Http({ method: "PATCH", path: "/transactions/{transactionId}" }),
+  ) as unknown as Schema.Codec<UpdateATransactionInput>;
 
 // Output Schema
+export interface UpdateATransactionOutput {
+  data: {
+    id?: string;
+    type?: string;
+    attributes?: {
+      status?: string;
+      "reference-id"?: string | null;
+      fields?: Record<string, unknown>;
+      tags?: ReadonlyArray<string>;
+      "created-at"?: string;
+      "updated-at"?: string | null;
+    };
+    relationships?: {
+      reviewer?: { data?: { type?: string; id?: string } | null };
+      "transaction-label"?: { data?: { type?: string; id?: string } | null };
+      "transaction-type"?: { data?: { type?: string; id?: string } };
+      "related-objects"?: {
+        data?: ReadonlyArray<{ type?: string; id?: string }>;
+      };
+    };
+  };
+  included?: ReadonlyArray<{
+    type?: string;
+    id?: string;
+    attributes?: {
+      "model-label"?: string;
+      "model-version"?: string | null;
+      "created-at"?: string;
+      "updated-at"?: string | null;
+    };
+  }>;
+}
 export const UpdateATransactionOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -136,8 +194,7 @@ export const UpdateATransactionOutput =
         }),
       ),
     ),
-  });
-export type UpdateATransactionOutput = typeof UpdateATransactionOutput.Type;
+  }) as unknown as Schema.Codec<UpdateATransactionOutput>;
 
 // The operation
 /**

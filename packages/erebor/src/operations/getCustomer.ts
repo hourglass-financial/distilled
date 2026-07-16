@@ -4,15 +4,34 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface GetCustomerInput {
+  id: string;
+  ereborVersion?: string;
+}
 export const GetCustomerInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String.pipe(T.PathParam()),
   ereborVersion: Schema.optional(Schema.String).pipe(
     T.HttpHeader("Erebor-Version"),
   ),
-}).pipe(T.Http({ method: "GET", path: "/customers/{id}" }));
-export type GetCustomerInput = typeof GetCustomerInput.Type;
+}).pipe(
+  T.Http({ method: "GET", path: "/customers/{id}" }),
+) as unknown as Schema.Codec<GetCustomerInput>;
 
 // Output Schema
+export interface GetCustomerOutput {
+  id: string;
+  type: "CUSTOMER";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id?: string | null;
+  status: "ACTIVE" | "OFFBOARDED";
+  name: string;
+  onboarding_id?: string | null;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const GetCustomerOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String,
   type: Schema.Literals(["CUSTOMER"]),
@@ -24,10 +43,11 @@ export const GetCustomerOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   status: Schema.Literals(["ACTIVE", "OFFBOARDED"]),
   name: Schema.String,
   onboarding_id: Schema.optional(Schema.NullOr(Schema.String)),
-  custom_ref: Schema.optional(Schema.Unknown),
-  custom_fields: Schema.optional(Schema.Unknown),
-});
-export type GetCustomerOutput = typeof GetCustomerOutput.Type;
+  custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+  custom_fields: Schema.optional(
+    Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+  ),
+}) as unknown as Schema.Codec<GetCustomerOutput>;
 
 // The operation
 /**

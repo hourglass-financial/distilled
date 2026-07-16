@@ -4,6 +4,13 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface SimulateBlockchainInInput {
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  deposit_account_id: string;
+  amount: { currency: "USAT" | "USDC" | "USDT"; value: string };
+  network: "BASE" | "ETHEREUM" | "INK" | "SOLANA" | "SUI";
+}
 export const SimulateBlockchainInInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     ereborVersion: Schema.optional(Schema.String).pipe(
@@ -18,10 +25,16 @@ export const SimulateBlockchainInInput =
       value: Schema.String,
     }),
     network: Schema.Literals(["BASE", "ETHEREUM", "INK", "SOLANA", "SUI"]),
-  }).pipe(T.Http({ method: "POST", path: "/simulation/blockchain_in" }));
-export type SimulateBlockchainInInput = typeof SimulateBlockchainInInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/simulation/blockchain_in" }),
+  ) as unknown as Schema.Codec<SimulateBlockchainInInput>;
 
 // Output Schema
+export interface SimulateBlockchainInOutput {
+  deposit_account_id: string;
+  amount: { currency: "USAT" | "USDC" | "USDT"; value: string };
+  transaction_hash: string;
+}
 export const SimulateBlockchainInOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     deposit_account_id: Schema.String,
@@ -30,8 +43,7 @@ export const SimulateBlockchainInOutput =
       value: Schema.String,
     }),
     transaction_hash: Schema.String,
-  });
-export type SimulateBlockchainInOutput = typeof SimulateBlockchainInOutput.Type;
+  }) as unknown as Schema.Codec<SimulateBlockchainInOutput>;
 
 // The operation
 /**

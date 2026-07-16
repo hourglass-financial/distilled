@@ -10,6 +10,21 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface RetrieveAConnectConnectionInput {
+  connectionId: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const RetrieveAConnectConnectionInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     connectionId: Schema.String.pipe(T.PathParam()),
@@ -36,11 +51,23 @@ export const RetrieveAConnectConnectionInput =
     ).pipe(T.HttpHeader("Persona-Version")),
   }).pipe(
     T.Http({ method: "GET", path: "/connect/connections/{connectionId}" }),
-  );
-export type RetrieveAConnectConnectionInput =
-  typeof RetrieveAConnectConnectionInput.Type;
+  ) as unknown as Schema.Codec<RetrieveAConnectConnectionInput>;
 
 // Output Schema
+export interface RetrieveAConnectConnectionOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      status?: string;
+      "destination-organization-id"?: string;
+      "source-organization-id"?: string;
+      "created-at"?: string;
+      "updated-at"?: string;
+    };
+    relationships?: { creator?: { data: { id: string; type: string } } };
+  };
+}
 export const RetrieveAConnectConnectionOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -68,9 +95,7 @@ export const RetrieveAConnectConnectionOutput =
         }),
       ),
     }),
-  });
-export type RetrieveAConnectConnectionOutput =
-  typeof RetrieveAConnectConnectionOutput.Type;
+  }) as unknown as Schema.Codec<RetrieveAConnectConnectionOutput>;
 
 // The operation
 /**

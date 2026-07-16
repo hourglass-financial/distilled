@@ -3,6 +3,39 @@ import { API } from "../client.ts";
 import * as T from "../traits.ts";
 
 // Input Schema
+export interface UserlandSsoControllerAuthorizeInput {
+  code_challenge_method?: string;
+  code_challenge?: string;
+  domain_hint?: string;
+  connection_id?: string;
+  provider_query_params?: string;
+  provider_scopes?: string;
+  invitation_token?: string;
+  max_age?: number;
+  screen_hint?: "sign-up" | "sign-in";
+  login_hint?: string;
+  provider?:
+    | "authkit"
+    | "AppleOAuth"
+    | "BitbucketOAuth"
+    | "GitHubOAuth"
+    | "GitLabOAuth"
+    | "GoogleOAuth"
+    | "IntuitOAuth"
+    | "LinkedInOAuth"
+    | "MicrosoftOAuth"
+    | "SalesforceOAuth"
+    | "SlackOAuth"
+    | "VercelMarketplaceOAuth"
+    | "VercelOAuth"
+    | "XeroOAuth";
+  prompt?: string;
+  state?: string;
+  organization_id?: string;
+  response_type: string;
+  redirect_uri: string;
+  client_id: string;
+}
 export const UserlandSsoControllerAuthorizeInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     code_challenge_method: Schema.optional(Schema.String),
@@ -12,6 +45,7 @@ export const UserlandSsoControllerAuthorizeInput =
     provider_query_params: Schema.optional(Schema.String),
     provider_scopes: Schema.optional(Schema.String),
     invitation_token: Schema.optional(Schema.String),
+    max_age: Schema.optional(Schema.Number),
     screen_hint: Schema.optional(Schema.Literals(["sign-up", "sign-in"])),
     login_hint: Schema.optional(Schema.String),
     provider: Schema.optional(
@@ -38,15 +72,14 @@ export const UserlandSsoControllerAuthorizeInput =
     response_type: Schema.String,
     redirect_uri: Schema.String,
     client_id: Schema.String,
-  }).pipe(T.Http({ method: "GET", path: "/user_management/authorize" }));
-export type UserlandSsoControllerAuthorizeInput =
-  typeof UserlandSsoControllerAuthorizeInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/user_management/authorize" }),
+  ) as unknown as Schema.Codec<UserlandSsoControllerAuthorizeInput>;
 
 // Output Schema
+export type UserlandSsoControllerAuthorizeOutput = void;
 export const UserlandSsoControllerAuthorizeOutput =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Void;
-export type UserlandSsoControllerAuthorizeOutput =
-  typeof UserlandSsoControllerAuthorizeOutput.Type;
+  /*@__PURE__*/ /*#__PURE__*/ Schema.Void as unknown as Schema.Codec<UserlandSsoControllerAuthorizeOutput>;
 
 // The operation
 /**
@@ -61,6 +94,7 @@ export type UserlandSsoControllerAuthorizeOutput =
  * @param provider_query_params - Key/value pairs of query parameters to pass to the OAuth provider.
  * @param provider_scopes - Additional OAuth scopes to request from the identity provider.
  * @param invitation_token - A token representing a user invitation to redeem during authentication.
+ * @param max_age - Maximum allowable elapsed time, in seconds, since the user last actively authenticated. If the last authentication is older than this value, the user is prompted to re-authenticate; a value of `0` forces re-authentication. Only supported when the provider is `authkit`.
  * @param screen_hint - Used to specify which screen to display when the provider is `authkit`.
  * @param login_hint - A hint to the authorization server about the login identifier the user might use.
  * @param provider - The OAuth provider to authenticate with (e.g., GoogleOAuth, MicrosoftOAuth, GitHubOAuth).

@@ -10,6 +10,30 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface CreateATransactionInput {
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  data?: {
+    attributes?: {
+      "transaction-type-id"?: string;
+      fields?: Record<string, unknown>;
+      "reference-id"?: string;
+      tags?: ReadonlyArray<string> | null;
+    };
+  };
+  meta?: unknown;
+}
 export const CreateATransactionInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
@@ -49,10 +73,33 @@ export const CreateATransactionInput =
       }),
     ),
     meta: Schema.optional(Schema.Unknown),
-  }).pipe(T.Http({ method: "POST", path: "/transactions" }));
-export type CreateATransactionInput = typeof CreateATransactionInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/transactions" }),
+  ) as unknown as Schema.Codec<CreateATransactionInput>;
 
 // Output Schema
+export interface CreateATransactionOutput {
+  data: {
+    id?: string;
+    type?: string;
+    attributes?: {
+      status?: string;
+      "reference-id"?: string | null;
+      fields?: Record<string, unknown>;
+      tags?: ReadonlyArray<string>;
+      "created-at"?: string;
+      "updated-at"?: string | null;
+    };
+    relationships?: {
+      reviewer?: { data?: { type?: string; id?: string } | null };
+      "transaction-label"?: { data?: { type?: string; id?: string } | null };
+      "transaction-type"?: { data?: { type?: string; id?: string } };
+      "related-objects"?: {
+        data?: ReadonlyArray<{ type?: string; id?: string }>;
+      };
+    };
+  };
+}
 export const CreateATransactionOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -119,8 +166,7 @@ export const CreateATransactionOutput =
         }),
       ),
     }),
-  });
-export type CreateATransactionOutput = typeof CreateATransactionOutput.Type;
+  }) as unknown as Schema.Codec<CreateATransactionOutput>;
 
 // The operation
 /**

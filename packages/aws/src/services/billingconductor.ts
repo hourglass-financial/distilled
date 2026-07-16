@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -2418,6 +2418,7 @@ export const getBillingGroupCostReport: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetBillingGroupCostReport",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -2465,6 +2466,7 @@ export const listAccountAssociations: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListAccountAssociations",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -2511,6 +2513,7 @@ export const listBillingGroupCostReports: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListBillingGroupCostReports",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -2543,6 +2546,7 @@ export const listTagsForResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type TagResourceError =
   | AccessDeniedException
@@ -2569,6 +2573,7 @@ export const tagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | AccessDeniedException
@@ -2595,6 +2600,7 @@ export const untagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UntagResource",
 }));
 export type CreateBillingGroupError =
   | AccessDeniedException
@@ -2623,6 +2629,7 @@ export const createBillingGroup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateBillingGroup",
 }));
 export type UpdateBillingGroupError =
   | AccessDeniedException
@@ -2651,6 +2658,7 @@ export const updateBillingGroup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateBillingGroup",
 }));
 export type DeleteBillingGroupError =
   | AccessDeniedException
@@ -2675,6 +2683,7 @@ export const deleteBillingGroup: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteBillingGroup",
 }));
 export type ListBillingGroupsError =
   | AccessDeniedException
@@ -2716,6 +2725,7 @@ export const listBillingGroups: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListBillingGroups",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -2752,6 +2762,7 @@ export const associateAccounts: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssociateAccounts",
 }));
 export type DisassociateAccountsError =
   | AccessDeniedException
@@ -2780,6 +2791,7 @@ export const disassociateAccounts: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DisassociateAccounts",
 }));
 export type CreateCustomLineItemError =
   | AccessDeniedException
@@ -2808,9 +2820,11 @@ export const createCustomLineItem: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateCustomLineItem",
 }));
 export type UpdateCustomLineItemError =
   | AccessDeniedException
+  | ConflictException
   | InternalServerException
   | ResourceNotFoundException
   | ThrottlingException
@@ -2829,11 +2843,13 @@ export const updateCustomLineItem: API.OperationMethod<
   output: UpdateCustomLineItemOutput,
   errors: [
     AccessDeniedException,
+    ConflictException,
     InternalServerException,
     ResourceNotFoundException,
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateCustomLineItem",
 }));
 export type DeleteCustomLineItemError =
   | AccessDeniedException
@@ -2860,6 +2876,7 @@ export const deleteCustomLineItem: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteCustomLineItem",
 }));
 export type ListCustomLineItemsError =
   | AccessDeniedException
@@ -2901,6 +2918,7 @@ export const listCustomLineItems: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListCustomLineItems",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -2937,6 +2955,7 @@ export const batchAssociateResourcesToCustomLineItem: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchAssociateResourcesToCustomLineItem",
 }));
 export type BatchDisassociateResourcesFromCustomLineItemError =
   | AccessDeniedException
@@ -2965,6 +2984,7 @@ export const batchDisassociateResourcesFromCustomLineItem: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchDisassociateResourcesFromCustomLineItem",
 }));
 export type ListCustomLineItemVersionsError =
   | AccessDeniedException
@@ -3004,6 +3024,7 @@ export const listCustomLineItemVersions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListCustomLineItemVersions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -3051,6 +3072,7 @@ export const listResourcesAssociatedToCustomLineItem: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListResourcesAssociatedToCustomLineItem",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -3087,6 +3109,7 @@ export const createPricingPlan: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreatePricingPlan",
 }));
 export type UpdatePricingPlanError =
   | AccessDeniedException
@@ -3115,6 +3138,7 @@ export const updatePricingPlan: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdatePricingPlan",
 }));
 export type DeletePricingPlanError =
   | AccessDeniedException
@@ -3141,6 +3165,7 @@ export const deletePricingPlan: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeletePricingPlan",
 }));
 export type ListPricingPlansError =
   | AccessDeniedException
@@ -3180,6 +3205,7 @@ export const listPricingPlans: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListPricingPlans",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -3216,6 +3242,7 @@ export const associatePricingRules: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssociatePricingRules",
 }));
 export type DisassociatePricingRulesError =
   | AccessDeniedException
@@ -3244,6 +3271,7 @@ export const disassociatePricingRules: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DisassociatePricingRules",
 }));
 export type ListPricingPlansAssociatedWithPricingRuleError =
   | AccessDeniedException
@@ -3285,6 +3313,7 @@ export const listPricingPlansAssociatedWithPricingRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListPricingPlansAssociatedWithPricingRule",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -3319,6 +3348,7 @@ export const createPricingRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreatePricingRule",
 }));
 export type UpdatePricingRuleError =
   | AccessDeniedException
@@ -3347,6 +3377,7 @@ export const updatePricingRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdatePricingRule",
 }));
 export type DeletePricingRuleError =
   | AccessDeniedException
@@ -3373,6 +3404,7 @@ export const deletePricingRule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeletePricingRule",
 }));
 export type ListPricingRulesError =
   | AccessDeniedException
@@ -3412,6 +3444,7 @@ export const listPricingRules: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListPricingRules",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -3459,6 +3492,7 @@ export const listPricingRulesAssociatedToPricingPlan: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListPricingRulesAssociatedToPricingPlan",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",

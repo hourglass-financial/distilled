@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -140,8 +140,10 @@ export const CRType = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export type CRAllocationStrategy =
   | "BEST_FIT"
   | "BEST_FIT_PROGRESSIVE"
+  | "BEST_FIT_PROGRESSIVE_ORDERED"
   | "SPOT_CAPACITY_OPTIMIZED"
   | "SPOT_PRICE_CAPACITY_OPTIMIZED"
+  | "SPOT_CAPACITY_OPTIMIZED_PRIORITIZED"
   | (string & {});
 export const CRAllocationStrategy = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export type StringList = string[];
@@ -1008,7 +1010,6 @@ export interface DescribeComputeEnvironmentsResponse {
     computeResources: ComputeResource & {
       type: CRType;
       maxvCpus: number;
-      subnets: StringList;
       ec2Configuration: (Ec2Configuration & { imageType: ImageType })[];
     };
     eksConfiguration: EksConfiguration & {
@@ -1176,16 +1177,35 @@ export const EFSVolumeConfiguration = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 ).annotate({
   identifier: "EFSVolumeConfiguration",
 }) as any as S.Schema<EFSVolumeConfiguration>;
+export interface S3FilesVolumeConfiguration {
+  fileSystemArn?: string;
+  rootDirectory?: string;
+  transitEncryptionPort?: number;
+  accessPointArn?: string;
+}
+export const S3FilesVolumeConfiguration = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      fileSystemArn: S.optional(S.String),
+      rootDirectory: S.optional(S.String),
+      transitEncryptionPort: S.optional(S.Number),
+      accessPointArn: S.optional(S.String),
+    }),
+).annotate({
+  identifier: "S3FilesVolumeConfiguration",
+}) as any as S.Schema<S3FilesVolumeConfiguration>;
 export interface Volume {
   host?: Host;
   name?: string;
   efsVolumeConfiguration?: EFSVolumeConfiguration;
+  s3filesVolumeConfiguration?: S3FilesVolumeConfiguration;
 }
 export const Volume = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     host: S.optional(Host),
     name: S.optional(S.String),
     efsVolumeConfiguration: S.optional(EFSVolumeConfiguration),
+    s3filesVolumeConfiguration: S.optional(S3FilesVolumeConfiguration),
   }),
 ).annotate({ identifier: "Volume" }) as any as S.Schema<Volume>;
 export type Volumes = Volume[];
@@ -1498,6 +1518,8 @@ export interface TaskContainerProperties {
   secrets?: Secret[];
   ulimits?: Ulimit[];
   user?: string;
+  startTimeout?: number;
+  stopTimeout?: number;
 }
 export const TaskContainerProperties = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -1519,6 +1541,8 @@ export const TaskContainerProperties = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       secrets: S.optional(SecretList),
       ulimits: S.optional(Ulimits),
       user: S.optional(S.String),
+      startTimeout: S.optional(S.Number),
+      stopTimeout: S.optional(S.Number),
     }),
 ).annotate({
   identifier: "TaskContainerProperties",
@@ -1915,6 +1939,9 @@ export interface DescribeJobDefinitionsResponse {
         efsVolumeConfiguration: EFSVolumeConfiguration & {
           fileSystemId: string;
         };
+        s3filesVolumeConfiguration: S3FilesVolumeConfiguration & {
+          fileSystemArn: string;
+        };
       })[];
       ulimits: (Ulimit & {
         hardLimit: number;
@@ -1948,6 +1975,9 @@ export interface DescribeJobDefinitionsResponse {
           volumes: (Volume & {
             efsVolumeConfiguration: EFSVolumeConfiguration & {
               fileSystemId: string;
+            };
+            s3filesVolumeConfiguration: S3FilesVolumeConfiguration & {
+              fileSystemArn: string;
             };
           })[];
           ulimits: (Ulimit & {
@@ -2007,6 +2037,9 @@ export interface DescribeJobDefinitionsResponse {
               efsVolumeConfiguration: EFSVolumeConfiguration & {
                 fileSystemId: string;
               };
+              s3filesVolumeConfiguration: S3FilesVolumeConfiguration & {
+                fileSystemArn: string;
+              };
             })[];
           })[];
         };
@@ -2065,6 +2098,9 @@ export interface DescribeJobDefinitionsResponse {
         volumes: (Volume & {
           efsVolumeConfiguration: EFSVolumeConfiguration & {
             fileSystemId: string;
+          };
+          s3filesVolumeConfiguration: S3FilesVolumeConfiguration & {
+            fileSystemArn: string;
           };
         })[];
       })[];
@@ -2579,6 +2615,8 @@ export interface TaskContainerDetails {
   secrets?: Secret[];
   ulimits?: Ulimit[];
   user?: string;
+  startTimeout?: number;
+  stopTimeout?: number;
   exitCode?: number;
   reason?: string;
   logStreamName?: string;
@@ -2603,6 +2641,8 @@ export const TaskContainerDetails = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     secrets: S.optional(SecretList),
     ulimits: S.optional(Ulimits),
     user: S.optional(S.String),
+    startTimeout: S.optional(S.Number),
+    stopTimeout: S.optional(S.Number),
     exitCode: S.optional(S.Number),
     reason: S.optional(S.String),
     logStreamName: S.optional(S.String),
@@ -2741,6 +2781,9 @@ export interface DescribeJobsResponse {
         efsVolumeConfiguration: EFSVolumeConfiguration & {
           fileSystemId: string;
         };
+        s3filesVolumeConfiguration: S3FilesVolumeConfiguration & {
+          fileSystemArn: string;
+        };
       })[];
       ulimits: (Ulimit & {
         hardLimit: number;
@@ -2774,6 +2817,9 @@ export interface DescribeJobsResponse {
           volumes: (Volume & {
             efsVolumeConfiguration: EFSVolumeConfiguration & {
               fileSystemId: string;
+            };
+            s3filesVolumeConfiguration: S3FilesVolumeConfiguration & {
+              fileSystemArn: string;
             };
           })[];
           ulimits: (Ulimit & {
@@ -2832,6 +2878,9 @@ export interface DescribeJobsResponse {
             volumes: (Volume & {
               efsVolumeConfiguration: EFSVolumeConfiguration & {
                 fileSystemId: string;
+              };
+              s3filesVolumeConfiguration: S3FilesVolumeConfiguration & {
+                fileSystemArn: string;
               };
             })[];
           })[];
@@ -2908,6 +2957,9 @@ export interface DescribeJobsResponse {
         volumes: (Volume & {
           efsVolumeConfiguration: EFSVolumeConfiguration & {
             fileSystemId: string;
+          };
+          s3filesVolumeConfiguration: S3FilesVolumeConfiguration & {
+            fileSystemArn: string;
           };
         })[];
       })[];
@@ -4609,8 +4661,10 @@ export const UntagResourceResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 }) as any as S.Schema<UntagResourceResponse>;
 export type CRUpdateAllocationStrategy =
   | "BEST_FIT_PROGRESSIVE"
+  | "BEST_FIT_PROGRESSIVE_ORDERED"
   | "SPOT_CAPACITY_OPTIMIZED"
   | "SPOT_PRICE_CAPACITY_OPTIMIZED"
+  | "SPOT_CAPACITY_OPTIMIZED_PRIORITIZED"
   | (string & {});
 export const CRUpdateAllocationStrategy = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface ComputeResourceUpdate {
@@ -4978,6 +5032,7 @@ export const cancelJob: API.OperationMethod<
   input: CancelJobRequest,
   output: CancelJobResponse,
   errors: [ClientException, ServerException],
+  operationName: "CancelJob",
 }));
 export type CreateComputeEnvironmentError =
   | ClientException
@@ -5020,6 +5075,7 @@ export const createComputeEnvironment: API.OperationMethod<
   input: CreateComputeEnvironmentRequest,
   output: CreateComputeEnvironmentResponse,
   errors: [ClientException, ServerException],
+  operationName: "CreateComputeEnvironment",
 }));
 export type CreateConsumableResourceError =
   | ClientException
@@ -5037,6 +5093,7 @@ export const createConsumableResource: API.OperationMethod<
   input: CreateConsumableResourceRequest,
   output: CreateConsumableResourceResponse,
   errors: [ClientException, ServerException],
+  operationName: "CreateConsumableResource",
 }));
 export type CreateJobQueueError =
   | ClientException
@@ -5061,6 +5118,7 @@ export const createJobQueue: API.OperationMethod<
   input: CreateJobQueueRequest,
   output: CreateJobQueueResponse,
   errors: [ClientException, ServerException],
+  operationName: "CreateJobQueue",
 }));
 export type CreateQuotaShareError =
   | ClientException
@@ -5078,6 +5136,7 @@ export const createQuotaShare: API.OperationMethod<
   input: CreateQuotaShareRequest,
   output: CreateQuotaShareResponse,
   errors: [ClientException, ServerException],
+  operationName: "CreateQuotaShare",
 }));
 export type CreateSchedulingPolicyError =
   | ClientException
@@ -5095,6 +5154,7 @@ export const createSchedulingPolicy: API.OperationMethod<
   input: CreateSchedulingPolicyRequest,
   output: CreateSchedulingPolicyResponse,
   errors: [ClientException, ServerException],
+  operationName: "CreateSchedulingPolicy",
 }));
 export type CreateServiceEnvironmentError =
   | ClientException
@@ -5112,6 +5172,7 @@ export const createServiceEnvironment: API.OperationMethod<
   input: CreateServiceEnvironmentRequest,
   output: CreateServiceEnvironmentResponse,
   errors: [ClientException, ServerException],
+  operationName: "CreateServiceEnvironment",
 }));
 export type DeleteComputeEnvironmentError =
   | ClientException
@@ -5136,6 +5197,7 @@ export const deleteComputeEnvironment: API.OperationMethod<
   input: DeleteComputeEnvironmentRequest,
   output: DeleteComputeEnvironmentResponse,
   errors: [ClientException, ServerException],
+  operationName: "DeleteComputeEnvironment",
 }));
 export type DeleteConsumableResourceError =
   | ClientException
@@ -5153,6 +5215,7 @@ export const deleteConsumableResource: API.OperationMethod<
   input: DeleteConsumableResourceRequest,
   output: DeleteConsumableResourceResponse,
   errors: [ClientException, ServerException],
+  operationName: "DeleteConsumableResource",
 }));
 export type DeleteJobQueueError =
   | ClientException
@@ -5175,6 +5238,7 @@ export const deleteJobQueue: API.OperationMethod<
   input: DeleteJobQueueRequest,
   output: DeleteJobQueueResponse,
   errors: [ClientException, ServerException],
+  operationName: "DeleteJobQueue",
 }));
 export type DeleteQuotaShareError =
   | ClientException
@@ -5194,6 +5258,7 @@ export const deleteQuotaShare: API.OperationMethod<
   input: DeleteQuotaShareRequest,
   output: DeleteQuotaShareResponse,
   errors: [ClientException, ServerException],
+  operationName: "DeleteQuotaShare",
 }));
 export type DeleteSchedulingPolicyError =
   | ClientException
@@ -5213,6 +5278,7 @@ export const deleteSchedulingPolicy: API.OperationMethod<
   input: DeleteSchedulingPolicyRequest,
   output: DeleteSchedulingPolicyResponse,
   errors: [ClientException, ServerException],
+  operationName: "DeleteSchedulingPolicy",
 }));
 export type DeleteServiceEnvironmentError =
   | ClientException
@@ -5230,6 +5296,7 @@ export const deleteServiceEnvironment: API.OperationMethod<
   input: DeleteServiceEnvironmentRequest,
   output: DeleteServiceEnvironmentResponse,
   errors: [ClientException, ServerException],
+  operationName: "DeleteServiceEnvironment",
 }));
 export type DeregisterJobDefinitionError =
   | ClientException
@@ -5248,6 +5315,7 @@ export const deregisterJobDefinition: API.OperationMethod<
   input: DeregisterJobDefinitionRequest,
   output: DeregisterJobDefinitionResponse,
   errors: [ClientException, ServerException],
+  operationName: "DeregisterJobDefinition",
 }));
 export type DescribeComputeEnvironmentsError =
   | ClientException
@@ -5284,6 +5352,7 @@ export const describeComputeEnvironments: API.OperationMethod<
   input: DescribeComputeEnvironmentsRequest,
   output: DescribeComputeEnvironmentsResponse,
   errors: [ClientException, ServerException],
+  operationName: "DescribeComputeEnvironments",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -5307,6 +5376,7 @@ export const describeConsumableResource: API.OperationMethod<
   input: DescribeConsumableResourceRequest,
   output: DescribeConsumableResourceResponse,
   errors: [ClientException, ServerException],
+  operationName: "DescribeConsumableResource",
 }));
 export type DescribeJobDefinitionsError =
   | ClientException
@@ -5340,6 +5410,7 @@ export const describeJobDefinitions: API.OperationMethod<
   input: DescribeJobDefinitionsRequest,
   output: DescribeJobDefinitionsResponse,
   errors: [ClientException, ServerException],
+  operationName: "DescribeJobDefinitions",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -5378,6 +5449,7 @@ export const describeJobQueues: API.OperationMethod<
   input: DescribeJobQueuesRequest,
   output: DescribeJobQueuesResponse,
   errors: [ClientException, ServerException],
+  operationName: "DescribeJobQueues",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -5401,6 +5473,7 @@ export const describeJobs: API.OperationMethod<
   input: DescribeJobsRequest,
   output: DescribeJobsResponse,
   errors: [ClientException, ServerException],
+  operationName: "DescribeJobs",
 }));
 export type DescribeQuotaShareError =
   | ClientException
@@ -5418,6 +5491,7 @@ export const describeQuotaShare: API.OperationMethod<
   input: DescribeQuotaShareRequest,
   output: DescribeQuotaShareResponse,
   errors: [ClientException, ServerException],
+  operationName: "DescribeQuotaShare",
 }));
 export type DescribeSchedulingPoliciesError =
   | ClientException
@@ -5435,6 +5509,7 @@ export const describeSchedulingPolicies: API.OperationMethod<
   input: DescribeSchedulingPoliciesRequest,
   output: DescribeSchedulingPoliciesResponse,
   errors: [ClientException, ServerException],
+  operationName: "DescribeSchedulingPolicies",
 }));
 export type DescribeServiceEnvironmentsError =
   | ClientException
@@ -5467,6 +5542,7 @@ export const describeServiceEnvironments: API.OperationMethod<
   input: DescribeServiceEnvironmentsRequest,
   output: DescribeServiceEnvironmentsResponse,
   errors: [ClientException, ServerException],
+  operationName: "DescribeServiceEnvironments",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -5490,6 +5566,7 @@ export const describeServiceJob: API.OperationMethod<
   input: DescribeServiceJobRequest,
   output: DescribeServiceJobResponse,
   errors: [ClientException, ServerException],
+  operationName: "DescribeServiceJob",
 }));
 export type GetJobQueueSnapshotError =
   | ClientException
@@ -5510,6 +5587,7 @@ export const getJobQueueSnapshot: API.OperationMethod<
   input: GetJobQueueSnapshotRequest,
   output: GetJobQueueSnapshotResponse,
   errors: [ClientException, ServerException],
+  operationName: "GetJobQueueSnapshot",
 }));
 export type ListConsumableResourcesError =
   | ClientException
@@ -5542,6 +5620,7 @@ export const listConsumableResources: API.OperationMethod<
   input: ListConsumableResourcesRequest,
   output: ListConsumableResourcesResponse,
   errors: [ClientException, ServerException],
+  operationName: "ListConsumableResources",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -5585,6 +5664,7 @@ export const listJobs: API.OperationMethod<
   input: ListJobsRequest,
   output: ListJobsResponse,
   errors: [ClientException, ServerException],
+  operationName: "ListJobs",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -5623,6 +5703,7 @@ export const listJobsByConsumableResource: API.OperationMethod<
   input: ListJobsByConsumableResourceRequest,
   output: ListJobsByConsumableResourceResponse,
   errors: [ClientException, ServerException],
+  operationName: "ListJobsByConsumableResource",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -5661,6 +5742,7 @@ export const listQuotaShares: API.OperationMethod<
   input: ListQuotaSharesRequest,
   output: ListQuotaSharesResponse,
   errors: [ClientException, ServerException],
+  operationName: "ListQuotaShares",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -5699,6 +5781,7 @@ export const listSchedulingPolicies: API.OperationMethod<
   input: ListSchedulingPoliciesRequest,
   output: ListSchedulingPoliciesResponse,
   errors: [ClientException, ServerException],
+  operationName: "ListSchedulingPolicies",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -5737,6 +5820,7 @@ export const listServiceJobs: API.OperationMethod<
   input: ListServiceJobsRequest,
   output: ListServiceJobsResponse,
   errors: [ClientException, ServerException],
+  operationName: "ListServiceJobs",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -5761,6 +5845,7 @@ export const listTagsForResource: API.OperationMethod<
   input: ListTagsForResourceRequest,
   output: ListTagsForResourceResponse,
   errors: [ClientException, ServerException],
+  operationName: "ListTagsForResource",
 }));
 export type RegisterJobDefinitionError =
   | ClientException
@@ -5778,6 +5863,7 @@ export const registerJobDefinition: API.OperationMethod<
   input: RegisterJobDefinitionRequest,
   output: RegisterJobDefinitionResponse,
   errors: [ClientException, ServerException],
+  operationName: "RegisterJobDefinition",
 }));
 export type SubmitJobError = ClientException | ServerException | CommonErrors;
 /**
@@ -5804,6 +5890,7 @@ export const submitJob: API.OperationMethod<
   input: SubmitJobRequest,
   output: SubmitJobResponse,
   errors: [ClientException, ServerException],
+  operationName: "SubmitJob",
 }));
 export type SubmitServiceJobError =
   | ClientException
@@ -5821,6 +5908,7 @@ export const submitServiceJob: API.OperationMethod<
   input: SubmitServiceJobRequest,
   output: SubmitServiceJobResponse,
   errors: [ClientException, ServerException],
+  operationName: "SubmitServiceJob",
 }));
 export type TagResourceError = ClientException | ServerException | CommonErrors;
 /**
@@ -5839,6 +5927,7 @@ export const tagResource: API.OperationMethod<
   input: TagResourceRequest,
   output: TagResourceResponse,
   errors: [ClientException, ServerException],
+  operationName: "TagResource",
 }));
 export type TerminateJobError =
   | ClientException
@@ -5859,6 +5948,7 @@ export const terminateJob: API.OperationMethod<
   input: TerminateJobRequest,
   output: TerminateJobResponse,
   errors: [ClientException, ServerException],
+  operationName: "TerminateJob",
 }));
 export type TerminateServiceJobError =
   | ClientException
@@ -5876,6 +5966,7 @@ export const terminateServiceJob: API.OperationMethod<
   input: TerminateServiceJobRequest,
   output: TerminateServiceJobResponse,
   errors: [ClientException, ServerException],
+  operationName: "TerminateServiceJob",
 }));
 export type UntagResourceError =
   | ClientException
@@ -5893,6 +5984,7 @@ export const untagResource: API.OperationMethod<
   input: UntagResourceRequest,
   output: UntagResourceResponse,
   errors: [ClientException, ServerException],
+  operationName: "UntagResource",
 }));
 export type UpdateComputeEnvironmentError =
   | ClientException
@@ -5910,6 +6002,7 @@ export const updateComputeEnvironment: API.OperationMethod<
   input: UpdateComputeEnvironmentRequest,
   output: UpdateComputeEnvironmentResponse,
   errors: [ClientException, ServerException],
+  operationName: "UpdateComputeEnvironment",
 }));
 export type UpdateConsumableResourceError =
   | ClientException
@@ -5927,6 +6020,7 @@ export const updateConsumableResource: API.OperationMethod<
   input: UpdateConsumableResourceRequest,
   output: UpdateConsumableResourceResponse,
   errors: [ClientException, ServerException],
+  operationName: "UpdateConsumableResource",
 }));
 export type UpdateJobQueueError =
   | ClientException
@@ -5944,6 +6038,7 @@ export const updateJobQueue: API.OperationMethod<
   input: UpdateJobQueueRequest,
   output: UpdateJobQueueResponse,
   errors: [ClientException, ServerException],
+  operationName: "UpdateJobQueue",
 }));
 export type UpdateQuotaShareError =
   | ClientException
@@ -5961,6 +6056,7 @@ export const updateQuotaShare: API.OperationMethod<
   input: UpdateQuotaShareRequest,
   output: UpdateQuotaShareResponse,
   errors: [ClientException, ServerException],
+  operationName: "UpdateQuotaShare",
 }));
 export type UpdateSchedulingPolicyError =
   | ClientException
@@ -5978,6 +6074,7 @@ export const updateSchedulingPolicy: API.OperationMethod<
   input: UpdateSchedulingPolicyRequest,
   output: UpdateSchedulingPolicyResponse,
   errors: [ClientException, ServerException],
+  operationName: "UpdateSchedulingPolicy",
 }));
 export type UpdateServiceEnvironmentError =
   | ClientException
@@ -5995,6 +6092,7 @@ export const updateServiceEnvironment: API.OperationMethod<
   input: UpdateServiceEnvironmentRequest,
   output: UpdateServiceEnvironmentResponse,
   errors: [ClientException, ServerException],
+  operationName: "UpdateServiceEnvironment",
 }));
 export type UpdateServiceJobError =
   | ClientException
@@ -6012,4 +6110,5 @@ export const updateServiceJob: API.OperationMethod<
   input: UpdateServiceJobRequest,
   output: UpdateServiceJobResponse,
   errors: [ClientException, ServerException],
+  operationName: "UpdateServiceJob",
 }));

@@ -4,6 +4,17 @@ import * as T from "../traits.ts";
 import { BadRequest, Conflict, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
+export interface CreateOutboundInternationalWireTransferInput {
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  type: "INTERNATIONAL_WIRE_OUT";
+  deposit_account_id: string;
+  counterparty_international_bank_account_id: string;
+  amount: { currency: "USD"; value: string };
+  memo?: string | null;
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const CreateOutboundInternationalWireTransferInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     ereborVersion: Schema.optional(Schema.String).pipe(
@@ -24,11 +35,32 @@ export const CreateOutboundInternationalWireTransferInput =
     custom_fields: Schema.optional(
       Schema.Record(Schema.String, Schema.Unknown),
     ),
-  }).pipe(T.Http({ method: "POST", path: "/international_wire_out" }));
-export type CreateOutboundInternationalWireTransferInput =
-  typeof CreateOutboundInternationalWireTransferInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/international_wire_out" }),
+  ) as unknown as Schema.Codec<CreateOutboundInternationalWireTransferInput>;
 
 // Output Schema
+export interface CreateOutboundInternationalWireTransferOutput {
+  id: string;
+  type: "INTERNATIONAL_WIRE_OUT";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id?: string | null;
+  status: "CREATED" | "PENDING" | "SETTLED" | "FAILED" | "RETURNED";
+  deposit_account_id: string;
+  counterparty_international_bank_account_id: string;
+  amount: {
+    currency: "USD";
+    exponent: number;
+    value: string;
+    display_value: string;
+  };
+  memo?: string | null;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const CreateOutboundInternationalWireTransferOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -54,11 +86,11 @@ export const CreateOutboundInternationalWireTransferOutput =
       display_value: Schema.String,
     }),
     memo: Schema.optional(Schema.NullOr(Schema.String)),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type CreateOutboundInternationalWireTransferOutput =
-  typeof CreateOutboundInternationalWireTransferOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<CreateOutboundInternationalWireTransferOutput>;
 
 // The operation
 /**

@@ -4,6 +4,22 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface RetrieveADeviceInput {
+  deviceId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const RetrieveADeviceInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   deviceId: Schema.String.pipe(T.PathParam()),
   include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
@@ -28,10 +44,23 @@ export const RetrieveADeviceInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "2020-05-18",
     ]),
   ).pipe(T.HttpHeader("Persona-Version")),
-}).pipe(T.Http({ method: "GET", path: "/devices/{deviceId}" }));
-export type RetrieveADeviceInput = typeof RetrieveADeviceInput.Type;
+}).pipe(
+  T.Http({ method: "GET", path: "/devices/{deviceId}" }),
+) as unknown as Schema.Codec<RetrieveADeviceInput>;
 
 // Output Schema
+export interface RetrieveADeviceOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      "device-vendor-id"?: string | null;
+      "device-fingerprint"?: string | null;
+      "browser-fingerprint"?: string | null;
+    };
+  };
+  included?: ReadonlyArray<unknown>;
+}
 export const RetrieveADeviceOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Struct({
     type: Schema.optional(Schema.String),
@@ -45,8 +74,7 @@ export const RetrieveADeviceOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     ),
   }),
   included: Schema.optional(Schema.Array(Schema.Unknown)),
-});
-export type RetrieveADeviceOutput = typeof RetrieveADeviceOutput.Type;
+}) as unknown as Schema.Codec<RetrieveADeviceOutput>;
 
 // The operation
 /**

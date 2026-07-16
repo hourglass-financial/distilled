@@ -4,15 +4,31 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface GetProgramInput {
+  id: string;
+  ereborVersion?: string;
+}
 export const GetProgramInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String.pipe(T.PathParam()),
   ereborVersion: Schema.optional(Schema.String).pipe(
     T.HttpHeader("Erebor-Version"),
   ),
-}).pipe(T.Http({ method: "GET", path: "/programs/{id}" }));
-export type GetProgramInput = typeof GetProgramInput.Type;
+}).pipe(
+  T.Http({ method: "GET", path: "/programs/{id}" }),
+) as unknown as Schema.Codec<GetProgramInput>;
 
 // Output Schema
+export interface GetProgramOutput {
+  id: string;
+  type: "PROGRAM";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  name: string;
+  billing_deposit_account_id?: string;
+  program_type?: string | null;
+}
 export const GetProgramOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String,
   type: Schema.Literals(["PROGRAM"]),
@@ -23,8 +39,7 @@ export const GetProgramOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   name: Schema.String,
   billing_deposit_account_id: Schema.optional(Schema.String),
   program_type: Schema.optional(Schema.NullOr(Schema.String)),
-});
-export type GetProgramOutput = typeof GetProgramOutput.Type;
+}) as unknown as Schema.Codec<GetProgramOutput>;
 
 // The operation
 /**

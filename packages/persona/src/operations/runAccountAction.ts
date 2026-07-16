@@ -11,16 +11,87 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface RunAccountActionInput {
+  accountId: string;
+  data: { "account-action-id": string; parameters?: Record<string, unknown> };
+}
 export const RunAccountActionInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   accountId: Schema.String.pipe(T.PathParam()),
   data: Schema.Struct({
     "account-action-id": Schema.String,
     parameters: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
   }),
-}).pipe(T.Http({ method: "POST", path: "/accounts/{accountId}/run-action" }));
-export type RunAccountActionInput = typeof RunAccountActionInput.Type;
+}).pipe(
+  T.Http({ method: "POST", path: "/accounts/{accountId}/run-action" }),
+) as unknown as Schema.Codec<RunAccountActionInput>;
 
 // Output Schema
+export interface RunAccountActionOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      "reference-id"?: string | null;
+      "account-type-name"?: string;
+      "created-at"?: string;
+      "updated-at"?: string;
+      "redacted-at"?: string | null;
+      fields?: {
+        name?: {
+          type?: string;
+          value?: {
+            first?: { type?: string; value?: string | null };
+            middle?: { type?: string; value?: string | null };
+            last?: { type?: string; value?: string | null };
+          };
+        };
+        address?: {
+          type?: string;
+          value?: {
+            street_1?: { type?: string; value?: string | null };
+            street_2?: { type?: string; value?: string | null };
+            subdivision?: { type?: string; value?: string | null };
+            city?: { type?: string; value?: string | null };
+            postal_code?: { type?: string; value?: string | null };
+            country_code?: { type?: string; value?: string | null };
+          };
+        };
+        identification_numbers?: {
+          type?: string;
+          value?: ReadonlyArray<{
+            type?: string;
+            value?: {
+              identification_class?: { type?: string; value?: string };
+              identification_number?: { type?: string; value?: string };
+              issuing_country?: { type?: string; value?: string };
+              hashed_identification_number?: {
+                type?: string;
+                value?: string | null;
+              };
+            };
+          }>;
+        };
+        birthdate?: { type?: string; value?: string | null };
+        phone_number?: { type?: string; value?: string | null };
+        email_address?: { type?: string; value?: string | null };
+        selfie_photo?: {
+          type?: string;
+          value?: {
+            filename?: string;
+            url?: string;
+            "byte-size"?: number;
+          } | null;
+        };
+      } & Record<string, unknown>;
+      tags?: ReadonlyArray<unknown>;
+      "account-status"?: string;
+    };
+    relationships?: {
+      "account-type"?: { data?: { id?: string; type?: string } };
+    };
+  };
+  meta: { "workflow-run-id": string };
+}
 export const RunAccountActionOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
   {
     data: Schema.Struct({
@@ -227,8 +298,7 @@ export const RunAccountActionOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
       "workflow-run-id": Schema.String,
     }),
   },
-);
-export type RunAccountActionOutput = typeof RunAccountActionOutput.Type;
+) as unknown as Schema.Codec<RunAccountActionOutput>;
 
 // The operation
 /**

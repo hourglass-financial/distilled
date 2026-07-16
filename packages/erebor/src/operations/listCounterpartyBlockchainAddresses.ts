@@ -3,6 +3,16 @@ import { API } from "../client.ts";
 import * as T from "../traits.ts";
 
 // Input Schema
+export interface ListCounterpartyBlockchainAddressesInput {
+  page_size?: number;
+  starting_after?: string;
+  ending_before?: string;
+  counterparty_id?: string;
+  customer_id?: string;
+  program_id?: string;
+  custom_ref?: string;
+  ereborVersion?: string;
+}
 export const ListCounterpartyBlockchainAddressesInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     page_size: Schema.optional(Schema.Number),
@@ -17,11 +27,71 @@ export const ListCounterpartyBlockchainAddressesInput =
     ),
   }).pipe(
     T.Http({ method: "GET", path: "/counterparty_blockchain_addresses" }),
-  );
-export type ListCounterpartyBlockchainAddressesInput =
-  typeof ListCounterpartyBlockchainAddressesInput.Type;
+  ) as unknown as Schema.Codec<ListCounterpartyBlockchainAddressesInput>;
 
 // Output Schema
+export interface ListCounterpartyBlockchainAddressesOutput {
+  data: ReadonlyArray<{
+    id: string;
+    type: "COUNTERPARTY_BLOCKCHAIN_ADDRESS";
+    url: string;
+    created_at: string;
+    updated_at: string;
+    archived_at?: string | null;
+    customer_id?: string | null;
+    program_id?: string | null;
+    counterparty_id?: string | null;
+    description: string | null;
+    address: string;
+    network: "BASE" | "ETHEREUM" | "INK" | "SOLANA" | "SUI";
+    custodian:
+      | "ANCHORAGE_SG"
+      | "ANCHORAGE_US"
+      | "AQUANOW_CA"
+      | "B2C2_UK"
+      | "B2C2_US"
+      | "BITGO_SG"
+      | "BITGO_US"
+      | "BITSTAMP_US"
+      | "BVNK_US"
+      | "CIRCLE_FR"
+      | "CIRCLE_US"
+      | "CITIBANK_US"
+      | "COINBASE_US"
+      | "COINSMART_CA"
+      | "COPPER_CH"
+      | "COPPER_UK"
+      | "CUMBERLAND_DRW_LLC_US"
+      | "CUMBERLAND_SG"
+      | "EREBOR_BANK_US"
+      | "FALCONX_US"
+      | "FIDELITY_UK"
+      | "FIDELITY_US"
+      | "FIREBLOCKS_APAC"
+      | "FIREBLOCKS_US"
+      | "GALAXY_KY"
+      | "GEMINI_US"
+      | "KRAKEN_BVI"
+      | "KRAKEN_EU_IE"
+      | "KRAKEN_UK"
+      | "KRAKEN_US"
+      | "NUBANK_BR"
+      | "PAXOS_US"
+      | "RAMP_NETWORK_US"
+      | "ROBINHOOD_US"
+      | "WINTERMUTE_GB"
+      | "SELF_HOSTED"
+      | "OTHER";
+    custodian_other?: string | null;
+    custom_ref?: string | null;
+    custom_fields?: Record<string, unknown> | null;
+  }>;
+  has_more: boolean;
+  page_size: number;
+  page_next?: string | null;
+  page_prev?: string | null;
+  url: string;
+}
 export const ListCounterpartyBlockchainAddressesOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Array(
@@ -78,8 +148,10 @@ export const ListCounterpartyBlockchainAddressesOutput =
           "OTHER",
         ]),
         custodian_other: Schema.optional(Schema.NullOr(Schema.String)),
-        custom_ref: Schema.optional(Schema.Unknown),
-        custom_fields: Schema.optional(Schema.Unknown),
+        custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+        custom_fields: Schema.optional(
+          Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+        ),
       }),
     ),
     has_more: Schema.Boolean,
@@ -87,9 +159,7 @@ export const ListCounterpartyBlockchainAddressesOutput =
     page_next: Schema.optional(Schema.NullOr(Schema.String)),
     page_prev: Schema.optional(Schema.NullOr(Schema.String)),
     url: Schema.String,
-  });
-export type ListCounterpartyBlockchainAddressesOutput =
-  typeof ListCounterpartyBlockchainAddressesOutput.Type;
+  }) as unknown as Schema.Codec<ListCounterpartyBlockchainAddressesOutput>;
 
 // The operation
 /**

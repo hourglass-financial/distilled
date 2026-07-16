@@ -1,5 +1,5 @@
 {
-  "description": "Fix response-schema drift between the Erebor OpenAPI snapshot and the live API, verified against api.erebor.bank. (1) Program.billing_deposit_account_id is declared required but is omitted from MANAGED program responses -> make optional. (2) Program responses include an undocumented program_type field (observed value MANAGED) -> add it. (3) Onboarding.disclosures is declared required but is omitted from every onboarding response (list/get/create/update) -> make optional. (4) Onboarding responses include an undocumented rejection_reason field -> add it. (5) The user-supplied `description` field is declared as a non-nullable string on every counterparty address/account output schema and on Transaction, but the API returns null when no description was set -> make nullable on all five output schemas. These were reported upstream in .ai-workspace/erebor-openapi-spec-issues.md.",
+  "description": "Fix response-schema drift between the Erebor OpenAPI snapshot and the live API, verified against api.erebor.bank. (1) Program.billing_deposit_account_id is declared required but is omitted from MANAGED program responses -> make optional. (2) Program responses include an undocumented program_type field (observed value MANAGED) -> add it. (3) Onboarding.disclosures is declared required but is omitted from every onboarding response (list/get/create/update) -> make optional. (4) Onboarding responses include an undocumented rejection_reason field -> add it. (5) The user-supplied `description` field is declared as a non-nullable string on every counterparty address/account output schema and on Transaction, but the API returns null when no description was set -> make nullable on all five output schemas. (6) BookTransferStatus omits the CREATED state returned immediately after creating a transfer -> add it. (7) TransactionFrom.url is declared required, but historical external-source transactions omit it -> make optional. These were reported upstream in .ai-workspace/erebor-openapi-spec-issues.md.",
   "patches": [
     {
       "op": "replace",
@@ -60,6 +60,21 @@
       "op": "replace",
       "path": "/components/schemas/Transaction/properties/description/type",
       "value": ["string", "null"]
+    },
+    {
+      "op": "add",
+      "path": "/components/schemas/BookTransferStatus/enum/-",
+      "value": "CREATED"
+    },
+    {
+      "op": "test",
+      "path": "/components/schemas/BookTransferStatus/enum",
+      "value": ["PENDING", "FAILED", "SETTLED", "CREATED"]
+    },
+    {
+      "op": "replace",
+      "path": "/components/schemas/TransactionFrom/required",
+      "value": ["type", "id"]
     }
   ]
 }

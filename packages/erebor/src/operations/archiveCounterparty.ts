@@ -4,6 +4,11 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface ArchiveCounterpartyInput {
+  id: string;
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+}
 export const ArchiveCounterpartyInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
@@ -13,10 +18,31 @@ export const ArchiveCounterpartyInput =
     ereborIdempotencyKey: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Idempotency-Key"),
     ),
-  }).pipe(T.Http({ method: "POST", path: "/counterparties/{id}/archive" }));
-export type ArchiveCounterpartyInput = typeof ArchiveCounterpartyInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/counterparties/{id}/archive" }),
+  ) as unknown as Schema.Codec<ArchiveCounterpartyInput>;
 
 // Output Schema
+export interface ArchiveCounterpartyOutput {
+  id: string;
+  type: "COUNTERPARTY";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  customer_id?: string | null;
+  program_id?: string | null;
+  name: string;
+  address: {
+    street_address: string;
+    city: string;
+    country_area?: string | null;
+    postal_code: string;
+    country: string;
+  };
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const ArchiveCounterpartyOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -35,10 +61,11 @@ export const ArchiveCounterpartyOutput =
       postal_code: Schema.String,
       country: Schema.String,
     }),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type ArchiveCounterpartyOutput = typeof ArchiveCounterpartyOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<ArchiveCounterpartyOutput>;
 
 // The operation
 /**

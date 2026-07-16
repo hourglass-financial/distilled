@@ -4,10 +4,24 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden } from "../errors.ts";
 
 // Input Schema
+export interface ListAllDevicesInput {
+  filter: { "inquiry-session-id": string };
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const ListAllDevicesInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   filter: Schema.Struct({
     "inquiry-session-id": Schema.String,
-  }).pipe(T.HttpQuery("filter")),
+  }),
   keyInflection: Schema.optional(
     Schema.Literals(["camel", "kebab", "snake"]),
   ).pipe(T.HttpHeader("Key-Inflection")),
@@ -26,10 +40,23 @@ export const ListAllDevicesInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "2020-05-18",
     ]),
   ).pipe(T.HttpHeader("Persona-Version")),
-}).pipe(T.Http({ method: "GET", path: "/devices" }));
-export type ListAllDevicesInput = typeof ListAllDevicesInput.Type;
+}).pipe(
+  T.Http({ method: "GET", path: "/devices" }),
+) as unknown as Schema.Codec<ListAllDevicesInput>;
 
 // Output Schema
+export interface ListAllDevicesOutput {
+  data: ReadonlyArray<{
+    type?: string;
+    id?: string;
+    attributes?: {
+      "device-vendor-id"?: string | null;
+      "device-fingerprint"?: string | null;
+      "browser-fingerprint"?: string | null;
+    };
+  }>;
+  links: { prev: string | null; next: string | null };
+}
 export const ListAllDevicesOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Array(
     Schema.Struct({
@@ -48,8 +75,7 @@ export const ListAllDevicesOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     prev: Schema.NullOr(Schema.String),
     next: Schema.NullOr(Schema.String),
   }),
-});
-export type ListAllDevicesOutput = typeof ListAllDevicesOutput.Type;
+}) as unknown as Schema.Codec<ListAllDevicesOutput>;
 
 // The operation
 /**

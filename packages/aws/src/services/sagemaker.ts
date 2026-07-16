@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -129,6 +129,7 @@ export type EnvironmentKey = string;
 export type EnvironmentValue = string;
 export type DataInputConfig = string;
 export type ModelPackageFrameworkVersion = string;
+export type AdditionalModelChannelName = string;
 export type S3Uri = string;
 export type HubContentName = string;
 export type HubContentVersion = string;
@@ -141,13 +142,26 @@ export type ExperimentDescription = string;
 export type StringParameterValue = string;
 export type MetadataPropertyValue = string;
 export type ActionArn = string;
+export type AIEntityName = string;
+export type AIResourceIdentifier = string;
+export type AIMlflowResourceArn = string;
+export type AIMlflowExperimentName = string;
+export type AIMlflowRunName = string;
+export type RoleArn = string;
+export type SecurityGroupId = string;
+export type SubnetId = string;
+export type AIBenchmarkJobArn = string;
+export type AIRecommendationAllowOptimization = boolean;
+export type AIMlReservationArn = string;
+export type AIRecommendationJobArn = string;
+export type AIChannelName = string;
+export type AIWorkloadConfigArn = string;
 export type ParameterName = string;
 export type ParameterValue = string;
 export type HyperParameterValue = string;
 export type MetricName = string;
 export type MetricRegex = string;
 export type ChannelName = string;
-export type RoleArn = string;
 export type HyperParameterKey = string;
 export type AttributeName = string;
 export type FileSystemId = string;
@@ -179,6 +193,7 @@ export type ImageArn = string;
 export type ImageVersionArn = string;
 export type ImageVersionAlias = string;
 export type StudioLifecycleConfigArn = string;
+export type StudioResourceSpecTrainingPlanArn = string;
 export type AppArn = string;
 export type AppImageConfigName = string;
 export type KernelName = string;
@@ -197,8 +212,6 @@ export type SampleWeightAttributeName = string;
 export type MaxCandidates = number;
 export type MaxRuntimePerTrainingJobInSeconds = number;
 export type MaxAutoMLJobRuntimeInSeconds = number;
-export type SecurityGroupId = string;
-export type SubnetId = string;
 export type ValidationFraction = number;
 export type GenerateCandidateDefinitionsOnly = boolean;
 export type AutoGenerateEndpointName = boolean;
@@ -231,6 +244,7 @@ export type NodeUnavailabilityValue = number;
 export type WaitTimeIntervalInSeconds = number;
 export type AlarmName = string;
 export type ImageId = string;
+export type ImageReleaseVersion = string;
 export type ClusterKubernetesLabelKey = string;
 export type ClusterKubernetesLabelValue = string;
 export type ClusterKubernetesTaintKey = string;
@@ -318,6 +332,8 @@ export type EndpointArn = string;
 export type VariantName = string;
 export type ModelName = string;
 export type InitialTaskCount = number;
+export type InstancePoolPriority = number;
+export type VariantInstanceProvisionTimeoutInSeconds = number;
 export type VariantWeight = number;
 export type ServerlessMemorySizeInMB = number;
 export type ServerlessMaxConcurrency = number;
@@ -354,6 +370,7 @@ export type ClarifyShapNumberOfSamples = number;
 export type ClarifyShapUseLogit = boolean;
 export type ClarifyShapSeed = number;
 export type EnableEnhancedMetrics = boolean;
+export type EnableDetailedObservability = boolean;
 export type EndpointConfigArn = string;
 export type ExperimentArn = string;
 export type FeatureGroupName = string;
@@ -422,6 +439,7 @@ export type ProgrammingLang = string;
 export type Horovod = boolean;
 export type ReleaseNotes = string;
 export type InferenceComponentName = string;
+export type MetricsEndpointPath = string;
 export type NumberOfCpuCores = number;
 export type NumberOfAcceleratorDevices = number;
 export type MemoryInMb = number;
@@ -454,6 +472,10 @@ export type RecommendationJobVpcSecurityGroupId = string;
 export type RecommendationJobVpcSubnetId = string;
 export type RecommendationJobDescription = string;
 export type RecommendationJobArn = string;
+export type JobName = string;
+export type JobSchemaVersion = string;
+export type JobConfigDocument = string;
+export type JobArn = string;
 export type LabelingJobName = string;
 export type LabelAttributeName = string;
 export type MaxHumanLabeledObjectCount = number;
@@ -476,7 +498,6 @@ export type TrackingServerName = string;
 export type MlflowVersion = string;
 export type TrackingServerArn = string;
 export type RepositoryCredentialsProviderArn = string;
-export type AdditionalModelChannelName = string;
 export type VersionedArnOrName = string;
 export type ModelCardContent = string | redacted.Redacted<string>;
 export type ModelCardArn = string;
@@ -608,6 +629,9 @@ export type NotificationTopicArn = string;
 export type Success = boolean;
 export type ExperimentEntityNameOrArn = string;
 export type LineageGroupArn = string;
+export type AIInferenceSpecificationName = string;
+export type AIRecommendationInstanceCount = number;
+export type AIRecommendationCopyCountPerInstance = number;
 export type AutoMLFailureReason = string;
 export type CandidateName = string;
 export type MetricValue = number;
@@ -719,8 +743,8 @@ export type TrainingPlanStatusMessage = string;
 export type TrainingPlanDurationHours = number;
 export type TrainingPlanDurationMinutes = number;
 export type CurrencyCode = string;
-export type TrainingPlanExtensionOfferingId = string;
 export type AvailabilityZoneId = string;
+export type TrainingPlanExtensionOfferingId = string;
 export type TrainingPlanExtensionDurationHours = number;
 export type TrialSourceArn = string;
 export type TrialComponentSourceArn = string;
@@ -1404,6 +1428,23 @@ export interface ModelInput {
 export const ModelInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({ DataInputConfig: S.optional(S.String) }),
 ).annotate({ identifier: "ModelInput" }) as any as S.Schema<ModelInput>;
+export interface AdditionalModelDataSource {
+  ChannelName?: string;
+  S3DataSource?: S3ModelDataSource;
+}
+export const AdditionalModelDataSource = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      ChannelName: S.optional(S.String),
+      S3DataSource: S.optional(S3ModelDataSource),
+    }),
+).annotate({
+  identifier: "AdditionalModelDataSource",
+}) as any as S.Schema<AdditionalModelDataSource>;
+export type AdditionalModelDataSources = AdditionalModelDataSource[];
+export const AdditionalModelDataSources = /*@__PURE__*/ /*#__PURE__*/ S.Array(
+  AdditionalModelDataSource,
+);
 export type AdditionalS3DataSourceDataType =
   | "S3Object"
   | "S3Prefix"
@@ -1453,6 +1494,7 @@ export interface ModelPackageContainerDefinition {
   Framework?: string;
   FrameworkVersion?: string;
   NearestModelName?: string;
+  AdditionalModelDataSources?: AdditionalModelDataSource[];
   AdditionalS3DataSource?: AdditionalS3DataSource;
   ModelDataETag?: string;
   IsCheckpoint?: boolean;
@@ -1472,6 +1514,7 @@ export const ModelPackageContainerDefinition =
       Framework: S.optional(S.String),
       FrameworkVersion: S.optional(S.String),
       NearestModelName: S.optional(S.String),
+      AdditionalModelDataSources: S.optional(AdditionalModelDataSources),
       AdditionalS3DataSource: S.optional(AdditionalS3DataSource),
       ModelDataETag: S.optional(S.String),
       IsCheckpoint: S.optional(S.Boolean),
@@ -2000,6 +2043,20 @@ export interface BatchDescribeModelPackageOutput {
                 };
               };
               ModelInput: ModelInput & { DataInputConfig: DataInputConfig };
+              AdditionalModelDataSources: (AdditionalModelDataSource & {
+                ChannelName: AdditionalModelChannelName;
+                S3DataSource: S3ModelDataSource & {
+                  S3Uri: S3ModelUri;
+                  S3DataType: S3ModelDataType;
+                  CompressionType: ModelCompressionType;
+                  ModelAccessConfig: ModelAccessConfig & {
+                    AcceptEula: AcceptEula;
+                  };
+                  HubAccessConfig: InferenceHubAccessConfig & {
+                    HubContentArn: HubContentArn;
+                  };
+                };
+              })[];
               AdditionalS3DataSource: AdditionalS3DataSource & {
                 S3DataType: AdditionalS3DataSourceDataType;
                 S3Uri: S3Uri;
@@ -2304,6 +2361,410 @@ export const CreateActionResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "CreateActionResponse",
 }) as any as S.Schema<CreateActionResponse>;
+export interface AIBenchmarkInferenceComponent {
+  Identifier?: string;
+}
+export const AIBenchmarkInferenceComponent =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ Identifier: S.optional(S.String) }),
+  ).annotate({
+    identifier: "AIBenchmarkInferenceComponent",
+  }) as any as S.Schema<AIBenchmarkInferenceComponent>;
+export type AIBenchmarkInferenceComponentList = AIBenchmarkInferenceComponent[];
+export const AIBenchmarkInferenceComponentList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(AIBenchmarkInferenceComponent);
+export interface AIBenchmarkEndpoint {
+  Identifier?: string;
+  TargetContainerHostname?: string;
+  InferenceComponents?: AIBenchmarkInferenceComponent[];
+}
+export const AIBenchmarkEndpoint = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    Identifier: S.optional(S.String),
+    TargetContainerHostname: S.optional(S.String),
+    InferenceComponents: S.optional(AIBenchmarkInferenceComponentList),
+  }),
+).annotate({
+  identifier: "AIBenchmarkEndpoint",
+}) as any as S.Schema<AIBenchmarkEndpoint>;
+export type AIBenchmarkTarget = { Endpoint: AIBenchmarkEndpoint };
+export const AIBenchmarkTarget = /*@__PURE__*/ /*#__PURE__*/ S.Union([
+  S.Struct({ Endpoint: AIBenchmarkEndpoint }),
+]);
+export interface AIMlflowConfig {
+  MlflowResourceArn?: string;
+  MlflowExperimentName?: string;
+  MlflowRunName?: string;
+}
+export const AIMlflowConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    MlflowResourceArn: S.optional(S.String),
+    MlflowExperimentName: S.optional(S.String),
+    MlflowRunName: S.optional(S.String),
+  }),
+).annotate({ identifier: "AIMlflowConfig" }) as any as S.Schema<AIMlflowConfig>;
+export interface AIBenchmarkOutputConfig {
+  S3OutputLocation?: string;
+  MlflowConfig?: AIMlflowConfig;
+}
+export const AIBenchmarkOutputConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      S3OutputLocation: S.optional(S.String),
+      MlflowConfig: S.optional(AIMlflowConfig),
+    }),
+).annotate({
+  identifier: "AIBenchmarkOutputConfig",
+}) as any as S.Schema<AIBenchmarkOutputConfig>;
+export type VpcSecurityGroupIds = string[];
+export const VpcSecurityGroupIds = /*@__PURE__*/ /*#__PURE__*/ S.Array(
+  S.String,
+);
+export type Subnets = string[];
+export const Subnets = /*@__PURE__*/ /*#__PURE__*/ S.Array(S.String);
+export interface VpcConfig {
+  SecurityGroupIds?: string[];
+  Subnets?: string[];
+}
+export const VpcConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    SecurityGroupIds: S.optional(VpcSecurityGroupIds),
+    Subnets: S.optional(Subnets),
+  }),
+).annotate({ identifier: "VpcConfig" }) as any as S.Schema<VpcConfig>;
+export interface AIBenchmarkNetworkConfig {
+  VpcConfig?: VpcConfig;
+}
+export const AIBenchmarkNetworkConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () => S.Struct({ VpcConfig: S.optional(VpcConfig) }),
+).annotate({
+  identifier: "AIBenchmarkNetworkConfig",
+}) as any as S.Schema<AIBenchmarkNetworkConfig>;
+export interface CreateAIBenchmarkJobRequest {
+  AIBenchmarkJobName?: string;
+  BenchmarkTarget?: AIBenchmarkTarget;
+  OutputConfig?: AIBenchmarkOutputConfig;
+  AIWorkloadConfigIdentifier?: string;
+  RoleArn?: string;
+  NetworkConfig?: AIBenchmarkNetworkConfig;
+  Tags?: Tag[];
+}
+export const CreateAIBenchmarkJobRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      AIBenchmarkJobName: S.optional(S.String),
+      BenchmarkTarget: S.optional(AIBenchmarkTarget),
+      OutputConfig: S.optional(AIBenchmarkOutputConfig),
+      AIWorkloadConfigIdentifier: S.optional(S.String),
+      RoleArn: S.optional(S.String),
+      NetworkConfig: S.optional(AIBenchmarkNetworkConfig),
+      Tags: S.optional(TagList),
+    }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "POST", uri: "/" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "CreateAIBenchmarkJobRequest",
+  }) as any as S.Schema<CreateAIBenchmarkJobRequest>;
+export interface CreateAIBenchmarkJobResponse {
+  AIBenchmarkJobArn: string;
+}
+export const CreateAIBenchmarkJobResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ AIBenchmarkJobArn: S.optional(S.String) }).pipe(ns),
+  ).annotate({
+    identifier: "CreateAIBenchmarkJobResponse",
+  }) as any as S.Schema<CreateAIBenchmarkJobResponse>;
+export interface AIModelSourceS3 {
+  S3Uri?: string;
+}
+export const AIModelSourceS3 = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ S3Uri: S.optional(S.String) }),
+).annotate({
+  identifier: "AIModelSourceS3",
+}) as any as S.Schema<AIModelSourceS3>;
+export type AIModelSource = { S3: AIModelSourceS3 };
+export const AIModelSource = /*@__PURE__*/ /*#__PURE__*/ S.Union([
+  S.Struct({ S3: AIModelSourceS3 }),
+]);
+export interface AIRecommendationOutputConfig {
+  S3OutputLocation?: string;
+  ModelPackageGroupIdentifier?: string;
+  MlflowConfig?: AIMlflowConfig;
+}
+export const AIRecommendationOutputConfig =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      S3OutputLocation: S.optional(S.String),
+      ModelPackageGroupIdentifier: S.optional(S.String),
+      MlflowConfig: S.optional(AIMlflowConfig),
+    }),
+  ).annotate({
+    identifier: "AIRecommendationOutputConfig",
+  }) as any as S.Schema<AIRecommendationOutputConfig>;
+export type AIRecommendationMetric =
+  | "ttft-ms"
+  | "throughput"
+  | "cost"
+  | (string & {});
+export const AIRecommendationMetric = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface AIRecommendationConstraint {
+  Metric?: AIRecommendationMetric;
+}
+export const AIRecommendationConstraint = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () => S.Struct({ Metric: S.optional(AIRecommendationMetric) }),
+).annotate({
+  identifier: "AIRecommendationConstraint",
+}) as any as S.Schema<AIRecommendationConstraint>;
+export type AIRecommendationConstraintList = AIRecommendationConstraint[];
+export const AIRecommendationConstraintList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(AIRecommendationConstraint);
+export interface AIRecommendationPerformanceTarget {
+  Constraints?: AIRecommendationConstraint[];
+}
+export const AIRecommendationPerformanceTarget =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ Constraints: S.optional(AIRecommendationConstraintList) }),
+  ).annotate({
+    identifier: "AIRecommendationPerformanceTarget",
+  }) as any as S.Schema<AIRecommendationPerformanceTarget>;
+export type AIRecommendationInferenceFramework = "LMI" | "VLLM" | (string & {});
+export const AIRecommendationInferenceFramework =
+  /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface AIRecommendationInferenceSpecification {
+  Framework?: AIRecommendationInferenceFramework;
+}
+export const AIRecommendationInferenceSpecification =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ Framework: S.optional(AIRecommendationInferenceFramework) }),
+  ).annotate({
+    identifier: "AIRecommendationInferenceSpecification",
+  }) as any as S.Schema<AIRecommendationInferenceSpecification>;
+export type AIRecommendationInstanceType =
+  | "ml.g5.xlarge"
+  | "ml.g5.2xlarge"
+  | "ml.g5.4xlarge"
+  | "ml.g5.8xlarge"
+  | "ml.g5.12xlarge"
+  | "ml.g5.16xlarge"
+  | "ml.g5.24xlarge"
+  | "ml.g5.48xlarge"
+  | "ml.g6.xlarge"
+  | "ml.g6.2xlarge"
+  | "ml.g6.4xlarge"
+  | "ml.g6.8xlarge"
+  | "ml.g6.12xlarge"
+  | "ml.g6.16xlarge"
+  | "ml.g6.24xlarge"
+  | "ml.g6.48xlarge"
+  | "ml.g6e.xlarge"
+  | "ml.g6e.2xlarge"
+  | "ml.g6e.4xlarge"
+  | "ml.g6e.8xlarge"
+  | "ml.g6e.12xlarge"
+  | "ml.g6e.16xlarge"
+  | "ml.g6e.24xlarge"
+  | "ml.g6e.48xlarge"
+  | "ml.g7e.2xlarge"
+  | "ml.g7e.4xlarge"
+  | "ml.g7e.8xlarge"
+  | "ml.g7e.12xlarge"
+  | "ml.g7e.24xlarge"
+  | "ml.g7e.48xlarge"
+  | "ml.p3.2xlarge"
+  | "ml.p3.8xlarge"
+  | "ml.p3.16xlarge"
+  | "ml.p4d.24xlarge"
+  | "ml.p4de.24xlarge"
+  | "ml.p5.4xlarge"
+  | "ml.p5.48xlarge"
+  | "ml.p5e.48xlarge"
+  | "ml.p5en.48xlarge"
+  | "ml.p6-b200.48xlarge"
+  | (string & {});
+export const AIRecommendationInstanceType =
+  /*@__PURE__*/ /*#__PURE__*/ S.String;
+export type AIRecommendationInstanceTypeList = AIRecommendationInstanceType[];
+export const AIRecommendationInstanceTypeList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(AIRecommendationInstanceType);
+export type AICapacityReservationPreference =
+  | "capacity-reservations-only"
+  | (string & {});
+export const AICapacityReservationPreference =
+  /*@__PURE__*/ /*#__PURE__*/ S.String;
+export type AIMlReservationArnList = string[];
+export const AIMlReservationArnList = /*@__PURE__*/ /*#__PURE__*/ S.Array(
+  S.String,
+);
+export interface AICapacityReservationConfig {
+  CapacityReservationPreference?: AICapacityReservationPreference;
+  MlReservationArns?: string[];
+}
+export const AICapacityReservationConfig =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      CapacityReservationPreference: S.optional(
+        AICapacityReservationPreference,
+      ),
+      MlReservationArns: S.optional(AIMlReservationArnList),
+    }),
+  ).annotate({
+    identifier: "AICapacityReservationConfig",
+  }) as any as S.Schema<AICapacityReservationConfig>;
+export interface AIRecommendationComputeSpec {
+  InstanceTypes?: AIRecommendationInstanceType[];
+  CapacityReservationConfig?: AICapacityReservationConfig;
+}
+export const AIRecommendationComputeSpec =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      InstanceTypes: S.optional(AIRecommendationInstanceTypeList),
+      CapacityReservationConfig: S.optional(AICapacityReservationConfig),
+    }),
+  ).annotate({
+    identifier: "AIRecommendationComputeSpec",
+  }) as any as S.Schema<AIRecommendationComputeSpec>;
+export interface CreateAIRecommendationJobRequest {
+  AIRecommendationJobName?: string;
+  ModelSource?: AIModelSource;
+  OutputConfig?: AIRecommendationOutputConfig;
+  AIWorkloadConfigIdentifier?: string;
+  PerformanceTarget?: AIRecommendationPerformanceTarget;
+  RoleArn?: string;
+  InferenceSpecification?: AIRecommendationInferenceSpecification;
+  OptimizeModel?: boolean;
+  ComputeSpec?: AIRecommendationComputeSpec;
+  Tags?: Tag[];
+}
+export const CreateAIRecommendationJobRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      AIRecommendationJobName: S.optional(S.String),
+      ModelSource: S.optional(AIModelSource),
+      OutputConfig: S.optional(AIRecommendationOutputConfig),
+      AIWorkloadConfigIdentifier: S.optional(S.String),
+      PerformanceTarget: S.optional(AIRecommendationPerformanceTarget),
+      RoleArn: S.optional(S.String),
+      InferenceSpecification: S.optional(
+        AIRecommendationInferenceSpecification,
+      ),
+      OptimizeModel: S.optional(S.Boolean),
+      ComputeSpec: S.optional(AIRecommendationComputeSpec),
+      Tags: S.optional(TagList),
+    }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "POST", uri: "/" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "CreateAIRecommendationJobRequest",
+  }) as any as S.Schema<CreateAIRecommendationJobRequest>;
+export interface CreateAIRecommendationJobResponse {
+  AIRecommendationJobArn: string;
+}
+export const CreateAIRecommendationJobResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ AIRecommendationJobArn: S.optional(S.String) }).pipe(ns),
+  ).annotate({
+    identifier: "CreateAIRecommendationJobResponse",
+  }) as any as S.Schema<CreateAIRecommendationJobResponse>;
+export interface AIWorkloadS3DataSource {
+  S3Uri?: string;
+}
+export const AIWorkloadS3DataSource = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () => S.Struct({ S3Uri: S.optional(S.String) }),
+).annotate({
+  identifier: "AIWorkloadS3DataSource",
+}) as any as S.Schema<AIWorkloadS3DataSource>;
+export interface AIWorkloadDataSource {
+  S3DataSource?: AIWorkloadS3DataSource;
+}
+export const AIWorkloadDataSource = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ S3DataSource: S.optional(AIWorkloadS3DataSource) }),
+).annotate({
+  identifier: "AIWorkloadDataSource",
+}) as any as S.Schema<AIWorkloadDataSource>;
+export interface AIWorkloadInputDataConfig {
+  ChannelName?: string;
+  DataSource?: AIWorkloadDataSource;
+}
+export const AIWorkloadInputDataConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      ChannelName: S.optional(S.String),
+      DataSource: S.optional(AIWorkloadDataSource),
+    }),
+).annotate({
+  identifier: "AIWorkloadInputDataConfig",
+}) as any as S.Schema<AIWorkloadInputDataConfig>;
+export type AIWorkloadInputDataConfigList = AIWorkloadInputDataConfig[];
+export const AIWorkloadInputDataConfigList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(AIWorkloadInputDataConfig);
+export type AIDatasetConfig = { InputDataConfig: AIWorkloadInputDataConfig[] };
+export const AIDatasetConfig = /*@__PURE__*/ /*#__PURE__*/ S.Union([
+  S.Struct({ InputDataConfig: AIWorkloadInputDataConfigList }),
+]);
+export type WorkloadSpec = { Inline: string };
+export const WorkloadSpec = /*@__PURE__*/ /*#__PURE__*/ S.Union([
+  S.Struct({ Inline: S.String }),
+]);
+export interface AIWorkloadConfigs {
+  WorkloadSpec?: WorkloadSpec;
+}
+export const AIWorkloadConfigs = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ WorkloadSpec: S.optional(WorkloadSpec) }),
+).annotate({
+  identifier: "AIWorkloadConfigs",
+}) as any as S.Schema<AIWorkloadConfigs>;
+export interface CreateAIWorkloadConfigRequest {
+  AIWorkloadConfigName?: string;
+  DatasetConfig?: AIDatasetConfig;
+  AIWorkloadConfigs?: AIWorkloadConfigs;
+  Tags?: Tag[];
+}
+export const CreateAIWorkloadConfigRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      AIWorkloadConfigName: S.optional(S.String),
+      DatasetConfig: S.optional(AIDatasetConfig),
+      AIWorkloadConfigs: S.optional(AIWorkloadConfigs),
+      Tags: S.optional(TagList),
+    }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "POST", uri: "/" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "CreateAIWorkloadConfigRequest",
+  }) as any as S.Schema<CreateAIWorkloadConfigRequest>;
+export interface CreateAIWorkloadConfigResponse {
+  AIWorkloadConfigArn: string;
+}
+export const CreateAIWorkloadConfigResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ AIWorkloadConfigArn: S.optional(S.String) }).pipe(ns),
+  ).annotate({
+    identifier: "CreateAIWorkloadConfigResponse",
+  }) as any as S.Schema<CreateAIWorkloadConfigResponse>;
 export type ParameterType =
   | "Integer"
   | "Continuous"
@@ -3222,6 +3683,13 @@ export type AppInstanceType =
   | "ml.r6id.16xlarge"
   | "ml.r6id.24xlarge"
   | "ml.r6id.32xlarge"
+  | "ml.p5.4xlarge"
+  | "ml.g7e.2xlarge"
+  | "ml.g7e.4xlarge"
+  | "ml.g7e.8xlarge"
+  | "ml.g7e.12xlarge"
+  | "ml.g7e.24xlarge"
+  | "ml.g7e.48xlarge"
   | (string & {});
 export const AppInstanceType = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface ResourceSpec {
@@ -3230,6 +3698,7 @@ export interface ResourceSpec {
   SageMakerImageVersionAlias?: string;
   InstanceType?: AppInstanceType;
   LifecycleConfigArn?: string;
+  TrainingPlanArn?: string;
 }
 export const ResourceSpec = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -3238,6 +3707,7 @@ export const ResourceSpec = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     SageMakerImageVersionAlias: S.optional(S.String),
     InstanceType: S.optional(AppInstanceType),
     LifecycleConfigArn: S.optional(S.String),
+    TrainingPlanArn: S.optional(S.String),
   }),
 ).annotate({ identifier: "ResourceSpec" }) as any as S.Schema<ResourceSpec>;
 export interface CreateAppRequest {
@@ -3595,22 +4065,6 @@ export const AutoMLJobCompletionCriteria =
   ).annotate({
     identifier: "AutoMLJobCompletionCriteria",
   }) as any as S.Schema<AutoMLJobCompletionCriteria>;
-export type VpcSecurityGroupIds = string[];
-export const VpcSecurityGroupIds = /*@__PURE__*/ /*#__PURE__*/ S.Array(
-  S.String,
-);
-export type Subnets = string[];
-export const Subnets = /*@__PURE__*/ /*#__PURE__*/ S.Array(S.String);
-export interface VpcConfig {
-  SecurityGroupIds?: string[];
-  Subnets?: string[];
-}
-export const VpcConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-  S.Struct({
-    SecurityGroupIds: S.optional(VpcSecurityGroupIds),
-    Subnets: S.optional(Subnets),
-  }),
-).annotate({ identifier: "VpcConfig" }) as any as S.Schema<VpcConfig>;
 export interface AutoMLSecurityConfig {
   VolumeKmsKeyId?: string;
   EnableInterContainerTrafficEncryption?: boolean;
@@ -4096,12 +4550,14 @@ export const ClusterInstanceRequirements =
 export interface ClusterLifeCycleConfig {
   SourceS3Uri?: string;
   OnCreate?: string;
+  OnInitComplete?: string;
 }
 export const ClusterLifeCycleConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
     S.Struct({
       SourceS3Uri: S.optional(S.String),
       OnCreate: S.optional(S.String),
+      OnInitComplete: S.optional(S.String),
     }),
 ).annotate({
   identifier: "ClusterLifeCycleConfig",
@@ -4245,6 +4701,36 @@ export const ScheduledUpdateConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "ScheduledUpdateConfig",
 }) as any as S.Schema<ScheduledUpdateConfig>;
+export type ClusterPatchingStrategy =
+  | "WhenIdle"
+  | "WhenAllIdle"
+  | (string & {});
+export const ClusterPatchingStrategy = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface ClusterPatchSchedule {
+  NextPatchDate?: Date;
+}
+export const ClusterPatchSchedule = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    NextPatchDate: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+  }),
+).annotate({
+  identifier: "ClusterPatchSchedule",
+}) as any as S.Schema<ClusterPatchSchedule>;
+export interface ClusterAutoPatchConfig {
+  PatchingStrategy: ClusterPatchingStrategy;
+  PatchSchedule?: ClusterPatchSchedule;
+  DeploymentConfig?: DeploymentConfiguration;
+}
+export const ClusterAutoPatchConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      PatchingStrategy: ClusterPatchingStrategy,
+      PatchSchedule: S.optional(ClusterPatchSchedule),
+      DeploymentConfig: S.optional(DeploymentConfiguration),
+    }),
+).annotate({
+  identifier: "ClusterAutoPatchConfig",
+}) as any as S.Schema<ClusterAutoPatchConfig>;
 export type ClusterKubernetesLabels = { [key: string]: string | undefined };
 export const ClusterKubernetesLabels = /*@__PURE__*/ /*#__PURE__*/ S.Record(
   S.String,
@@ -4336,6 +4822,16 @@ export const ClusterCapacityRequirements =
   ).annotate({
     identifier: "ClusterCapacityRequirements",
   }) as any as S.Schema<ClusterCapacityRequirements>;
+export type ClusterInterfaceType = "efa" | "efa-only" | (string & {});
+export const ClusterInterfaceType = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface ClusterNetworkInterface {
+  InterfaceType?: ClusterInterfaceType;
+}
+export const ClusterNetworkInterface = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () => S.Struct({ InterfaceType: S.optional(ClusterInterfaceType) }),
+).annotate({
+  identifier: "ClusterNetworkInterface",
+}) as any as S.Schema<ClusterNetworkInterface>;
 export interface ClusterInstanceGroupSpecification {
   InstanceCount?: number;
   MinInstanceCount?: number;
@@ -4351,9 +4847,12 @@ export interface ClusterInstanceGroupSpecification {
   OverrideVpcConfig?: VpcConfig;
   ScheduledUpdateConfig?: ScheduledUpdateConfig;
   ImageId?: string;
+  AutoPatchConfig?: ClusterAutoPatchConfig;
+  ImageReleaseVersion?: string;
   KubernetesConfig?: ClusterKubernetesConfig;
   SlurmConfig?: ClusterSlurmConfig;
   CapacityRequirements?: ClusterCapacityRequirements;
+  NetworkInterface?: ClusterNetworkInterface;
 }
 export const ClusterInstanceGroupSpecification =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -4372,9 +4871,12 @@ export const ClusterInstanceGroupSpecification =
       OverrideVpcConfig: S.optional(VpcConfig),
       ScheduledUpdateConfig: S.optional(ScheduledUpdateConfig),
       ImageId: S.optional(S.String),
+      AutoPatchConfig: S.optional(ClusterAutoPatchConfig),
+      ImageReleaseVersion: S.optional(S.String),
       KubernetesConfig: S.optional(ClusterKubernetesConfig),
       SlurmConfig: S.optional(ClusterSlurmConfig),
       CapacityRequirements: S.optional(ClusterCapacityRequirements),
+      NetworkInterface: S.optional(ClusterNetworkInterface),
     }),
   ).annotate({
     identifier: "ClusterInstanceGroupSpecification",
@@ -4440,6 +4942,36 @@ export const ClusterRestrictedInstanceGroupSpecifications =
   /*@__PURE__*/ /*#__PURE__*/ S.Array(
     ClusterRestrictedInstanceGroupSpecification,
   );
+export type ClusterFSxLustreDeletionPolicy =
+  | "DeleteIfNotUsed"
+  | "Keep"
+  | (string & {});
+export const ClusterFSxLustreDeletionPolicy =
+  /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface ClusterSharedEnvironmentConfig {
+  FSxLustreDeletionPolicy?: ClusterFSxLustreDeletionPolicy;
+  FSxLustreConfig?: FSxLustreConfig;
+}
+export const ClusterSharedEnvironmentConfig =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      FSxLustreDeletionPolicy: S.optional(ClusterFSxLustreDeletionPolicy),
+      FSxLustreConfig: S.optional(FSxLustreConfig),
+    }),
+  ).annotate({
+    identifier: "ClusterSharedEnvironmentConfig",
+  }) as any as S.Schema<ClusterSharedEnvironmentConfig>;
+export interface ClusterRestrictedInstanceGroupsConfig {
+  SharedEnvironmentConfig?: ClusterSharedEnvironmentConfig;
+}
+export const ClusterRestrictedInstanceGroupsConfig =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      SharedEnvironmentConfig: S.optional(ClusterSharedEnvironmentConfig),
+    }),
+  ).annotate({
+    identifier: "ClusterRestrictedInstanceGroupsConfig",
+  }) as any as S.Schema<ClusterRestrictedInstanceGroupsConfig>;
 export interface ClusterOrchestratorEksConfig {
   ClusterArn?: string;
 }
@@ -4516,6 +5048,7 @@ export interface CreateClusterRequest {
   ClusterName?: string;
   InstanceGroups?: ClusterInstanceGroupSpecification[];
   RestrictedInstanceGroups?: ClusterRestrictedInstanceGroupSpecification[];
+  RestrictedInstanceGroupsConfig?: ClusterRestrictedInstanceGroupsConfig;
   VpcConfig?: VpcConfig;
   Tags?: Tag[];
   Orchestrator?: ClusterOrchestrator;
@@ -4531,6 +5064,9 @@ export const CreateClusterRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     InstanceGroups: S.optional(ClusterInstanceGroupSpecifications),
     RestrictedInstanceGroups: S.optional(
       ClusterRestrictedInstanceGroupSpecifications,
+    ),
+    RestrictedInstanceGroupsConfig: S.optional(
+      ClusterRestrictedInstanceGroupsConfig,
     ),
     VpcConfig: S.optional(VpcConfig),
     Tags: S.optional(TagList),
@@ -6030,11 +6566,18 @@ export const HiddenSageMakerImage = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 export type HiddenSageMakerImageVersionAliasesList = HiddenSageMakerImage[];
 export const HiddenSageMakerImageVersionAliasesList =
   /*@__PURE__*/ /*#__PURE__*/ S.Array(HiddenSageMakerImage);
+export type ExecutionRoleSessionNameMode =
+  | "STATIC"
+  | "USER_IDENTITY"
+  | (string & {});
+export const ExecutionRoleSessionNameMode =
+  /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface StudioWebPortalSettings {
   HiddenMlTools?: MlTools[];
   HiddenAppTypes?: AppType[];
   HiddenInstanceTypes?: AppInstanceType[];
   HiddenSageMakerImageVersionAliases?: HiddenSageMakerImage[];
+  ExecutionRoleSessionNameMode?: ExecutionRoleSessionNameMode;
 }
 export const StudioWebPortalSettings = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -6045,6 +6588,7 @@ export const StudioWebPortalSettings = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       HiddenSageMakerImageVersionAliases: S.optional(
         HiddenSageMakerImageVersionAliasesList,
       ),
+      ExecutionRoleSessionNameMode: S.optional(ExecutionRoleSessionNameMode),
     }),
 ).annotate({
   identifier: "StudioWebPortalSettings",
@@ -6217,6 +6761,8 @@ export type AppNetworkAccessType =
 export const AppNetworkAccessType = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export type AppSecurityGroupManagement = "Service" | "Customer" | (string & {});
 export const AppSecurityGroupManagement = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export type HomeEfsFileSystemCreation = "Enabled" | "Disabled" | (string & {});
+export const HomeEfsFileSystemCreation = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export type TagPropagation = "ENABLED" | "DISABLED" | (string & {});
 export const TagPropagation = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface DefaultSpaceSettings {
@@ -6255,6 +6801,7 @@ export interface CreateDomainRequest {
   HomeEfsFileSystemKmsKeyId?: string;
   KmsKeyId?: string;
   AppSecurityGroupManagement?: AppSecurityGroupManagement;
+  HomeEfsFileSystemCreation?: HomeEfsFileSystemCreation;
   TagPropagation?: TagPropagation;
   DefaultSpaceSettings?: DefaultSpaceSettings;
 }
@@ -6271,6 +6818,7 @@ export const CreateDomainRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     HomeEfsFileSystemKmsKeyId: S.optional(S.String),
     KmsKeyId: S.optional(S.String),
     AppSecurityGroupManagement: S.optional(AppSecurityGroupManagement),
+    HomeEfsFileSystemCreation: S.optional(HomeEfsFileSystemCreation),
     TagPropagation: S.optional(TagPropagation),
     DefaultSpaceSettings: S.optional(DefaultSpaceSettings),
   }).pipe(
@@ -6606,6 +7154,21 @@ export const CreateEndpointOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "CreateEndpointOutput",
 }) as any as S.Schema<CreateEndpointOutput>;
+export interface InstancePool {
+  InstanceType?: ProductionVariantInstanceType;
+  ModelNameOverride?: string;
+  Priority?: number;
+}
+export const InstancePool = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    InstanceType: S.optional(ProductionVariantInstanceType),
+    ModelNameOverride: S.optional(S.String),
+    Priority: S.optional(S.Number),
+  }),
+).annotate({ identifier: "InstancePool" }) as any as S.Schema<InstancePool>;
+export type InstancePoolList = InstancePool[];
+export const InstancePoolList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(InstancePool);
 export type ProductionVariantAcceleratorType =
   | "ml.eia1.medium"
   | "ml.eia1.large"
@@ -6736,6 +7299,8 @@ export interface ProductionVariant {
   ModelName?: string;
   InitialInstanceCount?: number;
   InstanceType?: ProductionVariantInstanceType;
+  InstancePools?: InstancePool[];
+  VariantInstanceProvisionTimeoutInSeconds?: number;
   InitialVariantWeight?: number;
   AcceleratorType?: ProductionVariantAcceleratorType;
   CoreDumpConfig?: ProductionVariantCoreDumpConfig;
@@ -6755,6 +7320,8 @@ export const ProductionVariant = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     ModelName: S.optional(S.String),
     InitialInstanceCount: S.optional(S.Number),
     InstanceType: S.optional(ProductionVariantInstanceType),
+    InstancePools: S.optional(InstancePoolList),
+    VariantInstanceProvisionTimeoutInSeconds: S.optional(S.Number),
     InitialVariantWeight: S.optional(S.Number),
     AcceleratorType: S.optional(ProductionVariantAcceleratorType),
     CoreDumpConfig: S.optional(ProductionVariantCoreDumpConfig),
@@ -7081,11 +7648,13 @@ export const MetricPublishFrequencyInSeconds =
   /*@__PURE__*/ /*#__PURE__*/ S.Literals([10, 30, 60, 120, 180, 240, 300]);
 export interface MetricsConfig {
   EnableEnhancedMetrics?: boolean;
+  EnableDetailedObservability?: boolean;
   MetricPublishFrequencyInSeconds?: MetricPublishFrequencyInSeconds;
 }
 export const MetricsConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     EnableEnhancedMetrics: S.optional(S.Boolean),
+    EnableDetailedObservability: S.optional(S.Boolean),
     MetricPublishFrequencyInSeconds: S.optional(
       MetricPublishFrequencyInSeconds,
     ),
@@ -8230,10 +8799,36 @@ export const CreateImageVersionResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 ).annotate({
   identifier: "CreateImageVersionResponse",
 }) as any as S.Schema<CreateImageVersionResponse>;
+export interface MetricsEndpoint {
+  MetricsEndpointPath?: string;
+  MetricPublishFrequencyInSeconds?: MetricPublishFrequencyInSeconds;
+}
+export const MetricsEndpoint = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    MetricsEndpointPath: S.optional(S.String),
+    MetricPublishFrequencyInSeconds: S.optional(
+      MetricPublishFrequencyInSeconds,
+    ),
+  }),
+).annotate({
+  identifier: "MetricsEndpoint",
+}) as any as S.Schema<MetricsEndpoint>;
+export type MetricsEndpointList = MetricsEndpoint[];
+export const MetricsEndpointList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(MetricsEndpoint);
+export interface ContainerMetricsConfig {
+  MetricsEndpoints?: MetricsEndpoint[];
+}
+export const ContainerMetricsConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () => S.Struct({ MetricsEndpoints: S.optional(MetricsEndpointList) }),
+).annotate({
+  identifier: "ContainerMetricsConfig",
+}) as any as S.Schema<ContainerMetricsConfig>;
 export interface InferenceComponentContainerSpecification {
   Image?: string;
   ArtifactUrl?: string;
   Environment?: { [key: string]: string | undefined };
+  ContainerMetricsConfig?: ContainerMetricsConfig;
 }
 export const InferenceComponentContainerSpecification =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -8241,6 +8836,7 @@ export const InferenceComponentContainerSpecification =
       Image: S.optional(S.String),
       ArtifactUrl: S.optional(S.String),
       Environment: S.optional(EnvironmentMap),
+      ContainerMetricsConfig: S.optional(ContainerMetricsConfig),
     }),
   ).annotate({
     identifier: "InferenceComponentContainerSpecification",
@@ -8324,6 +8920,7 @@ export const InferenceComponentSchedulingConfig =
     identifier: "InferenceComponentSchedulingConfig",
   }) as any as S.Schema<InferenceComponentSchedulingConfig>;
 export interface InferenceComponentSpecification {
+  InstanceType?: ProductionVariantInstanceType;
   ModelName?: string;
   Container?: InferenceComponentContainerSpecification;
   StartupParameters?: InferenceComponentStartupParameters;
@@ -8335,6 +8932,7 @@ export interface InferenceComponentSpecification {
 export const InferenceComponentSpecification =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     S.Struct({
+      InstanceType: S.optional(ProductionVariantInstanceType),
       ModelName: S.optional(S.String),
       Container: S.optional(InferenceComponentContainerSpecification),
       StartupParameters: S.optional(InferenceComponentStartupParameters),
@@ -8348,6 +8946,10 @@ export const InferenceComponentSpecification =
   ).annotate({
     identifier: "InferenceComponentSpecification",
   }) as any as S.Schema<InferenceComponentSpecification>;
+export type InferenceComponentSpecificationList =
+  InferenceComponentSpecification[];
+export const InferenceComponentSpecificationList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(InferenceComponentSpecification);
 export interface InferenceComponentRuntimeConfig {
   CopyCount?: number;
 }
@@ -8362,6 +8964,7 @@ export interface CreateInferenceComponentInput {
   EndpointName?: string;
   VariantName?: string;
   Specification?: InferenceComponentSpecification;
+  Specifications?: InferenceComponentSpecification[];
   RuntimeConfig?: InferenceComponentRuntimeConfig;
   Tags?: Tag[];
 }
@@ -8372,6 +8975,7 @@ export const CreateInferenceComponentInput =
       EndpointName: S.optional(S.String),
       VariantName: S.optional(S.String),
       Specification: S.optional(InferenceComponentSpecification),
+      Specifications: S.optional(InferenceComponentSpecificationList),
       RuntimeConfig: S.optional(InferenceComponentRuntimeConfig),
       Tags: S.optional(TagList),
     }).pipe(
@@ -8414,190 +9018,14 @@ export const InferenceExperimentSchedule =
   }) as any as S.Schema<InferenceExperimentSchedule>;
 export type ModelInfrastructureType = "RealTimeInference" | (string & {});
 export const ModelInfrastructureType = /*@__PURE__*/ /*#__PURE__*/ S.String;
-export type InstanceType =
-  | "ml.t2.medium"
-  | "ml.t2.large"
-  | "ml.t2.xlarge"
-  | "ml.t2.2xlarge"
-  | "ml.t3.medium"
-  | "ml.t3.large"
-  | "ml.t3.xlarge"
-  | "ml.t3.2xlarge"
-  | "ml.m4.xlarge"
-  | "ml.m4.2xlarge"
-  | "ml.m4.4xlarge"
-  | "ml.m4.10xlarge"
-  | "ml.m4.16xlarge"
-  | "ml.m5.xlarge"
-  | "ml.m5.2xlarge"
-  | "ml.m5.4xlarge"
-  | "ml.m5.12xlarge"
-  | "ml.m5.24xlarge"
-  | "ml.m5d.large"
-  | "ml.m5d.xlarge"
-  | "ml.m5d.2xlarge"
-  | "ml.m5d.4xlarge"
-  | "ml.m5d.8xlarge"
-  | "ml.m5d.12xlarge"
-  | "ml.m5d.16xlarge"
-  | "ml.m5d.24xlarge"
-  | "ml.c4.xlarge"
-  | "ml.c4.2xlarge"
-  | "ml.c4.4xlarge"
-  | "ml.c4.8xlarge"
-  | "ml.c5.xlarge"
-  | "ml.c5.2xlarge"
-  | "ml.c5.4xlarge"
-  | "ml.c5.9xlarge"
-  | "ml.c5.18xlarge"
-  | "ml.c5d.xlarge"
-  | "ml.c5d.2xlarge"
-  | "ml.c5d.4xlarge"
-  | "ml.c5d.9xlarge"
-  | "ml.c5d.18xlarge"
-  | "ml.p2.xlarge"
-  | "ml.p2.8xlarge"
-  | "ml.p2.16xlarge"
-  | "ml.p3.2xlarge"
-  | "ml.p3.8xlarge"
-  | "ml.p3.16xlarge"
-  | "ml.p3dn.24xlarge"
-  | "ml.g4dn.xlarge"
-  | "ml.g4dn.2xlarge"
-  | "ml.g4dn.4xlarge"
-  | "ml.g4dn.8xlarge"
-  | "ml.g4dn.12xlarge"
-  | "ml.g4dn.16xlarge"
-  | "ml.r5.large"
-  | "ml.r5.xlarge"
-  | "ml.r5.2xlarge"
-  | "ml.r5.4xlarge"
-  | "ml.r5.8xlarge"
-  | "ml.r5.12xlarge"
-  | "ml.r5.16xlarge"
-  | "ml.r5.24xlarge"
-  | "ml.g5.xlarge"
-  | "ml.g5.2xlarge"
-  | "ml.g5.4xlarge"
-  | "ml.g5.8xlarge"
-  | "ml.g5.16xlarge"
-  | "ml.g5.12xlarge"
-  | "ml.g5.24xlarge"
-  | "ml.g5.48xlarge"
-  | "ml.inf1.xlarge"
-  | "ml.inf1.2xlarge"
-  | "ml.inf1.6xlarge"
-  | "ml.inf1.24xlarge"
-  | "ml.trn1.2xlarge"
-  | "ml.trn1.32xlarge"
-  | "ml.trn1n.32xlarge"
-  | "ml.inf2.xlarge"
-  | "ml.inf2.8xlarge"
-  | "ml.inf2.24xlarge"
-  | "ml.inf2.48xlarge"
-  | "ml.p4d.24xlarge"
-  | "ml.p4de.24xlarge"
-  | "ml.p5.48xlarge"
-  | "ml.p6-b200.48xlarge"
-  | "ml.m6i.large"
-  | "ml.m6i.xlarge"
-  | "ml.m6i.2xlarge"
-  | "ml.m6i.4xlarge"
-  | "ml.m6i.8xlarge"
-  | "ml.m6i.12xlarge"
-  | "ml.m6i.16xlarge"
-  | "ml.m6i.24xlarge"
-  | "ml.m6i.32xlarge"
-  | "ml.m7i.large"
-  | "ml.m7i.xlarge"
-  | "ml.m7i.2xlarge"
-  | "ml.m7i.4xlarge"
-  | "ml.m7i.8xlarge"
-  | "ml.m7i.12xlarge"
-  | "ml.m7i.16xlarge"
-  | "ml.m7i.24xlarge"
-  | "ml.m7i.48xlarge"
-  | "ml.c6i.large"
-  | "ml.c6i.xlarge"
-  | "ml.c6i.2xlarge"
-  | "ml.c6i.4xlarge"
-  | "ml.c6i.8xlarge"
-  | "ml.c6i.12xlarge"
-  | "ml.c6i.16xlarge"
-  | "ml.c6i.24xlarge"
-  | "ml.c6i.32xlarge"
-  | "ml.c7i.large"
-  | "ml.c7i.xlarge"
-  | "ml.c7i.2xlarge"
-  | "ml.c7i.4xlarge"
-  | "ml.c7i.8xlarge"
-  | "ml.c7i.12xlarge"
-  | "ml.c7i.16xlarge"
-  | "ml.c7i.24xlarge"
-  | "ml.c7i.48xlarge"
-  | "ml.r6i.large"
-  | "ml.r6i.xlarge"
-  | "ml.r6i.2xlarge"
-  | "ml.r6i.4xlarge"
-  | "ml.r6i.8xlarge"
-  | "ml.r6i.12xlarge"
-  | "ml.r6i.16xlarge"
-  | "ml.r6i.24xlarge"
-  | "ml.r6i.32xlarge"
-  | "ml.r7i.large"
-  | "ml.r7i.xlarge"
-  | "ml.r7i.2xlarge"
-  | "ml.r7i.4xlarge"
-  | "ml.r7i.8xlarge"
-  | "ml.r7i.12xlarge"
-  | "ml.r7i.16xlarge"
-  | "ml.r7i.24xlarge"
-  | "ml.r7i.48xlarge"
-  | "ml.m6id.large"
-  | "ml.m6id.xlarge"
-  | "ml.m6id.2xlarge"
-  | "ml.m6id.4xlarge"
-  | "ml.m6id.8xlarge"
-  | "ml.m6id.12xlarge"
-  | "ml.m6id.16xlarge"
-  | "ml.m6id.24xlarge"
-  | "ml.m6id.32xlarge"
-  | "ml.c6id.large"
-  | "ml.c6id.xlarge"
-  | "ml.c6id.2xlarge"
-  | "ml.c6id.4xlarge"
-  | "ml.c6id.8xlarge"
-  | "ml.c6id.12xlarge"
-  | "ml.c6id.16xlarge"
-  | "ml.c6id.24xlarge"
-  | "ml.c6id.32xlarge"
-  | "ml.r6id.large"
-  | "ml.r6id.xlarge"
-  | "ml.r6id.2xlarge"
-  | "ml.r6id.4xlarge"
-  | "ml.r6id.8xlarge"
-  | "ml.r6id.12xlarge"
-  | "ml.r6id.16xlarge"
-  | "ml.r6id.24xlarge"
-  | "ml.r6id.32xlarge"
-  | "ml.g6.xlarge"
-  | "ml.g6.2xlarge"
-  | "ml.g6.4xlarge"
-  | "ml.g6.8xlarge"
-  | "ml.g6.12xlarge"
-  | "ml.g6.16xlarge"
-  | "ml.g6.24xlarge"
-  | "ml.g6.48xlarge"
-  | (string & {});
-export const InstanceType = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface RealTimeInferenceConfig {
-  InstanceType?: InstanceType;
+  InstanceType?: ProductionVariantInstanceType;
   InstanceCount?: number;
 }
 export const RealTimeInferenceConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
     S.Struct({
-      InstanceType: S.optional(InstanceType),
+      InstanceType: S.optional(ProductionVariantInstanceType),
       InstanceCount: S.optional(S.Number),
     }),
 ).annotate({
@@ -9047,6 +9475,46 @@ export const CreateInferenceRecommendationsJobResponse =
   ).annotate({
     identifier: "CreateInferenceRecommendationsJobResponse",
   }) as any as S.Schema<CreateInferenceRecommendationsJobResponse>;
+export type JobCategory = "AgentRFT" | "AgentRFTEvaluation" | (string & {});
+export const JobCategory = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface CreateJobRequest {
+  JobName?: string;
+  RoleArn?: string;
+  JobCategory?: JobCategory;
+  JobConfigSchemaVersion?: string;
+  JobConfigDocument?: string;
+  Tags?: Tag[];
+}
+export const CreateJobRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    JobName: S.optional(S.String),
+    RoleArn: S.optional(S.String),
+    JobCategory: S.optional(JobCategory),
+    JobConfigSchemaVersion: S.optional(S.String),
+    JobConfigDocument: S.optional(S.String),
+    Tags: S.optional(TagList),
+  }).pipe(
+    T.all(
+      ns,
+      T.Http({ method: "POST", uri: "/" }),
+      svc,
+      auth,
+      proto,
+      ver,
+      rules,
+    ),
+  ),
+).annotate({
+  identifier: "CreateJobRequest",
+}) as any as S.Schema<CreateJobRequest>;
+export interface CreateJobResponse {
+  JobArn: string;
+}
+export const CreateJobResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ JobArn: S.optional(S.String) }).pipe(ns),
+).annotate({
+  identifier: "CreateJobResponse",
+}) as any as S.Schema<CreateJobResponse>;
 export interface LabelingJobS3DataSource {
   ManifestS3Uri?: string;
 }
@@ -9386,23 +9854,6 @@ export const ImageConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({ identifier: "ImageConfig" }) as any as S.Schema<ImageConfig>;
 export type ContainerMode = "SingleModel" | "MultiModel" | (string & {});
 export const ContainerMode = /*@__PURE__*/ /*#__PURE__*/ S.String;
-export interface AdditionalModelDataSource {
-  ChannelName?: string;
-  S3DataSource?: S3ModelDataSource;
-}
-export const AdditionalModelDataSource = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
-  () =>
-    S.Struct({
-      ChannelName: S.optional(S.String),
-      S3DataSource: S.optional(S3ModelDataSource),
-    }),
-).annotate({
-  identifier: "AdditionalModelDataSource",
-}) as any as S.Schema<AdditionalModelDataSource>;
-export type AdditionalModelDataSources = AdditionalModelDataSource[];
-export const AdditionalModelDataSources = /*@__PURE__*/ /*#__PURE__*/ S.Array(
-  AdditionalModelDataSource,
-);
 export type ModelCacheSetting = "Enabled" | "Disabled" | (string & {});
 export const ModelCacheSetting = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface MultiModelConfig {
@@ -9425,6 +9876,7 @@ export interface ContainerDefinition {
   ModelPackageName?: string;
   InferenceSpecificationName?: string;
   MultiModelConfig?: MultiModelConfig;
+  ContainerMetricsConfig?: ContainerMetricsConfig;
 }
 export const ContainerDefinition = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -9439,6 +9891,7 @@ export const ContainerDefinition = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     ModelPackageName: S.optional(S.String),
     InferenceSpecificationName: S.optional(S.String),
     MultiModelConfig: S.optional(MultiModelConfig),
+    ContainerMetricsConfig: S.optional(ContainerMetricsConfig),
   }),
 ).annotate({
   identifier: "ContainerDefinition",
@@ -10059,6 +10512,8 @@ export const ModelLifeCycle = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     StageDescription: S.optional(S.String),
   }),
 ).annotate({ identifier: "ModelLifeCycle" }) as any as S.Schema<ModelLifeCycle>;
+export type ManagedStorageType = "Restricted" | (string & {});
+export const ManagedStorageType = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface CreateModelPackageInput {
   ModelPackageName?: string;
   ModelPackageGroupName?: string;
@@ -10084,6 +10539,7 @@ export interface CreateModelPackageInput {
   SecurityConfig?: ModelPackageSecurityConfig;
   ModelCard?: ModelPackageModelCard;
   ModelLifeCycle?: ModelLifeCycle;
+  ManagedStorageType?: ManagedStorageType;
 }
 export const CreateModelPackageInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -10114,6 +10570,7 @@ export const CreateModelPackageInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       SecurityConfig: S.optional(ModelPackageSecurityConfig),
       ModelCard: S.optional(ModelPackageModelCard),
       ModelLifeCycle: S.optional(ModelLifeCycle),
+      ManagedStorageType: S.optional(ManagedStorageType),
     }).pipe(
       T.all(
         ns,
@@ -10136,10 +10593,19 @@ export const CreateModelPackageOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 ).annotate({
   identifier: "CreateModelPackageOutput",
 }) as any as S.Schema<CreateModelPackageOutput>;
+export interface ManagedConfiguration {
+  ManagedStorageType?: ManagedStorageType;
+}
+export const ManagedConfiguration = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ ManagedStorageType: S.optional(ManagedStorageType) }),
+).annotate({
+  identifier: "ManagedConfiguration",
+}) as any as S.Schema<ManagedConfiguration>;
 export interface CreateModelPackageGroupInput {
   ModelPackageGroupName?: string;
   ModelPackageGroupDescription?: string;
   Tags?: Tag[];
+  ManagedConfiguration?: ManagedConfiguration;
 }
 export const CreateModelPackageGroupInput =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -10147,6 +10613,7 @@ export const CreateModelPackageGroupInput =
       ModelPackageGroupName: S.optional(S.String),
       ModelPackageGroupDescription: S.optional(S.String),
       Tags: S.optional(TagList),
+      ManagedConfiguration: S.optional(ManagedConfiguration),
     }).pipe(
       T.all(
         ns,
@@ -10432,6 +10899,192 @@ export const CreateMonitoringScheduleResponse =
   ).annotate({
     identifier: "CreateMonitoringScheduleResponse",
   }) as any as S.Schema<CreateMonitoringScheduleResponse>;
+export type InstanceType =
+  | "ml.t2.medium"
+  | "ml.t2.large"
+  | "ml.t2.xlarge"
+  | "ml.t2.2xlarge"
+  | "ml.t3.medium"
+  | "ml.t3.large"
+  | "ml.t3.xlarge"
+  | "ml.t3.2xlarge"
+  | "ml.m4.xlarge"
+  | "ml.m4.2xlarge"
+  | "ml.m4.4xlarge"
+  | "ml.m4.10xlarge"
+  | "ml.m4.16xlarge"
+  | "ml.m5.xlarge"
+  | "ml.m5.2xlarge"
+  | "ml.m5.4xlarge"
+  | "ml.m5.12xlarge"
+  | "ml.m5.24xlarge"
+  | "ml.m5d.large"
+  | "ml.m5d.xlarge"
+  | "ml.m5d.2xlarge"
+  | "ml.m5d.4xlarge"
+  | "ml.m5d.8xlarge"
+  | "ml.m5d.12xlarge"
+  | "ml.m5d.16xlarge"
+  | "ml.m5d.24xlarge"
+  | "ml.c4.xlarge"
+  | "ml.c4.2xlarge"
+  | "ml.c4.4xlarge"
+  | "ml.c4.8xlarge"
+  | "ml.c5.xlarge"
+  | "ml.c5.2xlarge"
+  | "ml.c5.4xlarge"
+  | "ml.c5.9xlarge"
+  | "ml.c5.18xlarge"
+  | "ml.c5d.xlarge"
+  | "ml.c5d.2xlarge"
+  | "ml.c5d.4xlarge"
+  | "ml.c5d.9xlarge"
+  | "ml.c5d.18xlarge"
+  | "ml.p2.xlarge"
+  | "ml.p2.8xlarge"
+  | "ml.p2.16xlarge"
+  | "ml.p3.2xlarge"
+  | "ml.p3.8xlarge"
+  | "ml.p3.16xlarge"
+  | "ml.p3dn.24xlarge"
+  | "ml.g4dn.xlarge"
+  | "ml.g4dn.2xlarge"
+  | "ml.g4dn.4xlarge"
+  | "ml.g4dn.8xlarge"
+  | "ml.g4dn.12xlarge"
+  | "ml.g4dn.16xlarge"
+  | "ml.r5.large"
+  | "ml.r5.xlarge"
+  | "ml.r5.2xlarge"
+  | "ml.r5.4xlarge"
+  | "ml.r5.8xlarge"
+  | "ml.r5.12xlarge"
+  | "ml.r5.16xlarge"
+  | "ml.r5.24xlarge"
+  | "ml.g5.xlarge"
+  | "ml.g5.2xlarge"
+  | "ml.g5.4xlarge"
+  | "ml.g5.8xlarge"
+  | "ml.g5.16xlarge"
+  | "ml.g5.12xlarge"
+  | "ml.g5.24xlarge"
+  | "ml.g5.48xlarge"
+  | "ml.inf1.xlarge"
+  | "ml.inf1.2xlarge"
+  | "ml.inf1.6xlarge"
+  | "ml.inf1.24xlarge"
+  | "ml.trn1.2xlarge"
+  | "ml.trn1.32xlarge"
+  | "ml.trn1n.32xlarge"
+  | "ml.inf2.xlarge"
+  | "ml.inf2.8xlarge"
+  | "ml.inf2.24xlarge"
+  | "ml.inf2.48xlarge"
+  | "ml.p4d.24xlarge"
+  | "ml.p4de.24xlarge"
+  | "ml.p5.48xlarge"
+  | "ml.p6-b200.48xlarge"
+  | "ml.m6i.large"
+  | "ml.m6i.xlarge"
+  | "ml.m6i.2xlarge"
+  | "ml.m6i.4xlarge"
+  | "ml.m6i.8xlarge"
+  | "ml.m6i.12xlarge"
+  | "ml.m6i.16xlarge"
+  | "ml.m6i.24xlarge"
+  | "ml.m6i.32xlarge"
+  | "ml.m7i.large"
+  | "ml.m7i.xlarge"
+  | "ml.m7i.2xlarge"
+  | "ml.m7i.4xlarge"
+  | "ml.m7i.8xlarge"
+  | "ml.m7i.12xlarge"
+  | "ml.m7i.16xlarge"
+  | "ml.m7i.24xlarge"
+  | "ml.m7i.48xlarge"
+  | "ml.c6i.large"
+  | "ml.c6i.xlarge"
+  | "ml.c6i.2xlarge"
+  | "ml.c6i.4xlarge"
+  | "ml.c6i.8xlarge"
+  | "ml.c6i.12xlarge"
+  | "ml.c6i.16xlarge"
+  | "ml.c6i.24xlarge"
+  | "ml.c6i.32xlarge"
+  | "ml.c7i.large"
+  | "ml.c7i.xlarge"
+  | "ml.c7i.2xlarge"
+  | "ml.c7i.4xlarge"
+  | "ml.c7i.8xlarge"
+  | "ml.c7i.12xlarge"
+  | "ml.c7i.16xlarge"
+  | "ml.c7i.24xlarge"
+  | "ml.c7i.48xlarge"
+  | "ml.r6i.large"
+  | "ml.r6i.xlarge"
+  | "ml.r6i.2xlarge"
+  | "ml.r6i.4xlarge"
+  | "ml.r6i.8xlarge"
+  | "ml.r6i.12xlarge"
+  | "ml.r6i.16xlarge"
+  | "ml.r6i.24xlarge"
+  | "ml.r6i.32xlarge"
+  | "ml.r7i.large"
+  | "ml.r7i.xlarge"
+  | "ml.r7i.2xlarge"
+  | "ml.r7i.4xlarge"
+  | "ml.r7i.8xlarge"
+  | "ml.r7i.12xlarge"
+  | "ml.r7i.16xlarge"
+  | "ml.r7i.24xlarge"
+  | "ml.r7i.48xlarge"
+  | "ml.m6id.large"
+  | "ml.m6id.xlarge"
+  | "ml.m6id.2xlarge"
+  | "ml.m6id.4xlarge"
+  | "ml.m6id.8xlarge"
+  | "ml.m6id.12xlarge"
+  | "ml.m6id.16xlarge"
+  | "ml.m6id.24xlarge"
+  | "ml.m6id.32xlarge"
+  | "ml.c6id.large"
+  | "ml.c6id.xlarge"
+  | "ml.c6id.2xlarge"
+  | "ml.c6id.4xlarge"
+  | "ml.c6id.8xlarge"
+  | "ml.c6id.12xlarge"
+  | "ml.c6id.16xlarge"
+  | "ml.c6id.24xlarge"
+  | "ml.c6id.32xlarge"
+  | "ml.r6id.large"
+  | "ml.r6id.xlarge"
+  | "ml.r6id.2xlarge"
+  | "ml.r6id.4xlarge"
+  | "ml.r6id.8xlarge"
+  | "ml.r6id.12xlarge"
+  | "ml.r6id.16xlarge"
+  | "ml.r6id.24xlarge"
+  | "ml.r6id.32xlarge"
+  | "ml.g6.xlarge"
+  | "ml.g6.2xlarge"
+  | "ml.g6.4xlarge"
+  | "ml.g6.8xlarge"
+  | "ml.g6.12xlarge"
+  | "ml.g6.16xlarge"
+  | "ml.g6.24xlarge"
+  | "ml.g6.48xlarge"
+  | "ml.p5.4xlarge"
+  | "ml.p5en.48xlarge"
+  | "ml.g6e.xlarge"
+  | "ml.g6e.2xlarge"
+  | "ml.g6e.4xlarge"
+  | "ml.g6e.8xlarge"
+  | "ml.g6e.12xlarge"
+  | "ml.g6e.16xlarge"
+  | "ml.g6e.24xlarge"
+  | "ml.g6e.48xlarge"
+  | (string & {});
+export const InstanceType = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export type DirectInternetAccess = "Enabled" | "Disabled" | (string & {});
 export const DirectInternetAccess = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export type NotebookInstanceAcceleratorType =
@@ -10628,6 +11281,12 @@ export type OptimizationJobDeploymentInstanceType =
   | "ml.p5.48xlarge"
   | "ml.p5e.48xlarge"
   | "ml.p5en.48xlarge"
+  | "ml.g4dn.xlarge"
+  | "ml.g4dn.2xlarge"
+  | "ml.g4dn.4xlarge"
+  | "ml.g4dn.8xlarge"
+  | "ml.g4dn.12xlarge"
+  | "ml.g4dn.16xlarge"
   | "ml.g5.xlarge"
   | "ml.g5.2xlarge"
   | "ml.g5.4xlarge"
@@ -12806,6 +13465,90 @@ export const DeleteActionResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "DeleteActionResponse",
 }) as any as S.Schema<DeleteActionResponse>;
+export interface DeleteAIBenchmarkJobRequest {
+  AIBenchmarkJobName?: string;
+}
+export const DeleteAIBenchmarkJobRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ AIBenchmarkJobName: S.optional(S.String) }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "POST", uri: "/" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "DeleteAIBenchmarkJobRequest",
+  }) as any as S.Schema<DeleteAIBenchmarkJobRequest>;
+export interface DeleteAIBenchmarkJobResponse {
+  AIBenchmarkJobArn?: string;
+}
+export const DeleteAIBenchmarkJobResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ AIBenchmarkJobArn: S.optional(S.String) }).pipe(ns),
+  ).annotate({
+    identifier: "DeleteAIBenchmarkJobResponse",
+  }) as any as S.Schema<DeleteAIBenchmarkJobResponse>;
+export interface DeleteAIRecommendationJobRequest {
+  AIRecommendationJobName?: string;
+}
+export const DeleteAIRecommendationJobRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ AIRecommendationJobName: S.optional(S.String) }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "POST", uri: "/" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "DeleteAIRecommendationJobRequest",
+  }) as any as S.Schema<DeleteAIRecommendationJobRequest>;
+export interface DeleteAIRecommendationJobResponse {
+  AIRecommendationJobArn?: string;
+}
+export const DeleteAIRecommendationJobResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ AIRecommendationJobArn: S.optional(S.String) }).pipe(ns),
+  ).annotate({
+    identifier: "DeleteAIRecommendationJobResponse",
+  }) as any as S.Schema<DeleteAIRecommendationJobResponse>;
+export interface DeleteAIWorkloadConfigRequest {
+  AIWorkloadConfigName?: string;
+}
+export const DeleteAIWorkloadConfigRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ AIWorkloadConfigName: S.optional(S.String) }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "POST", uri: "/" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "DeleteAIWorkloadConfigRequest",
+  }) as any as S.Schema<DeleteAIWorkloadConfigRequest>;
+export interface DeleteAIWorkloadConfigResponse {
+  AIWorkloadConfigArn?: string;
+}
+export const DeleteAIWorkloadConfigResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ AIWorkloadConfigArn: S.optional(S.String) }).pipe(ns),
+  ).annotate({
+    identifier: "DeleteAIWorkloadConfigResponse",
+  }) as any as S.Schema<DeleteAIWorkloadConfigResponse>;
 export interface DeleteAlgorithmInput {
   AlgorithmName?: string;
 }
@@ -13609,6 +14352,34 @@ export const DeleteInferenceExperimentResponse =
   ).annotate({
     identifier: "DeleteInferenceExperimentResponse",
   }) as any as S.Schema<DeleteInferenceExperimentResponse>;
+export interface DeleteJobRequest {
+  JobName?: string;
+  JobCategory?: JobCategory;
+}
+export const DeleteJobRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    JobName: S.optional(S.String),
+    JobCategory: S.optional(JobCategory),
+  }).pipe(
+    T.all(
+      ns,
+      T.Http({ method: "POST", uri: "/" }),
+      svc,
+      auth,
+      proto,
+      ver,
+      rules,
+    ),
+  ),
+).annotate({
+  identifier: "DeleteJobRequest",
+}) as any as S.Schema<DeleteJobRequest>;
+export interface DeleteJobResponse {}
+export const DeleteJobResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({}).pipe(ns),
+).annotate({
+  identifier: "DeleteJobResponse",
+}) as any as S.Schema<DeleteJobResponse>;
 export interface DeleteMlflowAppRequest {
   Arn?: string;
 }
@@ -14416,6 +15187,391 @@ export const DescribeActionResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 ).annotate({
   identifier: "DescribeActionResponse",
 }) as any as S.Schema<DescribeActionResponse>;
+export interface DescribeAIBenchmarkJobRequest {
+  AIBenchmarkJobName?: string;
+}
+export const DescribeAIBenchmarkJobRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ AIBenchmarkJobName: S.optional(S.String) }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "POST", uri: "/" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "DescribeAIBenchmarkJobRequest",
+  }) as any as S.Schema<DescribeAIBenchmarkJobRequest>;
+export type AIBenchmarkJobStatus =
+  | "InProgress"
+  | "Completed"
+  | "Failed"
+  | "Stopping"
+  | "Stopped"
+  | (string & {});
+export const AIBenchmarkJobStatus = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface AICloudWatchLogs {
+  LogGroupArn?: string;
+  LogStreamName?: string;
+}
+export const AICloudWatchLogs = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    LogGroupArn: S.optional(S.String),
+    LogStreamName: S.optional(S.String),
+  }),
+).annotate({
+  identifier: "AICloudWatchLogs",
+}) as any as S.Schema<AICloudWatchLogs>;
+export type AICloudWatchLogsList = AICloudWatchLogs[];
+export const AICloudWatchLogsList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(AICloudWatchLogs);
+export interface AIBenchmarkOutputResult {
+  S3OutputLocation?: string;
+  CloudWatchLogs?: AICloudWatchLogs[];
+  MlflowConfig?: AIMlflowConfig;
+}
+export const AIBenchmarkOutputResult = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      S3OutputLocation: S.optional(S.String),
+      CloudWatchLogs: S.optional(AICloudWatchLogsList),
+      MlflowConfig: S.optional(AIMlflowConfig),
+    }),
+).annotate({
+  identifier: "AIBenchmarkOutputResult",
+}) as any as S.Schema<AIBenchmarkOutputResult>;
+export interface DescribeAIBenchmarkJobResponse {
+  AIBenchmarkJobName: string;
+  AIBenchmarkJobArn: string;
+  AIBenchmarkJobStatus: AIBenchmarkJobStatus;
+  FailureReason?: string;
+  BenchmarkTarget: AIBenchmarkTarget;
+  OutputConfig: AIBenchmarkOutputResult & {
+    S3OutputLocation: S3Uri;
+    MlflowConfig: AIMlflowConfig & { MlflowResourceArn: AIMlflowResourceArn };
+  };
+  AIWorkloadConfigIdentifier: string;
+  RoleArn: string;
+  NetworkConfig?: AIBenchmarkNetworkConfig & {
+    VpcConfig: VpcConfig & {
+      SecurityGroupIds: VpcSecurityGroupIds;
+      Subnets: Subnets;
+    };
+  };
+  CreationTime: Date;
+  StartTime?: Date;
+  EndTime?: Date;
+  Tags?: (Tag & { Key: TagKey; Value: TagValue })[];
+}
+export const DescribeAIBenchmarkJobResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      AIBenchmarkJobName: S.optional(S.String),
+      AIBenchmarkJobArn: S.optional(S.String),
+      AIBenchmarkJobStatus: S.optional(AIBenchmarkJobStatus),
+      FailureReason: S.optional(S.String),
+      BenchmarkTarget: S.optional(AIBenchmarkTarget),
+      OutputConfig: S.optional(AIBenchmarkOutputResult),
+      AIWorkloadConfigIdentifier: S.optional(S.String),
+      RoleArn: S.optional(S.String),
+      NetworkConfig: S.optional(AIBenchmarkNetworkConfig),
+      CreationTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+      StartTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+      EndTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+      Tags: S.optional(TagList),
+    }).pipe(ns),
+  ).annotate({
+    identifier: "DescribeAIBenchmarkJobResponse",
+  }) as any as S.Schema<DescribeAIBenchmarkJobResponse>;
+export interface DescribeAIRecommendationJobRequest {
+  AIRecommendationJobName?: string;
+}
+export const DescribeAIRecommendationJobRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ AIRecommendationJobName: S.optional(S.String) }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "POST", uri: "/" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "DescribeAIRecommendationJobRequest",
+  }) as any as S.Schema<DescribeAIRecommendationJobRequest>;
+export type AIRecommendationJobStatus =
+  | "InProgress"
+  | "Completed"
+  | "Failed"
+  | "Stopping"
+  | "Stopped"
+  | (string & {});
+export const AIRecommendationJobStatus = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface AIRecommendationOutputResult {
+  S3OutputLocation?: string;
+  ModelPackageGroupIdentifier?: string;
+  MlflowConfig?: AIMlflowConfig;
+}
+export const AIRecommendationOutputResult =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      S3OutputLocation: S.optional(S.String),
+      ModelPackageGroupIdentifier: S.optional(S.String),
+      MlflowConfig: S.optional(AIMlflowConfig),
+    }),
+  ).annotate({
+    identifier: "AIRecommendationOutputResult",
+  }) as any as S.Schema<AIRecommendationOutputResult>;
+export type AIRecommendationOptimizationType =
+  | "SpeculativeDecoding"
+  | "KernelTuning"
+  | (string & {});
+export const AIRecommendationOptimizationType =
+  /*@__PURE__*/ /*#__PURE__*/ S.String;
+export type AIRecommendationOptimizationConfigMap = {
+  [key: string]: string | undefined;
+};
+export const AIRecommendationOptimizationConfigMap =
+  /*@__PURE__*/ /*#__PURE__*/ S.Record(S.String, S.String.pipe(S.optional));
+export interface AIRecommendationOptimizationDetail {
+  OptimizationType?: AIRecommendationOptimizationType;
+  OptimizationConfig?: { [key: string]: string | undefined };
+}
+export const AIRecommendationOptimizationDetail =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      OptimizationType: S.optional(AIRecommendationOptimizationType),
+      OptimizationConfig: S.optional(AIRecommendationOptimizationConfigMap),
+    }),
+  ).annotate({
+    identifier: "AIRecommendationOptimizationDetail",
+  }) as any as S.Schema<AIRecommendationOptimizationDetail>;
+export type AIRecommendationOptimizationDetailList =
+  AIRecommendationOptimizationDetail[];
+export const AIRecommendationOptimizationDetailList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(AIRecommendationOptimizationDetail);
+export interface AIRecommendationInstanceDetail {
+  InstanceType?: AIRecommendationInstanceType;
+  InstanceCount?: number;
+  CopyCountPerInstance?: number;
+}
+export const AIRecommendationInstanceDetail =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      InstanceType: S.optional(AIRecommendationInstanceType),
+      InstanceCount: S.optional(S.Number),
+      CopyCountPerInstance: S.optional(S.Number),
+    }),
+  ).annotate({
+    identifier: "AIRecommendationInstanceDetail",
+  }) as any as S.Schema<AIRecommendationInstanceDetail>;
+export type AIRecommendationInstanceDetailList =
+  AIRecommendationInstanceDetail[];
+export const AIRecommendationInstanceDetailList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(AIRecommendationInstanceDetail);
+export interface AIRecommendationModelDetails {
+  ModelPackageArn?: string;
+  InferenceSpecificationName?: string;
+  InstanceDetails?: AIRecommendationInstanceDetail[];
+}
+export const AIRecommendationModelDetails =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      ModelPackageArn: S.optional(S.String),
+      InferenceSpecificationName: S.optional(S.String),
+      InstanceDetails: S.optional(AIRecommendationInstanceDetailList),
+    }),
+  ).annotate({
+    identifier: "AIRecommendationModelDetails",
+  }) as any as S.Schema<AIRecommendationModelDetails>;
+export interface AIRecommendationDeploymentS3Channel {
+  ChannelName?: string;
+  Uri?: string;
+}
+export const AIRecommendationDeploymentS3Channel =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ ChannelName: S.optional(S.String), Uri: S.optional(S.String) }),
+  ).annotate({
+    identifier: "AIRecommendationDeploymentS3Channel",
+  }) as any as S.Schema<AIRecommendationDeploymentS3Channel>;
+export type AIRecommendationDeploymentS3ChannelList =
+  AIRecommendationDeploymentS3Channel[];
+export const AIRecommendationDeploymentS3ChannelList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(AIRecommendationDeploymentS3Channel);
+export interface AIRecommendationDeploymentConfiguration {
+  S3?: AIRecommendationDeploymentS3Channel[];
+  ImageUri?: string;
+  InstanceType?: AIRecommendationInstanceType;
+  InstanceCount?: number;
+  CopyCountPerInstance?: number;
+  EnvironmentVariables?: { [key: string]: string | undefined };
+}
+export const AIRecommendationDeploymentConfiguration =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      S3: S.optional(AIRecommendationDeploymentS3ChannelList),
+      ImageUri: S.optional(S.String),
+      InstanceType: S.optional(AIRecommendationInstanceType),
+      InstanceCount: S.optional(S.Number),
+      CopyCountPerInstance: S.optional(S.Number),
+      EnvironmentVariables: S.optional(EnvironmentMap),
+    }),
+  ).annotate({
+    identifier: "AIRecommendationDeploymentConfiguration",
+  }) as any as S.Schema<AIRecommendationDeploymentConfiguration>;
+export interface AIRecommendationPerformanceMetric {
+  Metric?: string;
+  Stat?: string;
+  Value?: string;
+  Unit?: string;
+}
+export const AIRecommendationPerformanceMetric =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      Metric: S.optional(S.String),
+      Stat: S.optional(S.String),
+      Value: S.optional(S.String),
+      Unit: S.optional(S.String),
+    }),
+  ).annotate({
+    identifier: "AIRecommendationPerformanceMetric",
+  }) as any as S.Schema<AIRecommendationPerformanceMetric>;
+export type ExpectedPerformanceList = AIRecommendationPerformanceMetric[];
+export const ExpectedPerformanceList = /*@__PURE__*/ /*#__PURE__*/ S.Array(
+  AIRecommendationPerformanceMetric,
+);
+export interface AIRecommendation {
+  RecommendationDescription?: string;
+  OptimizationDetails?: AIRecommendationOptimizationDetail[];
+  ModelDetails?: AIRecommendationModelDetails;
+  DeploymentConfiguration?: AIRecommendationDeploymentConfiguration;
+  AIBenchmarkJobArn?: string;
+  ExpectedPerformance?: AIRecommendationPerformanceMetric[];
+}
+export const AIRecommendation = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    RecommendationDescription: S.optional(S.String),
+    OptimizationDetails: S.optional(AIRecommendationOptimizationDetailList),
+    ModelDetails: S.optional(AIRecommendationModelDetails),
+    DeploymentConfiguration: S.optional(
+      AIRecommendationDeploymentConfiguration,
+    ),
+    AIBenchmarkJobArn: S.optional(S.String),
+    ExpectedPerformance: S.optional(ExpectedPerformanceList),
+  }),
+).annotate({
+  identifier: "AIRecommendation",
+}) as any as S.Schema<AIRecommendation>;
+export type AIRecommendationList = AIRecommendation[];
+export const AIRecommendationList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(AIRecommendation);
+export interface DescribeAIRecommendationJobResponse {
+  AIRecommendationJobName: string;
+  AIRecommendationJobArn: string;
+  AIRecommendationJobStatus: AIRecommendationJobStatus;
+  FailureReason?: string;
+  ModelSource: AIModelSource;
+  OutputConfig: AIRecommendationOutputResult & {
+    S3OutputLocation: S3Uri;
+    MlflowConfig: AIMlflowConfig & { MlflowResourceArn: AIMlflowResourceArn };
+  };
+  InferenceSpecification?: AIRecommendationInferenceSpecification;
+  AIWorkloadConfigIdentifier: string;
+  OptimizeModel?: boolean;
+  PerformanceTarget?: AIRecommendationPerformanceTarget & {
+    Constraints: (AIRecommendationConstraint & {
+      Metric: AIRecommendationMetric;
+    })[];
+  };
+  Recommendations?: (AIRecommendation & {
+    OptimizationDetails: (AIRecommendationOptimizationDetail & {
+      OptimizationType: AIRecommendationOptimizationType;
+    })[];
+    ExpectedPerformance: (AIRecommendationPerformanceMetric & {
+      Metric: string;
+      Value: string;
+    })[];
+  })[];
+  RoleArn: string;
+  ComputeSpec?: AIRecommendationComputeSpec;
+  CreationTime: Date;
+  StartTime?: Date;
+  EndTime?: Date;
+  Tags?: (Tag & { Key: TagKey; Value: TagValue })[];
+}
+export const DescribeAIRecommendationJobResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      AIRecommendationJobName: S.optional(S.String),
+      AIRecommendationJobArn: S.optional(S.String),
+      AIRecommendationJobStatus: S.optional(AIRecommendationJobStatus),
+      FailureReason: S.optional(S.String),
+      ModelSource: S.optional(AIModelSource),
+      OutputConfig: S.optional(AIRecommendationOutputResult),
+      InferenceSpecification: S.optional(
+        AIRecommendationInferenceSpecification,
+      ),
+      AIWorkloadConfigIdentifier: S.optional(S.String),
+      OptimizeModel: S.optional(S.Boolean),
+      PerformanceTarget: S.optional(AIRecommendationPerformanceTarget),
+      Recommendations: S.optional(AIRecommendationList),
+      RoleArn: S.optional(S.String),
+      ComputeSpec: S.optional(AIRecommendationComputeSpec),
+      CreationTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+      StartTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+      EndTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+      Tags: S.optional(TagList),
+    }).pipe(ns),
+  ).annotate({
+    identifier: "DescribeAIRecommendationJobResponse",
+  }) as any as S.Schema<DescribeAIRecommendationJobResponse>;
+export interface DescribeAIWorkloadConfigRequest {
+  AIWorkloadConfigName?: string;
+}
+export const DescribeAIWorkloadConfigRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ AIWorkloadConfigName: S.optional(S.String) }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "POST", uri: "/" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "DescribeAIWorkloadConfigRequest",
+  }) as any as S.Schema<DescribeAIWorkloadConfigRequest>;
+export interface DescribeAIWorkloadConfigResponse {
+  AIWorkloadConfigName: string;
+  AIWorkloadConfigArn: string;
+  DatasetConfig?: AIDatasetConfig;
+  AIWorkloadConfigs?: AIWorkloadConfigs & { WorkloadSpec: WorkloadSpec };
+  Tags?: (Tag & { Key: TagKey; Value: TagValue })[];
+  CreationTime: Date;
+}
+export const DescribeAIWorkloadConfigResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      AIWorkloadConfigName: S.optional(S.String),
+      AIWorkloadConfigArn: S.optional(S.String),
+      DatasetConfig: S.optional(AIDatasetConfig),
+      AIWorkloadConfigs: S.optional(AIWorkloadConfigs),
+      Tags: S.optional(TagList),
+      CreationTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    }).pipe(ns),
+  ).annotate({
+    identifier: "DescribeAIWorkloadConfigResponse",
+  }) as any as S.Schema<DescribeAIWorkloadConfigResponse>;
 export interface DescribeAlgorithmInput {
   AlgorithmName?: string;
 }
@@ -14537,6 +15693,18 @@ export interface DescribeAlgorithmOutput {
         };
       };
       ModelInput: ModelInput & { DataInputConfig: DataInputConfig };
+      AdditionalModelDataSources: (AdditionalModelDataSource & {
+        ChannelName: AdditionalModelChannelName;
+        S3DataSource: S3ModelDataSource & {
+          S3Uri: S3ModelUri;
+          S3DataType: S3ModelDataType;
+          CompressionType: ModelCompressionType;
+          ModelAccessConfig: ModelAccessConfig & { AcceptEula: AcceptEula };
+          HubAccessConfig: InferenceHubAccessConfig & {
+            HubContentArn: HubContentArn;
+          };
+        };
+      })[];
       AdditionalS3DataSource: AdditionalS3DataSource & {
         S3DataType: AdditionalS3DataSourceDataType;
         S3Uri: S3Uri;
@@ -15469,6 +16637,43 @@ export type InstanceGroupStatus =
   | "Deleting"
   | (string & {});
 export const InstanceGroupStatus = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface ClusterPatchScheduleDetails {
+  NextPatchDate?: Date;
+}
+export const ClusterPatchScheduleDetails =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      NextPatchDate: S.optional(
+        S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+      ),
+    }),
+  ).annotate({
+    identifier: "ClusterPatchScheduleDetails",
+  }) as any as S.Schema<ClusterPatchScheduleDetails>;
+export interface ClusterAutoPatchConfigDetails {
+  PatchingStrategy?: ClusterPatchingStrategy;
+  CurrentPatchSchedule?: ClusterPatchScheduleDetails;
+  DesiredPatchSchedule?: ClusterPatchScheduleDetails;
+  DeploymentConfig?: DeploymentConfiguration;
+}
+export const ClusterAutoPatchConfigDetails =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      PatchingStrategy: S.optional(ClusterPatchingStrategy),
+      CurrentPatchSchedule: S.optional(ClusterPatchScheduleDetails),
+      DesiredPatchSchedule: S.optional(ClusterPatchScheduleDetails),
+      DeploymentConfig: S.optional(DeploymentConfiguration),
+    }),
+  ).annotate({
+    identifier: "ClusterAutoPatchConfigDetails",
+  }) as any as S.Schema<ClusterAutoPatchConfigDetails>;
+export type ClusterImageVersionStatus =
+  | "UpToDate"
+  | "UpdateAvailable"
+  | "SecurityUpdateRequired"
+  | "EndOfLife"
+  | (string & {});
+export const ClusterImageVersionStatus = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export type ActiveClusterOperationName = "Scaling" | (string & {});
 export const ActiveClusterOperationName = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export type ActiveOperations = { [key in ActiveClusterOperationName]?: number };
@@ -15515,6 +16720,15 @@ export const ClusterSlurmConfigDetails = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 ).annotate({
   identifier: "ClusterSlurmConfigDetails",
 }) as any as S.Schema<ClusterSlurmConfigDetails>;
+export interface ClusterNetworkInterfaceDetails {
+  InterfaceType?: ClusterInterfaceType;
+}
+export const ClusterNetworkInterfaceDetails =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ InterfaceType: S.optional(ClusterInterfaceType) }),
+  ).annotate({
+    identifier: "ClusterNetworkInterfaceDetails",
+  }) as any as S.Schema<ClusterNetworkInterfaceDetails>;
 export interface ClusterInstanceGroupDetails {
   CurrentCount?: number;
   TargetCount?: number;
@@ -15533,8 +16747,12 @@ export interface ClusterInstanceGroupDetails {
   TrainingPlanStatus?: string;
   OverrideVpcConfig?: VpcConfig;
   ScheduledUpdateConfig?: ScheduledUpdateConfig;
+  AutoPatchConfig?: ClusterAutoPatchConfigDetails;
   CurrentImageId?: string;
   DesiredImageId?: string;
+  CurrentImageReleaseVersion?: string;
+  DesiredImageReleaseVersion?: string;
+  ImageVersionStatus?: ClusterImageVersionStatus;
   ActiveOperations?: { [key: string]: number | undefined };
   KubernetesConfig?: ClusterKubernetesConfigDetails;
   CapacityRequirements?: ClusterCapacityRequirements;
@@ -15542,6 +16760,7 @@ export interface ClusterInstanceGroupDetails {
   SoftwareUpdateStatus?: SoftwareUpdateStatus;
   ActiveSoftwareUpdateConfig?: DeploymentConfiguration;
   SlurmConfig?: ClusterSlurmConfigDetails;
+  NetworkInterface?: ClusterNetworkInterfaceDetails;
 }
 export const ClusterInstanceGroupDetails =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -15563,8 +16782,12 @@ export const ClusterInstanceGroupDetails =
       TrainingPlanStatus: S.optional(S.String),
       OverrideVpcConfig: S.optional(VpcConfig),
       ScheduledUpdateConfig: S.optional(ScheduledUpdateConfig),
+      AutoPatchConfig: S.optional(ClusterAutoPatchConfigDetails),
       CurrentImageId: S.optional(S.String),
       DesiredImageId: S.optional(S.String),
+      CurrentImageReleaseVersion: S.optional(S.String),
+      DesiredImageReleaseVersion: S.optional(S.String),
+      ImageVersionStatus: S.optional(ClusterImageVersionStatus),
       ActiveOperations: S.optional(ActiveOperations),
       KubernetesConfig: S.optional(ClusterKubernetesConfigDetails),
       CapacityRequirements: S.optional(ClusterCapacityRequirements),
@@ -15572,6 +16795,7 @@ export const ClusterInstanceGroupDetails =
       SoftwareUpdateStatus: S.optional(SoftwareUpdateStatus),
       ActiveSoftwareUpdateConfig: S.optional(DeploymentConfiguration),
       SlurmConfig: S.optional(ClusterSlurmConfigDetails),
+      NetworkInterface: S.optional(ClusterNetworkInterfaceDetails),
     }),
   ).annotate({
     identifier: "ClusterInstanceGroupDetails",
@@ -15633,6 +16857,40 @@ export type ClusterRestrictedInstanceGroupDetailsList =
   ClusterRestrictedInstanceGroupDetails[];
 export const ClusterRestrictedInstanceGroupDetailsList =
   /*@__PURE__*/ /*#__PURE__*/ S.Array(ClusterRestrictedInstanceGroupDetails);
+export interface ClusterSharedEnvironmentConfigDetails {
+  CurrentFSxLustreConfig?: FSxLustreConfig;
+  DesiredFSxLustreConfig?: FSxLustreConfig;
+  CurrentFSxLustreDeletionPolicy?: ClusterFSxLustreDeletionPolicy;
+  DesiredFSxLustreDeletionPolicy?: ClusterFSxLustreDeletionPolicy;
+}
+export const ClusterSharedEnvironmentConfigDetails =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      CurrentFSxLustreConfig: S.optional(FSxLustreConfig),
+      DesiredFSxLustreConfig: S.optional(FSxLustreConfig),
+      CurrentFSxLustreDeletionPolicy: S.optional(
+        ClusterFSxLustreDeletionPolicy,
+      ),
+      DesiredFSxLustreDeletionPolicy: S.optional(
+        ClusterFSxLustreDeletionPolicy,
+      ),
+    }),
+  ).annotate({
+    identifier: "ClusterSharedEnvironmentConfigDetails",
+  }) as any as S.Schema<ClusterSharedEnvironmentConfigDetails>;
+export interface ClusterRestrictedInstanceGroupsConfigOutput {
+  SharedEnvironmentConfig?: ClusterSharedEnvironmentConfigDetails;
+}
+export const ClusterRestrictedInstanceGroupsConfigOutput =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      SharedEnvironmentConfig: S.optional(
+        ClusterSharedEnvironmentConfigDetails,
+      ),
+    }),
+  ).annotate({
+    identifier: "ClusterRestrictedInstanceGroupsConfigOutput",
+  }) as any as S.Schema<ClusterRestrictedInstanceGroupsConfigOutput>;
 export type ClusterAutoScalingStatus =
   | "InService"
   | "Failed"
@@ -15670,6 +16928,21 @@ export interface DescribeClusterResponse {
     };
     ScheduledUpdateConfig: ScheduledUpdateConfig & {
       ScheduleExpression: CronScheduleExpression;
+      DeploymentConfig: DeploymentConfiguration & {
+        RollingUpdatePolicy: RollingDeploymentPolicy & {
+          MaximumBatchSize: CapacitySizeConfig & {
+            Type: NodeUnavailabilityType;
+            Value: NodeUnavailabilityValue;
+          };
+          RollbackMaximumBatchSize: CapacitySizeConfig & {
+            Type: NodeUnavailabilityType;
+            Value: NodeUnavailabilityValue;
+          };
+        };
+        AutoRollbackConfiguration: (AlarmDetails & { AlarmName: AlarmName })[];
+      };
+    };
+    AutoPatchConfig: ClusterAutoPatchConfigDetails & {
       DeploymentConfig: DeploymentConfiguration & {
         RollingUpdatePolicy: RollingDeploymentPolicy & {
           MaximumBatchSize: CapacitySizeConfig & {
@@ -15726,6 +16999,18 @@ export interface DescribeClusterResponse {
       };
     };
   })[];
+  RestrictedInstanceGroupsConfig?: ClusterRestrictedInstanceGroupsConfigOutput & {
+    SharedEnvironmentConfig: ClusterSharedEnvironmentConfigDetails & {
+      CurrentFSxLustreConfig: FSxLustreConfig & {
+        SizeInGiB: FSxLustreSizeInGiB;
+        PerUnitStorageThroughput: FSxLustrePerUnitStorageThroughput;
+      };
+      DesiredFSxLustreConfig: FSxLustreConfig & {
+        SizeInGiB: FSxLustreSizeInGiB;
+        PerUnitStorageThroughput: FSxLustrePerUnitStorageThroughput;
+      };
+    };
+  };
   VpcConfig?: VpcConfig & {
     SecurityGroupIds: VpcSecurityGroupIds;
     Subnets: Subnets;
@@ -15752,6 +17037,9 @@ export const DescribeClusterResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       InstanceGroups: S.optional(ClusterInstanceGroupDetailsList),
       RestrictedInstanceGroups: S.optional(
         ClusterRestrictedInstanceGroupDetailsList,
+      ),
+      RestrictedInstanceGroupsConfig: S.optional(
+        ClusterRestrictedInstanceGroupsConfigOutput,
       ),
       VpcConfig: S.optional(VpcConfig),
       Orchestrator: S.optional(ClusterOrchestrator),
@@ -15870,9 +17158,27 @@ export interface AdditionalEnis {
 export const AdditionalEnis = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({ EfaEnis: S.optional(EfaEnis) }),
 ).annotate({ identifier: "AdditionalEnis" }) as any as S.Schema<AdditionalEnis>;
+export interface InstanceRequirementsEniConfiguration {
+  CustomerEni?: string;
+  AdditionalEnis?: AdditionalEnis;
+}
+export const InstanceRequirementsEniConfiguration =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      CustomerEni: S.optional(S.String),
+      AdditionalEnis: S.optional(AdditionalEnis),
+    }),
+  ).annotate({
+    identifier: "InstanceRequirementsEniConfiguration",
+  }) as any as S.Schema<InstanceRequirementsEniConfiguration>;
+export type InstanceRequirementsEniConfigurations =
+  InstanceRequirementsEniConfiguration[];
+export const InstanceRequirementsEniConfigurations =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(InstanceRequirementsEniConfiguration);
 export interface InstanceMetadata {
   CustomerEni?: string;
   AdditionalEnis?: AdditionalEnis;
+  InstanceRequirementsEniConfigurations?: InstanceRequirementsEniConfiguration[];
   CapacityReservation?: CapacityReservation;
   FailureMessage?: string;
   LcsExecutionState?: string;
@@ -15882,6 +17188,9 @@ export const InstanceMetadata = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     CustomerEni: S.optional(S.String),
     AdditionalEnis: S.optional(AdditionalEnis),
+    InstanceRequirementsEniConfigurations: S.optional(
+      InstanceRequirementsEniConfigurations,
+    ),
     CapacityReservation: S.optional(CapacityReservation),
     FailureMessage: S.optional(S.String),
     LcsExecutionState: S.optional(S.String),
@@ -15927,6 +17236,8 @@ export interface EventDetails {
 export const EventDetails = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({ EventMetadata: S.optional(EventMetadata) }),
 ).annotate({ identifier: "EventDetails" }) as any as S.Schema<EventDetails>;
+export type ClusterEventLevel = "Info" | "Warn" | "Error" | (string & {});
+export const ClusterEventLevel = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface ClusterEventDetail {
   EventId?: string;
   ClusterArn?: string;
@@ -15937,6 +17248,7 @@ export interface ClusterEventDetail {
   EventTime?: Date;
   EventDetails?: EventDetails;
   Description?: string;
+  EventLevel?: ClusterEventLevel;
 }
 export const ClusterEventDetail = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -15949,6 +17261,7 @@ export const ClusterEventDetail = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     EventTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
     EventDetails: S.optional(EventDetails),
     Description: S.optional(S.String),
+    EventLevel: S.optional(ClusterEventLevel),
   }),
 ).annotate({
   identifier: "ClusterEventDetail",
@@ -16065,9 +17378,13 @@ export interface ClusterNodeDetails {
   Placement?: ClusterInstancePlacement;
   CurrentImageId?: string;
   DesiredImageId?: string;
+  CurrentImageReleaseVersion?: string;
+  DesiredImageReleaseVersion?: string;
+  ImageVersionStatus?: ClusterImageVersionStatus;
   UltraServerInfo?: UltraServerInfo;
   KubernetesConfig?: ClusterKubernetesConfigNodeDetails;
   CapacityType?: ClusterCapacityType;
+  NetworkInterface?: ClusterNetworkInterfaceDetails;
 }
 export const ClusterNodeDetails = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -16090,9 +17407,13 @@ export const ClusterNodeDetails = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     Placement: S.optional(ClusterInstancePlacement),
     CurrentImageId: S.optional(S.String),
     DesiredImageId: S.optional(S.String),
+    CurrentImageReleaseVersion: S.optional(S.String),
+    DesiredImageReleaseVersion: S.optional(S.String),
+    ImageVersionStatus: S.optional(ClusterImageVersionStatus),
     UltraServerInfo: S.optional(UltraServerInfo),
     KubernetesConfig: S.optional(ClusterKubernetesConfigNodeDetails),
     CapacityType: S.optional(ClusterCapacityType),
+    NetworkInterface: S.optional(ClusterNetworkInterfaceDetails),
   }),
 ).annotate({
   identifier: "ClusterNodeDetails",
@@ -16793,6 +18114,7 @@ export interface DescribeDomainResponse {
   VpcId?: string;
   KmsKeyId?: string;
   AppSecurityGroupManagement?: AppSecurityGroupManagement;
+  HomeEfsFileSystemCreation?: HomeEfsFileSystemCreation;
   TagPropagation?: TagPropagation;
   DefaultSpaceSettings?: DefaultSpaceSettings & {
     JupyterServerAppSettings: JupyterServerAppSettings & {
@@ -16846,6 +18168,7 @@ export const DescribeDomainResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       VpcId: S.optional(S.String),
       KmsKeyId: S.optional(S.String),
       AppSecurityGroupManagement: S.optional(AppSecurityGroupManagement),
+      HomeEfsFileSystemCreation: S.optional(HomeEfsFileSystemCreation),
       TagPropagation: S.optional(TagPropagation),
       DefaultSpaceSettings: S.optional(DefaultSpaceSettings),
     }).pipe(ns),
@@ -17103,6 +18426,21 @@ export const DeployedImage = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 export type DeployedImages = DeployedImage[];
 export const DeployedImages =
   /*@__PURE__*/ /*#__PURE__*/ S.Array(DeployedImage);
+export interface InstancePoolSummary {
+  InstanceType?: ProductionVariantInstanceType;
+  CurrentInstanceCount?: number;
+}
+export const InstancePoolSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    InstanceType: S.optional(ProductionVariantInstanceType),
+    CurrentInstanceCount: S.optional(S.Number),
+  }),
+).annotate({
+  identifier: "InstancePoolSummary",
+}) as any as S.Schema<InstancePoolSummary>;
+export type InstancePoolSummaryList = InstancePoolSummary[];
+export const InstancePoolSummaryList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(InstancePoolSummary);
 export type VariantStatus =
   | "Creating"
   | "Updating"
@@ -17179,6 +18517,7 @@ export interface ProductionVariantSummary {
   DesiredWeight?: number;
   CurrentInstanceCount?: number;
   DesiredInstanceCount?: number;
+  InstancePools?: InstancePoolSummary[];
   VariantStatus?: ProductionVariantStatus[];
   CurrentServerlessConfig?: ProductionVariantServerlessConfig;
   DesiredServerlessConfig?: ProductionVariantServerlessConfig;
@@ -17195,6 +18534,7 @@ export const ProductionVariantSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       DesiredWeight: S.optional(S.Number),
       CurrentInstanceCount: S.optional(S.Number),
       DesiredInstanceCount: S.optional(S.Number),
+      InstancePools: S.optional(InstancePoolSummaryList),
       VariantStatus: S.optional(ProductionVariantStatusList),
       CurrentServerlessConfig: S.optional(ProductionVariantServerlessConfig),
       DesiredServerlessConfig: S.optional(ProductionVariantServerlessConfig),
@@ -17254,6 +18594,7 @@ export interface PendingProductionVariantSummary {
   CurrentInstanceCount?: number;
   DesiredInstanceCount?: number;
   InstanceType?: ProductionVariantInstanceType;
+  InstancePools?: InstancePoolSummary[];
   AcceleratorType?: ProductionVariantAcceleratorType;
   VariantStatus?: ProductionVariantStatus[];
   CurrentServerlessConfig?: ProductionVariantServerlessConfig;
@@ -17271,6 +18612,7 @@ export const PendingProductionVariantSummary =
       CurrentInstanceCount: S.optional(S.Number),
       DesiredInstanceCount: S.optional(S.Number),
       InstanceType: S.optional(ProductionVariantInstanceType),
+      InstancePools: S.optional(InstancePoolSummaryList),
       AcceleratorType: S.optional(ProductionVariantAcceleratorType),
       VariantStatus: S.optional(ProductionVariantStatusList),
       CurrentServerlessConfig: S.optional(ProductionVariantServerlessConfig),
@@ -17310,6 +18652,10 @@ export interface DescribeEndpointOutput {
   EndpointConfigName?: string;
   ProductionVariants?: (ProductionVariantSummary & {
     VariantName: VariantName;
+    InstancePools: (InstancePoolSummary & {
+      InstanceType: ProductionVariantInstanceType;
+      CurrentInstanceCount: TaskCount;
+    })[];
     VariantStatus: (ProductionVariantStatus & { Status: VariantStatus })[];
     CurrentServerlessConfig: ProductionVariantServerlessConfig & {
       MemorySizeInMB: ServerlessMemorySizeInMB;
@@ -17373,6 +18719,10 @@ export interface DescribeEndpointOutput {
     EndpointConfigName: EndpointConfigName;
     ProductionVariants: (PendingProductionVariantSummary & {
       VariantName: VariantName;
+      InstancePools: (InstancePoolSummary & {
+        InstanceType: ProductionVariantInstanceType;
+        CurrentInstanceCount: TaskCount;
+      })[];
       VariantStatus: (ProductionVariantStatus & { Status: VariantStatus })[];
       CurrentServerlessConfig: ProductionVariantServerlessConfig & {
         MemorySizeInMB: ServerlessMemorySizeInMB;
@@ -17393,6 +18743,10 @@ export interface DescribeEndpointOutput {
     })[];
     ShadowProductionVariants: (PendingProductionVariantSummary & {
       VariantName: VariantName;
+      InstancePools: (InstancePoolSummary & {
+        InstanceType: ProductionVariantInstanceType;
+        CurrentInstanceCount: TaskCount;
+      })[];
       VariantStatus: (ProductionVariantStatus & { Status: VariantStatus })[];
       CurrentServerlessConfig: ProductionVariantServerlessConfig & {
         MemorySizeInMB: ServerlessMemorySizeInMB;
@@ -17425,6 +18779,10 @@ export interface DescribeEndpointOutput {
   };
   ShadowProductionVariants?: (ProductionVariantSummary & {
     VariantName: VariantName;
+    InstancePools: (InstancePoolSummary & {
+      InstanceType: ProductionVariantInstanceType;
+      CurrentInstanceCount: TaskCount;
+    })[];
     VariantStatus: (ProductionVariantStatus & { Status: VariantStatus })[];
     CurrentServerlessConfig: ProductionVariantServerlessConfig & {
       MemorySizeInMB: ServerlessMemorySizeInMB;
@@ -17493,6 +18851,10 @@ export interface DescribeEndpointConfigOutput {
   EndpointConfigArn: string;
   ProductionVariants: (ProductionVariant & {
     VariantName: VariantName;
+    InstancePools: (InstancePool & {
+      InstanceType: ProductionVariantInstanceType;
+      Priority: InstancePoolPriority;
+    })[];
     CoreDumpConfig: ProductionVariantCoreDumpConfig & {
       DestinationS3Uri: DestinationS3Uri;
     };
@@ -17532,6 +18894,10 @@ export interface DescribeEndpointConfigOutput {
   };
   ShadowProductionVariants?: (ProductionVariant & {
     VariantName: VariantName;
+    InstancePools: (InstancePool & {
+      InstanceType: ProductionVariantInstanceType;
+      Priority: InstancePoolPriority;
+    })[];
     CoreDumpConfig: ProductionVariantCoreDumpConfig & {
       DestinationS3Uri: DestinationS3Uri;
     };
@@ -18693,6 +20059,7 @@ export interface InferenceComponentContainerSpecificationSummary {
   DeployedImage?: DeployedImage;
   ArtifactUrl?: string;
   Environment?: { [key: string]: string | undefined };
+  ContainerMetricsConfig?: ContainerMetricsConfig;
 }
 export const InferenceComponentContainerSpecificationSummary =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -18700,6 +20067,7 @@ export const InferenceComponentContainerSpecificationSummary =
       DeployedImage: S.optional(DeployedImage),
       ArtifactUrl: S.optional(S.String),
       Environment: S.optional(EnvironmentMap),
+      ContainerMetricsConfig: S.optional(ContainerMetricsConfig),
     }),
   ).annotate({
     identifier: "InferenceComponentContainerSpecificationSummary",
@@ -18714,6 +20082,7 @@ export const InferenceComponentDataCacheConfigSummary =
     identifier: "InferenceComponentDataCacheConfigSummary",
   }) as any as S.Schema<InferenceComponentDataCacheConfigSummary>;
 export interface InferenceComponentSpecificationSummary {
+  InstanceType?: ProductionVariantInstanceType;
   ModelName?: string;
   Container?: InferenceComponentContainerSpecificationSummary;
   StartupParameters?: InferenceComponentStartupParameters;
@@ -18725,6 +20094,7 @@ export interface InferenceComponentSpecificationSummary {
 export const InferenceComponentSpecificationSummary =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     S.Struct({
+      InstanceType: S.optional(ProductionVariantInstanceType),
       ModelName: S.optional(S.String),
       Container: S.optional(InferenceComponentContainerSpecificationSummary),
       StartupParameters: S.optional(InferenceComponentStartupParameters),
@@ -18738,15 +20108,38 @@ export const InferenceComponentSpecificationSummary =
   ).annotate({
     identifier: "InferenceComponentSpecificationSummary",
   }) as any as S.Schema<InferenceComponentSpecificationSummary>;
+export type InferenceComponentSpecificationSummaryList =
+  InferenceComponentSpecificationSummary[];
+export const InferenceComponentSpecificationSummaryList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(InferenceComponentSpecificationSummary);
+export interface InferenceComponentPlacementStatus {
+  InstanceType?: ProductionVariantInstanceType;
+  CurrentCopyCount?: number;
+}
+export const InferenceComponentPlacementStatus =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      InstanceType: S.optional(ProductionVariantInstanceType),
+      CurrentCopyCount: S.optional(S.Number),
+    }),
+  ).annotate({
+    identifier: "InferenceComponentPlacementStatus",
+  }) as any as S.Schema<InferenceComponentPlacementStatus>;
+export type InferenceComponentPlacementStatusList =
+  InferenceComponentPlacementStatus[];
+export const InferenceComponentPlacementStatusList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(InferenceComponentPlacementStatus);
 export interface InferenceComponentRuntimeConfigSummary {
   DesiredCopyCount?: number;
   CurrentCopyCount?: number;
+  PlacementStatus?: InferenceComponentPlacementStatus[];
 }
 export const InferenceComponentRuntimeConfigSummary =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     S.Struct({
       DesiredCopyCount: S.optional(S.Number),
       CurrentCopyCount: S.optional(S.Number),
+      PlacementStatus: S.optional(InferenceComponentPlacementStatusList),
     }),
   ).annotate({
     identifier: "InferenceComponentRuntimeConfigSummary",
@@ -18816,6 +20209,13 @@ export interface DescribeInferenceComponentOutput {
   VariantName?: string;
   FailureReason?: string;
   Specification?: InferenceComponentSpecificationSummary & {
+    Container: InferenceComponentContainerSpecificationSummary & {
+      ContainerMetricsConfig: ContainerMetricsConfig & {
+        MetricsEndpoints: (MetricsEndpoint & {
+          MetricsEndpointPath: MetricsEndpointPath;
+        })[];
+      };
+    };
     ComputeResourceRequirements: InferenceComponentComputeResourceRequirements & {
       MinMemoryRequiredInMb: MemoryInMb;
     };
@@ -18829,7 +20229,33 @@ export interface DescribeInferenceComponentOutput {
       };
     };
   };
-  RuntimeConfig?: InferenceComponentRuntimeConfigSummary;
+  Specifications?: (InferenceComponentSpecificationSummary & {
+    Container: InferenceComponentContainerSpecificationSummary & {
+      ContainerMetricsConfig: ContainerMetricsConfig & {
+        MetricsEndpoints: (MetricsEndpoint & {
+          MetricsEndpointPath: MetricsEndpointPath;
+        })[];
+      };
+    };
+    ComputeResourceRequirements: InferenceComponentComputeResourceRequirements & {
+      MinMemoryRequiredInMb: MemoryInMb;
+    };
+    DataCacheConfig: InferenceComponentDataCacheConfigSummary & {
+      EnableCaching: EnableCaching;
+    };
+    SchedulingConfig: InferenceComponentSchedulingConfig & {
+      PlacementStrategy: InferenceComponentPlacementStrategy;
+      AvailabilityZoneBalance: InferenceComponentAvailabilityZoneBalance & {
+        EnforcementMode: AvailabilityZoneBalanceEnforcementMode;
+      };
+    };
+  })[];
+  RuntimeConfig?: InferenceComponentRuntimeConfigSummary & {
+    PlacementStatus: (InferenceComponentPlacementStatus & {
+      InstanceType: ProductionVariantInstanceType;
+      CurrentCopyCount: InferenceComponentCopyCount;
+    })[];
+  };
   CreationTime: Date;
   LastModifiedTime: Date;
   InferenceComponentStatus?: InferenceComponentStatus;
@@ -18857,6 +20283,7 @@ export const DescribeInferenceComponentOutput =
       VariantName: S.optional(S.String),
       FailureReason: S.optional(S.String),
       Specification: S.optional(InferenceComponentSpecificationSummary),
+      Specifications: S.optional(InferenceComponentSpecificationSummaryList),
       RuntimeConfig: S.optional(InferenceComponentRuntimeConfigSummary),
       CreationTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
       LastModifiedTime: S.optional(
@@ -18961,7 +20388,7 @@ export interface DescribeInferenceExperimentResponse {
     InfrastructureConfig: ModelInfrastructureConfig & {
       InfrastructureType: ModelInfrastructureType;
       RealTimeInferenceConfig: RealTimeInferenceConfig & {
-        InstanceType: InstanceType;
+        InstanceType: ProductionVariantInstanceType;
         InstanceCount: TaskCount;
       };
     };
@@ -19244,6 +20671,155 @@ export const DescribeInferenceRecommendationsJobResponse =
   ).annotate({
     identifier: "DescribeInferenceRecommendationsJobResponse",
   }) as any as S.Schema<DescribeInferenceRecommendationsJobResponse>;
+export interface DescribeJobRequest {
+  JobName?: string;
+  JobCategory?: JobCategory;
+}
+export const DescribeJobRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    JobName: S.optional(S.String),
+    JobCategory: S.optional(JobCategory),
+  }).pipe(
+    T.all(
+      ns,
+      T.Http({ method: "POST", uri: "/" }),
+      svc,
+      auth,
+      proto,
+      ver,
+      rules,
+    ),
+  ),
+).annotate({
+  identifier: "DescribeJobRequest",
+}) as any as S.Schema<DescribeJobRequest>;
+export type JobStatus =
+  | "InProgress"
+  | "Completed"
+  | "Failed"
+  | "Stopping"
+  | "Stopped"
+  | "Deleting"
+  | "DeleteFailed"
+  | (string & {});
+export const JobStatus = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export type JobSecondaryStatus =
+  | "Starting"
+  | "Downloading"
+  | "Training"
+  | "Uploading"
+  | "Stopping"
+  | "Stopped"
+  | "MaxRuntimeExceeded"
+  | "Interrupted"
+  | "Failed"
+  | "Completed"
+  | "Restarting"
+  | "Pending"
+  | "Evaluating"
+  | "Deleting"
+  | "DeleteFailed"
+  | (string & {});
+export const JobSecondaryStatus = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface JobSecondaryStatusTransition {
+  Status?: JobSecondaryStatus;
+  StartTime?: Date;
+  EndTime?: Date;
+  StatusMessage?: string;
+}
+export const JobSecondaryStatusTransition =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      Status: S.optional(JobSecondaryStatus),
+      StartTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+      EndTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+      StatusMessage: S.optional(S.String),
+    }),
+  ).annotate({
+    identifier: "JobSecondaryStatusTransition",
+  }) as any as S.Schema<JobSecondaryStatusTransition>;
+export type JobSecondaryStatusTransitions = JobSecondaryStatusTransition[];
+export const JobSecondaryStatusTransitions =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(JobSecondaryStatusTransition);
+export interface DescribeJobResponse {
+  JobName: string;
+  JobArn: string;
+  RoleArn: string;
+  JobCategory: JobCategory;
+  JobConfigSchemaVersion: string;
+  JobConfigDocument?: string;
+  CreationTime: Date;
+  LastModifiedTime: Date;
+  EndTime?: Date;
+  JobStatus: JobStatus;
+  SecondaryStatus: JobSecondaryStatus;
+  SecondaryStatusTransitions: (JobSecondaryStatusTransition & {
+    Status: JobSecondaryStatus;
+    StartTime: Date;
+  })[];
+  FailureReason?: string;
+  Tags?: (Tag & { Key: TagKey; Value: TagValue })[];
+}
+export const DescribeJobResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    JobName: S.optional(S.String),
+    JobArn: S.optional(S.String),
+    RoleArn: S.optional(S.String),
+    JobCategory: S.optional(JobCategory),
+    JobConfigSchemaVersion: S.optional(S.String),
+    JobConfigDocument: S.optional(S.String),
+    CreationTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    LastModifiedTime: S.optional(
+      S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+    ),
+    EndTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    JobStatus: S.optional(JobStatus),
+    SecondaryStatus: S.optional(JobSecondaryStatus),
+    SecondaryStatusTransitions: S.optional(JobSecondaryStatusTransitions),
+    FailureReason: S.optional(S.String),
+    Tags: S.optional(TagList),
+  }).pipe(ns),
+).annotate({
+  identifier: "DescribeJobResponse",
+}) as any as S.Schema<DescribeJobResponse>;
+export interface DescribeJobSchemaVersionRequest {
+  JobCategory?: JobCategory;
+  JobConfigSchemaVersion?: string;
+}
+export const DescribeJobSchemaVersionRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      JobCategory: S.optional(JobCategory),
+      JobConfigSchemaVersion: S.optional(S.String),
+    }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "POST", uri: "/" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "DescribeJobSchemaVersionRequest",
+  }) as any as S.Schema<DescribeJobSchemaVersionRequest>;
+export interface DescribeJobSchemaVersionResponse {
+  JobCategory: JobCategory;
+  JobConfigSchemaVersion: string;
+  JobConfigSchema: string;
+}
+export const DescribeJobSchemaVersionResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      JobCategory: S.optional(JobCategory),
+      JobConfigSchemaVersion: S.optional(S.String),
+      JobConfigSchema: S.optional(S.String),
+    }).pipe(ns),
+  ).annotate({
+    identifier: "DescribeJobSchemaVersionResponse",
+  }) as any as S.Schema<DescribeJobSchemaVersionResponse>;
 export interface DescribeLabelingJobRequest {
   LabelingJobName?: string;
 }
@@ -19682,6 +21258,11 @@ export interface DescribeModelOutput {
         };
       };
     })[];
+    ContainerMetricsConfig: ContainerMetricsConfig & {
+      MetricsEndpoints: (MetricsEndpoint & {
+        MetricsEndpointPath: MetricsEndpointPath;
+      })[];
+    };
   };
   Containers?: (ContainerDefinition & {
     ImageConfig: ImageConfig & {
@@ -19713,6 +21294,11 @@ export interface DescribeModelOutput {
         };
       };
     })[];
+    ContainerMetricsConfig: ContainerMetricsConfig & {
+      MetricsEndpoints: (MetricsEndpoint & {
+        MetricsEndpointPath: MetricsEndpointPath;
+      })[];
+    };
   })[];
   InferenceExecutionConfig?: InferenceExecutionConfig & {
     Mode: InferenceExecutionMode;
@@ -19833,15 +21419,19 @@ export const DescribeModelBiasJobDefinitionResponse =
   ).annotate({
     identifier: "DescribeModelBiasJobDefinitionResponse",
   }) as any as S.Schema<DescribeModelBiasJobDefinitionResponse>;
+export type IncludedData = "AllData" | "MetadataOnly" | (string & {});
+export const IncludedData = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface DescribeModelCardRequest {
   ModelCardName?: string;
   ModelCardVersion?: number;
+  IncludedData?: IncludedData;
 }
 export const DescribeModelCardRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
     S.Struct({
       ModelCardName: S.optional(S.String),
       ModelCardVersion: S.optional(S.Number),
+      IncludedData: S.optional(IncludedData),
     }).pipe(
       T.all(
         ns,
@@ -20051,10 +21641,14 @@ export const DescribeModelExplainabilityJobDefinitionResponse =
   }) as any as S.Schema<DescribeModelExplainabilityJobDefinitionResponse>;
 export interface DescribeModelPackageInput {
   ModelPackageName?: string;
+  IncludedData?: IncludedData;
 }
 export const DescribeModelPackageInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
-    S.Struct({ ModelPackageName: S.optional(S.String) }).pipe(
+    S.Struct({
+      ModelPackageName: S.optional(S.String),
+      IncludedData: S.optional(IncludedData),
+    }).pipe(
       T.all(
         ns,
         T.Http({ method: "POST", uri: "/" }),
@@ -20129,6 +21723,18 @@ export interface DescribeModelPackageOutput {
         };
       };
       ModelInput: ModelInput & { DataInputConfig: DataInputConfig };
+      AdditionalModelDataSources: (AdditionalModelDataSource & {
+        ChannelName: AdditionalModelChannelName;
+        S3DataSource: S3ModelDataSource & {
+          S3Uri: S3ModelUri;
+          S3DataType: S3ModelDataType;
+          CompressionType: ModelCompressionType;
+          ModelAccessConfig: ModelAccessConfig & { AcceptEula: AcceptEula };
+          HubAccessConfig: InferenceHubAccessConfig & {
+            HubContentArn: HubContentArn;
+          };
+        };
+      })[];
       AdditionalS3DataSource: AdditionalS3DataSource & {
         S3DataType: AdditionalS3DataSourceDataType;
         S3Uri: S3Uri;
@@ -20258,6 +21864,18 @@ export interface DescribeModelPackageOutput {
         };
       };
       ModelInput: ModelInput & { DataInputConfig: DataInputConfig };
+      AdditionalModelDataSources: (AdditionalModelDataSource & {
+        ChannelName: AdditionalModelChannelName;
+        S3DataSource: S3ModelDataSource & {
+          S3Uri: S3ModelUri;
+          S3DataType: S3ModelDataType;
+          CompressionType: ModelCompressionType;
+          ModelAccessConfig: ModelAccessConfig & { AcceptEula: AcceptEula };
+          HubAccessConfig: InferenceHubAccessConfig & {
+            HubContentArn: HubContentArn;
+          };
+        };
+      })[];
       AdditionalS3DataSource: AdditionalS3DataSource & {
         S3DataType: AdditionalS3DataSourceDataType;
         S3Uri: S3Uri;
@@ -20272,6 +21890,7 @@ export interface DescribeModelPackageOutput {
     Stage: EntityName;
     StageStatus: EntityName;
   };
+  ManagedStorageType?: ManagedStorageType;
 }
 export const DescribeModelPackageOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -20311,6 +21930,7 @@ export const DescribeModelPackageOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       SecurityConfig: S.optional(ModelPackageSecurityConfig),
       ModelCard: S.optional(ModelPackageModelCard),
       ModelLifeCycle: S.optional(ModelLifeCycle),
+      ManagedStorageType: S.optional(ManagedStorageType),
     }).pipe(ns),
 ).annotate({
   identifier: "DescribeModelPackageOutput",
@@ -20350,6 +21970,7 @@ export interface DescribeModelPackageGroupOutput {
   CreationTime: Date;
   CreatedBy: UserContext;
   ModelPackageGroupStatus: ModelPackageGroupStatus;
+  ManagedConfiguration?: ManagedConfiguration;
 }
 export const DescribeModelPackageGroupOutput =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -20360,6 +21981,7 @@ export const DescribeModelPackageGroupOutput =
       CreationTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
       CreatedBy: S.optional(UserContext),
       ModelPackageGroupStatus: S.optional(ModelPackageGroupStatus),
+      ManagedConfiguration: S.optional(ManagedConfiguration),
     }).pipe(ns),
   ).annotate({
     identifier: "DescribeModelPackageGroupOutput",
@@ -22091,6 +23713,7 @@ export type SageMakerResourceName =
   | "training-job"
   | "hyperpod-cluster"
   | "endpoint"
+  | "studio-apps"
   | (string & {});
 export const SageMakerResourceName = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export type SageMakerResourceNames = SageMakerResourceName[];
@@ -22106,6 +23729,7 @@ export interface ReservedCapacitySummary {
   TotalInstanceCount?: number;
   Status?: ReservedCapacityStatus;
   AvailabilityZone?: string;
+  AvailabilityZoneId?: string;
   DurationHours?: number;
   DurationMinutes?: number;
   StartTime?: Date;
@@ -22122,6 +23746,7 @@ export const ReservedCapacitySummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       TotalInstanceCount: S.optional(S.Number),
       Status: S.optional(ReservedCapacityStatus),
       AvailabilityZone: S.optional(S.String),
+      AvailabilityZoneId: S.optional(S.String),
       DurationHours: S.optional(S.Number),
       DurationMinutes: S.optional(S.Number),
       StartTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
@@ -23349,6 +24974,7 @@ export type ResourceType =
   | "HyperParameterTuningJob"
   | "ModelCard"
   | "PipelineVersion"
+  | "Job"
   | (string & {});
 export const ResourceType = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface PropertyNameQuery {
@@ -23546,6 +25172,257 @@ export const ListActionsResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "ListActionsResponse",
 }) as any as S.Schema<ListActionsResponse>;
+export type ListAIBenchmarkJobsSortBy =
+  | "Name"
+  | "CreationTime"
+  | "Status"
+  | (string & {});
+export const ListAIBenchmarkJobsSortBy = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface ListAIBenchmarkJobsRequest {
+  MaxResults?: number;
+  NextToken?: string;
+  NameContains?: string;
+  StatusEquals?: AIBenchmarkJobStatus;
+  CreationTimeAfter?: Date;
+  CreationTimeBefore?: Date;
+  SortBy?: ListAIBenchmarkJobsSortBy;
+  SortOrder?: SortOrder;
+}
+export const ListAIBenchmarkJobsRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      MaxResults: S.optional(S.Number),
+      NextToken: S.optional(S.String),
+      NameContains: S.optional(S.String),
+      StatusEquals: S.optional(AIBenchmarkJobStatus),
+      CreationTimeAfter: S.optional(
+        S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+      ),
+      CreationTimeBefore: S.optional(
+        S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+      ),
+      SortBy: S.optional(ListAIBenchmarkJobsSortBy),
+      SortOrder: S.optional(SortOrder),
+    }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "POST", uri: "/" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+).annotate({
+  identifier: "ListAIBenchmarkJobsRequest",
+}) as any as S.Schema<ListAIBenchmarkJobsRequest>;
+export interface AIBenchmarkJobSummary {
+  AIBenchmarkJobName?: string;
+  AIBenchmarkJobArn?: string;
+  AIBenchmarkJobStatus?: AIBenchmarkJobStatus;
+  CreationTime?: Date;
+  EndTime?: Date;
+  AIWorkloadConfigName?: string;
+}
+export const AIBenchmarkJobSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    AIBenchmarkJobName: S.optional(S.String),
+    AIBenchmarkJobArn: S.optional(S.String),
+    AIBenchmarkJobStatus: S.optional(AIBenchmarkJobStatus),
+    CreationTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    EndTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    AIWorkloadConfigName: S.optional(S.String),
+  }),
+).annotate({
+  identifier: "AIBenchmarkJobSummary",
+}) as any as S.Schema<AIBenchmarkJobSummary>;
+export type AIBenchmarkJobSummaryList = AIBenchmarkJobSummary[];
+export const AIBenchmarkJobSummaryList = /*@__PURE__*/ /*#__PURE__*/ S.Array(
+  AIBenchmarkJobSummary,
+);
+export interface ListAIBenchmarkJobsResponse {
+  AIBenchmarkJobs: (AIBenchmarkJobSummary & {
+    AIBenchmarkJobName: AIEntityName;
+    AIBenchmarkJobArn: AIBenchmarkJobArn;
+    AIBenchmarkJobStatus: AIBenchmarkJobStatus;
+    CreationTime: Date;
+  })[];
+  NextToken?: string;
+}
+export const ListAIBenchmarkJobsResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      AIBenchmarkJobs: S.optional(AIBenchmarkJobSummaryList),
+      NextToken: S.optional(S.String),
+    }).pipe(ns),
+  ).annotate({
+    identifier: "ListAIBenchmarkJobsResponse",
+  }) as any as S.Schema<ListAIBenchmarkJobsResponse>;
+export type ListAIRecommendationJobsSortBy =
+  | "Name"
+  | "CreationTime"
+  | "Status"
+  | (string & {});
+export const ListAIRecommendationJobsSortBy =
+  /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface ListAIRecommendationJobsRequest {
+  MaxResults?: number;
+  NextToken?: string;
+  NameContains?: string;
+  StatusEquals?: AIRecommendationJobStatus;
+  CreationTimeAfter?: Date;
+  CreationTimeBefore?: Date;
+  SortBy?: ListAIRecommendationJobsSortBy;
+  SortOrder?: SortOrder;
+}
+export const ListAIRecommendationJobsRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      MaxResults: S.optional(S.Number),
+      NextToken: S.optional(S.String),
+      NameContains: S.optional(S.String),
+      StatusEquals: S.optional(AIRecommendationJobStatus),
+      CreationTimeAfter: S.optional(
+        S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+      ),
+      CreationTimeBefore: S.optional(
+        S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+      ),
+      SortBy: S.optional(ListAIRecommendationJobsSortBy),
+      SortOrder: S.optional(SortOrder),
+    }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "POST", uri: "/" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "ListAIRecommendationJobsRequest",
+  }) as any as S.Schema<ListAIRecommendationJobsRequest>;
+export interface AIRecommendationJobSummary {
+  AIRecommendationJobName?: string;
+  AIRecommendationJobArn?: string;
+  AIRecommendationJobStatus?: AIRecommendationJobStatus;
+  CreationTime?: Date;
+  EndTime?: Date;
+}
+export const AIRecommendationJobSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      AIRecommendationJobName: S.optional(S.String),
+      AIRecommendationJobArn: S.optional(S.String),
+      AIRecommendationJobStatus: S.optional(AIRecommendationJobStatus),
+      CreationTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+      EndTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    }),
+).annotate({
+  identifier: "AIRecommendationJobSummary",
+}) as any as S.Schema<AIRecommendationJobSummary>;
+export type AIRecommendationJobSummaryList = AIRecommendationJobSummary[];
+export const AIRecommendationJobSummaryList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(AIRecommendationJobSummary);
+export interface ListAIRecommendationJobsResponse {
+  AIRecommendationJobs: (AIRecommendationJobSummary & {
+    AIRecommendationJobName: AIEntityName;
+    AIRecommendationJobArn: AIRecommendationJobArn;
+    AIRecommendationJobStatus: AIRecommendationJobStatus;
+    CreationTime: Date;
+  })[];
+  NextToken?: string;
+}
+export const ListAIRecommendationJobsResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      AIRecommendationJobs: S.optional(AIRecommendationJobSummaryList),
+      NextToken: S.optional(S.String),
+    }).pipe(ns),
+  ).annotate({
+    identifier: "ListAIRecommendationJobsResponse",
+  }) as any as S.Schema<ListAIRecommendationJobsResponse>;
+export type ListAIWorkloadConfigsSortBy =
+  | "Name"
+  | "CreationTime"
+  | (string & {});
+export const ListAIWorkloadConfigsSortBy = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface ListAIWorkloadConfigsRequest {
+  MaxResults?: number;
+  NextToken?: string;
+  NameContains?: string;
+  CreationTimeAfter?: Date;
+  CreationTimeBefore?: Date;
+  SortBy?: ListAIWorkloadConfigsSortBy;
+  SortOrder?: SortOrder;
+}
+export const ListAIWorkloadConfigsRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      MaxResults: S.optional(S.Number),
+      NextToken: S.optional(S.String),
+      NameContains: S.optional(S.String),
+      CreationTimeAfter: S.optional(
+        S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+      ),
+      CreationTimeBefore: S.optional(
+        S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+      ),
+      SortBy: S.optional(ListAIWorkloadConfigsSortBy),
+      SortOrder: S.optional(SortOrder),
+    }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "POST", uri: "/" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "ListAIWorkloadConfigsRequest",
+  }) as any as S.Schema<ListAIWorkloadConfigsRequest>;
+export interface AIWorkloadConfigSummary {
+  AIWorkloadConfigName?: string;
+  AIWorkloadConfigArn?: string;
+  CreationTime?: Date;
+}
+export const AIWorkloadConfigSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      AIWorkloadConfigName: S.optional(S.String),
+      AIWorkloadConfigArn: S.optional(S.String),
+      CreationTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    }),
+).annotate({
+  identifier: "AIWorkloadConfigSummary",
+}) as any as S.Schema<AIWorkloadConfigSummary>;
+export type AIWorkloadConfigSummaryList = AIWorkloadConfigSummary[];
+export const AIWorkloadConfigSummaryList = /*@__PURE__*/ /*#__PURE__*/ S.Array(
+  AIWorkloadConfigSummary,
+);
+export interface ListAIWorkloadConfigsResponse {
+  AIWorkloadConfigs: (AIWorkloadConfigSummary & {
+    AIWorkloadConfigName: AIEntityName;
+    AIWorkloadConfigArn: AIWorkloadConfigArn;
+    CreationTime: Date;
+  })[];
+  NextToken?: string;
+}
+export const ListAIWorkloadConfigsResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      AIWorkloadConfigs: S.optional(AIWorkloadConfigSummaryList),
+      NextToken: S.optional(S.String),
+    }).pipe(ns),
+  ).annotate({
+    identifier: "ListAIWorkloadConfigsResponse",
+  }) as any as S.Schema<ListAIWorkloadConfigsResponse>;
 export type AlgorithmSortBy = "Name" | "CreationTime" | (string & {});
 export const AlgorithmSortBy = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface ListAlgorithmsInput {
@@ -24243,6 +26120,7 @@ export interface ClusterEventSummary {
   ResourceType?: ClusterEventResourceType;
   EventTime?: Date;
   Description?: string;
+  EventLevel?: ClusterEventLevel;
 }
 export const ClusterEventSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -24254,6 +26132,7 @@ export const ClusterEventSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     ResourceType: S.optional(ClusterEventResourceType),
     EventTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
     Description: S.optional(S.String),
+    EventLevel: S.optional(ClusterEventLevel),
   }),
 ).annotate({
   identifier: "ClusterEventSummary",
@@ -24333,6 +26212,8 @@ export interface ClusterNodeSummary {
   InstanceStatus?: ClusterInstanceStatusDetails;
   UltraServerInfo?: UltraServerInfo;
   PrivateDnsHostname?: string;
+  CurrentImageReleaseVersion?: string;
+  ImageVersionStatus?: ClusterImageVersionStatus;
 }
 export const ClusterNodeSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -24347,6 +26228,8 @@ export const ClusterNodeSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     InstanceStatus: S.optional(ClusterInstanceStatusDetails),
     UltraServerInfo: S.optional(UltraServerInfo),
     PrivateDnsHostname: S.optional(S.String),
+    CurrentImageReleaseVersion: S.optional(S.String),
+    ImageVersionStatus: S.optional(ClusterImageVersionStatus),
   }),
 ).annotate({
   identifier: "ClusterNodeSummary",
@@ -24421,6 +26304,7 @@ export interface ClusterSummary {
   CreationTime?: Date;
   ClusterStatus?: ClusterStatus;
   TrainingPlanArns?: string[];
+  ImageVersionStatus?: ClusterImageVersionStatus;
 }
 export const ClusterSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -24429,6 +26313,7 @@ export const ClusterSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     CreationTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
     ClusterStatus: S.optional(ClusterStatus),
     TrainingPlanArns: S.optional(TrainingPlanArns),
+    ImageVersionStatus: S.optional(ClusterImageVersionStatus),
   }),
 ).annotate({ identifier: "ClusterSummary" }) as any as S.Schema<ClusterSummary>;
 export type ClusterSummaries = ClusterSummary[];
@@ -27002,6 +28887,153 @@ export const ListInferenceRecommendationsJobStepsResponse =
   }) as any as S.Schema<ListInferenceRecommendationsJobStepsResponse>;
 export type SortBy = "Name" | "CreationTime" | "Status" | (string & {});
 export const SortBy = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface ListJobsRequest {
+  JobCategory?: JobCategory;
+  NextToken?: string;
+  MaxResults?: number;
+  CreationTimeAfter?: Date;
+  CreationTimeBefore?: Date;
+  LastModifiedTimeAfter?: Date;
+  LastModifiedTimeBefore?: Date;
+  NameContains?: string;
+  SortBy?: SortBy;
+  SortOrder?: SortOrder;
+  StatusEquals?: JobStatus;
+}
+export const ListJobsRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    JobCategory: S.optional(JobCategory),
+    NextToken: S.optional(S.String),
+    MaxResults: S.optional(S.Number),
+    CreationTimeAfter: S.optional(
+      S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+    ),
+    CreationTimeBefore: S.optional(
+      S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+    ),
+    LastModifiedTimeAfter: S.optional(
+      S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+    ),
+    LastModifiedTimeBefore: S.optional(
+      S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+    ),
+    NameContains: S.optional(S.String),
+    SortBy: S.optional(SortBy),
+    SortOrder: S.optional(SortOrder),
+    StatusEquals: S.optional(JobStatus),
+  }).pipe(
+    T.all(
+      ns,
+      T.Http({ method: "POST", uri: "/" }),
+      svc,
+      auth,
+      proto,
+      ver,
+      rules,
+    ),
+  ),
+).annotate({
+  identifier: "ListJobsRequest",
+}) as any as S.Schema<ListJobsRequest>;
+export interface JobSummary {
+  JobArn?: string;
+  JobName?: string;
+  JobCategory?: JobCategory;
+  JobStatus?: JobStatus;
+  JobSecondaryStatus?: JobSecondaryStatus;
+  CreationTime?: Date;
+  LastModifiedTime?: Date;
+  EndTime?: Date;
+}
+export const JobSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    JobArn: S.optional(S.String),
+    JobName: S.optional(S.String),
+    JobCategory: S.optional(JobCategory),
+    JobStatus: S.optional(JobStatus),
+    JobSecondaryStatus: S.optional(JobSecondaryStatus),
+    CreationTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    LastModifiedTime: S.optional(
+      S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+    ),
+    EndTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+  }),
+).annotate({ identifier: "JobSummary" }) as any as S.Schema<JobSummary>;
+export type JobSummaries = JobSummary[];
+export const JobSummaries = /*@__PURE__*/ /*#__PURE__*/ S.Array(JobSummary);
+export interface ListJobsResponse {
+  NextToken?: string;
+  JobSummaries: (JobSummary & {
+    JobArn: JobArn;
+    JobName: JobName;
+    JobCategory: JobCategory;
+    JobStatus: JobStatus;
+    JobSecondaryStatus: JobSecondaryStatus;
+    CreationTime: Date;
+    LastModifiedTime: Date;
+  })[];
+}
+export const ListJobsResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    NextToken: S.optional(S.String),
+    JobSummaries: S.optional(JobSummaries),
+  }).pipe(ns),
+).annotate({
+  identifier: "ListJobsResponse",
+}) as any as S.Schema<ListJobsResponse>;
+export interface ListJobSchemaVersionsRequest {
+  JobCategory?: JobCategory;
+  NextToken?: string;
+  MaxResults?: number;
+}
+export const ListJobSchemaVersionsRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      JobCategory: S.optional(JobCategory),
+      NextToken: S.optional(S.String),
+      MaxResults: S.optional(S.Number),
+    }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "POST", uri: "/" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "ListJobSchemaVersionsRequest",
+  }) as any as S.Schema<ListJobSchemaVersionsRequest>;
+export interface JobConfigSchemaVersionSummary {
+  JobConfigSchemaVersion?: string;
+}
+export const JobConfigSchemaVersionSummary =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ JobConfigSchemaVersion: S.optional(S.String) }),
+  ).annotate({
+    identifier: "JobConfigSchemaVersionSummary",
+  }) as any as S.Schema<JobConfigSchemaVersionSummary>;
+export type JobConfigSchemas = JobConfigSchemaVersionSummary[];
+export const JobConfigSchemas = /*@__PURE__*/ /*#__PURE__*/ S.Array(
+  JobConfigSchemaVersionSummary,
+);
+export interface ListJobSchemaVersionsResponse {
+  NextToken?: string;
+  JobConfigSchemas: (JobConfigSchemaVersionSummary & {
+    JobConfigSchemaVersion: JobSchemaVersion;
+  })[];
+}
+export const ListJobSchemaVersionsResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      NextToken: S.optional(S.String),
+      JobConfigSchemas: S.optional(JobConfigSchemas),
+    }).pipe(ns),
+  ).annotate({
+    identifier: "ListJobSchemaVersionsResponse",
+  }) as any as S.Schema<ListJobSchemaVersionsResponse>;
 export interface ListLabelingJobsRequest {
   CreationTimeAfter?: Date;
   CreationTimeBefore?: Date;
@@ -27986,6 +30018,7 @@ export interface ModelPackageGroupSummary {
   ModelPackageGroupDescription?: string;
   CreationTime?: Date;
   ModelPackageGroupStatus?: ModelPackageGroupStatus;
+  ManagedConfiguration?: ManagedConfiguration;
 }
 export const ModelPackageGroupSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -27995,6 +30028,7 @@ export const ModelPackageGroupSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       ModelPackageGroupDescription: S.optional(S.String),
       CreationTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
       ModelPackageGroupStatus: S.optional(ModelPackageGroupStatus),
+      ManagedConfiguration: S.optional(ManagedConfiguration),
     }),
 ).annotate({
   identifier: "ModelPackageGroupSummary",
@@ -29415,6 +31449,14 @@ export const LineageMetadata = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "LineageMetadata",
 }) as any as S.Schema<LineageMetadata>;
+export interface JobStepMetadata {
+  Arn?: string;
+}
+export const JobStepMetadata = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ Arn: S.optional(S.String) }),
+).annotate({
+  identifier: "JobStepMetadata",
+}) as any as S.Schema<JobStepMetadata>;
 export interface PipelineExecutionStepMetadata {
   TrainingJob?: TrainingJobStepMetadata;
   ProcessingJob?: ProcessingJobStepMetadata;
@@ -29438,6 +31480,7 @@ export interface PipelineExecutionStepMetadata {
   BedrockModelImport?: BedrockModelImportMetadata;
   InferenceComponent?: InferenceComponentMetadata;
   Lineage?: LineageMetadata;
+  Job?: JobStepMetadata;
 }
 export const PipelineExecutionStepMetadata =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -29468,6 +31511,7 @@ export const PipelineExecutionStepMetadata =
       BedrockModelImport: S.optional(BedrockModelImportMetadata),
       InferenceComponent: S.optional(InferenceComponentMetadata),
       Lineage: S.optional(LineageMetadata),
+      Job: S.optional(JobStepMetadata),
     }),
   ).annotate({
     identifier: "PipelineExecutionStepMetadata",
@@ -31606,6 +33650,7 @@ export interface TrainingJob {
   InputDataConfig?: Channel[];
   OutputDataConfig?: OutputDataConfig;
   ResourceConfig?: ResourceConfig;
+  WarmPoolStatus?: WarmPoolStatus;
   VpcConfig?: VpcConfig;
   StoppingCondition?: StoppingCondition;
   CreationTime?: Date;
@@ -31649,6 +33694,7 @@ export const TrainingJob = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     InputDataConfig: S.optional(InputDataConfig),
     OutputDataConfig: S.optional(OutputDataConfig),
     ResourceConfig: S.optional(ResourceConfig),
+    WarmPoolStatus: S.optional(WarmPoolStatus),
     VpcConfig: S.optional(VpcConfig),
     StoppingCondition: S.optional(StoppingCondition),
     CreationTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
@@ -32560,6 +34606,42 @@ export const ModelDashboardModel = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "ModelDashboardModel",
 }) as any as S.Schema<ModelDashboardModel>;
+export interface Job {
+  JobName?: string;
+  JobArn?: string;
+  RoleArn?: string;
+  JobCategory?: JobCategory;
+  JobConfigSchemaVersion?: string;
+  JobConfigDocument?: string;
+  CreationTime?: Date;
+  LastModifiedTime?: Date;
+  EndTime?: Date;
+  JobStatus?: JobStatus;
+  SecondaryStatus?: JobSecondaryStatus;
+  SecondaryStatusTransitions?: JobSecondaryStatusTransition[];
+  FailureReason?: string;
+  Tags?: Tag[];
+}
+export const Job = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    JobName: S.optional(S.String),
+    JobArn: S.optional(S.String),
+    RoleArn: S.optional(S.String),
+    JobCategory: S.optional(JobCategory),
+    JobConfigSchemaVersion: S.optional(S.String),
+    JobConfigDocument: S.optional(S.String),
+    CreationTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    LastModifiedTime: S.optional(
+      S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+    ),
+    EndTime: S.optional(S.Date.pipe(T.TimestampFormat("epoch-seconds"))),
+    JobStatus: S.optional(JobStatus),
+    SecondaryStatus: S.optional(JobSecondaryStatus),
+    SecondaryStatusTransitions: S.optional(JobSecondaryStatusTransitions),
+    FailureReason: S.optional(S.String),
+    Tags: S.optional(TagList),
+  }),
+).annotate({ identifier: "Job" }) as any as S.Schema<Job>;
 export interface SearchRecord {
   TrainingJob?: TrainingJob;
   Experiment?: Experiment;
@@ -32577,6 +34659,7 @@ export interface SearchRecord {
   HyperParameterTuningJob?: HyperParameterTuningJobSearchEntity;
   ModelCard?: ModelCard;
   Model?: ModelDashboardModel;
+  Job?: Job;
 }
 export const SearchRecord = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -32596,6 +34679,7 @@ export const SearchRecord = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     HyperParameterTuningJob: S.optional(HyperParameterTuningJobSearchEntity),
     ModelCard: S.optional(ModelCard),
     Model: S.optional(ModelDashboardModel),
+    Job: S.optional(Job),
   }),
 ).annotate({ identifier: "SearchRecord" }) as any as S.Schema<SearchRecord>;
 export type SearchResultsList = SearchRecord[];
@@ -32658,6 +34742,7 @@ export interface SearchResponse {
           })[];
         };
       };
+      WarmPoolStatus: WarmPoolStatus & { Status: WarmPoolResourceStatus };
       VpcConfig: VpcConfig & {
         SecurityGroupIds: VpcSecurityGroupIds;
         Subnets: Subnets;
@@ -32756,6 +34841,7 @@ export interface SearchResponse {
               })[];
             };
           };
+          WarmPoolStatus: WarmPoolStatus & { Status: WarmPoolResourceStatus };
           VpcConfig: VpcConfig & {
             SecurityGroupIds: VpcSecurityGroupIds;
             Subnets: Subnets;
@@ -32866,6 +34952,10 @@ export interface SearchResponse {
       LastModifiedTime: Date;
       ProductionVariants: (ProductionVariantSummary & {
         VariantName: VariantName;
+        InstancePools: (InstancePoolSummary & {
+          InstanceType: ProductionVariantInstanceType;
+          CurrentInstanceCount: TaskCount;
+        })[];
         VariantStatus: (ProductionVariantStatus & { Status: VariantStatus })[];
         CurrentServerlessConfig: ProductionVariantServerlessConfig & {
           MemorySizeInMB: ServerlessMemorySizeInMB;
@@ -32950,6 +35040,10 @@ export interface SearchResponse {
       Tags: (Tag & { Key: TagKey; Value: TagValue })[];
       ShadowProductionVariants: (ProductionVariantSummary & {
         VariantName: VariantName;
+        InstancePools: (InstancePoolSummary & {
+          InstanceType: ProductionVariantInstanceType;
+          CurrentInstanceCount: TaskCount;
+        })[];
         VariantStatus: (ProductionVariantStatus & { Status: VariantStatus })[];
         CurrentServerlessConfig: ProductionVariantServerlessConfig & {
           MemorySizeInMB: ServerlessMemorySizeInMB;
@@ -32984,6 +35078,18 @@ export interface SearchResponse {
             };
           };
           ModelInput: ModelInput & { DataInputConfig: DataInputConfig };
+          AdditionalModelDataSources: (AdditionalModelDataSource & {
+            ChannelName: AdditionalModelChannelName;
+            S3DataSource: S3ModelDataSource & {
+              S3Uri: S3ModelUri;
+              S3DataType: S3ModelDataType;
+              CompressionType: ModelCompressionType;
+              ModelAccessConfig: ModelAccessConfig & { AcceptEula: AcceptEula };
+              HubAccessConfig: InferenceHubAccessConfig & {
+                HubContentArn: HubContentArn;
+              };
+            };
+          })[];
           AdditionalS3DataSource: AdditionalS3DataSource & {
             S3DataType: AdditionalS3DataSourceDataType;
             S3Uri: S3Uri;
@@ -33088,6 +35194,18 @@ export interface SearchResponse {
             };
           };
           ModelInput: ModelInput & { DataInputConfig: DataInputConfig };
+          AdditionalModelDataSources: (AdditionalModelDataSource & {
+            ChannelName: AdditionalModelChannelName;
+            S3DataSource: S3ModelDataSource & {
+              S3Uri: S3ModelUri;
+              S3DataType: S3ModelDataType;
+              CompressionType: ModelCompressionType;
+              ModelAccessConfig: ModelAccessConfig & { AcceptEula: AcceptEula };
+              HubAccessConfig: InferenceHubAccessConfig & {
+                HubContentArn: HubContentArn;
+              };
+            };
+          })[];
           AdditionalS3DataSource: AdditionalS3DataSource & {
             S3DataType: AdditionalS3DataSourceDataType;
             S3Uri: S3Uri;
@@ -33455,6 +35573,11 @@ export interface SearchResponse {
               };
             };
           })[];
+          ContainerMetricsConfig: ContainerMetricsConfig & {
+            MetricsEndpoints: (MetricsEndpoint & {
+              MetricsEndpointPath: MetricsEndpointPath;
+            })[];
+          };
         };
         Containers: (ContainerDefinition & {
           ImageConfig: ImageConfig & {
@@ -33486,6 +35609,11 @@ export interface SearchResponse {
               };
             };
           })[];
+          ContainerMetricsConfig: ContainerMetricsConfig & {
+            MetricsEndpoints: (MetricsEndpoint & {
+              MetricsEndpointPath: MetricsEndpointPath;
+            })[];
+          };
         })[];
         InferenceExecutionConfig: InferenceExecutionConfig & {
           Mode: InferenceExecutionMode;
@@ -33599,6 +35727,13 @@ export interface SearchResponse {
       ModelCard: ModelDashboardModelCard & {
         Tags: (Tag & { Key: TagKey; Value: TagValue })[];
       };
+    };
+    Job: Job & {
+      SecondaryStatusTransitions: (JobSecondaryStatusTransition & {
+        Status: JobSecondaryStatus;
+        StartTime: Date;
+      })[];
+      Tags: (Tag & { Key: TagKey; Value: TagValue })[];
     };
   })[];
   NextToken?: string;
@@ -34110,6 +36245,61 @@ export const StartSessionResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "StartSessionResponse",
 }) as any as S.Schema<StartSessionResponse>;
+export interface StopAIBenchmarkJobRequest {
+  AIBenchmarkJobName?: string;
+}
+export const StopAIBenchmarkJobRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({ AIBenchmarkJobName: S.optional(S.String) }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "POST", uri: "/" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+).annotate({
+  identifier: "StopAIBenchmarkJobRequest",
+}) as any as S.Schema<StopAIBenchmarkJobRequest>;
+export interface StopAIBenchmarkJobResponse {
+  AIBenchmarkJobArn: string;
+}
+export const StopAIBenchmarkJobResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () => S.Struct({ AIBenchmarkJobArn: S.optional(S.String) }).pipe(ns),
+).annotate({
+  identifier: "StopAIBenchmarkJobResponse",
+}) as any as S.Schema<StopAIBenchmarkJobResponse>;
+export interface StopAIRecommendationJobRequest {
+  AIRecommendationJobName?: string;
+}
+export const StopAIRecommendationJobRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ AIRecommendationJobName: S.optional(S.String) }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "POST", uri: "/" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "StopAIRecommendationJobRequest",
+  }) as any as S.Schema<StopAIRecommendationJobRequest>;
+export interface StopAIRecommendationJobResponse {
+  AIRecommendationJobArn: string;
+}
+export const StopAIRecommendationJobResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ AIRecommendationJobArn: S.optional(S.String) }).pipe(ns),
+  ).annotate({
+    identifier: "StopAIRecommendationJobResponse",
+  }) as any as S.Schema<StopAIRecommendationJobResponse>;
 export interface StopAutoMLJobRequest {
   AutoMLJobName?: string;
 }
@@ -34316,6 +36506,32 @@ export const StopInferenceRecommendationsJobResponse =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() => S.Struct({}).pipe(ns)).annotate({
     identifier: "StopInferenceRecommendationsJobResponse",
   }) as any as S.Schema<StopInferenceRecommendationsJobResponse>;
+export interface StopJobRequest {
+  JobName?: string;
+  JobCategory?: JobCategory;
+}
+export const StopJobRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    JobName: S.optional(S.String),
+    JobCategory: S.optional(JobCategory),
+  }).pipe(
+    T.all(
+      ns,
+      T.Http({ method: "POST", uri: "/" }),
+      svc,
+      auth,
+      proto,
+      ver,
+      rules,
+    ),
+  ),
+).annotate({ identifier: "StopJobRequest" }) as any as S.Schema<StopJobRequest>;
+export interface StopJobResponse {}
+export const StopJobResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({}).pipe(ns),
+).annotate({
+  identifier: "StopJobResponse",
+}) as any as S.Schema<StopJobResponse>;
 export interface StopLabelingJobRequest {
   LabelingJobName?: string;
 }
@@ -34664,6 +36880,7 @@ export interface UpdateClusterRequest {
   ClusterName?: string;
   InstanceGroups?: ClusterInstanceGroupSpecification[];
   RestrictedInstanceGroups?: ClusterRestrictedInstanceGroupSpecification[];
+  RestrictedInstanceGroupsConfig?: ClusterRestrictedInstanceGroupsConfig;
   TieredStorageConfig?: ClusterTieredStorageConfig;
   NodeRecovery?: ClusterNodeRecovery;
   InstanceGroupsToDelete?: string[];
@@ -34678,6 +36895,9 @@ export const UpdateClusterRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     InstanceGroups: S.optional(ClusterInstanceGroupSpecifications),
     RestrictedInstanceGroups: S.optional(
       ClusterRestrictedInstanceGroupSpecifications,
+    ),
+    RestrictedInstanceGroupsConfig: S.optional(
+      ClusterRestrictedInstanceGroupsConfig,
     ),
     TieredStorageConfig: S.optional(ClusterTieredStorageConfig),
     NodeRecovery: S.optional(ClusterNodeRecovery),
@@ -34750,10 +36970,14 @@ export const UpdateClusterSchedulerConfigResponse =
   }) as any as S.Schema<UpdateClusterSchedulerConfigResponse>;
 export interface UpdateClusterSoftwareInstanceGroupSpecification {
   InstanceGroupName?: string;
+  ImageReleaseVersion?: string;
 }
 export const UpdateClusterSoftwareInstanceGroupSpecification =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-    S.Struct({ InstanceGroupName: S.optional(S.String) }),
+    S.Struct({
+      InstanceGroupName: S.optional(S.String),
+      ImageReleaseVersion: S.optional(S.String),
+    }),
   ).annotate({
     identifier: "UpdateClusterSoftwareInstanceGroupSpecification",
   }) as any as S.Schema<UpdateClusterSoftwareInstanceGroupSpecification>;
@@ -35034,6 +37258,7 @@ export interface UpdateDomainRequest {
   SubnetIds?: string[];
   AppNetworkAccessType?: AppNetworkAccessType;
   TagPropagation?: TagPropagation;
+  HomeEfsFileSystemCreation?: HomeEfsFileSystemCreation;
   VpcId?: string;
 }
 export const UpdateDomainRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -35046,6 +37271,7 @@ export const UpdateDomainRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     SubnetIds: S.optional(Subnets),
     AppNetworkAccessType: S.optional(AppNetworkAccessType),
     TagPropagation: S.optional(TagPropagation),
+    HomeEfsFileSystemCreation: S.optional(HomeEfsFileSystemCreation),
     VpcId: S.optional(S.String),
   }).pipe(
     T.all(
@@ -35545,6 +37771,7 @@ export const UpdateImageVersionResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 export interface UpdateInferenceComponentInput {
   InferenceComponentName?: string;
   Specification?: InferenceComponentSpecification;
+  Specifications?: InferenceComponentSpecification[];
   RuntimeConfig?: InferenceComponentRuntimeConfig;
   DeploymentConfig?: InferenceComponentDeploymentConfig;
 }
@@ -35553,6 +37780,7 @@ export const UpdateInferenceComponentInput =
     S.Struct({
       InferenceComponentName: S.optional(S.String),
       Specification: S.optional(InferenceComponentSpecification),
+      Specifications: S.optional(InferenceComponentSpecificationList),
       RuntimeConfig: S.optional(InferenceComponentRuntimeConfig),
       DeploymentConfig: S.optional(InferenceComponentDeploymentConfig),
     }).pipe(
@@ -36597,6 +38825,7 @@ export const addAssociation: API.OperationMethod<
   input: AddAssociationRequest,
   output: AddAssociationResponse,
   errors: [ResourceLimitExceeded, ResourceNotFound],
+  operationName: "AddAssociation",
 }));
 export type AddTagsError = CommonErrors;
 /**
@@ -36617,6 +38846,7 @@ export const addTags: API.OperationMethod<
   input: AddTagsInput,
   output: AddTagsOutput,
   errors: [],
+  operationName: "AddTags",
 }));
 export type AssociateTrialComponentError =
   | ResourceLimitExceeded
@@ -36634,6 +38864,7 @@ export const associateTrialComponent: API.OperationMethod<
   input: AssociateTrialComponentRequest,
   output: AssociateTrialComponentResponse,
   errors: [ResourceLimitExceeded, ResourceNotFound],
+  operationName: "AssociateTrialComponent",
 }));
 export type AttachClusterNodeVolumeError = ResourceNotFound | CommonErrors;
 /**
@@ -36650,6 +38881,7 @@ export const attachClusterNodeVolume: API.OperationMethod<
   input: AttachClusterNodeVolumeRequest,
   output: AttachClusterNodeVolumeResponse,
   errors: [ResourceNotFound],
+  operationName: "AttachClusterNodeVolume",
 }));
 export type BatchAddClusterNodesError =
   | ResourceLimitExceeded
@@ -36669,6 +38901,7 @@ export const batchAddClusterNodes: API.OperationMethod<
   input: BatchAddClusterNodesRequest,
   output: BatchAddClusterNodesResponse,
   errors: [ResourceLimitExceeded, ResourceNotFound],
+  operationName: "BatchAddClusterNodes",
 }));
 export type BatchDeleteClusterNodesError = ResourceNotFound | CommonErrors;
 /**
@@ -36687,6 +38920,7 @@ export const batchDeleteClusterNodes: API.OperationMethod<
   input: BatchDeleteClusterNodesRequest,
   output: BatchDeleteClusterNodesResponse,
   errors: [ResourceNotFound],
+  operationName: "BatchDeleteClusterNodes",
 }));
 export type BatchDescribeModelPackageError = CommonErrors;
 /**
@@ -36701,6 +38935,7 @@ export const batchDescribeModelPackage: API.OperationMethod<
   input: BatchDescribeModelPackageInput,
   output: BatchDescribeModelPackageOutput,
   errors: [],
+  operationName: "BatchDescribeModelPackage",
 }));
 export type BatchRebootClusterNodesError = ResourceNotFound | CommonErrors;
 /**
@@ -36723,6 +38958,7 @@ export const batchRebootClusterNodes: API.OperationMethod<
   input: BatchRebootClusterNodesRequest,
   output: BatchRebootClusterNodesResponse,
   errors: [ResourceNotFound],
+  operationName: "BatchRebootClusterNodes",
 }));
 export type BatchReplaceClusterNodesError = ResourceNotFound | CommonErrors;
 /**
@@ -36747,6 +38983,7 @@ export const batchReplaceClusterNodes: API.OperationMethod<
   input: BatchReplaceClusterNodesRequest,
   output: BatchReplaceClusterNodesResponse,
   errors: [ResourceNotFound],
+  operationName: "BatchReplaceClusterNodes",
 }));
 export type CreateActionError = ResourceLimitExceeded | CommonErrors;
 /**
@@ -36761,6 +38998,63 @@ export const createAction: API.OperationMethod<
   input: CreateActionRequest,
   output: CreateActionResponse,
   errors: [ResourceLimitExceeded],
+  operationName: "CreateAction",
+}));
+export type CreateAIBenchmarkJobError =
+  | ResourceInUse
+  | ResourceLimitExceeded
+  | ResourceNotFound
+  | CommonErrors;
+/**
+ * Creates a benchmark job that runs performance benchmarks against inference infrastructure using a predefined AI workload configuration. The benchmark job measures metrics such as latency, throughput, and cost for your generative AI inference endpoints.
+ */
+export const createAIBenchmarkJob: API.OperationMethod<
+  CreateAIBenchmarkJobRequest,
+  CreateAIBenchmarkJobResponse,
+  CreateAIBenchmarkJobError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: CreateAIBenchmarkJobRequest,
+  output: CreateAIBenchmarkJobResponse,
+  errors: [ResourceInUse, ResourceLimitExceeded, ResourceNotFound],
+  operationName: "CreateAIBenchmarkJob",
+}));
+export type CreateAIRecommendationJobError =
+  | ResourceInUse
+  | ResourceLimitExceeded
+  | ResourceNotFound
+  | CommonErrors;
+/**
+ * Creates a recommendation job that generates intelligent optimization recommendations for generative AI inference deployments. The job analyzes your model, workload configuration, and performance targets to recommend optimal instance types, model optimization techniques (such as quantization and speculative decoding), and deployment configurations.
+ */
+export const createAIRecommendationJob: API.OperationMethod<
+  CreateAIRecommendationJobRequest,
+  CreateAIRecommendationJobResponse,
+  CreateAIRecommendationJobError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: CreateAIRecommendationJobRequest,
+  output: CreateAIRecommendationJobResponse,
+  errors: [ResourceInUse, ResourceLimitExceeded, ResourceNotFound],
+  operationName: "CreateAIRecommendationJob",
+}));
+export type CreateAIWorkloadConfigError =
+  | ResourceInUse
+  | ResourceLimitExceeded
+  | CommonErrors;
+/**
+ * Creates a reusable AI workload configuration that defines datasets, data sources, and benchmark tool settings for consistent performance testing of generative AI inference deployments on Amazon SageMaker AI.
+ */
+export const createAIWorkloadConfig: API.OperationMethod<
+  CreateAIWorkloadConfigRequest,
+  CreateAIWorkloadConfigResponse,
+  CreateAIWorkloadConfigError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: CreateAIWorkloadConfigRequest,
+  output: CreateAIWorkloadConfigResponse,
+  errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateAIWorkloadConfig",
 }));
 export type CreateAlgorithmError = CommonErrors;
 /**
@@ -36775,6 +39069,7 @@ export const createAlgorithm: API.OperationMethod<
   input: CreateAlgorithmInput,
   output: CreateAlgorithmOutput,
   errors: [],
+  operationName: "CreateAlgorithm",
 }));
 export type CreateAppError =
   | ResourceInUse
@@ -36792,6 +39087,7 @@ export const createApp: API.OperationMethod<
   input: CreateAppRequest,
   output: CreateAppResponse,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateApp",
 }));
 export type CreateAppImageConfigError = ResourceInUse | CommonErrors;
 /**
@@ -36806,6 +39102,7 @@ export const createAppImageConfig: API.OperationMethod<
   input: CreateAppImageConfigRequest,
   output: CreateAppImageConfigResponse,
   errors: [ResourceInUse],
+  operationName: "CreateAppImageConfig",
 }));
 export type CreateArtifactError = ResourceLimitExceeded | CommonErrors;
 /**
@@ -36820,6 +39117,7 @@ export const createArtifact: API.OperationMethod<
   input: CreateArtifactRequest,
   output: CreateArtifactResponse,
   errors: [ResourceLimitExceeded],
+  operationName: "CreateArtifact",
 }));
 export type CreateAutoMLJobError =
   | ResourceInUse
@@ -36849,6 +39147,7 @@ export const createAutoMLJob: API.OperationMethod<
   input: CreateAutoMLJobRequest,
   output: CreateAutoMLJobResponse,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateAutoMLJob",
 }));
 export type CreateAutoMLJobV2Error =
   | ResourceInUse
@@ -36882,6 +39181,7 @@ export const createAutoMLJobV2: API.OperationMethod<
   input: CreateAutoMLJobV2Request,
   output: CreateAutoMLJobV2Response,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateAutoMLJobV2",
 }));
 export type CreateClusterError =
   | ResourceInUse
@@ -36899,6 +39199,7 @@ export const createCluster: API.OperationMethod<
   input: CreateClusterRequest,
   output: CreateClusterResponse,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateCluster",
 }));
 export type CreateClusterSchedulerConfigError =
   | ConflictException
@@ -36916,6 +39217,7 @@ export const createClusterSchedulerConfig: API.OperationMethod<
   input: CreateClusterSchedulerConfigRequest,
   output: CreateClusterSchedulerConfigResponse,
   errors: [ConflictException, ResourceLimitExceeded],
+  operationName: "CreateClusterSchedulerConfig",
 }));
 export type CreateCodeRepositoryError = CommonErrors;
 /**
@@ -36932,6 +39234,7 @@ export const createCodeRepository: API.OperationMethod<
   input: CreateCodeRepositoryInput,
   output: CreateCodeRepositoryOutput,
   errors: [],
+  operationName: "CreateCodeRepository",
 }));
 export type CreateCompilationJobError =
   | ResourceInUse
@@ -36965,6 +39268,7 @@ export const createCompilationJob: API.OperationMethod<
   input: CreateCompilationJobRequest,
   output: CreateCompilationJobResponse,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateCompilationJob",
 }));
 export type CreateComputeQuotaError =
   | ConflictException
@@ -36982,6 +39286,7 @@ export const createComputeQuota: API.OperationMethod<
   input: CreateComputeQuotaRequest,
   output: CreateComputeQuotaResponse,
   errors: [ConflictException, ResourceLimitExceeded],
+  operationName: "CreateComputeQuota",
 }));
 export type CreateContextError = ResourceLimitExceeded | CommonErrors;
 /**
@@ -36996,6 +39301,7 @@ export const createContext: API.OperationMethod<
   input: CreateContextRequest,
   output: CreateContextResponse,
   errors: [ResourceLimitExceeded],
+  operationName: "CreateContext",
 }));
 export type CreateDataQualityJobDefinitionError =
   | ResourceInUse
@@ -37013,6 +39319,7 @@ export const createDataQualityJobDefinition: API.OperationMethod<
   input: CreateDataQualityJobDefinitionRequest,
   output: CreateDataQualityJobDefinitionResponse,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateDataQualityJobDefinition",
 }));
 export type CreateDeviceFleetError =
   | ResourceInUse
@@ -37030,6 +39337,7 @@ export const createDeviceFleet: API.OperationMethod<
   input: CreateDeviceFleetRequest,
   output: CreateDeviceFleetResponse,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateDeviceFleet",
 }));
 export type CreateDomainError =
   | ResourceInUse
@@ -37067,6 +39375,7 @@ export const createDomain: API.OperationMethod<
   input: CreateDomainRequest,
   output: CreateDomainResponse,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateDomain",
 }));
 export type CreateEdgeDeploymentPlanError =
   | ResourceLimitExceeded
@@ -37083,6 +39392,7 @@ export const createEdgeDeploymentPlan: API.OperationMethod<
   input: CreateEdgeDeploymentPlanRequest,
   output: CreateEdgeDeploymentPlanResponse,
   errors: [ResourceLimitExceeded],
+  operationName: "CreateEdgeDeploymentPlan",
 }));
 export type CreateEdgeDeploymentStageError =
   | ResourceLimitExceeded
@@ -37099,6 +39409,7 @@ export const createEdgeDeploymentStage: API.OperationMethod<
   input: CreateEdgeDeploymentStageRequest,
   output: CreateEdgeDeploymentStageResponse,
   errors: [ResourceLimitExceeded],
+  operationName: "CreateEdgeDeploymentStage",
 }));
 export type CreateEdgePackagingJobError = ResourceLimitExceeded | CommonErrors;
 /**
@@ -37113,6 +39424,7 @@ export const createEdgePackagingJob: API.OperationMethod<
   input: CreateEdgePackagingJobRequest,
   output: CreateEdgePackagingJobResponse,
   errors: [ResourceLimitExceeded],
+  operationName: "CreateEdgePackagingJob",
 }));
 export type CreateEndpointError = ResourceLimitExceeded | CommonErrors;
 /**
@@ -37159,6 +39471,7 @@ export const createEndpoint: API.OperationMethod<
   input: CreateEndpointInput,
   output: CreateEndpointOutput,
   errors: [ResourceLimitExceeded],
+  operationName: "CreateEndpoint",
 }));
 export type CreateEndpointConfigError = ResourceLimitExceeded | CommonErrors;
 /**
@@ -37181,6 +39494,7 @@ export const createEndpointConfig: API.OperationMethod<
   input: CreateEndpointConfigInput,
   output: CreateEndpointConfigOutput,
   errors: [ResourceLimitExceeded],
+  operationName: "CreateEndpointConfig",
 }));
 export type CreateExperimentError = ResourceLimitExceeded | CommonErrors;
 /**
@@ -37207,6 +39521,7 @@ export const createExperiment: API.OperationMethod<
   input: CreateExperimentRequest,
   output: CreateExperimentResponse,
   errors: [ResourceLimitExceeded],
+  operationName: "CreateExperiment",
 }));
 export type CreateFeatureGroupError =
   | ResourceInUse
@@ -37230,6 +39545,7 @@ export const createFeatureGroup: API.OperationMethod<
   input: CreateFeatureGroupRequest,
   output: CreateFeatureGroupResponse,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateFeatureGroup",
 }));
 export type CreateFlowDefinitionError =
   | ResourceInUse
@@ -37247,6 +39563,7 @@ export const createFlowDefinition: API.OperationMethod<
   input: CreateFlowDefinitionRequest,
   output: CreateFlowDefinitionResponse,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateFlowDefinition",
 }));
 export type CreateHubError =
   | ResourceInUse
@@ -37264,6 +39581,7 @@ export const createHub: API.OperationMethod<
   input: CreateHubRequest,
   output: CreateHubResponse,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateHub",
 }));
 export type CreateHubContentPresignedUrlsError = CommonErrors;
 /**
@@ -37293,6 +39611,7 @@ export const createHubContentPresignedUrls: API.OperationMethod<
   input: CreateHubContentPresignedUrlsRequest,
   output: CreateHubContentPresignedUrlsResponse,
   errors: [],
+  operationName: "CreateHubContentPresignedUrls",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -37317,6 +39636,7 @@ export const createHubContentReference: API.OperationMethod<
   input: CreateHubContentReferenceRequest,
   output: CreateHubContentReferenceResponse,
   errors: [ResourceInUse, ResourceLimitExceeded, ResourceNotFound],
+  operationName: "CreateHubContentReference",
 }));
 export type CreateHumanTaskUiError =
   | ResourceInUse
@@ -37334,6 +39654,7 @@ export const createHumanTaskUi: API.OperationMethod<
   input: CreateHumanTaskUiRequest,
   output: CreateHumanTaskUiResponse,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateHumanTaskUi",
 }));
 export type CreateHyperParameterTuningJobError =
   | ResourceInUse
@@ -37355,6 +39676,7 @@ export const createHyperParameterTuningJob: API.OperationMethod<
   input: CreateHyperParameterTuningJobRequest,
   output: CreateHyperParameterTuningJobResponse,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateHyperParameterTuningJob",
 }));
 export type CreateImageError =
   | ResourceInUse
@@ -37372,6 +39694,7 @@ export const createImage: API.OperationMethod<
   input: CreateImageRequest,
   output: CreateImageResponse,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateImage",
 }));
 export type CreateImageVersionError =
   | ResourceInUse
@@ -37390,6 +39713,7 @@ export const createImageVersion: API.OperationMethod<
   input: CreateImageVersionRequest,
   output: CreateImageVersionResponse,
   errors: [ResourceInUse, ResourceLimitExceeded, ResourceNotFound],
+  operationName: "CreateImageVersion",
 }));
 export type CreateInferenceComponentError =
   | ResourceLimitExceeded
@@ -37406,6 +39730,7 @@ export const createInferenceComponent: API.OperationMethod<
   input: CreateInferenceComponentInput,
   output: CreateInferenceComponentOutput,
   errors: [ResourceLimitExceeded],
+  operationName: "CreateInferenceComponent",
 }));
 export type CreateInferenceExperimentError =
   | ResourceInUse
@@ -37429,6 +39754,7 @@ export const createInferenceExperiment: API.OperationMethod<
   input: CreateInferenceExperimentRequest,
   output: CreateInferenceExperimentResponse,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateInferenceExperiment",
 }));
 export type CreateInferenceRecommendationsJobError =
   | ResourceInUse
@@ -37446,6 +39772,44 @@ export const createInferenceRecommendationsJob: API.OperationMethod<
   input: CreateInferenceRecommendationsJobRequest,
   output: CreateInferenceRecommendationsJobResponse,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateInferenceRecommendationsJob",
+}));
+export type CreateJobError =
+  | ResourceInUse
+  | ResourceLimitExceeded
+  | ResourceNotFound
+  | CommonErrors;
+/**
+ * Creates a model customization job in Amazon SageMaker. A job runs a workload based on the job category and configuration you provide. You specify the job category, a schema-versioned configuration document, and an IAM role that grants Amazon SageMaker permission to access resources on your behalf.
+ *
+ * Use the `AgentRFT` category to fine-tune a model using multi-turn reinforcement learning with reward signals. Use the `AgentRFTEvaluation` category to evaluate a fine-tuned or base model by running multi-turn rollouts against a held-out prompt dataset and computing metrics such as pass@k and mean reward.
+ *
+ * Before creating a job, call `ListJobSchemaVersions` and `DescribeJobSchemaVersion` to retrieve the configuration schema for your job category. The `JobConfigDocument` must conform to the schema specified by `JobConfigSchemaVersion`.
+ *
+ * The following operations are related to `CreateJob`:
+ *
+ * - `DescribeJob`
+ *
+ * - `ListJobs`
+ *
+ * - `StopJob`
+ *
+ * - `DeleteJob`
+ *
+ * - `ListJobSchemaVersions`
+ *
+ * - `DescribeJobSchemaVersion`
+ */
+export const createJob: API.OperationMethod<
+  CreateJobRequest,
+  CreateJobResponse,
+  CreateJobError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: CreateJobRequest,
+  output: CreateJobResponse,
+  errors: [ResourceInUse, ResourceLimitExceeded, ResourceNotFound],
+  operationName: "CreateJob",
 }));
 export type CreateLabelingJobError =
   | ResourceInUse
@@ -37479,6 +39843,7 @@ export const createLabelingJob: API.OperationMethod<
   input: CreateLabelingJobRequest,
   output: CreateLabelingJobResponse,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateLabelingJob",
 }));
 export type CreateMlflowAppError = ResourceLimitExceeded | CommonErrors;
 /**
@@ -37493,6 +39858,7 @@ export const createMlflowApp: API.OperationMethod<
   input: CreateMlflowAppRequest,
   output: CreateMlflowAppResponse,
   errors: [ResourceLimitExceeded],
+  operationName: "CreateMlflowApp",
 }));
 export type CreateMlflowTrackingServerError =
   | ResourceLimitExceeded
@@ -37509,6 +39875,7 @@ export const createMlflowTrackingServer: API.OperationMethod<
   input: CreateMlflowTrackingServerRequest,
   output: CreateMlflowTrackingServerResponse,
   errors: [ResourceLimitExceeded],
+  operationName: "CreateMlflowTrackingServer",
 }));
 export type CreateModelError = ResourceLimitExceeded | CommonErrors;
 /**
@@ -37531,6 +39898,7 @@ export const createModel: API.OperationMethod<
   input: CreateModelInput,
   output: CreateModelOutput,
   errors: [ResourceLimitExceeded],
+  operationName: "CreateModel",
 }));
 export type CreateModelBiasJobDefinitionError =
   | ResourceInUse
@@ -37548,6 +39916,7 @@ export const createModelBiasJobDefinition: API.OperationMethod<
   input: CreateModelBiasJobDefinitionRequest,
   output: CreateModelBiasJobDefinitionResponse,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateModelBiasJobDefinition",
 }));
 export type CreateModelCardError =
   | ConflictException
@@ -37567,6 +39936,7 @@ export const createModelCard: API.OperationMethod<
   input: CreateModelCardRequest,
   output: CreateModelCardResponse,
   errors: [ConflictException, ResourceLimitExceeded],
+  operationName: "CreateModelCard",
 }));
 export type CreateModelCardExportJobError =
   | ConflictException
@@ -37585,6 +39955,7 @@ export const createModelCardExportJob: API.OperationMethod<
   input: CreateModelCardExportJobRequest,
   output: CreateModelCardExportJobResponse,
   errors: [ConflictException, ResourceLimitExceeded, ResourceNotFound],
+  operationName: "CreateModelCardExportJob",
 }));
 export type CreateModelExplainabilityJobDefinitionError =
   | ResourceInUse
@@ -37602,6 +39973,7 @@ export const createModelExplainabilityJobDefinition: API.OperationMethod<
   input: CreateModelExplainabilityJobDefinitionRequest,
   output: CreateModelExplainabilityJobDefinitionResponse,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateModelExplainabilityJobDefinition",
 }));
 export type CreateModelPackageError =
   | ConflictException
@@ -37627,6 +39999,7 @@ export const createModelPackage: API.OperationMethod<
   input: CreateModelPackageInput,
   output: CreateModelPackageOutput,
   errors: [ConflictException, ResourceLimitExceeded],
+  operationName: "CreateModelPackage",
 }));
 export type CreateModelPackageGroupError = ResourceLimitExceeded | CommonErrors;
 /**
@@ -37641,6 +40014,7 @@ export const createModelPackageGroup: API.OperationMethod<
   input: CreateModelPackageGroupInput,
   output: CreateModelPackageGroupOutput,
   errors: [ResourceLimitExceeded],
+  operationName: "CreateModelPackageGroup",
 }));
 export type CreateModelQualityJobDefinitionError =
   | ResourceInUse
@@ -37658,6 +40032,7 @@ export const createModelQualityJobDefinition: API.OperationMethod<
   input: CreateModelQualityJobDefinitionRequest,
   output: CreateModelQualityJobDefinitionResponse,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateModelQualityJobDefinition",
 }));
 export type CreateMonitoringScheduleError =
   | ResourceInUse
@@ -37675,6 +40050,7 @@ export const createMonitoringSchedule: API.OperationMethod<
   input: CreateMonitoringScheduleRequest,
   output: CreateMonitoringScheduleResponse,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateMonitoringSchedule",
 }));
 export type CreateNotebookInstanceError = ResourceLimitExceeded | CommonErrors;
 /**
@@ -37707,6 +40083,7 @@ export const createNotebookInstance: API.OperationMethod<
   input: CreateNotebookInstanceInput,
   output: CreateNotebookInstanceOutput,
   errors: [ResourceLimitExceeded],
+  operationName: "CreateNotebookInstance",
 }));
 export type CreateNotebookInstanceLifecycleConfigError =
   | ResourceLimitExceeded
@@ -37735,6 +40112,7 @@ export const createNotebookInstanceLifecycleConfig: API.OperationMethod<
   input: CreateNotebookInstanceLifecycleConfigInput,
   output: CreateNotebookInstanceLifecycleConfigOutput,
   errors: [ResourceLimitExceeded],
+  operationName: "CreateNotebookInstanceLifecycleConfig",
 }));
 export type CreateOptimizationJobError =
   | ResourceInUse
@@ -37754,6 +40132,7 @@ export const createOptimizationJob: API.OperationMethod<
   input: CreateOptimizationJobRequest,
   output: CreateOptimizationJobResponse,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateOptimizationJob",
 }));
 export type CreatePartnerAppError =
   | ConflictException
@@ -37771,6 +40150,7 @@ export const createPartnerApp: API.OperationMethod<
   input: CreatePartnerAppRequest,
   output: CreatePartnerAppResponse,
   errors: [ConflictException, ResourceLimitExceeded],
+  operationName: "CreatePartnerApp",
 }));
 export type CreatePartnerAppPresignedUrlError = ResourceNotFound | CommonErrors;
 /**
@@ -37785,6 +40165,7 @@ export const createPartnerAppPresignedUrl: API.OperationMethod<
   input: CreatePartnerAppPresignedUrlRequest,
   output: CreatePartnerAppPresignedUrlResponse,
   errors: [ResourceNotFound],
+  operationName: "CreatePartnerAppPresignedUrl",
 }));
 export type CreatePipelineError =
   | ConflictException
@@ -37803,6 +40184,7 @@ export const createPipeline: API.OperationMethod<
   input: CreatePipelineRequest,
   output: CreatePipelineResponse,
   errors: [ConflictException, ResourceLimitExceeded, ResourceNotFound],
+  operationName: "CreatePipeline",
 }));
 export type CreatePresignedDomainUrlError = ResourceNotFound | CommonErrors;
 /**
@@ -37825,6 +40207,7 @@ export const createPresignedDomainUrl: API.OperationMethod<
   input: CreatePresignedDomainUrlRequest,
   output: CreatePresignedDomainUrlResponse,
   errors: [ResourceNotFound],
+  operationName: "CreatePresignedDomainUrl",
 }));
 export type CreatePresignedMlflowAppUrlError = ResourceNotFound | CommonErrors;
 /**
@@ -37839,6 +40222,7 @@ export const createPresignedMlflowAppUrl: API.OperationMethod<
   input: CreatePresignedMlflowAppUrlRequest,
   output: CreatePresignedMlflowAppUrlResponse,
   errors: [ResourceNotFound],
+  operationName: "CreatePresignedMlflowAppUrl",
 }));
 export type CreatePresignedMlflowTrackingServerUrlError =
   | ResourceNotFound
@@ -37855,6 +40239,7 @@ export const createPresignedMlflowTrackingServerUrl: API.OperationMethod<
   input: CreatePresignedMlflowTrackingServerUrlRequest,
   output: CreatePresignedMlflowTrackingServerUrlResponse,
   errors: [ResourceNotFound],
+  operationName: "CreatePresignedMlflowTrackingServerUrl",
 }));
 export type CreatePresignedNotebookInstanceUrlError = CommonErrors;
 /**
@@ -37875,6 +40260,7 @@ export const createPresignedNotebookInstanceUrl: API.OperationMethod<
   input: CreatePresignedNotebookInstanceUrlInput,
   output: CreatePresignedNotebookInstanceUrlOutput,
   errors: [],
+  operationName: "CreatePresignedNotebookInstanceUrl",
 }));
 export type CreateProcessingJobError =
   | ResourceInUse
@@ -37893,6 +40279,7 @@ export const createProcessingJob: API.OperationMethod<
   input: CreateProcessingJobRequest,
   output: CreateProcessingJobResponse,
   errors: [ResourceInUse, ResourceLimitExceeded, ResourceNotFound],
+  operationName: "CreateProcessingJob",
 }));
 export type CreateProjectError = ResourceLimitExceeded | CommonErrors;
 /**
@@ -37907,6 +40294,7 @@ export const createProject: API.OperationMethod<
   input: CreateProjectInput,
   output: CreateProjectOutput,
   errors: [ResourceLimitExceeded],
+  operationName: "CreateProject",
 }));
 export type CreateSpaceError =
   | ResourceInUse
@@ -37924,6 +40312,7 @@ export const createSpace: API.OperationMethod<
   input: CreateSpaceRequest,
   output: CreateSpaceResponse,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateSpace",
 }));
 export type CreateStudioLifecycleConfigError = ResourceInUse | CommonErrors;
 /**
@@ -37938,6 +40327,7 @@ export const createStudioLifecycleConfig: API.OperationMethod<
   input: CreateStudioLifecycleConfigRequest,
   output: CreateStudioLifecycleConfigResponse,
   errors: [ResourceInUse],
+  operationName: "CreateStudioLifecycleConfig",
 }));
 export type CreateTrainingJobError =
   | ResourceInUse
@@ -37986,6 +40376,7 @@ export const createTrainingJob: API.OperationMethod<
   input: CreateTrainingJobRequest,
   output: CreateTrainingJobResponse,
   errors: [ResourceInUse, ResourceLimitExceeded, ResourceNotFound],
+  operationName: "CreateTrainingJob",
 }));
 export type CreateTrainingPlanError =
   | ResourceInUse
@@ -38034,6 +40425,7 @@ export const createTrainingPlan: API.OperationMethod<
   input: CreateTrainingPlanRequest,
   output: CreateTrainingPlanResponse,
   errors: [ResourceInUse, ResourceLimitExceeded, ResourceNotFound],
+  operationName: "CreateTrainingPlan",
 }));
 export type CreateTransformJobError =
   | ResourceInUse
@@ -38068,6 +40460,7 @@ export const createTransformJob: API.OperationMethod<
   input: CreateTransformJobRequest,
   output: CreateTransformJobResponse,
   errors: [ResourceInUse, ResourceLimitExceeded, ResourceNotFound],
+  operationName: "CreateTransformJob",
 }));
 export type CreateTrialError =
   | ResourceLimitExceeded
@@ -38091,6 +40484,7 @@ export const createTrial: API.OperationMethod<
   input: CreateTrialRequest,
   output: CreateTrialResponse,
   errors: [ResourceLimitExceeded, ResourceNotFound],
+  operationName: "CreateTrial",
 }));
 export type CreateTrialComponentError = ResourceLimitExceeded | CommonErrors;
 /**
@@ -38111,6 +40505,7 @@ export const createTrialComponent: API.OperationMethod<
   input: CreateTrialComponentRequest,
   output: CreateTrialComponentResponse,
   errors: [ResourceLimitExceeded],
+  operationName: "CreateTrialComponent",
 }));
 export type CreateUserProfileError =
   | ResourceInUse
@@ -38128,6 +40523,7 @@ export const createUserProfile: API.OperationMethod<
   input: CreateUserProfileRequest,
   output: CreateUserProfileResponse,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateUserProfile",
 }));
 export type CreateWorkforceError = CommonErrors;
 /**
@@ -38148,6 +40544,7 @@ export const createWorkforce: API.OperationMethod<
   input: CreateWorkforceRequest,
   output: CreateWorkforceResponse,
   errors: [],
+  operationName: "CreateWorkforce",
 }));
 export type CreateWorkteamError =
   | ResourceInUse
@@ -38167,6 +40564,7 @@ export const createWorkteam: API.OperationMethod<
   input: CreateWorkteamRequest,
   output: CreateWorkteamResponse,
   errors: [ResourceInUse, ResourceLimitExceeded],
+  operationName: "CreateWorkteam",
 }));
 export type DeleteActionError = ResourceNotFound | CommonErrors;
 /**
@@ -38181,6 +40579,55 @@ export const deleteAction: API.OperationMethod<
   input: DeleteActionRequest,
   output: DeleteActionResponse,
   errors: [ResourceNotFound],
+  operationName: "DeleteAction",
+}));
+export type DeleteAIBenchmarkJobError = ResourceNotFound | CommonErrors;
+/**
+ * Deletes the specified AI benchmark job.
+ */
+export const deleteAIBenchmarkJob: API.OperationMethod<
+  DeleteAIBenchmarkJobRequest,
+  DeleteAIBenchmarkJobResponse,
+  DeleteAIBenchmarkJobError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: DeleteAIBenchmarkJobRequest,
+  output: DeleteAIBenchmarkJobResponse,
+  errors: [ResourceNotFound],
+  operationName: "DeleteAIBenchmarkJob",
+}));
+export type DeleteAIRecommendationJobError = ResourceNotFound | CommonErrors;
+/**
+ * Deletes the specified AI recommendation job.
+ */
+export const deleteAIRecommendationJob: API.OperationMethod<
+  DeleteAIRecommendationJobRequest,
+  DeleteAIRecommendationJobResponse,
+  DeleteAIRecommendationJobError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: DeleteAIRecommendationJobRequest,
+  output: DeleteAIRecommendationJobResponse,
+  errors: [ResourceNotFound],
+  operationName: "DeleteAIRecommendationJob",
+}));
+export type DeleteAIWorkloadConfigError =
+  | ResourceInUse
+  | ResourceNotFound
+  | CommonErrors;
+/**
+ * Deletes the specified AI workload configuration. You cannot delete a configuration that is referenced by an active benchmark job.
+ */
+export const deleteAIWorkloadConfig: API.OperationMethod<
+  DeleteAIWorkloadConfigRequest,
+  DeleteAIWorkloadConfigResponse,
+  DeleteAIWorkloadConfigError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: DeleteAIWorkloadConfigRequest,
+  output: DeleteAIWorkloadConfigResponse,
+  errors: [ResourceInUse, ResourceNotFound],
+  operationName: "DeleteAIWorkloadConfig",
 }));
 export type DeleteAlgorithmError = ConflictException | CommonErrors;
 /**
@@ -38195,6 +40642,7 @@ export const deleteAlgorithm: API.OperationMethod<
   input: DeleteAlgorithmInput,
   output: DeleteAlgorithmResponse,
   errors: [ConflictException],
+  operationName: "DeleteAlgorithm",
 }));
 export type DeleteAppError = ResourceInUse | ResourceNotFound | CommonErrors;
 /**
@@ -38209,6 +40657,7 @@ export const deleteApp: API.OperationMethod<
   input: DeleteAppRequest,
   output: DeleteAppResponse,
   errors: [ResourceInUse, ResourceNotFound],
+  operationName: "DeleteApp",
 }));
 export type DeleteAppImageConfigError = ResourceNotFound | CommonErrors;
 /**
@@ -38223,6 +40672,7 @@ export const deleteAppImageConfig: API.OperationMethod<
   input: DeleteAppImageConfigRequest,
   output: DeleteAppImageConfigResponse,
   errors: [ResourceNotFound],
+  operationName: "DeleteAppImageConfig",
 }));
 export type DeleteArtifactError = ResourceNotFound | CommonErrors;
 /**
@@ -38237,6 +40687,7 @@ export const deleteArtifact: API.OperationMethod<
   input: DeleteArtifactRequest,
   output: DeleteArtifactResponse,
   errors: [ResourceNotFound],
+  operationName: "DeleteArtifact",
 }));
 export type DeleteAssociationError = ResourceNotFound | CommonErrors;
 /**
@@ -38251,6 +40702,7 @@ export const deleteAssociation: API.OperationMethod<
   input: DeleteAssociationRequest,
   output: DeleteAssociationResponse,
   errors: [ResourceNotFound],
+  operationName: "DeleteAssociation",
 }));
 export type DeleteClusterError =
   | ConflictException
@@ -38268,6 +40720,7 @@ export const deleteCluster: API.OperationMethod<
   input: DeleteClusterRequest,
   output: DeleteClusterResponse,
   errors: [ConflictException, ResourceNotFound],
+  operationName: "DeleteCluster",
 }));
 export type DeleteClusterSchedulerConfigError = ResourceNotFound | CommonErrors;
 /**
@@ -38282,6 +40735,7 @@ export const deleteClusterSchedulerConfig: API.OperationMethod<
   input: DeleteClusterSchedulerConfigRequest,
   output: DeleteClusterSchedulerConfigResponse,
   errors: [ResourceNotFound],
+  operationName: "DeleteClusterSchedulerConfig",
 }));
 export type DeleteCodeRepositoryError = CommonErrors;
 /**
@@ -38296,6 +40750,7 @@ export const deleteCodeRepository: API.OperationMethod<
   input: DeleteCodeRepositoryInput,
   output: DeleteCodeRepositoryResponse,
   errors: [],
+  operationName: "DeleteCodeRepository",
 }));
 export type DeleteCompilationJobError = ResourceNotFound | CommonErrors;
 /**
@@ -38312,6 +40767,7 @@ export const deleteCompilationJob: API.OperationMethod<
   input: DeleteCompilationJobRequest,
   output: DeleteCompilationJobResponse,
   errors: [ResourceNotFound],
+  operationName: "DeleteCompilationJob",
 }));
 export type DeleteComputeQuotaError = ResourceNotFound | CommonErrors;
 /**
@@ -38326,6 +40782,7 @@ export const deleteComputeQuota: API.OperationMethod<
   input: DeleteComputeQuotaRequest,
   output: DeleteComputeQuotaResponse,
   errors: [ResourceNotFound],
+  operationName: "DeleteComputeQuota",
 }));
 export type DeleteContextError = ResourceNotFound | CommonErrors;
 /**
@@ -38340,6 +40797,7 @@ export const deleteContext: API.OperationMethod<
   input: DeleteContextRequest,
   output: DeleteContextResponse,
   errors: [ResourceNotFound],
+  operationName: "DeleteContext",
 }));
 export type DeleteDataQualityJobDefinitionError =
   | ResourceNotFound
@@ -38356,6 +40814,7 @@ export const deleteDataQualityJobDefinition: API.OperationMethod<
   input: DeleteDataQualityJobDefinitionRequest,
   output: DeleteDataQualityJobDefinitionResponse,
   errors: [ResourceNotFound],
+  operationName: "DeleteDataQualityJobDefinition",
 }));
 export type DeleteDeviceFleetError = ResourceInUse | CommonErrors;
 /**
@@ -38370,6 +40829,7 @@ export const deleteDeviceFleet: API.OperationMethod<
   input: DeleteDeviceFleetRequest,
   output: DeleteDeviceFleetResponse,
   errors: [ResourceInUse],
+  operationName: "DeleteDeviceFleet",
 }));
 export type DeleteDomainError = ResourceInUse | ResourceNotFound | CommonErrors;
 /**
@@ -38384,6 +40844,7 @@ export const deleteDomain: API.OperationMethod<
   input: DeleteDomainRequest,
   output: DeleteDomainResponse,
   errors: [ResourceInUse, ResourceNotFound],
+  operationName: "DeleteDomain",
 }));
 export type DeleteEdgeDeploymentPlanError = ResourceInUse | CommonErrors;
 /**
@@ -38398,6 +40859,7 @@ export const deleteEdgeDeploymentPlan: API.OperationMethod<
   input: DeleteEdgeDeploymentPlanRequest,
   output: DeleteEdgeDeploymentPlanResponse,
   errors: [ResourceInUse],
+  operationName: "DeleteEdgeDeploymentPlan",
 }));
 export type DeleteEdgeDeploymentStageError = ResourceInUse | CommonErrors;
 /**
@@ -38412,6 +40874,7 @@ export const deleteEdgeDeploymentStage: API.OperationMethod<
   input: DeleteEdgeDeploymentStageRequest,
   output: DeleteEdgeDeploymentStageResponse,
   errors: [ResourceInUse],
+  operationName: "DeleteEdgeDeploymentStage",
 }));
 export type DeleteEndpointError = CommonErrors;
 /**
@@ -38430,6 +40893,7 @@ export const deleteEndpoint: API.OperationMethod<
   input: DeleteEndpointInput,
   output: DeleteEndpointResponse,
   errors: [],
+  operationName: "DeleteEndpoint",
 }));
 export type DeleteEndpointConfigError = CommonErrors;
 /**
@@ -38446,6 +40910,7 @@ export const deleteEndpointConfig: API.OperationMethod<
   input: DeleteEndpointConfigInput,
   output: DeleteEndpointConfigResponse,
   errors: [],
+  operationName: "DeleteEndpointConfig",
 }));
 export type DeleteExperimentError = ResourceNotFound | CommonErrors;
 /**
@@ -38460,6 +40925,7 @@ export const deleteExperiment: API.OperationMethod<
   input: DeleteExperimentRequest,
   output: DeleteExperimentResponse,
   errors: [ResourceNotFound],
+  operationName: "DeleteExperiment",
 }));
 export type DeleteFeatureGroupError = ResourceNotFound | CommonErrors;
 /**
@@ -38478,6 +40944,7 @@ export const deleteFeatureGroup: API.OperationMethod<
   input: DeleteFeatureGroupRequest,
   output: DeleteFeatureGroupResponse,
   errors: [ResourceNotFound],
+  operationName: "DeleteFeatureGroup",
 }));
 export type DeleteFlowDefinitionError =
   | ResourceInUse
@@ -38495,6 +40962,7 @@ export const deleteFlowDefinition: API.OperationMethod<
   input: DeleteFlowDefinitionRequest,
   output: DeleteFlowDefinitionResponse,
   errors: [ResourceInUse, ResourceNotFound],
+  operationName: "DeleteFlowDefinition",
 }));
 export type DeleteHubError = ResourceInUse | ResourceNotFound | CommonErrors;
 /**
@@ -38509,6 +40977,7 @@ export const deleteHub: API.OperationMethod<
   input: DeleteHubRequest,
   output: DeleteHubResponse,
   errors: [ResourceInUse, ResourceNotFound],
+  operationName: "DeleteHub",
 }));
 export type DeleteHubContentError =
   | ResourceInUse
@@ -38526,6 +40995,7 @@ export const deleteHubContent: API.OperationMethod<
   input: DeleteHubContentRequest,
   output: DeleteHubContentResponse,
   errors: [ResourceInUse, ResourceNotFound],
+  operationName: "DeleteHubContent",
 }));
 export type DeleteHubContentReferenceError = ResourceNotFound | CommonErrors;
 /**
@@ -38540,6 +41010,7 @@ export const deleteHubContentReference: API.OperationMethod<
   input: DeleteHubContentReferenceRequest,
   output: DeleteHubContentReferenceResponse,
   errors: [ResourceNotFound],
+  operationName: "DeleteHubContentReference",
 }));
 export type DeleteHumanTaskUiError = ResourceNotFound | CommonErrors;
 /**
@@ -38556,6 +41027,7 @@ export const deleteHumanTaskUi: API.OperationMethod<
   input: DeleteHumanTaskUiRequest,
   output: DeleteHumanTaskUiResponse,
   errors: [ResourceNotFound],
+  operationName: "DeleteHumanTaskUi",
 }));
 export type DeleteHyperParameterTuningJobError = CommonErrors;
 /**
@@ -38570,6 +41042,7 @@ export const deleteHyperParameterTuningJob: API.OperationMethod<
   input: DeleteHyperParameterTuningJobRequest,
   output: DeleteHyperParameterTuningJobResponse,
   errors: [],
+  operationName: "DeleteHyperParameterTuningJob",
 }));
 export type DeleteImageError = ResourceInUse | ResourceNotFound | CommonErrors;
 /**
@@ -38584,6 +41057,7 @@ export const deleteImage: API.OperationMethod<
   input: DeleteImageRequest,
   output: DeleteImageResponse,
   errors: [ResourceInUse, ResourceNotFound],
+  operationName: "DeleteImage",
 }));
 export type DeleteImageVersionError =
   | ResourceInUse
@@ -38601,6 +41075,7 @@ export const deleteImageVersion: API.OperationMethod<
   input: DeleteImageVersionRequest,
   output: DeleteImageVersionResponse,
   errors: [ResourceInUse, ResourceNotFound],
+  operationName: "DeleteImageVersion",
 }));
 export type DeleteInferenceComponentError = CommonErrors;
 /**
@@ -38615,6 +41090,7 @@ export const deleteInferenceComponent: API.OperationMethod<
   input: DeleteInferenceComponentInput,
   output: DeleteInferenceComponentResponse,
   errors: [],
+  operationName: "DeleteInferenceComponent",
 }));
 export type DeleteInferenceExperimentError =
   | ConflictException
@@ -38634,6 +41110,30 @@ export const deleteInferenceExperiment: API.OperationMethod<
   input: DeleteInferenceExperimentRequest,
   output: DeleteInferenceExperimentResponse,
   errors: [ConflictException, ResourceNotFound],
+  operationName: "DeleteInferenceExperiment",
+}));
+export type DeleteJobError = ResourceInUse | ResourceNotFound | CommonErrors;
+/**
+ * Deletes a job. This operation is idempotent. If the job is currently running, you must stop it before deleting it by calling `StopJob`.
+ *
+ * The following operations are related to `DeleteJob`:
+ *
+ * - `CreateJob`
+ *
+ * - `StopJob`
+ *
+ * - `DescribeJob`
+ */
+export const deleteJob: API.OperationMethod<
+  DeleteJobRequest,
+  DeleteJobResponse,
+  DeleteJobError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: DeleteJobRequest,
+  output: DeleteJobResponse,
+  errors: [ResourceInUse, ResourceNotFound],
+  operationName: "DeleteJob",
 }));
 export type DeleteMlflowAppError = ResourceNotFound | CommonErrors;
 /**
@@ -38648,6 +41148,7 @@ export const deleteMlflowApp: API.OperationMethod<
   input: DeleteMlflowAppRequest,
   output: DeleteMlflowAppResponse,
   errors: [ResourceNotFound],
+  operationName: "DeleteMlflowApp",
 }));
 export type DeleteMlflowTrackingServerError = ResourceNotFound | CommonErrors;
 /**
@@ -38662,6 +41163,7 @@ export const deleteMlflowTrackingServer: API.OperationMethod<
   input: DeleteMlflowTrackingServerRequest,
   output: DeleteMlflowTrackingServerResponse,
   errors: [ResourceNotFound],
+  operationName: "DeleteMlflowTrackingServer",
 }));
 export type DeleteModelError = CommonErrors;
 /**
@@ -38676,6 +41178,7 @@ export const deleteModel: API.OperationMethod<
   input: DeleteModelInput,
   output: DeleteModelResponse,
   errors: [],
+  operationName: "DeleteModel",
 }));
 export type DeleteModelBiasJobDefinitionError = ResourceNotFound | CommonErrors;
 /**
@@ -38690,6 +41193,7 @@ export const deleteModelBiasJobDefinition: API.OperationMethod<
   input: DeleteModelBiasJobDefinitionRequest,
   output: DeleteModelBiasJobDefinitionResponse,
   errors: [ResourceNotFound],
+  operationName: "DeleteModelBiasJobDefinition",
 }));
 export type DeleteModelCardError =
   | ConflictException
@@ -38707,6 +41211,7 @@ export const deleteModelCard: API.OperationMethod<
   input: DeleteModelCardRequest,
   output: DeleteModelCardResponse,
   errors: [ConflictException, ResourceNotFound],
+  operationName: "DeleteModelCard",
 }));
 export type DeleteModelExplainabilityJobDefinitionError =
   | ResourceNotFound
@@ -38723,6 +41228,7 @@ export const deleteModelExplainabilityJobDefinition: API.OperationMethod<
   input: DeleteModelExplainabilityJobDefinitionRequest,
   output: DeleteModelExplainabilityJobDefinitionResponse,
   errors: [ResourceNotFound],
+  operationName: "DeleteModelExplainabilityJobDefinition",
 }));
 export type DeleteModelPackageError = ConflictException | CommonErrors;
 /**
@@ -38739,6 +41245,7 @@ export const deleteModelPackage: API.OperationMethod<
   input: DeleteModelPackageInput,
   output: DeleteModelPackageResponse,
   errors: [ConflictException],
+  operationName: "DeleteModelPackage",
 }));
 export type DeleteModelPackageGroupError = ConflictException | CommonErrors;
 /**
@@ -38753,6 +41260,7 @@ export const deleteModelPackageGroup: API.OperationMethod<
   input: DeleteModelPackageGroupInput,
   output: DeleteModelPackageGroupResponse,
   errors: [ConflictException],
+  operationName: "DeleteModelPackageGroup",
 }));
 export type DeleteModelPackageGroupPolicyError = CommonErrors;
 /**
@@ -38767,6 +41275,7 @@ export const deleteModelPackageGroupPolicy: API.OperationMethod<
   input: DeleteModelPackageGroupPolicyInput,
   output: DeleteModelPackageGroupPolicyResponse,
   errors: [],
+  operationName: "DeleteModelPackageGroupPolicy",
 }));
 export type DeleteModelQualityJobDefinitionError =
   | ResourceNotFound
@@ -38783,6 +41292,7 @@ export const deleteModelQualityJobDefinition: API.OperationMethod<
   input: DeleteModelQualityJobDefinitionRequest,
   output: DeleteModelQualityJobDefinitionResponse,
   errors: [ResourceNotFound],
+  operationName: "DeleteModelQualityJobDefinition",
 }));
 export type DeleteMonitoringScheduleError = ResourceNotFound | CommonErrors;
 /**
@@ -38797,6 +41307,7 @@ export const deleteMonitoringSchedule: API.OperationMethod<
   input: DeleteMonitoringScheduleRequest,
   output: DeleteMonitoringScheduleResponse,
   errors: [ResourceNotFound],
+  operationName: "DeleteMonitoringSchedule",
 }));
 export type DeleteNotebookInstanceError = CommonErrors;
 /**
@@ -38813,6 +41324,7 @@ export const deleteNotebookInstance: API.OperationMethod<
   input: DeleteNotebookInstanceInput,
   output: DeleteNotebookInstanceResponse,
   errors: [],
+  operationName: "DeleteNotebookInstance",
 }));
 export type DeleteNotebookInstanceLifecycleConfigError = CommonErrors;
 /**
@@ -38827,6 +41339,7 @@ export const deleteNotebookInstanceLifecycleConfig: API.OperationMethod<
   input: DeleteNotebookInstanceLifecycleConfigInput,
   output: DeleteNotebookInstanceLifecycleConfigResponse,
   errors: [],
+  operationName: "DeleteNotebookInstanceLifecycleConfig",
 }));
 export type DeleteOptimizationJobError = ResourceNotFound | CommonErrors;
 /**
@@ -38841,6 +41354,7 @@ export const deleteOptimizationJob: API.OperationMethod<
   input: DeleteOptimizationJobRequest,
   output: DeleteOptimizationJobResponse,
   errors: [ResourceNotFound],
+  operationName: "DeleteOptimizationJob",
 }));
 export type DeletePartnerAppError =
   | ConflictException
@@ -38858,6 +41372,7 @@ export const deletePartnerApp: API.OperationMethod<
   input: DeletePartnerAppRequest,
   output: DeletePartnerAppResponse,
   errors: [ConflictException, ResourceNotFound],
+  operationName: "DeletePartnerApp",
 }));
 export type DeletePipelineError =
   | ConflictException
@@ -38875,6 +41390,7 @@ export const deletePipeline: API.OperationMethod<
   input: DeletePipelineRequest,
   output: DeletePipelineResponse,
   errors: [ConflictException, ResourceNotFound],
+  operationName: "DeletePipeline",
 }));
 export type DeleteProcessingJobError =
   | ResourceInUse
@@ -38892,6 +41408,7 @@ export const deleteProcessingJob: API.OperationMethod<
   input: DeleteProcessingJobRequest,
   output: DeleteProcessingJobResponse,
   errors: [ResourceInUse, ResourceNotFound],
+  operationName: "DeleteProcessingJob",
 }));
 export type DeleteProjectError = ConflictException | CommonErrors;
 /**
@@ -38906,6 +41423,7 @@ export const deleteProject: API.OperationMethod<
   input: DeleteProjectInput,
   output: DeleteProjectResponse,
   errors: [ConflictException],
+  operationName: "DeleteProject",
 }));
 export type DeleteSpaceError = ResourceInUse | ResourceNotFound | CommonErrors;
 /**
@@ -38920,6 +41438,7 @@ export const deleteSpace: API.OperationMethod<
   input: DeleteSpaceRequest,
   output: DeleteSpaceResponse,
   errors: [ResourceInUse, ResourceNotFound],
+  operationName: "DeleteSpace",
 }));
 export type DeleteStudioLifecycleConfigError =
   | ResourceInUse
@@ -38937,6 +41456,7 @@ export const deleteStudioLifecycleConfig: API.OperationMethod<
   input: DeleteStudioLifecycleConfigRequest,
   output: DeleteStudioLifecycleConfigResponse,
   errors: [ResourceInUse, ResourceNotFound],
+  operationName: "DeleteStudioLifecycleConfig",
 }));
 export type DeleteTagsError = CommonErrors;
 /**
@@ -38957,6 +41477,7 @@ export const deleteTags: API.OperationMethod<
   input: DeleteTagsInput,
   output: DeleteTagsOutput,
   errors: [],
+  operationName: "DeleteTags",
 }));
 export type DeleteTrainingJobError =
   | ResourceInUse
@@ -38974,6 +41495,7 @@ export const deleteTrainingJob: API.OperationMethod<
   input: DeleteTrainingJobRequest,
   output: DeleteTrainingJobResponse,
   errors: [ResourceInUse, ResourceNotFound],
+  operationName: "DeleteTrainingJob",
 }));
 export type DeleteTrialError = ResourceNotFound | CommonErrors;
 /**
@@ -38988,6 +41510,7 @@ export const deleteTrial: API.OperationMethod<
   input: DeleteTrialRequest,
   output: DeleteTrialResponse,
   errors: [ResourceNotFound],
+  operationName: "DeleteTrial",
 }));
 export type DeleteTrialComponentError = ResourceNotFound | CommonErrors;
 /**
@@ -39002,6 +41525,7 @@ export const deleteTrialComponent: API.OperationMethod<
   input: DeleteTrialComponentRequest,
   output: DeleteTrialComponentResponse,
   errors: [ResourceNotFound],
+  operationName: "DeleteTrialComponent",
 }));
 export type DeleteUserProfileError =
   | ResourceInUse
@@ -39019,6 +41543,7 @@ export const deleteUserProfile: API.OperationMethod<
   input: DeleteUserProfileRequest,
   output: DeleteUserProfileResponse,
   errors: [ResourceInUse, ResourceNotFound],
+  operationName: "DeleteUserProfile",
 }));
 export type DeleteWorkforceError = CommonErrors;
 /**
@@ -39037,6 +41562,7 @@ export const deleteWorkforce: API.OperationMethod<
   input: DeleteWorkforceRequest,
   output: DeleteWorkforceResponse,
   errors: [],
+  operationName: "DeleteWorkforce",
 }));
 export type DeleteWorkteamError = ResourceLimitExceeded | CommonErrors;
 /**
@@ -39051,6 +41577,7 @@ export const deleteWorkteam: API.OperationMethod<
   input: DeleteWorkteamRequest,
   output: DeleteWorkteamResponse,
   errors: [ResourceLimitExceeded],
+  operationName: "DeleteWorkteam",
 }));
 export type DeregisterDevicesError = CommonErrors;
 /**
@@ -39065,6 +41592,7 @@ export const deregisterDevices: API.OperationMethod<
   input: DeregisterDevicesRequest,
   output: DeregisterDevicesResponse,
   errors: [],
+  operationName: "DeregisterDevices",
 }));
 export type DescribeActionError = ResourceNotFound | CommonErrors;
 /**
@@ -39079,6 +41607,52 @@ export const describeAction: API.OperationMethod<
   input: DescribeActionRequest,
   output: DescribeActionResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeAction",
+}));
+export type DescribeAIBenchmarkJobError = ResourceNotFound | CommonErrors;
+/**
+ * Returns details of an AI benchmark job, including its status, configuration, target endpoint, and timing information.
+ */
+export const describeAIBenchmarkJob: API.OperationMethod<
+  DescribeAIBenchmarkJobRequest,
+  DescribeAIBenchmarkJobResponse,
+  DescribeAIBenchmarkJobError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: DescribeAIBenchmarkJobRequest,
+  output: DescribeAIBenchmarkJobResponse,
+  errors: [ResourceNotFound],
+  operationName: "DescribeAIBenchmarkJob",
+}));
+export type DescribeAIRecommendationJobError = ResourceNotFound | CommonErrors;
+/**
+ * Returns details of an AI recommendation job, including its status, model source, performance targets, optimization recommendations, and deployment configurations.
+ */
+export const describeAIRecommendationJob: API.OperationMethod<
+  DescribeAIRecommendationJobRequest,
+  DescribeAIRecommendationJobResponse,
+  DescribeAIRecommendationJobError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: DescribeAIRecommendationJobRequest,
+  output: DescribeAIRecommendationJobResponse,
+  errors: [ResourceNotFound],
+  operationName: "DescribeAIRecommendationJob",
+}));
+export type DescribeAIWorkloadConfigError = ResourceNotFound | CommonErrors;
+/**
+ * Returns details of an AI workload configuration, including the dataset configuration, benchmark tool settings, tags, and creation time.
+ */
+export const describeAIWorkloadConfig: API.OperationMethod<
+  DescribeAIWorkloadConfigRequest,
+  DescribeAIWorkloadConfigResponse,
+  DescribeAIWorkloadConfigError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: DescribeAIWorkloadConfigRequest,
+  output: DescribeAIWorkloadConfigResponse,
+  errors: [ResourceNotFound],
+  operationName: "DescribeAIWorkloadConfig",
 }));
 export type DescribeAlgorithmError = CommonErrors;
 /**
@@ -39093,6 +41667,7 @@ export const describeAlgorithm: API.OperationMethod<
   input: DescribeAlgorithmInput,
   output: DescribeAlgorithmOutput,
   errors: [],
+  operationName: "DescribeAlgorithm",
 }));
 export type DescribeAppError = ResourceNotFound | CommonErrors;
 /**
@@ -39107,6 +41682,7 @@ export const describeApp: API.OperationMethod<
   input: DescribeAppRequest,
   output: DescribeAppResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeApp",
 }));
 export type DescribeAppImageConfigError = ResourceNotFound | CommonErrors;
 /**
@@ -39121,6 +41697,7 @@ export const describeAppImageConfig: API.OperationMethod<
   input: DescribeAppImageConfigRequest,
   output: DescribeAppImageConfigResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeAppImageConfig",
 }));
 export type DescribeArtifactError = ResourceNotFound | CommonErrors;
 /**
@@ -39135,6 +41712,7 @@ export const describeArtifact: API.OperationMethod<
   input: DescribeArtifactRequest,
   output: DescribeArtifactResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeArtifact",
 }));
 export type DescribeAutoMLJobError = ResourceNotFound | CommonErrors;
 /**
@@ -39151,6 +41729,7 @@ export const describeAutoMLJob: API.OperationMethod<
   input: DescribeAutoMLJobRequest,
   output: DescribeAutoMLJobResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeAutoMLJob",
 }));
 export type DescribeAutoMLJobV2Error = ResourceNotFound | CommonErrors;
 /**
@@ -39165,6 +41744,7 @@ export const describeAutoMLJobV2: API.OperationMethod<
   input: DescribeAutoMLJobV2Request,
   output: DescribeAutoMLJobV2Response,
   errors: [ResourceNotFound],
+  operationName: "DescribeAutoMLJobV2",
 }));
 export type DescribeClusterError = ResourceNotFound | CommonErrors;
 /**
@@ -39179,6 +41759,7 @@ export const describeCluster: API.OperationMethod<
   input: DescribeClusterRequest,
   output: DescribeClusterResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeCluster",
 }));
 export type DescribeClusterEventError = ResourceNotFound | CommonErrors;
 /**
@@ -39193,6 +41774,7 @@ export const describeClusterEvent: API.OperationMethod<
   input: DescribeClusterEventRequest,
   output: DescribeClusterEventResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeClusterEvent",
 }));
 export type DescribeClusterNodeError = ResourceNotFound | CommonErrors;
 /**
@@ -39207,6 +41789,7 @@ export const describeClusterNode: API.OperationMethod<
   input: DescribeClusterNodeRequest,
   output: DescribeClusterNodeResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeClusterNode",
 }));
 export type DescribeClusterSchedulerConfigError =
   | ResourceNotFound
@@ -39223,6 +41806,7 @@ export const describeClusterSchedulerConfig: API.OperationMethod<
   input: DescribeClusterSchedulerConfigRequest,
   output: DescribeClusterSchedulerConfigResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeClusterSchedulerConfig",
 }));
 export type DescribeCodeRepositoryError = CommonErrors;
 /**
@@ -39237,6 +41821,7 @@ export const describeCodeRepository: API.OperationMethod<
   input: DescribeCodeRepositoryInput,
   output: DescribeCodeRepositoryOutput,
   errors: [],
+  operationName: "DescribeCodeRepository",
 }));
 export type DescribeCompilationJobError = ResourceNotFound | CommonErrors;
 /**
@@ -39253,6 +41838,7 @@ export const describeCompilationJob: API.OperationMethod<
   input: DescribeCompilationJobRequest,
   output: DescribeCompilationJobResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeCompilationJob",
 }));
 export type DescribeComputeQuotaError = ResourceNotFound | CommonErrors;
 /**
@@ -39267,6 +41853,7 @@ export const describeComputeQuota: API.OperationMethod<
   input: DescribeComputeQuotaRequest,
   output: DescribeComputeQuotaResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeComputeQuota",
 }));
 export type DescribeContextError = ResourceNotFound | CommonErrors;
 /**
@@ -39281,6 +41868,7 @@ export const describeContext: API.OperationMethod<
   input: DescribeContextRequest,
   output: DescribeContextResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeContext",
 }));
 export type DescribeDataQualityJobDefinitionError =
   | ResourceNotFound
@@ -39297,6 +41885,7 @@ export const describeDataQualityJobDefinition: API.OperationMethod<
   input: DescribeDataQualityJobDefinitionRequest,
   output: DescribeDataQualityJobDefinitionResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeDataQualityJobDefinition",
 }));
 export type DescribeDeviceError = ResourceNotFound | CommonErrors;
 /**
@@ -39311,6 +41900,7 @@ export const describeDevice: API.OperationMethod<
   input: DescribeDeviceRequest,
   output: DescribeDeviceResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeDevice",
 }));
 export type DescribeDeviceFleetError = ResourceNotFound | CommonErrors;
 /**
@@ -39325,6 +41915,7 @@ export const describeDeviceFleet: API.OperationMethod<
   input: DescribeDeviceFleetRequest,
   output: DescribeDeviceFleetResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeDeviceFleet",
 }));
 export type DescribeDomainError = ResourceNotFound | CommonErrors;
 /**
@@ -39339,6 +41930,7 @@ export const describeDomain: API.OperationMethod<
   input: DescribeDomainRequest,
   output: DescribeDomainResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeDomain",
 }));
 export type DescribeEdgeDeploymentPlanError = ResourceNotFound | CommonErrors;
 /**
@@ -39353,6 +41945,7 @@ export const describeEdgeDeploymentPlan: API.OperationMethod<
   input: DescribeEdgeDeploymentPlanRequest,
   output: DescribeEdgeDeploymentPlanResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeEdgeDeploymentPlan",
 }));
 export type DescribeEdgePackagingJobError = ResourceNotFound | CommonErrors;
 /**
@@ -39367,6 +41960,7 @@ export const describeEdgePackagingJob: API.OperationMethod<
   input: DescribeEdgePackagingJobRequest,
   output: DescribeEdgePackagingJobResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeEdgePackagingJob",
 }));
 export type DescribeEndpointError = CommonErrors;
 /**
@@ -39381,6 +41975,7 @@ export const describeEndpoint: API.OperationMethod<
   input: DescribeEndpointInput,
   output: DescribeEndpointOutput,
   errors: [],
+  operationName: "DescribeEndpoint",
 }));
 export type DescribeEndpointConfigError = CommonErrors;
 /**
@@ -39395,6 +41990,7 @@ export const describeEndpointConfig: API.OperationMethod<
   input: DescribeEndpointConfigInput,
   output: DescribeEndpointConfigOutput,
   errors: [],
+  operationName: "DescribeEndpointConfig",
 }));
 export type DescribeExperimentError = ResourceNotFound | CommonErrors;
 /**
@@ -39409,6 +42005,7 @@ export const describeExperiment: API.OperationMethod<
   input: DescribeExperimentRequest,
   output: DescribeExperimentResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeExperiment",
 }));
 export type DescribeFeatureGroupError = ResourceNotFound | CommonErrors;
 /**
@@ -39423,6 +42020,7 @@ export const describeFeatureGroup: API.OperationMethod<
   input: DescribeFeatureGroupRequest,
   output: DescribeFeatureGroupResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeFeatureGroup",
 }));
 export type DescribeFeatureMetadataError = ResourceNotFound | CommonErrors;
 /**
@@ -39437,6 +42035,7 @@ export const describeFeatureMetadata: API.OperationMethod<
   input: DescribeFeatureMetadataRequest,
   output: DescribeFeatureMetadataResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeFeatureMetadata",
 }));
 export type DescribeFlowDefinitionError = ResourceNotFound | CommonErrors;
 /**
@@ -39451,6 +42050,7 @@ export const describeFlowDefinition: API.OperationMethod<
   input: DescribeFlowDefinitionRequest,
   output: DescribeFlowDefinitionResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeFlowDefinition",
 }));
 export type DescribeHubError = ResourceNotFound | CommonErrors;
 /**
@@ -39465,6 +42065,7 @@ export const describeHub: API.OperationMethod<
   input: DescribeHubRequest,
   output: DescribeHubResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeHub",
 }));
 export type DescribeHubContentError = ResourceNotFound | CommonErrors;
 /**
@@ -39479,6 +42080,7 @@ export const describeHubContent: API.OperationMethod<
   input: DescribeHubContentRequest,
   output: DescribeHubContentResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeHubContent",
 }));
 export type DescribeHumanTaskUiError = ResourceNotFound | CommonErrors;
 /**
@@ -39493,6 +42095,7 @@ export const describeHumanTaskUi: API.OperationMethod<
   input: DescribeHumanTaskUiRequest,
   output: DescribeHumanTaskUiResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeHumanTaskUi",
 }));
 export type DescribeHyperParameterTuningJobError =
   | ResourceNotFound
@@ -39509,6 +42112,7 @@ export const describeHyperParameterTuningJob: API.OperationMethod<
   input: DescribeHyperParameterTuningJobRequest,
   output: DescribeHyperParameterTuningJobResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeHyperParameterTuningJob",
 }));
 export type DescribeImageError = ResourceNotFound | CommonErrors;
 /**
@@ -39523,6 +42127,7 @@ export const describeImage: API.OperationMethod<
   input: DescribeImageRequest,
   output: DescribeImageResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeImage",
 }));
 export type DescribeImageVersionError = ResourceNotFound | CommonErrors;
 /**
@@ -39537,6 +42142,7 @@ export const describeImageVersion: API.OperationMethod<
   input: DescribeImageVersionRequest,
   output: DescribeImageVersionResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeImageVersion",
 }));
 export type DescribeInferenceComponentError = CommonErrors;
 /**
@@ -39551,6 +42157,7 @@ export const describeInferenceComponent: API.OperationMethod<
   input: DescribeInferenceComponentInput,
   output: DescribeInferenceComponentOutput,
   errors: [],
+  operationName: "DescribeInferenceComponent",
 }));
 export type DescribeInferenceExperimentError = ResourceNotFound | CommonErrors;
 /**
@@ -39565,6 +42172,7 @@ export const describeInferenceExperiment: API.OperationMethod<
   input: DescribeInferenceExperimentRequest,
   output: DescribeInferenceExperimentResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeInferenceExperiment",
 }));
 export type DescribeInferenceRecommendationsJobError =
   | ResourceNotFound
@@ -39581,6 +42189,53 @@ export const describeInferenceRecommendationsJob: API.OperationMethod<
   input: DescribeInferenceRecommendationsJobRequest,
   output: DescribeInferenceRecommendationsJobResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeInferenceRecommendationsJob",
+}));
+export type DescribeJobError = ResourceNotFound | CommonErrors;
+/**
+ * Returns detailed information about a job, including its current status, secondary status, configuration, and timestamps. Use `SecondaryStatus` for granular progress tracking and `SecondaryStatusTransitions` to see the full history of status changes with timestamps.
+ *
+ * The following operations are related to `DescribeJob`:
+ *
+ * - `CreateJob`
+ *
+ * - `ListJobs`
+ *
+ * - `StopJob`
+ *
+ * - `DeleteJob`
+ */
+export const describeJob: API.OperationMethod<
+  DescribeJobRequest,
+  DescribeJobResponse,
+  DescribeJobError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: DescribeJobRequest,
+  output: DescribeJobResponse,
+  errors: [ResourceNotFound],
+  operationName: "DescribeJob",
+}));
+export type DescribeJobSchemaVersionError = ResourceNotFound | CommonErrors;
+/**
+ * Returns the JSON schema for a specified job category and schema version. Use this schema to validate your `JobConfigDocument` before calling `CreateJob`. If you don't specify a schema version, the latest version is returned. The schema defines required fields, allowed values, and constraints for the job configuration.
+ *
+ * The following operations are related to `DescribeJobSchemaVersion`:
+ *
+ * - `ListJobSchemaVersions`
+ *
+ * - `CreateJob`
+ */
+export const describeJobSchemaVersion: API.OperationMethod<
+  DescribeJobSchemaVersionRequest,
+  DescribeJobSchemaVersionResponse,
+  DescribeJobSchemaVersionError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: DescribeJobSchemaVersionRequest,
+  output: DescribeJobSchemaVersionResponse,
+  errors: [ResourceNotFound],
+  operationName: "DescribeJobSchemaVersion",
 }));
 export type DescribeLabelingJobError = ResourceNotFound | CommonErrors;
 /**
@@ -39595,6 +42250,7 @@ export const describeLabelingJob: API.OperationMethod<
   input: DescribeLabelingJobRequest,
   output: DescribeLabelingJobResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeLabelingJob",
 }));
 export type DescribeLineageGroupError = ResourceNotFound | CommonErrors;
 /**
@@ -39609,6 +42265,7 @@ export const describeLineageGroup: API.OperationMethod<
   input: DescribeLineageGroupRequest,
   output: DescribeLineageGroupResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeLineageGroup",
 }));
 export type DescribeMlflowAppError = ResourceNotFound | CommonErrors;
 /**
@@ -39623,6 +42280,7 @@ export const describeMlflowApp: API.OperationMethod<
   input: DescribeMlflowAppRequest,
   output: DescribeMlflowAppResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeMlflowApp",
 }));
 export type DescribeMlflowTrackingServerError = ResourceNotFound | CommonErrors;
 /**
@@ -39637,6 +42295,7 @@ export const describeMlflowTrackingServer: API.OperationMethod<
   input: DescribeMlflowTrackingServerRequest,
   output: DescribeMlflowTrackingServerResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeMlflowTrackingServer",
 }));
 export type DescribeModelError = CommonErrors;
 /**
@@ -39651,6 +42310,7 @@ export const describeModel: API.OperationMethod<
   input: DescribeModelInput,
   output: DescribeModelOutput,
   errors: [],
+  operationName: "DescribeModel",
 }));
 export type DescribeModelBiasJobDefinitionError =
   | ResourceNotFound
@@ -39667,10 +42327,13 @@ export const describeModelBiasJobDefinition: API.OperationMethod<
   input: DescribeModelBiasJobDefinitionRequest,
   output: DescribeModelBiasJobDefinitionResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeModelBiasJobDefinition",
 }));
 export type DescribeModelCardError = ResourceNotFound | CommonErrors;
 /**
  * Describes the content, creation time, and security configuration of an Amazon SageMaker Model Card.
+ *
+ * To retrieve only metadata about a model card without requiring `kms:Decrypt` permission on the associated customer-managed Amazon Web Services KMS key, set `IncludedData` to `MetadataOnly`. The default is `AllData`, which returns the full model card `Content` and requires `kms:Decrypt` permission when a customer-managed key is configured.
  */
 export const describeModelCard: API.OperationMethod<
   DescribeModelCardRequest,
@@ -39681,6 +42344,7 @@ export const describeModelCard: API.OperationMethod<
   input: DescribeModelCardRequest,
   output: DescribeModelCardResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeModelCard",
 }));
 export type DescribeModelCardExportJobError = ResourceNotFound | CommonErrors;
 /**
@@ -39695,6 +42359,7 @@ export const describeModelCardExportJob: API.OperationMethod<
   input: DescribeModelCardExportJobRequest,
   output: DescribeModelCardExportJobResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeModelCardExportJob",
 }));
 export type DescribeModelExplainabilityJobDefinitionError =
   | ResourceNotFound
@@ -39711,12 +42376,13 @@ export const describeModelExplainabilityJobDefinition: API.OperationMethod<
   input: DescribeModelExplainabilityJobDefinitionRequest,
   output: DescribeModelExplainabilityJobDefinitionResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeModelExplainabilityJobDefinition",
 }));
 export type DescribeModelPackageError = CommonErrors;
 /**
  * Returns a description of the specified model package, which is used to create SageMaker models or list them on Amazon Web Services Marketplace.
  *
- * If you provided a KMS Key ID when you created your model package, you will see the KMS Decrypt API call in your CloudTrail logs when you use this API.
+ * If you provided a KMS Key ID when you created your model package, you will see the KMS Decrypt API call in your CloudTrail logs when you use this API. To call this operation without requiring `kms:Decrypt` permission on the customer-managed key, set `IncludedData` to `MetadataOnly`; the response is returned with the embedded `ModelCard.ModelCardContent` field sanitized.
  *
  * To create models in SageMaker, buyers can subscribe to model packages listed on Amazon Web Services Marketplace.
  */
@@ -39729,6 +42395,7 @@ export const describeModelPackage: API.OperationMethod<
   input: DescribeModelPackageInput,
   output: DescribeModelPackageOutput,
   errors: [],
+  operationName: "DescribeModelPackage",
 }));
 export type DescribeModelPackageGroupError = CommonErrors;
 /**
@@ -39743,6 +42410,7 @@ export const describeModelPackageGroup: API.OperationMethod<
   input: DescribeModelPackageGroupInput,
   output: DescribeModelPackageGroupOutput,
   errors: [],
+  operationName: "DescribeModelPackageGroup",
 }));
 export type DescribeModelQualityJobDefinitionError =
   | ResourceNotFound
@@ -39759,6 +42427,7 @@ export const describeModelQualityJobDefinition: API.OperationMethod<
   input: DescribeModelQualityJobDefinitionRequest,
   output: DescribeModelQualityJobDefinitionResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeModelQualityJobDefinition",
 }));
 export type DescribeMonitoringScheduleError = ResourceNotFound | CommonErrors;
 /**
@@ -39773,6 +42442,7 @@ export const describeMonitoringSchedule: API.OperationMethod<
   input: DescribeMonitoringScheduleRequest,
   output: DescribeMonitoringScheduleResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeMonitoringSchedule",
 }));
 export type DescribeNotebookInstanceError = CommonErrors;
 /**
@@ -39787,6 +42457,7 @@ export const describeNotebookInstance: API.OperationMethod<
   input: DescribeNotebookInstanceInput,
   output: DescribeNotebookInstanceOutput,
   errors: [],
+  operationName: "DescribeNotebookInstance",
 }));
 export type DescribeNotebookInstanceLifecycleConfigError = CommonErrors;
 /**
@@ -39803,6 +42474,7 @@ export const describeNotebookInstanceLifecycleConfig: API.OperationMethod<
   input: DescribeNotebookInstanceLifecycleConfigInput,
   output: DescribeNotebookInstanceLifecycleConfigOutput,
   errors: [],
+  operationName: "DescribeNotebookInstanceLifecycleConfig",
 }));
 export type DescribeOptimizationJobError = ResourceNotFound | CommonErrors;
 /**
@@ -39817,6 +42489,7 @@ export const describeOptimizationJob: API.OperationMethod<
   input: DescribeOptimizationJobRequest,
   output: DescribeOptimizationJobResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeOptimizationJob",
 }));
 export type DescribePartnerAppError = ResourceNotFound | CommonErrors;
 /**
@@ -39831,6 +42504,7 @@ export const describePartnerApp: API.OperationMethod<
   input: DescribePartnerAppRequest,
   output: DescribePartnerAppResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribePartnerApp",
 }));
 export type DescribePipelineError = ResourceNotFound | CommonErrors;
 /**
@@ -39845,6 +42519,7 @@ export const describePipeline: API.OperationMethod<
   input: DescribePipelineRequest,
   output: DescribePipelineResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribePipeline",
 }));
 export type DescribePipelineDefinitionForExecutionError =
   | ResourceNotFound
@@ -39861,6 +42536,7 @@ export const describePipelineDefinitionForExecution: API.OperationMethod<
   input: DescribePipelineDefinitionForExecutionRequest,
   output: DescribePipelineDefinitionForExecutionResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribePipelineDefinitionForExecution",
 }));
 export type DescribePipelineExecutionError = ResourceNotFound | CommonErrors;
 /**
@@ -39875,6 +42551,7 @@ export const describePipelineExecution: API.OperationMethod<
   input: DescribePipelineExecutionRequest,
   output: DescribePipelineExecutionResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribePipelineExecution",
 }));
 export type DescribeProcessingJobError = ResourceNotFound | CommonErrors;
 /**
@@ -39889,6 +42566,7 @@ export const describeProcessingJob: API.OperationMethod<
   input: DescribeProcessingJobRequest,
   output: DescribeProcessingJobResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeProcessingJob",
 }));
 export type DescribeProjectError = CommonErrors;
 /**
@@ -39903,6 +42581,7 @@ export const describeProject: API.OperationMethod<
   input: DescribeProjectInput,
   output: DescribeProjectOutput,
   errors: [],
+  operationName: "DescribeProject",
 }));
 export type DescribeReservedCapacityError = ResourceNotFound | CommonErrors;
 /**
@@ -39917,6 +42596,7 @@ export const describeReservedCapacity: API.OperationMethod<
   input: DescribeReservedCapacityRequest,
   output: DescribeReservedCapacityResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeReservedCapacity",
 }));
 export type DescribeSpaceError = ResourceNotFound | CommonErrors;
 /**
@@ -39931,6 +42611,7 @@ export const describeSpace: API.OperationMethod<
   input: DescribeSpaceRequest,
   output: DescribeSpaceResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeSpace",
 }));
 export type DescribeStudioLifecycleConfigError =
   | ResourceNotFound
@@ -39947,6 +42628,7 @@ export const describeStudioLifecycleConfig: API.OperationMethod<
   input: DescribeStudioLifecycleConfigRequest,
   output: DescribeStudioLifecycleConfigResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeStudioLifecycleConfig",
 }));
 export type DescribeSubscribedWorkteamError = CommonErrors;
 /**
@@ -39961,6 +42643,7 @@ export const describeSubscribedWorkteam: API.OperationMethod<
   input: DescribeSubscribedWorkteamRequest,
   output: DescribeSubscribedWorkteamResponse,
   errors: [],
+  operationName: "DescribeSubscribedWorkteam",
 }));
 export type DescribeTrainingJobError = ResourceNotFound | CommonErrors;
 /**
@@ -39977,6 +42660,7 @@ export const describeTrainingJob: API.OperationMethod<
   input: DescribeTrainingJobRequest,
   output: DescribeTrainingJobResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeTrainingJob",
 }));
 export type DescribeTrainingPlanError = ResourceNotFound | CommonErrors;
 /**
@@ -39991,6 +42675,7 @@ export const describeTrainingPlan: API.OperationMethod<
   input: DescribeTrainingPlanRequest,
   output: DescribeTrainingPlanResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeTrainingPlan",
 }));
 export type DescribeTrainingPlanExtensionHistoryError =
   | ResourceNotFound
@@ -40022,6 +42707,7 @@ export const describeTrainingPlanExtensionHistory: API.OperationMethod<
   input: DescribeTrainingPlanExtensionHistoryRequest,
   output: DescribeTrainingPlanExtensionHistoryResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeTrainingPlanExtensionHistory",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -40042,6 +42728,7 @@ export const describeTransformJob: API.OperationMethod<
   input: DescribeTransformJobRequest,
   output: DescribeTransformJobResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeTransformJob",
 }));
 export type DescribeTrialError = ResourceNotFound | CommonErrors;
 /**
@@ -40056,6 +42743,7 @@ export const describeTrial: API.OperationMethod<
   input: DescribeTrialRequest,
   output: DescribeTrialResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeTrial",
 }));
 export type DescribeTrialComponentError = ResourceNotFound | CommonErrors;
 /**
@@ -40070,6 +42758,7 @@ export const describeTrialComponent: API.OperationMethod<
   input: DescribeTrialComponentRequest,
   output: DescribeTrialComponentResponse,
   errors: [ResourceNotFound],
+  operationName: "DescribeTrialComponent",
 }));
 export type DescribeUserProfileError =
   | ResourceLimitExceeded
@@ -40087,6 +42776,7 @@ export const describeUserProfile: API.OperationMethod<
   input: DescribeUserProfileRequest,
   output: DescribeUserProfileResponse,
   errors: [ResourceLimitExceeded, ResourceNotFound],
+  operationName: "DescribeUserProfile",
 }));
 export type DescribeWorkforceError = CommonErrors;
 /**
@@ -40103,6 +42793,7 @@ export const describeWorkforce: API.OperationMethod<
   input: DescribeWorkforceRequest,
   output: DescribeWorkforceResponse,
   errors: [],
+  operationName: "DescribeWorkforce",
 }));
 export type DescribeWorkteamError = CommonErrors;
 /**
@@ -40117,6 +42808,7 @@ export const describeWorkteam: API.OperationMethod<
   input: DescribeWorkteamRequest,
   output: DescribeWorkteamResponse,
   errors: [],
+  operationName: "DescribeWorkteam",
 }));
 export type DetachClusterNodeVolumeError = ResourceNotFound | CommonErrors;
 /**
@@ -40133,6 +42825,7 @@ export const detachClusterNodeVolume: API.OperationMethod<
   input: DetachClusterNodeVolumeRequest,
   output: DetachClusterNodeVolumeResponse,
   errors: [ResourceNotFound],
+  operationName: "DetachClusterNodeVolume",
 }));
 export type DisableSagemakerServicecatalogPortfolioError = CommonErrors;
 /**
@@ -40147,6 +42840,7 @@ export const disableSagemakerServicecatalogPortfolio: API.OperationMethod<
   input: DisableSagemakerServicecatalogPortfolioInput,
   output: DisableSagemakerServicecatalogPortfolioOutput,
   errors: [],
+  operationName: "DisableSagemakerServicecatalogPortfolio",
 }));
 export type DisassociateTrialComponentError = ResourceNotFound | CommonErrors;
 /**
@@ -40163,6 +42857,7 @@ export const disassociateTrialComponent: API.OperationMethod<
   input: DisassociateTrialComponentRequest,
   output: DisassociateTrialComponentResponse,
   errors: [ResourceNotFound],
+  operationName: "DisassociateTrialComponent",
 }));
 export type EnableSagemakerServicecatalogPortfolioError = CommonErrors;
 /**
@@ -40177,6 +42872,7 @@ export const enableSagemakerServicecatalogPortfolio: API.OperationMethod<
   input: EnableSagemakerServicecatalogPortfolioInput,
   output: EnableSagemakerServicecatalogPortfolioOutput,
   errors: [],
+  operationName: "EnableSagemakerServicecatalogPortfolio",
 }));
 export type ExtendTrainingPlanError = ResourceNotFound | CommonErrors;
 /**
@@ -40195,6 +42891,7 @@ export const extendTrainingPlan: API.OperationMethod<
   input: ExtendTrainingPlanRequest,
   output: ExtendTrainingPlanResponse,
   errors: [ResourceNotFound],
+  operationName: "ExtendTrainingPlan",
 }));
 export type GetDeviceFleetReportError = CommonErrors;
 /**
@@ -40209,6 +42906,7 @@ export const getDeviceFleetReport: API.OperationMethod<
   input: GetDeviceFleetReportRequest,
   output: GetDeviceFleetReportResponse,
   errors: [],
+  operationName: "GetDeviceFleetReport",
 }));
 export type GetLineageGroupPolicyError = ResourceNotFound | CommonErrors;
 /**
@@ -40223,6 +42921,7 @@ export const getLineageGroupPolicy: API.OperationMethod<
   input: GetLineageGroupPolicyRequest,
   output: GetLineageGroupPolicyResponse,
   errors: [ResourceNotFound],
+  operationName: "GetLineageGroupPolicy",
 }));
 export type GetModelPackageGroupPolicyError = CommonErrors;
 /**
@@ -40237,6 +42936,7 @@ export const getModelPackageGroupPolicy: API.OperationMethod<
   input: GetModelPackageGroupPolicyInput,
   output: GetModelPackageGroupPolicyOutput,
   errors: [],
+  operationName: "GetModelPackageGroupPolicy",
 }));
 export type GetSagemakerServicecatalogPortfolioStatusError = CommonErrors;
 /**
@@ -40251,6 +42951,7 @@ export const getSagemakerServicecatalogPortfolioStatus: API.OperationMethod<
   input: GetSagemakerServicecatalogPortfolioStatusInput,
   output: GetSagemakerServicecatalogPortfolioStatusOutput,
   errors: [],
+  operationName: "GetSagemakerServicecatalogPortfolioStatus",
 }));
 export type GetScalingConfigurationRecommendationError =
   | ResourceNotFound
@@ -40267,6 +42968,7 @@ export const getScalingConfigurationRecommendation: API.OperationMethod<
   input: GetScalingConfigurationRecommendationRequest,
   output: GetScalingConfigurationRecommendationResponse,
   errors: [ResourceNotFound],
+  operationName: "GetScalingConfigurationRecommendation",
 }));
 export type GetSearchSuggestionsError = CommonErrors;
 /**
@@ -40281,6 +42983,7 @@ export const getSearchSuggestions: API.OperationMethod<
   input: GetSearchSuggestionsRequest,
   output: GetSearchSuggestionsResponse,
   errors: [],
+  operationName: "GetSearchSuggestions",
 }));
 export type ImportHubContentError =
   | ResourceInUse
@@ -40299,6 +43002,7 @@ export const importHubContent: API.OperationMethod<
   input: ImportHubContentRequest,
   output: ImportHubContentResponse,
   errors: [ResourceInUse, ResourceLimitExceeded, ResourceNotFound],
+  operationName: "ImportHubContent",
 }));
 export type ListActionsError = ResourceNotFound | CommonErrors;
 /**
@@ -40328,10 +43032,119 @@ export const listActions: API.OperationMethod<
   input: ListActionsRequest,
   output: ListActionsResponse,
   errors: [ResourceNotFound],
+  operationName: "ListActions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
     items: "ActionSummaries",
+    pageSize: "MaxResults",
+  } as const,
+}));
+export type ListAIBenchmarkJobsError = CommonErrors;
+/**
+ * Returns a list of AI benchmark jobs in your account. You can filter the results by name, status, and creation time, and sort the results. The response is paginated.
+ */
+export const listAIBenchmarkJobs: API.OperationMethod<
+  ListAIBenchmarkJobsRequest,
+  ListAIBenchmarkJobsResponse,
+  ListAIBenchmarkJobsError,
+  Credentials | Region | HttpClient.HttpClient
+> & {
+  pages: (
+    input: ListAIBenchmarkJobsRequest,
+  ) => stream.Stream<
+    ListAIBenchmarkJobsResponse,
+    ListAIBenchmarkJobsError,
+    Credentials | Region | HttpClient.HttpClient
+  >;
+  items: (
+    input: ListAIBenchmarkJobsRequest,
+  ) => stream.Stream<
+    AIBenchmarkJobSummary,
+    ListAIBenchmarkJobsError,
+    Credentials | Region | HttpClient.HttpClient
+  >;
+} = /*@__PURE__*/ /*#__PURE__*/ API.makePaginated(() => ({
+  input: ListAIBenchmarkJobsRequest,
+  output: ListAIBenchmarkJobsResponse,
+  errors: [],
+  operationName: "ListAIBenchmarkJobs",
+  pagination: {
+    inputToken: "NextToken",
+    outputToken: "NextToken",
+    items: "AIBenchmarkJobs",
+    pageSize: "MaxResults",
+  } as const,
+}));
+export type ListAIRecommendationJobsError = CommonErrors;
+/**
+ * Returns a list of AI recommendation jobs in your account. You can filter the results by name, status, and creation time, and sort the results. The response is paginated.
+ */
+export const listAIRecommendationJobs: API.OperationMethod<
+  ListAIRecommendationJobsRequest,
+  ListAIRecommendationJobsResponse,
+  ListAIRecommendationJobsError,
+  Credentials | Region | HttpClient.HttpClient
+> & {
+  pages: (
+    input: ListAIRecommendationJobsRequest,
+  ) => stream.Stream<
+    ListAIRecommendationJobsResponse,
+    ListAIRecommendationJobsError,
+    Credentials | Region | HttpClient.HttpClient
+  >;
+  items: (
+    input: ListAIRecommendationJobsRequest,
+  ) => stream.Stream<
+    AIRecommendationJobSummary,
+    ListAIRecommendationJobsError,
+    Credentials | Region | HttpClient.HttpClient
+  >;
+} = /*@__PURE__*/ /*#__PURE__*/ API.makePaginated(() => ({
+  input: ListAIRecommendationJobsRequest,
+  output: ListAIRecommendationJobsResponse,
+  errors: [],
+  operationName: "ListAIRecommendationJobs",
+  pagination: {
+    inputToken: "NextToken",
+    outputToken: "NextToken",
+    items: "AIRecommendationJobs",
+    pageSize: "MaxResults",
+  } as const,
+}));
+export type ListAIWorkloadConfigsError = CommonErrors;
+/**
+ * Returns a list of AI workload configurations in your account. You can filter the results by name and creation time, and sort the results. The response is paginated.
+ */
+export const listAIWorkloadConfigs: API.OperationMethod<
+  ListAIWorkloadConfigsRequest,
+  ListAIWorkloadConfigsResponse,
+  ListAIWorkloadConfigsError,
+  Credentials | Region | HttpClient.HttpClient
+> & {
+  pages: (
+    input: ListAIWorkloadConfigsRequest,
+  ) => stream.Stream<
+    ListAIWorkloadConfigsResponse,
+    ListAIWorkloadConfigsError,
+    Credentials | Region | HttpClient.HttpClient
+  >;
+  items: (
+    input: ListAIWorkloadConfigsRequest,
+  ) => stream.Stream<
+    AIWorkloadConfigSummary,
+    ListAIWorkloadConfigsError,
+    Credentials | Region | HttpClient.HttpClient
+  >;
+} = /*@__PURE__*/ /*#__PURE__*/ API.makePaginated(() => ({
+  input: ListAIWorkloadConfigsRequest,
+  output: ListAIWorkloadConfigsResponse,
+  errors: [],
+  operationName: "ListAIWorkloadConfigs",
+  pagination: {
+    inputToken: "NextToken",
+    outputToken: "NextToken",
+    items: "AIWorkloadConfigs",
     pageSize: "MaxResults",
   } as const,
 }));
@@ -40363,6 +43176,7 @@ export const listAlgorithms: API.OperationMethod<
   input: ListAlgorithmsInput,
   output: ListAlgorithmsOutput,
   errors: [],
+  operationName: "ListAlgorithms",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -40398,6 +43212,7 @@ export const listAliases: API.OperationMethod<
   input: ListAliasesRequest,
   output: ListAliasesResponse,
   errors: [ResourceNotFound],
+  operationName: "ListAliases",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -40433,6 +43248,7 @@ export const listAppImageConfigs: API.OperationMethod<
   input: ListAppImageConfigsRequest,
   output: ListAppImageConfigsResponse,
   errors: [],
+  operationName: "ListAppImageConfigs",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -40468,6 +43284,7 @@ export const listApps: API.OperationMethod<
   input: ListAppsRequest,
   output: ListAppsResponse,
   errors: [],
+  operationName: "ListApps",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -40503,6 +43320,7 @@ export const listArtifacts: API.OperationMethod<
   input: ListArtifactsRequest,
   output: ListArtifactsResponse,
   errors: [ResourceNotFound],
+  operationName: "ListArtifacts",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -40538,6 +43356,7 @@ export const listAssociations: API.OperationMethod<
   input: ListAssociationsRequest,
   output: ListAssociationsResponse,
   errors: [ResourceNotFound],
+  operationName: "ListAssociations",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -40573,6 +43392,7 @@ export const listAutoMLJobs: API.OperationMethod<
   input: ListAutoMLJobsRequest,
   output: ListAutoMLJobsResponse,
   errors: [],
+  operationName: "ListAutoMLJobs",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -40608,6 +43428,7 @@ export const listCandidatesForAutoMLJob: API.OperationMethod<
   input: ListCandidatesForAutoMLJobRequest,
   output: ListCandidatesForAutoMLJobResponse,
   errors: [ResourceNotFound],
+  operationName: "ListCandidatesForAutoMLJob",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -40643,6 +43464,7 @@ export const listClusterEvents: API.OperationMethod<
   input: ListClusterEventsRequest,
   output: ListClusterEventsResponse,
   errors: [ResourceNotFound],
+  operationName: "ListClusterEvents",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -40678,6 +43500,7 @@ export const listClusterNodes: API.OperationMethod<
   input: ListClusterNodesRequest,
   output: ListClusterNodesResponse,
   errors: [ResourceNotFound],
+  operationName: "ListClusterNodes",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -40713,6 +43536,7 @@ export const listClusters: API.OperationMethod<
   input: ListClustersRequest,
   output: ListClustersResponse,
   errors: [],
+  operationName: "ListClusters",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -40748,6 +43572,7 @@ export const listClusterSchedulerConfigs: API.OperationMethod<
   input: ListClusterSchedulerConfigsRequest,
   output: ListClusterSchedulerConfigsResponse,
   errors: [],
+  operationName: "ListClusterSchedulerConfigs",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -40783,6 +43608,7 @@ export const listCodeRepositories: API.OperationMethod<
   input: ListCodeRepositoriesInput,
   output: ListCodeRepositoriesOutput,
   errors: [],
+  operationName: "ListCodeRepositories",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -40820,6 +43646,7 @@ export const listCompilationJobs: API.OperationMethod<
   input: ListCompilationJobsRequest,
   output: ListCompilationJobsResponse,
   errors: [],
+  operationName: "ListCompilationJobs",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -40855,6 +43682,7 @@ export const listComputeQuotas: API.OperationMethod<
   input: ListComputeQuotasRequest,
   output: ListComputeQuotasResponse,
   errors: [],
+  operationName: "ListComputeQuotas",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -40890,6 +43718,7 @@ export const listContexts: API.OperationMethod<
   input: ListContextsRequest,
   output: ListContextsResponse,
   errors: [ResourceNotFound],
+  operationName: "ListContexts",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -40925,6 +43754,7 @@ export const listDataQualityJobDefinitions: API.OperationMethod<
   input: ListDataQualityJobDefinitionsRequest,
   output: ListDataQualityJobDefinitionsResponse,
   errors: [],
+  operationName: "ListDataQualityJobDefinitions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -40960,6 +43790,7 @@ export const listDeviceFleets: API.OperationMethod<
   input: ListDeviceFleetsRequest,
   output: ListDeviceFleetsResponse,
   errors: [],
+  operationName: "ListDeviceFleets",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -40995,6 +43826,7 @@ export const listDevices: API.OperationMethod<
   input: ListDevicesRequest,
   output: ListDevicesResponse,
   errors: [],
+  operationName: "ListDevices",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41030,6 +43862,7 @@ export const listDomains: API.OperationMethod<
   input: ListDomainsRequest,
   output: ListDomainsResponse,
   errors: [],
+  operationName: "ListDomains",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41065,6 +43898,7 @@ export const listEdgeDeploymentPlans: API.OperationMethod<
   input: ListEdgeDeploymentPlansRequest,
   output: ListEdgeDeploymentPlansResponse,
   errors: [],
+  operationName: "ListEdgeDeploymentPlans",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41100,6 +43934,7 @@ export const listEdgePackagingJobs: API.OperationMethod<
   input: ListEdgePackagingJobsRequest,
   output: ListEdgePackagingJobsResponse,
   errors: [],
+  operationName: "ListEdgePackagingJobs",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41135,6 +43970,7 @@ export const listEndpointConfigs: API.OperationMethod<
   input: ListEndpointConfigsInput,
   output: ListEndpointConfigsOutput,
   errors: [],
+  operationName: "ListEndpointConfigs",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41170,6 +44006,7 @@ export const listEndpoints: API.OperationMethod<
   input: ListEndpointsInput,
   output: ListEndpointsOutput,
   errors: [],
+  operationName: "ListEndpoints",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41205,6 +44042,7 @@ export const listExperiments: API.OperationMethod<
   input: ListExperimentsRequest,
   output: ListExperimentsResponse,
   errors: [],
+  operationName: "ListExperiments",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41240,6 +44078,7 @@ export const listFeatureGroups: API.OperationMethod<
   input: ListFeatureGroupsRequest,
   output: ListFeatureGroupsResponse,
   errors: [],
+  operationName: "ListFeatureGroups",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41275,6 +44114,7 @@ export const listFlowDefinitions: API.OperationMethod<
   input: ListFlowDefinitionsRequest,
   output: ListFlowDefinitionsResponse,
   errors: [],
+  operationName: "ListFlowDefinitions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41295,6 +44135,7 @@ export const listHubContents: API.OperationMethod<
   input: ListHubContentsRequest,
   output: ListHubContentsResponse,
   errors: [ResourceNotFound],
+  operationName: "ListHubContents",
 }));
 export type ListHubContentVersionsError = ResourceNotFound | CommonErrors;
 /**
@@ -41309,6 +44150,7 @@ export const listHubContentVersions: API.OperationMethod<
   input: ListHubContentVersionsRequest,
   output: ListHubContentVersionsResponse,
   errors: [ResourceNotFound],
+  operationName: "ListHubContentVersions",
 }));
 export type ListHubsError = CommonErrors;
 /**
@@ -41323,6 +44165,7 @@ export const listHubs: API.OperationMethod<
   input: ListHubsRequest,
   output: ListHubsResponse,
   errors: [],
+  operationName: "ListHubs",
 }));
 export type ListHumanTaskUisError = CommonErrors;
 /**
@@ -41352,6 +44195,7 @@ export const listHumanTaskUis: API.OperationMethod<
   input: ListHumanTaskUisRequest,
   output: ListHumanTaskUisResponse,
   errors: [],
+  operationName: "ListHumanTaskUis",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41387,6 +44231,7 @@ export const listHyperParameterTuningJobs: API.OperationMethod<
   input: ListHyperParameterTuningJobsRequest,
   output: ListHyperParameterTuningJobsResponse,
   errors: [],
+  operationName: "ListHyperParameterTuningJobs",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41422,6 +44267,7 @@ export const listImages: API.OperationMethod<
   input: ListImagesRequest,
   output: ListImagesResponse,
   errors: [],
+  operationName: "ListImages",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41457,6 +44303,7 @@ export const listImageVersions: API.OperationMethod<
   input: ListImageVersionsRequest,
   output: ListImageVersionsResponse,
   errors: [ResourceNotFound],
+  operationName: "ListImageVersions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41492,6 +44339,7 @@ export const listInferenceComponents: API.OperationMethod<
   input: ListInferenceComponentsInput,
   output: ListInferenceComponentsOutput,
   errors: [],
+  operationName: "ListInferenceComponents",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41527,6 +44375,7 @@ export const listInferenceExperiments: API.OperationMethod<
   input: ListInferenceExperimentsRequest,
   output: ListInferenceExperimentsResponse,
   errors: [],
+  operationName: "ListInferenceExperiments",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41562,6 +44411,7 @@ export const listInferenceRecommendationsJobs: API.OperationMethod<
   input: ListInferenceRecommendationsJobsRequest,
   output: ListInferenceRecommendationsJobsResponse,
   errors: [],
+  operationName: "ListInferenceRecommendationsJobs",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41601,10 +44451,95 @@ export const listInferenceRecommendationsJobSteps: API.OperationMethod<
   input: ListInferenceRecommendationsJobStepsRequest,
   output: ListInferenceRecommendationsJobStepsResponse,
   errors: [ResourceNotFound],
+  operationName: "ListInferenceRecommendationsJobSteps",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
     items: "Steps",
+    pageSize: "MaxResults",
+  } as const,
+}));
+export type ListJobsError = CommonErrors;
+/**
+ * Lists jobs in a specified category. You can filter results by creation time, last modified time, name, and status. Results are sorted by the field you specify in `SortBy`. Use pagination to retrieve large result sets efficiently.
+ *
+ * The following operations are related to `ListJobs`:
+ *
+ * - `CreateJob`
+ *
+ * - `DescribeJob`
+ */
+export const listJobs: API.OperationMethod<
+  ListJobsRequest,
+  ListJobsResponse,
+  ListJobsError,
+  Credentials | Region | HttpClient.HttpClient
+> & {
+  pages: (
+    input: ListJobsRequest,
+  ) => stream.Stream<
+    ListJobsResponse,
+    ListJobsError,
+    Credentials | Region | HttpClient.HttpClient
+  >;
+  items: (
+    input: ListJobsRequest,
+  ) => stream.Stream<
+    JobSummary,
+    ListJobsError,
+    Credentials | Region | HttpClient.HttpClient
+  >;
+} = /*@__PURE__*/ /*#__PURE__*/ API.makePaginated(() => ({
+  input: ListJobsRequest,
+  output: ListJobsResponse,
+  errors: [],
+  operationName: "ListJobs",
+  pagination: {
+    inputToken: "NextToken",
+    outputToken: "NextToken",
+    items: "JobSummaries",
+    pageSize: "MaxResults",
+  } as const,
+}));
+export type ListJobSchemaVersionsError = ResourceNotFound | CommonErrors;
+/**
+ * Lists available configuration schema versions for a specified job category. Use the schema versions with `DescribeJobSchemaVersion` to retrieve the full schema document.
+ *
+ * The following operations are related to `ListJobSchemaVersions`:
+ *
+ * - `DescribeJobSchemaVersion`
+ *
+ * - `CreateJob`
+ */
+export const listJobSchemaVersions: API.OperationMethod<
+  ListJobSchemaVersionsRequest,
+  ListJobSchemaVersionsResponse,
+  ListJobSchemaVersionsError,
+  Credentials | Region | HttpClient.HttpClient
+> & {
+  pages: (
+    input: ListJobSchemaVersionsRequest,
+  ) => stream.Stream<
+    ListJobSchemaVersionsResponse,
+    ListJobSchemaVersionsError,
+    Credentials | Region | HttpClient.HttpClient
+  >;
+  items: (
+    input: ListJobSchemaVersionsRequest,
+  ) => stream.Stream<
+    JobConfigSchemaVersionSummary,
+    ListJobSchemaVersionsError,
+    Credentials | Region | HttpClient.HttpClient
+  >;
+} = /*@__PURE__*/ /*#__PURE__*/ API.makePaginated(() => ({
+  input: ListJobSchemaVersionsRequest,
+  output: ListJobSchemaVersionsResponse,
+  errors: [ResourceNotFound],
+  operationName: "ListJobSchemaVersions",
+  pagination: {
+    inputToken: "NextToken",
+    outputToken: "NextToken",
+    items: "JobConfigSchemas",
     pageSize: "MaxResults",
   } as const,
 }));
@@ -41636,6 +44571,7 @@ export const listLabelingJobs: API.OperationMethod<
   input: ListLabelingJobsRequest,
   output: ListLabelingJobsResponse,
   errors: [],
+  operationName: "ListLabelingJobs",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41671,6 +44607,7 @@ export const listLabelingJobsForWorkteam: API.OperationMethod<
   input: ListLabelingJobsForWorkteamRequest,
   output: ListLabelingJobsForWorkteamResponse,
   errors: [ResourceNotFound],
+  operationName: "ListLabelingJobsForWorkteam",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41706,6 +44643,7 @@ export const listLineageGroups: API.OperationMethod<
   input: ListLineageGroupsRequest,
   output: ListLineageGroupsResponse,
   errors: [],
+  operationName: "ListLineageGroups",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41741,6 +44679,7 @@ export const listMlflowApps: API.OperationMethod<
   input: ListMlflowAppsRequest,
   output: ListMlflowAppsResponse,
   errors: [],
+  operationName: "ListMlflowApps",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41776,6 +44715,7 @@ export const listMlflowTrackingServers: API.OperationMethod<
   input: ListMlflowTrackingServersRequest,
   output: ListMlflowTrackingServersResponse,
   errors: [],
+  operationName: "ListMlflowTrackingServers",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41811,6 +44751,7 @@ export const listModelBiasJobDefinitions: API.OperationMethod<
   input: ListModelBiasJobDefinitionsRequest,
   output: ListModelBiasJobDefinitionsResponse,
   errors: [],
+  operationName: "ListModelBiasJobDefinitions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41846,6 +44787,7 @@ export const listModelCardExportJobs: API.OperationMethod<
   input: ListModelCardExportJobsRequest,
   output: ListModelCardExportJobsResponse,
   errors: [],
+  operationName: "ListModelCardExportJobs",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41881,6 +44823,7 @@ export const listModelCards: API.OperationMethod<
   input: ListModelCardsRequest,
   output: ListModelCardsResponse,
   errors: [],
+  operationName: "ListModelCards",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41916,6 +44859,7 @@ export const listModelCardVersions: API.OperationMethod<
   input: ListModelCardVersionsRequest,
   output: ListModelCardVersionsResponse,
   errors: [ResourceNotFound],
+  operationName: "ListModelCardVersions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41951,6 +44895,7 @@ export const listModelExplainabilityJobDefinitions: API.OperationMethod<
   input: ListModelExplainabilityJobDefinitionsRequest,
   output: ListModelExplainabilityJobDefinitionsResponse,
   errors: [],
+  operationName: "ListModelExplainabilityJobDefinitions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -41986,6 +44931,7 @@ export const listModelMetadata: API.OperationMethod<
   input: ListModelMetadataRequest,
   output: ListModelMetadataResponse,
   errors: [],
+  operationName: "ListModelMetadata",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42021,6 +44967,7 @@ export const listModelPackageGroups: API.OperationMethod<
   input: ListModelPackageGroupsInput,
   output: ListModelPackageGroupsOutput,
   errors: [],
+  operationName: "ListModelPackageGroups",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42056,6 +45003,7 @@ export const listModelPackages: API.OperationMethod<
   input: ListModelPackagesInput,
   output: ListModelPackagesOutput,
   errors: [],
+  operationName: "ListModelPackages",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42091,6 +45039,7 @@ export const listModelQualityJobDefinitions: API.OperationMethod<
   input: ListModelQualityJobDefinitionsRequest,
   output: ListModelQualityJobDefinitionsResponse,
   errors: [],
+  operationName: "ListModelQualityJobDefinitions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42126,6 +45075,7 @@ export const listModels: API.OperationMethod<
   input: ListModelsInput,
   output: ListModelsOutput,
   errors: [],
+  operationName: "ListModels",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42161,6 +45111,7 @@ export const listMonitoringAlertHistory: API.OperationMethod<
   input: ListMonitoringAlertHistoryRequest,
   output: ListMonitoringAlertHistoryResponse,
   errors: [ResourceNotFound],
+  operationName: "ListMonitoringAlertHistory",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42196,6 +45147,7 @@ export const listMonitoringAlerts: API.OperationMethod<
   input: ListMonitoringAlertsRequest,
   output: ListMonitoringAlertsResponse,
   errors: [ResourceNotFound],
+  operationName: "ListMonitoringAlerts",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42231,6 +45183,7 @@ export const listMonitoringExecutions: API.OperationMethod<
   input: ListMonitoringExecutionsRequest,
   output: ListMonitoringExecutionsResponse,
   errors: [],
+  operationName: "ListMonitoringExecutions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42266,6 +45219,7 @@ export const listMonitoringSchedules: API.OperationMethod<
   input: ListMonitoringSchedulesRequest,
   output: ListMonitoringSchedulesResponse,
   errors: [],
+  operationName: "ListMonitoringSchedules",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42301,6 +45255,7 @@ export const listNotebookInstanceLifecycleConfigs: API.OperationMethod<
   input: ListNotebookInstanceLifecycleConfigsInput,
   output: ListNotebookInstanceLifecycleConfigsOutput,
   errors: [],
+  operationName: "ListNotebookInstanceLifecycleConfigs",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42336,6 +45291,7 @@ export const listNotebookInstances: API.OperationMethod<
   input: ListNotebookInstancesInput,
   output: ListNotebookInstancesOutput,
   errors: [],
+  operationName: "ListNotebookInstances",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42371,6 +45327,7 @@ export const listOptimizationJobs: API.OperationMethod<
   input: ListOptimizationJobsRequest,
   output: ListOptimizationJobsResponse,
   errors: [],
+  operationName: "ListOptimizationJobs",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42406,6 +45363,7 @@ export const listPartnerApps: API.OperationMethod<
   input: ListPartnerAppsRequest,
   output: ListPartnerAppsResponse,
   errors: [],
+  operationName: "ListPartnerApps",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42441,6 +45399,7 @@ export const listPipelineExecutions: API.OperationMethod<
   input: ListPipelineExecutionsRequest,
   output: ListPipelineExecutionsResponse,
   errors: [ResourceNotFound],
+  operationName: "ListPipelineExecutions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42476,6 +45435,7 @@ export const listPipelineExecutionSteps: API.OperationMethod<
   input: ListPipelineExecutionStepsRequest,
   output: ListPipelineExecutionStepsResponse,
   errors: [ResourceNotFound],
+  operationName: "ListPipelineExecutionSteps",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42513,6 +45473,7 @@ export const listPipelineParametersForExecution: API.OperationMethod<
   input: ListPipelineParametersForExecutionRequest,
   output: ListPipelineParametersForExecutionResponse,
   errors: [ResourceNotFound],
+  operationName: "ListPipelineParametersForExecution",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42548,6 +45509,7 @@ export const listPipelines: API.OperationMethod<
   input: ListPipelinesRequest,
   output: ListPipelinesResponse,
   errors: [],
+  operationName: "ListPipelines",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42583,6 +45545,7 @@ export const listPipelineVersions: API.OperationMethod<
   input: ListPipelineVersionsRequest,
   output: ListPipelineVersionsResponse,
   errors: [ResourceNotFound],
+  operationName: "ListPipelineVersions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42618,6 +45581,7 @@ export const listProcessingJobs: API.OperationMethod<
   input: ListProcessingJobsRequest,
   output: ListProcessingJobsResponse,
   errors: [],
+  operationName: "ListProcessingJobs",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42653,6 +45617,7 @@ export const listProjects: API.OperationMethod<
   input: ListProjectsInput,
   output: ListProjectsOutput,
   errors: [],
+  operationName: "ListProjects",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42687,6 +45652,7 @@ export const listResourceCatalogs: API.OperationMethod<
   input: ListResourceCatalogsRequest,
   output: ListResourceCatalogsResponse,
   errors: [],
+  operationName: "ListResourceCatalogs",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42722,6 +45688,7 @@ export const listSpaces: API.OperationMethod<
   input: ListSpacesRequest,
   output: ListSpacesResponse,
   errors: [],
+  operationName: "ListSpaces",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42757,6 +45724,7 @@ export const listStageDevices: API.OperationMethod<
   input: ListStageDevicesRequest,
   output: ListStageDevicesResponse,
   errors: [],
+  operationName: "ListStageDevices",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42792,6 +45760,7 @@ export const listStudioLifecycleConfigs: API.OperationMethod<
   input: ListStudioLifecycleConfigsRequest,
   output: ListStudioLifecycleConfigsResponse,
   errors: [ResourceInUse],
+  operationName: "ListStudioLifecycleConfigs",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42827,6 +45796,7 @@ export const listSubscribedWorkteams: API.OperationMethod<
   input: ListSubscribedWorkteamsRequest,
   output: ListSubscribedWorkteamsResponse,
   errors: [],
+  operationName: "ListSubscribedWorkteams",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42862,6 +45832,7 @@ export const listTags: API.OperationMethod<
   input: ListTagsInput,
   output: ListTagsOutput,
   errors: [],
+  operationName: "ListTags",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42909,6 +45880,7 @@ export const listTrainingJobs: API.OperationMethod<
   input: ListTrainingJobsRequest,
   output: ListTrainingJobsResponse,
   errors: [],
+  operationName: "ListTrainingJobs",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42946,6 +45918,7 @@ export const listTrainingJobsForHyperParameterTuningJob: API.OperationMethod<
   input: ListTrainingJobsForHyperParameterTuningJobRequest,
   output: ListTrainingJobsForHyperParameterTuningJobResponse,
   errors: [ResourceNotFound],
+  operationName: "ListTrainingJobsForHyperParameterTuningJob",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -42981,6 +45954,7 @@ export const listTrainingPlans: API.OperationMethod<
   input: ListTrainingPlansRequest,
   output: ListTrainingPlansResponse,
   errors: [],
+  operationName: "ListTrainingPlans",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -43016,6 +45990,7 @@ export const listTransformJobs: API.OperationMethod<
   input: ListTransformJobsRequest,
   output: ListTransformJobsResponse,
   errors: [],
+  operationName: "ListTransformJobs",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -43057,6 +46032,7 @@ export const listTrialComponents: API.OperationMethod<
   input: ListTrialComponentsRequest,
   output: ListTrialComponentsResponse,
   errors: [ResourceNotFound],
+  operationName: "ListTrialComponents",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -43092,6 +46068,7 @@ export const listTrials: API.OperationMethod<
   input: ListTrialsRequest,
   output: ListTrialsResponse,
   errors: [ResourceNotFound],
+  operationName: "ListTrials",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -43129,6 +46106,7 @@ export const listUltraServersByReservedCapacity: API.OperationMethod<
   input: ListUltraServersByReservedCapacityRequest,
   output: ListUltraServersByReservedCapacityResponse,
   errors: [ResourceNotFound],
+  operationName: "ListUltraServersByReservedCapacity",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -43164,6 +46142,7 @@ export const listUserProfiles: API.OperationMethod<
   input: ListUserProfilesRequest,
   output: ListUserProfilesResponse,
   errors: [],
+  operationName: "ListUserProfiles",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -43199,6 +46178,7 @@ export const listWorkforces: API.OperationMethod<
   input: ListWorkforcesRequest,
   output: ListWorkforcesResponse,
   errors: [],
+  operationName: "ListWorkforces",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -43234,6 +46214,7 @@ export const listWorkteams: API.OperationMethod<
   input: ListWorkteamsRequest,
   output: ListWorkteamsResponse,
   errors: [],
+  operationName: "ListWorkteams",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -43254,6 +46235,7 @@ export const putModelPackageGroupPolicy: API.OperationMethod<
   input: PutModelPackageGroupPolicyInput,
   output: PutModelPackageGroupPolicyOutput,
   errors: [ConflictException],
+  operationName: "PutModelPackageGroupPolicy",
 }));
 export type QueryLineageError = ResourceNotFound | CommonErrors;
 /**
@@ -43283,6 +46265,7 @@ export const queryLineage: API.OperationMethod<
   input: QueryLineageRequest,
   output: QueryLineageResponse,
   errors: [ResourceNotFound],
+  operationName: "QueryLineage",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -43302,6 +46285,7 @@ export const registerDevices: API.OperationMethod<
   input: RegisterDevicesRequest,
   output: RegisterDevicesResponse,
   errors: [ResourceLimitExceeded],
+  operationName: "RegisterDevices",
 }));
 export type RenderUiTemplateError = ResourceNotFound | CommonErrors;
 /**
@@ -43316,6 +46300,7 @@ export const renderUiTemplate: API.OperationMethod<
   input: RenderUiTemplateRequest,
   output: RenderUiTemplateResponse,
   errors: [ResourceNotFound],
+  operationName: "RenderUiTemplate",
 }));
 export type RetryPipelineExecutionError =
   | ConflictException
@@ -43334,6 +46319,7 @@ export const retryPipelineExecution: API.OperationMethod<
   input: RetryPipelineExecutionRequest,
   output: RetryPipelineExecutionResponse,
   errors: [ConflictException, ResourceLimitExceeded, ResourceNotFound],
+  operationName: "RetryPipelineExecution",
 }));
 export type SearchError = CommonErrors;
 /**
@@ -43367,6 +46353,7 @@ export const search: API.OperationMethod<
   input: SearchRequest,
   output: SearchResponse,
   errors: [],
+  operationName: "Search",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -43395,6 +46382,7 @@ export const searchTrainingPlanOfferings: API.OperationMethod<
   input: SearchTrainingPlanOfferingsRequest,
   output: SearchTrainingPlanOfferingsResponse,
   errors: [ResourceLimitExceeded],
+  operationName: "SearchTrainingPlanOfferings",
 }));
 export type SendPipelineExecutionStepFailureError =
   | ConflictException
@@ -43413,6 +46401,7 @@ export const sendPipelineExecutionStepFailure: API.OperationMethod<
   input: SendPipelineExecutionStepFailureRequest,
   output: SendPipelineExecutionStepFailureResponse,
   errors: [ConflictException, ResourceLimitExceeded, ResourceNotFound],
+  operationName: "SendPipelineExecutionStepFailure",
 }));
 export type SendPipelineExecutionStepSuccessError =
   | ConflictException
@@ -43431,6 +46420,7 @@ export const sendPipelineExecutionStepSuccess: API.OperationMethod<
   input: SendPipelineExecutionStepSuccessRequest,
   output: SendPipelineExecutionStepSuccessResponse,
   errors: [ConflictException, ResourceLimitExceeded, ResourceNotFound],
+  operationName: "SendPipelineExecutionStepSuccess",
 }));
 export type StartClusterHealthCheckError = ResourceNotFound | CommonErrors;
 /**
@@ -43445,6 +46435,7 @@ export const startClusterHealthCheck: API.OperationMethod<
   input: StartClusterHealthCheckRequest,
   output: StartClusterHealthCheckResponse,
   errors: [ResourceNotFound],
+  operationName: "StartClusterHealthCheck",
 }));
 export type StartEdgeDeploymentStageError = CommonErrors;
 /**
@@ -43459,6 +46450,7 @@ export const startEdgeDeploymentStage: API.OperationMethod<
   input: StartEdgeDeploymentStageRequest,
   output: StartEdgeDeploymentStageResponse,
   errors: [],
+  operationName: "StartEdgeDeploymentStage",
 }));
 export type StartInferenceExperimentError =
   | ConflictException
@@ -43476,6 +46468,7 @@ export const startInferenceExperiment: API.OperationMethod<
   input: StartInferenceExperimentRequest,
   output: StartInferenceExperimentResponse,
   errors: [ConflictException, ResourceNotFound],
+  operationName: "StartInferenceExperiment",
 }));
 export type StartMlflowTrackingServerError =
   | ConflictException
@@ -43493,6 +46486,7 @@ export const startMlflowTrackingServer: API.OperationMethod<
   input: StartMlflowTrackingServerRequest,
   output: StartMlflowTrackingServerResponse,
   errors: [ConflictException, ResourceNotFound],
+  operationName: "StartMlflowTrackingServer",
 }));
 export type StartMonitoringScheduleError = ResourceNotFound | CommonErrors;
 /**
@@ -43509,6 +46503,7 @@ export const startMonitoringSchedule: API.OperationMethod<
   input: StartMonitoringScheduleRequest,
   output: StartMonitoringScheduleResponse,
   errors: [ResourceNotFound],
+  operationName: "StartMonitoringSchedule",
 }));
 export type StartNotebookInstanceError = ResourceLimitExceeded | CommonErrors;
 /**
@@ -43523,6 +46518,7 @@ export const startNotebookInstance: API.OperationMethod<
   input: StartNotebookInstanceInput,
   output: StartNotebookInstanceResponse,
   errors: [ResourceLimitExceeded],
+  operationName: "StartNotebookInstance",
 }));
 export type StartPipelineExecutionError =
   | ConflictException
@@ -43541,6 +46537,7 @@ export const startPipelineExecution: API.OperationMethod<
   input: StartPipelineExecutionRequest,
   output: StartPipelineExecutionResponse,
   errors: [ConflictException, ResourceLimitExceeded, ResourceNotFound],
+  operationName: "StartPipelineExecution",
 }));
 export type StartSessionError =
   | ResourceLimitExceeded
@@ -43558,6 +46555,37 @@ export const startSession: API.OperationMethod<
   input: StartSessionRequest,
   output: StartSessionResponse,
   errors: [ResourceLimitExceeded, ResourceNotFound],
+  operationName: "StartSession",
+}));
+export type StopAIBenchmarkJobError = ResourceNotFound | CommonErrors;
+/**
+ * Stops a running AI benchmark job.
+ */
+export const stopAIBenchmarkJob: API.OperationMethod<
+  StopAIBenchmarkJobRequest,
+  StopAIBenchmarkJobResponse,
+  StopAIBenchmarkJobError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: StopAIBenchmarkJobRequest,
+  output: StopAIBenchmarkJobResponse,
+  errors: [ResourceNotFound],
+  operationName: "StopAIBenchmarkJob",
+}));
+export type StopAIRecommendationJobError = ResourceNotFound | CommonErrors;
+/**
+ * Stops a running AI recommendation job.
+ */
+export const stopAIRecommendationJob: API.OperationMethod<
+  StopAIRecommendationJobRequest,
+  StopAIRecommendationJobResponse,
+  StopAIRecommendationJobError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: StopAIRecommendationJobRequest,
+  output: StopAIRecommendationJobResponse,
+  errors: [ResourceNotFound],
+  operationName: "StopAIRecommendationJob",
 }));
 export type StopAutoMLJobError = ResourceNotFound | CommonErrors;
 /**
@@ -43572,6 +46600,7 @@ export const stopAutoMLJob: API.OperationMethod<
   input: StopAutoMLJobRequest,
   output: StopAutoMLJobResponse,
   errors: [ResourceNotFound],
+  operationName: "StopAutoMLJob",
 }));
 export type StopCompilationJobError = ResourceNotFound | CommonErrors;
 /**
@@ -43590,6 +46619,7 @@ export const stopCompilationJob: API.OperationMethod<
   input: StopCompilationJobRequest,
   output: StopCompilationJobResponse,
   errors: [ResourceNotFound],
+  operationName: "StopCompilationJob",
 }));
 export type StopEdgeDeploymentStageError = CommonErrors;
 /**
@@ -43604,6 +46634,7 @@ export const stopEdgeDeploymentStage: API.OperationMethod<
   input: StopEdgeDeploymentStageRequest,
   output: StopEdgeDeploymentStageResponse,
   errors: [],
+  operationName: "StopEdgeDeploymentStage",
 }));
 export type StopEdgePackagingJobError = CommonErrors;
 /**
@@ -43618,6 +46649,7 @@ export const stopEdgePackagingJob: API.OperationMethod<
   input: StopEdgePackagingJobRequest,
   output: StopEdgePackagingJobResponse,
   errors: [],
+  operationName: "StopEdgePackagingJob",
 }));
 export type StopHyperParameterTuningJobError = ResourceNotFound | CommonErrors;
 /**
@@ -43634,6 +46666,7 @@ export const stopHyperParameterTuningJob: API.OperationMethod<
   input: StopHyperParameterTuningJobRequest,
   output: StopHyperParameterTuningJobResponse,
   errors: [ResourceNotFound],
+  operationName: "StopHyperParameterTuningJob",
 }));
 export type StopInferenceExperimentError =
   | ConflictException
@@ -43651,6 +46684,7 @@ export const stopInferenceExperiment: API.OperationMethod<
   input: StopInferenceExperimentRequest,
   output: StopInferenceExperimentResponse,
   errors: [ConflictException, ResourceNotFound],
+  operationName: "StopInferenceExperiment",
 }));
 export type StopInferenceRecommendationsJobError =
   | ResourceNotFound
@@ -43667,6 +46701,30 @@ export const stopInferenceRecommendationsJob: API.OperationMethod<
   input: StopInferenceRecommendationsJobRequest,
   output: StopInferenceRecommendationsJobResponse,
   errors: [ResourceNotFound],
+  operationName: "StopInferenceRecommendationsJob",
+}));
+export type StopJobError = ResourceNotFound | CommonErrors;
+/**
+ * Stops a running job. When you call `StopJob`, Amazon SageMaker sets the job status to `Stopping`. After the job stops, the status changes to `Stopped`. Partial results may be available in the output location if the job was in progress. To delete a stopped job, call `DeleteJob`.
+ *
+ * The following operations are related to `StopJob`:
+ *
+ * - `CreateJob`
+ *
+ * - `DescribeJob`
+ *
+ * - `DeleteJob`
+ */
+export const stopJob: API.OperationMethod<
+  StopJobRequest,
+  StopJobResponse,
+  StopJobError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: StopJobRequest,
+  output: StopJobResponse,
+  errors: [ResourceNotFound],
+  operationName: "StopJob",
 }));
 export type StopLabelingJobError = ResourceNotFound | CommonErrors;
 /**
@@ -43681,6 +46739,7 @@ export const stopLabelingJob: API.OperationMethod<
   input: StopLabelingJobRequest,
   output: StopLabelingJobResponse,
   errors: [ResourceNotFound],
+  operationName: "StopLabelingJob",
 }));
 export type StopMlflowTrackingServerError =
   | ConflictException
@@ -43698,6 +46757,7 @@ export const stopMlflowTrackingServer: API.OperationMethod<
   input: StopMlflowTrackingServerRequest,
   output: StopMlflowTrackingServerResponse,
   errors: [ConflictException, ResourceNotFound],
+  operationName: "StopMlflowTrackingServer",
 }));
 export type StopMonitoringScheduleError = ResourceNotFound | CommonErrors;
 /**
@@ -43712,6 +46772,7 @@ export const stopMonitoringSchedule: API.OperationMethod<
   input: StopMonitoringScheduleRequest,
   output: StopMonitoringScheduleResponse,
   errors: [ResourceNotFound],
+  operationName: "StopMonitoringSchedule",
 }));
 export type StopNotebookInstanceError = CommonErrors;
 /**
@@ -43728,6 +46789,7 @@ export const stopNotebookInstance: API.OperationMethod<
   input: StopNotebookInstanceInput,
   output: StopNotebookInstanceResponse,
   errors: [],
+  operationName: "StopNotebookInstance",
 }));
 export type StopOptimizationJobError = ResourceNotFound | CommonErrors;
 /**
@@ -43742,6 +46804,7 @@ export const stopOptimizationJob: API.OperationMethod<
   input: StopOptimizationJobRequest,
   output: StopOptimizationJobResponse,
   errors: [ResourceNotFound],
+  operationName: "StopOptimizationJob",
 }));
 export type StopPipelineExecutionError =
   | ConflictException
@@ -43771,6 +46834,7 @@ export const stopPipelineExecution: API.OperationMethod<
   input: StopPipelineExecutionRequest,
   output: StopPipelineExecutionResponse,
   errors: [ConflictException, ResourceNotFound],
+  operationName: "StopPipelineExecution",
 }));
 export type StopProcessingJobError = ResourceNotFound | CommonErrors;
 /**
@@ -43785,6 +46849,7 @@ export const stopProcessingJob: API.OperationMethod<
   input: StopProcessingJobRequest,
   output: StopProcessingJobResponse,
   errors: [ResourceNotFound],
+  operationName: "StopProcessingJob",
 }));
 export type StopTrainingJobError = ResourceNotFound | CommonErrors;
 /**
@@ -43801,6 +46866,7 @@ export const stopTrainingJob: API.OperationMethod<
   input: StopTrainingJobRequest,
   output: StopTrainingJobResponse,
   errors: [ResourceNotFound],
+  operationName: "StopTrainingJob",
 }));
 export type StopTransformJobError = ResourceNotFound | CommonErrors;
 /**
@@ -43817,6 +46883,7 @@ export const stopTransformJob: API.OperationMethod<
   input: StopTransformJobRequest,
   output: StopTransformJobResponse,
   errors: [ResourceNotFound],
+  operationName: "StopTransformJob",
 }));
 export type UpdateActionError =
   | ConflictException
@@ -43834,6 +46901,7 @@ export const updateAction: API.OperationMethod<
   input: UpdateActionRequest,
   output: UpdateActionResponse,
   errors: [ConflictException, ResourceNotFound],
+  operationName: "UpdateAction",
 }));
 export type UpdateAppImageConfigError = ResourceNotFound | CommonErrors;
 /**
@@ -43848,6 +46916,7 @@ export const updateAppImageConfig: API.OperationMethod<
   input: UpdateAppImageConfigRequest,
   output: UpdateAppImageConfigResponse,
   errors: [ResourceNotFound],
+  operationName: "UpdateAppImageConfig",
 }));
 export type UpdateArtifactError =
   | ConflictException
@@ -43865,6 +46934,7 @@ export const updateArtifact: API.OperationMethod<
   input: UpdateArtifactRequest,
   output: UpdateArtifactResponse,
   errors: [ConflictException, ResourceNotFound],
+  operationName: "UpdateArtifact",
 }));
 export type UpdateClusterError =
   | ConflictException
@@ -43883,6 +46953,7 @@ export const updateCluster: API.OperationMethod<
   input: UpdateClusterRequest,
   output: UpdateClusterResponse,
   errors: [ConflictException, ResourceLimitExceeded, ResourceNotFound],
+  operationName: "UpdateCluster",
 }));
 export type UpdateClusterSchedulerConfigError =
   | ConflictException
@@ -43901,6 +46972,7 @@ export const updateClusterSchedulerConfig: API.OperationMethod<
   input: UpdateClusterSchedulerConfigRequest,
   output: UpdateClusterSchedulerConfigResponse,
   errors: [ConflictException, ResourceLimitExceeded, ResourceNotFound],
+  operationName: "UpdateClusterSchedulerConfig",
 }));
 export type UpdateClusterSoftwareError =
   | ConflictException
@@ -43920,6 +46992,7 @@ export const updateClusterSoftware: API.OperationMethod<
   input: UpdateClusterSoftwareRequest,
   output: UpdateClusterSoftwareResponse,
   errors: [ConflictException, ResourceNotFound],
+  operationName: "UpdateClusterSoftware",
 }));
 export type UpdateCodeRepositoryError = ConflictException | CommonErrors;
 /**
@@ -43934,6 +47007,7 @@ export const updateCodeRepository: API.OperationMethod<
   input: UpdateCodeRepositoryInput,
   output: UpdateCodeRepositoryOutput,
   errors: [ConflictException],
+  operationName: "UpdateCodeRepository",
 }));
 export type UpdateComputeQuotaError =
   | ConflictException
@@ -43952,6 +47026,7 @@ export const updateComputeQuota: API.OperationMethod<
   input: UpdateComputeQuotaRequest,
   output: UpdateComputeQuotaResponse,
   errors: [ConflictException, ResourceLimitExceeded, ResourceNotFound],
+  operationName: "UpdateComputeQuota",
 }));
 export type UpdateContextError =
   | ConflictException
@@ -43969,6 +47044,7 @@ export const updateContext: API.OperationMethod<
   input: UpdateContextRequest,
   output: UpdateContextResponse,
   errors: [ConflictException, ResourceNotFound],
+  operationName: "UpdateContext",
 }));
 export type UpdateDeviceFleetError = ResourceInUse | CommonErrors;
 /**
@@ -43983,6 +47059,7 @@ export const updateDeviceFleet: API.OperationMethod<
   input: UpdateDeviceFleetRequest,
   output: UpdateDeviceFleetResponse,
   errors: [ResourceInUse],
+  operationName: "UpdateDeviceFleet",
 }));
 export type UpdateDevicesError = CommonErrors;
 /**
@@ -43997,6 +47074,7 @@ export const updateDevices: API.OperationMethod<
   input: UpdateDevicesRequest,
   output: UpdateDevicesResponse,
   errors: [],
+  operationName: "UpdateDevices",
 }));
 export type UpdateDomainError =
   | ResourceInUse
@@ -44015,6 +47093,7 @@ export const updateDomain: API.OperationMethod<
   input: UpdateDomainRequest,
   output: UpdateDomainResponse,
   errors: [ResourceInUse, ResourceLimitExceeded, ResourceNotFound],
+  operationName: "UpdateDomain",
 }));
 export type UpdateEndpointError = ResourceLimitExceeded | CommonErrors;
 /**
@@ -44035,6 +47114,7 @@ export const updateEndpoint: API.OperationMethod<
   input: UpdateEndpointInput,
   output: UpdateEndpointOutput,
   errors: [ResourceLimitExceeded],
+  operationName: "UpdateEndpoint",
 }));
 export type UpdateEndpointWeightsAndCapacitiesError =
   | ResourceLimitExceeded
@@ -44051,6 +47131,7 @@ export const updateEndpointWeightsAndCapacities: API.OperationMethod<
   input: UpdateEndpointWeightsAndCapacitiesInput,
   output: UpdateEndpointWeightsAndCapacitiesOutput,
   errors: [ResourceLimitExceeded],
+  operationName: "UpdateEndpointWeightsAndCapacities",
 }));
 export type UpdateExperimentError =
   | ConflictException
@@ -44068,6 +47149,7 @@ export const updateExperiment: API.OperationMethod<
   input: UpdateExperimentRequest,
   output: UpdateExperimentResponse,
   errors: [ConflictException, ResourceNotFound],
+  operationName: "UpdateExperiment",
 }));
 export type UpdateFeatureGroupError =
   | ResourceLimitExceeded
@@ -44089,6 +47171,7 @@ export const updateFeatureGroup: API.OperationMethod<
   input: UpdateFeatureGroupRequest,
   output: UpdateFeatureGroupResponse,
   errors: [ResourceLimitExceeded, ResourceNotFound],
+  operationName: "UpdateFeatureGroup",
 }));
 export type UpdateFeatureMetadataError = ResourceNotFound | CommonErrors;
 /**
@@ -44103,6 +47186,7 @@ export const updateFeatureMetadata: API.OperationMethod<
   input: UpdateFeatureMetadataRequest,
   output: UpdateFeatureMetadataResponse,
   errors: [ResourceNotFound],
+  operationName: "UpdateFeatureMetadata",
 }));
 export type UpdateHubError = ResourceNotFound | CommonErrors;
 /**
@@ -44117,6 +47201,7 @@ export const updateHub: API.OperationMethod<
   input: UpdateHubRequest,
   output: UpdateHubResponse,
   errors: [ResourceNotFound],
+  operationName: "UpdateHub",
 }));
 export type UpdateHubContentError =
   | ResourceInUse
@@ -44150,6 +47235,7 @@ export const updateHubContent: API.OperationMethod<
   input: UpdateHubContentRequest,
   output: UpdateHubContentResponse,
   errors: [ResourceInUse, ResourceNotFound],
+  operationName: "UpdateHubContent",
 }));
 export type UpdateHubContentReferenceError =
   | ResourceInUse
@@ -44173,6 +47259,7 @@ export const updateHubContentReference: API.OperationMethod<
   input: UpdateHubContentReferenceRequest,
   output: UpdateHubContentReferenceResponse,
   errors: [ResourceInUse, ResourceNotFound],
+  operationName: "UpdateHubContentReference",
 }));
 export type UpdateImageError = ResourceInUse | ResourceNotFound | CommonErrors;
 /**
@@ -44187,6 +47274,7 @@ export const updateImage: API.OperationMethod<
   input: UpdateImageRequest,
   output: UpdateImageResponse,
   errors: [ResourceInUse, ResourceNotFound],
+  operationName: "UpdateImage",
 }));
 export type UpdateImageVersionError =
   | ResourceInUse
@@ -44204,6 +47292,7 @@ export const updateImageVersion: API.OperationMethod<
   input: UpdateImageVersionRequest,
   output: UpdateImageVersionResponse,
   errors: [ResourceInUse, ResourceNotFound],
+  operationName: "UpdateImageVersion",
 }));
 export type UpdateInferenceComponentError =
   | ResourceLimitExceeded
@@ -44220,6 +47309,7 @@ export const updateInferenceComponent: API.OperationMethod<
   input: UpdateInferenceComponentInput,
   output: UpdateInferenceComponentOutput,
   errors: [ResourceLimitExceeded],
+  operationName: "UpdateInferenceComponent",
 }));
 export type UpdateInferenceComponentRuntimeConfigError =
   | ResourceLimitExceeded
@@ -44236,6 +47326,7 @@ export const updateInferenceComponentRuntimeConfig: API.OperationMethod<
   input: UpdateInferenceComponentRuntimeConfigInput,
   output: UpdateInferenceComponentRuntimeConfigOutput,
   errors: [ResourceLimitExceeded],
+  operationName: "UpdateInferenceComponentRuntimeConfig",
 }));
 export type UpdateInferenceExperimentError =
   | ConflictException
@@ -44253,6 +47344,7 @@ export const updateInferenceExperiment: API.OperationMethod<
   input: UpdateInferenceExperimentRequest,
   output: UpdateInferenceExperimentResponse,
   errors: [ConflictException, ResourceNotFound],
+  operationName: "UpdateInferenceExperiment",
 }));
 export type UpdateMlflowAppError =
   | ConflictException
@@ -44270,6 +47362,7 @@ export const updateMlflowApp: API.OperationMethod<
   input: UpdateMlflowAppRequest,
   output: UpdateMlflowAppResponse,
   errors: [ConflictException, ResourceNotFound],
+  operationName: "UpdateMlflowApp",
 }));
 export type UpdateMlflowTrackingServerError =
   | ConflictException
@@ -44288,6 +47381,7 @@ export const updateMlflowTrackingServer: API.OperationMethod<
   input: UpdateMlflowTrackingServerRequest,
   output: UpdateMlflowTrackingServerResponse,
   errors: [ConflictException, ResourceLimitExceeded, ResourceNotFound],
+  operationName: "UpdateMlflowTrackingServer",
 }));
 export type UpdateModelCardError =
   | ConflictException
@@ -44308,6 +47402,7 @@ export const updateModelCard: API.OperationMethod<
   input: UpdateModelCardRequest,
   output: UpdateModelCardResponse,
   errors: [ConflictException, ResourceLimitExceeded, ResourceNotFound],
+  operationName: "UpdateModelCard",
 }));
 export type UpdateModelPackageError = ConflictException | CommonErrors;
 /**
@@ -44322,6 +47417,7 @@ export const updateModelPackage: API.OperationMethod<
   input: UpdateModelPackageInput,
   output: UpdateModelPackageOutput,
   errors: [ConflictException],
+  operationName: "UpdateModelPackage",
 }));
 export type UpdateMonitoringAlertError =
   | ResourceLimitExceeded
@@ -44339,6 +47435,7 @@ export const updateMonitoringAlert: API.OperationMethod<
   input: UpdateMonitoringAlertRequest,
   output: UpdateMonitoringAlertResponse,
   errors: [ResourceLimitExceeded, ResourceNotFound],
+  operationName: "UpdateMonitoringAlert",
 }));
 export type UpdateMonitoringScheduleError =
   | ResourceLimitExceeded
@@ -44356,6 +47453,7 @@ export const updateMonitoringSchedule: API.OperationMethod<
   input: UpdateMonitoringScheduleRequest,
   output: UpdateMonitoringScheduleResponse,
   errors: [ResourceLimitExceeded, ResourceNotFound],
+  operationName: "UpdateMonitoringSchedule",
 }));
 export type UpdateNotebookInstanceError = ResourceLimitExceeded | CommonErrors;
 /**
@@ -44372,6 +47470,7 @@ export const updateNotebookInstance: API.OperationMethod<
   input: UpdateNotebookInstanceInput,
   output: UpdateNotebookInstanceOutput,
   errors: [ResourceLimitExceeded],
+  operationName: "UpdateNotebookInstance",
 }));
 export type UpdateNotebookInstanceLifecycleConfigError =
   | ResourceLimitExceeded
@@ -44390,6 +47489,7 @@ export const updateNotebookInstanceLifecycleConfig: API.OperationMethod<
   input: UpdateNotebookInstanceLifecycleConfigInput,
   output: UpdateNotebookInstanceLifecycleConfigOutput,
   errors: [ResourceLimitExceeded],
+  operationName: "UpdateNotebookInstanceLifecycleConfig",
 }));
 export type UpdatePartnerAppError =
   | ConflictException
@@ -44407,6 +47507,7 @@ export const updatePartnerApp: API.OperationMethod<
   input: UpdatePartnerAppRequest,
   output: UpdatePartnerAppResponse,
   errors: [ConflictException, ResourceNotFound],
+  operationName: "UpdatePartnerApp",
 }));
 export type UpdatePipelineError =
   | ConflictException
@@ -44424,6 +47525,7 @@ export const updatePipeline: API.OperationMethod<
   input: UpdatePipelineRequest,
   output: UpdatePipelineResponse,
   errors: [ConflictException, ResourceNotFound],
+  operationName: "UpdatePipeline",
 }));
 export type UpdatePipelineExecutionError =
   | ConflictException
@@ -44441,6 +47543,7 @@ export const updatePipelineExecution: API.OperationMethod<
   input: UpdatePipelineExecutionRequest,
   output: UpdatePipelineExecutionResponse,
   errors: [ConflictException, ResourceNotFound],
+  operationName: "UpdatePipelineExecution",
 }));
 export type UpdatePipelineVersionError =
   | ConflictException
@@ -44458,6 +47561,7 @@ export const updatePipelineVersion: API.OperationMethod<
   input: UpdatePipelineVersionRequest,
   output: UpdatePipelineVersionResponse,
   errors: [ConflictException, ResourceNotFound],
+  operationName: "UpdatePipelineVersion",
 }));
 export type UpdateProjectError = ConflictException | CommonErrors;
 /**
@@ -44474,6 +47578,7 @@ export const updateProject: API.OperationMethod<
   input: UpdateProjectInput,
   output: UpdateProjectOutput,
   errors: [ConflictException],
+  operationName: "UpdateProject",
 }));
 export type UpdateSpaceError =
   | ResourceInUse
@@ -44494,6 +47599,7 @@ export const updateSpace: API.OperationMethod<
   input: UpdateSpaceRequest,
   output: UpdateSpaceResponse,
   errors: [ResourceInUse, ResourceLimitExceeded, ResourceNotFound],
+  operationName: "UpdateSpace",
 }));
 export type UpdateTrainingJobError =
   | ResourceLimitExceeded
@@ -44511,6 +47617,7 @@ export const updateTrainingJob: API.OperationMethod<
   input: UpdateTrainingJobRequest,
   output: UpdateTrainingJobResponse,
   errors: [ResourceLimitExceeded, ResourceNotFound],
+  operationName: "UpdateTrainingJob",
 }));
 export type UpdateTrialError =
   | ConflictException
@@ -44528,6 +47635,7 @@ export const updateTrial: API.OperationMethod<
   input: UpdateTrialRequest,
   output: UpdateTrialResponse,
   errors: [ConflictException, ResourceNotFound],
+  operationName: "UpdateTrial",
 }));
 export type UpdateTrialComponentError =
   | ConflictException
@@ -44545,6 +47653,7 @@ export const updateTrialComponent: API.OperationMethod<
   input: UpdateTrialComponentRequest,
   output: UpdateTrialComponentResponse,
   errors: [ConflictException, ResourceNotFound],
+  operationName: "UpdateTrialComponent",
 }));
 export type UpdateUserProfileError =
   | ResourceInUse
@@ -44563,6 +47672,7 @@ export const updateUserProfile: API.OperationMethod<
   input: UpdateUserProfileRequest,
   output: UpdateUserProfileResponse,
   errors: [ResourceInUse, ResourceLimitExceeded, ResourceNotFound],
+  operationName: "UpdateUserProfile",
 }));
 export type UpdateWorkforceError = ConflictException | CommonErrors;
 /**
@@ -44593,6 +47703,7 @@ export const updateWorkforce: API.OperationMethod<
   input: UpdateWorkforceRequest,
   output: UpdateWorkforceResponse,
   errors: [ConflictException],
+  operationName: "UpdateWorkforce",
 }));
 export type UpdateWorkteamError = ResourceLimitExceeded | CommonErrors;
 /**
@@ -44607,4 +47718,5 @@ export const updateWorkteam: API.OperationMethod<
   input: UpdateWorkteamRequest,
   output: UpdateWorkteamResponse,
   errors: [ResourceLimitExceeded],
+  operationName: "UpdateWorkteam",
 }));

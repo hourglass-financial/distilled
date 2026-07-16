@@ -287,7 +287,9 @@ const loadServicePatches = (
       return yield* Effect.die(
         `Orphaned patch file(s) in ${patchDir}: ${orphans
           .map((o) => `${o}.json`)
-          .join(", ")} — no matching operation in the regenerated '${serviceName}' service. ` +
+          .join(
+            ", ",
+          )} — no matching operation in the regenerated '${serviceName}' service. ` +
           `The upstream spec likely renamed or removed the operation; ` +
           `re-key the patch to the new operation name (available: ${[...opNames].sort().join(", ")}) ` +
           `or delete it, and migrate consumers in packages/alchemy.`,
@@ -634,16 +636,25 @@ function applyPatchToTypeInfo(typeInfo: TypeInfo, patch: PropertyPatch): void {
     }
   }
 
-  // Append variants to an object union (e.g. new binding type in metadata.bindings)
-  if (
-    !patch.type &&
-    patch.appendUnion &&
-    patch.appendUnion.length > 0 &&
-    typeInfo.kind === "union" &&
-    typeInfo.values
-  ) {
-    for (const variant of patch.appendUnion) {
-      typeInfo.values.push(JSON.parse(JSON.stringify(variant)) as TypeInfo);
+  // Append variants to a union (e.g. new binding type in metadata.bindings, or
+  // widen a scalar field to a value union). When the target is not already a
+  // union, wrap the current type in one with the appended variants — mirrors
+  // the "$"-root behavior in applyResponsePatch.
+  if (!patch.type && patch.appendUnion && patch.appendUnion.length > 0) {
+    if (typeInfo.kind === "union" && typeInfo.values) {
+      for (const variant of patch.appendUnion) {
+        typeInfo.values.push(JSON.parse(JSON.stringify(variant)) as TypeInfo);
+      }
+    } else {
+      const currentCopy = JSON.parse(JSON.stringify(typeInfo)) as TypeInfo;
+      for (const key of Object.keys(typeInfo)) {
+        delete (typeInfo as unknown as Record<string, unknown>)[key];
+      }
+      typeInfo.kind = "union";
+      typeInfo.values = [
+        currentCopy,
+        ...(JSON.parse(JSON.stringify(patch.appendUnion)) as TypeInfo[]),
+      ];
     }
   }
 
@@ -864,6 +875,13 @@ function resolveOperationModel(
       resolvedResponseType.kind !== "object" ||
       !resolvedResponseType.properties;
   }
+
+  // Hoist nested object schemas out of request body params (covers the
+  // account/zone and plain operation generators, which consume this model).
+  hoistBodyParams(
+    resolvedBodyParams,
+    `${toPascalCase(op.operationName)}Request`,
+  );
 
   return {
     allParams,
@@ -1180,6 +1198,17 @@ function typeInfoToSchema(
             literalSet.add(`"${v.value}"`);
           }
         }
+        // A `true | false` literal union is just a boolean. Some Cloudflare
+        // SDK fields model booleans this way; collapse to `Schema.Boolean`
+        // rather than the stricter `Schema.Literals([true, false])` (which
+        // also mirrors the `boolean` we emit on the TS type side).
+        if (
+          literalSet.size === 2 &&
+          literalSet.has("true") &&
+          literalSet.has("false")
+        ) {
+          return "Schema.Boolean";
+        }
         const literals = `Schema.Literals([${[...literalSet].join(", ")}])`;
         // Cloudflare's string enums are OPEN: the API regularly returns values
         // the SDK's union doesn't yet list (e.g. new permission-group scopes
@@ -1233,6 +1262,10 @@ function typeInfoToSchema(
       return `Schema.Array(${elementSchema})`;
 
     case "object":
+      // Reference to a hoisted top-level schema const.
+      if (type.ref) {
+        return type.ref;
+      }
       // If it has a name but no resolved properties, use Unknown
       if (type.name && (!type.properties || type.properties.length === 0)) {
         return "Schema.Unknown";
@@ -1349,6 +1382,15 @@ function typeInfoToTsType(
         tsTypeSet.add(t);
       }
       const uniqueTsTypes = [...tsTypeSet];
+      // A `true | false` literal union is just `boolean` (mirrors the
+      // `Schema.Boolean` emitted in `typeInfoToSchema`).
+      if (
+        uniqueTsTypes.length === 2 &&
+        tsTypeSet.has("true") &&
+        tsTypeSet.has("false")
+      ) {
+        return "boolean";
+      }
       // Cloudflare's string enums are OPEN (see `typeInfoToSchema`): keep the
       // literal members for autocomplete but widen with `(string & {})` so
       // newer server-side values still type-check. Boolean-literal unions and
@@ -1384,6 +1426,11 @@ function typeInfoToTsType(
       return `${elementType}[]`;
 
     case "object":
+      // NOTE: deliberately ignore `type.ref` here. Hoisting lifts the *runtime
+      // schema* into a module-private const, but the TS *type* stays fully
+      // inlined on the exported interface so it remains self-contained (never
+      // references a private name → no declaration-emit error, no extra
+      // exports polluting the `.d.ts`).
       // If it has a name but no properties, it wasn't resolved - use unknown
       if (type.name && (!type.properties || type.properties.length === 0)) {
         return "unknown";
@@ -1432,6 +1479,306 @@ function typeIncludesNull(type: TypeInfo): boolean {
     return true;
   }
   return type.kind === "union" && !!type.values?.some(typeIncludesNull);
+}
+
+// ===========================================================================
+// Nested-schema hoisting
+//
+// Deeply-nested *inline* `Schema.Struct({...})` literals are the dominant
+// driver of tsc type-instantiation cost (a single Cloudflare service can reach
+// 50M instantiations). Hoisting lifts every nested object schema into its own
+// top-level named `interface` + `const ... as unknown as Schema.Codec<Name>`,
+// so each `Schema.Struct` body is one level deep and its leaves are opaque
+// `Codec<Name>` references the checker never recurses into. Structurally
+// identical shapes are de-duplicated *within the file*, collapsing the
+// repetition that makes the big services enormous.
+//
+// Naming is source-first: reuse the upstream SDK's qualified interface name
+// (`TypeInfo.name`) when present; otherwise synthesize a path-derived name from
+// the parent + property chain, disambiguating collisions deterministically.
+// ===========================================================================
+
+/**
+ * Identifiers a hoisted schema name must never collide with: module-level
+ * imports emitted by `generateServiceFile`, plus JS globals / TS built-in types
+ * that appear in generated type strings (e.g. `Record<string, unknown>`,
+ * `File | Blob`). A collision would either shadow the import (e.g. naming a
+ * schema `Schema`) or a built-in (e.g. `Record` → "Type 'Record' is not
+ * generic"). The hoist name allocator suffixes around these.
+ */
+const RESERVED_HOIST_NAMES: ReadonlySet<string> = new Set([
+  // Module imports
+  "Schema",
+  "Effect",
+  "Stream",
+  "stream",
+  "HttpClient",
+  "HttpClientError",
+  "API",
+  "T",
+  "Credentials",
+  "DefaultErrors",
+  "SensitiveString",
+  "UploadableSchema",
+  "BinaryBodySchema",
+  "BinaryStreamResponseSchema",
+  // JS globals / TS built-in types referenced in generated code
+  "Record",
+  "Array",
+  "ReadonlyArray",
+  "Object",
+  "String",
+  "Number",
+  "Boolean",
+  "Date",
+  "Blob",
+  "File",
+  "Uint8Array",
+  "ArrayBuffer",
+  "Promise",
+  "Map",
+  "Set",
+  "Error",
+  "JSON",
+  "Partial",
+  "Readonly",
+  "Required",
+  "Pick",
+  "Omit",
+  "Exclude",
+  "Extract",
+]);
+
+interface HoistState {
+  /** Hoisted definitions in emission order (dependencies before dependents). */
+  defs: { name: string; type: TypeInfo }[];
+  /** Structural key -> canonical hoisted name (intra-file dedup). */
+  byKey: Map<string, string>;
+  /** All allocated/reserved identifiers, to avoid collisions. */
+  names: Set<string>;
+}
+
+/** Active hoist state for the file currently being generated, or null. */
+let hoist: HoistState | null = null;
+
+/**
+ * Canonical structural fingerprint of a TypeInfo, ignoring descriptions but
+ * including everything that affects emission (kinds, property names, required
+ * flags, wire-key renames). Two schemas with the same key emit identically and
+ * may be shared. A `ref` node is keyed by its target name so parents that
+ * reference the same hoisted child collapse together.
+ */
+function structuralKey(t: TypeInfo): string {
+  if (t.ref) return `@${t.ref}`;
+  switch (t.kind) {
+    case "primitive":
+      return `p:${t.value ?? ""}`;
+    case "literal":
+      return `l:${t.value ?? ""}`;
+    case "null":
+      return "null";
+    case "file":
+      return "file";
+    case "binary":
+      return "binary";
+    case "array":
+      return `arr(${t.elementType ? structuralKey(t.elementType) : "?"})`;
+    case "union":
+      return `u(${(t.values ?? []).map(structuralKey).sort().join("|")})`;
+    case "object":
+      if (!t.properties || t.properties.length === 0) return "rec";
+      return `o{${t.properties
+        .map(
+          (p) =>
+            `${p.wireKey ?? p.name}:${p.required ? 1 : 0}:${structuralKey(p.type)}`,
+        )
+        .sort()
+        .join(";")}}`;
+    case "unknown":
+    default:
+      return "unknown";
+  }
+}
+
+/** Allocate a unique PascalCase identifier, disambiguating collisions. */
+function allocHoistName(suggested: string): string {
+  let base = (toPascalCase(suggested) || "Anon").replace(/[^A-Za-z0-9]/g, "");
+  // Guarantee a valid JS identifier: must start with a letter (some upstream
+  // type/property names are pure numbers, e.g. ASN keys like "13335").
+  if (!/^[A-Za-z]/.test(base)) {
+    base = `Schema${base}`;
+  }
+  let name = base;
+  let i = 2;
+  while (hoist!.names.has(name)) {
+    name = `${base}${i++}`;
+  }
+  hoist!.names.add(name);
+  return name;
+}
+
+/**
+ * Upstream SDK names that carry no semantic meaning (auto-generated by the
+ * cloudflare-typescript codegen for anonymous union members / shapes). We
+ * prefer a path-derived name over these.
+ */
+function isMeaningfulSourceName(name: string | undefined): name is string {
+  return (
+    !!name && !/^(UnionMember|Variant|Shape|AnonymousInterface)\d*$/i.test(name)
+  );
+}
+
+/** Register (or dedup) a fully-transformed object as a hoisted def; return a ref. */
+function hoistObject(type: TypeInfo, suggested: string): TypeInfo {
+  const key = structuralKey(type);
+  let name = hoist!.byKey.get(key);
+  if (!name) {
+    name = allocHoistName(
+      isMeaningfulSourceName(type.name) ? type.name : suggested,
+    );
+    hoist!.byKey.set(key, name);
+    hoist!.defs.push({ name, type });
+  }
+  // Retain the full (transformed) structure on the ref node so the TS-type
+  // emitter can still inline it; only the schema emitter uses `ref`.
+  return { ...type, ref: name };
+}
+
+/**
+ * Recursively replace nested object schemas with references to hoisted
+ * top-level definitions. The root node is kept inline (it is already its own
+ * named `const`); only its descendants are hoisted.
+ */
+function transformForHoisting(
+  type: TypeInfo,
+  suggested: string,
+  isRoot: boolean,
+  depth: number,
+): TypeInfo {
+  if (depth > 12 || type.ref) return type;
+  switch (type.kind) {
+    case "object": {
+      if (!type.properties || type.properties.length === 0) return type;
+      const transformed: TypeInfo = {
+        ...type,
+        properties: type.properties.map((p) => ({
+          ...p,
+          type: transformForHoisting(
+            p.type,
+            `${suggested}${toPascalCase(p.name)}`,
+            false,
+            depth + 1,
+          ),
+        })),
+      };
+      return isRoot ? transformed : hoistObject(transformed, suggested);
+    }
+    case "array":
+      return type.elementType
+        ? {
+            ...type,
+            elementType: transformForHoisting(
+              type.elementType,
+              singularize(suggested) || suggested,
+              false,
+              depth + 1,
+            ),
+          }
+        : type;
+    case "union":
+      return type.values
+        ? {
+            ...type,
+            values: type.values.map((v, i) =>
+              transformForHoisting(
+                v,
+                v.kind === "object" ? `${suggested}${i || ""}` : suggested,
+                false,
+                depth + 1,
+              ),
+            ),
+          }
+        : type;
+    default:
+      return type;
+  }
+}
+
+/**
+ * Hoist the descendants of a response type. No-op when hoisting is inactive.
+ */
+function hoistResponse(
+  type: TypeInfo | undefined,
+  responseTypeName: string,
+): TypeInfo | undefined {
+  if (!hoist || !type) return type;
+  return transformForHoisting(type, responseTypeName, true, 0);
+}
+
+/**
+ * Hoist nested object schemas out of request *body* params into module-private
+ * consts. Unlike `hoistResponse` this hoists each body field at its root
+ * (`isRoot: false`) — a body field whose type is itself a large object (e.g.
+ * `dlp`, `guardrails`) becomes a single named ref rather than a big inline
+ * `Schema.Struct`. The request *interface* still inlines (typeInfoToTsType
+ * ignores `ref`), so the public type stays self-contained. Mutates each param's
+ * `type` in place; no-op when hoisting is inactive.
+ */
+function hoistBodyParams(
+  bodyParams: { name: string; type: TypeInfo }[],
+  requestTypeName: string,
+): void {
+  if (!hoist) return;
+  for (const param of bodyParams) {
+    param.type = transformForHoisting(
+      param.type,
+      `${requestTypeName}${toPascalCase(param.name)}`,
+      false,
+      0,
+    );
+  }
+}
+
+/** Emit the collected hoisted `interface` + `const` definitions for the file. */
+function emitHoistedDefs(): string {
+  if (!hoist || hoist.defs.length === 0) return "";
+  const out: string[] = [];
+  out.push(`// ${"=".repeat(77)}`);
+  out.push(`// Shared nested schemas (hoisted, module-private)`);
+  out.push(`// ${"=".repeat(77)}`);
+  out.push("");
+  for (const { name, type } of hoist.defs) {
+    // Module-private interface (NOT exported — nested shapes are an internal
+    // implementation detail and must not pollute the public `.d.ts`). Used only
+    // as the cast target for the matching private const below.
+    out.push(`interface ${name} {`);
+    for (const prop of type.properties ?? []) {
+      const propName = toCamelCase(prop.name);
+      const tsType = typeInfoToTsType(prop.type, 0, true);
+      const optMark = prop.required ? "" : "?";
+      const nullableSuffix =
+        !prop.required && !typeIncludesNull(prop.type) ? " | null" : "";
+      if (prop.description) {
+        out.push(
+          `  /** ${prop.description.replace(/\n/g, " ").slice(0, 200)} */`,
+        );
+      }
+      out.push(
+        `  ${quotePropKey(propName)}${optMark}: ${tsType}${nullableSuffix};`,
+      );
+    }
+    out.push(`}`);
+    // Module-private const. The cast to `Schema.Codec<${name}>` is what caps
+    // the leaf type so dependents instantiate over an opaque reference instead
+    // of the full nested struct. The file-level `Schema.suspend(...)` wrap is
+    // applied by the post-processor in generateServiceFile.
+    const schema = typeInfoToSchema(type, "", 0, true);
+    out.push(
+      `const ${name} = /*@__PURE__*/ /*#__PURE__*/ ${schema} as unknown as Schema.Codec<${name}>;`,
+    );
+    out.push("");
+  }
+  return out.join("\n");
 }
 
 function generateOperationSchemaAst(
@@ -1552,6 +1899,10 @@ function generateOperationSchemaAst(
     }
   }
 
+  // Hoist nested object schemas out of request body params (the interface loop
+  // below still inlines via typeInfoToTsType, which ignores `ref`).
+  hoistBodyParams(resolvedBodyParams, requestTypeName);
+
   // Generate request interface
   lines.push(`export interface ${requestTypeName} {`);
   for (const param of allParams) {
@@ -1670,6 +2021,8 @@ function generateOperationSchemaAst(
   ];
   if (isMultipart) httpTraitParts.push(`contentType: "multipart"`);
   else if (isBinary) httpTraitParts.push(`contentType: "binary"`);
+  if (isBinary && op.requestMediaType)
+    httpTraitParts.push(`bodyMediaType: "${op.requestMediaType}"`);
   if (op.responseContentType === "binary") {
     httpTraitParts.push(`responseContentType: "binary"`);
   }
@@ -1677,7 +2030,7 @@ function generateOperationSchemaAst(
   pipes.push(httpTrait);
 
   lines.push(
-    `  .pipe(${pipes.join(", ")}) as unknown as Schema.Schema<${requestTypeName}>;`,
+    `  .pipe(${pipes.join(", ")}) as unknown as Schema.Codec<${requestTypeName}>;`,
   );
   lines.push("");
 
@@ -1740,6 +2093,9 @@ function generateOperationSchemaAst(
       !resolvedResponseType.properties;
   }
 
+  // Hoist nested object schemas out of the response into module-private consts.
+  resolvedResponseType = hoistResponse(resolvedResponseType, responseTypeName);
+
   if (op.responseContentType === "binary") {
     emitBinaryResponse(lines, responseTypeName, op);
   } else if (isTypeAlias && resolvedResponseType) {
@@ -1753,7 +2109,7 @@ function generateOperationSchemaAst(
     lines.push(`export type ${responseTypeName} = ${tsType};`);
     lines.push("");
     lines.push(
-      `export const ${responseTypeName} = /*@__PURE__*/ /*#__PURE__*/ ${schema}${responsePathPipe} as unknown as Schema.Schema<${responseTypeName}>;`,
+      `export const ${responseTypeName} = /*@__PURE__*/ /*#__PURE__*/ ${schema}${responsePathPipe} as unknown as Schema.Codec<${responseTypeName}>;`,
     );
     lines.push("");
   } else if (
@@ -1822,7 +2178,7 @@ function generateOperationSchemaAst(
       lines.push(responseProps.join(",\n"));
     }
     lines.push(
-      `})${responseEncodeKeysPipe}${responsePathPipe} as unknown as Schema.Schema<${responseTypeName}>;`,
+      `})${responseEncodeKeysPipe}${responsePathPipe} as unknown as Schema.Codec<${responseTypeName}>;`,
     );
     lines.push("");
   } else {
@@ -1830,7 +2186,7 @@ function generateOperationSchemaAst(
     lines.push(`export type ${responseTypeName} = unknown;`);
     lines.push("");
     lines.push(
-      `export const ${responseTypeName} = /*@__PURE__*/ /*#__PURE__*/ Schema.Unknown as unknown as Schema.Schema<${responseTypeName}>;`,
+      `export const ${responseTypeName} = /*@__PURE__*/ /*#__PURE__*/ Schema.Unknown as unknown as Schema.Codec<${responseTypeName}>;`,
     );
     lines.push("");
   }
@@ -2038,6 +2394,8 @@ function generateAccountOrZoneOperationSchema(
     const parts: string[] = [`method: "${op.httpMethod}"`, `path: "${path}"`];
     if (isMultipart) parts.push(`contentType: "multipart"`);
     else if (isBinary) parts.push(`contentType: "binary"`);
+    if (isBinary && op.requestMediaType)
+      parts.push(`bodyMediaType: "${op.requestMediaType}"`);
     if (op.responseContentType === "binary") {
       parts.push(`responseContentType: "binary"`);
     }
@@ -2153,7 +2511,7 @@ function generateAccountOrZoneOperationSchema(
   lines.push(`  ...${baseFieldsConstName},`);
   lines.push(`})`);
   lines.push(
-    `  .pipe(${buildPipes(buildHttpTrait(accountPath))}) as unknown as Schema.Schema<${accountRequestType}>;`,
+    `  .pipe(${buildPipes(buildHttpTrait(accountPath))}) as unknown as Schema.Codec<${accountRequestType}>;`,
   );
   lines.push("");
 
@@ -2164,14 +2522,17 @@ function generateAccountOrZoneOperationSchema(
   lines.push(`  ...${baseFieldsConstName},`);
   lines.push(`})`);
   lines.push(
-    `  .pipe(${buildPipes(buildHttpTrait(zonePath))}) as unknown as Schema.Schema<${zoneRequestType}>;`,
+    `  .pipe(${buildPipes(buildHttpTrait(zonePath))}) as unknown as Schema.Codec<${zoneRequestType}>;`,
   );
   lines.push("");
 
   // ---- emit shared response ----
-  const resolvedResponseType = resolved.responseType;
+  let resolvedResponseType = resolved.responseType;
   const isTypeAlias = resolved.isTypeAlias;
   const responsePath = resolved.responsePath;
+
+  // Hoist nested object schemas out of the response into module-private consts.
+  resolvedResponseType = hoistResponse(resolvedResponseType, responseTypeName);
 
   if (op.responseContentType === "binary") {
     emitBinaryResponse(lines, responseTypeName, op);
@@ -2184,7 +2545,7 @@ function generateAccountOrZoneOperationSchema(
     lines.push(`export type ${responseTypeName} = ${tsType};`);
     lines.push("");
     lines.push(
-      `export const ${responseTypeName} = /*@__PURE__*/ /*#__PURE__*/ ${schema}${responsePathPipe} as unknown as Schema.Schema<${responseTypeName}>;`,
+      `export const ${responseTypeName} = /*@__PURE__*/ /*#__PURE__*/ ${schema}${responsePathPipe} as unknown as Schema.Codec<${responseTypeName}>;`,
     );
     lines.push("");
   } else if (
@@ -2246,7 +2607,7 @@ function generateAccountOrZoneOperationSchema(
       lines.push(responseProps.join(",\n"));
     }
     lines.push(
-      `})${responseEncodeKeysPipe}${responsePathPipe} as unknown as Schema.Schema<${responseTypeName}>;`,
+      `})${responseEncodeKeysPipe}${responsePathPipe} as unknown as Schema.Codec<${responseTypeName}>;`,
     );
     lines.push("");
   } else {
@@ -2256,7 +2617,7 @@ function generateAccountOrZoneOperationSchema(
     lines.push(`export type ${responseTypeName} = unknown;`);
     lines.push("");
     lines.push(
-      `export const ${responseTypeName} = /*@__PURE__*/ /*#__PURE__*/ Schema.Unknown${responsePathPipe} as unknown as Schema.Schema<${responseTypeName}>;`,
+      `export const ${responseTypeName} = /*@__PURE__*/ /*#__PURE__*/ Schema.Unknown${responsePathPipe} as unknown as Schema.Codec<${responseTypeName}>;`,
     );
     lines.push("");
   }
@@ -2454,6 +2815,8 @@ function generateOperationSchema(
   ];
   if (isMultipart) httpTraitParts2.push(`contentType: "multipart"`);
   else if (isBinary) httpTraitParts2.push(`contentType: "binary"`);
+  if (isBinary && op.requestMediaType)
+    httpTraitParts2.push(`bodyMediaType: "${op.requestMediaType}"`);
   if (op.responseContentType === "binary") {
     httpTraitParts2.push(`responseContentType: "binary"`);
   }
@@ -2461,14 +2824,17 @@ function generateOperationSchema(
   pipes.push(httpTrait);
 
   lines.push(
-    `  .pipe(${pipes.join(", ")}) as unknown as Schema.Schema<${requestTypeName}>;`,
+    `  .pipe(${pipes.join(", ")}) as unknown as Schema.Codec<${requestTypeName}>;`,
   );
   lines.push("");
 
-  const resolvedResponseType = resolved.responseType;
+  let resolvedResponseType = resolved.responseType;
   const paginatedItemType = resolved.paginatedItemType;
   const isTypeAlias = resolved.isTypeAlias;
   const responsePath = resolved.responsePath;
+
+  // Hoist nested object schemas out of the response into module-private consts.
+  resolvedResponseType = hoistResponse(resolvedResponseType, responseTypeName);
 
   if (op.responseContentType === "binary") {
     emitBinaryResponse(lines, responseTypeName, op);
@@ -2481,7 +2847,7 @@ function generateOperationSchema(
     lines.push(`export type ${responseTypeName} = ${tsType};`);
     lines.push("");
     lines.push(
-      `export const ${responseTypeName} = /*@__PURE__*/ /*#__PURE__*/ ${schema}${responsePathPipe} as unknown as Schema.Schema<${responseTypeName}>;`,
+      `export const ${responseTypeName} = /*@__PURE__*/ /*#__PURE__*/ ${schema}${responsePathPipe} as unknown as Schema.Codec<${responseTypeName}>;`,
     );
     lines.push("");
   } else if (
@@ -2543,7 +2909,7 @@ function generateOperationSchema(
       lines.push(responseProps.join(",\n"));
     }
     lines.push(
-      `})${responseEncodeKeysPipe}${responsePathPipe} as unknown as Schema.Schema<${responseTypeName}>;`,
+      `})${responseEncodeKeysPipe}${responsePathPipe} as unknown as Schema.Codec<${responseTypeName}>;`,
     );
     lines.push("");
   } else {
@@ -2553,7 +2919,7 @@ function generateOperationSchema(
     lines.push(`export type ${responseTypeName} = unknown;`);
     lines.push("");
     lines.push(
-      `export const ${responseTypeName} = /*@__PURE__*/ /*#__PURE__*/ Schema.Unknown${responsePathPipe} as unknown as Schema.Schema<${responseTypeName}>;`,
+      `export const ${responseTypeName} = /*@__PURE__*/ /*#__PURE__*/ Schema.Unknown${responsePathPipe} as unknown as Schema.Codec<${responseTypeName}>;`,
     );
     lines.push("");
   }
@@ -3108,7 +3474,7 @@ function emitBinaryResponse(
       `  ${quotePropKey(propName)}: Schema.optional(${innerSchema}).pipe(T.HttpResponseHeader("${wireName}")),`,
     );
   }
-  lines.push(`}) as unknown as Schema.Schema<${responseTypeName}>;`);
+  lines.push(`}) as unknown as Schema.Codec<${responseTypeName}>;`);
   lines.push("");
 }
 
@@ -3153,7 +3519,7 @@ function generateServiceFile(
   // Imports (Effect/Stream are conditionally included via placeholders)
   lines.push(`__EFFECT_IMPORT__`);
   lines.push(`__STREAM_IMPORT__`);
-  lines.push(`import * as Schema from "effect/Schema";`);
+  lines.push(`import * as Schema from "@distilled.cloud/core/schema";`);
   lines.push(
     `import type * as HttpClient from "effect/unstable/http/HttpClient";`,
   );
@@ -3241,6 +3607,28 @@ function generateServiceFile(
   // Sort operations by resource, then by verb order
   const sortedOperations = sortOperations(service.operations);
 
+  // Initialize nested-schema hoisting for this file. Seed the reserved-name set
+  // with every top-level identifier the operations will emit (request/response/
+  // error consts + error classes) so hoisted private names never collide with
+  // an exported declaration.
+  const reservedNames = new Set<string>(RESERVED_HOIST_NAMES);
+  for (const op of sortedOperations) {
+    const pascal = toPascalCase(op.operationName);
+    reservedNames.add(`${pascal}Request`);
+    reservedNames.add(`${pascal}Response`);
+    reservedNames.add(`${pascal}Error`);
+  }
+  for (const { tag } of mergedErrors) {
+    reservedNames.add(tag);
+  }
+  hoist = { defs: [], byKey: new Map(), names: reservedNames };
+
+  // Placeholder for the hoisted private-schema block; filled in after all
+  // operations are generated (and thus all nested schemas discovered).
+  const hoistPlaceholder = "__HOISTED_SCHEMAS__";
+  lines.push(hoistPlaceholder);
+  lines.push("");
+
   // Generate each operation with inlined types, adding resource group separators
   let currentResource: string | null = null;
   for (const op of sortedOperations) {
@@ -3263,7 +3651,15 @@ function generateServiceFile(
     lines.push(generateOperationSchema(op, patch));
   }
 
+  // Splice the hoisted private-schema definitions in where the placeholder sits
+  // (after errors, before operations), then clear the file-scoped hoist state.
+  const hoistedBlock = emitHoistedDefs();
+  hoist = null;
+
   let code = lines.join("\n");
+  code = hoistedBlock
+    ? code.replace(hoistPlaceholder, hoistedBlock)
+    : code.replace(`${hoistPlaceholder}\n\n`, "");
 
   // Defer schema construction. Each generated request/response schema is a
   // large eager `Schema.Struct({...})` — a service like zero-trust builds
@@ -3272,12 +3668,13 @@ function generateServiceFile(
   // in `Schema.suspend(() => ...)` so construction is deferred until the
   // operation is first invoked (the shared `API.make` client forces + memoizes
   // it lazily). Each schema const is uniquely identified by its
-  // `... as unknown as Schema.Schema<Name>;` cast tail; operation consts
-  // (`API.make(...)`) and error classes don't carry it. The tempered
-  // `(?!export const )` body guard prevents a cast-less const from swallowing
-  // the next const's tail.
+  // `... as unknown as Schema.Codec<Name>;` cast tail; operation consts
+  // (`API.make(...)`) and error classes don't carry it. Both exported
+  // (request/response) and module-private (hoisted nested) consts are wrapped.
+  // The tempered `(?!(?:export )?const )` body guard prevents a cast-less const
+  // from swallowing the next const's tail.
   code = code.replace(
-    /(export const \w+ = \/\*@__PURE__\*\/ \/\*#__PURE__\*\/ )((?:(?!export const )[\s\S])*?)( as unknown as Schema\.Schema<\w+>;)/g,
+    /((?:export )?const \w+ = \/\*@__PURE__\*\/ \/\*#__PURE__\*\/ )((?:(?!(?:export )?const )[\s\S])*?)( as unknown as Schema\.(?:Schema|Codec)<\w+>;)/g,
     (_m, head: string, body: string, tail: string) =>
       `${head}Schema.suspend(() => ${body})${tail}`,
   );

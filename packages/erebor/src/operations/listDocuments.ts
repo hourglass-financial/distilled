@@ -3,6 +3,14 @@ import { API } from "../client.ts";
 import * as T from "../traits.ts";
 
 // Input Schema
+export interface ListDocumentsInput {
+  page_size?: number;
+  starting_after?: string;
+  ending_before?: string;
+  program_id?: string;
+  custom_ref?: string;
+  ereborVersion?: string;
+}
 export const ListDocumentsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   page_size: Schema.optional(Schema.Number),
   starting_after: Schema.optional(Schema.String),
@@ -12,10 +20,41 @@ export const ListDocumentsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   ereborVersion: Schema.optional(Schema.String).pipe(
     T.HttpHeader("Erebor-Version"),
   ),
-}).pipe(T.Http({ method: "GET", path: "/documents" }));
-export type ListDocumentsInput = typeof ListDocumentsInput.Type;
+}).pipe(
+  T.Http({ method: "GET", path: "/documents" }),
+) as unknown as Schema.Codec<ListDocumentsInput>;
 
 // Output Schema
+export interface ListDocumentsOutput {
+  data: ReadonlyArray<{
+    id: string;
+    type: "DOCUMENT";
+    url: string;
+    created_at: string;
+    updated_at: string;
+    archived_at?: string | null;
+    program_id: string;
+    name: string;
+    description?: string | null;
+    document_type:
+      | "US_DRIVERS_LICENSE"
+      | "PASSPORT"
+      | "FORMATION_DOCUMENT"
+      | "IRS_EIN_CONFIRMATION"
+      | "OTHER";
+    content_hash: string;
+    content_size: number;
+    content_type: string;
+    content_url: string;
+    custom_ref?: string | null;
+    custom_fields?: Record<string, unknown> | null;
+  }>;
+  has_more: boolean;
+  page_size: number;
+  page_next?: string | null;
+  page_prev?: string | null;
+  url: string;
+}
 export const ListDocumentsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Array(
     Schema.Struct({
@@ -39,8 +78,10 @@ export const ListDocumentsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       content_size: Schema.Number,
       content_type: Schema.String,
       content_url: Schema.String,
-      custom_ref: Schema.optional(Schema.Unknown),
-      custom_fields: Schema.optional(Schema.Unknown),
+      custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+      custom_fields: Schema.optional(
+        Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+      ),
     }),
   ),
   has_more: Schema.Boolean,
@@ -48,8 +89,7 @@ export const ListDocumentsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   page_next: Schema.optional(Schema.NullOr(Schema.String)),
   page_prev: Schema.optional(Schema.NullOr(Schema.String)),
   url: Schema.String,
-});
-export type ListDocumentsOutput = typeof ListDocumentsOutput.Type;
+}) as unknown as Schema.Codec<ListDocumentsOutput>;
 
 // The operation
 /**

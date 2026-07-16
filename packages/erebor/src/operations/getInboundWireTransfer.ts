@@ -4,17 +4,57 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface GetInboundWireTransferInput {
+  id: string;
+  ereborVersion?: string;
+}
 export const GetInboundWireTransferInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
-  }).pipe(T.Http({ method: "GET", path: "/wire_in/{id}" }));
-export type GetInboundWireTransferInput =
-  typeof GetInboundWireTransferInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/wire_in/{id}" }),
+  ) as unknown as Schema.Codec<GetInboundWireTransferInput>;
 
 // Output Schema
+export interface GetInboundWireTransferOutput {
+  id: string;
+  type: "WIRE_IN";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id?: string | null;
+  status:
+    | "CREATED"
+    | "PENDING"
+    | "SETTLED"
+    | "FAILED"
+    | "RETURNED"
+    | "RESOLVING_FROM_SUSPENSE";
+  counterparty_us_bank_account_id: string;
+  deposit_account_id: string;
+  bank_name?: string | null;
+  debtor_routing_number?: string | null;
+  debtor_account_number?: string | null;
+  debtor_name?: string | null;
+  creditor_name?: string | null;
+  amount: {
+    currency: "USD";
+    exponent: number;
+    value: string;
+    display_value: string;
+  };
+  end_to_end_id: string;
+  imad: string;
+  uetr: string;
+  instruction_id: string | null;
+  memo?: string | null;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const GetInboundWireTransferOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -50,11 +90,11 @@ export const GetInboundWireTransferOutput =
     uetr: Schema.String,
     instruction_id: Schema.NullOr(Schema.String),
     memo: Schema.optional(Schema.NullOr(Schema.String)),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type GetInboundWireTransferOutput =
-  typeof GetInboundWireTransferOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<GetInboundWireTransferOutput>;
 
 // The operation
 /**

@@ -4,6 +4,14 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface UpdateCounterpartyRailAddressInput {
+  id: string;
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  description?: string;
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const UpdateCounterpartyRailAddressInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
@@ -20,11 +28,24 @@ export const UpdateCounterpartyRailAddressInput =
     ),
   }).pipe(
     T.Http({ method: "PATCH", path: "/counterparty_rail_addresses/{id}" }),
-  );
-export type UpdateCounterpartyRailAddressInput =
-  typeof UpdateCounterpartyRailAddressInput.Type;
+  ) as unknown as Schema.Codec<UpdateCounterpartyRailAddressInput>;
 
 // Output Schema
+export interface UpdateCounterpartyRailAddressOutput {
+  id: string;
+  type: "COUNTERPARTY_RAIL_ADDRESS";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  customer_id?: string | null;
+  program_id?: string | null;
+  counterparty_id?: string | null;
+  description?: string | null;
+  address: string;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const UpdateCounterpartyRailAddressOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -38,11 +59,11 @@ export const UpdateCounterpartyRailAddressOutput =
     counterparty_id: Schema.optional(Schema.NullOr(Schema.String)),
     description: Schema.optional(Schema.NullOr(Schema.String)),
     address: Schema.String,
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type UpdateCounterpartyRailAddressOutput =
-  typeof UpdateCounterpartyRailAddressOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<UpdateCounterpartyRailAddressOutput>;
 
 // The operation
 /**

@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -839,6 +839,10 @@ export class InternalServerException extends S.TaggedErrorClass<InternalServerEx
   "InternalServerException",
   { message: S.optional(S.String) },
 ).pipe(C.withServerError) {}
+export class ServiceUnavailableException extends S.TaggedErrorClass<ServiceUnavailableException>()(
+  "ServiceUnavailableException",
+  { message: S.optional(S.String) },
+).pipe(C.withServerError) {}
 export class ValidationException extends S.TaggedErrorClass<ValidationException>()(
   "ValidationException",
   { message: S.optional(S.String) },
@@ -876,9 +880,11 @@ export const createCliToken: API.OperationMethod<
   input: CreateCliTokenRequest,
   output: CreateCliTokenResponse,
   errors: [ResourceNotFoundException],
+  operationName: "CreateCliToken",
 }));
 export type CreateEnvironmentError =
   | InternalServerException
+  | ServiceUnavailableException
   | ValidationException
   | CommonErrors;
 /**
@@ -892,7 +898,12 @@ export const createEnvironment: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: CreateEnvironmentInput,
   output: CreateEnvironmentOutput,
-  errors: [InternalServerException, ValidationException],
+  errors: [
+    InternalServerException,
+    ServiceUnavailableException,
+    ValidationException,
+  ],
+  operationName: "CreateEnvironment",
 }));
 export type CreateWebLoginTokenError =
   | AccessDeniedException
@@ -917,10 +928,12 @@ export const createWebLoginToken: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "CreateWebLoginToken",
 }));
 export type DeleteEnvironmentError =
   | InternalServerException
   | ResourceNotFoundException
+  | ServiceUnavailableException
   | ValidationException
   | CommonErrors;
 /**
@@ -937,8 +950,10 @@ export const deleteEnvironment: API.OperationMethod<
   errors: [
     InternalServerException,
     ResourceNotFoundException,
+    ServiceUnavailableException,
     ValidationException,
   ],
+  operationName: "DeleteEnvironment",
 }));
 export type GetEnvironmentError =
   | InternalServerException
@@ -961,6 +976,7 @@ export const getEnvironment: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "GetEnvironment",
 }));
 export type InvokeRestApiError =
   | AccessDeniedException
@@ -971,8 +987,7 @@ export type InvokeRestApiError =
   | ValidationException
   | CommonErrors;
 /**
- * Invokes the Apache Airflow REST API on the webserver with the specified inputs. To
- * learn more, see Using the Apache Airflow REST API
+ * Invokes the Apache Airflow REST API on the webserver with the specified inputs. To learn more, see Using the Apache Airflow REST API
  */
 export const invokeRestApi: API.OperationMethod<
   InvokeRestApiRequest,
@@ -990,6 +1005,7 @@ export const invokeRestApi: API.OperationMethod<
     RestApiServerException,
     ValidationException,
   ],
+  operationName: "InvokeRestApi",
 }));
 export type ListEnvironmentsError =
   | InternalServerException
@@ -1022,6 +1038,7 @@ export const listEnvironments: API.OperationMethod<
   input: ListEnvironmentsInput,
   output: ListEnvironmentsOutput,
   errors: [InternalServerException, ValidationException],
+  operationName: "ListEnvironments",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -1050,6 +1067,7 @@ export const listTagsForResource: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type PublishMetricsError =
   | InternalServerException
@@ -1067,6 +1085,7 @@ export const publishMetrics: API.OperationMethod<
   input: PublishMetricsInput,
   output: PublishMetricsOutput,
   errors: [InternalServerException, ValidationException],
+  operationName: "PublishMetrics",
 }));
 export type TagResourceError =
   | InternalServerException
@@ -1089,6 +1108,7 @@ export const tagResource: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | InternalServerException
@@ -1111,10 +1131,12 @@ export const untagResource: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "UntagResource",
 }));
 export type UpdateEnvironmentError =
   | InternalServerException
   | ResourceNotFoundException
+  | ServiceUnavailableException
   | ValidationException
   | CommonErrors;
 /**
@@ -1131,6 +1153,8 @@ export const updateEnvironment: API.OperationMethod<
   errors: [
     InternalServerException,
     ResourceNotFoundException,
+    ServiceUnavailableException,
     ValidationException,
   ],
+  operationName: "UpdateEnvironment",
 }));

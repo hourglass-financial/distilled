@@ -10,6 +10,22 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface GenerateAOneTimeLinkForAnInquirySessionInput {
+  inquirySessionId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const GenerateAOneTimeLinkForAnInquirySessionInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     inquirySessionId: Schema.String.pipe(T.PathParam()),
@@ -40,11 +56,148 @@ export const GenerateAOneTimeLinkForAnInquirySessionInput =
       method: "POST",
       path: "/inquiry-sessions/{inquirySessionId}/generate-one-time-link",
     }),
-  );
-export type GenerateAOneTimeLinkForAnInquirySessionInput =
-  typeof GenerateAOneTimeLinkForAnInquirySessionInput.Type;
+  ) as unknown as Schema.Codec<GenerateAOneTimeLinkForAnInquirySessionInput>;
 
 // Output Schema
+export interface GenerateAOneTimeLinkForAnInquirySessionOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      status?: string;
+      "created-at"?: string;
+      "started-at"?: string | null;
+      "expired-at"?: string | null;
+      "ip-address"?: string | null;
+      "user-agent"?: string | null;
+      "os-name"?: string | null;
+      "os-full-version"?: string | null;
+      "device-type"?: string | null;
+      "device-name"?: string | null;
+      "browser-name"?: string | null;
+      "browser-full-version"?: string | null;
+      "mobile-sdk-name"?: string | null;
+      "mobile-sdk-full-version"?: string | null;
+      "device-handoff-method"?: string | null;
+      "is-proxy"?: boolean | null;
+      "is-tor"?: boolean | null;
+      "is-datacenter"?: boolean | null;
+      "is-vpn"?: boolean | null;
+      "threat-level"?: string | null;
+      "country-code"?: string | null;
+      "country-name"?: string | null;
+      "region-code"?: string | null;
+      "region-name"?: string | null;
+      latitude?: number | null;
+      longitude?: number | null;
+      "gps-latitude"?: number | null;
+      "gps-longitude"?: number | null;
+      "gps-precision"?: string | null;
+      "ip-connection-type"?: string | null;
+      "ip-isp"?: string | null;
+      "network-organization"?: string | null;
+    };
+    relationships?: {
+      inquiry?: { data?: { type?: string; id?: string } };
+      device?: { data?: { type?: string; id?: string } | null };
+      network?: { data?: { type?: string; id?: string } | null };
+    };
+  };
+  meta: { "one-time-link": string; "one-time-link-short": string };
+  included?: ReadonlyArray<
+    | {
+        type?: string;
+        id?: string;
+        attributes?: {
+          "device-vendor-id"?: string | null;
+          "device-fingerprint"?: string | null;
+          "browser-fingerprint"?: string | null;
+        };
+      }
+    | {
+        type: string;
+        id: string;
+        attributes: {
+          status: string;
+          "reference-id": string | null;
+          note: string | null;
+          behaviors: Record<string, unknown> | null;
+          tags: ReadonlyArray<string | null>;
+          creator: string;
+          "reviewer-comment": string | null;
+          "created-at": string;
+          "updated-at": string;
+          "started-at": string | null;
+          "expires-at": string | null;
+          "completed-at": string | null;
+          "failed-at": string | null;
+          "marked-for-review-at": string | null;
+          "decisioned-at": string | null;
+          "expired-at": string | null;
+          "redacted-at": string | null;
+          "previous-step-name": string | null;
+          "next-step-name": string | null;
+          fields: Record<
+            string,
+            | { type: "string"; value: string | null }
+            | { type: "choices"; value: string | null }
+            | { type: "multi_choices"; value: ReadonlyArray<string> }
+            | { type: "boolean"; value: boolean | null }
+            | { type: "number"; value: number | null }
+            | { type: "date"; value: string | null }
+            | {
+                type: "generic";
+                value: { id: string; type: "Document::Generic" } | null;
+              }
+            | {
+                type: "government_id";
+                value: { id: string; type: "Document::GovernmentId" } | null;
+              }
+            | {
+                type: "selfie";
+                value: { id: string; type: "Selfie::ProfileAndCenter" } | null;
+              }
+            | { type: "json"; value: unknown }
+          >;
+        };
+        relationships: {
+          account?: { data?: { id?: string; type?: string } | null };
+          documents?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+          template?: { data?: { id?: string; type?: string } | null };
+          "inquiry-template"?: { data?: { id?: string; type?: string } | null };
+          "inquiry-template-version"?: {
+            data?: { id?: string; type?: string } | null;
+          };
+          reports?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+          transaction?: { data?: { id?: string; type?: string } | null };
+          reviewer?: { data?: { id?: string; type?: string } | null };
+          selfies?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+          sessions?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+          verifications?: {
+            data?: ReadonlyArray<{ id?: string; type?: string }>;
+          };
+        };
+      }
+    | {
+        type?: string;
+        id?: string;
+        attributes?: {
+          "created-at"?: string;
+          "ip-address"?: string | null;
+          "service-provider"?: string | null;
+          "service-type"?: string | null;
+          "proxy-type"?: string | null;
+          "threat-level"?: string | null;
+          "country-code"?: string | null;
+          "country-name"?: string | null;
+          "region-code"?: string | null;
+          "region-name"?: string | null;
+          latitude?: number | null;
+          longitude?: number | null;
+        };
+      }
+  >;
+}
 export const GenerateAOneTimeLinkForAnInquirySessionOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -134,9 +287,7 @@ export const GenerateAOneTimeLinkForAnInquirySessionOutput =
       "one-time-link-short": Schema.String,
     }),
     included: Schema.optional(Schema.Array(Schema.Unknown)),
-  });
-export type GenerateAOneTimeLinkForAnInquirySessionOutput =
-  typeof GenerateAOneTimeLinkForAnInquirySessionOutput.Type;
+  }) as unknown as Schema.Codec<GenerateAOneTimeLinkForAnInquirySessionOutput>;
 
 // The operation
 /**

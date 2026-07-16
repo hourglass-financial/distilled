@@ -9,6 +9,22 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface CreateANameListInput {
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  data?: { attributes?: { "allow-fuzzy-name-first"?: boolean; name?: string } };
+}
 export const CreateANameListInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
   fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
@@ -42,10 +58,26 @@ export const CreateANameListInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       ),
     }),
   ),
-}).pipe(T.Http({ method: "POST", path: "/list/names" }));
-export type CreateANameListInput = typeof CreateANameListInput.Type;
+}).pipe(
+  T.Http({ method: "POST", path: "/list/names" }),
+) as unknown as Schema.Codec<CreateANameListInput>;
 
 // Output Schema
+export interface CreateANameListOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      name?: string;
+      status?: string;
+      "archived-at"?: string | null;
+      "created-at"?: string;
+      "updated-at"?: string;
+      "allow-fuzzy-name-first"?: boolean;
+    };
+    relationships?: { "list-items"?: { data?: ReadonlyArray<unknown> } };
+  };
+}
 export const CreateANameListOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Struct({
     type: Schema.optional(Schema.String),
@@ -70,8 +102,7 @@ export const CreateANameListOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       }),
     ),
   }),
-});
-export type CreateANameListOutput = typeof CreateANameListOutput.Type;
+}) as unknown as Schema.Codec<CreateANameListOutput>;
 
 // The operation
 /**

@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -670,11 +670,22 @@ export const RuleCondition = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 export type RuleConditionList = RuleCondition[];
 export const RuleConditionList =
   /*@__PURE__*/ /*#__PURE__*/ S.Array(RuleCondition);
+export interface MatchingConfig {
+  enableTransitiveMatching?: boolean;
+}
+export const MatchingConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ enableTransitiveMatching: S.optional(S.Boolean) }),
+).annotate({ identifier: "MatchingConfig" }) as any as S.Schema<MatchingConfig>;
 export interface RuleConditionProperties {
   rules: RuleCondition[];
+  matchingConfig?: MatchingConfig;
 }
 export const RuleConditionProperties = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
-  () => S.Struct({ rules: RuleConditionList }),
+  () =>
+    S.Struct({
+      rules: RuleConditionList,
+      matchingConfig: S.optional(MatchingConfig),
+    }),
 ).annotate({
   identifier: "RuleConditionProperties",
 }) as any as S.Schema<RuleConditionProperties>;
@@ -2556,6 +2567,7 @@ export const addPolicyStatement: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AddPolicyStatement",
 }));
 export type BatchDeleteUniqueIdError =
   | InternalServerException
@@ -2578,6 +2590,7 @@ export const batchDeleteUniqueId: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "BatchDeleteUniqueId",
 }));
 export type CreateIdMappingWorkflowError =
   | AccessDeniedException
@@ -2608,6 +2621,7 @@ export const createIdMappingWorkflow: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateIdMappingWorkflow",
 }));
 export type CreateIdNamespaceError =
   | AccessDeniedException
@@ -2636,6 +2650,7 @@ export const createIdNamespace: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateIdNamespace",
 }));
 export type CreateMatchingWorkflowError =
   | AccessDeniedException
@@ -2666,6 +2681,7 @@ export const createMatchingWorkflow: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateMatchingWorkflow",
 }));
 export type CreateSchemaMappingError =
   | AccessDeniedException
@@ -2694,6 +2710,7 @@ export const createSchemaMapping: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateSchemaMapping",
 }));
 export type DeleteIdMappingWorkflowError =
   | AccessDeniedException
@@ -2720,6 +2737,7 @@ export const deleteIdMappingWorkflow: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteIdMappingWorkflow",
 }));
 export type DeleteIdNamespaceError =
   | AccessDeniedException
@@ -2744,6 +2762,7 @@ export const deleteIdNamespace: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteIdNamespace",
 }));
 export type DeleteMatchingWorkflowError =
   | AccessDeniedException
@@ -2770,6 +2789,7 @@ export const deleteMatchingWorkflow: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteMatchingWorkflow",
 }));
 export type DeletePolicyStatementError =
   | AccessDeniedException
@@ -2798,6 +2818,7 @@ export const deletePolicyStatement: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeletePolicyStatement",
 }));
 export type DeleteSchemaMappingError =
   | AccessDeniedException
@@ -2824,6 +2845,7 @@ export const deleteSchemaMapping: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteSchemaMapping",
 }));
 export type GenerateMatchIdError =
   | AccessDeniedException
@@ -2852,6 +2874,7 @@ export const generateMatchId: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GenerateMatchId",
 }));
 export type GetIdMappingJobError =
   | AccessDeniedException
@@ -2878,6 +2901,7 @@ export const getIdMappingJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetIdMappingJob",
 }));
 export type GetIdMappingWorkflowError =
   | AccessDeniedException
@@ -2904,6 +2928,7 @@ export const getIdMappingWorkflow: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetIdMappingWorkflow",
 }));
 export type GetIdNamespaceError =
   | AccessDeniedException
@@ -2930,6 +2955,7 @@ export const getIdNamespace: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetIdNamespace",
 }));
 export type GetMatchIdError =
   | AccessDeniedException
@@ -2958,6 +2984,7 @@ export const getMatchId: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetMatchId",
 }));
 export type GetMatchingJobError =
   | AccessDeniedException
@@ -2984,6 +3011,7 @@ export const getMatchingJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetMatchingJob",
 }));
 export type GetMatchingWorkflowError =
   | AccessDeniedException
@@ -3010,6 +3038,7 @@ export const getMatchingWorkflow: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetMatchingWorkflow",
 }));
 export type GetPolicyError =
   | AccessDeniedException
@@ -3036,6 +3065,7 @@ export const getPolicy: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetPolicy",
 }));
 export type GetProviderServiceError =
   | AccessDeniedException
@@ -3062,6 +3092,7 @@ export const getProviderService: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetProviderService",
 }));
 export type GetSchemaMappingError =
   | AccessDeniedException
@@ -3088,6 +3119,7 @@ export const getSchemaMapping: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetSchemaMapping",
 }));
 export type ListIdMappingJobsError =
   | AccessDeniedException
@@ -3129,6 +3161,7 @@ export const listIdMappingJobs: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListIdMappingJobs",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3174,6 +3207,7 @@ export const listIdMappingWorkflows: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListIdMappingWorkflows",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3219,6 +3253,7 @@ export const listIdNamespaces: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListIdNamespaces",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3266,6 +3301,7 @@ export const listMatchingJobs: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListMatchingJobs",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3311,6 +3347,7 @@ export const listMatchingWorkflows: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListMatchingWorkflows",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3356,6 +3393,7 @@ export const listProviderServices: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListProviderServices",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3401,6 +3439,7 @@ export const listSchemaMappings: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListSchemaMappings",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3429,6 +3468,7 @@ export const listTagsForResource: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type PutPolicyError =
   | AccessDeniedException
@@ -3457,6 +3497,7 @@ export const putPolicy: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutPolicy",
 }));
 export type StartIdMappingJobError =
   | AccessDeniedException
@@ -3487,6 +3528,7 @@ export const startIdMappingJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartIdMappingJob",
 }));
 export type StartMatchingJobError =
   | AccessDeniedException
@@ -3517,6 +3559,7 @@ export const startMatchingJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartMatchingJob",
 }));
 export type TagResourceError =
   | InternalServerException
@@ -3539,6 +3582,7 @@ export const tagResource: API.OperationMethod<
     ResourceNotFoundException,
     ValidationException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | InternalServerException
@@ -3556,6 +3600,7 @@ export const untagResource: API.OperationMethod<
   input: UntagResourceInput,
   output: UntagResourceOutput,
   errors: [InternalServerException, ResourceNotFoundException],
+  operationName: "UntagResource",
 }));
 export type UpdateIdMappingWorkflowError =
   | AccessDeniedException
@@ -3584,6 +3629,7 @@ export const updateIdMappingWorkflow: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateIdMappingWorkflow",
 }));
 export type UpdateIdNamespaceError =
   | AccessDeniedException
@@ -3610,6 +3656,7 @@ export const updateIdNamespace: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateIdNamespace",
 }));
 export type UpdateMatchingWorkflowError =
   | AccessDeniedException
@@ -3638,6 +3685,7 @@ export const updateMatchingWorkflow: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateMatchingWorkflow",
 }));
 export type UpdateSchemaMappingError =
   | AccessDeniedException
@@ -3668,4 +3716,5 @@ export const updateSchemaMapping: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateSchemaMapping",
 }));

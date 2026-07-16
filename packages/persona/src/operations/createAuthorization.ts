@@ -10,6 +10,22 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface CreateAuthorizationInput {
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  "client-id": string;
+  "response-type": string;
+  scope: string;
+}
 export const CreateAuthorizationInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     keyInflection: Schema.optional(
@@ -39,16 +55,18 @@ export const CreateAuthorizationInput =
       path: "/oauth/authorize",
       contentType: "form-urlencoded",
     }),
-  );
-export type CreateAuthorizationInput = typeof CreateAuthorizationInput.Type;
+  ) as unknown as Schema.Codec<CreateAuthorizationInput>;
 
 // Output Schema
+export interface CreateAuthorizationOutput {
+  code: string;
+  "expires-in": number;
+}
 export const CreateAuthorizationOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     code: Schema.String,
     "expires-in": Schema.Number,
-  });
-export type CreateAuthorizationOutput = typeof CreateAuthorizationOutput.Type;
+  }) as unknown as Schema.Codec<CreateAuthorizationOutput>;
 
 // The operation
 /**

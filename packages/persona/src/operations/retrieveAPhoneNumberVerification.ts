@@ -4,6 +4,22 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface RetrieveAPhoneNumberVerificationInput {
+  verificationId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const RetrieveAPhoneNumberVerificationInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     verificationId: Schema.String.pipe(T.PathParam()),
@@ -34,11 +50,53 @@ export const RetrieveAPhoneNumberVerificationInput =
       method: "GET",
       path: "/verification/phone-numbers/{verificationId}",
     }),
-  );
-export type RetrieveAPhoneNumberVerificationInput =
-  typeof RetrieveAPhoneNumberVerificationInput.Type;
+  ) as unknown as Schema.Codec<RetrieveAPhoneNumberVerificationInput>;
 
 // Output Schema
+export interface RetrieveAPhoneNumberVerificationOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      status?: string;
+      "created-at"?: string;
+      "created-at-ts"?: number;
+      "submitted-at"?: string | null;
+      "submitted-at-ts"?: number | null;
+      "completed-at"?: string | null;
+      "completed-at-ts"?: number | null;
+      "redacted-at"?: string | null;
+      "country-code"?: string | null;
+      tags?: ReadonlyArray<string>;
+      checks?: ReadonlyArray<{
+        name?: string;
+        status?: string;
+        reasons?: ReadonlyArray<string | null>;
+        requirement?: string;
+        metadata?: Record<string, unknown>;
+      }>;
+      "phone-number"?: string;
+      "confirmation-code"?: string;
+      metadata?: { "telesign-risk-score"?: number };
+    };
+    relationships?: {
+      inquiry?: { data?: { id?: string; type?: string } | null };
+      template?: { data?: { type?: string; id?: string } | null };
+      "inquiry-template-version"?: {
+        data?: { type?: string; id?: string } | null;
+      };
+      "inquiry-template"?: { data?: { type?: string; id?: string } | null };
+      transaction?: { data?: { type?: string; id?: string } | null };
+      "verification-template"?: {
+        data?: { type?: string; id?: string } | null;
+      };
+      "verification-template-version"?: {
+        data?: { type?: string; id?: string } | null;
+      };
+      accounts?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+    };
+  };
+}
 export const RetrieveAPhoneNumberVerificationOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -181,9 +239,7 @@ export const RetrieveAPhoneNumberVerificationOutput =
         }),
       ),
     }),
-  });
-export type RetrieveAPhoneNumberVerificationOutput =
-  typeof RetrieveAPhoneNumberVerificationOutput.Type;
+  }) as unknown as Schema.Codec<RetrieveAPhoneNumberVerificationOutput>;
 
 // The operation
 /**

@@ -10,6 +10,22 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface ReportActionResumeContinuousMonitoringInput {
+  reportId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const ReportActionResumeContinuousMonitoringInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     reportId: Schema.String.pipe(T.PathParam()),
@@ -35,18 +51,20 @@ export const ReportActionResumeContinuousMonitoringInput =
         "2020-05-18",
       ]),
     ).pipe(T.HttpHeader("Persona-Version")),
-  }).pipe(T.Http({ method: "POST", path: "/reports/{reportId}/resume" }));
-export type ReportActionResumeContinuousMonitoringInput =
-  typeof ReportActionResumeContinuousMonitoringInput.Type;
+  }).pipe(
+    T.Http({ method: "POST", path: "/reports/{reportId}/resume" }),
+  ) as unknown as Schema.Codec<ReportActionResumeContinuousMonitoringInput>;
 
 // Output Schema
+export interface ReportActionResumeContinuousMonitoringOutput {
+  data: unknown;
+  included?: ReadonlyArray<unknown>;
+}
 export const ReportActionResumeContinuousMonitoringOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Unknown,
     included: Schema.optional(Schema.Array(Schema.Unknown)),
-  });
-export type ReportActionResumeContinuousMonitoringOutput =
-  typeof ReportActionResumeContinuousMonitoringOutput.Type;
+  }) as unknown as Schema.Codec<ReportActionResumeContinuousMonitoringOutput>;
 
 // The operation
 /**

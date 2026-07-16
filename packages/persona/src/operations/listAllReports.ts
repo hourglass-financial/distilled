@@ -4,6 +4,22 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden } from "../errors.ts";
 
 // Input Schema
+export interface ListAllReportsInput {
+  page?: { after?: string; before?: string; size?: number };
+  fields?: Record<string, string>;
+  filter?: { "reference-id"?: string; "account-id"?: string };
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const ListAllReportsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   page: Schema.optional(
     Schema.Struct({
@@ -11,7 +27,7 @@ export const ListAllReportsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       before: Schema.optional(Schema.String),
       size: Schema.optional(Schema.Number),
     }),
-  ).pipe(T.HttpQuery("page")),
+  ),
   fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
     T.HttpQuery("fields"),
   ),
@@ -20,7 +36,7 @@ export const ListAllReportsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "reference-id": Schema.optional(Schema.String),
       "account-id": Schema.optional(Schema.String),
     }),
-  ).pipe(T.HttpQuery("filter")),
+  ),
   keyInflection: Schema.optional(
     Schema.Literals(["camel", "kebab", "snake"]),
   ).pipe(T.HttpHeader("Key-Inflection")),
@@ -39,18 +55,22 @@ export const ListAllReportsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "2020-05-18",
     ]),
   ).pipe(T.HttpHeader("Persona-Version")),
-}).pipe(T.Http({ method: "GET", path: "/reports" }));
-export type ListAllReportsInput = typeof ListAllReportsInput.Type;
+}).pipe(
+  T.Http({ method: "GET", path: "/reports" }),
+) as unknown as Schema.Codec<ListAllReportsInput>;
 
 // Output Schema
+export interface ListAllReportsOutput {
+  data: ReadonlyArray<unknown>;
+  links: { prev: string | null; next: string | null };
+}
 export const ListAllReportsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Array(Schema.Unknown),
   links: Schema.Struct({
     prev: Schema.NullOr(Schema.String),
     next: Schema.NullOr(Schema.String),
   }),
-});
-export type ListAllReportsOutput = typeof ListAllReportsOutput.Type;
+}) as unknown as Schema.Codec<ListAllReportsOutput>;
 
 // The operation
 /**

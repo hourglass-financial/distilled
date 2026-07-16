@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -2469,12 +2469,18 @@ export const GetPolicyStoreAliasOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 ).annotate({
   identifier: "GetPolicyStoreAliasOutput",
 }) as any as S.Schema<GetPolicyStoreAliasOutput>;
+export type DeletionMode = "SoftDelete" | "HardDelete" | (string & {});
+export const DeletionMode = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface DeletePolicyStoreAliasInput {
   aliasName: string;
+  deletionMode?: DeletionMode;
 }
 export const DeletePolicyStoreAliasInput =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-    S.Struct({ aliasName: S.String }).pipe(
+    S.Struct({
+      aliasName: S.String,
+      deletionMode: S.optional(DeletionMode),
+    }).pipe(
       T.all(T.Http({ method: "POST", uri: "/" }), svc, auth, proto, ver, rules),
     ),
   ).annotate({
@@ -2615,6 +2621,7 @@ export const listTagsForResource: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type TagResourceError =
   | AccessDeniedException
@@ -2647,6 +2654,7 @@ export const tagResource: API.OperationMethod<
     ThrottlingException,
     TooManyTagsException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | AccessDeniedException
@@ -2671,6 +2679,7 @@ export const untagResource: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "UntagResource",
 }));
 export type CreatePolicyStoreError =
   | ConflictException
@@ -2679,7 +2688,7 @@ export type CreatePolicyStoreError =
 /**
  * Creates a policy store. A policy store is a container for policy resources.
  *
- * Although Cedar supports multiple namespaces, Verified Permissions currently supports only one namespace per policy store.
+ * As of May 2026, Verified Permissions has aligned with Cedar and now supports multiple namespaces.
  *
  * Verified Permissions is * eventually consistent *. It can take a few seconds for a new or changed element to propagate through the service and be visible in the results of other Verified Permissions operations.
  */
@@ -2692,6 +2701,7 @@ export const createPolicyStore: API.OperationMethod<
   input: CreatePolicyStoreInput,
   output: CreatePolicyStoreOutput,
   errors: [ConflictException, ServiceQuotaExceededException],
+  operationName: "CreatePolicyStore",
 }));
 export type GetPolicyStoreError = ResourceNotFoundException | CommonErrors;
 /**
@@ -2706,6 +2716,7 @@ export const getPolicyStore: API.OperationMethod<
   input: GetPolicyStoreInput,
   output: GetPolicyStoreOutput,
   errors: [ResourceNotFoundException],
+  operationName: "GetPolicyStore",
 }));
 export type UpdatePolicyStoreError =
   | ConflictException
@@ -2725,6 +2736,7 @@ export const updatePolicyStore: API.OperationMethod<
   input: UpdatePolicyStoreInput,
   output: UpdatePolicyStoreOutput,
   errors: [ConflictException, ResourceNotFoundException],
+  operationName: "UpdatePolicyStore",
 }));
 export type DeletePolicyStoreError = InvalidStateException | CommonErrors;
 /**
@@ -2741,6 +2753,7 @@ export const deletePolicyStore: API.OperationMethod<
   input: DeletePolicyStoreInput,
   output: DeletePolicyStoreOutput,
   errors: [InvalidStateException],
+  operationName: "DeletePolicyStore",
 }));
 export type ListPolicyStoresError = CommonErrors;
 /**
@@ -2770,6 +2783,7 @@ export const listPolicyStores: API.OperationMethod<
   input: ListPolicyStoresInput,
   output: ListPolicyStoresOutput,
   errors: [],
+  operationName: "ListPolicyStores",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -2796,6 +2810,7 @@ export const batchIsAuthorized: API.OperationMethod<
   input: BatchIsAuthorizedInput,
   output: BatchIsAuthorizedOutput,
   errors: [ResourceNotFoundException],
+  operationName: "BatchIsAuthorized",
 }));
 export type BatchIsAuthorizedWithTokenError =
   | ResourceNotFoundException
@@ -2818,6 +2833,7 @@ export const batchIsAuthorizedWithToken: API.OperationMethod<
   input: BatchIsAuthorizedWithTokenInput,
   output: BatchIsAuthorizedWithTokenOutput,
   errors: [ResourceNotFoundException],
+  operationName: "BatchIsAuthorizedWithToken",
 }));
 export type GetSchemaError = ResourceNotFoundException | CommonErrors;
 /**
@@ -2832,6 +2848,7 @@ export const getSchema: API.OperationMethod<
   input: GetSchemaInput,
   output: GetSchemaOutput,
   errors: [ResourceNotFoundException],
+  operationName: "GetSchema",
 }));
 export type IsAuthorizedError = ResourceNotFoundException | CommonErrors;
 /**
@@ -2846,6 +2863,7 @@ export const isAuthorized: API.OperationMethod<
   input: IsAuthorizedInput,
   output: IsAuthorizedOutput,
   errors: [ResourceNotFoundException],
+  operationName: "IsAuthorized",
 }));
 export type IsAuthorizedWithTokenError =
   | ResourceNotFoundException
@@ -2866,6 +2884,7 @@ export const isAuthorizedWithToken: API.OperationMethod<
   input: IsAuthorizedWithTokenInput,
   output: IsAuthorizedWithTokenOutput,
   errors: [ResourceNotFoundException],
+  operationName: "IsAuthorizedWithToken",
 }));
 export type PutSchemaError =
   | ConflictException
@@ -2890,6 +2909,7 @@ export const putSchema: API.OperationMethod<
     ResourceNotFoundException,
     ServiceQuotaExceededException,
   ],
+  operationName: "PutSchema",
 }));
 export type BatchGetPolicyError = CommonErrors;
 /**
@@ -2906,6 +2926,7 @@ export const batchGetPolicy: API.OperationMethod<
   input: BatchGetPolicyInput,
   output: BatchGetPolicyOutput,
   errors: [],
+  operationName: "BatchGetPolicy",
 }));
 export type CreateIdentitySourceError =
   | ConflictException
@@ -2940,6 +2961,7 @@ export const createIdentitySource: API.OperationMethod<
     ResourceNotFoundException,
     ServiceQuotaExceededException,
   ],
+  operationName: "CreateIdentitySource",
 }));
 export type GetIdentitySourceError = ResourceNotFoundException | CommonErrors;
 /**
@@ -2954,6 +2976,7 @@ export const getIdentitySource: API.OperationMethod<
   input: GetIdentitySourceInput,
   output: GetIdentitySourceOutput,
   errors: [ResourceNotFoundException],
+  operationName: "GetIdentitySource",
 }));
 export type UpdateIdentitySourceError =
   | ConflictException
@@ -2973,6 +2996,7 @@ export const updateIdentitySource: API.OperationMethod<
   input: UpdateIdentitySourceInput,
   output: UpdateIdentitySourceOutput,
   errors: [ConflictException, ResourceNotFoundException],
+  operationName: "UpdateIdentitySource",
 }));
 export type DeleteIdentitySourceError =
   | ConflictException
@@ -2990,6 +3014,7 @@ export const deleteIdentitySource: API.OperationMethod<
   input: DeleteIdentitySourceInput,
   output: DeleteIdentitySourceOutput,
   errors: [ConflictException, ResourceNotFoundException],
+  operationName: "DeleteIdentitySource",
 }));
 export type ListIdentitySourcesError = ResourceNotFoundException | CommonErrors;
 /**
@@ -3019,6 +3044,7 @@ export const listIdentitySources: API.OperationMethod<
   input: ListIdentitySourcesInput,
   output: ListIdentitySourcesOutput,
   errors: [ResourceNotFoundException],
+  operationName: "ListIdentitySources",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3055,6 +3081,7 @@ export const createPolicy: API.OperationMethod<
     ResourceNotFoundException,
     ServiceQuotaExceededException,
   ],
+  operationName: "CreatePolicy",
 }));
 export type GetPolicyError = ResourceNotFoundException | CommonErrors;
 /**
@@ -3069,6 +3096,7 @@ export const getPolicy: API.OperationMethod<
   input: GetPolicyInput,
   output: GetPolicyOutput,
   errors: [ResourceNotFoundException],
+  operationName: "GetPolicy",
 }));
 export type UpdatePolicyError =
   | ConflictException
@@ -3113,6 +3141,7 @@ export const updatePolicy: API.OperationMethod<
     ResourceNotFoundException,
     ServiceQuotaExceededException,
   ],
+  operationName: "UpdatePolicy",
 }));
 export type DeletePolicyError =
   | ConflictException
@@ -3132,6 +3161,7 @@ export const deletePolicy: API.OperationMethod<
   input: DeletePolicyInput,
   output: DeletePolicyOutput,
   errors: [ConflictException, ResourceNotFoundException],
+  operationName: "DeletePolicy",
 }));
 export type ListPoliciesError = ResourceNotFoundException | CommonErrors;
 /**
@@ -3161,6 +3191,7 @@ export const listPolicies: API.OperationMethod<
   input: ListPoliciesInput,
   output: ListPoliciesOutput,
   errors: [ResourceNotFoundException],
+  operationName: "ListPolicies",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3191,6 +3222,7 @@ export const createPolicyTemplate: API.OperationMethod<
     ResourceNotFoundException,
     ServiceQuotaExceededException,
   ],
+  operationName: "CreatePolicyTemplate",
 }));
 export type GetPolicyTemplateError = ResourceNotFoundException | CommonErrors;
 /**
@@ -3205,6 +3237,7 @@ export const getPolicyTemplate: API.OperationMethod<
   input: GetPolicyTemplateInput,
   output: GetPolicyTemplateOutput,
   errors: [ResourceNotFoundException],
+  operationName: "GetPolicyTemplate",
 }));
 export type UpdatePolicyTemplateError =
   | ConflictException
@@ -3226,6 +3259,7 @@ export const updatePolicyTemplate: API.OperationMethod<
   input: UpdatePolicyTemplateInput,
   output: UpdatePolicyTemplateOutput,
   errors: [ConflictException, ResourceNotFoundException],
+  operationName: "UpdatePolicyTemplate",
 }));
 export type DeletePolicyTemplateError =
   | ConflictException
@@ -3245,6 +3279,7 @@ export const deletePolicyTemplate: API.OperationMethod<
   input: DeletePolicyTemplateInput,
   output: DeletePolicyTemplateOutput,
   errors: [ConflictException, ResourceNotFoundException],
+  operationName: "DeletePolicyTemplate",
 }));
 export type ListPolicyTemplatesError = ResourceNotFoundException | CommonErrors;
 /**
@@ -3274,6 +3309,7 @@ export const listPolicyTemplates: API.OperationMethod<
   input: ListPolicyTemplatesInput,
   output: ListPolicyTemplatesOutput,
   errors: [ResourceNotFoundException],
+  operationName: "ListPolicyTemplates",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3306,6 +3342,7 @@ export const createPolicyStoreAlias: API.OperationMethod<
     ResourceNotFoundException,
     ServiceQuotaExceededException,
   ],
+  operationName: "CreatePolicyStoreAlias",
 }));
 export type GetPolicyStoreAliasError = ResourceNotFoundException | CommonErrors;
 /**
@@ -3320,6 +3357,7 @@ export const getPolicyStoreAlias: API.OperationMethod<
   input: GetPolicyStoreAliasInput,
   output: GetPolicyStoreAliasOutput,
   errors: [ResourceNotFoundException],
+  operationName: "GetPolicyStoreAlias",
 }));
 export type DeletePolicyStoreAliasError = InvalidStateException | CommonErrors;
 /**
@@ -3327,7 +3365,11 @@ export type DeletePolicyStoreAliasError = InvalidStateException | CommonErrors;
  *
  * This operation is idempotent. If you specify a policy store alias that does not exist, the request response will still return a successful HTTP 200 status code.
  *
- * When a policy store alias is deleted, it enters the `PendingDeletion` state. When a policy store alias is in the `PendingDeletion` state, new policy store aliases cannot be created with the same name. If the policy store alias is used in an API that has a `policyStoreId` field, the operation will fail with a `ResourceNotFound` exception.
+ * By default, when a policy store alias is deleted, it enters the `PendingDeletion` state. When a policy store alias is in the `PendingDeletion` state, new policy store aliases cannot be created with the same name. If the policy store alias is used in an API that has a `policyStoreId` field, the operation will fail with a `ResourceNotFound` exception.
+ *
+ * To immediately delete a policy store alias and bypass the `PendingDeletion` state, set the `deletionMode` parameter to `HardDelete`.
+ *
+ * Verified Permissions is eventually consistent. If you hard delete a policy store alias and then immediately recreate it to be associated with a different policy store, requests that reference this alias may continue to be evaluated against the previously associated policy store for a short period of time.
  */
 export const deletePolicyStoreAlias: API.OperationMethod<
   DeletePolicyStoreAliasInput,
@@ -3338,6 +3380,7 @@ export const deletePolicyStoreAlias: API.OperationMethod<
   input: DeletePolicyStoreAliasInput,
   output: DeletePolicyStoreAliasOutput,
   errors: [InvalidStateException],
+  operationName: "DeletePolicyStoreAlias",
 }));
 export type ListPolicyStoreAliasesError = CommonErrors;
 /**
@@ -3367,6 +3410,7 @@ export const listPolicyStoreAliases: API.OperationMethod<
   input: ListPolicyStoreAliasesInput,
   output: ListPolicyStoreAliasesOutput,
   errors: [],
+  operationName: "ListPolicyStoreAliases",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",

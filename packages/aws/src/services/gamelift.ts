@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -861,6 +861,57 @@ export const ContainerPortConfiguration = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 ).annotate({
   identifier: "ContainerPortConfiguration",
 }) as any as S.Schema<ContainerPortConfiguration>;
+export type LinuxCapability =
+  | "AUDIT_CONTROL"
+  | "AUDIT_WRITE"
+  | "BLOCK_SUSPEND"
+  | "CHOWN"
+  | "DAC_OVERRIDE"
+  | "DAC_READ_SEARCH"
+  | "FOWNER"
+  | "FSETID"
+  | "IPC_LOCK"
+  | "IPC_OWNER"
+  | "KILL"
+  | "LEASE"
+  | "LINUX_IMMUTABLE"
+  | "MAC_ADMIN"
+  | "MAC_OVERRIDE"
+  | "MKNOD"
+  | "NET_ADMIN"
+  | "NET_BIND_SERVICE"
+  | "NET_BROADCAST"
+  | "NET_RAW"
+  | "SETFCAP"
+  | "SETGID"
+  | "SETPCAP"
+  | "SETUID"
+  | "SYS_ADMIN"
+  | "SYS_BOOT"
+  | "SYS_CHROOT"
+  | "SYS_MODULE"
+  | "SYS_NICE"
+  | "SYS_PACCT"
+  | "SYS_PTRACE"
+  | "SYS_RAWIO"
+  | "SYS_RESOURCE"
+  | "SYS_TIME"
+  | "SYS_TTY_CONFIG"
+  | "SYSLOG"
+  | "WAKE_ALARM"
+  | (string & {});
+export const LinuxCapability = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export type LinuxCapabilityList = LinuxCapability[];
+export const LinuxCapabilityList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(LinuxCapability);
+export interface LinuxCapabilities {
+  Include?: LinuxCapability[];
+}
+export const LinuxCapabilities = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ Include: S.optional(LinuxCapabilityList) }),
+).annotate({
+  identifier: "LinuxCapabilities",
+}) as any as S.Schema<LinuxCapabilities>;
 export interface GameServerContainerDefinitionInput {
   ContainerName?: string;
   DependsOn?: ContainerDependency[];
@@ -869,6 +920,7 @@ export interface GameServerContainerDefinitionInput {
   ImageUri?: string;
   PortConfiguration?: ContainerPortConfiguration;
   ServerSdkVersion?: string;
+  LinuxCapabilities?: LinuxCapabilities;
 }
 export const GameServerContainerDefinitionInput =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -880,6 +932,7 @@ export const GameServerContainerDefinitionInput =
       ImageUri: S.optional(S.String),
       PortConfiguration: S.optional(ContainerPortConfiguration),
       ServerSdkVersion: S.optional(S.String),
+      LinuxCapabilities: S.optional(LinuxCapabilities),
     }),
   ).annotate({
     identifier: "GameServerContainerDefinitionInput",
@@ -917,6 +970,7 @@ export interface SupportContainerDefinitionInput {
   MemoryHardLimitMebibytes?: number;
   PortConfiguration?: ContainerPortConfiguration;
   Vcpu?: number;
+  LinuxCapabilities?: LinuxCapabilities;
 }
 export const SupportContainerDefinitionInput =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -931,6 +985,7 @@ export const SupportContainerDefinitionInput =
       MemoryHardLimitMebibytes: S.optional(S.Number),
       PortConfiguration: S.optional(ContainerPortConfiguration),
       Vcpu: S.optional(S.Number),
+      LinuxCapabilities: S.optional(LinuxCapabilities),
     }),
   ).annotate({
     identifier: "SupportContainerDefinitionInput",
@@ -991,6 +1046,7 @@ export interface GameServerContainerDefinition {
   PortConfiguration?: ContainerPortConfiguration;
   ResolvedImageDigest?: string;
   ServerSdkVersion?: string;
+  LinuxCapabilities?: LinuxCapabilities;
 }
 export const GameServerContainerDefinition =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -1003,6 +1059,7 @@ export const GameServerContainerDefinition =
       PortConfiguration: S.optional(ContainerPortConfiguration),
       ResolvedImageDigest: S.optional(S.String),
       ServerSdkVersion: S.optional(S.String),
+      LinuxCapabilities: S.optional(LinuxCapabilities),
     }),
   ).annotate({
     identifier: "GameServerContainerDefinition",
@@ -1019,6 +1076,7 @@ export interface SupportContainerDefinition {
   PortConfiguration?: ContainerPortConfiguration;
   ResolvedImageDigest?: string;
   Vcpu?: number;
+  LinuxCapabilities?: LinuxCapabilities;
 }
 export const SupportContainerDefinition = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
   () =>
@@ -1034,6 +1092,7 @@ export const SupportContainerDefinition = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
       PortConfiguration: S.optional(ContainerPortConfiguration),
       ResolvedImageDigest: S.optional(S.String),
       Vcpu: S.optional(S.Number),
+      LinuxCapabilities: S.optional(LinuxCapabilities),
     }),
 ).annotate({
   identifier: "SupportContainerDefinition",
@@ -3690,6 +3749,95 @@ export const DescribeContainerGroupDefinitionOutput =
   ).annotate({
     identifier: "DescribeContainerGroupDefinitionOutput",
   }) as any as S.Schema<DescribeContainerGroupDefinitionOutput>;
+export interface DescribeContainerGroupPortMappingsInput {
+  FleetId?: string;
+  ContainerGroupType?: ContainerGroupType;
+  ComputeName?: string;
+  InstanceId?: string;
+  ContainerName?: string;
+}
+export const DescribeContainerGroupPortMappingsInput =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      FleetId: S.optional(S.String),
+      ContainerGroupType: S.optional(ContainerGroupType),
+      ComputeName: S.optional(S.String),
+      InstanceId: S.optional(S.String),
+      ContainerName: S.optional(S.String),
+    }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "POST", uri: "/" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "DescribeContainerGroupPortMappingsInput",
+  }) as any as S.Schema<DescribeContainerGroupPortMappingsInput>;
+export interface ContainerPortMapping {
+  ContainerPort?: number;
+  ConnectionPort?: number;
+  Protocol?: IpProtocol;
+}
+export const ContainerPortMapping = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    ContainerPort: S.optional(S.Number),
+    ConnectionPort: S.optional(S.Number),
+    Protocol: S.optional(IpProtocol),
+  }),
+).annotate({
+  identifier: "ContainerPortMapping",
+}) as any as S.Schema<ContainerPortMapping>;
+export type ContainerPortMappingList = ContainerPortMapping[];
+export const ContainerPortMappingList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(ContainerPortMapping);
+export interface ContainerGroupPortMapping {
+  ContainerName?: string;
+  ContainerRuntimeId?: string;
+  ContainerPortMappings?: ContainerPortMapping[];
+}
+export const ContainerGroupPortMapping = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({
+      ContainerName: S.optional(S.String),
+      ContainerRuntimeId: S.optional(S.String),
+      ContainerPortMappings: S.optional(ContainerPortMappingList),
+    }),
+).annotate({
+  identifier: "ContainerGroupPortMapping",
+}) as any as S.Schema<ContainerGroupPortMapping>;
+export type ContainerGroupPortMappingList = ContainerGroupPortMapping[];
+export const ContainerGroupPortMappingList =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(ContainerGroupPortMapping);
+export interface DescribeContainerGroupPortMappingsOutput {
+  FleetId?: string;
+  FleetArn?: string;
+  Location?: string;
+  ContainerGroupDefinitionArn?: string;
+  ContainerGroupType?: ContainerGroupType;
+  ComputeName?: string;
+  InstanceId?: string;
+  ContainerGroupPortMappings?: ContainerGroupPortMapping[];
+}
+export const DescribeContainerGroupPortMappingsOutput =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      FleetId: S.optional(S.String),
+      FleetArn: S.optional(S.String),
+      Location: S.optional(S.String),
+      ContainerGroupDefinitionArn: S.optional(S.String),
+      ContainerGroupType: S.optional(ContainerGroupType),
+      ComputeName: S.optional(S.String),
+      InstanceId: S.optional(S.String),
+      ContainerGroupPortMappings: S.optional(ContainerGroupPortMappingList),
+    }).pipe(ns),
+  ).annotate({
+    identifier: "DescribeContainerGroupPortMappingsOutput",
+  }) as any as S.Schema<DescribeContainerGroupPortMappingsOutput>;
 export interface DescribeEC2InstanceLimitsInput {
   EC2InstanceType?: EC2InstanceType;
   Location?: string;
@@ -7874,6 +8022,7 @@ export const acceptMatch: API.OperationMethod<
     NotFoundException,
     UnsupportedRegionException,
   ],
+  operationName: "AcceptMatch",
 }));
 export type ClaimGameServerError =
   | ConflictException
@@ -7939,6 +8088,7 @@ export const claimGameServer: API.OperationMethod<
     OutOfCapacityException,
     UnauthorizedException,
   ],
+  operationName: "ClaimGameServer",
 }));
 export type CreateAliasError =
   | ConflictException
@@ -7988,6 +8138,7 @@ export const createAlias: API.OperationMethod<
     TaggingFailedException,
     UnauthorizedException,
   ],
+  operationName: "CreateAlias",
 }));
 export type CreateBuildError =
   | ConflictException
@@ -8051,6 +8202,7 @@ export const createBuild: API.OperationMethod<
     TaggingFailedException,
     UnauthorizedException,
   ],
+  operationName: "CreateBuild",
 }));
 export type CreateContainerFleetError =
   | ConflictException
@@ -8155,6 +8307,7 @@ export const createContainerFleet: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "CreateContainerFleet",
 }));
 export type CreateContainerGroupDefinitionError =
   | ConflictException
@@ -8219,11 +8372,11 @@ export type CreateContainerGroupDefinitionError =
  *
  * - `ContainerGroupType` (`GAME_SERVER`)
  *
- * - `OperatingSystem` (omit to use default value)
+ * - `OperatingSystem`
  *
- * - `TotalMemoryLimitMebibytes` (omit to use default value)
+ * - `TotalMemoryLimitMebibytes`
  *
- * - `TotalVcpuLimit `(omit to use default value)
+ * - `TotalVcpuLimit`
  *
  * - At least one `GameServerContainerDefinition`
  *
@@ -8233,7 +8386,7 @@ export type CreateContainerGroupDefinitionError =
  *
  * - `PortConfiguration`
  *
- * - `ServerSdkVersion` (omit to use default value)
+ * - `ServerSdkVersion`
  *
  * - Create a per-instance container group definition. Provide the following required parameter
  * values:
@@ -8242,11 +8395,11 @@ export type CreateContainerGroupDefinitionError =
  *
  * - `ContainerGroupType` (`PER_INSTANCE`)
  *
- * - `OperatingSystem` (omit to use default value)
+ * - `OperatingSystem`
  *
- * - `TotalMemoryLimitMebibytes` (omit to use default value)
+ * - `TotalMemoryLimitMebibytes`
  *
- * - `TotalVcpuLimit `(omit to use default value)
+ * - `TotalVcpuLimit`
  *
  * - At least one `SupportContainerDefinition`
  *
@@ -8277,6 +8430,7 @@ export const createContainerGroupDefinition: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "CreateContainerGroupDefinition",
 }));
 export type CreateFleetError =
   | ConflictException
@@ -8384,6 +8538,7 @@ export const createFleet: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "CreateFleet",
 }));
 export type CreateFleetLocationsError =
   | ConflictException
@@ -8443,6 +8598,7 @@ export const createFleetLocations: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "CreateFleetLocations",
 }));
 export type CreateGameServerGroupError =
   | ConflictException
@@ -8506,6 +8662,7 @@ export const createGameServerGroup: API.OperationMethod<
     LimitExceededException,
     UnauthorizedException,
   ],
+  operationName: "CreateGameServerGroup",
 }));
 export type CreateGameSessionError =
   | ConflictException
@@ -8584,6 +8741,7 @@ export const createGameSession: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "CreateGameSession",
 }));
 export type CreateGameSessionQueueError =
   | InternalServiceException
@@ -8686,6 +8844,7 @@ export const createGameSessionQueue: API.OperationMethod<
     TaggingFailedException,
     UnauthorizedException,
   ],
+  operationName: "CreateGameSessionQueue",
 }));
 export type CreateLocationError =
   | ConflictException
@@ -8716,6 +8875,7 @@ export const createLocation: API.OperationMethod<
     TaggingFailedException,
     UnauthorizedException,
   ],
+  operationName: "CreateLocation",
 }));
 export type CreateMatchmakingConfigurationError =
   | InternalServiceException
@@ -8770,6 +8930,7 @@ export const createMatchmakingConfiguration: API.OperationMethod<
     TaggingFailedException,
     UnsupportedRegionException,
   ],
+  operationName: "CreateMatchmakingConfiguration",
 }));
 export type CreateMatchmakingRuleSetError =
   | InternalServiceException
@@ -8818,6 +8979,7 @@ export const createMatchmakingRuleSet: API.OperationMethod<
     TaggingFailedException,
     UnsupportedRegionException,
   ],
+  operationName: "CreateMatchmakingRuleSet",
 }));
 export type CreatePlayerSessionError =
   | GameSessionFullException
@@ -8868,6 +9030,7 @@ export const createPlayerSession: API.OperationMethod<
     TerminalRoutingStrategyException,
     UnauthorizedException,
   ],
+  operationName: "CreatePlayerSession",
 }));
 export type CreatePlayerSessionsError =
   | GameSessionFullException
@@ -8918,6 +9081,7 @@ export const createPlayerSessions: API.OperationMethod<
     TerminalRoutingStrategyException,
     UnauthorizedException,
   ],
+  operationName: "CreatePlayerSessions",
 }));
 export type CreateScriptError =
   | ConflictException
@@ -8977,6 +9141,7 @@ export const createScript: API.OperationMethod<
     TaggingFailedException,
     UnauthorizedException,
   ],
+  operationName: "CreateScript",
 }));
 export type CreateVpcPeeringAuthorizationError =
   | InternalServiceException
@@ -9013,6 +9178,21 @@ export type CreateVpcPeeringAuthorizationError =
  * The authorization remains valid for 24 hours unless it is canceled. You must create or
  * delete the peering connection while the authorization is valid.
  *
+ * Amazon GameLift Servers uses the caller's credentials to update peer-VPC resources. The IAM user
+ * that calls this operation must have the following Amazon EC2 permissions enabled:
+ *
+ * - `ec2:AcceptVpcPeeringConnection`
+ *
+ * - `ec2:AuthorizeSecurityGroupEgress`
+ *
+ * - `ec2:AuthorizeSecurityGroupIngress`
+ *
+ * - `ec2:CreateRoute`
+ *
+ * - `ec2:DescribeRouteTables`
+ *
+ * - `ec2:DescribeSecurityGroups`
+ *
  * **Related actions**
  *
  * All APIs by task
@@ -9031,6 +9211,7 @@ export const createVpcPeeringAuthorization: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "CreateVpcPeeringAuthorization",
 }));
 export type CreateVpcPeeringConnectionError =
   | InternalServiceException
@@ -9062,6 +9243,21 @@ export type CreateVpcPeeringConnectionError =
  * polling to track the request's status using DescribeVpcPeeringConnections , or by monitoring fleet events for success
  * or failure using DescribeFleetEvents .
  *
+ * Amazon GameLift Servers uses the caller's credentials to update peer-VPC resources. The IAM user
+ * that calls this operation must have the following Amazon EC2 permissions enabled:
+ *
+ * - `ec2:AcceptVpcPeeringConnection`
+ *
+ * - `ec2:AuthorizeSecurityGroupEgress`
+ *
+ * - `ec2:AuthorizeSecurityGroupIngress`
+ *
+ * - `ec2:CreateRoute`
+ *
+ * - `ec2:DescribeRouteTables`
+ *
+ * - `ec2:DescribeSecurityGroups`
+ *
  * **Related actions**
  *
  * All APIs by task
@@ -9080,6 +9276,7 @@ export const createVpcPeeringConnection: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "CreateVpcPeeringConnection",
 }));
 export type DeleteAliasError =
   | InternalServiceException
@@ -9114,6 +9311,7 @@ export const deleteAlias: API.OperationMethod<
     TaggingFailedException,
     UnauthorizedException,
   ],
+  operationName: "DeleteAlias",
 }));
 export type DeleteBuildError =
   | InternalServiceException
@@ -9153,6 +9351,7 @@ export const deleteBuild: API.OperationMethod<
     TaggingFailedException,
     UnauthorizedException,
   ],
+  operationName: "DeleteBuild",
 }));
 export type DeleteContainerFleetError =
   | InternalServiceException
@@ -9193,6 +9392,7 @@ export const deleteContainerFleet: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "DeleteContainerFleet",
 }));
 export type DeleteContainerGroupDefinitionError =
   | InternalServiceException
@@ -9251,6 +9451,7 @@ export const deleteContainerGroupDefinition: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "DeleteContainerGroupDefinition",
 }));
 export type DeleteFleetError =
   | InternalServiceException
@@ -9296,6 +9497,7 @@ export const deleteFleet: API.OperationMethod<
     TaggingFailedException,
     UnauthorizedException,
   ],
+  operationName: "DeleteFleet",
 }));
 export type DeleteFleetLocationsError =
   | InternalServiceException
@@ -9337,6 +9539,7 @@ export const deleteFleetLocations: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "DeleteFleetLocations",
 }));
 export type DeleteGameServerGroupError =
   | InternalServiceException
@@ -9390,6 +9593,7 @@ export const deleteGameServerGroup: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "DeleteGameServerGroup",
 }));
 export type DeleteGameSessionQueueError =
   | InternalServiceException
@@ -9419,6 +9623,7 @@ export const deleteGameSessionQueue: API.OperationMethod<
     TaggingFailedException,
     UnauthorizedException,
   ],
+  operationName: "DeleteGameSessionQueue",
 }));
 export type DeleteLocationError =
   | InternalServiceException
@@ -9448,6 +9653,7 @@ export const deleteLocation: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "DeleteLocation",
 }));
 export type DeleteMatchmakingConfigurationError =
   | InternalServiceException
@@ -9478,6 +9684,7 @@ export const deleteMatchmakingConfiguration: API.OperationMethod<
     TaggingFailedException,
     UnsupportedRegionException,
   ],
+  operationName: "DeleteMatchmakingConfiguration",
 }));
 export type DeleteMatchmakingRuleSetError =
   | InternalServiceException
@@ -9513,6 +9720,7 @@ export const deleteMatchmakingRuleSet: API.OperationMethod<
     TaggingFailedException,
     UnsupportedRegionException,
   ],
+  operationName: "DeleteMatchmakingRuleSet",
 }));
 export type DeleteScalingPolicyError =
   | InternalServiceException
@@ -9546,6 +9754,7 @@ export const deleteScalingPolicy: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "DeleteScalingPolicy",
 }));
 export type DeleteScriptError =
   | InternalServiceException
@@ -9589,6 +9798,7 @@ export const deleteScript: API.OperationMethod<
     TaggingFailedException,
     UnauthorizedException,
   ],
+  operationName: "DeleteScript",
 }));
 export type DeleteVpcPeeringAuthorizationError =
   | InternalServiceException
@@ -9620,6 +9830,7 @@ export const deleteVpcPeeringAuthorization: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "DeleteVpcPeeringAuthorization",
 }));
 export type DeleteVpcPeeringConnectionError =
   | InternalServiceException
@@ -9655,6 +9866,7 @@ export const deleteVpcPeeringConnection: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "DeleteVpcPeeringConnection",
 }));
 export type DeregisterComputeError =
   | InternalServiceException
@@ -9687,6 +9899,7 @@ export const deregisterCompute: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "DeregisterCompute",
 }));
 export type DeregisterGameServerError =
   | InternalServiceException
@@ -9724,6 +9937,7 @@ export const deregisterGameServer: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "DeregisterGameServer",
 }));
 export type DescribeAliasError =
   | InternalServiceException
@@ -9758,6 +9972,7 @@ export const describeAlias: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "DescribeAlias",
 }));
 export type DescribeBuildError =
   | InternalServiceException
@@ -9792,6 +10007,7 @@ export const describeBuild: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "DescribeBuild",
 }));
 export type DescribeComputeError =
   | InternalServiceException
@@ -9848,6 +10064,7 @@ export const describeCompute: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "DescribeCompute",
 }));
 export type DescribeContainerFleetError =
   | InternalServiceException
@@ -9891,6 +10108,7 @@ export const describeContainerFleet: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "DescribeContainerFleet",
 }));
 export type DescribeContainerGroupDefinitionError =
   | InternalServiceException
@@ -9937,6 +10155,70 @@ export const describeContainerGroupDefinition: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "DescribeContainerGroupDefinition",
+}));
+export type DescribeContainerGroupPortMappingsError =
+  | InternalServiceException
+  | InvalidRequestException
+  | LimitExceededException
+  | NotFoundException
+  | UnauthorizedException
+  | UnsupportedRegionException
+  | CommonErrors;
+/**
+ * **This API works with the following fleet types:** Container
+ *
+ * Retrieves the port mappings for a container group running on a container fleet. Port
+ * mappings show how container ports are mapped to connection ports on the fleet instance.
+ * Use this operation to find the connection port for a specific container on a fleet
+ * instance.
+ *
+ * **Request options**
+ *
+ * - Get port mappings for a game server container group. Provide the fleet ID,
+ * set `ContainerGroupType` to `GAME_SERVER`, and specify the
+ * `ComputeName` for the game server container group.
+ *
+ * - Get port mappings for a per-instance container group. Provide the fleet ID,
+ * set `ContainerGroupType` to `PER_INSTANCE`, and specify the
+ * `InstanceId` for the instance.
+ *
+ * - Optionally filter results to a single container by providing a
+ * `ContainerName`.
+ *
+ * **Results**
+ *
+ * This operation returns the fleet ID, fleet ARN, location, container group definition
+ * ARN, container group type, compute name (for game server container groups), instance ID,
+ * and a list of `ContainerGroupPortMapping` objects. Each object contains the
+ * container name, runtime ID, and a list of port mappings that show how container ports map
+ * to connection ports on the instance.
+ *
+ * **Learn more**
+ *
+ * Connect to
+ * containers
+ *
+ * Create a
+ * container group definition
+ */
+export const describeContainerGroupPortMappings: API.OperationMethod<
+  DescribeContainerGroupPortMappingsInput,
+  DescribeContainerGroupPortMappingsOutput,
+  DescribeContainerGroupPortMappingsError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: DescribeContainerGroupPortMappingsInput,
+  output: DescribeContainerGroupPortMappingsOutput,
+  errors: [
+    InternalServiceException,
+    InvalidRequestException,
+    LimitExceededException,
+    NotFoundException,
+    UnauthorizedException,
+    UnsupportedRegionException,
+  ],
+  operationName: "DescribeContainerGroupPortMappings",
 }));
 export type DescribeEC2InstanceLimitsError =
   | InternalServiceException
@@ -9958,24 +10240,27 @@ export type DescribeEC2InstanceLimitsError =
  * Region or in a remote location. For remote locations, limits also differ based on the
  * combination of home Region and remote location. All requests must specify an Amazon Web Services
  * Region (either explicitly or as your default settings). To get the limit for a remote
- * location, you must also specify the location. For example, the following requests all
+ * location, you must also specify the location. To learn more about how Amazon GameLift Servers handles
+ * locations, see Amazon GameLift Servers service
+ * locations. For example, the following requests all
  * return different results:
  *
  * - Request specifies the Region `ap-northeast-1` with no location. The
- * result is limits and usage data on all instance types that are deployed in
- * `us-east-2`, by all of the fleets that reside in
+ * result is limits and usage data on all of the fleets that reside in
+ * `ap-northeast-1`, for all instance types that are deployed in
  * `ap-northeast-1`.
  *
- * - Request specifies the Region `us-east-1` with location
- * `ca-central-1`. The result is limits and usage data on all
- * instance types that are deployed in `ca-central-1`, by all of the
- * fleets that reside in `us-east-2`. These limits do not affect fleets
- * in any other Regions that deploy instances to `ca-central-1`.
+ * - Request specifies the Region `ap-northeast-1` with location
+ * `us-west-2`. The result is limits and usage data on all of the
+ * fleets that reside in `ap-northeast-1`, for all instance types
+ * that are deployed in `us-west-2`.
  *
- * - Request specifies the Region `eu-west-1` with location
- * `ca-central-1`. The result is limits and usage data on all
- * instance types that are deployed in `ca-central-1`, by all of the
- * fleets that reside in `eu-west-1`.
+ * - Request specifies the Region `us-east-1` with location
+ * `ap-northeast-1`. The result is limits and usage data on all of
+ * the fleets that reside in `us-east-1`, for all instance types
+ * that are deployed in `ap-northeast-1`. These limits do not affect
+ * fleets in any other Regions that deploy instances to
+ * `ap-northeast-1`.
  *
  * This operation can be used in the following ways:
  *
@@ -10009,6 +10294,7 @@ export const describeEC2InstanceLimits: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "DescribeEC2InstanceLimits",
 }));
 export type DescribeFleetAttributesError =
   | InternalServiceException
@@ -10072,6 +10358,7 @@ export const describeFleetAttributes: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "DescribeFleetAttributes",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -10152,6 +10439,7 @@ export const describeFleetCapacity: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "DescribeFleetCapacity",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -10198,6 +10486,7 @@ export const describeFleetDeployment: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "DescribeFleetDeployment",
 }));
 export type DescribeFleetEventsError =
   | InternalServiceException
@@ -10254,6 +10543,7 @@ export const describeFleetEvents: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "DescribeFleetEvents",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -10287,8 +10577,6 @@ export type DescribeFleetLocationAttributesError =
  *
  * If successful, a `LocationAttributes` object is returned for each requested
  * location. If the fleet does not have a requested location, no information is returned.
- * This operation does not return the home Region. To get information on a fleet's home
- * Region, call `DescribeFleetAttributes`.
  *
  * **Learn more**
  *
@@ -10327,6 +10615,7 @@ export const describeFleetLocationAttributes: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "DescribeFleetLocationAttributes",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -10381,6 +10670,7 @@ export const describeFleetLocationCapacity: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "DescribeFleetLocationCapacity",
 }));
 export type DescribeFleetLocationUtilizationError =
   | InternalServiceException
@@ -10427,6 +10717,7 @@ export const describeFleetLocationUtilization: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "DescribeFleetLocationUtilization",
 }));
 export type DescribeFleetPortSettingsError =
   | InternalServiceException
@@ -10476,6 +10767,7 @@ export const describeFleetPortSettings: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "DescribeFleetPortSettings",
 }));
 export type DescribeFleetUtilizationError =
   | InternalServiceException
@@ -10546,6 +10838,7 @@ export const describeFleetUtilization: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "DescribeFleetUtilization",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -10588,6 +10881,7 @@ export const describeGameServer: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "DescribeGameServer",
 }));
 export type DescribeGameServerGroupError =
   | InternalServiceException
@@ -10626,6 +10920,7 @@ export const describeGameServerGroup: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "DescribeGameServerGroup",
 }));
 export type DescribeGameServerInstancesError =
   | InternalServiceException
@@ -10686,6 +10981,7 @@ export const describeGameServerInstances: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "DescribeGameServerInstances",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -10766,6 +11062,7 @@ export const describeGameSessionDetails: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "DescribeGameSessionDetails",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -10809,6 +11106,7 @@ export const describeGameSessionPlacement: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "DescribeGameSessionPlacement",
 }));
 export type DescribeGameSessionQueuesError =
   | InternalServiceException
@@ -10857,6 +11155,7 @@ export const describeGameSessionQueues: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "DescribeGameSessionQueues",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -10944,6 +11243,7 @@ export const describeGameSessions: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "DescribeGameSessions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -11026,6 +11326,7 @@ export const describeInstances: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "DescribeInstances",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -11074,6 +11375,7 @@ export const describeMatchmaking: API.OperationMethod<
     InvalidRequestException,
     UnsupportedRegionException,
   ],
+  operationName: "DescribeMatchmaking",
 }));
 export type DescribeMatchmakingConfigurationsError =
   | InternalServiceException
@@ -11125,6 +11427,7 @@ export const describeMatchmakingConfigurations: API.OperationMethod<
     InvalidRequestException,
     UnsupportedRegionException,
   ],
+  operationName: "DescribeMatchmakingConfigurations",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -11180,6 +11483,7 @@ export const describeMatchmakingRuleSets: API.OperationMethod<
     NotFoundException,
     UnsupportedRegionException,
   ],
+  operationName: "DescribeMatchmakingRuleSets",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -11250,6 +11554,7 @@ export const describePlayerSessions: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "DescribePlayerSessions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -11300,6 +11605,7 @@ export const describeRuntimeConfiguration: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "DescribeRuntimeConfiguration",
 }));
 export type DescribeScalingPoliciesError =
   | InternalServiceException
@@ -11351,6 +11657,7 @@ export const describeScalingPolicies: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "DescribeScalingPolicies",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -11394,6 +11701,7 @@ export const describeScript: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "DescribeScript",
 }));
 export type DescribeVpcPeeringAuthorizationsError =
   | InternalServiceException
@@ -11424,6 +11732,7 @@ export const describeVpcPeeringAuthorizations: API.OperationMethod<
     InvalidRequestException,
     UnauthorizedException,
   ],
+  operationName: "DescribeVpcPeeringAuthorizations",
 }));
 export type DescribeVpcPeeringConnectionsError =
   | InternalServiceException
@@ -11461,6 +11770,7 @@ export const describeVpcPeeringConnections: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "DescribeVpcPeeringConnections",
 }));
 export type GetComputeAccessError =
   | InternalServiceException
@@ -11512,6 +11822,7 @@ export const getComputeAccess: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "GetComputeAccess",
 }));
 export type GetComputeAuthTokenError =
   | InternalServiceException
@@ -11567,6 +11878,7 @@ export const getComputeAuthToken: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "GetComputeAuthToken",
 }));
 export type GetGameSessionLogUrlError =
   | InternalServiceException
@@ -11601,6 +11913,7 @@ export const getGameSessionLogUrl: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "GetGameSessionLogUrl",
 }));
 export type GetInstanceAccessError =
   | InternalServiceException
@@ -11656,6 +11969,7 @@ export const getInstanceAccess: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "GetInstanceAccess",
 }));
 export type GetPlayerConnectionDetailsError =
   | InternalServiceException
@@ -11698,6 +12012,7 @@ export const getPlayerConnectionDetails: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "GetPlayerConnectionDetails",
 }));
 export type ListAliasesError =
   | InternalServiceException
@@ -11745,6 +12060,7 @@ export const listAliases: API.OperationMethod<
     InvalidRequestException,
     UnauthorizedException,
   ],
+  operationName: "ListAliases",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -11801,6 +12117,7 @@ export const listBuilds: API.OperationMethod<
     InvalidRequestException,
     UnauthorizedException,
   ],
+  operationName: "ListBuilds",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -11871,6 +12188,7 @@ export const listCompute: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "ListCompute",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -11939,6 +12257,7 @@ export const listContainerFleets: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "ListContainerFleets",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -12004,6 +12323,7 @@ export const listContainerGroupDefinitions: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "ListContainerGroupDefinitions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -12072,6 +12392,7 @@ export const listContainerGroupDefinitionVersions: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "ListContainerGroupDefinitionVersions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -12136,6 +12457,7 @@ export const listFleetDeployments: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "ListFleetDeployments",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -12205,6 +12527,7 @@ export const listFleets: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "ListFleets",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -12250,6 +12573,7 @@ export const listGameServerGroups: API.OperationMethod<
     InvalidRequestException,
     UnauthorizedException,
   ],
+  operationName: "ListGameServerGroups",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -12303,6 +12627,7 @@ export const listGameServers: API.OperationMethod<
     InvalidRequestException,
     UnauthorizedException,
   ],
+  operationName: "ListGameServers",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -12355,6 +12680,7 @@ export const listLocations: API.OperationMethod<
     InvalidRequestException,
     UnauthorizedException,
   ],
+  operationName: "ListLocations",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -12409,6 +12735,7 @@ export const listScripts: API.OperationMethod<
     InvalidRequestException,
     UnauthorizedException,
   ],
+  operationName: "ListScripts",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -12458,6 +12785,7 @@ export const listTagsForResource: API.OperationMethod<
     TaggingFailedException,
     UnsupportedRegionException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type PutScalingPolicyError =
   | InternalServiceException
@@ -12553,6 +12881,7 @@ export const putScalingPolicy: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "PutScalingPolicy",
 }));
 export type RegisterComputeError =
   | ConflictException
@@ -12610,6 +12939,7 @@ export const registerCompute: API.OperationMethod<
     NotReadyException,
     UnauthorizedException,
   ],
+  operationName: "RegisterCompute",
 }));
 export type RegisterGameServerError =
   | ConflictException
@@ -12657,6 +12987,7 @@ export const registerGameServer: API.OperationMethod<
     LimitExceededException,
     UnauthorizedException,
   ],
+  operationName: "RegisterGameServer",
 }));
 export type RequestUploadCredentialsError =
   | InternalServiceException
@@ -12695,6 +13026,7 @@ export const requestUploadCredentials: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "RequestUploadCredentials",
 }));
 export type ResolveAliasError =
   | InternalServiceException
@@ -12732,6 +13064,7 @@ export const resolveAlias: API.OperationMethod<
     TerminalRoutingStrategyException,
     UnauthorizedException,
   ],
+  operationName: "ResolveAlias",
 }));
 export type ResumeGameServerGroupError =
   | InternalServiceException
@@ -12773,6 +13106,7 @@ export const resumeGameServerGroup: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "ResumeGameServerGroup",
 }));
 export type SearchGameSessionsError =
   | InternalServiceException
@@ -12813,8 +13147,8 @@ export type SearchGameSessionsError =
  *
  * To set search and sort criteria, create a filter expression using the following game session attributes. For game session search examples, see the Examples section of this topic.
  *
- * - **gameSessionId** -- A unique identifier for the game session. You can use either a
- * `GameSessionId` or `GameSessionArn` value.
+ * - **gameSessionId** -- An identifier for the game session that is unique across all regions. You must use the
+ * full ARN value.
  *
  * - **gameSessionName** -- Name assigned to a game
  * session. Game session names do not need to be unique to a game session.
@@ -12886,6 +13220,7 @@ export const searchGameSessions: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "SearchGameSessions",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -12939,6 +13274,7 @@ export const startFleetActions: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "StartFleetActions",
 }));
 export type StartGameSessionPlacementError =
   | InternalServiceException
@@ -13042,6 +13378,7 @@ export const startGameSessionPlacement: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "StartGameSessionPlacement",
 }));
 export type StartMatchBackfillError =
   | InternalServiceException
@@ -13103,6 +13440,7 @@ export const startMatchBackfill: API.OperationMethod<
     NotFoundException,
     UnsupportedRegionException,
   ],
+  operationName: "StartMatchBackfill",
 }));
 export type StartMatchmakingError =
   | InternalServiceException
@@ -13154,6 +13492,7 @@ export const startMatchmaking: API.OperationMethod<
     NotFoundException,
     UnsupportedRegionException,
   ],
+  operationName: "StartMatchmaking",
 }));
 export type StopFleetActionsError =
   | InternalServiceException
@@ -13206,6 +13545,7 @@ export const stopFleetActions: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "StopFleetActions",
 }));
 export type StopGameSessionPlacementError =
   | InternalServiceException
@@ -13242,6 +13582,7 @@ export const stopGameSessionPlacement: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "StopGameSessionPlacement",
 }));
 export type StopMatchmakingError =
   | InternalServiceException
@@ -13283,6 +13624,7 @@ export const stopMatchmaking: API.OperationMethod<
     NotFoundException,
     UnsupportedRegionException,
   ],
+  operationName: "StopMatchmaking",
 }));
 export type SuspendGameServerGroupError =
   | InternalServiceException
@@ -13330,6 +13672,7 @@ export const suspendGameServerGroup: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "SuspendGameServerGroup",
 }));
 export type TagResourceError =
   | InternalServiceException
@@ -13376,6 +13719,7 @@ export const tagResource: API.OperationMethod<
     TaggingFailedException,
     UnsupportedRegionException,
   ],
+  operationName: "TagResource",
 }));
 export type TerminateGameSessionError =
   | InternalServiceException
@@ -13448,6 +13792,7 @@ export const terminateGameSession: API.OperationMethod<
     NotReadyException,
     UnauthorizedException,
   ],
+  operationName: "TerminateGameSession",
 }));
 export type UntagResourceError =
   | InternalServiceException
@@ -13493,6 +13838,7 @@ export const untagResource: API.OperationMethod<
     TaggingFailedException,
     UnsupportedRegionException,
   ],
+  operationName: "UntagResource",
 }));
 export type UpdateAliasError =
   | InternalServiceException
@@ -13527,6 +13873,7 @@ export const updateAlias: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "UpdateAlias",
 }));
 export type UpdateBuildError =
   | InternalServiceException
@@ -13562,6 +13909,7 @@ export const updateBuild: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "UpdateBuild",
 }));
 export type UpdateContainerFleetError =
   | InternalServiceException
@@ -13641,6 +13989,7 @@ export const updateContainerFleet: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "UpdateContainerFleet",
 }));
 export type UpdateContainerGroupDefinitionError =
   | InternalServiceException
@@ -13671,8 +14020,8 @@ export type UpdateContainerGroupDefinitionError =
  * version number. Provide updated values for the properties that you want to change only.
  * All other values remain the same as the source version.
  *
- * - Change a game server container definition. Provide the updated container
- * definition.
+ * - Change a game server container definition. Provide a complete set of container
+ * definitions, including the updated definition.
  *
  * - Add or change a support container definition. Provide a complete set of container
  * definitions, including the updated definition.
@@ -13706,6 +14055,7 @@ export const updateContainerGroupDefinition: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "UpdateContainerGroupDefinition",
 }));
 export type UpdateFleetAttributesError =
   | ConflictException
@@ -13754,6 +14104,7 @@ export const updateFleetAttributes: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "UpdateFleetAttributes",
 }));
 export type UpdateFleetCapacityError =
   | ConflictException
@@ -13836,6 +14187,7 @@ export const updateFleetCapacity: API.OperationMethod<
     UnauthorizedException,
     UnsupportedRegionException,
   ],
+  operationName: "UpdateFleetCapacity",
 }));
 export type UpdateFleetPortSettingsError =
   | ConflictException
@@ -13858,7 +14210,7 @@ export type UpdateFleetPortSettingsError =
  * `InboundPermissionRevocations`. Permissions to be removed must match
  * existing fleet permissions.
  *
- * If successful, the fleet ID for the updated fleet is returned. For fleets with remote
+ * If successful, the fleet identifiers for the updated fleet are returned. For fleets with remote
  * locations, port setting updates can take time to propagate across all locations. You can
  * check the status of updates in each location by calling
  * `DescribeFleetPortSettings` with a location name.
@@ -13885,6 +14237,7 @@ export const updateFleetPortSettings: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "UpdateFleetPortSettings",
 }));
 export type UpdateGameServerError =
   | InternalServiceException
@@ -13939,6 +14292,7 @@ export const updateGameServer: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "UpdateGameServer",
 }));
 export type UpdateGameServerGroupError =
   | InternalServiceException
@@ -13959,6 +14313,12 @@ export type UpdateGameServerGroupError =
  * Amazon GameLift Servers FleetIQ can continue to perform instance balancing activity. If successful, a
  * `GameServerGroup` object is returned.
  *
+ * Target tracking Auto Scaling policies on the Auto Scaling group cannot be
+ * updated through the Amazon Web Services Management Console. Instead, use the Amazon Elastic Compute Cloud Auto Scaling
+ *
+ * `PutScalingPolicy`
+ * API action to update these policies.
+ *
  * **Learn more**
  *
  * Amazon GameLift Servers FleetIQ
@@ -13978,6 +14338,7 @@ export const updateGameServerGroup: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "UpdateGameServerGroup",
 }));
 export type UpdateGameSessionError =
   | ConflictException
@@ -14017,6 +14378,7 @@ export const updateGameSession: API.OperationMethod<
     NotReadyException,
     UnauthorizedException,
   ],
+  operationName: "UpdateGameSession",
 }));
 export type UpdateGameSessionQueueError =
   | InternalServiceException
@@ -14050,6 +14412,7 @@ export const updateGameSessionQueue: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "UpdateGameSessionQueue",
 }));
 export type UpdateMatchmakingConfigurationError =
   | InternalServiceException
@@ -14083,6 +14446,7 @@ export const updateMatchmakingConfiguration: API.OperationMethod<
     NotFoundException,
     UnsupportedRegionException,
   ],
+  operationName: "UpdateMatchmakingConfiguration",
 }));
 export type UpdateRuntimeConfigurationError =
   | InternalServiceException
@@ -14132,6 +14496,7 @@ export const updateRuntimeConfiguration: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "UpdateRuntimeConfiguration",
 }));
 export type UpdateScriptError =
   | InternalServiceException
@@ -14178,6 +14543,7 @@ export const updateScript: API.OperationMethod<
     NotFoundException,
     UnauthorizedException,
   ],
+  operationName: "UpdateScript",
 }));
 export type ValidateMatchmakingRuleSetError =
   | InternalServiceException
@@ -14209,4 +14575,5 @@ export const validateMatchmakingRuleSet: API.OperationMethod<
     InvalidRequestException,
     UnsupportedRegionException,
   ],
+  operationName: "ValidateMatchmakingRuleSet",
 }));

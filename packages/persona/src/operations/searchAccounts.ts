@@ -11,6 +11,27 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface SearchAccountsInput {
+  fields?: Record<string, string>;
+  page?: { after?: string; before?: string; size?: number };
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  query?:
+    | { and: ReadonlyArray<Record<string, unknown>> }
+    | { or: ReadonlyArray<Record<string, unknown>> }
+    | { not: Record<string, unknown> }
+    | { attribute: string; operator: string; value: string | number | boolean };
+  sort?: { attribute: string; direction: string };
+}
 export const SearchAccountsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
     T.HttpQuery("fields"),
@@ -21,7 +42,7 @@ export const SearchAccountsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       before: Schema.optional(Schema.String),
       size: Schema.optional(Schema.Number),
     }),
-  ).pipe(T.HttpQuery("page")),
+  ),
   keyInflection: Schema.optional(
     Schema.Literals(["camel", "kebab", "snake"]),
   ).pipe(T.HttpHeader("Key-Inflection")),
@@ -40,17 +61,101 @@ export const SearchAccountsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "2020-05-18",
     ]),
   ).pipe(T.HttpHeader("Persona-Version")),
-  query: Schema.optional(Schema.Unknown),
+  query: Schema.optional(
+    Schema.Union([
+      Schema.Struct({
+        and: Schema.Array(Schema.Record(Schema.String, Schema.Unknown)),
+      }),
+      Schema.Struct({
+        or: Schema.Array(Schema.Record(Schema.String, Schema.Unknown)),
+      }),
+      Schema.Struct({
+        not: Schema.Record(Schema.String, Schema.Unknown),
+      }),
+      Schema.Struct({
+        attribute: Schema.String,
+        operator: Schema.String,
+        value: Schema.Union([Schema.String, Schema.Number, Schema.Boolean]),
+      }),
+    ]),
+  ),
   sort: Schema.optional(
     Schema.Struct({
       attribute: Schema.String,
       direction: Schema.String,
     }),
   ),
-}).pipe(T.Http({ method: "POST", path: "/accounts/search" }));
-export type SearchAccountsInput = typeof SearchAccountsInput.Type;
+}).pipe(
+  T.Http({ method: "POST", path: "/accounts/search" }),
+) as unknown as Schema.Codec<SearchAccountsInput>;
 
 // Output Schema
+export interface SearchAccountsOutput {
+  data: ReadonlyArray<{
+    type?: string;
+    id?: string;
+    attributes?: {
+      "reference-id"?: string | null;
+      "account-type-name"?: string;
+      "created-at"?: string;
+      "updated-at"?: string;
+      "redacted-at"?: string | null;
+      fields?: {
+        name?: {
+          type?: string;
+          value?: {
+            first?: { type?: string; value?: string | null };
+            middle?: { type?: string; value?: string | null };
+            last?: { type?: string; value?: string | null };
+          };
+        };
+        address?: {
+          type?: string;
+          value?: {
+            street_1?: { type?: string; value?: string | null };
+            street_2?: { type?: string; value?: string | null };
+            subdivision?: { type?: string; value?: string | null };
+            city?: { type?: string; value?: string | null };
+            postal_code?: { type?: string; value?: string | null };
+            country_code?: { type?: string; value?: string | null };
+          };
+        };
+        identification_numbers?: {
+          type?: string;
+          value?: ReadonlyArray<{
+            type?: string;
+            value?: {
+              identification_class?: { type?: string; value?: string };
+              identification_number?: { type?: string; value?: string };
+              issuing_country?: { type?: string; value?: string };
+              hashed_identification_number?: {
+                type?: string;
+                value?: string | null;
+              };
+            };
+          }>;
+        };
+        birthdate?: { type?: string; value?: string | null };
+        phone_number?: { type?: string; value?: string | null };
+        email_address?: { type?: string; value?: string | null };
+        selfie_photo?: {
+          type?: string;
+          value?: {
+            filename?: string;
+            url?: string;
+            "byte-size"?: number;
+          } | null;
+        };
+      } & Record<string, unknown>;
+      tags?: ReadonlyArray<unknown>;
+      "account-status"?: string;
+    };
+    relationships?: {
+      "account-type"?: { data?: { id?: string; type?: string } };
+    };
+  }>;
+  links: { prev: string | null; next: string | null };
+}
 export const SearchAccountsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Array(
     Schema.Struct({
@@ -258,8 +363,7 @@ export const SearchAccountsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     prev: Schema.NullOr(Schema.String),
     next: Schema.NullOr(Schema.String),
   }),
-});
-export type SearchAccountsOutput = typeof SearchAccountsOutput.Type;
+}) as unknown as Schema.Codec<SearchAccountsOutput>;
 
 // The operation
 /**

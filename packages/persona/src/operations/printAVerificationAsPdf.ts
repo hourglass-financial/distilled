@@ -4,6 +4,20 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface PrintAVerificationAsPdfInput {
+  verificationId: string;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const PrintAVerificationAsPdfInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     verificationId: Schema.String.pipe(T.PathParam()),
@@ -27,15 +41,12 @@ export const PrintAVerificationAsPdfInput =
     ).pipe(T.HttpHeader("Persona-Version")),
   }).pipe(
     T.Http({ method: "GET", path: "/verifications/{verificationId}/print" }),
-  );
-export type PrintAVerificationAsPdfInput =
-  typeof PrintAVerificationAsPdfInput.Type;
+  ) as unknown as Schema.Codec<PrintAVerificationAsPdfInput>;
 
 // Output Schema
+export type PrintAVerificationAsPdfOutput = void;
 export const PrintAVerificationAsPdfOutput =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Void;
-export type PrintAVerificationAsPdfOutput =
-  typeof PrintAVerificationAsPdfOutput.Type;
+  /*@__PURE__*/ /*#__PURE__*/ Schema.Void as unknown as Schema.Codec<PrintAVerificationAsPdfOutput>;
 
 // The operation
 /**

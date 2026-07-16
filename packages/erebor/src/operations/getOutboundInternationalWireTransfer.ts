@@ -4,17 +4,42 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface GetOutboundInternationalWireTransferInput {
+  id: string;
+  ereborVersion?: string;
+}
 export const GetOutboundInternationalWireTransferInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
-  }).pipe(T.Http({ method: "GET", path: "/international_wire_out/{id}" }));
-export type GetOutboundInternationalWireTransferInput =
-  typeof GetOutboundInternationalWireTransferInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/international_wire_out/{id}" }),
+  ) as unknown as Schema.Codec<GetOutboundInternationalWireTransferInput>;
 
 // Output Schema
+export interface GetOutboundInternationalWireTransferOutput {
+  id: string;
+  type: "INTERNATIONAL_WIRE_OUT";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id?: string | null;
+  status: "CREATED" | "PENDING" | "SETTLED" | "FAILED" | "RETURNED";
+  deposit_account_id: string;
+  counterparty_international_bank_account_id: string;
+  amount: {
+    currency: "USD";
+    exponent: number;
+    value: string;
+    display_value: string;
+  };
+  memo?: string | null;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const GetOutboundInternationalWireTransferOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -40,11 +65,11 @@ export const GetOutboundInternationalWireTransferOutput =
       display_value: Schema.String,
     }),
     memo: Schema.optional(Schema.NullOr(Schema.String)),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type GetOutboundInternationalWireTransferOutput =
-  typeof GetOutboundInternationalWireTransferOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<GetOutboundInternationalWireTransferOutput>;
 
 // The operation
 /**

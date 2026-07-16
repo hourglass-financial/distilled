@@ -10,6 +10,20 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface RedactAVerificationInput {
+  verificationId: string;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const RedactAVerificationInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     verificationId: Schema.String.pipe(T.PathParam()),
@@ -33,15 +47,16 @@ export const RedactAVerificationInput =
     ).pipe(T.HttpHeader("Persona-Version")),
   }).pipe(
     T.Http({ method: "DELETE", path: "/verifications/{verificationId}" }),
-  );
-export type RedactAVerificationInput = typeof RedactAVerificationInput.Type;
+  ) as unknown as Schema.Codec<RedactAVerificationInput>;
 
 // Output Schema
+export interface RedactAVerificationOutput {
+  data: unknown;
+}
 export const RedactAVerificationOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Unknown,
-  });
-export type RedactAVerificationOutput = typeof RedactAVerificationOutput.Type;
+  }) as unknown as Schema.Codec<RedactAVerificationOutput>;
 
 // The operation
 /**

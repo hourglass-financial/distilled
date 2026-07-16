@@ -1,5 +1,5 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -103,9 +103,14 @@ const rules = T.EndpointResolver((p, _) => {
 });
 
 //# Newtypes
+export type DatasetIdentifier = string;
+export type KmsKeyArn = string;
+export type ErrorMessage = string;
+export type ResourceType = string;
+export type ResourceId = string;
+export type FaultDescription = string;
 export type Name = string;
 export type AlarmName = string;
-export type ErrorMessage = string;
 export type Namespace = string;
 export type MetricName = string;
 export type DimensionName = string;
@@ -118,12 +123,8 @@ export type Stat = string;
 export type MetricExpression = string;
 export type MetricLabel = string;
 export type ReturnData = boolean;
-export type FaultDescription = string;
 export type AwsQueryErrorMessage = string;
-export type ResourceType = string;
-export type ResourceId = string;
 export type DashboardName = string;
-export type DashboardErrorMessage = string;
 export type InsightRuleName = string;
 export type FailureResource = string;
 export type ExceptionType = string;
@@ -158,6 +159,18 @@ export type Query = string;
 export type PendingPeriod = number;
 export type RecoveryPeriod = number;
 export type EvaluationInterval = number;
+export type QueryString = string;
+export type AmazonResourceName = string;
+export type ScheduleExpression = string;
+export type StartTimeOffset = number;
+export type EndTimeOffset = number;
+export type AggregationExpression = string;
+export type TagKey = string;
+export type TagValue = string;
+export type QueryResultsToEvaluate = number;
+export type QueryResultsToAlarm = number;
+export type ActionLogLineCount = number;
+export type ActionLogLineRoleArn = string;
 export type MaxReturnedResultsCount = number;
 export type AnomalyDetectorMetricTimezone = string;
 export type PeriodicSpikes = boolean;
@@ -174,6 +187,9 @@ export type Timezone = string;
 export type MuteType = string;
 export type DashboardArn = string;
 export type DashboardBody = string;
+export type DashboardErrorMessage = string;
+export type DatasetId = string;
+export type DatasetArn = string;
 export type InsightRuleUnboundInteger = number;
 export type InsightRuleMetricName = string;
 export type InsightRuleOrderBy = string;
@@ -187,7 +203,6 @@ export type GetMetricDataLabelTimezone = string;
 export type DatapointValue = number;
 export type MessageDataCode = string;
 export type MessageDataValue = string;
-export type AmazonResourceName = string;
 export type MetricStreamState = string;
 export type MetricStreamStatistic = string;
 export type IncludeLinkedAccountsMetrics = boolean;
@@ -200,8 +215,6 @@ export type Size = number;
 export type TemplateName = string;
 export type IncludeLinkedAccounts = boolean;
 export type ListMetricStreamsMaxResults = number;
-export type TagKey = string;
-export type TagValue = string;
 export type DataPath = string;
 export type Message = string;
 export type StorageResolution = number;
@@ -212,6 +225,34 @@ export type EntityAttributesMapValueString = string;
 export type StrictEntityValidation = boolean;
 
 //# Schemas
+export interface AssociateDatasetKmsKeyInput {
+  DatasetIdentifier?: string;
+  KmsKeyArn?: string;
+}
+export const AssociateDatasetKmsKeyInput =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      DatasetIdentifier: S.optional(S.String),
+      KmsKeyArn: S.optional(S.String),
+    }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "POST", uri: "/" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "AssociateDatasetKmsKeyInput",
+  }) as any as S.Schema<AssociateDatasetKmsKeyInput>;
+export interface AssociateDatasetKmsKeyOutput {}
+export const AssociateDatasetKmsKeyOutput =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() => S.Struct({}).pipe(ns)).annotate({
+    identifier: "AssociateDatasetKmsKeyOutput",
+  }) as any as S.Schema<AssociateDatasetKmsKeyOutput>;
 export interface DeleteAlarmMuteRuleInput {
   AlarmMuteRuleName?: string;
 }
@@ -578,7 +619,11 @@ export const DescribeAlarmContributorsOutput =
   ).annotate({
     identifier: "DescribeAlarmContributorsOutput",
   }) as any as S.Schema<DescribeAlarmContributorsOutput>;
-export type AlarmType = "CompositeAlarm" | "MetricAlarm" | (string & {});
+export type AlarmType =
+  | "CompositeAlarm"
+  | "MetricAlarm"
+  | "LogAlarm"
+  | (string & {});
 export const AlarmType = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export type AlarmTypes = AlarmType[];
 export const AlarmTypes = /*@__PURE__*/ /*#__PURE__*/ S.Array(AlarmType);
@@ -889,6 +934,114 @@ export const MetricAlarm = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({ identifier: "MetricAlarm" }) as any as S.Schema<MetricAlarm>;
 export type MetricAlarms = MetricAlarm[];
 export const MetricAlarms = /*@__PURE__*/ /*#__PURE__*/ S.Array(MetricAlarm);
+export type LogGroupIdentifiers = string[];
+export const LogGroupIdentifiers = /*@__PURE__*/ /*#__PURE__*/ S.Array(
+  S.String,
+);
+export interface ScheduleConfiguration {
+  ScheduleExpression?: string;
+  StartTimeOffset?: number;
+  EndTimeOffset?: number;
+}
+export const ScheduleConfiguration = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    ScheduleExpression: S.optional(S.String),
+    StartTimeOffset: S.optional(S.Number),
+    EndTimeOffset: S.optional(S.Number),
+  }),
+).annotate({
+  identifier: "ScheduleConfiguration",
+}) as any as S.Schema<ScheduleConfiguration>;
+export interface Tag {
+  Key?: string;
+  Value?: string;
+}
+export const Tag = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ Key: S.optional(S.String), Value: S.optional(S.String) }),
+).annotate({ identifier: "Tag" }) as any as S.Schema<Tag>;
+export type TagList = Tag[];
+export const TagList = /*@__PURE__*/ /*#__PURE__*/ S.Array(Tag);
+export interface ScheduledQueryConfiguration {
+  QueryString?: string;
+  LogGroupIdentifiers?: string[];
+  QueryARN?: string;
+  ScheduledQueryRoleARN?: string;
+  ScheduleConfiguration?: ScheduleConfiguration;
+  AggregationExpression?: string;
+  Tags?: Tag[];
+}
+export const ScheduledQueryConfiguration =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      QueryString: S.optional(S.String),
+      LogGroupIdentifiers: S.optional(LogGroupIdentifiers),
+      QueryARN: S.optional(S.String),
+      ScheduledQueryRoleARN: S.optional(S.String),
+      ScheduleConfiguration: S.optional(ScheduleConfiguration),
+      AggregationExpression: S.optional(S.String),
+      Tags: S.optional(TagList),
+    }),
+  ).annotate({
+    identifier: "ScheduledQueryConfiguration",
+  }) as any as S.Schema<ScheduledQueryConfiguration>;
+export interface LogAlarm {
+  AlarmName?: string;
+  AlarmArn?: string;
+  AlarmDescription?: string;
+  AlarmConfigurationUpdatedTimestamp?: Date;
+  ActionsEnabled?: boolean;
+  OKActions?: string[];
+  AlarmActions?: string[];
+  InsufficientDataActions?: string[];
+  StateValue?: StateValue;
+  StateReason?: string;
+  StateReasonData?: string;
+  StateUpdatedTimestamp?: Date;
+  ScheduledQueryConfiguration?: ScheduledQueryConfiguration;
+  QueryResultsToEvaluate?: number;
+  QueryResultsToAlarm?: number;
+  Threshold?: number;
+  ComparisonOperator?: ComparisonOperator;
+  TreatMissingData?: string;
+  StateTransitionedTimestamp?: Date;
+  EvaluationState?: EvaluationState;
+  ActionLogLineCount?: number;
+  ActionLogLineRoleArn?: string;
+}
+export const LogAlarm = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    AlarmName: S.optional(S.String),
+    AlarmArn: S.optional(S.String),
+    AlarmDescription: S.optional(S.String),
+    AlarmConfigurationUpdatedTimestamp: S.optional(
+      S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+    ),
+    ActionsEnabled: S.optional(S.Boolean),
+    OKActions: S.optional(ResourceList),
+    AlarmActions: S.optional(ResourceList),
+    InsufficientDataActions: S.optional(ResourceList),
+    StateValue: S.optional(StateValue),
+    StateReason: S.optional(S.String),
+    StateReasonData: S.optional(S.String),
+    StateUpdatedTimestamp: S.optional(
+      S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+    ),
+    ScheduledQueryConfiguration: S.optional(ScheduledQueryConfiguration),
+    QueryResultsToEvaluate: S.optional(S.Number),
+    QueryResultsToAlarm: S.optional(S.Number),
+    Threshold: S.optional(S.Number),
+    ComparisonOperator: S.optional(ComparisonOperator),
+    TreatMissingData: S.optional(S.String),
+    StateTransitionedTimestamp: S.optional(
+      S.Date.pipe(T.TimestampFormat("epoch-seconds")),
+    ),
+    EvaluationState: S.optional(EvaluationState),
+    ActionLogLineCount: S.optional(S.Number),
+    ActionLogLineRoleArn: S.optional(S.String),
+  }),
+).annotate({ identifier: "LogAlarm" }) as any as S.Schema<LogAlarm>;
+export type LogAlarms = LogAlarm[];
+export const LogAlarms = /*@__PURE__*/ /*#__PURE__*/ S.Array(LogAlarm);
 export interface DescribeAlarmsOutput {
   CompositeAlarms?: CompositeAlarm[];
   MetricAlarms?: (MetricAlarm & {
@@ -907,12 +1060,24 @@ export interface DescribeAlarmsOutput {
       };
     })[];
   })[];
+  LogAlarms?: (LogAlarm & {
+    ScheduledQueryConfiguration: ScheduledQueryConfiguration & {
+      QueryString: QueryString;
+      ScheduledQueryRoleARN: AmazonResourceName;
+      ScheduleConfiguration: ScheduleConfiguration & {
+        ScheduleExpression: ScheduleExpression;
+      };
+      AggregationExpression: AggregationExpression;
+      Tags: (Tag & { Key: TagKey; Value: TagValue })[];
+    };
+  })[];
   NextToken?: string;
 }
 export const DescribeAlarmsOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     CompositeAlarms: S.optional(CompositeAlarms),
     MetricAlarms: S.optional(MetricAlarms),
+    LogAlarms: S.optional(LogAlarms),
     NextToken: S.optional(S.String),
   }).pipe(ns),
 ).annotate({
@@ -1234,6 +1399,30 @@ export const DisableInsightRulesOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 ).annotate({
   identifier: "DisableInsightRulesOutput",
 }) as any as S.Schema<DisableInsightRulesOutput>;
+export interface DisassociateDatasetKmsKeyInput {
+  DatasetIdentifier?: string;
+}
+export const DisassociateDatasetKmsKeyInput =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({ DatasetIdentifier: S.optional(S.String) }).pipe(
+      T.all(
+        ns,
+        T.Http({ method: "POST", uri: "/" }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "DisassociateDatasetKmsKeyInput",
+  }) as any as S.Schema<DisassociateDatasetKmsKeyInput>;
+export interface DisassociateDatasetKmsKeyOutput {}
+export const DisassociateDatasetKmsKeyOutput =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() => S.Struct({}).pipe(ns)).annotate({
+    identifier: "DisassociateDatasetKmsKeyOutput",
+  }) as any as S.Schema<DisassociateDatasetKmsKeyOutput>;
 export interface EnableAlarmActionsInput {
   AlarmNames?: string[];
 }
@@ -1403,6 +1592,38 @@ export const GetDashboardOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "GetDashboardOutput",
 }) as any as S.Schema<GetDashboardOutput>;
+export interface GetDatasetInput {
+  DatasetIdentifier?: string;
+}
+export const GetDatasetInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ DatasetIdentifier: S.optional(S.String) }).pipe(
+    T.all(
+      ns,
+      T.Http({ method: "POST", uri: "/" }),
+      svc,
+      auth,
+      proto,
+      ver,
+      rules,
+    ),
+  ),
+).annotate({
+  identifier: "GetDatasetInput",
+}) as any as S.Schema<GetDatasetInput>;
+export interface GetDatasetOutput {
+  DatasetId: string;
+  Arn: string;
+  KmsKeyArn?: string;
+}
+export const GetDatasetOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    DatasetId: S.optional(S.String),
+    Arn: S.optional(S.String),
+    KmsKeyArn: S.optional(S.String),
+  }).pipe(ns),
+).annotate({
+  identifier: "GetDatasetOutput",
+}) as any as S.Schema<GetDatasetOutput>;
 export type InsightRuleMetricList = string[];
 export const InsightRuleMetricList = /*@__PURE__*/ /*#__PURE__*/ S.Array(
   S.String,
@@ -2232,15 +2453,6 @@ export const ListTagsForResourceInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 ).annotate({
   identifier: "ListTagsForResourceInput",
 }) as any as S.Schema<ListTagsForResourceInput>;
-export interface Tag {
-  Key?: string;
-  Value?: string;
-}
-export const Tag = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
-  S.Struct({ Key: S.optional(S.String), Value: S.optional(S.String) }),
-).annotate({ identifier: "Tag" }) as any as S.Schema<Tag>;
-export type TagList = Tag[];
-export const TagList = /*@__PURE__*/ /*#__PURE__*/ S.Array(Tag);
 export interface ListTagsForResourceOutput {
   Tags?: (Tag & { Key: TagKey; Value: TagValue })[];
 }
@@ -2378,11 +2590,13 @@ export const PutCompositeAlarmResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 export interface PutDashboardInput {
   DashboardName?: string;
   DashboardBody?: string;
+  Tags?: Tag[];
 }
 export const PutDashboardInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
     DashboardName: S.optional(S.String),
     DashboardBody: S.optional(S.String),
+    Tags: S.optional(TagList),
   }).pipe(
     T.all(
       ns,
@@ -2455,6 +2669,60 @@ export const PutInsightRuleOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "PutInsightRuleOutput",
 }) as any as S.Schema<PutInsightRuleOutput>;
+export interface PutLogAlarmInput {
+  AlarmName?: string;
+  AlarmDescription?: string;
+  ScheduledQueryConfiguration?: ScheduledQueryConfiguration;
+  ActionLogLineCount?: number;
+  ActionLogLineRoleArn?: string;
+  ActionsEnabled?: boolean;
+  OKActions?: string[];
+  AlarmActions?: string[];
+  InsufficientDataActions?: string[];
+  QueryResultsToEvaluate?: number;
+  QueryResultsToAlarm?: number;
+  Threshold?: number;
+  ComparisonOperator?: ComparisonOperator;
+  TreatMissingData?: string;
+  Tags?: Tag[];
+}
+export const PutLogAlarmInput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    AlarmName: S.optional(S.String),
+    AlarmDescription: S.optional(S.String),
+    ScheduledQueryConfiguration: S.optional(ScheduledQueryConfiguration),
+    ActionLogLineCount: S.optional(S.Number),
+    ActionLogLineRoleArn: S.optional(S.String),
+    ActionsEnabled: S.optional(S.Boolean),
+    OKActions: S.optional(ResourceList),
+    AlarmActions: S.optional(ResourceList),
+    InsufficientDataActions: S.optional(ResourceList),
+    QueryResultsToEvaluate: S.optional(S.Number),
+    QueryResultsToAlarm: S.optional(S.Number),
+    Threshold: S.optional(S.Number),
+    ComparisonOperator: S.optional(ComparisonOperator),
+    TreatMissingData: S.optional(S.String),
+    Tags: S.optional(TagList),
+  }).pipe(
+    T.all(
+      ns,
+      T.Http({ method: "POST", uri: "/" }),
+      svc,
+      auth,
+      proto,
+      ver,
+      rules,
+    ),
+  ),
+).annotate({
+  identifier: "PutLogAlarmInput",
+}) as any as S.Schema<PutLogAlarmInput>;
+export interface PutLogAlarmResponse {}
+export const PutLogAlarmResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({}).pipe(ns),
+).annotate({
+  identifier: "PutLogAlarmResponse",
+}) as any as S.Schema<PutLogAlarmResponse>;
 export interface ManagedRule {
   TemplateName?: string;
   ResourceARN?: string;
@@ -2911,6 +3179,36 @@ export const UntagResourceOutput = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 }) as any as S.Schema<UntagResourceOutput>;
 
 //# Errors
+export class ConflictException extends S.TaggedErrorClass<ConflictException>()(
+  "ConflictException",
+  { Message: S.optional(S.String) },
+).pipe(C.withConflictError) {}
+export class KmsAccessDeniedException extends S.TaggedErrorClass<KmsAccessDeniedException>()(
+  "KmsAccessDeniedException",
+  { Message: S.optional(S.String) },
+).pipe(C.withAuthError) {}
+export class KmsKeyDisabledException extends S.TaggedErrorClass<KmsKeyDisabledException>()(
+  "KmsKeyDisabledException",
+  { Message: S.optional(S.String) },
+) {}
+export class KmsKeyNotFoundException extends S.TaggedErrorClass<KmsKeyNotFoundException>()(
+  "KmsKeyNotFoundException",
+  { Message: S.optional(S.String) },
+) {}
+export class ResourceNotFoundException extends S.TaggedErrorClass<ResourceNotFoundException>()(
+  "ResourceNotFoundException",
+  {
+    ResourceType: S.optional(S.String),
+    ResourceId: S.optional(S.String),
+    Message: S.optional(S.String),
+  },
+  T.AwsQueryError({ code: "ResourceNotFoundException", httpResponseCode: 404 }),
+).pipe(C.withBadRequestError) {}
+export class ResourceConflict extends S.TaggedErrorClass<ResourceConflict>()(
+  "ResourceConflict",
+  { message: S.optional(S.String) },
+  T.AwsQueryError({ code: "ResourceConflict", httpResponseCode: 409 }),
+).pipe(C.withConflictError) {}
 export class ResourceNotFound extends S.TaggedErrorClass<ResourceNotFound>()(
   "ResourceNotFound",
   { message: S.optional(S.String) },
@@ -2939,24 +3237,6 @@ export class MissingRequiredParameterException extends S.TaggedErrorClass<Missin
   { message: S.optional(S.String) },
   T.AwsQueryError({ code: "MissingParameter", httpResponseCode: 400 }),
 ).pipe(C.withBadRequestError) {}
-export class ResourceNotFoundException extends S.TaggedErrorClass<ResourceNotFoundException>()(
-  "ResourceNotFoundException",
-  {
-    ResourceType: S.optional(S.String),
-    ResourceId: S.optional(S.String),
-    Message: S.optional(S.String),
-  },
-  T.AwsQueryError({ code: "ResourceNotFoundException", httpResponseCode: 404 }),
-).pipe(C.withBadRequestError) {}
-export class ConflictException extends S.TaggedErrorClass<ConflictException>()(
-  "ConflictException",
-  { Message: S.optional(S.String) },
-).pipe(C.withConflictError) {}
-export class DashboardNotFoundError extends S.TaggedErrorClass<DashboardNotFoundError>()(
-  "DashboardNotFoundError",
-  { message: S.optional(S.String) },
-  T.AwsQueryError({ code: "ResourceNotFound", httpResponseCode: 404 }),
-).pipe(C.withBadRequestError) {}
 export class InvalidNextToken extends S.TaggedErrorClass<InvalidNextToken>()(
   "InvalidNextToken",
   { message: S.optional(S.String) },
@@ -2966,6 +3246,11 @@ export class LimitExceededException extends S.TaggedErrorClass<LimitExceededExce
   "LimitExceededException",
   { Message: S.optional(S.String) },
   T.AwsQueryError({ code: "LimitExceededException", httpResponseCode: 400 }),
+).pipe(C.withBadRequestError) {}
+export class DashboardNotFoundError extends S.TaggedErrorClass<DashboardNotFoundError>()(
+  "DashboardNotFoundError",
+  { message: S.optional(S.String) },
+  T.AwsQueryError({ code: "ResourceNotFound", httpResponseCode: 404 }),
 ).pipe(C.withBadRequestError) {}
 export class LimitExceededFault extends S.TaggedErrorClass<LimitExceededFault>()(
   "LimitExceededFault",
@@ -2995,17 +3280,105 @@ export class InvalidFormatFault extends S.TaggedErrorClass<InvalidFormatFault>()
 ).pipe(C.withBadRequestError) {}
 
 //# Operations
+export type AssociateDatasetKmsKeyError =
+  | ConflictException
+  | KmsAccessDeniedException
+  | KmsKeyDisabledException
+  | KmsKeyNotFoundException
+  | ResourceNotFoundException
+  | CommonErrors;
+/**
+ * Associates an Amazon Web Services Key Management Service (Amazon Web Services KMS)
+ * customer managed key with the specified dataset. After this operation completes, all
+ * data published to the dataset is encrypted at rest using the specified KMS key.
+ * Callers must have `kms:Decrypt` permission on the key to read the
+ * encrypted data.
+ *
+ * Only the `default` dataset is supported. The `default` dataset
+ * is implicit for every account in every Region — you do not need to create it before
+ * calling this operation.
+ *
+ * You can call `AssociateDatasetKmsKey` on a dataset that is already
+ * associated with a KMS key to replace the existing key with a different one. To replace
+ * a key, the caller must have `kms:Decrypt` permission on both the current
+ * key and the new key.
+ *
+ * The KMS key that you specify must meet all of the following requirements:
+ *
+ * - It must be a symmetric encryption KMS key (key spec
+ * `SYMMETRIC_DEFAULT`, key usage `ENCRYPT_DECRYPT`).
+ * Asymmetric keys, HMAC keys, and key material types other than
+ * `SYMMETRIC_DEFAULT` are not supported.
+ *
+ * - It must be enabled and not pending deletion.
+ *
+ * - Its key policy must grant the CloudWatch service principal
+ * (`cloudwatch.amazonaws.com`) these permissions:
+ * `kms:DescribeKey`, `kms:GenerateDataKey`,
+ * `kms:Encrypt`, `kms:Decrypt`, and
+ * `kms:ReEncrypt*`. Amazon CloudWatch requires these permissions
+ * to manage the data on your behalf.
+ *
+ * - The calling principal must have `kms:Decrypt` permission on the
+ * key.
+ *
+ * - It must be specified as a fully qualified key ARN. Key IDs, aliases, and
+ * alias ARNs are not accepted.
+ *
+ * - It must be in the same Amazon Web Services Region as the dataset.
+ *
+ * Before completing the association, Amazon CloudWatch validates the key by
+ * performing a series of dry-run KMS operations. Service-principal checks run first to
+ * verify that the key policy grants the required access to Amazon CloudWatch. These
+ * checks include `kms:DescribeKey`, `kms:GenerateDataKey`,
+ * `kms:Encrypt`, `kms:Decrypt`, and `kms:ReEncrypt*`.
+ * After those succeed, a `kms:Decrypt` dry-run is run with the caller's
+ * credentials to verify that the calling principal can use the key. When you are
+ * replacing an existing key, the caller's `kms:Decrypt` dry-run is run on
+ * the current key first, and only then on the new key.
+ *
+ * If any of these checks fails, the operation fails and the existing key association
+ * (if any) remains unchanged. Common failure causes include the key being disabled, the
+ * key policy not granting the required permissions to Amazon CloudWatch, or the
+ * caller lacking `kms:Decrypt` permission on the key.
+ *
+ * For more information about using customer managed keys with Amazon CloudWatch,
+ * see Encryption at rest
+ * with customer managed keys in the Amazon CloudWatch User
+ * Guide.
+ */
+export const associateDatasetKmsKey: API.OperationMethod<
+  AssociateDatasetKmsKeyInput,
+  AssociateDatasetKmsKeyOutput,
+  AssociateDatasetKmsKeyError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: AssociateDatasetKmsKeyInput,
+  output: AssociateDatasetKmsKeyOutput,
+  errors: [
+    ConflictException,
+    KmsAccessDeniedException,
+    KmsKeyDisabledException,
+    KmsKeyNotFoundException,
+    ResourceNotFoundException,
+  ],
+  operationName: "AssociateDatasetKmsKey",
+}));
 export type DeleteAlarmMuteRuleError = CommonErrors;
 /**
  * Deletes a specific alarm mute rule.
  *
- * When you delete a mute rule, any alarms that are currently being muted by that rule are immediately unmuted. If those alarms are in an ALARM state, their configured actions will trigger.
+ * When you delete a mute rule, any alarms that are currently being muted by that rule
+ * are immediately unmuted. If those alarms are in an ALARM state, their configured actions
+ * will trigger.
  *
- * This operation is idempotent. If you delete a mute rule that does not exist, the operation succeeds without returning an error.
+ * This operation is idempotent. If you delete a mute rule that does not exist, the
+ * operation succeeds without returning an error.
  *
  * **Permissions**
  *
- * To delete a mute rule, you need the `cloudwatch:DeleteAlarmMuteRule` permission on the alarm mute rule resource.
+ * To delete a mute rule, you need the `cloudwatch:DeleteAlarmMuteRule`
+ * permission on the alarm mute rule resource.
  */
 export const deleteAlarmMuteRule: API.OperationMethod<
   DeleteAlarmMuteRuleInput,
@@ -3016,17 +3389,21 @@ export const deleteAlarmMuteRule: API.OperationMethod<
   input: DeleteAlarmMuteRuleInput,
   output: DeleteAlarmMuteRuleResponse,
   errors: [],
+  operationName: "DeleteAlarmMuteRule",
 }));
-export type DeleteAlarmsError = ResourceNotFound | CommonErrors;
+export type DeleteAlarmsError =
+  | ResourceConflict
+  | ResourceNotFound
+  | CommonErrors;
 /**
  * Deletes the specified alarms. You can delete up to 100 alarms in one operation.
  * However, this total can include no more than one composite alarm. For example, you could
  * delete 99 metric alarms and one composite alarms with one operation, but you can't
- * delete two composite alarms with one operation.
+ * delete two composite alarms with one operation. Log alarms cannot be batch deleted.
  *
- * If you specify any incorrect alarm names, the alarms you specify with correct names are still deleted. Other syntax errors might result
- * in no alarms being deleted. To confirm that alarms were deleted successfully, you can use the
- * DescribeAlarms operation after using `DeleteAlarms`.
+ * If you specify any incorrect alarm names, the alarms you specify with correct
+ * names are still deleted. Other syntax errors might result in no alarms being deleted. To
+ * confirm that alarms were deleted successfully, you can use the DescribeAlarms operation after using `DeleteAlarms`.
  *
  * It is possible to create a loop or cycle of composite alarms, where composite
  * alarm A depends on composite alarm B, and composite alarm B also depends on
@@ -3050,7 +3427,8 @@ export const deleteAlarms: API.OperationMethod<
 > = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   input: DeleteAlarmsInput,
   output: DeleteAlarmsResponse,
-  errors: [ResourceNotFound],
+  errors: [ResourceConflict, ResourceNotFound],
+  operationName: "DeleteAlarms",
 }));
 export type DeleteAnomalyDetectorError =
   | InternalServiceFault
@@ -3079,16 +3457,17 @@ export const deleteAnomalyDetector: API.OperationMethod<
     MissingRequiredParameterException,
     ResourceNotFoundException,
   ],
+  operationName: "DeleteAnomalyDetector",
 }));
 export type DeleteDashboardsError =
   | ConflictException
-  | DashboardNotFoundError
   | InternalServiceFault
   | InvalidParameterValueException
   | CommonErrors;
 /**
  * Deletes all dashboards that you specify. You can specify up to 100 dashboards to
- * delete. If there is an error during this call, no dashboards are deleted.
+ * delete. If there is an error during this call, the operation attempts to delete as many
+ * dashboards as possible.
  */
 export const deleteDashboards: API.OperationMethod<
   DeleteDashboardsInput,
@@ -3100,10 +3479,10 @@ export const deleteDashboards: API.OperationMethod<
   output: DeleteDashboardsOutput,
   errors: [
     ConflictException,
-    DashboardNotFoundError,
     InternalServiceFault,
     InvalidParameterValueException,
   ],
+  operationName: "DeleteDashboards",
 }));
 export type DeleteInsightRulesError =
   | InvalidParameterValueException
@@ -3124,6 +3503,7 @@ export const deleteInsightRules: API.OperationMethod<
   input: DeleteInsightRulesInput,
   output: DeleteInsightRulesOutput,
   errors: [InvalidParameterValueException, MissingRequiredParameterException],
+  operationName: "DeleteInsightRules",
 }));
 export type DeleteMetricStreamError =
   | InternalServiceFault
@@ -3146,13 +3526,16 @@ export const deleteMetricStream: API.OperationMethod<
     InvalidParameterValueException,
     MissingRequiredParameterException,
   ],
+  operationName: "DeleteMetricStream",
 }));
 export type DescribeAlarmContributorsError =
   | InvalidNextToken
   | ResourceNotFoundException
   | CommonErrors;
 /**
- * Returns the information of the current alarm contributors that are in `ALARM` state. This operation returns details about the individual time series that contribute to the alarm's state.
+ * Returns the information of the current alarm contributors that are in
+ * `ALARM` state. This operation returns details about the individual time
+ * series that contribute to the alarm's state.
  */
 export const describeAlarmContributors: API.OperationMethod<
   DescribeAlarmContributorsInput,
@@ -3163,6 +3546,7 @@ export const describeAlarmContributors: API.OperationMethod<
   input: DescribeAlarmContributorsInput,
   output: DescribeAlarmContributorsOutput,
   errors: [InvalidNextToken, ResourceNotFoundException],
+  operationName: "DescribeAlarmContributors",
 }));
 export type DescribeAlarmHistoryError = InvalidNextToken | CommonErrors;
 /**
@@ -3201,6 +3585,7 @@ export const describeAlarmHistory: API.OperationMethod<
   input: DescribeAlarmHistoryInput,
   output: DescribeAlarmHistoryOutput,
   errors: [InvalidNextToken],
+  operationName: "DescribeAlarmHistory",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -3242,6 +3627,7 @@ export const describeAlarms: API.OperationMethod<
   input: DescribeAlarmsInput,
   output: DescribeAlarmsOutput,
   errors: [InvalidNextToken],
+  operationName: "DescribeAlarms",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -3266,6 +3652,7 @@ export const describeAlarmsForMetric: API.OperationMethod<
   input: DescribeAlarmsForMetricInput,
   output: DescribeAlarmsForMetricOutput,
   errors: [],
+  operationName: "DescribeAlarmsForMetric",
 }));
 export type DescribeAnomalyDetectorsError =
   | InternalServiceFault
@@ -3310,6 +3697,7 @@ export const describeAnomalyDetectors: API.OperationMethod<
     InvalidParameterCombinationException,
     InvalidParameterValueException,
   ],
+  operationName: "DescribeAnomalyDetectors",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -3348,6 +3736,7 @@ export const describeInsightRules: API.OperationMethod<
   input: DescribeInsightRulesInput,
   output: DescribeInsightRulesOutput,
   errors: [InvalidNextToken],
+  operationName: "DescribeInsightRules",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -3368,6 +3757,7 @@ export const disableAlarmActions: API.OperationMethod<
   input: DisableAlarmActionsInput,
   output: DisableAlarmActionsResponse,
   errors: [],
+  operationName: "DisableAlarmActions",
 }));
 export type DisableInsightRulesError =
   | InvalidParameterValueException
@@ -3386,6 +3776,52 @@ export const disableInsightRules: API.OperationMethod<
   input: DisableInsightRulesInput,
   output: DisableInsightRulesOutput,
   errors: [InvalidParameterValueException, MissingRequiredParameterException],
+  operationName: "DisableInsightRules",
+}));
+export type DisassociateDatasetKmsKeyError =
+  | ConflictException
+  | ResourceNotFoundException
+  | CommonErrors;
+/**
+ * Removes the customer managed Amazon Web Services Key Management Service
+ * (Amazon Web Services KMS) key association from the specified dataset. After this
+ * operation completes, data that you publish to the dataset is encrypted at rest using
+ * an Amazon Web Services owned key managed by Amazon CloudWatch.
+ *
+ * Only the `default` dataset is supported. To call this operation, the
+ * dataset must currently have a customer managed KMS key associated with it. If the
+ * dataset has no associated KMS key, the operation fails with
+ * `ResourceNotFoundException`.
+ *
+ * Amazon CloudWatch performs a dry-run `kms:Decrypt` call on the key
+ * as part of this operation. This verifies that the caller is authorized to use the
+ * currently associated key. The caller must have `kms:Decrypt` permission on
+ * the currently associated key, and the key must be enabled and accessible. If the key
+ * has been disabled or scheduled for deletion, you must first re-enable or restore it
+ * before you can disassociate it from the dataset.
+ *
+ * Disassociating a KMS key from a dataset does not immediately remove the
+ * `kms:Decrypt` requirement on data plane operations. For up to three
+ * hours after disassociation, callers must continue to have
+ * `kms:Decrypt` permission on the previously associated key. Some data
+ * may still be encrypted with that key during this window. After this enforcement
+ * window elapses, the `kms:Decrypt` requirement is lifted.
+ *
+ * For more information about using customer managed keys with Amazon CloudWatch,
+ * see Encryption at rest
+ * with customer managed keys in the Amazon CloudWatch User
+ * Guide.
+ */
+export const disassociateDatasetKmsKey: API.OperationMethod<
+  DisassociateDatasetKmsKeyInput,
+  DisassociateDatasetKmsKeyOutput,
+  DisassociateDatasetKmsKeyError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: DisassociateDatasetKmsKeyInput,
+  output: DisassociateDatasetKmsKeyOutput,
+  errors: [ConflictException, ResourceNotFoundException],
+  operationName: "DisassociateDatasetKmsKey",
 }));
 export type EnableAlarmActionsError = CommonErrors;
 /**
@@ -3400,6 +3836,7 @@ export const enableAlarmActions: API.OperationMethod<
   input: EnableAlarmActionsInput,
   output: EnableAlarmActionsResponse,
   errors: [],
+  operationName: "EnableAlarmActions",
 }));
 export type EnableInsightRulesError =
   | InvalidParameterValueException
@@ -3423,24 +3860,31 @@ export const enableInsightRules: API.OperationMethod<
     LimitExceededException,
     MissingRequiredParameterException,
   ],
+  operationName: "EnableInsightRules",
 }));
 export type GetAlarmMuteRuleError = ResourceNotFoundException | CommonErrors;
 /**
  * Retrieves details for a specific alarm mute rule.
  *
- * This operation returns complete information about the mute rule, including its configuration, status, targeted alarms, and metadata.
+ * This operation returns complete information about the mute rule, including its
+ * configuration, status, targeted alarms, and metadata.
  *
  * The returned status indicates the current state of the mute rule:
  *
- * - **SCHEDULED**: The mute rule is configured and will become active in the future
+ * - **SCHEDULED**: The mute rule is configured and
+ * will become active in the future
  *
- * - **ACTIVE**: The mute rule is currently muting alarm actions
+ * - **ACTIVE**: The mute rule is currently muting
+ * alarm actions
  *
- * - **EXPIRED**: The mute rule has passed its expiration date and will no longer become active
+ * - **EXPIRED**: The mute rule has passed its
+ * expiration date and will no longer become active
  *
  * **Permissions**
  *
- * To retrieve details for a mute rule, you need the `cloudwatch:GetAlarmMuteRule` permission on the alarm mute rule resource.
+ * To retrieve details for a mute rule, you need the
+ * `cloudwatch:GetAlarmMuteRule` permission on the alarm mute rule
+ * resource.
  */
 export const getAlarmMuteRule: API.OperationMethod<
   GetAlarmMuteRuleInput,
@@ -3451,6 +3895,7 @@ export const getAlarmMuteRule: API.OperationMethod<
   input: GetAlarmMuteRuleInput,
   output: GetAlarmMuteRuleOutput,
   errors: [ResourceNotFoundException],
+  operationName: "GetAlarmMuteRule",
 }));
 export type GetDashboardError =
   | DashboardNotFoundError
@@ -3477,6 +3922,34 @@ export const getDashboard: API.OperationMethod<
     InternalServiceFault,
     InvalidParameterValueException,
   ],
+  operationName: "GetDashboard",
+}));
+export type GetDatasetError = ResourceNotFoundException | CommonErrors;
+/**
+ * Returns information about the specified dataset. This includes its identifier,
+ * Amazon Resource Name (ARN), and any customer managed Amazon Web Services Key
+ * Management Service (Amazon Web Services KMS) key that is currently associated with
+ * it.
+ *
+ * Only the `default` dataset is supported. The `default` dataset
+ * is implicit for every account in every Region — you can call `GetDataset`
+ * for it without first creating it. If no customer managed KMS key has been associated
+ * with the dataset, the response omits the `KmsKeyArn` field, indicating that
+ * data is encrypted at rest using an Amazon Web Services owned key managed by
+ * Amazon CloudWatch.
+ *
+ * To associate a customer managed KMS key with a dataset, use AssociateDatasetKmsKey. To remove the association, use DisassociateDatasetKmsKey.
+ */
+export const getDataset: API.OperationMethod<
+  GetDatasetInput,
+  GetDatasetOutput,
+  GetDatasetError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: GetDatasetInput,
+  output: GetDatasetOutput,
+  errors: [ResourceNotFoundException],
+  operationName: "GetDataset",
 }));
 export type GetInsightRuleReportError =
   | InvalidParameterValueException
@@ -3530,6 +4003,7 @@ export const getInsightRuleReport: API.OperationMethod<
     MissingRequiredParameterException,
     ResourceNotFoundException,
   ],
+  operationName: "GetInsightRuleReport",
 }));
 export type GetMetricDataError = InvalidNextToken | CommonErrors;
 /**
@@ -3622,6 +4096,7 @@ export const getMetricData: API.OperationMethod<
   input: GetMetricDataInput,
   output: GetMetricDataOutput,
   errors: [InvalidNextToken],
+  operationName: "GetMetricData",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -3705,6 +4180,7 @@ export const getMetricStatistics: API.OperationMethod<
     InvalidParameterValueException,
     MissingRequiredParameterException,
   ],
+  operationName: "GetMetricStatistics",
 }));
 export type GetMetricStreamError =
   | InternalServiceFault
@@ -3731,6 +4207,7 @@ export const getMetricStream: API.OperationMethod<
     MissingRequiredParameterException,
     ResourceNotFoundException,
   ],
+  operationName: "GetMetricStream",
 }));
 export type GetMetricWidgetImageError = CommonErrors;
 /**
@@ -3759,13 +4236,13 @@ export const getMetricWidgetImage: API.OperationMethod<
   input: GetMetricWidgetImageInput,
   output: GetMetricWidgetImageOutput,
   errors: [],
+  operationName: "GetMetricWidgetImage",
 }));
 export type GetOTelEnrichmentError = CommonErrors;
 /**
  * Returns the current status of vended metric enrichment for the account, including
- * whether CloudWatch vended metrics are enriched with resource ARN and resource tag
- * labels and queryable using PromQL. For the list of supported resources, see
- * Supported AWS infrastructure metrics.
+ * whether CloudWatch vended metrics are enriched with resource ARN and resource tag labels
+ * and queryable using PromQL. For the list of supported resources, see Supported Amazon Web Services infrastructure metrics.
  */
 export const getOTelEnrichment: API.OperationMethod<
   GetOTelEnrichmentInput,
@@ -3776,6 +4253,7 @@ export const getOTelEnrichment: API.OperationMethod<
   input: GetOTelEnrichmentInput,
   output: GetOTelEnrichmentOutput,
   errors: [],
+  operationName: "GetOTelEnrichment",
 }));
 export type ListAlarmMuteRulesError =
   | InvalidNextToken
@@ -3784,13 +4262,17 @@ export type ListAlarmMuteRulesError =
 /**
  * Lists alarm mute rules in your Amazon Web Services account and region.
  *
- * You can filter the results by alarm name to find all mute rules targeting a specific alarm, or by status to find rules that are scheduled, active, or expired.
+ * You can filter the results by alarm name to find all mute rules targeting a specific
+ * alarm, or by status to find rules that are scheduled, active, or expired.
  *
- * This operation supports pagination for accounts with many mute rules. Use the `MaxRecords` and `NextToken` parameters to retrieve results in multiple calls.
+ * This operation supports pagination for accounts with many mute rules. Use the
+ * `MaxRecords` and `NextToken` parameters to retrieve results in
+ * multiple calls.
  *
  * **Permissions**
  *
- * To list mute rules, you need the `cloudwatch:ListAlarmMuteRules` permission.
+ * To list mute rules, you need the `cloudwatch:ListAlarmMuteRules`
+ * permission.
  */
 export const listAlarmMuteRules: API.OperationMethod<
   ListAlarmMuteRulesInput,
@@ -3816,6 +4298,7 @@ export const listAlarmMuteRules: API.OperationMethod<
   input: ListAlarmMuteRulesInput,
   output: ListAlarmMuteRulesOutput,
   errors: [InvalidNextToken, ResourceNotFoundException],
+  operationName: "ListAlarmMuteRules",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -3861,6 +4344,7 @@ export const listDashboards: API.OperationMethod<
   input: ListDashboardsInput,
   output: ListDashboardsOutput,
   errors: [InternalServiceFault, InvalidParameterValueException],
+  operationName: "ListDashboards",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -3904,6 +4388,7 @@ export const listManagedInsightRules: API.OperationMethod<
     InvalidParameterValueException,
     MissingRequiredParameterException,
   ],
+  operationName: "ListManagedInsightRules",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -3954,6 +4439,7 @@ export const listMetrics: API.OperationMethod<
   input: ListMetricsInput,
   output: ListMetricsOutput,
   errors: [InternalServiceFault, InvalidParameterValueException],
+  operationName: "ListMetrics",
   pagination: { inputToken: "NextToken", outputToken: "NextToken" } as const,
 }));
 export type ListMetricStreamsError =
@@ -3994,6 +4480,7 @@ export const listMetricStreams: API.OperationMethod<
     InvalidParameterValueException,
     MissingRequiredParameterException,
   ],
+  operationName: "ListMetricStreams",
   pagination: {
     inputToken: "NextToken",
     outputToken: "NextToken",
@@ -4006,8 +4493,8 @@ export type ListTagsForResourceError =
   | ResourceNotFoundException
   | CommonErrors;
 /**
- * Displays the tags associated with a CloudWatch resource. Currently, alarms and
- * Contributor Insights rules support tagging.
+ * Displays the tags associated with a CloudWatch resource. Currently, alarms,
+ * dashboards, metric streams and Contributor Insights rules support tagging.
  */
 export const listTagsForResource: API.OperationMethod<
   ListTagsForResourceInput,
@@ -4022,24 +4509,43 @@ export const listTagsForResource: API.OperationMethod<
     InvalidParameterValueException,
     ResourceNotFoundException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type PutAlarmMuteRuleError = LimitExceededFault | CommonErrors;
 /**
  * Creates or updates an alarm mute rule.
  *
- * Alarm mute rules automatically mute alarm actions during predefined time windows. When a mute rule is active, targeted alarms continue to evaluate metrics and transition between states, but their configured actions (such as Amazon SNS notifications or Auto Scaling actions) are muted.
+ * Alarm mute rules automatically mute alarm actions during predefined time windows. When
+ * a mute rule is active, targeted alarms continue to evaluate metrics and transition
+ * between states, but their configured actions (such as Amazon SNS notifications
+ * or Auto Scaling actions) are muted.
  *
- * You can create mute rules with recurring schedules using `cron` expressions or one-time mute windows using `at` expressions. Each mute rule can target up to 100 specific alarms by name.
+ * You can create mute rules with recurring schedules using `cron` expressions
+ * or one-time mute windows using `at` expressions. Each mute rule can target up
+ * to 100 specific alarms by name.
  *
- * If you specify a rule name that already exists, this operation updates the existing rule with the new configuration.
+ * If you specify a rule name that already exists, this operation updates the existing
+ * rule with the new configuration.
  *
  * **Permissions**
  *
- * To create or update a mute rule, you must have the `cloudwatch:PutAlarmMuteRule` permission on two types of resources: the alarm mute rule resource itself, and each alarm that the rule targets.
+ * To create or update a mute rule, you must have the
+ * `cloudwatch:PutAlarmMuteRule` permission on two types of resources: the
+ * alarm mute rule resource itself, and each alarm that the rule targets.
  *
- * For example, If you want to allow a user to create mute rules that target only specific alarms named "WebServerCPUAlarm" and "DatabaseConnectionAlarm", you would create an IAM policy with one statement granting `cloudwatch:PutAlarmMuteRule` on the alarm mute rule resource (`arn:aws:cloudwatch:[REGION]:123456789012:alarm-mute-rule:*`), and another statement granting `cloudwatch:PutAlarmMuteRule` on the targeted alarm resources (`arn:aws:cloudwatch:[REGION]:123456789012:alarm:WebServerCPUAlarm` and `arn:aws:cloudwatch:[REGION]:123456789012:alarm:DatabaseConnectionAlarm`).
+ * For example, If you want to allow a user to create mute rules that target only
+ * specific alarms named "WebServerCPUAlarm" and "DatabaseConnectionAlarm", you would
+ * create an IAM policy with one statement granting
+ * `cloudwatch:PutAlarmMuteRule` on the alarm mute rule resource
+ * (`arn:aws:cloudwatch:[REGION]:123456789012:alarm-mute-rule:*`), and
+ * another statement granting `cloudwatch:PutAlarmMuteRule` on the targeted
+ * alarm resources
+ * (`arn:aws:cloudwatch:[REGION]:123456789012:alarm:WebServerCPUAlarm` and
+ * `arn:aws:cloudwatch:[REGION]:123456789012:alarm:DatabaseConnectionAlarm`).
  *
- * You can also use IAM policy conditions to allow targeting alarms based on resource tags. For example, you can restrict users to create/update mute rules to only target alarms that have a specific tag key-value pair, such as `Team=TeamA`.
+ * You can also use IAM policy conditions to allow targeting alarms based on resource
+ * tags. For example, you can restrict users to create/update mute rules to only target
+ * alarms that have a specific tag key-value pair, such as `Team=TeamA`.
  */
 export const putAlarmMuteRule: API.OperationMethod<
   PutAlarmMuteRuleInput,
@@ -4050,6 +4556,7 @@ export const putAlarmMuteRule: API.OperationMethod<
   input: PutAlarmMuteRuleInput,
   output: PutAlarmMuteRuleResponse,
   errors: [LimitExceededFault],
+  operationName: "PutAlarmMuteRule",
 }));
 export type PutAnomalyDetectorError =
   | InternalServiceFault
@@ -4084,6 +4591,7 @@ export const putAnomalyDetector: API.OperationMethod<
     LimitExceededException,
     MissingRequiredParameterException,
   ],
+  operationName: "PutAnomalyDetector",
 }));
 export type PutCompositeAlarmError = LimitExceededFault | CommonErrors;
 /**
@@ -4153,6 +4661,7 @@ export const putCompositeAlarm: API.OperationMethod<
   input: PutCompositeAlarmInput,
   output: PutCompositeAlarmResponse,
   errors: [LimitExceededFault],
+  operationName: "PutCompositeAlarm",
 }));
 export type PutDashboardError =
   | ConflictException
@@ -4189,6 +4698,7 @@ export const putDashboard: API.OperationMethod<
   input: PutDashboardInput,
   output: PutDashboardOutput,
   errors: [ConflictException, DashboardInvalidInputError, InternalServiceFault],
+  operationName: "PutDashboard",
 }));
 export type PutInsightRuleError =
   | InvalidParameterValueException
@@ -4217,6 +4727,35 @@ export const putInsightRule: API.OperationMethod<
     LimitExceededException,
     MissingRequiredParameterException,
   ],
+  operationName: "PutInsightRule",
+}));
+export type PutLogAlarmError =
+  | LimitExceededFault
+  | ResourceConflict
+  | CommonErrors;
+/**
+ * Creates or updates a log alarm. A log alarm evaluates the results of a CloudWatch Logs scheduled query against the configured threshold and comparison operator to determine its state.
+ *
+ * When you create a log alarm, the operation creates a service-managed CloudWatch Logs scheduled query that runs the query string you provide on the schedule you configure. Each scheduled query execution returns one or more aggregated values determined by the `AggregationExpression`, and each aggregated value is compared against the alarm `Threshold` to determine the alarm state. The alarm uses M-out-of-N evaluation: if `QueryResultsToAlarm` out of the most recent `QueryResultsToEvaluate` query results breach the threshold, the alarm transitions to `ALARM`.
+ *
+ * Log alarms support the alarm states (`OK`, `ALARM`, `INSUFFICIENT_DATA`). Configure transition actions using `OKActions`, `AlarmActions`, and `InsufficientDataActions`.
+ *
+ * If you call this operation with the name of an existing log alarm, the operation replaces the previous configuration of that alarm.
+ *
+ * **Permissions**
+ *
+ * To create or update a log alarm, you must have the `cloudwatch:PutLogAlarm` permission. The IAM role specified in `ScheduledQueryRoleARN` must grant the CloudWatch Alarms service permission to execute scheduled queries on the specified log groups. If you set `ActionLogLineCount`, the role specified in `ActionLogLineRoleArn` must grant permission to retrieve log events for inclusion in alarm notifications.
+ */
+export const putLogAlarm: API.OperationMethod<
+  PutLogAlarmInput,
+  PutLogAlarmResponse,
+  PutLogAlarmError,
+  Credentials | Region | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: PutLogAlarmInput,
+  output: PutLogAlarmResponse,
+  errors: [LimitExceededFault, ResourceConflict],
+  operationName: "PutLogAlarm",
 }));
 export type PutManagedInsightRulesError =
   | InvalidParameterValueException
@@ -4241,12 +4780,13 @@ export const putManagedInsightRules: API.OperationMethod<
   input: PutManagedInsightRulesInput,
   output: PutManagedInsightRulesOutput,
   errors: [InvalidParameterValueException, MissingRequiredParameterException],
+  operationName: "PutManagedInsightRules",
 }));
 export type PutMetricAlarmError = LimitExceededFault | CommonErrors;
 /**
  * Creates or updates an alarm and associates it with the specified metric, metric
- * math expression, anomaly detection model, Metrics Insights query, or PromQL query. For more
- * information about using a Metrics Insights query for an alarm, see Create
+ * math expression, anomaly detection model, Metrics Insights query, or PromQL query. For
+ * more information about using a Metrics Insights query for an alarm, see Create
  * alarms on Metrics Insights queries.
  *
  * Alarms based on anomaly detection models cannot have Auto Scaling actions.
@@ -4303,6 +4843,7 @@ export const putMetricAlarm: API.OperationMethod<
   input: PutMetricAlarmInput,
   output: PutMetricAlarmResponse,
   errors: [LimitExceededFault],
+  operationName: "PutMetricAlarm",
 }));
 export type PutMetricDataError =
   | InternalServiceFault
@@ -4379,6 +4920,7 @@ export const putMetricData: API.OperationMethod<
     InvalidParameterValueException,
     MissingRequiredParameterException,
   ],
+  operationName: "PutMetricData",
 }));
 export type PutMetricStreamError =
   | ConcurrentModificationException
@@ -4439,6 +4981,7 @@ export const putMetricStream: API.OperationMethod<
     InvalidParameterValueException,
     MissingRequiredParameterException,
   ],
+  operationName: "PutMetricStream",
 }));
 export type SetAlarmStateError =
   | InvalidFormatFault
@@ -4474,6 +5017,7 @@ export const setAlarmState: API.OperationMethod<
   input: SetAlarmStateInput,
   output: SetAlarmStateResponse,
   errors: [InvalidFormatFault, ResourceNotFound],
+  operationName: "SetAlarmState",
 }));
 export type StartMetricStreamsError =
   | InternalServiceFault
@@ -4496,18 +5040,18 @@ export const startMetricStreams: API.OperationMethod<
     InvalidParameterValueException,
     MissingRequiredParameterException,
   ],
+  operationName: "StartMetricStreams",
 }));
 export type StartOTelEnrichmentError = CommonErrors;
 /**
- * Enables enrichment and PromQL access for CloudWatch vended metrics for
- * supported AWS resources in the account. Once enabled, metrics that
- * contain a resource identifier dimension (for example, EC2
+ * Enables enrichment and PromQL access for CloudWatch vended metrics for supported Amazon Web Services resources in the account. Once enabled,
+ * metrics that contain a resource identifier dimension (for example, EC2
  * `CPUUtilization` with an `InstanceId` dimension) are enriched
- * with resource ARN and resource tag labels and become queryable using
- * PromQL.
+ * with resource ARN and resource tag labels and become queryable using PromQL.
  *
- * Before calling this operation, you must enable resource tags on telemetry for
- * your account. For more information, see Enable resource tags on telemetry.
+ * Before calling this operation, you must enable resource tags on telemetry for your
+ * account. For more information, see Enable
+ * resource tags on telemetry.
  */
 export const startOTelEnrichment: API.OperationMethod<
   StartOTelEnrichmentInput,
@@ -4518,6 +5062,7 @@ export const startOTelEnrichment: API.OperationMethod<
   input: StartOTelEnrichmentInput,
   output: StartOTelEnrichmentOutput,
   errors: [],
+  operationName: "StartOTelEnrichment",
 }));
 export type StopMetricStreamsError =
   | InternalServiceFault
@@ -4540,13 +5085,13 @@ export const stopMetricStreams: API.OperationMethod<
     InvalidParameterValueException,
     MissingRequiredParameterException,
   ],
+  operationName: "StopMetricStreams",
 }));
 export type StopOTelEnrichmentError = CommonErrors;
 /**
- * Disables enrichment and PromQL access for CloudWatch vended metrics for
- * supported AWS resources in the account. After disabling, these metrics
- * are no longer enriched with resource ARN and resource tag labels, and cannot be
- * queried using PromQL.
+ * Disables enrichment and PromQL access for CloudWatch vended metrics for supported Amazon Web Services resources in the account. After disabling,
+ * these metrics are no longer enriched with resource ARN and resource tag labels, and
+ * cannot be queried using PromQL.
  */
 export const stopOTelEnrichment: API.OperationMethod<
   StopOTelEnrichmentInput,
@@ -4557,6 +5102,7 @@ export const stopOTelEnrichment: API.OperationMethod<
   input: StopOTelEnrichmentInput,
   output: StopOTelEnrichmentOutput,
   errors: [],
+  operationName: "StopOTelEnrichment",
 }));
 export type TagResourceError =
   | ConcurrentModificationException
@@ -4567,8 +5113,8 @@ export type TagResourceError =
   | CommonErrors;
 /**
  * Assigns one or more tags (key-value pairs) to the specified CloudWatch resource.
- * Currently, the only CloudWatch resources that can be tagged are alarms and Contributor
- * Insights rules.
+ * Currently, the only CloudWatch resources that can be tagged are alarms, dashboards,
+ * metric streams and Contributor Insights rules.
  *
  * Tags can help you organize and categorize your resources. You can also use them to
  * scope user permissions by granting a user permission to access or change only resources
@@ -4600,6 +5146,7 @@ export const tagResource: API.OperationMethod<
     InvalidParameterValueException,
     ResourceNotFoundException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | ConcurrentModificationException
@@ -4609,7 +5156,8 @@ export type UntagResourceError =
   | ResourceNotFoundException
   | CommonErrors;
 /**
- * Removes one or more tags from the specified resource.
+ * Removes one or more tags from the specified resource. Currently, alarms, dashboards,
+ * metric streams and Contributor Insights rules support tagging.
  */
 export const untagResource: API.OperationMethod<
   UntagResourceInput,
@@ -4626,4 +5174,5 @@ export const untagResource: API.OperationMethod<
     InvalidParameterValueException,
     ResourceNotFoundException,
   ],
+  operationName: "UntagResource",
 }));

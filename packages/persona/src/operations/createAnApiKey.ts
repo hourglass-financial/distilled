@@ -9,6 +9,41 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface CreateAnApiKeyInput {
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  data: {
+    attributes: {
+      name: string;
+      note?: string;
+      "api-version"?:
+        | "2025-12-08"
+        | "2025-10-27"
+        | "2023-01-05"
+        | "2022-09-01"
+        | "2021-08-18"
+        | "2021-07-05"
+        | "2021-02-21"
+        | "2020-05-18";
+      "api-key-inflection"?: string;
+      "api-attributes-blocklist"?: ReadonlyArray<string>;
+      "ip-address-allowlist"?: ReadonlyArray<string>;
+      permissions?: ReadonlyArray<string>;
+      "file-access-token-expires-in"?: number;
+    };
+  };
+}
 export const CreateAnApiKeyInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
   fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
@@ -55,10 +90,40 @@ export const CreateAnApiKeyInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "file-access-token-expires-in": Schema.optional(Schema.Number),
     }),
   }),
-}).pipe(T.Http({ method: "POST", path: "/api-keys" }));
-export type CreateAnApiKeyInput = typeof CreateAnApiKeyInput.Type;
+}).pipe(
+  T.Http({ method: "POST", path: "/api-keys" }),
+) as unknown as Schema.Codec<CreateAnApiKeyInput>;
 
 // Output Schema
+export interface CreateAnApiKeyOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      name?: string;
+      note?: string | null;
+      "api-version"?:
+        | "2025-12-08"
+        | "2025-10-27"
+        | "2023-01-05"
+        | "2022-09-01"
+        | "2021-08-18"
+        | "2021-07-05"
+        | "2021-02-21"
+        | "2020-05-18";
+      "api-key-inflection"?: string;
+      "api-attributes-blocklist"?: ReadonlyArray<string | null>;
+      permissions?: ReadonlyArray<string>;
+      "ip-address-allowlist"?: ReadonlyArray<string>;
+      "file-access-token-expires-in"?: number;
+      "last-used-at"?: string | null;
+      "expires-at"?: string | null;
+      "created-at"?: string;
+      value?: string;
+    };
+  };
+  included?: ReadonlyArray<unknown>;
+}
 export const CreateAnApiKeyOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Struct({
     type: Schema.optional(Schema.String),
@@ -94,8 +159,7 @@ export const CreateAnApiKeyOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     ),
   }),
   included: Schema.optional(Schema.Array(Schema.Unknown)),
-});
-export type CreateAnApiKeyOutput = typeof CreateAnApiKeyOutput.Type;
+}) as unknown as Schema.Codec<CreateAnApiKeyOutput>;
 
 // The operation
 /**

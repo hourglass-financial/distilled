@@ -4,6 +4,10 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface SimulateInternationalWireOutReturnInput {
+  id: string;
+  ereborVersion?: string;
+}
 export const SimulateInternationalWireOutReturnInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
@@ -15,17 +19,16 @@ export const SimulateInternationalWireOutReturnInput =
       method: "POST",
       path: "/simulation/international_wire_out/{id}/return",
     }),
-  );
-export type SimulateInternationalWireOutReturnInput =
-  typeof SimulateInternationalWireOutReturnInput.Type;
+  ) as unknown as Schema.Codec<SimulateInternationalWireOutReturnInput>;
 
 // Output Schema
+export interface SimulateInternationalWireOutReturnOutput {
+  international_wire_out_id: string;
+}
 export const SimulateInternationalWireOutReturnOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     international_wire_out_id: Schema.String,
-  });
-export type SimulateInternationalWireOutReturnOutput =
-  typeof SimulateInternationalWireOutReturnOutput.Type;
+  }) as unknown as Schema.Codec<SimulateInternationalWireOutReturnOutput>;
 
 // The operation
 /**

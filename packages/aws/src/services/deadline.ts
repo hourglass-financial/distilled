@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -158,6 +158,7 @@ export type KmsKeyArn = string;
 export type CostScaleFactor = number;
 export type IdentityCenterPrincipalId = string;
 export type IdentityStoreId = string;
+export type Region = string;
 export type AmountRequirementName = string;
 export type MaxCount = number;
 export type MinZeroMaxInteger = number;
@@ -173,12 +174,18 @@ export type EbsIops = number;
 export type EbsThroughputMiB = number;
 export type AcceleratorRuntime = string;
 export type VpcResourceConfigurationArn = string;
+export type PersistentVolumeSizeGiB = number;
+export type PersistentVolumeIops = number;
+export type PersistentVolumeThroughputMiB = number;
+export type MountPath = string;
+export type PersistentVolumeTtlHours = number;
 export type ServiceManagedEc2WorkerIdleDurationSeconds = number;
 export type HostConfigurationScript = string | redacted.Redacted<string>;
 export type HostConfigurationScriptTimeoutSeconds = number;
 export type AccessKeyId = string | redacted.Redacted<string>;
 export type SecretAccessKey = string | redacted.Redacted<string>;
 export type SessionToken = string | redacted.Redacted<string>;
+export type VolumeId = string;
 export type S3BucketName = string;
 export type S3Prefix = string;
 export type Document = unknown;
@@ -202,11 +209,12 @@ export type LicenseEndpointId = string;
 export type StatusMessage = string;
 export type DnsName = string;
 export type IdentityCenterInstanceArn = string;
-export type Region = string;
 export type Subdomain = string;
 export type MonitorId = string;
 export type IdentityCenterApplicationArn = string;
 export type Url = string;
+export type SettingKey = string;
+export type SettingValue = string;
 
 //# Schemas
 export interface BatchGetJobIdentifier {
@@ -3262,6 +3270,7 @@ export interface AssociateMemberToFarmRequest {
   identityStoreId: string;
   membershipLevel: MembershipLevel;
   principalId: string;
+  identityCenterRegion?: string;
 }
 export const AssociateMemberToFarmRequest =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -3271,6 +3280,7 @@ export const AssociateMemberToFarmRequest =
       identityStoreId: S.String,
       membershipLevel: MembershipLevel,
       principalId: S.String.pipe(T.HttpLabel("principalId")),
+      identityCenterRegion: S.optional(S.String),
     }).pipe(
       T.all(
         T.Http({
@@ -4346,7 +4356,13 @@ export const Ec2EbsVolume = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     throughputMiB: S.optional(S.Number),
   }),
 ).annotate({ identifier: "Ec2EbsVolume" }) as any as S.Schema<Ec2EbsVolume>;
-export type AcceleratorName = "t4" | "a10g" | "l4" | "l40s" | (string & {});
+export type AcceleratorName =
+  | "t4"
+  | "a10g"
+  | "l4"
+  | "l40s"
+  | "rtx-pro-server-6000"
+  | (string & {});
 export const AcceleratorName = /*@__PURE__*/ /*#__PURE__*/ S.String;
 export interface AcceleratorSelection {
   name: AcceleratorName;
@@ -4433,6 +4449,25 @@ export const VpcConfiguration = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "VpcConfiguration",
 }) as any as S.Schema<VpcConfiguration>;
+export interface PersistentVolumeConfiguration {
+  sizeGiB?: number;
+  iops?: number;
+  throughputMiB?: number;
+  mountPath: string;
+  lastUsedTtlHours?: number;
+}
+export const PersistentVolumeConfiguration =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      sizeGiB: S.optional(S.Number),
+      iops: S.optional(S.Number),
+      throughputMiB: S.optional(S.Number),
+      mountPath: S.String,
+      lastUsedTtlHours: S.optional(S.Number),
+    }),
+  ).annotate({
+    identifier: "PersistentVolumeConfiguration",
+  }) as any as S.Schema<PersistentVolumeConfiguration>;
 export interface ServiceManagedEc2AutoScalingConfiguration {
   standbyWorkerCount?: number;
   workerIdleDurationSeconds?: number;
@@ -4453,6 +4488,7 @@ export interface ServiceManagedEc2FleetConfiguration {
   instanceMarketOptions: ServiceManagedEc2InstanceMarketOptions;
   vpcConfiguration?: VpcConfiguration;
   storageProfileId?: string;
+  persistentVolumeConfiguration?: PersistentVolumeConfiguration;
   autoScalingConfiguration?: ServiceManagedEc2AutoScalingConfiguration;
 }
 export const ServiceManagedEc2FleetConfiguration =
@@ -4462,6 +4498,7 @@ export const ServiceManagedEc2FleetConfiguration =
       instanceMarketOptions: ServiceManagedEc2InstanceMarketOptions,
       vpcConfiguration: S.optional(VpcConfiguration),
       storageProfileId: S.optional(S.String),
+      persistentVolumeConfiguration: S.optional(PersistentVolumeConfiguration),
       autoScalingConfiguration: S.optional(
         ServiceManagedEc2AutoScalingConfiguration,
       ),
@@ -4818,6 +4855,7 @@ export interface AssociateMemberToFleetRequest {
   identityStoreId: string;
   membershipLevel: MembershipLevel;
   principalId: string;
+  identityCenterRegion?: string;
 }
 export const AssociateMemberToFleetRequest =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -4828,6 +4866,7 @@ export const AssociateMemberToFleetRequest =
       identityStoreId: S.String,
       membershipLevel: MembershipLevel,
       principalId: S.String.pipe(T.HttpLabel("principalId")),
+      identityCenterRegion: S.optional(S.String),
     }).pipe(
       T.all(
         T.Http({
@@ -4987,6 +5026,176 @@ export const ListFleetMembersResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
 ).annotate({
   identifier: "ListFleetMembersResponse",
 }) as any as S.Schema<ListFleetMembersResponse>;
+export interface GetVolumeRequest {
+  farmId: string;
+  fleetId: string;
+  volumeId: string;
+}
+export const GetVolumeRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    farmId: S.String.pipe(T.HttpLabel("farmId")),
+    fleetId: S.String.pipe(T.HttpLabel("fleetId")),
+    volumeId: S.String.pipe(T.HttpLabel("volumeId")),
+  }).pipe(
+    T.all(
+      T.Http({
+        method: "GET",
+        uri: "/2023-10-12/farms/{farmId}/fleets/{fleetId}/volumes/{volumeId}",
+      }),
+      svc,
+      auth,
+      proto,
+      ver,
+      rules,
+    ),
+  ),
+).annotate({
+  identifier: "GetVolumeRequest",
+}) as any as S.Schema<GetVolumeRequest>;
+export type VolumeState =
+  | "PENDING_CREATION"
+  | "PENDING_ATTACHMENT"
+  | "IN_USE"
+  | "AVAILABLE"
+  | "PENDING_DELETION"
+  | (string & {});
+export const VolumeState = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export type EbsVolumeType = "gp3" | (string & {});
+export const EbsVolumeType = /*@__PURE__*/ /*#__PURE__*/ S.String;
+export interface GetVolumeResponse {
+  volumeId: string;
+  farmId: string;
+  fleetId: string;
+  state: VolumeState;
+  sizeGiB: number;
+  availabilityZoneId: string;
+  attachedWorkerId?: string;
+  volumeType: EbsVolumeType;
+  iops?: number;
+  throughputMiB?: number;
+  createdAt: Date;
+  lastAssignedAt?: Date;
+  lastReleasedAt?: Date;
+  expiresAt?: Date;
+}
+export const GetVolumeResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    volumeId: S.String,
+    farmId: S.String,
+    fleetId: S.String,
+    state: VolumeState,
+    sizeGiB: S.Number,
+    availabilityZoneId: S.String,
+    attachedWorkerId: S.optional(S.String),
+    volumeType: EbsVolumeType,
+    iops: S.optional(S.Number),
+    throughputMiB: S.optional(S.Number),
+    createdAt: T.DateFromString.pipe(T.TimestampFormat("date-time")),
+    lastAssignedAt: S.optional(
+      T.DateFromString.pipe(T.TimestampFormat("date-time")),
+    ),
+    lastReleasedAt: S.optional(
+      T.DateFromString.pipe(T.TimestampFormat("date-time")),
+    ),
+    expiresAt: S.optional(
+      T.DateFromString.pipe(T.TimestampFormat("date-time")),
+    ),
+  }),
+).annotate({
+  identifier: "GetVolumeResponse",
+}) as any as S.Schema<GetVolumeResponse>;
+export interface DeleteVolumeRequest {
+  farmId: string;
+  fleetId: string;
+  volumeId: string;
+}
+export const DeleteVolumeRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    farmId: S.String.pipe(T.HttpLabel("farmId")),
+    fleetId: S.String.pipe(T.HttpLabel("fleetId")),
+    volumeId: S.String.pipe(T.HttpLabel("volumeId")),
+  }).pipe(
+    T.all(
+      T.Http({
+        method: "DELETE",
+        uri: "/2023-10-12/farms/{farmId}/fleets/{fleetId}/volumes/{volumeId}",
+      }),
+      svc,
+      auth,
+      proto,
+      ver,
+      rules,
+    ),
+  ),
+).annotate({
+  identifier: "DeleteVolumeRequest",
+}) as any as S.Schema<DeleteVolumeRequest>;
+export interface DeleteVolumeResponse {}
+export const DeleteVolumeResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({}),
+).annotate({
+  identifier: "DeleteVolumeResponse",
+}) as any as S.Schema<DeleteVolumeResponse>;
+export interface ListVolumesRequest {
+  farmId: string;
+  fleetId: string;
+  nextToken?: string;
+  maxResults?: number;
+}
+export const ListVolumesRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    farmId: S.String.pipe(T.HttpLabel("farmId")),
+    fleetId: S.String.pipe(T.HttpLabel("fleetId")),
+    nextToken: S.optional(S.String).pipe(T.HttpQuery("nextToken")),
+    maxResults: S.optional(S.Number).pipe(T.HttpQuery("maxResults")),
+  }).pipe(
+    T.all(
+      T.Http({
+        method: "GET",
+        uri: "/2023-10-12/farms/{farmId}/fleets/{fleetId}/volumes",
+      }),
+      svc,
+      auth,
+      proto,
+      ver,
+      rules,
+    ),
+  ),
+).annotate({
+  identifier: "ListVolumesRequest",
+}) as any as S.Schema<ListVolumesRequest>;
+export interface VolumeSummary {
+  volumeId: string;
+  farmId: string;
+  fleetId: string;
+  state: VolumeState;
+  sizeGiB: number;
+  availabilityZoneId: string;
+  attachedWorkerId?: string;
+}
+export const VolumeSummary = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    volumeId: S.String,
+    farmId: S.String,
+    fleetId: S.String,
+    state: VolumeState,
+    sizeGiB: S.Number,
+    availabilityZoneId: S.String,
+    attachedWorkerId: S.optional(S.String),
+  }),
+).annotate({ identifier: "VolumeSummary" }) as any as S.Schema<VolumeSummary>;
+export type VolumeSummaries = VolumeSummary[];
+export const VolumeSummaries =
+  /*@__PURE__*/ /*#__PURE__*/ S.Array(VolumeSummary);
+export interface ListVolumesResponse {
+  volumes: VolumeSummary[];
+  nextToken?: string;
+}
+export const ListVolumesResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({ volumes: VolumeSummaries, nextToken: S.optional(S.String) }),
+).annotate({
+  identifier: "ListVolumesResponse",
+}) as any as S.Schema<ListVolumesResponse>;
 export interface HostPropertiesRequest {
   ipAddresses?: IpAddresses;
   hostName?: string;
@@ -6431,6 +6640,7 @@ export interface AssociateMemberToQueueRequest {
   identityStoreId: string;
   membershipLevel: MembershipLevel;
   principalId: string;
+  identityCenterRegion?: string;
 }
 export const AssociateMemberToQueueRequest =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -6441,6 +6651,7 @@ export const AssociateMemberToQueueRequest =
       identityStoreId: S.String,
       membershipLevel: MembershipLevel,
       principalId: S.String.pipe(T.HttpLabel("principalId")),
+      identityCenterRegion: S.optional(S.String),
     }).pipe(
       T.all(
         T.Http({
@@ -7248,6 +7459,7 @@ export interface AssociateMemberToJobRequest {
   identityStoreId: string;
   membershipLevel: MembershipLevel;
   principalId: string;
+  identityCenterRegion?: string;
 }
 export const AssociateMemberToJobRequest =
   /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
@@ -7259,6 +7471,7 @@ export const AssociateMemberToJobRequest =
       identityStoreId: S.String,
       membershipLevel: MembershipLevel,
       principalId: S.String.pipe(T.HttpLabel("principalId")),
+      identityCenterRegion: S.optional(S.String),
     }).pipe(
       T.all(
         T.Http({
@@ -8852,6 +9065,70 @@ export const ListMonitorsResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "ListMonitorsResponse",
 }) as any as S.Schema<ListMonitorsResponse>;
+export interface GetMonitorSettingsRequest {
+  monitorId: string;
+}
+export const GetMonitorSettingsRequest = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () =>
+    S.Struct({ monitorId: S.String.pipe(T.HttpLabel("monitorId")) }).pipe(
+      T.all(
+        T.Http({
+          method: "GET",
+          uri: "/2023-10-12/monitors/{monitorId}/settings",
+        }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+).annotate({
+  identifier: "GetMonitorSettingsRequest",
+}) as any as S.Schema<GetMonitorSettingsRequest>;
+export type SettingsMap = { [key: string]: string | undefined };
+export const SettingsMap = /*@__PURE__*/ /*#__PURE__*/ S.Record(
+  S.String,
+  S.String.pipe(S.optional),
+);
+export interface GetMonitorSettingsResponse {
+  settings: { [key: string]: string | undefined };
+}
+export const GetMonitorSettingsResponse = /*@__PURE__*/ /*#__PURE__*/ S.suspend(
+  () => S.Struct({ settings: SettingsMap }),
+).annotate({
+  identifier: "GetMonitorSettingsResponse",
+}) as any as S.Schema<GetMonitorSettingsResponse>;
+export interface UpdateMonitorSettingsRequest {
+  monitorId: string;
+  settings: { [key: string]: string | undefined };
+}
+export const UpdateMonitorSettingsRequest =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+    S.Struct({
+      monitorId: S.String.pipe(T.HttpLabel("monitorId")),
+      settings: SettingsMap,
+    }).pipe(
+      T.all(
+        T.Http({
+          method: "PATCH",
+          uri: "/2023-10-12/monitors/{monitorId}/settings",
+        }),
+        svc,
+        auth,
+        proto,
+        ver,
+        rules,
+      ),
+    ),
+  ).annotate({
+    identifier: "UpdateMonitorSettingsRequest",
+  }) as any as S.Schema<UpdateMonitorSettingsRequest>;
+export interface UpdateMonitorSettingsResponse {}
+export const UpdateMonitorSettingsResponse =
+  /*@__PURE__*/ /*#__PURE__*/ S.suspend(() => S.Struct({})).annotate({
+    identifier: "UpdateMonitorSettingsResponse",
+  }) as any as S.Schema<UpdateMonitorSettingsResponse>;
 
 //# Errors
 export class AccessDeniedException extends S.TaggedErrorClass<AccessDeniedException>()(
@@ -8944,6 +9221,7 @@ export const batchGetJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchGetJob",
 }));
 export type BatchGetSessionError =
   | AccessDeniedException
@@ -8970,6 +9248,7 @@ export const batchGetSession: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchGetSession",
 }));
 export type BatchGetSessionActionError =
   | AccessDeniedException
@@ -8996,6 +9275,7 @@ export const batchGetSessionAction: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchGetSessionAction",
 }));
 export type BatchGetStepError =
   | AccessDeniedException
@@ -9022,6 +9302,7 @@ export const batchGetStep: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchGetStep",
 }));
 export type BatchGetTaskError =
   | AccessDeniedException
@@ -9048,6 +9329,7 @@ export const batchGetTask: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchGetTask",
 }));
 export type BatchGetWorkerError =
   | AccessDeniedException
@@ -9074,6 +9356,7 @@ export const batchGetWorker: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchGetWorker",
 }));
 export type BatchUpdateJobError =
   | AccessDeniedException
@@ -9104,6 +9387,7 @@ export const batchUpdateJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchUpdateJob",
 }));
 export type BatchUpdateTaskError =
   | AccessDeniedException
@@ -9130,6 +9414,7 @@ export const batchUpdateTask: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchUpdateTask",
 }));
 export type CreateQueueFleetAssociationError =
   | AccessDeniedException
@@ -9156,6 +9441,7 @@ export const createQueueFleetAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateQueueFleetAssociation",
 }));
 export type CreateQueueLimitAssociationError =
   | AccessDeniedException
@@ -9182,6 +9468,7 @@ export const createQueueLimitAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateQueueLimitAssociation",
 }));
 export type DeleteQueueFleetAssociationError =
   | AccessDeniedException
@@ -9210,6 +9497,7 @@ export const deleteQueueFleetAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteQueueFleetAssociation",
 }));
 export type DeleteQueueLimitAssociationError =
   | AccessDeniedException
@@ -9238,6 +9526,7 @@ export const deleteQueueLimitAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteQueueLimitAssociation",
 }));
 export type GetQueueFleetAssociationError =
   | AccessDeniedException
@@ -9264,6 +9553,7 @@ export const getQueueFleetAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetQueueFleetAssociation",
 }));
 export type GetQueueLimitAssociationError =
   | AccessDeniedException
@@ -9290,6 +9580,7 @@ export const getQueueLimitAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetQueueLimitAssociation",
 }));
 export type GetSessionsStatisticsAggregationError =
   | AccessDeniedException
@@ -9331,6 +9622,7 @@ export const getSessionsStatisticsAggregation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetSessionsStatisticsAggregation",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -9369,6 +9661,7 @@ export const listAvailableMeteredProducts: API.OperationMethod<
   input: ListAvailableMeteredProductsRequest,
   output: ListAvailableMeteredProductsResponse,
   errors: [InternalServerErrorException, ThrottlingException],
+  operationName: "ListAvailableMeteredProducts",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -9414,6 +9707,7 @@ export const listQueueFleetAssociations: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "ListQueueFleetAssociations",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -9459,6 +9753,7 @@ export const listQueueLimitAssociations: API.OperationMethod<
     ResourceNotFoundException,
     ThrottlingException,
   ],
+  operationName: "ListQueueLimitAssociations",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -9491,6 +9786,7 @@ export const listTagsForResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListTagsForResource",
 }));
 export type SearchJobsError =
   | AccessDeniedException
@@ -9517,6 +9813,7 @@ export const searchJobs: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SearchJobs",
 }));
 export type SearchStepsError =
   | AccessDeniedException
@@ -9543,6 +9840,7 @@ export const searchSteps: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SearchSteps",
 }));
 export type SearchTasksError =
   | AccessDeniedException
@@ -9569,6 +9867,7 @@ export const searchTasks: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SearchTasks",
 }));
 export type SearchWorkersError =
   | AccessDeniedException
@@ -9595,6 +9894,7 @@ export const searchWorkers: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "SearchWorkers",
 }));
 export type StartSessionsStatisticsAggregationError =
   | AccessDeniedException
@@ -9621,6 +9921,7 @@ export const startSessionsStatisticsAggregation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "StartSessionsStatisticsAggregation",
 }));
 export type TagResourceError =
   | AccessDeniedException
@@ -9649,6 +9950,7 @@ export const tagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "TagResource",
 }));
 export type UntagResourceError =
   | AccessDeniedException
@@ -9677,6 +9979,7 @@ export const untagResource: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UntagResource",
 }));
 export type UpdateQueueFleetAssociationError =
   | AccessDeniedException
@@ -9703,6 +10006,7 @@ export const updateQueueFleetAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateQueueFleetAssociation",
 }));
 export type UpdateQueueLimitAssociationError =
   | AccessDeniedException
@@ -9729,6 +10033,7 @@ export const updateQueueLimitAssociation: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateQueueLimitAssociation",
 }));
 export type CreateFarmError =
   | AccessDeniedException
@@ -9757,6 +10062,7 @@ export const createFarm: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateFarm",
 }));
 export type GetFarmError =
   | AccessDeniedException
@@ -9783,6 +10089,7 @@ export const getFarm: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetFarm",
 }));
 export type UpdateFarmError =
   | AccessDeniedException
@@ -9809,6 +10116,7 @@ export const updateFarm: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateFarm",
 }));
 export type DeleteFarmError =
   | AccessDeniedException
@@ -9835,6 +10143,7 @@ export const deleteFarm: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteFarm",
 }));
 export type ListFarmsError =
   | AccessDeniedException
@@ -9874,6 +10183,7 @@ export const listFarms: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListFarms",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -9908,6 +10218,7 @@ export const associateMemberToFarm: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssociateMemberToFarm",
 }));
 export type CreateLimitError =
   | AccessDeniedException
@@ -9938,6 +10249,7 @@ export const createLimit: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateLimit",
 }));
 export type CreateStorageProfileError =
   | AccessDeniedException
@@ -9966,6 +10278,7 @@ export const createStorageProfile: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateStorageProfile",
 }));
 export type DeleteLimitError =
   | AccessDeniedException
@@ -9990,6 +10303,7 @@ export const deleteLimit: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteLimit",
 }));
 export type DeleteStorageProfileError =
   | AccessDeniedException
@@ -10014,6 +10328,7 @@ export const deleteStorageProfile: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteStorageProfile",
 }));
 export type DisassociateMemberFromFarmError =
   | AccessDeniedException
@@ -10040,6 +10355,7 @@ export const disassociateMemberFromFarm: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DisassociateMemberFromFarm",
 }));
 export type GetLimitError =
   | AccessDeniedException
@@ -10066,6 +10382,7 @@ export const getLimit: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetLimit",
 }));
 export type GetStorageProfileError =
   | AccessDeniedException
@@ -10092,6 +10409,7 @@ export const getStorageProfile: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetStorageProfile",
 }));
 export type ListFarmMembersError =
   | AccessDeniedException
@@ -10133,6 +10451,7 @@ export const listFarmMembers: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListFarmMembers",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -10180,6 +10499,7 @@ export const listLimits: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListLimits",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -10227,6 +10547,7 @@ export const listStorageProfiles: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListStorageProfiles",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -10259,6 +10580,7 @@ export const updateLimit: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateLimit",
 }));
 export type UpdateStorageProfileError =
   | AccessDeniedException
@@ -10285,6 +10607,7 @@ export const updateStorageProfile: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateStorageProfile",
 }));
 export type CreateBudgetError =
   | AccessDeniedException
@@ -10313,6 +10636,7 @@ export const createBudget: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateBudget",
 }));
 export type GetBudgetError =
   | AccessDeniedException
@@ -10339,6 +10663,7 @@ export const getBudget: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetBudget",
 }));
 export type UpdateBudgetError =
   | AccessDeniedException
@@ -10365,6 +10690,7 @@ export const updateBudget: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateBudget",
 }));
 export type DeleteBudgetError =
   | AccessDeniedException
@@ -10391,6 +10717,7 @@ export const deleteBudget: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteBudget",
 }));
 export type ListBudgetsError =
   | AccessDeniedException
@@ -10432,6 +10759,7 @@ export const listBudgets: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListBudgets",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -10466,6 +10794,7 @@ export const createFleet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateFleet",
 }));
 export type GetFleetError =
   | AccessDeniedException
@@ -10492,6 +10821,7 @@ export const getFleet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetFleet",
 }));
 export type UpdateFleetError =
   | AccessDeniedException
@@ -10520,6 +10850,7 @@ export const updateFleet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateFleet",
 }));
 export type DeleteFleetError =
   | AccessDeniedException
@@ -10548,6 +10879,7 @@ export const deleteFleet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteFleet",
 }));
 export type ListFleetsError =
   | AccessDeniedException
@@ -10589,6 +10921,7 @@ export const listFleets: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListFleets",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -10623,6 +10956,7 @@ export const associateMemberToFleet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssociateMemberToFleet",
 }));
 export type AssumeFleetRoleForReadError =
   | AccessDeniedException
@@ -10649,6 +10983,7 @@ export const assumeFleetRoleForRead: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssumeFleetRoleForRead",
 }));
 export type DisassociateMemberFromFleetError =
   | AccessDeniedException
@@ -10677,6 +11012,7 @@ export const disassociateMemberFromFleet: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DisassociateMemberFromFleet",
 }));
 export type ListFleetMembersError =
   | AccessDeniedException
@@ -10718,10 +11054,115 @@ export const listFleetMembers: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListFleetMembers",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
     items: "members",
+    pageSize: "maxResults",
+  } as const,
+}));
+export type GetVolumeError =
+  | AccessDeniedException
+  | InternalServerErrorException
+  | ResourceNotFoundException
+  | ThrottlingException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Gets a persistent volume.
+ */
+export const getVolume: API.OperationMethod<
+  GetVolumeRequest,
+  GetVolumeResponse,
+  GetVolumeError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: GetVolumeRequest,
+  output: GetVolumeResponse,
+  errors: [
+    AccessDeniedException,
+    InternalServerErrorException,
+    ResourceNotFoundException,
+    ThrottlingException,
+    ValidationException,
+  ],
+  operationName: "GetVolume",
+}));
+export type DeleteVolumeError =
+  | AccessDeniedException
+  | ConflictException
+  | InternalServerErrorException
+  | ResourceNotFoundException
+  | ThrottlingException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Deletes a persistent volume.
+ */
+export const deleteVolume: API.OperationMethod<
+  DeleteVolumeRequest,
+  DeleteVolumeResponse,
+  DeleteVolumeError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: DeleteVolumeRequest,
+  output: DeleteVolumeResponse,
+  errors: [
+    AccessDeniedException,
+    ConflictException,
+    InternalServerErrorException,
+    ResourceNotFoundException,
+    ThrottlingException,
+    ValidationException,
+  ],
+  operationName: "DeleteVolume",
+}));
+export type ListVolumesError =
+  | AccessDeniedException
+  | InternalServerErrorException
+  | ResourceNotFoundException
+  | ThrottlingException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Lists the persistent volumes in a fleet.
+ */
+export const listVolumes: API.OperationMethod<
+  ListVolumesRequest,
+  ListVolumesResponse,
+  ListVolumesError,
+  Credentials | Rgn | HttpClient.HttpClient
+> & {
+  pages: (
+    input: ListVolumesRequest,
+  ) => stream.Stream<
+    ListVolumesResponse,
+    ListVolumesError,
+    Credentials | Rgn | HttpClient.HttpClient
+  >;
+  items: (
+    input: ListVolumesRequest,
+  ) => stream.Stream<
+    VolumeSummary,
+    ListVolumesError,
+    Credentials | Rgn | HttpClient.HttpClient
+  >;
+} = /*@__PURE__*/ /*#__PURE__*/ API.makePaginated(() => ({
+  input: ListVolumesRequest,
+  output: ListVolumesResponse,
+  errors: [
+    AccessDeniedException,
+    InternalServerErrorException,
+    ResourceNotFoundException,
+    ThrottlingException,
+    ValidationException,
+  ],
+  operationName: "ListVolumes",
+  pagination: {
+    inputToken: "nextToken",
+    outputToken: "nextToken",
+    items: "volumes",
     pageSize: "maxResults",
   } as const,
 }));
@@ -10754,6 +11195,7 @@ export const createWorker: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateWorker",
 }));
 export type GetWorkerError =
   | AccessDeniedException
@@ -10780,6 +11222,7 @@ export const getWorker: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetWorker",
 }));
 export type UpdateWorkerError =
   | AccessDeniedException
@@ -10808,6 +11251,7 @@ export const updateWorker: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateWorker",
 }));
 export type DeleteWorkerError =
   | AccessDeniedException
@@ -10836,6 +11280,7 @@ export const deleteWorker: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteWorker",
 }));
 export type ListWorkersError =
   | AccessDeniedException
@@ -10877,6 +11322,7 @@ export const listWorkers: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListWorkers",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -10911,6 +11357,7 @@ export const assumeFleetRoleForWorker: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssumeFleetRoleForWorker",
 }));
 export type AssumeQueueRoleForWorkerError =
   | AccessDeniedException
@@ -10939,6 +11386,7 @@ export const assumeQueueRoleForWorker: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssumeQueueRoleForWorker",
 }));
 export type BatchGetJobEntityError =
   | AccessDeniedException
@@ -10965,6 +11413,7 @@ export const batchGetJobEntity: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "BatchGetJobEntity",
 }));
 export type ListSessionsForWorkerError =
   | AccessDeniedException
@@ -11006,6 +11455,7 @@ export const listSessionsForWorker: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListSessionsForWorker",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -11040,6 +11490,7 @@ export const updateWorkerSchedule: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateWorkerSchedule",
 }));
 export type CreateQueueError =
   | AccessDeniedException
@@ -11068,6 +11519,7 @@ export const createQueue: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateQueue",
 }));
 export type GetQueueError =
   | AccessDeniedException
@@ -11094,6 +11546,7 @@ export const getQueue: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetQueue",
 }));
 export type UpdateQueueError =
   | AccessDeniedException
@@ -11120,6 +11573,7 @@ export const updateQueue: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateQueue",
 }));
 export type DeleteQueueError =
   | AccessDeniedException
@@ -11150,6 +11604,7 @@ export const deleteQueue: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteQueue",
 }));
 export type ListQueuesError =
   | AccessDeniedException
@@ -11191,6 +11646,7 @@ export const listQueues: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListQueues",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -11225,6 +11681,7 @@ export const associateMemberToQueue: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssociateMemberToQueue",
 }));
 export type AssumeQueueRoleForReadError =
   | AccessDeniedException
@@ -11251,6 +11708,7 @@ export const assumeQueueRoleForRead: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssumeQueueRoleForRead",
 }));
 export type AssumeQueueRoleForUserError =
   | AccessDeniedException
@@ -11277,6 +11735,7 @@ export const assumeQueueRoleForUser: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssumeQueueRoleForUser",
 }));
 export type CreateQueueEnvironmentError =
   | AccessDeniedException
@@ -11305,6 +11764,7 @@ export const createQueueEnvironment: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateQueueEnvironment",
 }));
 export type DeleteQueueEnvironmentError =
   | AccessDeniedException
@@ -11329,6 +11789,7 @@ export const deleteQueueEnvironment: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteQueueEnvironment",
 }));
 export type DisassociateMemberFromQueueError =
   | AccessDeniedException
@@ -11357,6 +11818,7 @@ export const disassociateMemberFromQueue: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DisassociateMemberFromQueue",
 }));
 export type GetQueueEnvironmentError =
   | AccessDeniedException
@@ -11383,6 +11845,7 @@ export const getQueueEnvironment: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetQueueEnvironment",
 }));
 export type GetStorageProfileForQueueError =
   | AccessDeniedException
@@ -11409,6 +11872,7 @@ export const getStorageProfileForQueue: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetStorageProfileForQueue",
 }));
 export type ListQueueEnvironmentsError =
   | AccessDeniedException
@@ -11450,6 +11914,7 @@ export const listQueueEnvironments: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListQueueEnvironments",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -11497,6 +11962,7 @@ export const listQueueMembers: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListQueueMembers",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -11544,6 +12010,7 @@ export const listStorageProfilesForQueue: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListStorageProfilesForQueue",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -11576,6 +12043,7 @@ export const updateQueueEnvironment: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateQueueEnvironment",
 }));
 export type CreateJobError =
   | AccessDeniedException
@@ -11604,6 +12072,7 @@ export const createJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateJob",
 }));
 export type GetJobError =
   | AccessDeniedException
@@ -11630,6 +12099,7 @@ export const getJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetJob",
 }));
 export type UpdateJobError =
   | AccessDeniedException
@@ -11662,6 +12132,7 @@ export const updateJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateJob",
 }));
 export type ListJobsError =
   | AccessDeniedException
@@ -11703,6 +12174,7 @@ export const listJobs: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListJobs",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -11737,6 +12209,7 @@ export const associateMemberToJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "AssociateMemberToJob",
 }));
 export type CopyJobTemplateError =
   | AccessDeniedException
@@ -11763,6 +12236,7 @@ export const copyJobTemplate: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CopyJobTemplate",
 }));
 export type DisassociateMemberFromJobError =
   | AccessDeniedException
@@ -11789,6 +12263,7 @@ export const disassociateMemberFromJob: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DisassociateMemberFromJob",
 }));
 export type GetSessionError =
   | AccessDeniedException
@@ -11815,6 +12290,7 @@ export const getSession: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetSession",
 }));
 export type GetSessionActionError =
   | AccessDeniedException
@@ -11841,6 +12317,7 @@ export const getSessionAction: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetSessionAction",
 }));
 export type GetStepError =
   | AccessDeniedException
@@ -11867,6 +12344,7 @@ export const getStep: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetStep",
 }));
 export type GetTaskError =
   | AccessDeniedException
@@ -11893,6 +12371,7 @@ export const getTask: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetTask",
 }));
 export type ListJobMembersError =
   | AccessDeniedException
@@ -11934,6 +12413,7 @@ export const listJobMembers: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListJobMembers",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -11981,6 +12461,7 @@ export const listJobParameterDefinitions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListJobParameterDefinitions",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -12028,6 +12509,7 @@ export const listSessionActions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListSessionActions",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -12075,6 +12557,7 @@ export const listSessions: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListSessions",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -12122,6 +12605,7 @@ export const listStepConsumers: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListStepConsumers",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -12169,6 +12653,7 @@ export const listStepDependencies: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListStepDependencies",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -12216,6 +12701,7 @@ export const listSteps: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListSteps",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -12263,6 +12749,7 @@ export const listTasks: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListTasks",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -12297,6 +12784,7 @@ export const updateSession: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateSession",
 }));
 export type UpdateStepError =
   | AccessDeniedException
@@ -12325,6 +12813,7 @@ export const updateStep: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateStep",
 }));
 export type UpdateTaskError =
   | AccessDeniedException
@@ -12353,6 +12842,7 @@ export const updateTask: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateTask",
 }));
 export type CreateLicenseEndpointError =
   | AccessDeniedException
@@ -12381,6 +12871,7 @@ export const createLicenseEndpoint: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateLicenseEndpoint",
 }));
 export type GetLicenseEndpointError =
   | AccessDeniedException
@@ -12407,6 +12898,7 @@ export const getLicenseEndpoint: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetLicenseEndpoint",
 }));
 export type DeleteLicenseEndpointError =
   | AccessDeniedException
@@ -12435,6 +12927,7 @@ export const deleteLicenseEndpoint: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteLicenseEndpoint",
 }));
 export type ListLicenseEndpointsError =
   | AccessDeniedException
@@ -12476,6 +12969,7 @@ export const listLicenseEndpoints: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListLicenseEndpoints",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -12508,6 +13002,7 @@ export const deleteMeteredProduct: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteMeteredProduct",
 }));
 export type ListMeteredProductsError =
   | AccessDeniedException
@@ -12549,6 +13044,7 @@ export const listMeteredProducts: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListMeteredProducts",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -12581,6 +13077,7 @@ export const putMeteredProduct: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "PutMeteredProduct",
 }));
 export type CreateMonitorError =
   | AccessDeniedException
@@ -12607,6 +13104,7 @@ export const createMonitor: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "CreateMonitor",
 }));
 export type GetMonitorError =
   | AccessDeniedException
@@ -12633,6 +13131,7 @@ export const getMonitor: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "GetMonitor",
 }));
 export type UpdateMonitorError =
   | AccessDeniedException
@@ -12659,6 +13158,7 @@ export const updateMonitor: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "UpdateMonitor",
 }));
 export type DeleteMonitorError =
   | AccessDeniedException
@@ -12685,6 +13185,7 @@ export const deleteMonitor: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "DeleteMonitor",
 }));
 export type ListMonitorsError =
   | AccessDeniedException
@@ -12724,10 +13225,65 @@ export const listMonitors: API.OperationMethod<
     ThrottlingException,
     ValidationException,
   ],
+  operationName: "ListMonitors",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
     items: "monitors",
     pageSize: "maxResults",
   } as const,
+}));
+export type GetMonitorSettingsError =
+  | AccessDeniedException
+  | InternalServerErrorException
+  | ResourceNotFoundException
+  | ThrottlingException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Gets the settings for a Deadline Cloud monitor.
+ */
+export const getMonitorSettings: API.OperationMethod<
+  GetMonitorSettingsRequest,
+  GetMonitorSettingsResponse,
+  GetMonitorSettingsError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: GetMonitorSettingsRequest,
+  output: GetMonitorSettingsResponse,
+  errors: [
+    AccessDeniedException,
+    InternalServerErrorException,
+    ResourceNotFoundException,
+    ThrottlingException,
+    ValidationException,
+  ],
+  operationName: "GetMonitorSettings",
+}));
+export type UpdateMonitorSettingsError =
+  | AccessDeniedException
+  | InternalServerErrorException
+  | ResourceNotFoundException
+  | ThrottlingException
+  | ValidationException
+  | CommonErrors;
+/**
+ * Updates the settings for a Deadline Cloud monitor. Keys present in the request are upserted; keys absent are left unchanged. Send an empty string value to delete a key.
+ */
+export const updateMonitorSettings: API.OperationMethod<
+  UpdateMonitorSettingsRequest,
+  UpdateMonitorSettingsResponse,
+  UpdateMonitorSettingsError,
+  Credentials | Rgn | HttpClient.HttpClient
+> = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
+  input: UpdateMonitorSettingsRequest,
+  output: UpdateMonitorSettingsResponse,
+  errors: [
+    AccessDeniedException,
+    InternalServerErrorException,
+    ResourceNotFoundException,
+    ThrottlingException,
+    ValidationException,
+  ],
+  operationName: "UpdateMonitorSettings",
 }));

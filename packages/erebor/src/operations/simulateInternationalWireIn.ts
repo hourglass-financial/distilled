@@ -4,6 +4,25 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface SimulateInternationalWireInInput {
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  deposit_account_id?: string;
+  account_number?: string;
+  routing_number?: string;
+  amount: { currency: "USD"; value: string };
+  originator_name: string;
+  originator_account_number: string;
+  originator_bic: string;
+  originator_additional_account_number_data?: {
+    canada?: {
+      institution_number: string;
+      transit_number: string;
+      account_number?: string;
+    } | null;
+  };
+  memo?: string | null;
+}
 export const SimulateInternationalWireInInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     ereborVersion: Schema.optional(Schema.String).pipe(
@@ -24,17 +43,29 @@ export const SimulateInternationalWireInInput =
     originator_bic: Schema.String,
     originator_additional_account_number_data: Schema.optional(
       Schema.Struct({
-        canada: Schema.optional(Schema.Unknown),
+        canada: Schema.optional(
+          Schema.NullOr(
+            Schema.Struct({
+              institution_number: Schema.String,
+              transit_number: Schema.String,
+              account_number: Schema.optional(Schema.String),
+            }),
+          ),
+        ),
       }),
     ),
     memo: Schema.optional(Schema.NullOr(Schema.String)),
   }).pipe(
     T.Http({ method: "POST", path: "/simulation/international_wire_in" }),
-  );
-export type SimulateInternationalWireInInput =
-  typeof SimulateInternationalWireInInput.Type;
+  ) as unknown as Schema.Codec<SimulateInternationalWireInInput>;
 
 // Output Schema
+export interface SimulateInternationalWireInOutput {
+  international_wire_in_id: string;
+  deposit_account_id: string;
+  amount: { currency: "USD"; value: string };
+  status: "CREATED" | "PENDING" | "SETTLED" | "FAILED" | "RETURNED";
+}
 export const SimulateInternationalWireInOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     international_wire_in_id: Schema.String,
@@ -50,9 +81,7 @@ export const SimulateInternationalWireInOutput =
       "FAILED",
       "RETURNED",
     ]),
-  });
-export type SimulateInternationalWireInOutput =
-  typeof SimulateInternationalWireInOutput.Type;
+  }) as unknown as Schema.Codec<SimulateInternationalWireInOutput>;
 
 // The operation
 /**

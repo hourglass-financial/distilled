@@ -4,6 +4,14 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface UpdateCounterpartyUsBankAccountInput {
+  id: string;
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  description?: string;
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const UpdateCounterpartyUsBankAccountInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
@@ -20,11 +28,26 @@ export const UpdateCounterpartyUsBankAccountInput =
     ),
   }).pipe(
     T.Http({ method: "PATCH", path: "/counterparty_us_bank_accounts/{id}" }),
-  );
-export type UpdateCounterpartyUsBankAccountInput =
-  typeof UpdateCounterpartyUsBankAccountInput.Type;
+  ) as unknown as Schema.Codec<UpdateCounterpartyUsBankAccountInput>;
 
 // Output Schema
+export interface UpdateCounterpartyUsBankAccountOutput {
+  id: string;
+  type: "COUNTERPARTY_US_BANK_ACCOUNT";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  customer_id?: string | null;
+  program_id?: string | null;
+  counterparty_id?: string | null;
+  description: string | null;
+  account_number: string;
+  routing_number: string;
+  bank_name?: string | null;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const UpdateCounterpartyUsBankAccountOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -40,11 +63,11 @@ export const UpdateCounterpartyUsBankAccountOutput =
     account_number: Schema.String,
     routing_number: Schema.String,
     bank_name: Schema.optional(Schema.NullOr(Schema.String)),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type UpdateCounterpartyUsBankAccountOutput =
-  typeof UpdateCounterpartyUsBankAccountOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<UpdateCounterpartyUsBankAccountOutput>;
 
 // The operation
 /**

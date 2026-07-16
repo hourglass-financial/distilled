@@ -4,6 +4,13 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface UpdateOnboardingInput {
+  id: string;
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const UpdateOnboardingInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   id: Schema.String.pipe(T.PathParam()),
   ereborVersion: Schema.optional(Schema.String).pipe(
@@ -14,10 +21,31 @@ export const UpdateOnboardingInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   ),
   custom_ref: Schema.optional(Schema.String),
   custom_fields: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
-}).pipe(T.Http({ method: "PATCH", path: "/onboardings/{id}" }));
-export type UpdateOnboardingInput = typeof UpdateOnboardingInput.Type;
+}).pipe(
+  T.Http({ method: "PATCH", path: "/onboardings/{id}" }),
+) as unknown as Schema.Codec<UpdateOnboardingInput>;
 
 // Output Schema
+export interface UpdateOnboardingOutput {
+  id: string;
+  type: "ONBOARDING";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  program_id: string;
+  status: "SUBMITTED" | "UNDER_REVIEW" | "APPROVED" | "REJECTED";
+  applicant_type: "PERSON" | "BUSINESS";
+  person_applicant_id?: string | null;
+  business_applicant_id?: string | null;
+  deposit_account_template_id?: string | null;
+  disclosures?: { disclosures_signed_externally: boolean };
+  customer_id?: string | null;
+  deposit_account_id?: string | null;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+  rejection_reason?: string | null;
+}
 export const UpdateOnboardingOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
   {
     id: Schema.String,
@@ -44,12 +72,13 @@ export const UpdateOnboardingOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
     ),
     customer_id: Schema.optional(Schema.NullOr(Schema.String)),
     deposit_account_id: Schema.optional(Schema.NullOr(Schema.String)),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
     rejection_reason: Schema.optional(Schema.NullOr(Schema.String)),
   },
-);
-export type UpdateOnboardingOutput = typeof UpdateOnboardingOutput.Type;
+) as unknown as Schema.Codec<UpdateOnboardingOutput>;
 
 // The operation
 /**

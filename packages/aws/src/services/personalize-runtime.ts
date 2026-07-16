@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
 import * as C from "../category.ts";
@@ -358,6 +358,7 @@ export const getActionRecommendations: API.OperationMethod<
   input: GetActionRecommendationsRequest,
   output: GetActionRecommendationsResponse,
   errors: [InvalidInputException, ResourceNotFoundException],
+  operationName: "GetActionRecommendations",
 }));
 export type GetPersonalizedRankingError =
   | InvalidInputException
@@ -379,6 +380,7 @@ export const getPersonalizedRanking: API.OperationMethod<
   input: GetPersonalizedRankingRequest,
   output: GetPersonalizedRankingResponse,
   errors: [InvalidInputException, ResourceNotFoundException],
+  operationName: "GetPersonalizedRanking",
 }));
 export type GetRecommendationsError =
   | InvalidInputException
@@ -407,4 +409,5 @@ export const getRecommendations: API.OperationMethod<
   input: GetRecommendationsRequest,
   output: GetRecommendationsResponse,
   errors: [InvalidInputException, ResourceNotFoundException],
+  operationName: "GetRecommendations",
 }));

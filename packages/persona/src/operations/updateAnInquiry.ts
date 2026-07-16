@@ -10,6 +10,30 @@ import {
 } from "../errors.ts";
 
 // Input Schema
+export interface UpdateAnInquiryInput {
+  inquiryId: string;
+  include?: string;
+  fields?: Record<string, string>;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+  data?: {
+    attributes?: {
+      note?: string | null;
+      fields?: { "address-country-code"?: string } | null;
+      tags?: ReadonlyArray<string>;
+      "redirect-uri"?: string | null;
+    };
+  };
+}
 export const UpdateAnInquiryInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   inquiryId: Schema.String.pipe(T.PathParam()),
   include: Schema.optional(Schema.String).pipe(T.HttpQuery("include")),
@@ -39,17 +63,89 @@ export const UpdateAnInquiryInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       attributes: Schema.optional(
         Schema.Struct({
           note: Schema.optional(Schema.NullOr(Schema.String)),
-          fields: Schema.optional(Schema.Unknown),
+          fields: Schema.optional(
+            Schema.NullOr(
+              Schema.Struct({
+                "address-country-code": Schema.optional(Schema.String),
+              }),
+            ),
+          ),
           tags: Schema.optional(Schema.Array(Schema.String)),
           "redirect-uri": Schema.optional(Schema.NullOr(Schema.String)),
         }),
       ),
     }),
   ),
-}).pipe(T.Http({ method: "PATCH", path: "/inquiries/{inquiryId}" }));
-export type UpdateAnInquiryInput = typeof UpdateAnInquiryInput.Type;
+}).pipe(
+  T.Http({ method: "PATCH", path: "/inquiries/{inquiryId}" }),
+) as unknown as Schema.Codec<UpdateAnInquiryInput>;
 
 // Output Schema
+export interface UpdateAnInquiryOutput {
+  data: {
+    type: string;
+    id: string;
+    attributes: {
+      status: string;
+      "reference-id": string | null;
+      note: string | null;
+      behaviors: Record<string, unknown> | null;
+      tags: ReadonlyArray<string | null>;
+      creator: string;
+      "reviewer-comment": string | null;
+      "created-at": string;
+      "updated-at": string;
+      "started-at": string | null;
+      "expires-at": string | null;
+      "completed-at": string | null;
+      "failed-at": string | null;
+      "marked-for-review-at": string | null;
+      "decisioned-at": string | null;
+      "expired-at": string | null;
+      "redacted-at": string | null;
+      "previous-step-name": string | null;
+      "next-step-name": string | null;
+      fields: Record<
+        string,
+        | { type: "string"; value: string | null }
+        | { type: "choices"; value: string | null }
+        | { type: "multi_choices"; value: ReadonlyArray<string> }
+        | { type: "boolean"; value: boolean | null }
+        | { type: "number"; value: number | null }
+        | { type: "date"; value: string | null }
+        | {
+            type: "generic";
+            value: { id: string; type: "Document::Generic" } | null;
+          }
+        | {
+            type: "government_id";
+            value: { id: string; type: "Document::GovernmentId" } | null;
+          }
+        | {
+            type: "selfie";
+            value: { id: string; type: "Selfie::ProfileAndCenter" } | null;
+          }
+        | { type: "json"; value: unknown }
+      >;
+    };
+    relationships: {
+      account?: { data?: { id?: string; type?: string } | null };
+      documents?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      template?: { data?: { id?: string; type?: string } | null };
+      "inquiry-template"?: { data?: { id?: string; type?: string } | null };
+      "inquiry-template-version"?: {
+        data?: { id?: string; type?: string } | null;
+      };
+      reports?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      transaction?: { data?: { id?: string; type?: string } | null };
+      reviewer?: { data?: { id?: string; type?: string } | null };
+      selfies?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      sessions?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+      verifications?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+    };
+  };
+  included?: ReadonlyArray<unknown>;
+}
 export const UpdateAnInquiryOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   data: Schema.Struct({
     type: Schema.String,
@@ -274,8 +370,7 @@ export const UpdateAnInquiryOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     }),
   }),
   included: Schema.optional(Schema.Array(Schema.Unknown)),
-});
-export type UpdateAnInquiryOutput = typeof UpdateAnInquiryOutput.Type;
+}) as unknown as Schema.Codec<UpdateAnInquiryOutput>;
 
 // The operation
 /**

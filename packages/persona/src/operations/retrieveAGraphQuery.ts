@@ -4,6 +4,11 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
+export interface RetrieveAGraphQueryInput {
+  graphQueryId: string;
+  include?: string;
+  fields?: Record<string, string>;
+}
 export const RetrieveAGraphQueryInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     graphQueryId: Schema.String.pipe(T.PathParam()),
@@ -11,10 +16,34 @@ export const RetrieveAGraphQueryInput =
     fields: Schema.optional(Schema.Record(Schema.String, Schema.String)).pipe(
       T.HttpQuery("fields"),
     ),
-  }).pipe(T.Http({ method: "GET", path: "/graph-queries/{graphQueryId}" }));
-export type RetrieveAGraphQueryInput = typeof RetrieveAGraphQueryInput.Type;
+  }).pipe(
+    T.Http({ method: "GET", path: "/graph-queries/{graphQueryId}" }),
+  ) as unknown as Schema.Codec<RetrieveAGraphQueryInput>;
 
 // Output Schema
+export interface RetrieveAGraphQueryOutput {
+  data: {
+    type?: string;
+    id?: string;
+    attributes?: {
+      status?: string;
+      params?: Record<string, unknown>;
+      "created-at"?: string;
+      "updated-at"?: string | null;
+      "errored-at"?: string | null;
+      "completed-at"?: string | null;
+      "redacted-at"?: string | null;
+      stats?: unknown;
+      "explorer-url"?: string | null;
+      "node-limit-reached"?: boolean | null;
+      nodes?: ReadonlyArray<{ type?: string; value?: string }>;
+    };
+    relationships?: {
+      accounts?: { data?: ReadonlyArray<{ id?: string; type?: string }> };
+    };
+  };
+  included?: ReadonlyArray<unknown>;
+}
 export const RetrieveAGraphQueryOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Struct({
@@ -60,8 +89,7 @@ export const RetrieveAGraphQueryOutput =
       ),
     }),
     included: Schema.optional(Schema.Array(Schema.Unknown)),
-  });
-export type RetrieveAGraphQueryOutput = typeof RetrieveAGraphQueryOutput.Type;
+  }) as unknown as Schema.Codec<RetrieveAGraphQueryOutput>;
 
 // The operation
 /**

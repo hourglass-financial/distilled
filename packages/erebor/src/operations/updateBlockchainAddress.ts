@@ -4,6 +4,14 @@ import * as T from "../traits.ts";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface UpdateBlockchainAddressInput {
+  id: string;
+  ereborVersion?: string;
+  ereborIdempotencyKey?: string;
+  name?: string | null;
+  custom_ref?: string;
+  custom_fields?: Record<string, unknown>;
+}
 export const UpdateBlockchainAddressInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
@@ -18,11 +26,26 @@ export const UpdateBlockchainAddressInput =
     custom_fields: Schema.optional(
       Schema.Record(Schema.String, Schema.Unknown),
     ),
-  }).pipe(T.Http({ method: "PATCH", path: "/blockchain_addresses/{id}" }));
-export type UpdateBlockchainAddressInput =
-  typeof UpdateBlockchainAddressInput.Type;
+  }).pipe(
+    T.Http({ method: "PATCH", path: "/blockchain_addresses/{id}" }),
+  ) as unknown as Schema.Codec<UpdateBlockchainAddressInput>;
 
 // Output Schema
+export interface UpdateBlockchainAddressOutput {
+  id: string;
+  type: "BLOCKCHAIN_ADDRESS";
+  url: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+  deposit_account_id: string;
+  name?: string | null;
+  address: string;
+  address_type: "ETHEREUM" | "SOLANA" | "SUI";
+  network: ReadonlyArray<"BASE" | "ETHEREUM" | "INK" | "SOLANA" | "SUI">;
+  custom_ref?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+}
 export const UpdateBlockchainAddressOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
@@ -38,11 +61,11 @@ export const UpdateBlockchainAddressOutput =
     network: Schema.Array(
       Schema.Literals(["BASE", "ETHEREUM", "INK", "SOLANA", "SUI"]),
     ),
-    custom_ref: Schema.optional(Schema.Unknown),
-    custom_fields: Schema.optional(Schema.Unknown),
-  });
-export type UpdateBlockchainAddressOutput =
-  typeof UpdateBlockchainAddressOutput.Type;
+    custom_ref: Schema.optional(Schema.NullOr(Schema.String)),
+    custom_fields: Schema.optional(
+      Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
+    ),
+  }) as unknown as Schema.Codec<UpdateBlockchainAddressOutput>;
 
 // The operation
 /**

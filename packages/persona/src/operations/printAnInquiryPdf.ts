@@ -4,6 +4,20 @@ import * as T from "../traits.ts";
 import { BadRequest, Forbidden, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
+export interface PrintAnInquiryPdfInput {
+  inquiryId: string;
+  keyInflection?: "camel" | "kebab" | "snake";
+  idempotencyKey?: string;
+  personaVersion?:
+    | "2025-12-08"
+    | "2025-10-27"
+    | "2023-01-05"
+    | "2022-09-01"
+    | "2021-08-18"
+    | "2021-07-05"
+    | "2021-02-21"
+    | "2020-05-18";
+}
 export const PrintAnInquiryPdfInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
   {
     inquiryId: Schema.String.pipe(T.PathParam()),
@@ -26,12 +40,14 @@ export const PrintAnInquiryPdfInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
       ]),
     ).pipe(T.HttpHeader("Persona-Version")),
   },
-).pipe(T.Http({ method: "GET", path: "/inquiries/{inquiryId}/print" }));
-export type PrintAnInquiryPdfInput = typeof PrintAnInquiryPdfInput.Type;
+).pipe(
+  T.Http({ method: "GET", path: "/inquiries/{inquiryId}/print" }),
+) as unknown as Schema.Codec<PrintAnInquiryPdfInput>;
 
 // Output Schema
-export const PrintAnInquiryPdfOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Void;
-export type PrintAnInquiryPdfOutput = typeof PrintAnInquiryPdfOutput.Type;
+export type PrintAnInquiryPdfOutput = void;
+export const PrintAnInquiryPdfOutput =
+  /*@__PURE__*/ /*#__PURE__*/ Schema.Void as unknown as Schema.Codec<PrintAnInquiryPdfOutput>;
 
 // The operation
 /**

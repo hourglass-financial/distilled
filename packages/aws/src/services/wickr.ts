@@ -1,6 +1,6 @@
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as redacted from "effect/Redacted";
-import * as S from "effect/Schema";
+import * as S from "@distilled.cloud/core/schema";
 import * as stream from "effect/Stream";
 import * as API from "../client/api.ts";
 import * as T from "../traits.ts";
@@ -867,6 +867,7 @@ export interface SecurityGroupSettings {
   showMasterRecoveryKey?: boolean;
   shredder?: ShredderSettings;
   ssoMaxIdleMinutes?: number;
+  maxNonSsoSessionMinutes?: number;
   federationMode?: number;
   lockoutThreshold?: number;
   permittedNetworks?: string[];
@@ -905,6 +906,7 @@ export const SecurityGroupSettings = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     showMasterRecoveryKey: S.optional(S.Boolean),
     shredder: S.optional(ShredderSettings),
     ssoMaxIdleMinutes: S.optional(S.Number),
+    maxNonSsoSessionMinutes: S.optional(S.Number),
     federationMode: S.optional(S.Number),
     lockoutThreshold: S.optional(S.Number),
     permittedNetworks: S.optional(PermittedNetworksList),
@@ -2378,11 +2380,28 @@ export const ReadReceiptConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
 ).annotate({
   identifier: "ReadReceiptConfig",
 }) as any as S.Schema<ReadReceiptConfig>;
+export interface ConsentPopupConfig {
+  enabled: boolean;
+  header?: string;
+  content?: string;
+  closeButtonLabel?: string;
+}
+export const ConsentPopupConfig = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
+  S.Struct({
+    enabled: S.Boolean,
+    header: S.optional(S.String),
+    content: S.optional(S.String),
+    closeButtonLabel: S.optional(S.String),
+  }),
+).annotate({
+  identifier: "ConsentPopupConfig",
+}) as any as S.Schema<ConsentPopupConfig>;
 export interface NetworkSettings {
   enableClientMetrics?: boolean;
   readReceiptConfig?: ReadReceiptConfig;
   dataRetention?: boolean;
   enableTrustedDataFormat?: boolean;
+  consentPopup?: ConsentPopupConfig;
 }
 export const NetworkSettings = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
   S.Struct({
@@ -2390,6 +2409,7 @@ export const NetworkSettings = /*@__PURE__*/ /*#__PURE__*/ S.suspend(() =>
     readReceiptConfig: S.optional(ReadReceiptConfig),
     dataRetention: S.optional(S.Boolean),
     enableTrustedDataFormat: S.optional(S.Boolean),
+    consentPopup: S.optional(ConsentPopupConfig),
   }),
 ).annotate({
   identifier: "NetworkSettings",
@@ -2603,6 +2623,7 @@ export const batchCreateUser: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "BatchCreateUser",
 }));
 export type BatchDeleteUserError =
   | BadRequestError
@@ -2633,6 +2654,7 @@ export const batchDeleteUser: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "BatchDeleteUser",
 }));
 export type BatchLookupUserUnameError =
   | BadRequestError
@@ -2663,6 +2685,7 @@ export const batchLookupUserUname: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "BatchLookupUserUname",
 }));
 export type BatchReinviteUserError =
   | BadRequestError
@@ -2693,6 +2716,7 @@ export const batchReinviteUser: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "BatchReinviteUser",
 }));
 export type BatchResetDevicesForUserError =
   | BadRequestError
@@ -2723,6 +2747,7 @@ export const batchResetDevicesForUser: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "BatchResetDevicesForUser",
 }));
 export type BatchToggleUserSuspendStatusError =
   | BadRequestError
@@ -2753,6 +2778,7 @@ export const batchToggleUserSuspendStatus: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "BatchToggleUserSuspendStatus",
 }));
 export type CreateBotError =
   | BadRequestError
@@ -2783,6 +2809,7 @@ export const createBot: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "CreateBot",
 }));
 export type CreateDataRetentionBotError =
   | BadRequestError
@@ -2813,6 +2840,7 @@ export const createDataRetentionBot: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "CreateDataRetentionBot",
 }));
 export type CreateDataRetentionBotChallengeError =
   | BadRequestError
@@ -2843,6 +2871,7 @@ export const createDataRetentionBotChallenge: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "CreateDataRetentionBotChallenge",
 }));
 export type CreateNetworkError =
   | BadRequestError
@@ -2873,6 +2902,7 @@ export const createNetwork: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "CreateNetwork",
 }));
 export type CreateSecurityGroupError =
   | BadRequestError
@@ -2903,6 +2933,7 @@ export const createSecurityGroup: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "CreateSecurityGroup",
 }));
 export type DeleteBotError =
   | BadRequestError
@@ -2933,6 +2964,7 @@ export const deleteBot: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "DeleteBot",
 }));
 export type DeleteDataRetentionBotError =
   | BadRequestError
@@ -2963,6 +2995,7 @@ export const deleteDataRetentionBot: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "DeleteDataRetentionBot",
 }));
 export type DeleteNetworkError =
   | BadRequestError
@@ -2993,6 +3026,7 @@ export const deleteNetwork: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "DeleteNetwork",
 }));
 export type DeleteSecurityGroupError =
   | BadRequestError
@@ -3023,6 +3057,7 @@ export const deleteSecurityGroup: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "DeleteSecurityGroup",
 }));
 export type GetBotError =
   | BadRequestError
@@ -3053,6 +3088,7 @@ export const getBot: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "GetBot",
 }));
 export type GetBotsCountError =
   | BadRequestError
@@ -3083,6 +3119,7 @@ export const getBotsCount: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "GetBotsCount",
 }));
 export type GetDataRetentionBotError =
   | BadRequestError
@@ -3113,6 +3150,7 @@ export const getDataRetentionBot: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "GetDataRetentionBot",
 }));
 export type GetGuestUserHistoryCountError =
   | BadRequestError
@@ -3143,6 +3181,7 @@ export const getGuestUserHistoryCount: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "GetGuestUserHistoryCount",
 }));
 export type GetNetworkError =
   | BadRequestError
@@ -3173,6 +3212,7 @@ export const getNetwork: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "GetNetwork",
 }));
 export type GetNetworkSettingsError =
   | BadRequestError
@@ -3203,6 +3243,7 @@ export const getNetworkSettings: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "GetNetworkSettings",
 }));
 export type GetOidcInfoError =
   | BadRequestError
@@ -3233,6 +3274,7 @@ export const getOidcInfo: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "GetOidcInfo",
 }));
 export type GetOpentdfConfigError =
   | BadRequestError
@@ -3263,6 +3305,7 @@ export const getOpentdfConfig: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "GetOpentdfConfig",
 }));
 export type GetSecurityGroupError =
   | BadRequestError
@@ -3293,6 +3336,7 @@ export const getSecurityGroup: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "GetSecurityGroup",
 }));
 export type GetUserError =
   | BadRequestError
@@ -3323,6 +3367,7 @@ export const getUser: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "GetUser",
 }));
 export type GetUsersCountError =
   | BadRequestError
@@ -3353,6 +3398,7 @@ export const getUsersCount: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "GetUsersCount",
 }));
 export type ListBlockedGuestUsersError =
   | BadRequestError
@@ -3398,6 +3444,7 @@ export const listBlockedGuestUsers: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "ListBlockedGuestUsers",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3449,6 +3496,7 @@ export const listBots: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "ListBots",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3500,6 +3548,7 @@ export const listDevicesForUser: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "ListDevicesForUser",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3551,6 +3600,7 @@ export const listGuestUsers: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "ListGuestUsers",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3600,6 +3650,7 @@ export const listNetworks: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "ListNetworks",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3651,6 +3702,7 @@ export const listSecurityGroups: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "ListSecurityGroups",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3702,6 +3754,7 @@ export const listSecurityGroupUsers: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "ListSecurityGroupUsers",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3753,6 +3806,7 @@ export const listUsers: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "ListUsers",
   pagination: {
     inputToken: "nextToken",
     outputToken: "nextToken",
@@ -3789,6 +3843,7 @@ export const registerOidcConfig: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "RegisterOidcConfig",
 }));
 export type RegisterOidcConfigTestError =
   | BadRequestError
@@ -3819,6 +3874,7 @@ export const registerOidcConfigTest: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "RegisterOidcConfigTest",
 }));
 export type RegisterOpentdfConfigError =
   | BadRequestError
@@ -3849,6 +3905,7 @@ export const registerOpentdfConfig: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "RegisterOpentdfConfig",
 }));
 export type UpdateBotError =
   | BadRequestError
@@ -3879,6 +3936,7 @@ export const updateBot: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "UpdateBot",
 }));
 export type UpdateDataRetentionError =
   | BadRequestError
@@ -3909,6 +3967,7 @@ export const updateDataRetention: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "UpdateDataRetention",
 }));
 export type UpdateGuestUserError =
   | BadRequestError
@@ -3939,6 +3998,7 @@ export const updateGuestUser: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "UpdateGuestUser",
 }));
 export type UpdateNetworkError =
   | BadRequestError
@@ -3969,6 +4029,7 @@ export const updateNetwork: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "UpdateNetwork",
 }));
 export type UpdateNetworkSettingsError =
   | BadRequestError
@@ -3999,6 +4060,7 @@ export const updateNetworkSettings: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "UpdateNetworkSettings",
 }));
 export type UpdateSecurityGroupError =
   | BadRequestError
@@ -4029,6 +4091,7 @@ export const updateSecurityGroup: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "UpdateSecurityGroup",
 }));
 export type UpdateUserError =
   | BadRequestError
@@ -4061,4 +4124,5 @@ export const updateUser: API.OperationMethod<
     UnauthorizedError,
     ValidationError,
   ],
+  operationName: "UpdateUser",
 }));
