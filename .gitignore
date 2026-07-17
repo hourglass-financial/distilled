@@ -8,6 +8,7 @@ pnpm-workspace.yaml
 .ai-workspace
 .gen-tmp
 vendor/
+repos/
 # .claude
 .worktrees
 .azure-np/
