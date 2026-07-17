@@ -25,6 +25,7 @@ interface WorkflowStep {
   readonly uses?: string;
   readonly run?: string;
   readonly if?: string;
+  readonly env?: Record<string, unknown>;
   readonly with?: Record<string, unknown>;
 }
 
@@ -57,6 +58,10 @@ describe.each(workflows)("$file", ({ file, provider, label }) => {
     const rollbackStep = stepNamed(
       "Restore previous final tags after failed promotion",
     );
+    const finalTagVerificationStep =
+      provider === "workos"
+        ? stepNamed("Verify additional WorkOS latest tag")
+        : undefined;
     const cleanupStep = stepNamed("Remove temporary run tags");
 
     expect(dispatch.inputs["source-sha"].required).toBe(true);
@@ -120,7 +125,33 @@ describe.each(workflows)("$file", ({ file, provider, label }) => {
     expect(cleanupStep.if).toBe("always()");
     if (provider === "workos") {
       expect(publishJob["timeout-minutes"]).toBe(30);
+      expect(workflow.concurrency.group).toBe("private-package-workos");
+      expect(snapshotStep.run).toContain("--tag latest");
+      expect(promotionStep.run).toContain(
+        `npm dist-tag add "${providerPackage}@\${VERSION}" latest`,
+      );
+      expect(stepIndex("Move final tags")).toBeLessThan(
+        stepIndex("Verify additional WorkOS latest tag"),
+      );
+      expect(stepIndex("Verify additional WorkOS latest tag")).toBeLessThan(
+        stepIndex("Write release receipt"),
+      );
+      expect(finalTagVerificationStep?.if).toBe(
+        "inputs['dist-tag'] != 'latest'",
+      );
+      expect(finalTagVerificationStep?.run).toContain(
+        `verify-tag --package ${providerPackage} --tag latest --version "$VERSION"`,
+      );
       expect(rollbackStep.if).toContain("cancelled()");
+      expect(rollbackStep.env?.PREVIOUS_PROVIDER_LATEST).toBe(
+        "${{ steps.previous_tags.outputs.provider_latest }}",
+      );
+      expect(rollbackStep.run).toContain(
+        `restore_tag ${providerPackage} latest "$PREVIOUS_PROVIDER_LATEST"`,
+      );
+      expect(rollbackStep.run).toContain(
+        'verify-tag --package "$package" --tag "$tag" --version "$previous"',
+      );
       expect(rollbackStep.run).toContain(
         "private-package-release.ts tag-version",
       );
