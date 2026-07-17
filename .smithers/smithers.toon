@@ -1,0 +1,12 @@
+name: jovial-darwin-ca4c47
+version: 0.0.0
+description: ""
+repository: ""
+smithers: *
+contents:
+  workflows: []
+  ui: []
+capabilities:
+  bins: []
+  env: []
+  writes: none
