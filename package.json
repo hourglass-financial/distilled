@@ -26,6 +26,8 @@
     "smoke:github-erebor-install": "bun ./scripts/smoke-github-erebor-install.ts",
     "prepare:github-persona-packages": "bun ./scripts/prepare-github-persona-packages.ts",
     "smoke:github-persona-install": "bun ./scripts/smoke-github-persona-install.ts",
+    "prepare:github-workos-packages": "bun ./scripts/prepare-github-workos-packages.ts",
+    "smoke:github-workos-install": "bun ./scripts/smoke-github-workos-install.ts",
     "test:effect-compatibility": "bunx vitest run scripts/check-effect-compatibility.test.ts scripts/lib/effect-package-policy.test.ts scripts/lib/installed-effect.test.ts scripts/lib/private-package-smoke.test.ts scripts/lib/static-package-registry.test.ts scripts/private-package-release.test.ts scripts/private-package-workflows.test.ts && bun ./scripts/check-effect-compatibility.ts",
     "prepare": "husky"
   },

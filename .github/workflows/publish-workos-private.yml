@@ -1,0 +1,255 @@
+name: Publish Private WorkOS Packages
+
+# HOURGLASS PATCH: Publish a provenance-pinned private WorkOS/core pair.
+# HOURGLASS PATCH: GitHub Actions are pinned to full commit SHAs.
+on:
+  workflow_dispatch:
+    inputs:
+      source-sha:
+        description: Full merged commit SHA to publish
+        required: true
+        type: string
+      dist-tag:
+        description: Dist tag to move after verification
+        required: true
+        type: string
+        default: workos-sdk
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: private-package-${{ inputs['dist-tag'] }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Validate release inputs from trusted source
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SOURCE_SHA: ${{ inputs['source-sha'] }}
+          DIST_TAG: ${{ inputs['dist-tag'] }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_SHA" =~ ^[0-9a-fA-F]{40}$ ]] || { echo "source-sha must be a full commit SHA" >&2; exit 1; }
+          [[ "$DIST_TAG" =~ ^[a-z][a-z0-9._-]*$ ]] || { echo "dist-tag contains unsupported characters" >&2; exit 1; }
+          [[ ! "$DIST_TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]] || { echo "dist-tag cannot be a semantic version" >&2; exit 1; }
+          status="$(gh api "repos/${GITHUB_REPOSITORY}/compare/${SOURCE_SHA}...main" --jq .status)"
+          [[ "$status" == "ahead" || "$status" == "identical" ]] || { echo "source-sha is not reachable from main" >&2; exit 1; }
+
+      - name: Checkout validated release source
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          ref: ${{ inputs['source-sha'] }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build package inputs
+        run: |
+          bun --filter @distilled.cloud/core build
+          bun --filter @distilled.cloud/workos build
+
+      - name: Compute package version
+        id: version
+        env:
+          SOURCE_SHA: ${{ inputs['source-sha'] }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          base_version="$(node -p "require('./packages/workos/package.json').version")"
+          short_sha="${SOURCE_SHA:0:7}"
+          if [[ "$base_version" == *-* ]]; then
+            version="${base_version}.${GITHUB_RUN_ID}.${GITHUB_RUN_ATTEMPT}.g${short_sha}"
+          else
+            version="${base_version}-release.${GITHUB_RUN_ID}.${GITHUB_RUN_ATTEMPT}.g${short_sha}"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Stage package manifests
+        run: |
+          bun run prepare:github-workos-packages \
+            --version "${{ steps.version.outputs.version }}" \
+            --stage-dir .ai-workspace/github-workos-packages
+
+      - name: Pack immutable artifacts
+        id: pack
+        env:
+          PACK_DIR: ${{ runner.temp }}/private-release
+        run: |
+          set -euo pipefail
+          mkdir -p "$PACK_DIR"
+          core_dir="$GITHUB_WORKSPACE/.ai-workspace/github-workos-packages/@hourglass-financial__distilled-core"
+          provider_dir="$GITHUB_WORKSPACE/.ai-workspace/github-workos-packages/@hourglass-financial__workos"
+          npm pack --json --pack-destination "$PACK_DIR" "$core_dir" > "$PACK_DIR/core-pack.json"
+          npm pack --json --pack-destination "$PACK_DIR" "$provider_dir" > "$PACK_DIR/provider-pack.json"
+          echo "core=$PACK_DIR/$(node -p "require('$PACK_DIR/core-pack.json')[0].filename")" >> "$GITHUB_OUTPUT"
+          echo "provider=$PACK_DIR/$(node -p "require('$PACK_DIR/provider-pack.json')[0].filename")" >> "$GITHUB_OUTPUT"
+          echo "core_dir=$core_dir" >> "$GITHUB_OUTPUT"
+          echo "provider_dir=$provider_dir" >> "$GITHUB_OUTPUT"
+
+      - name: Configure temporary GitHub Packages auth
+        env:
+          NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/private-release.npmrc
+        run: |
+          echo '@hourglass-financial:registry=https://npm.pkg.github.com' > "$NPM_CONFIG_USERCONFIG"
+          echo '//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}' >> "$NPM_CONFIG_USERCONFIG"
+
+      - name: Publish pair under temporary tag
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/private-release.npmrc
+          RUN_TAG: run-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          npm publish "${{ steps.pack.outputs.core }}" --tag "$RUN_TAG" --registry=https://npm.pkg.github.com
+          npm publish "${{ steps.pack.outputs.provider }}" --tag "$RUN_TAG" --registry=https://npm.pkg.github.com
+
+      - name: Verify published pair before moving final tags
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/private-release.npmrc
+          RUN_TAG: run-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          bun scripts/private-package-release.ts verify \
+            --core-pack "${{ runner.temp }}/private-release/core-pack.json" \
+            --provider-pack "${{ runner.temp }}/private-release/provider-pack.json" \
+            --core-dir "${{ steps.pack.outputs.core_dir }}" \
+            --provider-dir "${{ steps.pack.outputs.provider_dir }}" \
+            --tag "$RUN_TAG"
+
+      - name: Smoke published WorkOS pair before moving final tags
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_TAG: run-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          bun run smoke:github-workos-install --tag "$RUN_TAG" --package-manager npm
+          bun run smoke:github-workos-install --tag "$RUN_TAG" --package-manager bun
+
+      - name: Snapshot current final tags
+        id: previous_tags
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/private-release.npmrc
+          DIST_TAG: ${{ inputs['dist-tag'] }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          core_previous="$(bun scripts/private-package-release.ts tag-version --package @hourglass-financial/distilled-core --tag "$DIST_TAG")"
+          provider_previous="$(bun scripts/private-package-release.ts tag-version --package @hourglass-financial/workos --tag "$DIST_TAG")"
+          echo "core=$core_previous" >> "$GITHUB_OUTPUT"
+          echo "provider=$provider_previous" >> "$GITHUB_OUTPUT"
+
+      - name: Move final tags
+        id: final_tags
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/private-release.npmrc
+          VERSION: ${{ steps.version.outputs.version }}
+          DIST_TAG: ${{ inputs['dist-tag'] }}
+        run: |
+          set -euo pipefail
+          echo "attempted=true" >> "$GITHUB_OUTPUT"
+          npm dist-tag add "@hourglass-financial/distilled-core@${VERSION}" "$DIST_TAG" --registry=https://npm.pkg.github.com
+          npm dist-tag add "@hourglass-financial/workos@${VERSION}" "$DIST_TAG" --registry=https://npm.pkg.github.com
+
+      - name: Write release receipt
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/private-release.npmrc
+          SOURCE_SHA: ${{ inputs['source-sha'] }}
+          DIST_TAG: ${{ inputs['dist-tag'] }}
+        run: |
+          bun scripts/private-package-release.ts receipt \
+            --core-pack "${{ runner.temp }}/private-release/core-pack.json" \
+            --provider-pack "${{ runner.temp }}/private-release/provider-pack.json" \
+            --core-dir "${{ steps.pack.outputs.core_dir }}" \
+            --provider-dir "${{ steps.pack.outputs.provider_dir }}" \
+            --source-sha "$SOURCE_SHA" \
+            --tag "$DIST_TAG" \
+            --output "${{ runner.temp }}/private-release/workos-release-receipt.json"
+
+      - name: Upload release receipt
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: workos-release-receipt-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/private-release/workos-release-receipt.json
+
+      - name: Restore previous final tags after failed promotion
+        if: (failure() || cancelled()) && steps.final_tags.outputs.attempted == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/private-release.npmrc
+          DIST_TAG: ${{ inputs['dist-tag'] }}
+          PREVIOUS_CORE: ${{ steps.previous_tags.outputs.core }}
+          PREVIOUS_PROVIDER: ${{ steps.previous_tags.outputs.provider }}
+        shell: bash
+        run: |
+          restore_tag() {
+            local package="$1"
+            local previous="$2"
+            if [[ -n "$previous" ]]; then
+              npm dist-tag add "${package}@${previous}" "$DIST_TAG" --registry=https://npm.pkg.github.com
+            else
+              npm dist-tag rm "$package" "$DIST_TAG" --registry=https://npm.pkg.github.com || true
+              local current
+              if ! current="$(bun scripts/private-package-release.ts tag-version --package "$package" --tag "$DIST_TAG")"; then
+                echo "Could not verify removal of ${package} tag ${DIST_TAG}" >&2
+                return 1
+              fi
+              if [[ -n "$current" ]]; then
+                echo "Failed to remove ${package} tag ${DIST_TAG}; it still points to ${current}" >&2
+                return 1
+              fi
+            fi
+          }
+          status=0
+          restore_tag @hourglass-financial/distilled-core "$PREVIOUS_CORE" || status=1
+          restore_tag @hourglass-financial/workos "$PREVIOUS_PROVIDER" || status=1
+          exit "$status"
+
+      - name: Remove temporary run tags
+        if: always()
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/private-release.npmrc
+          RUN_TAG: run-${{ github.run_id }}-${{ github.run_attempt }}
+        shell: bash
+        run: |
+          remove_tag() {
+            local package="$1"
+            local current
+            for attempt in 1 2 3; do
+              npm dist-tag rm "$package" "$RUN_TAG" --registry=https://npm.pkg.github.com || true
+              if current="$(bun scripts/private-package-release.ts tag-version --package "$package" --tag "$RUN_TAG")"; then
+                if [[ -z "$current" ]]; then
+                  return 0
+                fi
+                echo "${package} tag ${RUN_TAG} still points to ${current} after attempt ${attempt}" >&2
+              else
+                echo "Could not verify removal of ${package} tag ${RUN_TAG} after attempt ${attempt}" >&2
+              fi
+              if [[ "$attempt" -lt 3 ]]; then
+                sleep 2
+              fi
+            done
+            return 1
+          }
+          status=0
+          remove_tag @hourglass-financial/distilled-core || status=1
+          remove_tag @hourglass-financial/workos || status=1
+          exit "$status"
+
+      - name: Remove registry credentials
+        if: always()
+        run: rm -f "${{ runner.temp }}/private-release.npmrc"

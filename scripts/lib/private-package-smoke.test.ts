@@ -43,6 +43,7 @@ describe("private package smoke security", () => {
         PATH: "/bin",
         PERSONA_API_KEY: "persona-secret",
         EREBOR_API_KEY: "erebor-secret",
+        WORKOS_API_KEY: "workos-secret",
         AWS_SECRET_ACCESS_KEY: "aws-secret",
       },
       tempDir: "/tmp/private-package-smoke",
@@ -52,6 +53,8 @@ describe("private package smoke security", () => {
     expect(environments.runtimeEnv.NODE_AUTH_TOKEN).toBeUndefined();
     expect(environments.installEnv.PERSONA_API_KEY).toBeUndefined();
     expect(environments.runtimeEnv.EREBOR_API_KEY).toBeUndefined();
+    expect(environments.installEnv.WORKOS_API_KEY).toBeUndefined();
+    expect(environments.runtimeEnv.WORKOS_API_KEY).toBeUndefined();
     expect(environments.npmrc).toContain("${NODE_AUTH_TOKEN}");
     expect(environments.npmrc).not.toContain("package-token");
   });

@@ -3,8 +3,21 @@ import { describe, expect, test } from "vitest";
 import { parse } from "yaml";
 
 const workflows = [
-  ".github/workflows/publish-persona-private.yml",
-  ".github/workflows/publish-erebor-private.yml",
+  {
+    file: ".github/workflows/publish-persona-private.yml",
+    provider: "persona",
+    label: "Persona",
+  },
+  {
+    file: ".github/workflows/publish-erebor-private.yml",
+    provider: "erebor",
+    label: "Erebor",
+  },
+  {
+    file: ".github/workflows/publish-workos-private.yml",
+    provider: "workos",
+    label: "WorkOS",
+  },
 ] as const;
 
 interface WorkflowStep {
@@ -15,12 +28,15 @@ interface WorkflowStep {
   readonly with?: Record<string, unknown>;
 }
 
-describe.each(workflows)("%s", (file) => {
+describe.each(workflows)("$file", ({ file, provider, label }) => {
   test("pins source, verifies artifacts, and protects tag promotion", async () => {
     const source = await readFile(file, "utf8");
     const workflow = parse(source);
     const dispatch = workflow.on.workflow_dispatch;
-    const steps = workflow.jobs.publish.steps as WorkflowStep[];
+    const publishJob = workflow.jobs.publish;
+    const steps = publishJob.steps as WorkflowStep[];
+    const corePackage = "@hourglass-financial/distilled-core";
+    const providerPackage = `@hourglass-financial/${provider}`;
     const stepNamed = (name: string): WorkflowStep => {
       const step = steps.find((candidate) => candidate.name === name);
       expect(step, `missing workflow step: ${name}`).toBeDefined();
@@ -35,12 +51,16 @@ describe.each(workflows)("%s", (file) => {
         typeof step.uses === "string" &&
         step.uses.startsWith("actions/checkout@"),
     );
-    const provider = file.includes("persona") ? "persona" : "erebor";
-    const providerLabel = provider === "persona" ? "Persona" : "Erebor";
-    const smokeStep = `Smoke published ${providerLabel} pair before moving final tags`;
+    const smokeStep = `Smoke published ${label} pair before moving final tags`;
+    const snapshotStep = stepNamed("Snapshot current final tags");
+    const promotionStep = stepNamed("Move final tags");
+    const rollbackStep = stepNamed(
+      "Restore previous final tags after failed promotion",
+    );
+    const cleanupStep = stepNamed("Remove temporary run tags");
 
     expect(dispatch.inputs["source-sha"].required).toBe(true);
-    expect(workflow.jobs.publish.if).toBe("github.ref == 'refs/heads/main'");
+    expect(publishJob.if).toBe("github.ref == 'refs/heads/main'");
     expect(checkoutSteps).toHaveLength(1);
     expect(checkoutSteps[0].with?.ref).toBe("${{ inputs['source-sha'] }}");
     expect(checkoutSteps[0].with?.["persist-credentials"]).toBe(false);
@@ -66,12 +86,24 @@ describe.each(workflows)("%s", (file) => {
       stepIndex("Verify published pair before moving final tags"),
     ).toBeLessThan(stepIndex(smokeStep));
     expect(stepIndex(smokeStep)).toBeLessThan(stepIndex("Move final tags"));
-    expect(stepNamed("Snapshot current final tags").run).toContain(
+    expect(stepNamed(smokeStep).run).toContain(
+      `smoke:github-${provider}-install --tag "$RUN_TAG" --package-manager npm`,
+    );
+    expect(stepNamed(smokeStep).run).toContain(
+      `smoke:github-${provider}-install --tag "$RUN_TAG" --package-manager bun`,
+    );
+    expect(snapshotStep.run).toContain(
       "private-package-release.ts tag-version",
     );
-    expect(stepNamed("Snapshot current final tags").run).not.toContain(
-      "JSON.parse",
-    );
+    expect(snapshotStep.run).not.toContain("JSON.parse");
+    for (const packageName of [corePackage, providerPackage]) {
+      expect(snapshotStep.run).toContain(`--package ${packageName}`);
+      expect(promotionStep.run).toContain(
+        `"${packageName}@\${VERSION}" "$DIST_TAG"`,
+      );
+      expect(rollbackStep.run).toContain(`restore_tag ${packageName}`);
+      expect(cleanupStep.run).toContain(packageName);
+    }
     expect(stepIndex("Move final tags")).toBeLessThan(
       stepIndex("Write release receipt"),
     );
@@ -84,10 +116,21 @@ describe.each(workflows)("%s", (file) => {
     expect(stepNamed("Upload release receipt").uses).toBe(
       "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
     );
-    expect(
-      stepNamed("Restore previous final tags after failed promotion").if,
-    ).toContain("failure()");
-    expect(stepNamed("Remove temporary run tags").if).toBe("always()");
+    expect(rollbackStep.if).toContain("failure()");
+    expect(cleanupStep.if).toBe("always()");
+    if (provider === "workos") {
+      expect(publishJob["timeout-minutes"]).toBe(30);
+      expect(rollbackStep.if).toContain("cancelled()");
+      expect(rollbackStep.run).toContain(
+        "private-package-release.ts tag-version",
+      );
+      expect(cleanupStep.run).toContain(
+        "private-package-release.ts tag-version",
+      );
+      for (const packageName of [corePackage, providerPackage]) {
+        expect(cleanupStep.run).toContain(`remove_tag ${packageName}`);
+      }
+    }
     expect(stepNamed("Remove registry credentials").if).toBe("always()");
   });
 });

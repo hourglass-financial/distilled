@@ -50,8 +50,12 @@ export const startStaticPackageRegistry = async (
           response.writeHead(404).end();
           return;
         }
-        response.writeHead(200, { "content-type": "application/octet-stream" });
-        response.end(await readFile(pkg.tarballPath));
+        const tarball = await readFile(pkg.tarballPath);
+        response.writeHead(200, {
+          "content-type": "application/octet-stream",
+          "content-length": tarball.byteLength,
+        });
+        response.end(tarball);
         return;
       }
 
@@ -82,8 +86,10 @@ export const startStaticPackageRegistry = async (
           versions: { [pkg.version]: versionManifest },
         }),
       );
-    } catch {
-      response.writeHead(500).end();
+    } catch (error) {
+      console.error(`Static registry request failed: ${request.url}`, error);
+      if (!response.headersSent) response.writeHead(500);
+      if (!response.writableEnded) response.end();
     }
   });
 
