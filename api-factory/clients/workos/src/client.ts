@@ -82,7 +82,7 @@ const matchError = makeMatchError<WorkosExtraError>({
       status,
       code: envelope.discriminator,
       message: envelope.message,
-      body: envelope.body,
+      body: Redacted.make(envelope.body),
     }),
 });
 
@@ -138,17 +138,21 @@ export const layerWith = (
         // Only a genuine wire-level fault is the (retryable) transport error;
         // every other HttpClientError reason (encode, response read/decode,
         // invalid URL) is a non-retryable decode-class failure. Both carry a
-        // secret-free summary, never the raw error with its embedded request.
-        toTransport: (cause) =>
-          Category.isTransportError(cause)
+        // secret-free summary, never the raw error with its embedded request,
+        // and both messages are built from structured parts — no lower-layer
+        // free text can flow into a logged headline.
+        toTransport: (cause) => {
+          const failure = summarizeHttpClientError(cause);
+          return Category.isTransportError(cause)
             ? new WorkosTransportError({
-                message: cause.reason.message,
-                cause: summarizeHttpClientError(cause),
+                message: `wire-level transport failure (${failure.method} ${failure.url})`,
+                cause: failure,
               })
             : new WorkosDecodeError({
-                message: cause.reason.message,
-                cause: Redacted.make(summarizeHttpClientError(cause)),
-              }),
+                message: `the response could not be read from the wire (${failure.reason})`,
+                cause: Redacted.make(failure),
+              });
+        },
         // The raw value and schema issue stay reachable via Redacted.value;
         // the message is fixed text so no field value can leak through it.
         toDecode: (phase, body, cause) =>

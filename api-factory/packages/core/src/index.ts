@@ -1,8 +1,8 @@
 /**
  * `@hourglass-financial/api-factory-core` — the hand-written runtime machinery
- * every generated client imports: base errors, static error classification,
- * retry, cursor pagination, redaction, the operation model, and the request
- * executor + error matcher.
+ * every generated client imports: base errors, instance-carried error
+ * classification, retry, cursor pagination, redaction, the operation model,
+ * and the request executor + error matcher.
  *
  * A generated client stays thin: it declares operation descriptors and vendor
  * error classes/maps, then wires one `makeRunner`/`makeMatchError` pair. All

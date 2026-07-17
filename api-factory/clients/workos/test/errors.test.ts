@@ -57,7 +57,9 @@ describe("matcher tables", () => {
 
   it("the fallback and wrapper errors are classified", () => {
     expect(
-      Category.metaOf(new UnknownWorkosError({ message: "x", body: null })),
+      Category.metaOf(
+        new UnknownWorkosError({ message: "x", body: Redacted.make(null) }),
+      ),
     ).toEqual({ category: "unknown", retry: "none" });
     expect(
       Category.metaOf(new WorkosTransportError({ message: "x", cause: null })),

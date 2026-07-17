@@ -199,6 +199,21 @@ describe("organizations", () => {
       after: "cur_1",
     });
   });
+
+  it("list — a caller-supplied `after` seeds page one and is overwritten, not duplicated", async () => {
+    const { run, requests } = harness((_request, index) =>
+      index === 0
+        ? { status: 200, body: listPage("org_1", "cur_1") }
+        : { status: 200, body: listPage("org_2", null) },
+    );
+    await run(Stream.runCollect(organizations.listItems({ after: "cur_a" })));
+    expect(UrlParams.toRecord(requests[0]!.urlParams)).toEqual({
+      after: "cur_a",
+    });
+    expect(UrlParams.toRecord(requests[1]!.urlParams)).toEqual({
+      after: "cur_1",
+    });
+  });
 });
 
 describe("retry disposition", () => {

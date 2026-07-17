@@ -18,12 +18,15 @@
       "version": "0.0.0",
       "dependencies": {
         "@hourglass-financial/api-factory-core": "workspace:*",
-        "effect": "catalog:",
       },
       "devDependencies": {
         "@types/bun": "catalog:",
         "@types/node": "catalog:",
+        "effect": "catalog:",
         "vitest": "catalog:",
+      },
+      "peerDependencies": {
+        "effect": "catalog:",
       },
     },
     "packages/codegen": {
@@ -41,13 +44,14 @@
     "packages/core": {
       "name": "@hourglass-financial/api-factory-core",
       "version": "0.0.0",
-      "dependencies": {
-        "effect": "catalog:",
-      },
       "devDependencies": {
         "@types/bun": "catalog:",
         "@types/node": "catalog:",
+        "effect": "catalog:",
         "vitest": "catalog:",
+      },
+      "peerDependencies": {
+        "effect": "catalog:",
       },
     },
     "packages/harness": {

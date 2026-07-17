@@ -135,8 +135,11 @@ export class RadarChallenge extends Schema.TaggedErrorClass<RadarChallenge>()(
 
 /**
  * A WorkOS error the SDK does not (yet) model — an unmapped status or an
- * unknown discriminator code. Its presence signals a spec gap to be patched;
- * the raw body is preserved for diagnosis.
+ * unknown discriminator code. Its presence signals a spec gap to be patched.
+ * The raw body is preserved for diagnosis behind `Redacted` — validation
+ * envelopes can echo submitted values, so it must not print from a logged
+ * error; unwrap deliberately with `Redacted.value(error.body)`. The `message`
+ * is the API's own human-facing text and stays printable.
  */
 export class UnknownWorkosError extends Schema.TaggedErrorClass<UnknownWorkosError>()(
   "UnknownWorkosError",
@@ -144,7 +147,7 @@ export class UnknownWorkosError extends Schema.TaggedErrorClass<UnknownWorkosErr
     status: Schema.optional(Schema.Number),
     code: Schema.optional(Schema.String),
     message: Schema.String,
-    body: Schema.Unknown,
+    body: RedactedValue,
   },
 ) {
   readonly [MetaKey] = Meta.unknown;

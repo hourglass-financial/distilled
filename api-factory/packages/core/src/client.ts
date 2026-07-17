@@ -143,13 +143,19 @@ export type DecodePhase = "request-encode" | "response-decode";
  * Secret-free summary of an HTTP client failure, safe to carry on a vendor
  * error. Never wrap the `HttpClientError` itself: its `reason` holds the full
  * request — encoded body and auth header included — so preserving it verbatim
- * would leak secrets through any logged error chain.
+ * would leak secrets through any logged error chain. Vendor error *messages*
+ * are built from the structured parts here, never from the reason's formatted
+ * free text.
  */
 export interface TransportFailure {
   readonly reason: string;
-  readonly message: string;
   readonly method: string;
   readonly url: string;
+  /**
+   * Transport-authored detail (e.g. "socket reset"), when the reason carries
+   * one. Authored by the transport layer, never from request payloads.
+   */
+  readonly description?: string | undefined;
 }
 
 /** Build a {@link TransportFailure} from a raw HTTP client error. */
@@ -157,9 +163,13 @@ export const summarizeHttpClientError = (
   error: HttpClientError.HttpClientError,
 ): TransportFailure => ({
   reason: error.reason._tag,
-  message: error.reason.message,
   method: error.reason.request.method,
   url: error.reason.request.url,
+  description:
+    "description" in error.reason &&
+    typeof error.reason.description === "string"
+      ? error.reason.description
+      : undefined,
 });
 
 /** Everything the runner captures once, at layer-construction time. */
@@ -234,9 +244,11 @@ export const makeRunner =
 
       const response = yield* deps.http.execute(request);
 
-      // Success is strictly 2xx. 1xx/3xx are neither success nor a documented
-      // error table entry, so they route through the matcher and surface as
-      // the vendor's Unknown fallback rather than a bogus decode attempt.
+      // Success is strictly 2xx. 3xx (and, from a non-fetch transport, 1xx —
+      // fetch itself never surfaces informational responses) is neither
+      // success nor a documented error-table entry, so it routes through the
+      // matcher and surfaces as the vendor's Unknown fallback rather than a
+      // bogus decode attempt.
       if (response.status < 200 || response.status >= 300) {
         const errorBody = yield* readBody(response);
         return yield* deps.matchError(

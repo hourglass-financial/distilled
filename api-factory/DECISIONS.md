@@ -170,13 +170,17 @@ program.pipe(Effect.provide(layerFromEnv)); // one layer: fetch transport + env 
   `Redacted.make(...)`, so a plaintext secret never travels inside an input
   object.
 - **Error carriers are leak paths too** (found in adversarial review): a raw
-  `HttpClientError` embeds the full request (encoded body + auth header), and
-  a raw response body may contain tokens even when decode fails on an
-  unrelated field. So `WorkosTransportError.cause` is core's secret-free
-  `TransportFailure` summary, and `WorkosDecodeError` wraps its `body`/`cause`
-  in `Redacted` with a fixed message — diagnosis via `Redacted.value(...)`,
-  never via a logged error. Contract tests stringify both error shapes and
-  assert no secret appears.
+  `HttpClientError` embeds the full request (encoded body + auth header), a
+  raw response body may contain tokens even when decode fails on an unrelated
+  field, and an unmodeled error envelope can echo submitted values. So
+  `WorkosTransportError.cause` is core's secret-free `TransportFailure`
+  summary, `WorkosDecodeError` wraps its `body`/`cause` in `Redacted`, and
+  `UnknownWorkosError.body` is likewise `Redacted` — diagnosis via
+  `Redacted.value(...)`, never via a logged error. Every wrapper *message* is
+  built from structured parts the SDK controls (reason tag, method, URL, or
+  fixed text); the one piece of foreign text that stays printable is the
+  vendor envelope's own `message` — the API's human-facing error text.
+  Contract tests stringify the error shapes and assert no secret appears.
 - **Rejected:** a hand-rolled `decodeTo` transform (duplicates the stdlib and
   lacks its error-redaction middleware); v1's `Sensitive` union
   (`A | Redacted<A>`, needed an `as any`, lets plaintext ride along);
@@ -208,7 +212,11 @@ JSON-serializable), keeping `HttpBodyError` out of the channel.
 ## Known deferrals
 
 - The Effect pin (`effect@4.0.0-beta.98`, exact) is provisional pending the
-  pinning-policy ticket (#40).
+  pinning-policy ticket (#40). Structurally, `effect` is a **peer** dependency
+  of the provider packages (plus a dev dependency for local gates), matching
+  the fork's private-package policy: with two physical effect copies, a
+  consumer's `Redacted` values would miss the provider's registry and
+  `Redacted.value` would throw.
 - The coverage-manifest format (every endpoint tested/todo/skipped) is ticket
   #30's scope; the fragment ships plain vitest suites.
 - 429's `daily_quota_exceeded` code maps to the retryable `TooManyRequests`
