@@ -18,14 +18,16 @@ describe("Effect compatibility contract", () => {
     expect(tsconfig.compilerOptions.skipLibCheck).toBe(false);
   });
 
-  test("fork-only providers use the workspace TypeScript compiler", async () => {
-    for (const provider of ["persona", "erebor"]) {
+  test("private providers use the workspace TypeScript compiler", async () => {
+    for (const provider of ["persona", "erebor", "workos"]) {
       const manifest = JSON.parse(
         await readFile(`packages/${provider}/package.json`, "utf8"),
       );
-      expect(manifest.scripts.typecheck).toBe("tsc");
+      expect(manifest.scripts.typecheck).toMatch(/^tsc(?:\s|$)/);
       expect(manifest.scripts.build).toBe("tsc -b");
-      expect(manifest.scripts.check).toContain("tsc &&");
+      expect(manifest.scripts.check).toMatch(
+        /^(?:tsc|bun run typecheck)(?:\s|$)/,
+      );
     }
   });
 });

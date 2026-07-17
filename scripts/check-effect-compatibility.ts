@@ -5,6 +5,7 @@ import {
   copyFile,
   mkdtemp,
   mkdir,
+  readdir,
   readFile,
   rm,
   writeFile,
@@ -23,8 +24,8 @@ import {
 } from "./lib/static-package-registry.ts";
 import { prepareGithubEreborPackages } from "./prepare-github-erebor-packages.ts";
 import { prepareGithubPersonaPackages } from "./prepare-github-persona-packages.ts";
+import { prepareGithubWorkosPackages } from "./prepare-github-workos-packages.ts";
 
-type Provider = "persona" | "erebor";
 type PackageManager = "bun" | "npm";
 
 interface CommandResult {
@@ -37,6 +38,14 @@ interface PackOutput {
   readonly integrity: string;
   readonly shasum: string;
 }
+
+const providers = [
+  { name: "persona", prepare: prepareGithubPersonaPackages },
+  { name: "erebor", prepare: prepareGithubEreborPackages },
+  { name: "workos", prepare: prepareGithubWorkosPackages },
+] as const;
+
+type Provider = (typeof providers)[number]["name"];
 
 const SAFE_ENV_KEYS = [
   "PATH",
@@ -88,7 +97,7 @@ const run = (
 
 const packPackage = async (
   directory: string,
-  packDir: string,
+  packRoot: string,
   env: NodeJS.ProcessEnv,
 ): Promise<StaticRegistryPackage> => {
   const manifest = JSON.parse(
@@ -97,6 +106,8 @@ const packPackage = async (
     readonly name: string;
     readonly version: string;
   };
+  const packDir = path.join(packRoot, manifest.name.replaceAll("/", "__"));
+  await mkdir(packDir, { recursive: true });
   const result = await run(
     ["npm", "pack", "--json", "--pack-destination", packDir, directory],
     { cwd: packDir, env },
@@ -105,11 +116,21 @@ const packPackage = async (
   if (!packed?.integrity || !packed.shasum) {
     throw new Error(`npm pack did not report integrity for ${manifest.name}`);
   }
+  const tarballs = (await readdir(packDir)).filter((file) =>
+    file.endsWith(".tgz"),
+  );
+  if (tarballs.length !== 1) {
+    throw new Error(
+      `${manifest.name}: expected one packed archive, found ${tarballs.length}`,
+    );
+  }
   return {
     name: manifest.name,
     version: manifest.version,
     manifest,
-    tarballPath: path.join(packDir, packed.filename),
+    // npm 8 can report a scoped filename containing "/" while writing the
+    // flattened archive name. Isolating each pack makes discovery unambiguous.
+    tarballPath: path.join(packDir, tarballs[0]),
     integrity: packed.integrity,
     shasum: packed.shasum,
   };
@@ -168,6 +189,9 @@ const verifyCase = async (options: {
       options.packageManager === "bun"
         ? ["bun", "install", "--ignore-scripts"]
         : ["npm", "install", "--ignore-scripts", "--no-audit", "--no-fund"];
+    console.log(
+      `CHECK ${options.provider} ${options.packageManager} effect@${options.effectVersion}`,
+    );
     await run(install, { cwd: tempDir, env });
 
     await assertSingleEffectInstallation(
@@ -209,38 +233,42 @@ export const checkEffectCompatibility = async (
   const workDir = await mkdtemp(
     path.join(os.tmpdir(), "effect-compatibility-"),
   );
-  const personaStage = path.join(
-    rootDir,
-    ".ai-workspace/effect-compat-persona",
+  const stages = new Map(
+    providers.map(({ name }) => [
+      name,
+      path.join(rootDir, `.ai-workspace/effect-compat-${name}`),
+    ]),
   );
-  const ereborStage = path.join(rootDir, ".ai-workspace/effect-compat-erebor");
   try {
     const env = safeEnvironment(workDir);
     await run(["bun", "--filter", "@distilled.cloud/core", "build"], {
       cwd: rootDir,
       env,
     });
-    for (const provider of ["persona", "erebor"] as const) {
-      await run(["bun", "--filter", `@distilled.cloud/${provider}`, "build"], {
-        cwd: rootDir,
-        env,
-      });
-    }
+    // HOURGLASS PATCH: Validate every provider published to the private registry.
+    await Promise.all(
+      providers.map(({ name }) =>
+        run(["bun", "--filter", `@distilled.cloud/${name}`, "build"], {
+          cwd: rootDir,
+          env,
+        }),
+      ),
+    );
 
     const version = `0.0.0-effect-compat.${Date.now()}`;
-    const persona = await prepareGithubPersonaPackages({
-      rootDir,
-      stageDir: personaStage,
-      version,
-      force: false,
-    });
-    const erebor = await prepareGithubEreborPackages({
-      rootDir,
-      stageDir: ereborStage,
-      version,
-      force: false,
-    });
-    for (const prepared of [...persona, ...erebor]) {
+    const preparedPackages = (
+      await Promise.all(
+        providers.map(({ name, prepare }) =>
+          prepare({
+            rootDir,
+            stageDir: stages.get(name)!,
+            version,
+            force: false,
+          }),
+        ),
+      )
+    ).flat();
+    for (const prepared of preparedPackages) {
       if (prepared.name === "@hourglass-financial/distilled-core") continue;
       const readme = await readFile(
         path.join(prepared.directory, "README.md"),
@@ -252,16 +280,13 @@ export const checkEffectCompatibility = async (
         );
       }
     }
-    const byName = new Map(
-      [...persona, ...erebor].map((pkg) => [pkg.name, pkg]),
-    );
+    const byName = new Map(preparedPackages.map((pkg) => [pkg.name, pkg]));
     const packDir = path.join(workDir, "packs");
     await mkdir(packDir, { recursive: true });
     const packages = await Promise.all(
       [
         "@hourglass-financial/distilled-core",
-        "@hourglass-financial/persona",
-        "@hourglass-financial/erebor",
+        ...providers.map(({ name }) => `@hourglass-financial/${name}`),
       ].map((name) => {
         const pkg = byName.get(name);
         if (!pkg) throw new Error(`Missing staged package ${name}`);
@@ -270,7 +295,7 @@ export const checkEffectCompatibility = async (
     );
     const registry = await startStaticPackageRegistry(packages);
     try {
-      for (const provider of ["persona", "erebor"] as const) {
+      for (const { name: provider } of providers) {
         const providerPackage = packages.find(
           (pkg) => pkg.name === `@hourglass-financial/${provider}`,
         );
@@ -292,7 +317,7 @@ export const checkEffectCompatibility = async (
     }
   } finally {
     await Promise.all(
-      [workDir, personaStage, ereborStage].map((directory) =>
+      [workDir, ...stages.values()].map((directory) =>
         rm(directory, { recursive: true, force: true }),
       ),
     );

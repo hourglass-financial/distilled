@@ -28,7 +28,7 @@ const SAFE_ENV_KEYS = [
 
 export interface PrivatePackageSmokeOptions {
   readonly rootDir?: string;
-  readonly provider: "persona" | "erebor";
+  readonly provider: "persona" | "erebor" | "workos";
   readonly packageName: string;
   readonly tag: string;
   readonly packageManager: "bun" | "npm";
@@ -142,7 +142,7 @@ const installCommand = (
 const prepareSmokeProject = async (options: {
   readonly tempDir: string;
   readonly rootDir: string;
-  readonly provider: "persona" | "erebor";
+  readonly provider: "persona" | "erebor" | "workos";
   readonly packageName: string;
   readonly tag: string;
   readonly policy: EffectCompatibilityPolicy;
@@ -313,6 +313,6 @@ export const runPrivatePackageSmokeCli = async (
   if (result.preserved) console.log(`Smoke project: ${result.tempDir}`);
   else
     console.log(
-      `${defaults.provider === "persona" ? "Persona" : "Erebor"} package smoke passed`,
+      `${defaults.provider[0].toUpperCase()}${defaults.provider.slice(1)} package smoke passed`,
     );
 };
