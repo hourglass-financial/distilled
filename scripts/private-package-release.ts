@@ -189,6 +189,17 @@ const npmViewExpected = async (
   );
 };
 
+export const verifyPublishedTag = (
+  packageName: string,
+  tag: string,
+  version: string,
+): Promise<string> =>
+  npmViewExpected(
+    `${assertPrivatePackageName(packageName)}@${assertDistTag(tag)}`,
+    "version",
+    version,
+  );
+
 export const createReleaseReceipt = (options: {
   readonly repository: string;
   readonly workflow: string;
@@ -291,6 +302,12 @@ if (import.meta.main) {
         "--registry=https://npm.pkg.github.com",
       ]);
       console.log(parseDistTagListing(listing, tag));
+    } else if (command === "verify-tag") {
+      await verifyPublishedTag(
+        argument("--package"),
+        argument("--tag"),
+        argument("--version"),
+      );
     } else if (command === "verify" || command === "receipt") {
       const tag = argument("--tag");
       const packages = await verifyPair({
@@ -329,7 +346,9 @@ if (import.meta.main) {
         );
       }
     } else {
-      throw new Error("Expected tag-version, verify, or receipt command");
+      throw new Error(
+        "Expected tag-version, verify-tag, verify, or receipt command",
+      );
     }
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));

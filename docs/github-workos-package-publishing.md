@@ -26,7 +26,8 @@ Packages` workflow on `main`. Supply the full 40-character merged commit SHA as
 2. Stages registry-ready manifests under `.ai-workspace/github-workos-packages`.
 3. Publishes immutable core and WorkOS tarballs under a temporary run tag.
 4. Verifies registry integrity and tests the published pair with npm and Bun.
-5. Moves the selected dist tag, defaulting to `workos-sdk`.
+5. Moves the selected dist tag, defaulting to `workos-sdk`, and points the
+   WorkOS package's standard `latest` tag at the same verified version.
 6. Uploads a release receipt containing the source SHA, versions, registry
    integrity values, and normalized build digests.
 
@@ -52,10 +53,12 @@ Add this `.npmrc` entry in the consuming repository:
 //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
 ```
 
-Install the private package with its verified Effect peer:
+Install the private package with its verified Effect peer. The unqualified
+package name resolves through `latest`; the `workos-sdk` dist tag remains
+available via `@hourglass-financial/workos@workos-sdk`.
 
 ```bash
-bun add @hourglass-financial/workos@workos-sdk effect@4.0.0-beta.98
+bun add @hourglass-financial/workos effect@4.0.0-beta.98
 ```
 
 Import from the private package name in consuming code:

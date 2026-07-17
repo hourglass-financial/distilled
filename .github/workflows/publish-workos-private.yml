@@ -20,7 +20,7 @@ permissions:
   packages: write
 
 concurrency:
-  group: private-package-${{ inputs['dist-tag'] }}
+  group: private-package-workos
   cancel-in-progress: false
 
 jobs:
@@ -147,8 +147,13 @@ jobs:
           set -euo pipefail
           core_previous="$(bun scripts/private-package-release.ts tag-version --package @hourglass-financial/distilled-core --tag "$DIST_TAG")"
           provider_previous="$(bun scripts/private-package-release.ts tag-version --package @hourglass-financial/workos --tag "$DIST_TAG")"
+          provider_latest="$provider_previous"
+          if [[ "$DIST_TAG" != "latest" ]]; then
+            provider_latest="$(bun scripts/private-package-release.ts tag-version --package @hourglass-financial/workos --tag latest)"
+          fi
           echo "core=$core_previous" >> "$GITHUB_OUTPUT"
           echo "provider=$provider_previous" >> "$GITHUB_OUTPUT"
+          echo "provider_latest=$provider_latest" >> "$GITHUB_OUTPUT"
 
       - name: Move final tags
         id: final_tags
@@ -162,6 +167,19 @@ jobs:
           echo "attempted=true" >> "$GITHUB_OUTPUT"
           npm dist-tag add "@hourglass-financial/distilled-core@${VERSION}" "$DIST_TAG" --registry=https://npm.pkg.github.com
           npm dist-tag add "@hourglass-financial/workos@${VERSION}" "$DIST_TAG" --registry=https://npm.pkg.github.com
+          if [[ "$DIST_TAG" != "latest" ]]; then
+            npm dist-tag add "@hourglass-financial/workos@${VERSION}" latest --registry=https://npm.pkg.github.com
+          fi
+
+      - name: Verify additional WorkOS latest tag
+        if: inputs['dist-tag'] != 'latest'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/private-release.npmrc
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          bun scripts/private-package-release.ts verify-tag --package @hourglass-financial/workos --tag latest --version "$VERSION"
 
       - name: Write release receipt
         env:
@@ -193,29 +211,35 @@ jobs:
           DIST_TAG: ${{ inputs['dist-tag'] }}
           PREVIOUS_CORE: ${{ steps.previous_tags.outputs.core }}
           PREVIOUS_PROVIDER: ${{ steps.previous_tags.outputs.provider }}
+          PREVIOUS_PROVIDER_LATEST: ${{ steps.previous_tags.outputs.provider_latest }}
         shell: bash
         run: |
           restore_tag() {
             local package="$1"
-            local previous="$2"
+            local tag="$2"
+            local previous="$3"
             if [[ -n "$previous" ]]; then
-              npm dist-tag add "${package}@${previous}" "$DIST_TAG" --registry=https://npm.pkg.github.com
+              npm dist-tag add "${package}@${previous}" "$tag" --registry=https://npm.pkg.github.com
+              bun scripts/private-package-release.ts verify-tag --package "$package" --tag "$tag" --version "$previous"
             else
-              npm dist-tag rm "$package" "$DIST_TAG" --registry=https://npm.pkg.github.com || true
+              npm dist-tag rm "$package" "$tag" --registry=https://npm.pkg.github.com || true
               local current
-              if ! current="$(bun scripts/private-package-release.ts tag-version --package "$package" --tag "$DIST_TAG")"; then
-                echo "Could not verify removal of ${package} tag ${DIST_TAG}" >&2
+              if ! current="$(bun scripts/private-package-release.ts tag-version --package "$package" --tag "$tag")"; then
+                echo "Could not verify removal of ${package} tag ${tag}" >&2
                 return 1
               fi
               if [[ -n "$current" ]]; then
-                echo "Failed to remove ${package} tag ${DIST_TAG}; it still points to ${current}" >&2
+                echo "Failed to remove ${package} tag ${tag}; it still points to ${current}" >&2
                 return 1
               fi
             fi
           }
           status=0
-          restore_tag @hourglass-financial/distilled-core "$PREVIOUS_CORE" || status=1
-          restore_tag @hourglass-financial/workos "$PREVIOUS_PROVIDER" || status=1
+          restore_tag @hourglass-financial/distilled-core "$DIST_TAG" "$PREVIOUS_CORE" || status=1
+          restore_tag @hourglass-financial/workos "$DIST_TAG" "$PREVIOUS_PROVIDER" || status=1
+          if [[ "$DIST_TAG" != "latest" ]]; then
+            restore_tag @hourglass-financial/workos latest "$PREVIOUS_PROVIDER_LATEST" || status=1
+          fi
           exit "$status"
 
       - name: Remove temporary run tags
