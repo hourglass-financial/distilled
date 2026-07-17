@@ -15,7 +15,7 @@ const declarationPath = resolve(
 const runtimePath = resolve(packageDir, `lib/operations/${operationName}.js`);
 
 const build = (cwd: string): void => {
-  const result = spawnSync(process.execPath, ["run", "build", "--force"], {
+  const result = spawnSync("bun", ["run", "build", "--force"], {
     cwd,
     encoding: "utf8",
   });
