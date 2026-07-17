@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, Forbidden, Conflict } from "../errors.ts";
 
 // Input Schema
@@ -30,7 +31,7 @@ export const SimulateWireInInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   memo: Schema.optional(Schema.NullOr(Schema.String)),
 }).pipe(
   T.Http({ method: "POST", path: "/simulation/wire_in" }),
-) as unknown as Schema.Codec<SimulateWireInInput>;
+) as unknown as GeneratedStructCodec<SimulateWireInInput>;
 
 // Output Schema
 export interface SimulateWireInOutput {
@@ -43,7 +44,7 @@ export const SimulateWireInOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     currency: Schema.Literals(["USD"]),
     value: Schema.String,
   }),
-}) as unknown as Schema.Codec<SimulateWireInOutput>;
+}) as unknown as GeneratedStructCodec<SimulateWireInOutput>;
 
 // The operation
 /**
@@ -52,9 +53,9 @@ export const SimulateWireInOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
  * Simulate an inbound wire transfer for testing purposes. This endpoint is only available in the sandbox environment.
  * Creates a new inbound wire transfer that will be processed as if it was received from an external bank. You can identify the destination account using either a `deposit_account_id` or an `account_number` + `routing_number` pair — provide exactly one.
  *
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
- * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
+ * @param ereborIdempotencyKey - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
  */
 export const simulateWireIn = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

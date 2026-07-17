@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -15,7 +16,7 @@ export const GetAccountNumberInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   ),
 }).pipe(
   T.Http({ method: "GET", path: "/account_numbers/{id}" }),
-) as unknown as Schema.Codec<GetAccountNumberInput>;
+) as unknown as GeneratedStructCodec<GetAccountNumberInput>;
 
 // Output Schema
 export interface GetAccountNumberOutput {
@@ -53,7 +54,7 @@ export const GetAccountNumberOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
   },
-) as unknown as Schema.Codec<GetAccountNumberOutput>;
+) as unknown as GeneratedStructCodec<GetAccountNumberOutput>;
 
 // The operation
 /**
@@ -62,7 +63,7 @@ export const GetAccountNumberOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
  * Retrieve a specific Account Number by ID
  *
  * @param id - Account number ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const getAccountNumber = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

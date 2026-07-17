@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -16,7 +17,7 @@ export const GetCounterpartyBlockchainAddressInput =
     ),
   }).pipe(
     T.Http({ method: "GET", path: "/counterparty_blockchain_addresses/{id}" }),
-  ) as unknown as Schema.Codec<GetCounterpartyBlockchainAddressInput>;
+  ) as unknown as GeneratedStructCodec<GetCounterpartyBlockchainAddressInput>;
 
 // Output Schema
 export interface GetCounterpartyBlockchainAddressOutput {
@@ -132,7 +133,7 @@ export const GetCounterpartyBlockchainAddressOutput =
     custom_fields: Schema.optional(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
-  }) as unknown as Schema.Codec<GetCounterpartyBlockchainAddressOutput>;
+  }) as unknown as GeneratedStructCodec<GetCounterpartyBlockchainAddressOutput>;
 
 // The operation
 /**
@@ -141,7 +142,7 @@ export const GetCounterpartyBlockchainAddressOutput =
  * Retrieve a specific Counterparty Blockchain Address by ID
  *
  * @param id - Contact Blockchain Address ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const getCounterpartyBlockchainAddress =

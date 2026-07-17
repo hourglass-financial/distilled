@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -16,7 +17,7 @@ export const GetInboundWireTransferInput =
     ),
   }).pipe(
     T.Http({ method: "GET", path: "/wire_in/{id}" }),
-  ) as unknown as Schema.Codec<GetInboundWireTransferInput>;
+  ) as unknown as GeneratedStructCodec<GetInboundWireTransferInput>;
 
 // Output Schema
 export interface GetInboundWireTransferOutput {
@@ -94,7 +95,7 @@ export const GetInboundWireTransferOutput =
     custom_fields: Schema.optional(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
-  }) as unknown as Schema.Codec<GetInboundWireTransferOutput>;
+  }) as unknown as GeneratedStructCodec<GetInboundWireTransferOutput>;
 
 // The operation
 /**
@@ -103,7 +104,7 @@ export const GetInboundWireTransferOutput =
  * Retrieve a specific Inbound Wire Transfer by ID
  *
  * @param id - Inbound wire transfer ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const getInboundWireTransfer = /*@__PURE__*/ /*#__PURE__*/ API.make(

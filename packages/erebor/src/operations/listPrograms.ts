@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 
 // Input Schema
 export interface ListProgramsInput {
@@ -10,15 +11,19 @@ export interface ListProgramsInput {
   ereborVersion?: string;
 }
 export const ListProgramsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  page_size: Schema.optional(Schema.Number),
-  starting_after: Schema.optional(Schema.String),
-  ending_before: Schema.optional(Schema.String),
+  page_size: Schema.optional(Schema.Number).pipe(T.HttpQuery("page_size")),
+  starting_after: Schema.optional(Schema.String).pipe(
+    T.HttpQuery("starting_after"),
+  ),
+  ending_before: Schema.optional(Schema.String).pipe(
+    T.HttpQuery("ending_before"),
+  ),
   ereborVersion: Schema.optional(Schema.String).pipe(
     T.HttpHeader("Erebor-Version"),
   ),
 }).pipe(
   T.Http({ method: "GET", path: "/programs" }),
-) as unknown as Schema.Codec<ListProgramsInput>;
+) as unknown as GeneratedStructCodec<ListProgramsInput>;
 
 // Output Schema
 export interface ListProgramsOutput {
@@ -58,7 +63,7 @@ export const ListProgramsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   page_next: Schema.optional(Schema.NullOr(Schema.String)),
   page_prev: Schema.optional(Schema.NullOr(Schema.String)),
   url: Schema.String,
-}) as unknown as Schema.Codec<ListProgramsOutput>;
+}) as unknown as GeneratedStructCodec<ListProgramsOutput>;
 
 // The operation
 /**
@@ -69,7 +74,7 @@ export const ListProgramsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
  * @param page_size - Number of items per page (max 100)
  * @param starting_after - Cursor for pagination (exclusive start)
  * @param ending_before - Cursor for pagination (exclusive end)
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const listPrograms = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

@@ -81,9 +81,9 @@ export type OperationMethod<I, A, E, R, RequestOptions = never> = Effect.Effect<
  * Failures introduced by the shared HTTP client in addition to an operation's
  * OpenAPI-declared errors.
  */
-export type ClientOperationError<OperationError, ProviderError, ParseError> =
+export type ClientOperationError<OperationError, UniversalError, ParseError> =
   | OperationError
-  | ProviderError
+  | UniversalError
   | ParseError
   | HttpClientError.HttpClientError
   | HttpBody.HttpBodyError;
@@ -142,7 +142,7 @@ const isEffectLike = (value: unknown): value is Effect.Effect<unknown> =>
 export interface ClientConfig<
   Creds,
   RequestOptions = never,
-  ProviderError = never,
+  UniversalError = never,
   ParseError = never,
 > {
   /** The credentials service tag */
@@ -191,7 +191,7 @@ export interface ClientConfig<
     body: unknown,
     errors?: E,
     headers?: Record<string, string | undefined>,
-  ) => Effect.Effect<never, ProviderError | InstanceType<E[number]>>;
+  ) => Effect.Effect<never, UniversalError | InstanceType<E[number]>>;
 
   /** Parse error class for schema decode failures */
   ParseError: new (props: { body: unknown; cause: unknown }) => ParseError;
@@ -250,6 +250,20 @@ export type ApiErrorClass = {
     readonly message: string;
   };
 };
+
+/**
+ * Whether a status-mapped error is valid for this operation. Undeclared
+ * provider errors must fall back to the provider's Unknown* error instead of
+ * widening every operation's public error channel.
+ */
+// HOURGLASS PATCH: Keep runtime error matching aligned with generated errors.
+export const isErrorClassAllowedForOperation = (
+  errorClass: ApiErrorClass,
+  operationErrors: readonly ApiErrorClass[] | undefined,
+  universalErrors: readonly ApiErrorClass[],
+): boolean =>
+  universalErrors.includes(errorClass) ||
+  operationErrors?.includes(errorClass) === true;
 
 /**
  * Operation configuration with optional operation-specific errors.
@@ -552,10 +566,10 @@ function setBinaryBody(
 export const makeAPI = <
   Creds,
   RequestOptions = never,
-  ProviderError = never,
+  UniversalError = never,
   ParseError = never,
 >(
-  config: ClientConfig<Creds, RequestOptions, ProviderError, ParseError>,
+  config: ClientConfig<Creds, RequestOptions, UniversalError, ParseError>,
 ) => {
   type ResolvedCreds = ResolvedClientCredentials<Creds>;
 
@@ -569,7 +583,7 @@ export const makeAPI = <
     ): OperationMethod<
       Schema.Schema.Type<I>,
       Schema.Schema.Type<O>,
-      ClientOperationError<InstanceType<E[number]>, ProviderError, ParseError>,
+      ClientOperationError<InstanceType<E[number]>, UniversalError, ParseError>,
       Creds | HttpClient.HttpClient | O["DecodingServices"],
       RequestOptions
     > => {
@@ -577,7 +591,7 @@ export const makeAPI = <
       type Output = O["Type"];
       type Error = ClientOperationError<
         InstanceType<E[number]>,
-        ProviderError,
+        UniversalError,
         ParseError
       >;
       type Requirements = Creds | HttpClient.HttpClient | O["DecodingServices"];
@@ -1174,7 +1188,7 @@ export const makeAPI = <
     ): PaginatedOperationMethod<
       Schema.Schema.Type<I>,
       Schema.Schema.Type<O>,
-      ClientOperationError<InstanceType<E[number]>, ProviderError, ParseError>,
+      ClientOperationError<InstanceType<E[number]>, UniversalError, ParseError>,
       Creds | HttpClient.HttpClient | O["DecodingServices"],
       RequestOptions
     > => {
@@ -1182,7 +1196,7 @@ export const makeAPI = <
       const pagination = opConfig.pagination!;
 
       // Create the base operation
-      const baseFn = makeAPI<Creds, RequestOptions, ProviderError, ParseError>(
+      const baseFn = makeAPI<Creds, RequestOptions, UniversalError, ParseError>(
         config,
       ).make(() => ({
         inputSchema: opConfig.inputSchema ?? opConfig.input,

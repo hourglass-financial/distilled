@@ -66,7 +66,7 @@
     "fmt": "oxfmt --write src",
     "lint": "oxlint --fix src",
     "check": "tsc && oxlint src && oxfmt --check src",
-    "test": "bunx vitest run test --passWithNoTests",
+    "test": "bun run typecheck:test && bunx vitest run test --passWithNoTests",
     "typecheck:test": "tsc -p tsconfig.test.json",
     "test:live": "bun run typecheck:test && bunx vitest run test",
     "test:cleanup": "bun scripts/cleanup-test-run.ts",

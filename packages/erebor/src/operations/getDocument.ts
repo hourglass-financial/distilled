@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -15,7 +16,7 @@ export const GetDocumentInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   ),
 }).pipe(
   T.Http({ method: "GET", path: "/documents/{id}" }),
-) as unknown as Schema.Codec<GetDocumentInput>;
+) as unknown as GeneratedStructCodec<GetDocumentInput>;
 
 // Output Schema
 export interface GetDocumentOutput {
@@ -66,7 +67,7 @@ export const GetDocumentOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   custom_fields: Schema.optional(
     Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
   ),
-}) as unknown as Schema.Codec<GetDocumentOutput>;
+}) as unknown as GeneratedStructCodec<GetDocumentOutput>;
 
 // The operation
 /**
@@ -75,7 +76,7 @@ export const GetDocumentOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
  * Retrieve document metadata and download URL
  *
  * @param id - Document ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const getDocument = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

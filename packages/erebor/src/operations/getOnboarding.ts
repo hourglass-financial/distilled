@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -15,7 +16,7 @@ export const GetOnboardingInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   ),
 }).pipe(
   T.Http({ method: "GET", path: "/onboardings/{id}" }),
-) as unknown as Schema.Codec<GetOnboardingInput>;
+) as unknown as GeneratedStructCodec<GetOnboardingInput>;
 
 // Output Schema
 export interface GetOnboardingOutput {
@@ -68,7 +69,7 @@ export const GetOnboardingOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
   ),
   rejection_reason: Schema.optional(Schema.NullOr(Schema.String)),
-}) as unknown as Schema.Codec<GetOnboardingOutput>;
+}) as unknown as GeneratedStructCodec<GetOnboardingOutput>;
 
 // The operation
 /**
@@ -77,7 +78,7 @@ export const GetOnboardingOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
  * Retrieve a specific Onboarding process by ID
  *
  * @param id - Onboarding ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const getOnboarding = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

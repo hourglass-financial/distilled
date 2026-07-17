@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, Forbidden, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
@@ -12,13 +13,15 @@ export interface SimulateAchInReturnInput {
 export const SimulateAchInReturnInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
-    return_code: Schema.optional(Schema.String),
+    return_code: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("return_code"),
+    ),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
   }).pipe(
     T.Http({ method: "POST", path: "/simulation/ach_in/{id}/return" }),
-  ) as unknown as Schema.Codec<SimulateAchInReturnInput>;
+  ) as unknown as GeneratedStructCodec<SimulateAchInReturnInput>;
 
 // Output Schema
 export interface SimulateAchInReturnOutput {
@@ -29,7 +32,7 @@ export const SimulateAchInReturnOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
     return_code: Schema.String,
-  }) as unknown as Schema.Codec<SimulateAchInReturnOutput>;
+  }) as unknown as GeneratedStructCodec<SimulateAchInReturnOutput>;
 
 // The operation
 /**
@@ -43,7 +46,7 @@ export const SimulateAchInReturnOutput =
  * @param id - ID of the inbound ACH transfer to return. Must be in `SETTLED` status.
  * @param return_code - NACHA return reason code to apply to the returned transfer. Defaults to `R01` (Insufficient Funds) when omitted. Must be a NACHA return reason code matching `^R[0-9]{2}$` (R01-R85). Codes that match the pattern but are not in the NACHA set return `400`.
 
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const simulateAchInReturn = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, Conflict } from "../errors.ts";
 
 // Input Schema
@@ -42,7 +43,7 @@ export const CreateCounterpartyInput =
     ),
   }).pipe(
     T.Http({ method: "POST", path: "/counterparties" }),
-  ) as unknown as Schema.Codec<CreateCounterpartyInput>;
+  ) as unknown as GeneratedStructCodec<CreateCounterpartyInput>;
 
 // Output Schema
 export interface CreateCounterpartyOutput {
@@ -87,7 +88,7 @@ export const CreateCounterpartyOutput =
     custom_fields: Schema.optional(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
-  }) as unknown as Schema.Codec<CreateCounterpartyOutput>;
+  }) as unknown as GeneratedStructCodec<CreateCounterpartyOutput>;
 
 // The operation
 /**
@@ -95,9 +96,9 @@ export const CreateCounterpartyOutput =
  *
  * Create a new Counterparty
  *
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
- * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
+ * @param ereborIdempotencyKey - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
  */
 export const createCounterparty = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

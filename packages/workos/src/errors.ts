@@ -27,7 +27,8 @@ export type { DefaultErrors } from "@distilled.cloud/core/errors";
 import * as Schema from "effect/Schema";
 import * as Category from "@distilled.cloud/core/category";
 
-// Unknown Workos error - returned when an error code is not recognized
+// HOURGLASS PATCH: Unknown statuses are not necessarily transient server
+// failures; known 5xx statuses retain their concrete ServerError classes.
 export class UnknownWorkosError extends Schema.TaggedErrorClass<UnknownWorkosError>()(
   "UnknownWorkosError",
   {
@@ -35,7 +36,7 @@ export class UnknownWorkosError extends Schema.TaggedErrorClass<UnknownWorkosErr
     message: Schema.optional(Schema.String),
     body: Schema.Unknown,
   },
-).pipe(Category.withServerError) {}
+) {}
 
 // Schema parse error wrapper
 export class WorkosParseError extends Schema.TaggedErrorClass<WorkosParseError>()(

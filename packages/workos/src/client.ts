@@ -7,11 +7,17 @@
 import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
-import { makeAPI } from "@distilled.cloud/core/client";
+import {
+  type ApiErrorClass,
+  isErrorClassAllowedForOperation,
+  makeAPI,
+} from "@distilled.cloud/core/client";
 import { parseRetryAfterForStatus } from "@distilled.cloud/core/retry-after";
 import { Retry } from "./retry.ts";
 import {
   HTTP_STATUS_MAP,
+  DEFAULT_ERRORS,
+  type DefaultErrors,
   UnknownWorkosError,
   WorkosParseError,
 } from "./errors.ts";
@@ -20,9 +26,12 @@ import {
 export { UnknownWorkosError } from "./errors.ts";
 import { Credentials } from "./credentials.ts";
 
-type ClientError =
-  | InstanceType<(typeof HTTP_STATUS_MAP)[keyof typeof HTTP_STATUS_MAP]>
-  | UnknownWorkosError;
+// HOURGLASS PATCH: Only errors that can arise independently of an operation's
+// OpenAPI response table belong in every WorkOS operation channel.
+type UniversalClientError = DefaultErrors | UnknownWorkosError;
+type OperationClientError<E extends readonly ApiErrorClass[]> =
+  | UniversalClientError
+  | InstanceType<E[number]>;
 
 /**
  * WorkOS API Error Response Schema.
@@ -42,12 +51,12 @@ const ApiErrorResponse = Schema.Struct({
  * Match a WorkOS API error response to the appropriate error class based on
  * HTTP status.
  */
-const matchError = (
+const matchError = <const E extends readonly ApiErrorClass[] = readonly []>(
   status: number,
   errorBody: unknown,
-  _errors?: readonly unknown[],
+  errors?: E,
   headers?: Record<string, string | undefined>,
-): Effect.Effect<never, ClientError> => {
+): Effect.Effect<never, OperationClientError<E>> => {
   // Try to extract a message and code from the body, but fall through to
   // status-code mapping regardless of whether the body parses as the
   // canonical WorkOS error shape. Some endpoints return non-JSON or
@@ -71,14 +80,17 @@ const matchError = (
       message = errorBody;
     }
   }
-  const ErrorClass = (HTTP_STATUS_MAP as any)[status];
-  if (ErrorClass) {
+  const ErrorClass = (HTTP_STATUS_MAP as Record<number, ApiErrorClass>)[status];
+  if (
+    ErrorClass &&
+    isErrorClassAllowedForOperation(ErrorClass, errors, DEFAULT_ERRORS)
+  ) {
     return Effect.fail(
       new ErrorClass({
         message,
         retryAfter: parseRetryAfterForStatus(status, headers),
       }),
-    );
+    ) as Effect.Effect<never, OperationClientError<E>>;
   }
   return Effect.fail(
     new UnknownWorkosError({ code, message, body: errorBody }),
@@ -88,7 +100,12 @@ const matchError = (
 /**
  * WorkOS API client.
  */
-export const API = makeAPI<Credentials, never, ClientError, WorkosParseError>({
+export const API = makeAPI<
+  Credentials,
+  never,
+  UniversalClientError,
+  WorkosParseError
+>({
   credentials: Credentials as any,
   getBaseUrl: (creds: any) => creds.apiBaseUrl,
   getAuthHeaders: (creds: any) => ({

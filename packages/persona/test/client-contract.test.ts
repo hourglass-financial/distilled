@@ -10,71 +10,53 @@ import { Credentials } from "../src/credentials.ts";
 import {
   BadGateway,
   BadRequest,
-  Conflict,
-  EreborFeatureNotEnabled,
-  EreborParseError,
-  EreborValidationError,
   Forbidden,
   GatewayTimeout,
   InternalServerError,
   NotFound,
+  PersonaParseError,
   ServiceUnavailable,
   TooManyRequests,
   Unauthorized,
-  UnknownEreborError,
-  UnprocessableEntity,
+  UnknownPersonaError,
 } from "../src/errors.ts";
-import { createBusinessApplicant } from "../src/operations/createBusinessApplicant.ts";
-import { getProgram } from "../src/operations/getProgram.ts";
+import { listAllApiKeys } from "../src/operations/listAllApiKeys.ts";
 
-describe("Erebor operation type contract", () => {
-  it("keeps lookup errors precise while retaining universal failures", () => {
-    type DirectEffect = ReturnType<typeof getProgram>;
+describe("Persona operation type contract", () => {
+  it("keeps declared API errors precise while retaining universal failures", () => {
+    type DirectEffect = ReturnType<typeof listAllApiKeys>;
     type DirectErrors = Effect.Error<DirectEffect>;
     type DirectServices = Effect.Services<DirectEffect>;
     type ExpectedErrors =
       | BadRequest
-      | NotFound
-      | Unauthorized
       | Forbidden
+      | Unauthorized
       | TooManyRequests
       | InternalServerError
       | BadGateway
       | ServiceUnavailable
       | GatewayTimeout
-      | EreborFeatureNotEnabled
-      | UnknownEreborError
-      | EreborParseError
+      | UnknownPersonaError
+      | PersonaParseError
       | HttpClientError.HttpClientError
       | HttpBody.HttpBodyError;
 
+    expectTypeOf<DirectErrors>().toEqualTypeOf<ExpectedErrors>();
+    expectTypeOf<NotFound>().not.toMatchTypeOf<DirectErrors>();
     expectTypeOf<Credentials>().toMatchTypeOf<DirectServices>();
     expectTypeOf<HttpClient.HttpClient>().toMatchTypeOf<DirectServices>();
-    expectTypeOf<DirectErrors>().toEqualTypeOf<ExpectedErrors>();
-    expectTypeOf<Conflict>().not.toMatchTypeOf<DirectErrors>();
-    expectTypeOf<UnprocessableEntity>().not.toMatchTypeOf<DirectErrors>();
-    expectTypeOf<EreborValidationError>().not.toMatchTypeOf<DirectErrors>();
-  });
-
-  it("retains structured validation errors only on operations declaring 422", () => {
-    type ApplicantErrors = Effect.Error<
-      ReturnType<typeof createBusinessApplicant>
-    >;
-
-    expectTypeOf<EreborValidationError>().toMatchTypeOf<ApplicantErrors>();
-    expectTypeOf<UnprocessableEntity>().toMatchTypeOf<ApplicantErrors>();
   });
 
   it.each([
-    { status: 409, tag: "UnknownEreborError" },
-    { status: 403, tag: "Forbidden" },
+    { status: 404, tag: "UnknownPersonaError" },
+    { status: 401, tag: "Unauthorized" },
   ])(
     "maps HTTP $status to $tag for this operation",
     async ({ status, tag }) => {
       let requests = 0;
       const credentials = Layer.succeed(Credentials, {
-        apiKey: Redacted.make("erebor_contract"),
-        apiBaseUrl: "https://erebor.example",
+        apiKey: Redacted.make("persona_sandbox_contract"),
+        apiBaseUrl: "https://persona.example",
       });
       const transport = Layer.succeed(
         HttpClient.HttpClient,
@@ -84,7 +66,9 @@ describe("Erebor operation type contract", () => {
             HttpClientResponse.fromWeb(
               request,
               new Response(
-                JSON.stringify({ error: "CONTRACT_ERROR", message: "test" }),
+                JSON.stringify({
+                  errors: [{ title: "contract error", details: "test" }],
+                }),
                 {
                   status,
                   headers: { "content-type": "application/json" },
@@ -96,7 +80,7 @@ describe("Erebor operation type contract", () => {
       );
 
       const error = await Effect.runPromise(
-        getProgram({ id: "prg_contract" }).pipe(
+        listAllApiKeys({}).pipe(
           Effect.flip,
           Effect.provide(Layer.merge(credentials, transport)),
         ),

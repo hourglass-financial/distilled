@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -15,7 +16,7 @@ export const GetProgramInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   ),
 }).pipe(
   T.Http({ method: "GET", path: "/programs/{id}" }),
-) as unknown as Schema.Codec<GetProgramInput>;
+) as unknown as GeneratedStructCodec<GetProgramInput>;
 
 // Output Schema
 export interface GetProgramOutput {
@@ -39,7 +40,7 @@ export const GetProgramOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   name: Schema.String,
   billing_deposit_account_id: Schema.optional(Schema.String),
   program_type: Schema.optional(Schema.NullOr(Schema.String)),
-}) as unknown as Schema.Codec<GetProgramOutput>;
+}) as unknown as GeneratedStructCodec<GetProgramOutput>;
 
 // The operation
 /**
@@ -48,7 +49,7 @@ export const GetProgramOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
  * Retrieve a specific Program by ID
  *
  * @param id - Program ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const getProgram = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

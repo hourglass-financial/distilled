@@ -207,7 +207,7 @@ export interface GeneratorConfig {
   /** Type-only helper import path for composable generated struct schemas */
   generatedSchemaImport?: string;
   /** Naming strategy for generated query/header input fields (default: camelCase) */
-  parameterFieldNaming?: "camelCase" | "preserve";
+  parameterFieldNaming?: ParameterFieldNaming;
   // HOURGLASS PATCH: Allow a provider config to retain a verified large
   // finite union without removing the shared generator's expansion guard.
   /** Maximum rendered size of an inline oneOf/anyOf before falling back to unknown */
@@ -216,8 +216,10 @@ export interface GeneratorConfig {
   operationUnionInlineChars?: Readonly<Record<string, number>>;
   /** Whether to include operation-specific error imports (default: true for Swagger, false for OAS 3.x) */
   includeOperationErrors?: boolean;
-  /** Status codes to error class name mapping (only used when includeOperationErrors=true) */
-  statusToErrorClass?: Record<string, string>;
+  /** Status codes to error class names (only used when includeOperationErrors=true) */
+  // HOURGLASS PATCH: Some provider response bodies distinguish multiple typed
+  // errors that share one HTTP status, so preserve every declared class.
+  statusToErrorClass?: Record<string, string | readonly string[]>;
   /** Default error status codes to exclude from operation-specific errors */
   defaultErrorStatuses?: Set<string>;
   /** Whether to skip deprecated operations (default: true) */
@@ -230,6 +232,14 @@ export interface GeneratorConfig {
    */
   apiVersion?: string;
 }
+
+type ParameterFieldNamingStrategy = "camelCase" | "preserve";
+type ParameterFieldNaming =
+  | ParameterFieldNamingStrategy
+  | Readonly<{
+      query?: ParameterFieldNamingStrategy;
+      header?: ParameterFieldNamingStrategy;
+    }>;
 
 // ============================================================================
 // Utility Functions
@@ -277,9 +287,12 @@ function renderEnumLiterals(
 // can preserve an established public input surface without losing wire traits.
 function toParameterFieldName(
   name: string,
-  naming: "camelCase" | "preserve" = "camelCase",
+  naming: ParameterFieldNaming | undefined,
+  location: "query" | "header",
 ): string {
-  if (naming === "preserve") return name;
+  const strategy =
+    typeof naming === "object" ? naming[location] : (naming ?? "camelCase");
+  if (strategy === "preserve") return name;
   const camel = toCamelCase(name);
   return camel.charAt(0).toLowerCase() + camel.slice(1);
 }
@@ -1319,7 +1332,7 @@ function generateJsDoc(
   description: string | undefined,
   parameters: ParameterInfo[],
   bodyProperties?: Record<string, SchemaObject>,
-  parameterFieldNaming?: "camelCase" | "preserve",
+  parameterFieldNaming?: ParameterFieldNaming,
 ): string {
   const lines: string[] = ["/**"];
 
@@ -1347,8 +1360,8 @@ function generateJsDoc(
       const desc = escapeJsDoc(param.description || "");
       // HOURGLASS PATCH: Query docs name the normalized TypeScript input field.
       const fieldName =
-        param.in === "query"
-          ? toParameterFieldName(param.name, parameterFieldNaming)
+        param.in === "query" || param.in === "header"
+          ? toParameterFieldName(param.name, parameterFieldNaming, param.in)
           : param.name;
       lines.push(` * @param ${fieldName} - ${desc}`);
     }
@@ -1499,7 +1512,7 @@ function generateInputSchemaSwagger(
   spec: Swagger2Spec,
   ctx?: SchemaGenerationContext,
   apiVersion?: string,
-  parameterFieldNaming?: "camelCase" | "preserve",
+  parameterFieldNaming?: ParameterFieldNaming,
 ): { inputSchemaCode: string; inputSchemaName: string } {
   const inputSchemaName = `${toPascalCase(operationId)}Input`;
   const pathParams = parameters.filter((p) => p.in === "path");
@@ -1551,7 +1564,11 @@ function generateInputSchemaSwagger(
 
   // HOURGLASS PATCH: Keep Swagger query wire names when field names are normalized.
   for (const param of queryParams) {
-    const fieldName = toParameterFieldName(param.name, parameterFieldNaming);
+    const fieldName = toParameterFieldName(
+      param.name,
+      parameterFieldNaming,
+      "query",
+    );
     if (usedNames.has(fieldName)) continue;
     usedNames.add(fieldName);
     let schema = param.enum
@@ -1582,7 +1599,11 @@ function generateInputSchemaSwagger(
 
   // HOURGLASS PATCH: Emit Swagger 2.0 header params via T.HttpHeader.
   for (const param of headerParams) {
-    const fieldName = toParameterFieldName(param.name, parameterFieldNaming);
+    const fieldName = toParameterFieldName(
+      param.name,
+      parameterFieldNaming,
+      "header",
+    );
     if (usedNames.has(fieldName)) continue;
     usedNames.add(fieldName);
 
@@ -1704,7 +1725,7 @@ function generateInputSchema3(
   ctx?: SchemaGenerationContext,
   noFollowRedirect: boolean = false,
   apiVersion?: string,
-  parameterFieldNaming?: "camelCase" | "preserve",
+  parameterFieldNaming?: ParameterFieldNaming,
 ): { inputSchemaCode: string; inputSchemaName: string } {
   // Resolve top-level $ref (e.g. #/components/requestBodies/Foo).
   const requestBody = requestBodyParam?.$ref
@@ -1744,7 +1765,11 @@ function generateInputSchema3(
 
   // HOURGLASS PATCH: Emit named OpenAPI query traits, including serialization metadata.
   for (const param of queryParams) {
-    const fieldName = toParameterFieldName(param.name, parameterFieldNaming);
+    const fieldName = toParameterFieldName(
+      param.name,
+      parameterFieldNaming,
+      "query",
+    );
     if (usedNames.has(fieldName)) continue;
     usedNames.add(fieldName);
     const schema = param.schema;
@@ -1763,7 +1788,11 @@ function generateInputSchema3(
 
   // HOURGLASS PATCH: Emit OpenAPI 3.x header params via T.HttpHeader.
   for (const param of headerParams) {
-    const fieldName = toParameterFieldName(param.name, parameterFieldNaming);
+    const fieldName = toParameterFieldName(
+      param.name,
+      parameterFieldNaming,
+      "header",
+    );
     if (usedNames.has(fieldName)) continue;
     usedNames.add(fieldName);
 
@@ -2090,6 +2119,11 @@ import * as T from "${traitsImport}.ts";`;
   ].join("\n");
 }
 
+const errorClassNames = (
+  value: string | readonly string[] | undefined,
+): readonly string[] =>
+  value === undefined ? [] : typeof value === "string" ? [value] : value;
+
 // ============================================================================
 // Main Generator
 // ============================================================================
@@ -2244,11 +2278,11 @@ export function generateFromOpenAPI(config: GeneratorConfig): void {
             for (const status of Object.keys(operation.responses)) {
               if (status.startsWith("2") || defaultErrorStatuses.has(status))
                 continue;
-              const errorClass = statusToErrorClass[status];
-              if (errorClass) {
-                operationErrors.push(errorClass);
-              }
+              operationErrors.push(
+                ...errorClassNames(statusToErrorClass[status]),
+              );
             }
+            operationErrors = [...new Set(operationErrors)];
           }
 
           const pagination = detectPagination(
@@ -2397,11 +2431,11 @@ export function generateFromOpenAPI(config: GeneratorConfig): void {
             for (const status of Object.keys(operation.responses)) {
               if (status.startsWith("2") || defaultErrorStatuses.has(status))
                 continue;
-              const errorClass = statusToErrorClass[status];
-              if (errorClass) {
-                operationErrors.push(errorClass);
-              }
+              operationErrors.push(
+                ...errorClassNames(statusToErrorClass[status]),
+              );
             }
+            operationErrors = [...new Set(operationErrors)];
           }
 
           const pagination = detectPagination(

@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -16,7 +17,7 @@ export const GetInboundInternationalWireTransferInput =
     ),
   }).pipe(
     T.Http({ method: "GET", path: "/international_wire_in/{id}" }),
-  ) as unknown as Schema.Codec<GetInboundInternationalWireTransferInput>;
+  ) as unknown as GeneratedStructCodec<GetInboundInternationalWireTransferInput>;
 
 // Output Schema
 export interface GetInboundInternationalWireTransferOutput {
@@ -69,7 +70,7 @@ export const GetInboundInternationalWireTransferOutput =
     custom_fields: Schema.optional(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
-  }) as unknown as Schema.Codec<GetInboundInternationalWireTransferOutput>;
+  }) as unknown as GeneratedStructCodec<GetInboundInternationalWireTransferOutput>;
 
 // The operation
 /**
@@ -78,7 +79,7 @@ export const GetInboundInternationalWireTransferOutput =
  * Retrieve a specific Inbound International Wire by ID
  *
  * @param id - Inbound International Wire ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const getInboundInternationalWireTransfer =

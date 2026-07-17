@@ -94,7 +94,7 @@ export class UnknownEreborError extends Schema.TaggedErrorClass<UnknownEreborErr
     message: Schema.optional(Schema.String),
     body: Schema.Unknown,
   },
-).pipe(Category.withServerError) {}
+) {}
 
 // Schema parse error wrapper
 export class EreborParseError extends Schema.TaggedErrorClass<EreborParseError>()(

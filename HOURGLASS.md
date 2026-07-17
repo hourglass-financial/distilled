@@ -120,12 +120,12 @@ before generation). Re-evaluate every patch entry against the new spec:
 - **Still needed** — a genuine spec-vs-reality drift the new spec still gets
   wrong. Keep or extend it.
 
-Key fact that de-risks this: the per-operation `errors: [...]` arrays are
-**type-channel only**. At runtime, `client.ts`'s `matchError` maps every
-`status >= 400` response to a typed error globally by status + body, ignoring the
-per-op array. So error-response patches are cosmetic once the spec declares the
-statuses — trust the spec and prefer removing them. The patches that *matter* are
-**response-schema** fixes (see step 5).
+The per-operation `errors: [...]` arrays control both the public error channel
+and runtime matching. `client.ts` emits a concrete status-mapped error only when
+the operation declares it or it is in the provider's explicit universal error
+set; otherwise it emits `UnknownEreborError`. Keep response-status patches when
+they are needed to make that operation contract match the live API. Response
+schema patches remain equally important (see step 5).
 
 ### 4. Regenerate and prune
 

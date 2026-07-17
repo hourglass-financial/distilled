@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -16,7 +17,7 @@ export const GetCounterpartyRailAddressInput =
     ),
   }).pipe(
     T.Http({ method: "GET", path: "/counterparty_rail_addresses/{id}" }),
-  ) as unknown as Schema.Codec<GetCounterpartyRailAddressInput>;
+  ) as unknown as GeneratedStructCodec<GetCounterpartyRailAddressInput>;
 
 // Output Schema
 export interface GetCounterpartyRailAddressOutput {
@@ -51,7 +52,7 @@ export const GetCounterpartyRailAddressOutput =
     custom_fields: Schema.optional(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
-  }) as unknown as Schema.Codec<GetCounterpartyRailAddressOutput>;
+  }) as unknown as GeneratedStructCodec<GetCounterpartyRailAddressOutput>;
 
 // The operation
 /**
@@ -60,7 +61,7 @@ export const GetCounterpartyRailAddressOutput =
  * Retrieve a specific Counterparty Rail Address by ID
  *
  * @param id - Rail address ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const getCounterpartyRailAddress = /*@__PURE__*/ /*#__PURE__*/ API.make(

@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
@@ -101,7 +102,7 @@ export const AttributeInboundBlockchainTransferInput =
     custodian_other: Schema.optional(Schema.NullOr(Schema.String)),
   }).pipe(
     T.Http({ method: "POST", path: "/blockchain_in/{id}/attribute" }),
-  ) as unknown as Schema.Codec<AttributeInboundBlockchainTransferInput>;
+  ) as unknown as GeneratedStructCodec<AttributeInboundBlockchainTransferInput>;
 
 // Output Schema
 export interface AttributeInboundBlockchainTransferOutput {
@@ -162,7 +163,7 @@ export const AttributeInboundBlockchainTransferOutput =
     custom_fields: Schema.optional(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
-  }) as unknown as Schema.Codec<AttributeInboundBlockchainTransferOutput>;
+  }) as unknown as GeneratedStructCodec<AttributeInboundBlockchainTransferOutput>;
 
 // The operation
 /**
@@ -171,9 +172,9 @@ export const AttributeInboundBlockchainTransferOutput =
  * Attribute an Inbound Blockchain Transfer to a counterparty with custodian information
  *
  * @param id - Inbound blockchain transfer ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
- * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
+ * @param ereborIdempotencyKey - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
  */
 export const attributeInboundBlockchainTransfer =

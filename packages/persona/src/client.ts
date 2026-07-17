@@ -7,10 +7,16 @@
 import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
-import { makeAPI } from "@distilled.cloud/core/client";
+import {
+  type ApiErrorClass,
+  isErrorClassAllowedForOperation,
+  makeAPI,
+} from "@distilled.cloud/core/client";
 import { parseRetryAfterForStatus } from "@distilled.cloud/core/retry-after";
 import {
   HTTP_STATUS_MAP,
+  DEFAULT_ERRORS,
+  type DefaultErrors,
   UnknownPersonaError,
   PersonaParseError,
 } from "./errors.ts";
@@ -20,9 +26,10 @@ export { UnknownPersonaError } from "./errors.ts";
 import { Credentials } from "./credentials.ts";
 import { Retry } from "./retry.ts";
 
-type ClientError =
-  | InstanceType<(typeof HTTP_STATUS_MAP)[keyof typeof HTTP_STATUS_MAP]>
-  | UnknownPersonaError;
+type UniversalClientError = DefaultErrors | UnknownPersonaError;
+type OperationClientError<E extends readonly ApiErrorClass[]> =
+  | UniversalClientError
+  | InstanceType<E[number]>;
 
 // API Error Response Schema
 const PersonaError = Schema.Struct({
@@ -51,22 +58,30 @@ const getMessage = (parsed: typeof ApiErrorResponse.Type): string => {
  * field is fine; the default retry policy still uses exponential backoff.
  * For bespoke rate-limit hints, parse them here and pass `retryAfter` when known.
  */
-const matchError = (
+const matchError = <const E extends readonly ApiErrorClass[] = readonly []>(
   status: number,
   errorBody: unknown,
-  _errors?: readonly unknown[],
+  errors?: E,
   headers?: Record<string, string | undefined>,
-): Effect.Effect<never, ClientError> => {
+): Effect.Effect<never, OperationClientError<E>> => {
   try {
     const parsed = Schema.decodeUnknownSync(ApiErrorResponse)(errorBody);
     const message = getMessage(parsed);
-    const ErrorClass = (HTTP_STATUS_MAP as any)[status];
-    if (ErrorClass) {
+    const ErrorClass = (HTTP_STATUS_MAP as Record<number, ApiErrorClass>)[
+      status
+    ];
+    if (
+      ErrorClass &&
+      isErrorClassAllowedForOperation(ErrorClass, errors, DEFAULT_ERRORS)
+    ) {
       const args: { message: string; retryAfter?: unknown } = { message };
       if (RETRYABLE_HTTP_STATUSES.has(status)) {
         args.retryAfter = parseRetryAfterForStatus(status, headers);
       }
-      return Effect.fail(new ErrorClass(args));
+      return Effect.fail(new ErrorClass(args)) as Effect.Effect<
+        never,
+        OperationClientError<E>
+      >;
     }
     return Effect.fail(
       new UnknownPersonaError({
@@ -84,7 +99,12 @@ const matchError = (
 /**
  * Persona API client.
  */
-export const API = makeAPI<Credentials, never, ClientError, PersonaParseError>({
+export const API = makeAPI<
+  Credentials,
+  never,
+  UniversalClientError,
+  PersonaParseError
+>({
   credentials: Credentials as any,
   getBaseUrl: (creds: any) => creds.apiBaseUrl,
   getAuthHeaders: (creds: any): Record<string, string> => ({

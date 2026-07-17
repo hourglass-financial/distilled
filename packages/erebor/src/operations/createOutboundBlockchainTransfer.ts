@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, Conflict } from "../errors.ts";
 
 // Input Schema
@@ -35,7 +36,7 @@ export const CreateOutboundBlockchainTransferInput =
     ),
   }).pipe(
     T.Http({ method: "POST", path: "/blockchain_out" }),
-  ) as unknown as Schema.Codec<CreateOutboundBlockchainTransferInput>;
+  ) as unknown as GeneratedStructCodec<CreateOutboundBlockchainTransferInput>;
 
 // Output Schema
 export interface CreateOutboundBlockchainTransferOutput {
@@ -88,7 +89,7 @@ export const CreateOutboundBlockchainTransferOutput =
     custom_fields: Schema.optional(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
-  }) as unknown as Schema.Codec<CreateOutboundBlockchainTransferOutput>;
+  }) as unknown as GeneratedStructCodec<CreateOutboundBlockchainTransferOutput>;
 
 // The operation
 /**
@@ -97,9 +98,9 @@ export const CreateOutboundBlockchainTransferOutput =
  * Create a new Outbound Blockchain Transfer.
  * Sending to an unsupported network or incorrect address may result in permanent loss. Erebor cannot recover these funds.
  *
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
- * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
+ * @param ereborIdempotencyKey - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
  */
 export const createOutboundBlockchainTransfer =

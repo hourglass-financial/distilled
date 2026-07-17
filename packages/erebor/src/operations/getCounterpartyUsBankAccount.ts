@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -16,7 +17,7 @@ export const GetCounterpartyUsBankAccountInput =
     ),
   }).pipe(
     T.Http({ method: "GET", path: "/counterparty_us_bank_accounts/{id}" }),
-  ) as unknown as Schema.Codec<GetCounterpartyUsBankAccountInput>;
+  ) as unknown as GeneratedStructCodec<GetCounterpartyUsBankAccountInput>;
 
 // Output Schema
 export interface GetCounterpartyUsBankAccountOutput {
@@ -55,7 +56,7 @@ export const GetCounterpartyUsBankAccountOutput =
     custom_fields: Schema.optional(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
-  }) as unknown as Schema.Codec<GetCounterpartyUsBankAccountOutput>;
+  }) as unknown as GeneratedStructCodec<GetCounterpartyUsBankAccountOutput>;
 
 // The operation
 /**
@@ -64,7 +65,7 @@ export const GetCounterpartyUsBankAccountOutput =
  * Retrieve a specific Counterparty US Bank Account by ID
  *
  * @param id - US Bank Account ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const getCounterpartyUsBankAccount =

@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
@@ -26,7 +27,7 @@ export const UpdateOutboundInternationalWireTransferInput =
     ),
   }).pipe(
     T.Http({ method: "PATCH", path: "/international_wire_out/{id}" }),
-  ) as unknown as Schema.Codec<UpdateOutboundInternationalWireTransferInput>;
+  ) as unknown as GeneratedStructCodec<UpdateOutboundInternationalWireTransferInput>;
 
 // Output Schema
 export interface UpdateOutboundInternationalWireTransferOutput {
@@ -79,7 +80,7 @@ export const UpdateOutboundInternationalWireTransferOutput =
     custom_fields: Schema.optional(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
-  }) as unknown as Schema.Codec<UpdateOutboundInternationalWireTransferOutput>;
+  }) as unknown as GeneratedStructCodec<UpdateOutboundInternationalWireTransferOutput>;
 
 // The operation
 /**
@@ -88,9 +89,9 @@ export const UpdateOutboundInternationalWireTransferOutput =
  * Update an outbound international wire transfer's `custom_ref` or `custom_fields`. Amount, parties, rail message fields, and status are immutable.
  *
  * @param id - Outbound International Wire ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
- * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
+ * @param ereborIdempotencyKey - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
  */
 export const updateOutboundInternationalWireTransfer =

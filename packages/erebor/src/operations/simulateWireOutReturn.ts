@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, Forbidden, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
@@ -16,7 +17,7 @@ export const SimulateWireOutReturnInput =
     ),
   }).pipe(
     T.Http({ method: "POST", path: "/simulation/wire_out/{id}/return" }),
-  ) as unknown as Schema.Codec<SimulateWireOutReturnInput>;
+  ) as unknown as GeneratedStructCodec<SimulateWireOutReturnInput>;
 
 // Output Schema
 export interface SimulateWireOutReturnOutput {
@@ -25,7 +26,7 @@ export interface SimulateWireOutReturnOutput {
 export const SimulateWireOutReturnOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String,
-  }) as unknown as Schema.Codec<SimulateWireOutReturnOutput>;
+  }) as unknown as GeneratedStructCodec<SimulateWireOutReturnOutput>;
 
 // The operation
 /**
@@ -36,7 +37,7 @@ export const SimulateWireOutReturnOutput =
  * The response returns immediately. The transfer is still `SETTLED` at response time; the flip to `RETURNED` is asynchronous — usually within a minute. Poll `GET /wire_out/{id}` or listen for the `WIRE_OUT.RETURNED` webhook to observe the transition.
  *
  * @param id - ID of the outbound wire transfer to return. Must be in `SETTLED` status.
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const simulateWireOutReturn = /*@__PURE__*/ /*#__PURE__*/ API.make(

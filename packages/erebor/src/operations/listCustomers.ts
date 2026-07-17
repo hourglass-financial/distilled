@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 
 // Input Schema
 export interface ListCustomersInput {
@@ -13,18 +14,24 @@ export interface ListCustomersInput {
   ereborVersion?: string;
 }
 export const ListCustomersInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  page_size: Schema.optional(Schema.Number),
-  starting_after: Schema.optional(Schema.String),
-  ending_before: Schema.optional(Schema.String),
-  status: Schema.optional(Schema.Literals(["ACTIVE", "OFFBOARDED"])),
-  program_id: Schema.optional(Schema.String),
-  custom_ref: Schema.optional(Schema.String),
+  page_size: Schema.optional(Schema.Number).pipe(T.HttpQuery("page_size")),
+  starting_after: Schema.optional(Schema.String).pipe(
+    T.HttpQuery("starting_after"),
+  ),
+  ending_before: Schema.optional(Schema.String).pipe(
+    T.HttpQuery("ending_before"),
+  ),
+  status: Schema.optional(Schema.Literals(["ACTIVE", "OFFBOARDED"])).pipe(
+    T.HttpQuery("status"),
+  ),
+  program_id: Schema.optional(Schema.String).pipe(T.HttpQuery("program_id")),
+  custom_ref: Schema.optional(Schema.String).pipe(T.HttpQuery("custom_ref")),
   ereborVersion: Schema.optional(Schema.String).pipe(
     T.HttpHeader("Erebor-Version"),
   ),
 }).pipe(
   T.Http({ method: "GET", path: "/customers" }),
-) as unknown as Schema.Codec<ListCustomersInput>;
+) as unknown as GeneratedStructCodec<ListCustomersInput>;
 
 // Output Schema
 export interface ListCustomersOutput {
@@ -72,7 +79,7 @@ export const ListCustomersOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   page_next: Schema.optional(Schema.NullOr(Schema.String)),
   page_prev: Schema.optional(Schema.NullOr(Schema.String)),
   url: Schema.String,
-}) as unknown as Schema.Codec<ListCustomersOutput>;
+}) as unknown as GeneratedStructCodec<ListCustomersOutput>;
 
 // The operation
 /**
@@ -85,7 +92,7 @@ export const ListCustomersOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
  * @param ending_before - Cursor for pagination (exclusive end)
  * @param program_id - Filter by program ID
  * @param custom_ref - Filter by exact `custom_ref` match (case-sensitive, up to 255 characters).
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const listCustomers = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

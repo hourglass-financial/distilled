@@ -27,10 +27,17 @@
 import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
-import { makeAPI } from "@distilled.cloud/core/client";
+import {
+  type ApiErrorClass,
+  isErrorClassAllowedForOperation,
+  makeAPI,
+} from "@distilled.cloud/core/client";
 import { parseRetryAfterForStatus } from "@distilled.cloud/core/retry-after";
 import {
   HTTP_STATUS_MAP,
+  DEFAULT_ERRORS,
+  type DefaultErrors,
+  Forbidden,
   UnknownEreborError,
   EreborParseError,
   EreborValidationError,
@@ -43,11 +50,16 @@ export { UnknownEreborError } from "./errors.ts";
 import { Credentials } from "./credentials.ts";
 import { Retry } from "./retry.ts";
 
-type ClientError =
-  | InstanceType<(typeof HTTP_STATUS_MAP)[keyof typeof HTTP_STATUS_MAP]>
-  | EreborValidationError
+const UNIVERSAL_ERROR_CLASSES = [...DEFAULT_ERRORS, Forbidden] as const;
+
+type UniversalClientError =
+  | DefaultErrors
+  | Forbidden
   | EreborFeatureNotEnabled
   | UnknownEreborError;
+type OperationClientError<E extends readonly ApiErrorClass[]> =
+  | UniversalClientError
+  | InstanceType<E[number]>;
 
 // API Error Response Schema
 const ApiErrorResponse = Schema.Struct({
@@ -85,19 +97,27 @@ const RETRYABLE_HTTP_STATUSES = new Set([423, 429, 500, 502, 503, 504]);
  *   reuses `error: "RATE_LIMITED"`, so the *message* is the only
  *   reliable disambiguator.
  */
-const matchError = (
+const matchError = <const E extends readonly ApiErrorClass[] = readonly []>(
   status: number,
   errorBody: unknown,
-  _errors?: readonly unknown[],
+  errors?: E,
   headers?: Record<string, string | undefined>,
-): Effect.Effect<never, ClientError> => {
+): Effect.Effect<never, OperationClientError<E>> => {
   try {
     const parsed = Schema.decodeUnknownSync(ApiErrorResponse)(errorBody);
     const message = parsed.message ?? parsed.error ?? "";
 
     // 422 — surface structured field errors rather than dropping them
     // into a bare UnprocessableEntity instance.
-    if (status === 422 && parsed.error === "VALIDATION_ERROR") {
+    if (
+      status === 422 &&
+      parsed.error === "VALIDATION_ERROR" &&
+      isErrorClassAllowedForOperation(
+        EreborValidationError,
+        errors,
+        UNIVERSAL_ERROR_CLASSES,
+      )
+    ) {
       return Effect.fail(
         new EreborValidationError({
           message,
@@ -105,7 +125,7 @@ const matchError = (
           field: parsed.field,
           error_details: parsed.error_details,
         }),
-      );
+      ) as Effect.Effect<never, OperationClientError<E>>;
     }
 
     // 429 — Erebor folds permission/feature-gate failures ("feature not
@@ -119,13 +139,25 @@ const matchError = (
       );
     }
 
-    const ErrorClass = (HTTP_STATUS_MAP as any)[status];
-    if (ErrorClass) {
+    const ErrorClass = (HTTP_STATUS_MAP as Record<number, ApiErrorClass>)[
+      status
+    ];
+    if (
+      ErrorClass &&
+      isErrorClassAllowedForOperation(
+        ErrorClass,
+        errors,
+        UNIVERSAL_ERROR_CLASSES,
+      )
+    ) {
       const args: { message: string; retryAfter?: unknown } = { message };
       if (RETRYABLE_HTTP_STATUSES.has(status)) {
         args.retryAfter = parseRetryAfterForStatus(status, headers);
       }
-      return Effect.fail(new ErrorClass(args));
+      return Effect.fail(new ErrorClass(args)) as Effect.Effect<
+        never,
+        OperationClientError<E>
+      >;
     }
     return Effect.fail(
       new UnknownEreborError({
@@ -142,7 +174,12 @@ const matchError = (
 /**
  * Erebor API client.
  */
-export const API = makeAPI<Credentials, never, ClientError, EreborParseError>({
+export const API = makeAPI<
+  Credentials,
+  never,
+  UniversalClientError,
+  EreborParseError
+>({
   credentials: Credentials as any,
   getBaseUrl: (creds: any) => creds.apiBaseUrl,
   getAuthHeaders: (creds: any): Record<string, string> => ({

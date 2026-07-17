@@ -1,11 +1,13 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import {
   BadRequest,
   NotFound,
   Conflict,
   UnprocessableEntity,
+  EreborValidationError,
 } from "../errors.ts";
 
 // Input Schema
@@ -42,7 +44,7 @@ export const CreateOnboardingInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   custom_fields: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
 }).pipe(
   T.Http({ method: "POST", path: "/onboardings" }),
-) as unknown as Schema.Codec<CreateOnboardingInput>;
+) as unknown as GeneratedStructCodec<CreateOnboardingInput>;
 
 // Output Schema
 export interface CreateOnboardingOutput {
@@ -97,7 +99,7 @@ export const CreateOnboardingOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
     ),
     rejection_reason: Schema.optional(Schema.NullOr(Schema.String)),
   },
-) as unknown as Schema.Codec<CreateOnboardingOutput>;
+) as unknown as GeneratedStructCodec<CreateOnboardingOutput>;
 
 // The operation
 /**
@@ -111,11 +113,11 @@ export const CreateOnboardingOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
  * Supplying neither field returns `400`. An unrecognised `program_id` (or one you do not manage) returns `404`.
  * On approval the `ONBOARDING.APPROVED` event always fires. The `DEPOSIT_ACCOUNT.PENDING` / `DEPOSIT_ACCOUNT.OPEN` events only fire when the Onboarding was created with `deposit_account_template_id` (either alone or alongside a matching `program_id`).
  *
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
- * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
+ * @param ereborIdempotencyKey - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
- * @param Erebor-Simulation-Scenario - **Sandbox only.** Forces a simulated onboarding outcome so you can exercise success and failure paths. Ignored in production, where onboardings always go through real review.
+ * @param ereborSimulationScenario - **Sandbox only.** Forces a simulated onboarding outcome so you can exercise success and failure paths. Ignored in production, where onboardings always go through real review.
 
 | Value | Outcome |
 |-------|---------|
@@ -129,5 +131,11 @@ An unrecognized value is rejected with `400`. The header name aligns with the pl
 export const createOnboarding = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
   inputSchema: CreateOnboardingInput,
   outputSchema: CreateOnboardingOutput,
-  errors: [BadRequest, NotFound, Conflict, UnprocessableEntity] as const,
+  errors: [
+    BadRequest,
+    NotFound,
+    Conflict,
+    UnprocessableEntity,
+    EreborValidationError,
+  ] as const,
 }));

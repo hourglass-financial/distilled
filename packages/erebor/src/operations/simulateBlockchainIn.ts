@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, Forbidden, Conflict } from "../errors.ts";
 
 // Input Schema
@@ -27,7 +28,7 @@ export const SimulateBlockchainInInput =
     network: Schema.Literals(["BASE", "ETHEREUM", "INK", "SOLANA", "SUI"]),
   }).pipe(
     T.Http({ method: "POST", path: "/simulation/blockchain_in" }),
-  ) as unknown as Schema.Codec<SimulateBlockchainInInput>;
+  ) as unknown as GeneratedStructCodec<SimulateBlockchainInInput>;
 
 // Output Schema
 export interface SimulateBlockchainInOutput {
@@ -43,7 +44,7 @@ export const SimulateBlockchainInOutput =
       value: Schema.String,
     }),
     transaction_hash: Schema.String,
-  }) as unknown as Schema.Codec<SimulateBlockchainInOutput>;
+  }) as unknown as GeneratedStructCodec<SimulateBlockchainInOutput>;
 
 // The operation
 /**
@@ -52,9 +53,9 @@ export const SimulateBlockchainInOutput =
  * Simulate an inbound blockchain transfer for testing purposes. This endpoint is only available in the sandbox environment.
  * Creates a new inbound blockchain transfer that will be processed as if it was received on-chain.
  *
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
- * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
+ * @param ereborIdempotencyKey - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
  */
 export const simulateBlockchainIn = /*@__PURE__*/ /*#__PURE__*/ API.make(

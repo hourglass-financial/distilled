@@ -62,12 +62,12 @@
     }
   },
   "scripts": {
-    "typecheck": "tsc",
+    "typecheck": "tsc && tsc -p tsconfig.contract-test.json",
     "build": "tsc -b",
     "fmt": "oxfmt --write src",
     "lint": "oxlint --fix src",
-    "check": "tsc && oxlint src && oxfmt --check src",
-    "test": "bunx vitest run test --passWithNoTests",
+    "check": "bun run typecheck && oxlint src && oxfmt --check src",
+    "test": "tsc -p tsconfig.contract-test.json && bunx vitest run test --passWithNoTests",
     "publish:npm": "bun run build && bun publish --access public",
     "generate": "bun run scripts/generate.ts && oxlint --fix src && oxfmt --write src && oxfmt --write src",
     "specs:fetch": "git submodule update --force --init --recursive --depth=1 specs/openapi-spec && git -C specs/openapi-spec checkout -- .",

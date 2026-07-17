@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -17,7 +18,7 @@ export const GetDepositAccountInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
   },
 ).pipe(
   T.Http({ method: "GET", path: "/deposit_accounts/{id}" }),
-) as unknown as Schema.Codec<GetDepositAccountInput>;
+) as unknown as GeneratedStructCodec<GetDepositAccountInput>;
 
 // Output Schema
 export interface GetDepositAccountOutput {
@@ -235,7 +236,7 @@ export const GetDepositAccountOutput =
     custom_fields: Schema.optional(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
-  }) as unknown as Schema.Codec<GetDepositAccountOutput>;
+  }) as unknown as GeneratedStructCodec<GetDepositAccountOutput>;
 
 // The operation
 /**
@@ -244,7 +245,7 @@ export const GetDepositAccountOutput =
  * Retrieve a specific Deposit Account by ID
  *
  * @param id - Deposit Account ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const getDepositAccount = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

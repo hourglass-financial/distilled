@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 
 // Input Schema
 export interface ListDepositAccountTemplatesInput {
@@ -15,23 +16,29 @@ export interface ListDepositAccountTemplatesInput {
 }
 export const ListDepositAccountTemplatesInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    page_size: Schema.optional(Schema.Number),
-    starting_after: Schema.optional(Schema.String),
-    ending_before: Schema.optional(Schema.String),
+    page_size: Schema.optional(Schema.Number).pipe(T.HttpQuery("page_size")),
+    starting_after: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("starting_after"),
+    ),
+    ending_before: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("ending_before"),
+    ),
     deposit_account_type: Schema.optional(
       Schema.Literals(["DDA", "FBO", "OMNIBUS", "VIRTUAL_DDA"]),
-    ),
+    ).pipe(T.HttpQuery("deposit_account_type")),
     ownership_type: Schema.optional(
       Schema.Literals(["BUSINESS", "INDIVIDUAL"]),
+    ).pipe(T.HttpQuery("ownership_type")),
+    status: Schema.optional(Schema.Literals(["ENABLED", "DISABLED"])).pipe(
+      T.HttpQuery("status"),
     ),
-    status: Schema.optional(Schema.Literals(["ENABLED", "DISABLED"])),
-    program_id: Schema.optional(Schema.String),
+    program_id: Schema.optional(Schema.String).pipe(T.HttpQuery("program_id")),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
   }).pipe(
     T.Http({ method: "GET", path: "/deposit_account_templates" }),
-  ) as unknown as Schema.Codec<ListDepositAccountTemplatesInput>;
+  ) as unknown as GeneratedStructCodec<ListDepositAccountTemplatesInput>;
 
 // Output Schema
 export interface ListDepositAccountTemplatesOutput {
@@ -168,7 +175,7 @@ export const ListDepositAccountTemplatesOutput =
     page_next: Schema.optional(Schema.NullOr(Schema.String)),
     page_prev: Schema.optional(Schema.NullOr(Schema.String)),
     url: Schema.String,
-  }) as unknown as Schema.Codec<ListDepositAccountTemplatesOutput>;
+  }) as unknown as GeneratedStructCodec<ListDepositAccountTemplatesOutput>;
 
 // The operation
 /**
@@ -183,7 +190,7 @@ export const ListDepositAccountTemplatesOutput =
  * @param ownership_type - Filter by ownership type
  * @param status - Filter by template status
  * @param program_id - Filter by program ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const listDepositAccountTemplates = /*@__PURE__*/ /*#__PURE__*/ API.make(

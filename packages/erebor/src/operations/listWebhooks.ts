@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound } from "../errors.ts";
 import { SensitiveOutputNullableString } from "../sensitive.ts";
 import * as Redacted from "effect/Redacted";
@@ -16,20 +17,26 @@ export interface ListWebhooksInput {
   ereborVersion?: string;
 }
 export const ListWebhooksInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  page_size: Schema.optional(Schema.Number),
-  starting_after: Schema.optional(Schema.String),
-  ending_before: Schema.optional(Schema.String),
+  page_size: Schema.optional(Schema.Number).pipe(T.HttpQuery("page_size")),
+  starting_after: Schema.optional(Schema.String).pipe(
+    T.HttpQuery("starting_after"),
+  ),
+  ending_before: Schema.optional(Schema.String).pipe(
+    T.HttpQuery("ending_before"),
+  ),
   status: Schema.optional(
     Schema.Array(Schema.Literals(["ENABLED", "DISABLED", "ARCHIVED"])),
+  ).pipe(T.HttpQuery("status")),
+  webhook_url: Schema.optional(Schema.Array(Schema.String)).pipe(
+    T.HttpQuery("webhook_url"),
   ),
-  webhook_url: Schema.optional(Schema.Array(Schema.String)),
-  custom_ref: Schema.optional(Schema.String),
+  custom_ref: Schema.optional(Schema.String).pipe(T.HttpQuery("custom_ref")),
   ereborVersion: Schema.optional(Schema.String).pipe(
     T.HttpHeader("Erebor-Version"),
   ),
 }).pipe(
   T.Http({ method: "GET", path: "/webhooks" }),
-) as unknown as Schema.Codec<ListWebhooksInput>;
+) as unknown as GeneratedStructCodec<ListWebhooksInput>;
 
 // Output Schema
 export interface ListWebhooksOutput {
@@ -263,7 +270,7 @@ export const ListWebhooksOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   page_next: Schema.optional(Schema.NullOr(Schema.String)),
   page_prev: Schema.optional(Schema.NullOr(Schema.String)),
   url: Schema.String,
-}) as unknown as Schema.Codec<ListWebhooksOutput>;
+}) as unknown as GeneratedStructCodec<ListWebhooksOutput>;
 
 // The operation
 /**
@@ -277,7 +284,7 @@ export const ListWebhooksOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
  * @param status - Filter by webhook status. Repeat the param to filter on multiple statuses (ORed together).
  * @param webhook_url - Filter by exact webhook URL. Repeat the param to match on multiple URLs (ORed together).
  * @param custom_ref - Filter by exact `custom_ref` match (case-sensitive, up to 255 characters).
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const listWebhooks = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
