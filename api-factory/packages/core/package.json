@@ -1,0 +1,37 @@
+{
+  "name": "@hourglass-financial/api-factory-core",
+  "version": "0.0.0",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hourglass-financial/distilled",
+    "directory": "api-factory/packages/core"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "module": "src/index.ts",
+  "files": [
+    "lib",
+    "src"
+  ],
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "bun": "./src/index.ts",
+      "default": "./lib/index.js"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc && tsc -p tsconfig.test.json",
+    "build": "tsc -b",
+    "fmt": "oxfmt --write src test",
+    "lint": "oxlint --fix src test",
+    "check": "bun run typecheck && oxlint src test && oxfmt --check src test",
+    "test": "bunx vitest run test"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "@types/node": "catalog:",
+    "vitest": "catalog:"
+  }
+}

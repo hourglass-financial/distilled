@@ -56,9 +56,12 @@ codex exec -s read-only -C "<abs working root>" --ephemeral \
 - `< /dev/null` — REQUIRED. In non-TTY Bash, codex blocks forever waiting to append piped stdin ("Reading additional input from stdin..."). For long or quote-heavy prompts, Write the prompt to a file and use `- < promptfile` instead — same fix, zero shell-quoting.
 - `-o <file>` — codex writes ONLY its final message there. Read it; never parse the stdout transcript. Distinct paths per parallel wrapper.
 - `-s read-only` for investigation/review; `workspace-write` for implementation.
+- `--skip-git-repo-check` — required when `-C` targets a directory outside a git repo (e.g. a scratchpad); without it codex exits immediately with "Not inside a trusted directory".
+- **code-mode host gotcha (diagnosed + fixed 2026-07-17)**: codex spawns `codex-code-mode-host` as a sibling of *the path it was invoked as* — and only for `workspace-write` runs, so read-only probes pass and mask the break. Standalone installs symlink only `codex` into `~/.local/bin`, so PATH-spawned workspace-write runs fail every tool call with stderr `codex_core::tools::router: failed to spawn code-mode host …` — while the model may still *claim* success, so probe prompts must demand tool errors verbatim (never trust a bare success reply). Fixed on this machine: `ln -s ~/.codex/packages/standalone/current/bin/codex-code-mode-host ~/.local/bin/codex-code-mode-host` (routes through `current`, survives codex updates). If it recurs (fresh machine, reinstall), recreate the symlink or invoke by real path: `"$(realpath "$(command -v codex)")" exec …`.
 - `--ephemeral` — no session litter. `--output-schema <file>` — optional JSON-Schema-typed final message.
 - Model and reasoning effort come from `~/.codex/config.toml` (gpt-5.6 / high); override per-call with `-m` or `-c model_reasoning_effort=...` only when justified.
 - Overhead: ~10–15s per call; parallel wrappers verified safe.
+- Spawn path re-validated end-to-end 2026-07-17: direct Bash, Agent-tool thin wrapper, and workflow `agent()` slot each drove a `workspace-write` codex run that verifiably wrote a probe file to disk.
 
 ## Output contracts
 
