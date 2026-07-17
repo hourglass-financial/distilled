@@ -15,12 +15,15 @@ import {
   userManagement,
   type WorkosClient,
   type WorkosClientOptions,
+  type WorkosDecodeError,
+  type WorkosTransportError,
 } from "@hourglass-financial/api-factory-workos";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import * as Stream from "effect/Stream";
 import * as HttpClientModule from "effect/unstable/http/HttpClient";
+import * as HttpClientError from "effect/unstable/http/HttpClientError";
 import type * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import * as UrlParams from "effect/unstable/http/UrlParams";
@@ -139,6 +142,25 @@ describe("organizations", () => {
     const { run } = harness(() => ({ status: 200 }));
     const result = await run(organizations.delete({ id: "org_123" }));
     expect(result).toBeUndefined();
+  });
+
+  it("get — a 204 on a body-declaring operation fails honestly, not undefined", async () => {
+    const { run } = harness(() => ({ status: 204 }));
+    const error = await run(
+      organizations.get({ id: "org_123" }).pipe(Effect.flip),
+    );
+    expect(error._tag).toBe("WorkosDecodeError");
+  });
+
+  it("get — a redirect is not success: 302 falls back to UnknownWorkosError", async () => {
+    const { run } = harness(() => ({
+      status: 302,
+      body: { message: "moved" },
+    }));
+    const error = await run(
+      organizations.get({ id: "org_123" }).pipe(Effect.flip),
+    );
+    expect(error._tag).toBe("UnknownWorkosError");
   });
 
   it("list — serializes query params and follows the cursor via listItems", async () => {
@@ -294,5 +316,69 @@ describe("userManagement.authenticateWithPassword", () => {
       userManagement.authenticateWithPassword(authInput).pipe(Effect.flip),
     );
     expect(error._tag).toBe("UnknownWorkosError");
+  });
+
+  it("a decode failure keeps the token-bearing body redacted — tokens never print", async () => {
+    // Valid tokens, malformed `user`: the exact spec-drift scenario the SDK
+    // exists to surface must not itself leak the credentials.
+    const { run } = harness(() => ({
+      status: 200,
+      body: {
+        user: { object: "user" },
+        access_token: "leaky.jwt.token",
+        refresh_token: "leaky.refresh.token",
+      },
+    }));
+    const error = await run(
+      userManagement.authenticateWithPassword(authInput).pipe(Effect.flip),
+    );
+    expect(error._tag).toBe("WorkosDecodeError");
+    const decodeError = error as WorkosDecodeError;
+    expect(Redacted.isRedacted(decodeError.body)).toBe(true);
+    const printed = JSON.stringify(decodeError);
+    expect(printed).not.toContain("leaky.jwt.token");
+    expect(printed).not.toContain("leaky.refresh.token");
+    // ...while the raw body stays reachable for deliberate diagnosis.
+    expect(JSON.stringify(Redacted.value(decodeError.body!))).toContain(
+      "leaky.jwt.token",
+    );
+  });
+
+  it("a transport failure carries no secrets in its error chain", async () => {
+    const failing = HttpClientModule.make((request) =>
+      Effect.fail(
+        new HttpClientError.HttpClientError({
+          reason: new HttpClientError.TransportError({
+            request,
+            description: "socket reset",
+          }),
+        }),
+      ),
+    );
+    const layer = layerWith({ retry: Retry.disabled }).pipe(
+      Layer.provide(Layer.succeed(HttpClientModule.HttpClient, failing)),
+      Layer.provide(
+        credentialsOf({
+          apiKey: Redacted.make("sk_test_123"),
+          baseUrl: "https://api.workos.test",
+        }),
+      ),
+    );
+    const error = await Effect.runPromise(
+      userManagement
+        .authenticateWithPassword(authInput)
+        .pipe(Effect.flip, Effect.provide(layer)),
+    );
+    expect(error._tag).toBe("WorkosTransportError");
+    const transportError = error as WorkosTransportError;
+    // The cause is the secret-free summary, not the raw request-bearing error.
+    expect(transportError.cause).toMatchObject({
+      reason: "TransportError",
+      method: "POST",
+    });
+    const printed = JSON.stringify(transportError);
+    expect(printed).not.toContain("s3cret-password");
+    expect(printed).not.toContain("sk_secret");
+    expect(printed).not.toContain("sk_test_123");
   });
 });

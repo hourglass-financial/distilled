@@ -11,6 +11,7 @@
  * thing a consumer wires; everything else is a tree-shakeable operation import.
  */
 import {
+  Category,
   type ClassifiedErrorClass,
   makeMatchError,
   makeRunner,
@@ -19,10 +20,12 @@ import {
   retryAfterForStatus,
   Retry,
   type Runner,
+  summarizeHttpClientError,
 } from "@hourglass-financial/api-factory-core";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 import { HttpClient } from "effect/unstable/http/HttpClient";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
@@ -132,10 +135,31 @@ export const layerWith = (
         baseUrl,
         retry: options.retry ?? Retry.defaultPolicy,
         matchError,
+        // Only a genuine wire-level fault is the (retryable) transport error;
+        // every other HttpClientError reason (encode, response read/decode,
+        // invalid URL) is a non-retryable decode-class failure. Both carry a
+        // secret-free summary, never the raw error with its embedded request.
         toTransport: (cause) =>
-          new WorkosTransportError({ message: cause.message, cause }),
-        toDecode: (body, cause) =>
-          new WorkosDecodeError({ message: cause.message, body, cause }),
+          Category.isTransportError(cause)
+            ? new WorkosTransportError({
+                message: cause.reason.message,
+                cause: summarizeHttpClientError(cause),
+              })
+            : new WorkosDecodeError({
+                message: cause.reason.message,
+                cause: Redacted.make(summarizeHttpClientError(cause)),
+              }),
+        // The raw value and schema issue stay reachable via Redacted.value;
+        // the message is fixed text so no field value can leak through it.
+        toDecode: (phase, body, cause) =>
+          new WorkosDecodeError({
+            message:
+              phase === "request-encode"
+                ? "request input did not match the operation's input schema"
+                : "response body did not match the operation's output schema",
+            body: Redacted.make(body),
+            cause: Redacted.make(cause),
+          }),
       });
       return WorkosClient.of({ run });
     }),

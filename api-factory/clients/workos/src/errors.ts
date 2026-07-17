@@ -15,6 +15,7 @@ import {
   type Category,
   type ClassifiedErrorClass,
   DEFAULT_ERRORS as CORE_DEFAULT_ERRORS,
+  RedactedValue,
   STATUS_ERRORS as CORE_STATUS_ERRORS,
 } from "@hourglass-financial/api-factory-core";
 import * as Schema from "effect/Schema";
@@ -178,7 +179,12 @@ export class UnknownWorkosError extends Schema.TaggedErrorClass<UnknownWorkosErr
   };
 }
 
-/** A wire-level transport failure (DNS, connect/read timeout, socket reset). */
+/**
+ * A wire-level transport failure (DNS, connect/read timeout, socket reset).
+ * `cause` is core's secret-free `TransportFailure` summary — never the raw
+ * `HttpClientError`, whose `reason` carries the full request (encoded body
+ * and auth header included).
+ */
 export class WorkosTransportError extends Schema.TaggedErrorClass<WorkosTransportError>()(
   "WorkosTransportError",
   { message: Schema.String, cause: Schema.Unknown },
@@ -189,10 +195,20 @@ export class WorkosTransportError extends Schema.TaggedErrorClass<WorkosTranspor
   };
 }
 
-/** A response body (or request input) that did not match its schema. */
+/**
+ * A request or response the SDK could not encode, read, or decode against its
+ * schema. The offending value and the underlying issue are preserved for
+ * diagnosis but wrapped in `Redacted` — a token-bearing response that fails
+ * decode on an unrelated field must not leak secrets through a logged error.
+ * Unwrap deliberately: `Redacted.value(error.body)` / `Redacted.value(error.cause)`.
+ */
 export class WorkosDecodeError extends Schema.TaggedErrorClass<WorkosDecodeError>()(
   "WorkosDecodeError",
-  { message: Schema.String, body: Schema.Unknown, cause: Schema.Unknown },
+  {
+    message: Schema.String,
+    body: Schema.optional(RedactedValue),
+    cause: RedactedValue,
+  },
 ) {
   static readonly meta: Category.ErrorMeta = {
     category: "parse",

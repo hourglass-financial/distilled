@@ -46,8 +46,9 @@ program.pipe(Effect.provide(layerFromEnv)); // one layer: fetch transport + env 
   public names — the spec's internal codenames (`UserlandSessions*`, `Create0`)
   are gone. The delete operation is exported as the API's own verb via
   `export { deleteOrganization as delete }` (`delete` is a reserved declaration
-  name but a legal export name). Operations whose inputs are entirely optional
-  take `input = {}`, so `organizations.list()` works bare.
+  name but a legal export name). Read operations whose inputs are entirely
+  optional take `input = {}`, so `organizations.list()` works bare; `create`
+  requires its input — the spec marks `name` required, so the type does too.
 - **Rejected:** v1's dual `OperationMethod` (yieldable *and* callable) — bespoke
   `SingleShotGen` cleverness an emitter shouldn't reproduce, for a niche win.
   Also rejected: a class/service-object surface (breaks per-op tree-shaking at
@@ -71,6 +72,10 @@ program.pipe(Effect.provide(layerFromEnv)); // one layer: fetch transport + env 
   *encoded* keys — sound only under the snake-case-verbatim convention below; a
   generator introducing key renames must bind encoded names (documented in
   `operation.ts`).
+- **Status semantics:** success is strictly 2xx; 1xx/3xx route through the
+  matcher and surface as `UnknownWorkosError`. Only a void-output operation
+  resolves `undefined` — a 204 on a body-declaring operation is a contract
+  violation and fails as a decode error rather than lying with `undefined`.
 
 ## 3. Service / layer shape
 
@@ -136,9 +141,10 @@ program.pipe(Effect.provide(layerFromEnv)); // one layer: fetch transport + env 
 - **Choice:** cursor pagination on `Stream.paginate`, exposed as three flat
   exports per paginated op: `list` (one page), `listPages` (Stream of pages),
   `listItems` (Stream of items), with typed accessor projections — no `getPath`
-  string traversal. The cursor config's `clear: ["before"]` drops the
-  opposing-direction cursor once the walk advances: a caller-supplied `before`
-  scopes the first request only, never rides alongside `after`.
+  string traversal. The first request sends the caller's input verbatim; from
+  page two on, the forward cursor is substituted and the config's
+  `clear: ["before"]` drops the opposing-direction cursor — a caller-supplied
+  `before` scopes the first request only, never rides alongside `after`.
 - **Rejected:** `Object.assign(list, { pages, items })` (the sol draft, v1's
   shape) — reads nicely as `list.items()`, but a function-with-properties can't
   be tree-shaken per-accessor at 200-op scale and is a less uniform emit.
@@ -153,6 +159,14 @@ program.pipe(Effect.provide(layerFromEnv)); // one layer: fetch transport + env 
   `refresh_token`). Inputs are strictly `Redacted<string>`: callers wrap with
   `Redacted.make(...)`, so a plaintext secret never travels inside an input
   object.
+- **Error carriers are leak paths too** (found in adversarial review): a raw
+  `HttpClientError` embeds the full request (encoded body + auth header), and
+  a raw response body may contain tokens even when decode fails on an
+  unrelated field. So `WorkosTransportError.cause` is core's secret-free
+  `TransportFailure` summary, and `WorkosDecodeError` wraps its `body`/`cause`
+  in `Redacted` with a fixed message — diagnosis via `Redacted.value(...)`,
+  never via a logged error. Contract tests stringify both error shapes and
+  assert no secret appears.
 - **Rejected:** a hand-rolled `decodeTo` transform (duplicates the stdlib and
   lacks its error-redaction middleware); v1's `Sensitive` union
   (`A | Redacted<A>`, needed an `as any`, lets plaintext ride along);

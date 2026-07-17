@@ -16,8 +16,8 @@ export * from "./errors.ts";
 // Static error classification (categories + retry disposition).
 export * as Category from "./category.ts";
 
-// Redaction helper for request/response secrets.
-export { Secret } from "./redaction.ts";
+// Redaction helpers for request/response secrets and error-carried values.
+export { RedactedValue, Secret } from "./redaction.ts";
 
 // Retry policy + honest `Retry-After` backoff schedule.
 export * as Retry from "./retry.ts";
@@ -41,6 +41,7 @@ export {
 
 // Request execution + error matching.
 export {
+  type DecodePhase,
   type ErrorEnvelope,
   makeMatchError,
   makeRunner,
@@ -48,4 +49,6 @@ export {
   type MatchErrorConfig,
   type Runner,
   type RunnerDeps,
+  summarizeHttpClientError,
+  type TransportFailure,
 } from "./client.ts";

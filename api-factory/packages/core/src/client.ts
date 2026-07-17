@@ -136,6 +136,32 @@ export const makeMatchError =
 // Request execution
 // ---------------------------------------------------------------------------
 
+/** Which half of the pipeline a schema failure occurred in. */
+export type DecodePhase = "request-encode" | "response-decode";
+
+/**
+ * Secret-free summary of an HTTP client failure, safe to carry on a vendor
+ * error. Never wrap the `HttpClientError` itself: its `reason` holds the full
+ * request — encoded body and auth header included — so preserving it verbatim
+ * would leak secrets through any logged error chain.
+ */
+export interface TransportFailure {
+  readonly reason: string;
+  readonly message: string;
+  readonly method: string;
+  readonly url: string;
+}
+
+/** Build a {@link TransportFailure} from a raw HTTP client error. */
+export const summarizeHttpClientError = (
+  error: HttpClientError.HttpClientError,
+): TransportFailure => ({
+  reason: error.reason._tag,
+  message: error.reason.message,
+  method: error.reason.request.method,
+  url: error.reason.request.url,
+});
+
 /** Everything the runner captures once, at layer-construction time. */
 export interface RunnerDeps<Extra> {
   readonly http: HttpClient;
@@ -145,8 +171,16 @@ export interface RunnerDeps<Extra> {
   readonly matchError: MatchError<Extra>;
   /** Wrap a raw transport fault into a vendor-tagged error. */
   readonly toTransport: (cause: HttpClientError.HttpClientError) => Extra;
-  /** Wrap a request-encode or response-decode failure into a vendor error. */
-  readonly toDecode: (body: unknown, cause: SchemaError) => Extra;
+  /**
+   * Wrap a request-encode or response-decode failure into a vendor error.
+   * `body` may contain secrets (a token-bearing response that failed on an
+   * unrelated field) — implementations must not store it printably.
+   */
+  readonly toDecode: (
+    phase: DecodePhase,
+    body: unknown,
+    cause: SchemaError,
+  ) => Extra;
 }
 
 /**
@@ -176,7 +210,7 @@ export const makeRunner =
     const attempt = Effect.gen(function* () {
       const wire = (yield* Schema.encodeUnknownEffect(op.input)(input).pipe(
         Effect.catchTag("SchemaError", (cause) =>
-          Effect.fail(deps.toDecode(input, cause)),
+          Effect.fail(deps.toDecode("request-encode", input, cause)),
         ),
       )) as Record<string, unknown>;
 
@@ -200,7 +234,10 @@ export const makeRunner =
 
       const response = yield* deps.http.execute(request);
 
-      if (response.status >= 400) {
+      // Success is strictly 2xx. 1xx/3xx are neither success nor a documented
+      // error table entry, so they route through the matcher and surface as
+      // the vendor's Unknown fallback rather than a bogus decode attempt.
+      if (response.status < 200 || response.status >= 300) {
         const errorBody = yield* readBody(response);
         return yield* deps.matchError(
           response.status,
@@ -210,14 +247,17 @@ export const makeRunner =
         );
       }
 
-      if (response.status === 204 || isVoidOutput(op)) {
+      // Only a void-output operation resolves to undefined. A 204 on an
+      // operation that declares a body is a contract violation and falls
+      // through to decode, failing honestly instead of returning undefined.
+      if (isVoidOutput(op)) {
         return undefined as Out;
       }
 
       const rawBody = yield* readBody(response);
       return yield* Schema.decodeUnknownEffect(op.output)(rawBody).pipe(
         Effect.catchTag("SchemaError", (cause) =>
-          Effect.fail(deps.toDecode(rawBody, cause)),
+          Effect.fail(deps.toDecode("response-decode", rawBody, cause)),
         ),
       );
     });

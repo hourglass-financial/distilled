@@ -78,8 +78,10 @@ const step =
     );
 
 /**
- * Stream every page of a cursor-paginated list, starting from an optional
- * initial cursor already present on `input`.
+ * Stream every page of a cursor-paginated list. The first request sends
+ * `input` exactly as given (including any caller-supplied cursor, in either
+ * direction); from the second page on, the forward cursor is substituted and
+ * the `clear` params are dropped.
  */
 export const pages = <I, Page, Item, E, R>(
   fetchPage: (input: I) => Effect.Effect<Page, E, R>,
@@ -87,13 +89,14 @@ export const pages = <I, Page, Item, E, R>(
   config: CursorPagination<I, Page, Item>,
 ): Stream.Stream<Page, E, R> =>
   Stream.paginate(
-    initialCursor(input, config.cursorParam),
+    Option.none<string>(),
     step(fetchPage, input, config, (page) => [page]),
   );
 
 /**
  * Stream every item across every page of a cursor-paginated list — the common
- * "give me all of them" consumer path.
+ * "give me all of them" consumer path. First-request semantics match
+ * {@link pages}.
  */
 export const items = <I, Page, Item, E, R>(
   fetchPage: (input: I) => Effect.Effect<Page, E, R>,
@@ -101,14 +104,6 @@ export const items = <I, Page, Item, E, R>(
   config: CursorPagination<I, Page, Item>,
 ): Stream.Stream<Item, E, R> =>
   Stream.paginate(
-    initialCursor(input, config.cursorParam),
+    Option.none<string>(),
     step(fetchPage, input, config, config.items),
   );
-
-const initialCursor = <I>(
-  input: I,
-  cursorParam: keyof I & string,
-): Option.Option<string> => {
-  const value = (input as Record<string, unknown>)[cursorParam];
-  return typeof value === "string" ? Option.some(value) : Option.none();
-};

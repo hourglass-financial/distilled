@@ -18,6 +18,7 @@
  *   wrap with `Redacted.make(...)` instead; the secret is redacted from the
  *   moment it crosses the SDK boundary.
  */
+import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
 /**
@@ -34,3 +35,12 @@ import * as Schema from "effect/Schema";
  */
 export const Secret: Schema.RedactedFromValue<typeof Schema.String> =
   Schema.RedactedFromValue(Schema.String);
+
+/**
+ * Opaque schema for an already-`Redacted` value carried on an error class.
+ * Never decoded from the wire — a `declare` guard suffices. Use for error
+ * fields that must preserve a possibly-secret value for deliberate diagnosis
+ * (`Redacted.value(...)`) without ever printing it.
+ */
+export const RedactedValue: Schema.declare<Redacted.Redacted<unknown>> =
+  Schema.declare(Redacted.isRedacted);

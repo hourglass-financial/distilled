@@ -31,7 +31,7 @@ import { Organization, OrganizationList } from "../schemas.ts";
 // ===========================================================================
 
 export const CreateOrganizationInput = Schema.Struct({
-  name: Schema.optional(Schema.String),
+  name: Schema.String,
   domains: Schema.optional(Schema.Array(Schema.String)),
   domain_data: Schema.optional(
     Schema.Array(
@@ -71,7 +71,7 @@ const createOp: Operation<
 
 /** Create an organization in the current environment. */
 export const create = (
-  input: CreateOrganizationInput = {},
+  input: CreateOrganizationInput,
 ): Effect.Effect<
   Organization,
   WorkosError<typeof createErrors>,
