@@ -142,8 +142,8 @@ const isEffectLike = (value: unknown): value is Effect.Effect<unknown> =>
 export interface ClientConfig<
   Creds,
   RequestOptions = never,
-  ProviderError = unknown,
-  ParseError = unknown,
+  ProviderError = never,
+  ParseError = never,
 > {
   /** The credentials service tag */
   credentials: Context.ServiceClass<any, any, Effect.Effect<Creds>>;
@@ -186,12 +186,12 @@ export interface ClientConfig<
    *  60s) — override with \`DISTILLED_SERVER_RETRY_HINT_CAP_MS\` or provide
    *  \`ServerRetryHintCapMs\` via \`Layer\` from \`@distilled.cloud/core/retry\`.
    */
-  matchError: (
+  matchError: <const E extends readonly ApiErrorClass[] = readonly []>(
     status: number,
     body: unknown,
-    errors?: readonly ApiErrorClass[],
+    errors?: E,
     headers?: Record<string, string | undefined>,
-  ) => Effect.Effect<never, ProviderError>;
+  ) => Effect.Effect<never, ProviderError | InstanceType<E[number]>>;
 
   /** Parse error class for schema decode failures */
   ParseError: new (props: { body: unknown; cause: unknown }) => ParseError;
@@ -552,8 +552,8 @@ function setBinaryBody(
 export const makeAPI = <
   Creds,
   RequestOptions = never,
-  ProviderError = unknown,
-  ParseError = unknown,
+  ProviderError = never,
+  ParseError = never,
 >(
   config: ClientConfig<Creds, RequestOptions, ProviderError, ParseError>,
 ) => {

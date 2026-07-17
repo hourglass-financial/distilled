@@ -19,6 +19,10 @@ import { Retry } from "../retry.ts";
 
 export type { OperationMethod, PaginatedOperationMethod };
 
+type ClientError =
+  | InstanceType<(typeof HTTP_STATUS_MAP)[keyof typeof HTTP_STATUS_MAP]>
+  | UnknownGCPError;
+
 /**
  * Shape of GCP's standard error envelope as documented at
  * <https://cloud.google.com/apis/design/errors>:
@@ -104,7 +108,7 @@ const matchError = (
   errorBody: unknown,
   _errors?: readonly unknown[],
   headers?: Record<string, string | undefined>,
-): Effect.Effect<never, unknown> => {
+): Effect.Effect<never, ClientError> => {
   const ErrorClass = (HTTP_STATUS_MAP as any)[status];
   const envelope = extractGCPErrorEnvelope(errorBody);
   const message = envelope.message ?? String(status);
@@ -149,7 +153,7 @@ type EnvelopeAddenda = {
  * `T.Service({ rootUrl })` trait; `core.makeAPI` reads the trait when
  * `getBaseUrl` returns an empty string.
  */
-const _API = makeAPI<Credentials>({
+const _API = makeAPI<Credentials, never, ClientError, GCPParseError>({
   credentials: Credentials as any,
   getBaseUrl: (_creds: any) => "",
   getAuthHeaders: (creds: any) => ({

@@ -1,5 +1,5 @@
 {
-  "description": "Restore the documented cursor pagination input on the Account relations endpoint and keep its polymorphic JSON:API resources runtime-decodable. Persona's full account/transaction component expansion exceeds the shared bounded-inline-union limit, so this operation retains the verified type/id discriminants and preserves all provider-defined resource members as additional properties.",
+  "description": "Restore the documented cursor pagination input on the Account relations endpoint and require the JSON:API type/id envelope while retaining Persona's complete account and transaction resource schemas.",
   "patches": [
     {
       "op": "add",
@@ -12,26 +12,20 @@
       "op": "replace",
       "path": "/paths/~1accounts~1{accountId}~1relations/get/responses/200/content/application~1json/schema/properties/data/items/oneOf/0",
       "value": {
-        "type": "object",
-        "additionalProperties": true,
-        "required": ["type", "id"],
-        "properties": {
-          "type": { "type": "string", "const": "account" },
-          "id": { "type": "string" }
-        }
+        "allOf": [
+          { "$ref": "#/components/schemas/account" },
+          { "type": "object", "required": ["type", "id"] }
+        ]
       }
     },
     {
       "op": "replace",
       "path": "/paths/~1accounts~1{accountId}~1relations/get/responses/200/content/application~1json/schema/properties/data/items/oneOf/1",
       "value": {
-        "type": "object",
-        "additionalProperties": true,
-        "required": ["type", "id"],
-        "properties": {
-          "type": { "type": "string", "const": "transaction" },
-          "id": { "type": "string" }
-        }
+        "allOf": [
+          { "$ref": "#/components/schemas/transaction" },
+          { "type": "object", "required": ["type", "id"] }
+        ]
       }
     }
   ]

@@ -2,12 +2,17 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
+import * as Schema from "effect/Schema";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
-import { describe, expect, it } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
 import { Credentials } from "../../src/credentials.ts";
-import { accountsListAllRelations } from "../../src/operations/accountsListAllRelations.ts";
+import {
+  AccountsListAllRelationsOutput,
+  accountsListAllRelations,
+  type AccountsListAllRelationsOutput as AccountsListAllRelationsResult,
+} from "../../src/operations/accountsListAllRelations.ts";
 
 // Coverage: fixture-dependent
 describe("accountsListAllRelations", () => {
@@ -30,7 +35,12 @@ describe("accountsListAllRelations", () => {
                   {
                     type: "account",
                     id: "act_related",
-                    attributes: { tenantField: "preserved" },
+                    attributes: {
+                      "reference-id": "related-account",
+                      fields: {
+                        "tenant-score": { type: "number", value: 42 },
+                      },
+                    },
                   },
                 ],
                 links: { prev: null, next: null },
@@ -66,8 +76,39 @@ describe("accountsListAllRelations", () => {
     expect(output.data[0]).toMatchObject({
       type: "account",
       id: "act_related",
-      attributes: { tenantField: "preserved" },
+      attributes: {
+        "reference-id": "related-account",
+        fields: {
+          "tenant-score": { type: "number", value: 42 },
+        },
+      },
     });
+  });
+
+  it("retains documented relation types in both TypeScript and runtime schemas", () => {
+    type Relation = AccountsListAllRelationsResult["data"][number];
+    type AccountRelation = Extract<Relation, { type: "account" }>;
+
+    expectTypeOf<AccountRelation["attributes"]>().toMatchTypeOf<
+      | {
+          "reference-id"?: string | null;
+          fields?: Record<string, unknown>;
+        }
+      | undefined
+    >();
+
+    expect(() =>
+      Schema.decodeUnknownSync(AccountsListAllRelationsOutput)({
+        data: [
+          {
+            type: "account",
+            id: "act_related",
+            attributes: { "reference-id": 42 },
+          },
+        ],
+        links: { prev: null, next: null },
+      }),
+    ).toThrow();
   });
 
   it.todo(

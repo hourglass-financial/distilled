@@ -208,6 +208,12 @@ export interface GeneratorConfig {
   generatedSchemaImport?: string;
   /** Naming strategy for generated query/header input fields (default: camelCase) */
   parameterFieldNaming?: "camelCase" | "preserve";
+  // HOURGLASS PATCH: Allow a provider config to retain a verified large
+  // finite union without removing the shared generator's expansion guard.
+  /** Maximum rendered size of an inline oneOf/anyOf before falling back to unknown */
+  maxUnionInlineChars?: number;
+  /** Per-operation overrides for finite unions that safely exceed the default */
+  operationUnionInlineChars?: Readonly<Record<string, number>>;
   /** Whether to include operation-specific error imports (default: true for Swagger, false for OAS 3.x) */
   includeOperationErrors?: boolean;
   /** Status codes to error class name mapping (only used when includeOperationErrors=true) */
@@ -441,6 +447,20 @@ function getBaseType(prop: SchemaObject): string | undefined {
 const MAX_UNION_INLINE_DEPTH = 4;
 const MAX_UNION_INLINE_CHARS = 4000;
 
+function maxUnionInlineCharsForOperation(
+  config: Pick<
+    GeneratorConfig,
+    "maxUnionInlineChars" | "operationUnionInlineChars"
+  >,
+  operationId: string,
+): number {
+  return (
+    config.operationUnionInlineChars?.[operationId] ??
+    config.maxUnionInlineChars ??
+    MAX_UNION_INLINE_CHARS
+  );
+}
+
 /**
  * Whether every branch of a `oneOf`/`anyOf` is a scalar — a primitive,
  * an enum, or a pure-null branch — with no `$ref`, nested union, object, or
@@ -541,6 +561,7 @@ interface SchemaGenerationContext {
   usesSensitiveNullableString: boolean;
   usesSensitiveOutputString: boolean;
   usesSensitiveOutputNullableString: boolean;
+  maxUnionInlineChars: number;
 }
 
 function generateAdditionalPropertiesValueSchema(
@@ -788,7 +809,9 @@ function openApiTypeToEffectSchema(
           ? `Schema.Union([${uniq.join(", ")}], { mode: "oneOf" })`
           : `Schema.Union([${uniq.join(", ")}])`;
     const result = nullable ? `Schema.NullOr(${base})` : base;
-    return result.length > MAX_UNION_INLINE_CHARS ? "Schema.Unknown" : result;
+    return result.length > (ctx?.maxUnionInlineChars ?? MAX_UNION_INLINE_CHARS)
+      ? "Schema.Unknown"
+      : result;
   }
 
   // HOURGLASS PATCH: OpenAPI 3.1 `const` is a literal constraint, including
@@ -1052,7 +1075,9 @@ function openApiTypeToTsType(
     if (uniq.length === 0) return nullable ? "null" : "never";
     const base = uniq.join(" | ");
     const result = nullable ? `${base} | null` : base;
-    return result.length > MAX_UNION_INLINE_CHARS ? "unknown" : result;
+    return result.length > (ctx?.maxUnionInlineChars ?? MAX_UNION_INLINE_CHARS)
+      ? "unknown"
+      : result;
   }
 
   if (prop.const !== undefined) {
@@ -1881,6 +1906,7 @@ function generateOutputSchema(
   operationId: string,
   responseSchema: SchemaObject | null,
   spec: any,
+  maxUnionInlineChars: number = MAX_UNION_INLINE_CHARS,
 ): {
   outputSchemaCode: string;
   outputSchemaName: string;
@@ -1898,6 +1924,7 @@ function generateOutputSchema(
     usesSensitiveNullableString: false,
     usesSensitiveOutputString: false,
     usesSensitiveOutputNullableString: false,
+    maxUnionInlineChars,
   };
 
   if (!responseSchema) {
@@ -2163,6 +2190,10 @@ export function generateFromOpenAPI(config: GeneratorConfig): void {
             usesSensitiveNullableString: false,
             usesSensitiveOutputString: false,
             usesSensitiveOutputNullableString: false,
+            maxUnionInlineChars: maxUnionInlineCharsForOperation(
+              config,
+              operation.operationId,
+            ),
           };
 
           const { inputSchemaCode, inputSchemaName } =
@@ -2190,6 +2221,7 @@ export function generateFromOpenAPI(config: GeneratorConfig): void {
             operation.operationId,
             responseSchema,
             swagger,
+            maxUnionInlineCharsForOperation(config, operation.operationId),
           );
           const sensitiveImports = {
             usesSensitiveString:
@@ -2289,6 +2321,10 @@ export function generateFromOpenAPI(config: GeneratorConfig): void {
             usesSensitiveNullableString: false,
             usesSensitiveOutputString: false,
             usesSensitiveOutputNullableString: false,
+            maxUnionInlineChars: maxUnionInlineCharsForOperation(
+              config,
+              operation.operationId,
+            ),
           };
 
           // Detect operations that should opt out of automatic redirect-
@@ -2334,7 +2370,12 @@ export function generateFromOpenAPI(config: GeneratorConfig): void {
             outputSchemaCode,
             outputSchemaName,
             sensitiveImports: outputSensitiveImports,
-          } = generateOutputSchema(operation.operationId, responseSchema, oas);
+          } = generateOutputSchema(
+            operation.operationId,
+            responseSchema,
+            oas,
+            maxUnionInlineCharsForOperation(config, operation.operationId),
+          );
           const sensitiveImports = {
             usesSensitiveString:
               sensitiveCtx.usesSensitiveString ||

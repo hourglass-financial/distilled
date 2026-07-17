@@ -19,7 +19,11 @@ const workspaceDir = resolve(packageRoot, "../../.ai-workspace");
 mkdirSync(workspaceDir, { recursive: true });
 const fixtureOutputDirs: string[] = [];
 
-function generateFixture(specName: string, outputPrefix: string): string {
+function generateFixture(
+  specName: string,
+  outputPrefix: string,
+  config: Partial<Parameters<typeof generateFromOpenAPI>[0]> = {},
+): string {
   const outputDir = mkdtempSync(join(workspaceDir, outputPrefix));
   const generatedDir = join(outputDir, "operations");
   const specPath = join(packageRoot, "test/fixtures/openapi", specName);
@@ -38,6 +42,7 @@ function generateFixture(specName: string, outputPrefix: string): string {
       "src/openapi-additional-properties.ts",
     ),
     generatedSchemaImport: resolve(packageRoot, "src/generated-schema.ts"),
+    ...config,
   });
   return generatedDir;
 }
@@ -50,6 +55,8 @@ let createMembershipSource: string;
 let updateMembershipInputSchema: Schema.Top;
 let createMembershipInputSchema: Schema.Top;
 let constUnionSource: string;
+let limitedConstUnionSource: string;
+let operationLimitedConstUnionSource: string;
 let constUnionOutputSchema: Schema.Top;
 
 beforeAll(async () => {
@@ -100,6 +107,29 @@ beforeAll(async () => {
     /* @vite-ignore */ `${pathToFileURL(constUnionPath).href}?test=${Date.now()}`
   );
   constUnionOutputSchema = constUnionGenerated.GetConstEventOutput;
+
+  const limitedConstUnionGeneratedDir = generateFixture(
+    "const-discriminated-union.json",
+    "distilled-openapi-limited-const-union-",
+    { maxUnionInlineChars: 1 },
+  );
+  limitedConstUnionSource = readFileSync(
+    join(limitedConstUnionGeneratedDir, "getConstEvent.ts"),
+    "utf8",
+  );
+
+  const operationLimitedConstUnionGeneratedDir = generateFixture(
+    "const-discriminated-union.json",
+    "distilled-openapi-operation-limited-const-union-",
+    {
+      maxUnionInlineChars: 1,
+      operationUnionInlineChars: { getConstEvent: 4_000 },
+    },
+  );
+  operationLimitedConstUnionSource = readFileSync(
+    join(operationLimitedConstUnionGeneratedDir, "getConstEvent.ts"),
+    "utf8",
+  );
 });
 
 afterAll(() => {
@@ -148,6 +178,15 @@ describe("OpenAPI 3.1 const and generated struct typing", () => {
     );
     expect(constUnionSource).toContain(
       "import type { GeneratedStructCodec } from",
+    );
+  });
+
+  it("supports operation-specific union limits without widening other operations", () => {
+    expect(limitedConstUnionSource).toContain("data: unknown");
+    expect(limitedConstUnionSource).toContain("data: Schema.Unknown");
+    expect(operationLimitedConstUnionSource).toContain('type: "alpha"');
+    expect(operationLimitedConstUnionSource).toContain(
+      'Schema.Literals(["alpha"])',
     );
   });
 });

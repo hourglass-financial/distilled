@@ -78,33 +78,371 @@ export const AccountsListAllRelationsInput =
 // Output Schema
 export interface AccountsListAllRelationsOutput {
   data: ReadonlyArray<
-    | ({ type: "account"; id: string } & Record<string, unknown>)
-    | ({ type: "transaction"; id: string } & Record<string, unknown>)
+    | {
+        type: "account";
+        id: string;
+        attributes?: {
+          "reference-id"?: string | null;
+          "account-type-name"?: string;
+          "created-at"?: string;
+          "updated-at"?: string;
+          "redacted-at"?: string | null;
+          fields?: {
+            name?: {
+              type?: string;
+              value?: {
+                first?: { type?: string; value?: string | null };
+                middle?: { type?: string; value?: string | null };
+                last?: { type?: string; value?: string | null };
+              };
+            };
+            address?: {
+              type?: string;
+              value?: {
+                street_1?: { type?: string; value?: string | null };
+                street_2?: { type?: string; value?: string | null };
+                subdivision?: { type?: string; value?: string | null };
+                city?: { type?: string; value?: string | null };
+                postal_code?: { type?: string; value?: string | null };
+                country_code?: { type?: string; value?: string | null };
+              };
+            };
+            identification_numbers?: {
+              type?: string;
+              value?: ReadonlyArray<{
+                type?: string;
+                value?: {
+                  identification_class?: { type?: string; value?: string };
+                  identification_number?: { type?: string; value?: string };
+                  issuing_country?: { type?: string; value?: string };
+                  hashed_identification_number?: {
+                    type?: string;
+                    value?: string | null;
+                  };
+                };
+              }>;
+            };
+            birthdate?: { type?: string; value?: string | null };
+            phone_number?: { type?: string; value?: string | null };
+            email_address?: { type?: string; value?: string | null };
+            selfie_photo?: {
+              type?: "file";
+              value?: {
+                filename?: string;
+                url?: string;
+                "byte-size"?: number;
+              } | null;
+            };
+          } & Record<string, unknown>;
+          tags?: ReadonlyArray<unknown>;
+          "account-status"?: string;
+        };
+        relationships?: {
+          "account-type"?: { data?: { id?: string; type?: "account-type" } };
+        };
+      }
+    | {
+        id: string;
+        type: "transaction";
+        attributes?: {
+          status?: string;
+          "reference-id"?: string | null;
+          fields?: Record<string, unknown>;
+          tags?: ReadonlyArray<string>;
+          "created-at"?: string;
+          "updated-at"?: string | null;
+        };
+        relationships?: {
+          reviewer?: { data?: { type?: string; id?: string } | null };
+          "transaction-label"?: {
+            data?: { type?: "transaction-label"; id?: string } | null;
+          };
+          "transaction-type"?: {
+            data?: { type?: "transaction-type"; id?: string };
+          };
+          "related-objects"?: {
+            data?: ReadonlyArray<{ type?: string; id?: string }>;
+          };
+        };
+      }
   >;
   links: { prev: string | null; next: string | null };
 }
 export const AccountsListAllRelationsOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data: Schema.Array(
-      Schema.Union(
-        [
-          StructWithAdditionalProperties(
+      Schema.Union([
+        Schema.Struct({
+          type: Schema.Literals(["account"]),
+          id: Schema.String,
+          attributes: Schema.optional(
             Schema.Struct({
-              type: Schema.Literals(["account"]),
-              id: Schema.String,
+              "reference-id": Schema.optional(Schema.NullOr(Schema.String)),
+              "account-type-name": Schema.optional(Schema.String),
+              "created-at": Schema.optional(Schema.String),
+              "updated-at": Schema.optional(Schema.String),
+              "redacted-at": Schema.optional(Schema.NullOr(Schema.String)),
+              fields: Schema.optional(
+                StructWithAdditionalProperties(
+                  Schema.Struct({
+                    name: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        value: Schema.optional(
+                          Schema.Struct({
+                            first: Schema.optional(
+                              Schema.Struct({
+                                type: Schema.optional(Schema.String),
+                                value: Schema.optional(
+                                  Schema.NullOr(Schema.String),
+                                ),
+                              }),
+                            ),
+                            middle: Schema.optional(
+                              Schema.Struct({
+                                type: Schema.optional(Schema.String),
+                                value: Schema.optional(
+                                  Schema.NullOr(Schema.String),
+                                ),
+                              }),
+                            ),
+                            last: Schema.optional(
+                              Schema.Struct({
+                                type: Schema.optional(Schema.String),
+                                value: Schema.optional(
+                                  Schema.NullOr(Schema.String),
+                                ),
+                              }),
+                            ),
+                          }),
+                        ),
+                      }),
+                    ),
+                    address: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        value: Schema.optional(
+                          Schema.Struct({
+                            street_1: Schema.optional(
+                              Schema.Struct({
+                                type: Schema.optional(Schema.String),
+                                value: Schema.optional(
+                                  Schema.NullOr(Schema.String),
+                                ),
+                              }),
+                            ),
+                            street_2: Schema.optional(
+                              Schema.Struct({
+                                type: Schema.optional(Schema.String),
+                                value: Schema.optional(
+                                  Schema.NullOr(Schema.String),
+                                ),
+                              }),
+                            ),
+                            subdivision: Schema.optional(
+                              Schema.Struct({
+                                type: Schema.optional(Schema.String),
+                                value: Schema.optional(
+                                  Schema.NullOr(Schema.String),
+                                ),
+                              }),
+                            ),
+                            city: Schema.optional(
+                              Schema.Struct({
+                                type: Schema.optional(Schema.String),
+                                value: Schema.optional(
+                                  Schema.NullOr(Schema.String),
+                                ),
+                              }),
+                            ),
+                            postal_code: Schema.optional(
+                              Schema.Struct({
+                                type: Schema.optional(Schema.String),
+                                value: Schema.optional(
+                                  Schema.NullOr(Schema.String),
+                                ),
+                              }),
+                            ),
+                            country_code: Schema.optional(
+                              Schema.Struct({
+                                type: Schema.optional(Schema.String),
+                                value: Schema.optional(
+                                  Schema.NullOr(Schema.String),
+                                ),
+                              }),
+                            ),
+                          }),
+                        ),
+                      }),
+                    ),
+                    identification_numbers: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        value: Schema.optional(
+                          Schema.Array(
+                            Schema.Struct({
+                              type: Schema.optional(Schema.String),
+                              value: Schema.optional(
+                                Schema.Struct({
+                                  identification_class: Schema.optional(
+                                    Schema.Struct({
+                                      type: Schema.optional(Schema.String),
+                                      value: Schema.optional(Schema.String),
+                                    }),
+                                  ),
+                                  identification_number: Schema.optional(
+                                    Schema.Struct({
+                                      type: Schema.optional(Schema.String),
+                                      value: Schema.optional(Schema.String),
+                                    }),
+                                  ),
+                                  issuing_country: Schema.optional(
+                                    Schema.Struct({
+                                      type: Schema.optional(Schema.String),
+                                      value: Schema.optional(Schema.String),
+                                    }),
+                                  ),
+                                  hashed_identification_number: Schema.optional(
+                                    Schema.Struct({
+                                      type: Schema.optional(Schema.String),
+                                      value: Schema.optional(
+                                        Schema.NullOr(Schema.String),
+                                      ),
+                                    }),
+                                  ),
+                                }),
+                              ),
+                            }),
+                          ),
+                        ),
+                      }),
+                    ),
+                    birthdate: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        value: Schema.optional(Schema.NullOr(Schema.String)),
+                      }),
+                    ),
+                    phone_number: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        value: Schema.optional(Schema.NullOr(Schema.String)),
+                      }),
+                    ),
+                    email_address: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        value: Schema.optional(Schema.NullOr(Schema.String)),
+                      }),
+                    ),
+                    selfie_photo: Schema.optional(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.Literals(["file"])),
+                        value: Schema.optional(
+                          Schema.NullOr(
+                            Schema.Struct({
+                              filename: Schema.optional(Schema.String),
+                              url: Schema.optional(Schema.String),
+                              "byte-size": Schema.optional(Schema.Number),
+                            }),
+                          ),
+                        ),
+                      }),
+                    ),
+                  }),
+                  Schema.Unknown,
+                ),
+              ),
+              tags: Schema.optional(Schema.Array(Schema.Unknown)),
+              "account-status": Schema.optional(Schema.String),
             }),
-            Schema.Unknown,
           ),
-          StructWithAdditionalProperties(
+          relationships: Schema.optional(
             Schema.Struct({
-              type: Schema.Literals(["transaction"]),
-              id: Schema.String,
+              "account-type": Schema.optional(
+                Schema.Struct({
+                  data: Schema.optional(
+                    Schema.Struct({
+                      id: Schema.optional(Schema.String),
+                      type: Schema.optional(Schema.Literals(["account-type"])),
+                    }),
+                  ),
+                }),
+              ),
             }),
-            Schema.Unknown,
           ),
-        ],
-        { mode: "oneOf" },
-      ),
+        }),
+        Schema.Struct({
+          id: Schema.String,
+          type: Schema.Literals(["transaction"]),
+          attributes: Schema.optional(
+            Schema.Struct({
+              status: Schema.optional(Schema.String),
+              "reference-id": Schema.optional(Schema.NullOr(Schema.String)),
+              fields: Schema.optional(
+                Schema.Record(Schema.String, Schema.Unknown),
+              ),
+              tags: Schema.optional(Schema.Array(Schema.String)),
+              "created-at": Schema.optional(Schema.String),
+              "updated-at": Schema.optional(Schema.NullOr(Schema.String)),
+            }),
+          ),
+          relationships: Schema.optional(
+            Schema.Struct({
+              reviewer: Schema.optional(
+                Schema.Struct({
+                  data: Schema.optional(
+                    Schema.NullOr(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        id: Schema.optional(Schema.String),
+                      }),
+                    ),
+                  ),
+                }),
+              ),
+              "transaction-label": Schema.optional(
+                Schema.Struct({
+                  data: Schema.optional(
+                    Schema.NullOr(
+                      Schema.Struct({
+                        type: Schema.optional(
+                          Schema.Literals(["transaction-label"]),
+                        ),
+                        id: Schema.optional(Schema.String),
+                      }),
+                    ),
+                  ),
+                }),
+              ),
+              "transaction-type": Schema.optional(
+                Schema.Struct({
+                  data: Schema.optional(
+                    Schema.Struct({
+                      type: Schema.optional(
+                        Schema.Literals(["transaction-type"]),
+                      ),
+                      id: Schema.optional(Schema.String),
+                    }),
+                  ),
+                }),
+              ),
+              "related-objects": Schema.optional(
+                Schema.Struct({
+                  data: Schema.optional(
+                    Schema.Array(
+                      Schema.Struct({
+                        type: Schema.optional(Schema.String),
+                        id: Schema.optional(Schema.String),
+                      }),
+                    ),
+                  ),
+                }),
+              ),
+            }),
+          ),
+        }),
+      ]),
     ),
     links: Schema.Struct({
       prev: Schema.NullOr(Schema.String),

@@ -42,6 +42,12 @@ import {
 import { Retry } from "../retry.ts";
 import { getErrorMatchers, type ErrorMatcher } from "../traits.ts";
 
+type ClientError =
+  | InstanceType<(typeof HTTP_STATUS_MAP)[keyof typeof HTTP_STATUS_MAP]>
+  | CloudflareHttpError
+  | InvalidRoute
+  | UnknownCloudflareError;
+
 // ============================================================================
 // Global Cloudflare error codes
 // ============================================================================
@@ -68,7 +74,7 @@ const GLOBAL_RATE_LIMIT_MESSAGE =
  */
 const GLOBAL_ERROR_CODE_MAP: Record<
   number,
-  (message: string, headers?: Record<string, string | undefined>) => unknown
+  (message: string, headers?: Record<string, string | undefined>) => ClientError
 > = {
   // "Please wait and consider throttling your request speed"
   // Cloudflare returns this code inside an envelope with arbitrary HTTP status
@@ -144,7 +150,7 @@ function httpStatusError(
   status: number,
   body?: string,
   headers?: Record<string, string | undefined>,
-): unknown {
+): ClientError {
   const ErrorClass = HTTP_STATUS_MAP[status as keyof typeof HTTP_STATUS_MAP];
   const message = body ?? String(status);
   if (ErrorClass) {
@@ -288,12 +294,14 @@ function findMatchingError(
  * per-operation error schemas and decode the winning TaggedError class.
  * Returns `undefined` when no matcher fires.
  */
-const tryMatchOperationError = (
-  errors: readonly ApiErrorClass[] | undefined,
+const tryMatchOperationError = <const E extends readonly ApiErrorClass[]>(
+  errors: E | undefined,
   errorCode: number | undefined,
   status: number,
   errorMessage: string,
-): Effect.Effect<never, unknown> | undefined => {
+):
+  | Effect.Effect<never, InstanceType<E[number]> | UnknownCloudflareError>
+  | undefined => {
   if (!errors || errors.length === 0) return undefined;
 
   const errorSchemas = new Map<string, Schema.Top>();
@@ -336,18 +344,18 @@ const tryMatchOperationError = (
           }),
         ),
     ),
-  ) as Effect.Effect<never, unknown>;
+  ) as Effect.Effect<never, InstanceType<E[number]> | UnknownCloudflareError>;
 };
 
 /**
  * Match a Cloudflare API error response using per-operation error schemas.
  */
-const matchError = (
+const matchError = <const E extends readonly ApiErrorClass[] = readonly []>(
   status: number,
   errorBody: unknown,
-  errors?: readonly ApiErrorClass[],
+  errors?: E,
   headers?: Record<string, string | undefined>,
-): Effect.Effect<never, unknown> => {
+): Effect.Effect<never, ClientError | InstanceType<E[number]>> => {
   // Handle non-JSON error responses (e.g., HTML from malformed URLs, 520 pages)
   const isNonJsonError =
     typeof errorBody === "object" &&
@@ -547,7 +555,7 @@ export const transformCloudflareRequestParts = ({
   };
 };
 
-const _API = makeAPI<Credentials>({
+const _API = makeAPI<Credentials, never, ClientError, CloudflareDecodeError>({
   credentials: Credentials as any,
   getBaseUrl: (creds: any) => creds.apiBaseUrl,
   getAuthHeaders: formatHeaders as any,
