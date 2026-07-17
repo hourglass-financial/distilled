@@ -13,7 +13,6 @@ import {
 } from "vitest";
 import { generateFromOpenAPI } from "../scripts/generate-openapi.ts";
 import { StructWithAdditionalProperties } from "../src/openapi-additional-properties.ts";
-import * as T from "../src/traits.ts";
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const workspaceDir = resolve(packageRoot, "../../.ai-workspace");
@@ -38,6 +37,7 @@ function generateFixture(specName: string, outputPrefix: string): string {
       packageRoot,
       "src/openapi-additional-properties.ts",
     ),
+    generatedSchemaImport: resolve(packageRoot, "src/generated-schema.ts"),
   });
   return generatedDir;
 }
@@ -49,6 +49,8 @@ let updateMembershipSource: string;
 let createMembershipSource: string;
 let updateMembershipInputSchema: Schema.Top;
 let createMembershipInputSchema: Schema.Top;
+let constUnionSource: string;
+let constUnionOutputSchema: Schema.Top;
 
 beforeAll(async () => {
   const generatedDir = generateFixture(
@@ -87,12 +89,67 @@ beforeAll(async () => {
   );
   updateMembershipInputSchema = updateMembership.UpdateMembershipInput;
   createMembershipInputSchema = createMembership.CreateMembershipInput;
+
+  const constUnionGeneratedDir = generateFixture(
+    "const-discriminated-union.json",
+    "distilled-openapi-const-union-",
+  );
+  const constUnionPath = join(constUnionGeneratedDir, "getConstEvent.ts");
+  constUnionSource = readFileSync(constUnionPath, "utf8");
+  const constUnionGenerated = await import(
+    /* @vite-ignore */ `${pathToFileURL(constUnionPath).href}?test=${Date.now()}`
+  );
+  constUnionOutputSchema = constUnionGenerated.GetConstEventOutput;
 });
 
 afterAll(() => {
   for (const outputDir of fixtureOutputDirs) {
     rmSync(outputDir, { recursive: true, force: true });
   }
+});
+
+describe("OpenAPI 3.1 const and generated struct typing", () => {
+  it("preserves const-discriminated unions in runtime and TypeScript output", () => {
+    expect(
+      Schema.decodeUnknownSync(constUnionOutputSchema)({
+        data: {
+          type: "alpha",
+          payload: "ok",
+          revision: 2,
+          enabled: true,
+        },
+      }),
+    ).toEqual({
+      data: { type: "alpha", payload: "ok", revision: 2, enabled: true },
+    });
+    expect(() =>
+      Schema.decodeUnknownSync(constUnionOutputSchema)({
+        data: {
+          type: "gamma",
+          payload: "nope",
+          revision: 2,
+          enabled: true,
+        },
+      }),
+    ).toThrow();
+
+    expect(constUnionSource).toContain('type: "alpha"');
+    expect(constUnionSource).toContain('Schema.Literals(["alpha"])');
+    expect(constUnionSource).toContain("revision: 2");
+    expect(constUnionSource).toContain("Schema.Literals([2])");
+    expect(constUnionSource).toContain("enabled: true");
+    expect(constUnionSource).toContain("Schema.Literals([true])");
+    expect(constUnionSource).toContain('{ mode: "oneOf" }');
+  });
+
+  it("exports top-level structs with a compact structural field view", () => {
+    expect(constUnionSource).toContain(
+      "GeneratedStructCodec<GetConstEventOutput>",
+    );
+    expect(constUnionSource).toContain(
+      "import type { GeneratedStructCodec } from",
+    );
+  });
 });
 
 const validInput = {

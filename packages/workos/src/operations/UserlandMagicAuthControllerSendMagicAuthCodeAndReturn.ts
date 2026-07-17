@@ -1,43 +1,44 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
 export interface UserlandMagicAuthControllerSendMagicAuthCodeAndReturnInput {
-  email?: string;
+  email: string;
   invitation_token?: string;
 }
 export const UserlandMagicAuthControllerSendMagicAuthCodeAndReturnInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    email: Schema.optional(Schema.String),
+    email: Schema.String,
     invitation_token: Schema.optional(Schema.String),
   }).pipe(
     T.Http({ method: "POST", path: "/user_management/magic_auth" }),
-  ) as unknown as Schema.Codec<UserlandMagicAuthControllerSendMagicAuthCodeAndReturnInput>;
+  ) as unknown as GeneratedStructCodec<UserlandMagicAuthControllerSendMagicAuthCodeAndReturnInput>;
 
 // Output Schema
 export interface UserlandMagicAuthControllerSendMagicAuthCodeAndReturnOutput {
-  object?: string;
-  id?: string;
-  user_id?: string;
-  email?: string;
-  expires_at?: string;
-  created_at?: string;
-  updated_at?: string;
-  code?: string;
+  object: "magic_auth";
+  id: string;
+  user_id: string;
+  email: string;
+  expires_at: string;
+  created_at: string;
+  updated_at: string;
+  code: string;
 }
 export const UserlandMagicAuthControllerSendMagicAuthCodeAndReturnOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    id: Schema.optional(Schema.String),
-    user_id: Schema.optional(Schema.String),
-    email: Schema.optional(Schema.String),
-    expires_at: Schema.optional(Schema.String),
-    created_at: Schema.optional(Schema.String),
-    updated_at: Schema.optional(Schema.String),
-    code: Schema.optional(Schema.String),
-  }) as unknown as Schema.Codec<UserlandMagicAuthControllerSendMagicAuthCodeAndReturnOutput>;
+    object: Schema.Literals(["magic_auth"]),
+    id: Schema.String,
+    user_id: Schema.String,
+    email: Schema.String,
+    expires_at: Schema.String,
+    created_at: Schema.String,
+    updated_at: Schema.String,
+    code: Schema.String,
+  }) as unknown as GeneratedStructCodec<UserlandMagicAuthControllerSendMagicAuthCodeAndReturnOutput>;
 
 // The operation
 /**

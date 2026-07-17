@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound, Conflict, UnprocessableEntity } from "../errors.ts";
 import { SensitiveOutputString } from "../sensitive.ts";
 import * as Redacted from "effect/Redacted";
@@ -11,11 +12,6 @@ export interface WebhookEndpointsControllerUpdateInput {
   endpoint_url?: string;
   status?: "enabled" | "disabled";
   events?: ReadonlyArray<
-    | "agent.registration.created"
-    | "agent.registration.claim.attempt.created"
-    | "agent.registration.claim.completed"
-    | "agent.registration.credential.issued"
-    | "agent.registration.organization.switched"
     | "authentication.email_verification_succeeded"
     | "authentication.magic_auth_failed"
     | "authentication.magic_auth_succeeded"
@@ -31,7 +27,6 @@ export interface WebhookEndpointsControllerUpdateInput {
     | "authentication.sso_succeeded"
     | "authentication.sso_timed_out"
     | "authentication.radar_risk_detected"
-    | "authentication.reauthentication_succeeded"
     | "api_key.created"
     | "api_key.revoked"
     | "api_key.updated"
@@ -95,6 +90,7 @@ export interface WebhookEndpointsControllerUpdateInput {
     | "pipes.connected_account.disconnected"
     | "pipes.connected_account.reauthorization_needed"
     | "session.created"
+    | "session.reauthenticated"
     | "session.revoked"
     | "waitlist_user.approved"
     | "waitlist_user.created"
@@ -109,11 +105,6 @@ export const WebhookEndpointsControllerUpdateInput =
     events: Schema.optional(
       Schema.Array(
         Schema.Literals([
-          "agent.registration.created",
-          "agent.registration.claim.attempt.created",
-          "agent.registration.claim.completed",
-          "agent.registration.credential.issued",
-          "agent.registration.organization.switched",
           "authentication.email_verification_succeeded",
           "authentication.magic_auth_failed",
           "authentication.magic_auth_succeeded",
@@ -129,7 +120,6 @@ export const WebhookEndpointsControllerUpdateInput =
           "authentication.sso_succeeded",
           "authentication.sso_timed_out",
           "authentication.radar_risk_detected",
-          "authentication.reauthentication_succeeded",
           "api_key.created",
           "api_key.revoked",
           "api_key.updated",
@@ -193,6 +183,7 @@ export const WebhookEndpointsControllerUpdateInput =
           "pipes.connected_account.disconnected",
           "pipes.connected_account.reauthorization_needed",
           "session.created",
+          "session.reauthenticated",
           "session.revoked",
           "waitlist_user.approved",
           "waitlist_user.created",
@@ -202,30 +193,30 @@ export const WebhookEndpointsControllerUpdateInput =
     ),
   }).pipe(
     T.Http({ method: "PATCH", path: "/webhook_endpoints/{id}" }),
-  ) as unknown as Schema.Codec<WebhookEndpointsControllerUpdateInput>;
+  ) as unknown as GeneratedStructCodec<WebhookEndpointsControllerUpdateInput>;
 
 // Output Schema
 export interface WebhookEndpointsControllerUpdateOutput {
-  object?: string;
-  id?: string;
-  endpoint_url?: string;
-  secret?: Redacted.Redacted<string>;
-  status?: "enabled" | "disabled";
-  events?: ReadonlyArray<string>;
-  created_at?: string;
-  updated_at?: string;
+  object: "webhook_endpoint";
+  id: string;
+  endpoint_url: string;
+  secret: Redacted.Redacted<string>;
+  status: "enabled" | "disabled";
+  events: ReadonlyArray<string>;
+  created_at: string;
+  updated_at: string;
 }
 export const WebhookEndpointsControllerUpdateOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    id: Schema.optional(Schema.String),
-    endpoint_url: Schema.optional(Schema.String),
-    secret: Schema.optional(SensitiveOutputString),
-    status: Schema.optional(Schema.Literals(["enabled", "disabled"])),
-    events: Schema.optional(Schema.Array(Schema.String)),
-    created_at: Schema.optional(Schema.String),
-    updated_at: Schema.optional(Schema.String),
-  }) as unknown as Schema.Codec<WebhookEndpointsControllerUpdateOutput>;
+    object: Schema.Literals(["webhook_endpoint"]),
+    id: Schema.String,
+    endpoint_url: Schema.String,
+    secret: SensitiveOutputString,
+    status: Schema.Literals(["enabled", "disabled"]),
+    events: Schema.Array(Schema.String),
+    created_at: Schema.String,
+    updated_at: Schema.String,
+  }) as unknown as GeneratedStructCodec<WebhookEndpointsControllerUpdateOutput>;
 
 // The operation
 /**

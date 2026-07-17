@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound } from "../errors.ts";
 
 // Input Schema
@@ -12,7 +13,7 @@ export const AuthenticationFactorsControllerDeleteInput =
     id: Schema.String.pipe(T.PathParam()),
   }).pipe(
     T.Http({ method: "DELETE", path: "/auth/factors/{id}" }),
-  ) as unknown as Schema.Codec<AuthenticationFactorsControllerDeleteInput>;
+  ) as unknown as GeneratedStructCodec<AuthenticationFactorsControllerDeleteInput>;
 
 // Output Schema
 export type AuthenticationFactorsControllerDeleteOutput = void;

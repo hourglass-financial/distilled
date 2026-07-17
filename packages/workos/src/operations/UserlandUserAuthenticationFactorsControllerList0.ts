@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
@@ -9,72 +10,68 @@ export interface UserlandUserAuthenticationFactorsControllerList0Input {
   before?: string;
   after?: string;
   limit?: number;
-  order?: string;
+  order?: "normal" | "desc" | "asc";
 }
 export const UserlandUserAuthenticationFactorsControllerList0Input =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     userlandUserId: Schema.String.pipe(T.PathParam()),
-    before: Schema.optional(Schema.String),
-    after: Schema.optional(Schema.String),
-    limit: Schema.optional(Schema.Number),
-    order: Schema.optional(Schema.String),
+    before: Schema.optional(Schema.String).pipe(T.HttpQuery("before")),
+    after: Schema.optional(Schema.String).pipe(T.HttpQuery("after")),
+    limit: Schema.optional(Schema.Number).pipe(T.HttpQuery("limit")),
+    order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])).pipe(
+      T.HttpQuery("order"),
+    ),
   }).pipe(
     T.Http({
       method: "GET",
       path: "/user_management/users/{userlandUserId}/auth_factors",
     }),
-  ) as unknown as Schema.Codec<UserlandUserAuthenticationFactorsControllerList0Input>;
+  ) as unknown as GeneratedStructCodec<UserlandUserAuthenticationFactorsControllerList0Input>;
 
 // Output Schema
 export interface UserlandUserAuthenticationFactorsControllerList0Output {
-  object?: string;
-  data?: ReadonlyArray<{
-    object?: string;
-    id?: string;
-    type?: "generic_otp" | "sms" | "totp" | "webauthn";
+  object: "list";
+  data: ReadonlyArray<{
+    object: "authentication_factor";
+    id: string;
+    type: "generic_otp" | "sms" | "totp" | "webauthn";
     user_id?: string;
     sms?: { phone_number: string };
     totp?: { issuer: string; user: string };
-    created_at?: string;
-    updated_at?: string;
+    created_at: string;
+    updated_at: string;
   }>;
-  list_metadata?: { before: string | null; after: string | null };
+  list_metadata: { before: string | null; after: string | null };
 }
 export const UserlandUserAuthenticationFactorsControllerList0Output =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    data: Schema.optional(
-      Schema.Array(
-        Schema.Struct({
-          object: Schema.optional(Schema.String),
-          id: Schema.optional(Schema.String),
-          type: Schema.optional(
-            Schema.Literals(["generic_otp", "sms", "totp", "webauthn"]),
-          ),
-          user_id: Schema.optional(Schema.String),
-          sms: Schema.optional(
-            Schema.Struct({
-              phone_number: Schema.String,
-            }),
-          ),
-          totp: Schema.optional(
-            Schema.Struct({
-              issuer: Schema.String,
-              user: Schema.String,
-            }),
-          ),
-          created_at: Schema.optional(Schema.String),
-          updated_at: Schema.optional(Schema.String),
-        }),
-      ),
-    ),
-    list_metadata: Schema.optional(
+    object: Schema.Literals(["list"]),
+    data: Schema.Array(
       Schema.Struct({
-        before: Schema.NullOr(Schema.String),
-        after: Schema.NullOr(Schema.String),
+        object: Schema.Literals(["authentication_factor"]),
+        id: Schema.String,
+        type: Schema.Literals(["generic_otp", "sms", "totp", "webauthn"]),
+        user_id: Schema.optional(Schema.String),
+        sms: Schema.optional(
+          Schema.Struct({
+            phone_number: Schema.String,
+          }),
+        ),
+        totp: Schema.optional(
+          Schema.Struct({
+            issuer: Schema.String,
+            user: Schema.String,
+          }),
+        ),
+        created_at: Schema.String,
+        updated_at: Schema.String,
       }),
     ),
-  }) as unknown as Schema.Codec<UserlandUserAuthenticationFactorsControllerList0Output>;
+    list_metadata: Schema.Struct({
+      before: Schema.NullOr(Schema.String),
+      after: Schema.NullOr(Schema.String),
+    }),
+  }) as unknown as GeneratedStructCodec<UserlandUserAuthenticationFactorsControllerList0Output>;
 
 // The operation
 /**

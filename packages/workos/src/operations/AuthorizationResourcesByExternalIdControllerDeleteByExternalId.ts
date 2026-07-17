@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, Forbidden, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
@@ -15,13 +16,15 @@ export const AuthorizationResourcesByExternalIdControllerDeleteByExternalIdInput
     organization_id: Schema.String.pipe(T.PathParam()),
     resource_type_slug: Schema.String.pipe(T.PathParam()),
     external_id: Schema.String.pipe(T.PathParam()),
-    cascade_delete: Schema.optional(Schema.Boolean),
+    cascade_delete: Schema.optional(Schema.Boolean).pipe(
+      T.HttpQuery("cascade_delete"),
+    ),
   }).pipe(
     T.Http({
       method: "DELETE",
       path: "/authorization/organizations/{organization_id}/resources/{resource_type_slug}/{external_id}",
     }),
-  ) as unknown as Schema.Codec<AuthorizationResourcesByExternalIdControllerDeleteByExternalIdInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationResourcesByExternalIdControllerDeleteByExternalIdInput>;
 
 // Output Schema
 export type AuthorizationResourcesByExternalIdControllerDeleteByExternalIdOutput =

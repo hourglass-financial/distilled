@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound } from "../errors.ts";
 
 // Input Schema
@@ -15,11 +16,11 @@ export const ApplicationCredentialsControllerListInput =
       method: "GET",
       path: "/connect/applications/{id}/client_secrets",
     }),
-  ) as unknown as Schema.Codec<ApplicationCredentialsControllerListInput>;
+  ) as unknown as GeneratedStructCodec<ApplicationCredentialsControllerListInput>;
 
 // Output Schema
 export type ApplicationCredentialsControllerListOutput = ReadonlyArray<{
-  object: string;
+  object: "connect_application_secret";
   id: string;
   secret_hint: string;
   last_used_at: string | null;
@@ -29,7 +30,7 @@ export type ApplicationCredentialsControllerListOutput = ReadonlyArray<{
 export const ApplicationCredentialsControllerListOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Array(
     Schema.Struct({
-      object: Schema.String,
+      object: Schema.Literals(["connect_application_secret"]),
       id: Schema.String,
       secret_hint: Schema.String,
       last_used_at: Schema.NullOr(Schema.String),

@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound } from "../errors.ts";
 
 // Input Schema
@@ -12,11 +13,11 @@ export const FeatureFlagsControllerEnableFlagInput =
     slug: Schema.String.pipe(T.PathParam()),
   }).pipe(
     T.Http({ method: "PUT", path: "/feature-flags/{slug}/enable" }),
-  ) as unknown as Schema.Codec<FeatureFlagsControllerEnableFlagInput>;
+  ) as unknown as GeneratedStructCodec<FeatureFlagsControllerEnableFlagInput>;
 
 // Output Schema
 export interface FeatureFlagsControllerEnableFlagOutput {
-  object: string;
+  object: "feature_flag";
   id: string;
   slug: string;
   name: string;
@@ -34,7 +35,7 @@ export interface FeatureFlagsControllerEnableFlagOutput {
 }
 export const FeatureFlagsControllerEnableFlagOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["feature_flag"]),
     id: Schema.String,
     slug: Schema.String,
     name: Schema.String,
@@ -51,7 +52,7 @@ export const FeatureFlagsControllerEnableFlagOutput =
     default_value: Schema.Boolean,
     created_at: Schema.String,
     updated_at: Schema.String,
-  }) as unknown as Schema.Codec<FeatureFlagsControllerEnableFlagOutput>;
+  }) as unknown as GeneratedStructCodec<FeatureFlagsControllerEnableFlagOutput>;
 
 // The operation
 /**

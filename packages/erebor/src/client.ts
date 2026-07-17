@@ -43,6 +43,12 @@ export { UnknownEreborError } from "./errors.ts";
 import { Credentials } from "./credentials.ts";
 import { Retry } from "./retry.ts";
 
+type ClientError =
+  | InstanceType<(typeof HTTP_STATUS_MAP)[keyof typeof HTTP_STATUS_MAP]>
+  | EreborValidationError
+  | EreborFeatureNotEnabled
+  | UnknownEreborError;
+
 // API Error Response Schema
 const ApiErrorResponse = Schema.Struct({
   error: Schema.optional(Schema.String),
@@ -84,7 +90,7 @@ const matchError = (
   errorBody: unknown,
   _errors?: readonly unknown[],
   headers?: Record<string, string | undefined>,
-): Effect.Effect<never, unknown> => {
+): Effect.Effect<never, ClientError> => {
   try {
     const parsed = Schema.decodeUnknownSync(ApiErrorResponse)(errorBody);
     const message = parsed.message ?? parsed.error ?? "";
@@ -136,7 +142,7 @@ const matchError = (
 /**
  * Erebor API client.
  */
-export const API = makeAPI<Credentials>({
+export const API = makeAPI<Credentials, never, ClientError, EreborParseError>({
   credentials: Credentials as any,
   getBaseUrl: (creds: any) => creds.apiBaseUrl,
   getAuthHeaders: (creds: any): Record<string, string> => ({

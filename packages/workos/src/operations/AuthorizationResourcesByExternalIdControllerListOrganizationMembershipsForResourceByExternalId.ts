@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import {
   BadRequest,
   Forbidden,
@@ -16,7 +17,7 @@ export interface AuthorizationResourcesByExternalIdControllerListOrganizationMem
   before?: string;
   after?: string;
   limit?: number;
-  order?: string;
+  order?: "normal" | "desc" | "asc";
   permission_slug: string;
   assignment?: "direct" | "indirect";
 }
@@ -25,24 +26,28 @@ export const AuthorizationResourcesByExternalIdControllerListOrganizationMembers
     organization_id: Schema.String.pipe(T.PathParam()),
     resource_type_slug: Schema.String.pipe(T.PathParam()),
     external_id: Schema.String.pipe(T.PathParam()),
-    before: Schema.optional(Schema.String),
-    after: Schema.optional(Schema.String),
-    limit: Schema.optional(Schema.Number),
-    order: Schema.optional(Schema.String),
-    permission_slug: Schema.String,
-    assignment: Schema.optional(Schema.Literals(["direct", "indirect"])),
+    before: Schema.optional(Schema.String).pipe(T.HttpQuery("before")),
+    after: Schema.optional(Schema.String).pipe(T.HttpQuery("after")),
+    limit: Schema.optional(Schema.Number).pipe(T.HttpQuery("limit")),
+    order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])).pipe(
+      T.HttpQuery("order"),
+    ),
+    permission_slug: Schema.String.pipe(T.HttpQuery("permission_slug")),
+    assignment: Schema.optional(Schema.Literals(["direct", "indirect"])).pipe(
+      T.HttpQuery("assignment"),
+    ),
   }).pipe(
     T.Http({
       method: "GET",
       path: "/authorization/organizations/{organization_id}/resources/{resource_type_slug}/{external_id}/organization_memberships",
     }),
-  ) as unknown as Schema.Codec<AuthorizationResourcesByExternalIdControllerListOrganizationMembershipsForResourceByExternalIdInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationResourcesByExternalIdControllerListOrganizationMembershipsForResourceByExternalIdInput>;
 
 // Output Schema
 export interface AuthorizationResourcesByExternalIdControllerListOrganizationMembershipsForResourceByExternalIdOutput {
-  object: string;
+  object: "list";
   data: ReadonlyArray<{
-    object: string;
+    object: "organization_membership";
     id: string;
     user_id: string;
     organization_id: string;
@@ -53,30 +58,30 @@ export interface AuthorizationResourcesByExternalIdControllerListOrganizationMem
     created_at: string;
     updated_at: string;
     user: {
-      object?: string;
-      id?: string;
-      first_name?: string | null;
-      last_name?: string | null;
+      object: "user";
+      id: string;
+      first_name: string | null;
+      last_name: string | null;
       name?: string | null;
-      profile_picture_url?: string | null;
-      email?: string;
-      email_verified?: boolean;
-      external_id?: string | null;
+      profile_picture_url: string | null;
+      email: string;
+      email_verified: boolean;
+      external_id: string | null;
       metadata?: Record<string, string>;
-      last_sign_in_at?: string | null;
+      last_sign_in_at: string | null;
       locale?: string | null;
-      created_at?: string;
-      updated_at?: string;
+      created_at: string;
+      updated_at: string;
     };
   }>;
   list_metadata: { before: string | null; after: string | null };
 }
 export const AuthorizationResourcesByExternalIdControllerListOrganizationMembershipsForResourceByExternalIdOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["list"]),
     data: Schema.Array(
       Schema.Struct({
-        object: Schema.String,
+        object: Schema.Literals(["organization_membership"]),
         id: Schema.String,
         user_id: Schema.String,
         organization_id: Schema.String,
@@ -89,22 +94,22 @@ export const AuthorizationResourcesByExternalIdControllerListOrganizationMembers
         created_at: Schema.String,
         updated_at: Schema.String,
         user: Schema.Struct({
-          object: Schema.optional(Schema.String),
-          id: Schema.optional(Schema.String),
-          first_name: Schema.optional(Schema.NullOr(Schema.String)),
-          last_name: Schema.optional(Schema.NullOr(Schema.String)),
+          object: Schema.Literals(["user"]),
+          id: Schema.String,
+          first_name: Schema.NullOr(Schema.String),
+          last_name: Schema.NullOr(Schema.String),
           name: Schema.optional(Schema.NullOr(Schema.String)),
-          profile_picture_url: Schema.optional(Schema.NullOr(Schema.String)),
-          email: Schema.optional(Schema.String),
-          email_verified: Schema.optional(Schema.Boolean),
-          external_id: Schema.optional(Schema.NullOr(Schema.String)),
+          profile_picture_url: Schema.NullOr(Schema.String),
+          email: Schema.String,
+          email_verified: Schema.Boolean,
+          external_id: Schema.NullOr(Schema.String),
           metadata: Schema.optional(
             Schema.Record(Schema.String, Schema.String),
           ),
-          last_sign_in_at: Schema.optional(Schema.NullOr(Schema.String)),
+          last_sign_in_at: Schema.NullOr(Schema.String),
           locale: Schema.optional(Schema.NullOr(Schema.String)),
-          created_at: Schema.optional(Schema.String),
-          updated_at: Schema.optional(Schema.String),
+          created_at: Schema.String,
+          updated_at: Schema.String,
         }),
       }),
     ),
@@ -112,7 +117,7 @@ export const AuthorizationResourcesByExternalIdControllerListOrganizationMembers
       before: Schema.NullOr(Schema.String),
       after: Schema.NullOr(Schema.String),
     }),
-  }) as unknown as Schema.Codec<AuthorizationResourcesByExternalIdControllerListOrganizationMembershipsForResourceByExternalIdOutput>;
+  }) as unknown as GeneratedStructCodec<AuthorizationResourcesByExternalIdControllerListOrganizationMembershipsForResourceByExternalIdOutput>;
 
 // The operation
 /**

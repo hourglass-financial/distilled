@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound, UnprocessableEntity } from "../errors.ts";
 import { SensitiveString } from "../sensitive.ts";
 import * as Redacted from "effect/Redacted";
@@ -27,11 +28,11 @@ export const ProviderControllerConfigureInput =
       method: "PUT",
       path: "/organizations/{organizationId}/data_integration_configurations/{slug}",
     }),
-  ) as unknown as Schema.Codec<ProviderControllerConfigureInput>;
+  ) as unknown as GeneratedStructCodec<ProviderControllerConfigureInput>;
 
 // Output Schema
 export interface ProviderControllerConfigureOutput {
-  object: string;
+  object: "data_integration_configuration";
   id: string;
   organization_id: string;
   slug: string;
@@ -50,7 +51,7 @@ export interface ProviderControllerConfigureOutput {
 }
 export const ProviderControllerConfigureOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["data_integration_configuration"]),
     id: Schema.String,
     organization_id: Schema.String,
     slug: Schema.String,
@@ -68,7 +69,7 @@ export const ProviderControllerConfigureOutput =
         redirect_uri: Schema.String,
       }),
     ),
-  }) as unknown as Schema.Codec<ProviderControllerConfigureOutput>;
+  }) as unknown as GeneratedStructCodec<ProviderControllerConfigureOutput>;
 
 // The operation
 /**

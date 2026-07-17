@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
@@ -23,13 +24,13 @@ export const UserApiKeysControllerCreateInput =
       method: "POST",
       path: "/user_management/users/{userId}/api_keys",
     }),
-  ) as unknown as Schema.Codec<UserApiKeysControllerCreateInput>;
+  ) as unknown as GeneratedStructCodec<UserApiKeysControllerCreateInput>;
 
 // Output Schema
 export interface UserApiKeysControllerCreateOutput {
-  object: string;
+  object: "api_key";
   id: string;
-  owner: { type: string; id: string; organization_id: string };
+  owner: { type: "user"; id: string; organization_id: string };
   name: string;
   obfuscated_value: string;
   last_used_at: string | null;
@@ -41,10 +42,10 @@ export interface UserApiKeysControllerCreateOutput {
 }
 export const UserApiKeysControllerCreateOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["api_key"]),
     id: Schema.String,
     owner: Schema.Struct({
-      type: Schema.String,
+      type: Schema.Literals(["user"]),
       id: Schema.String,
       organization_id: Schema.String,
     }),
@@ -56,7 +57,7 @@ export const UserApiKeysControllerCreateOutput =
     created_at: Schema.String,
     updated_at: Schema.String,
     value: Schema.String,
-  }) as unknown as Schema.Codec<UserApiKeysControllerCreateOutput>;
+  }) as unknown as GeneratedStructCodec<UserApiKeysControllerCreateOutput>;
 
 // The operation
 /**

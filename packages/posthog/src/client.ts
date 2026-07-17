@@ -19,6 +19,10 @@ import {
 export { UnknownPosthogError } from "./errors.ts";
 import { Credentials } from "./credentials.ts";
 
+type ClientError =
+  | InstanceType<(typeof HTTP_STATUS_MAP)[keyof typeof HTTP_STATUS_MAP]>
+  | UnknownPosthogError;
+
 /**
  * PostHog returns Django REST Framework style errors:
  *   { "type": "authentication_error",
@@ -50,7 +54,7 @@ const matchError = (
   errorBody: unknown,
   _errors?: readonly unknown[],
   headers?: Record<string, string | undefined>,
-): Effect.Effect<never, unknown> => {
+): Effect.Effect<never, ClientError> => {
   try {
     const parsed = Schema.decodeUnknownSync(ApiErrorResponse)(errorBody);
     const message = parsed.detail ?? parsed.message ?? parsed.error ?? "";
@@ -81,7 +85,7 @@ const matchError = (
  * Authenticates using a Personal API key sent as a Bearer token in the
  * `Authorization` header.
  */
-export const API = makeAPI<Credentials>({
+export const API = makeAPI<Credentials, never, ClientError, PosthogParseError>({
   credentials: Credentials as any,
   getBaseUrl: (creds: any) => creds.apiBaseUrl,
   getAuthHeaders: (creds: any): Record<string, string> => ({

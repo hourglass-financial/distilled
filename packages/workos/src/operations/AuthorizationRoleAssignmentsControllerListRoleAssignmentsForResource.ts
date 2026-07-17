@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -9,37 +10,35 @@ export interface AuthorizationRoleAssignmentsControllerListRoleAssignmentsForRes
   before?: string;
   after?: string;
   limit?: number;
-  order?: string;
+  order?: "normal" | "desc" | "asc";
   role_slug?: string;
 }
 export const AuthorizationRoleAssignmentsControllerListRoleAssignmentsForResourceInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     resource_id: Schema.String.pipe(T.PathParam()),
-    before: Schema.optional(Schema.String),
-    after: Schema.optional(Schema.String),
-    limit: Schema.optional(Schema.Number),
-    order: Schema.optional(Schema.String),
-    role_slug: Schema.optional(Schema.String),
+    before: Schema.optional(Schema.String).pipe(T.HttpQuery("before")),
+    after: Schema.optional(Schema.String).pipe(T.HttpQuery("after")),
+    limit: Schema.optional(Schema.Number).pipe(T.HttpQuery("limit")),
+    order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])).pipe(
+      T.HttpQuery("order"),
+    ),
+    role_slug: Schema.optional(Schema.String).pipe(T.HttpQuery("role_slug")),
   }).pipe(
     T.Http({
       method: "GET",
       path: "/authorization/resources/{resource_id}/role_assignments",
     }),
-  ) as unknown as Schema.Codec<AuthorizationRoleAssignmentsControllerListRoleAssignmentsForResourceInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationRoleAssignmentsControllerListRoleAssignmentsForResourceInput>;
 
 // Output Schema
 export interface AuthorizationRoleAssignmentsControllerListRoleAssignmentsForResourceOutput {
-  object: string;
+  object: "list";
   data: ReadonlyArray<{
-    object: string;
+    object: "role_assignment";
     id: string;
     organization_membership_id: string;
-    role: { slug?: string };
+    role: { slug: string };
     resource: { id: string; external_id: string; resource_type_slug: string };
-    source: {
-      type: "direct" | "group";
-      group_role_assignment_id: string | null;
-    };
     created_at: string;
     updated_at: string;
   }>;
@@ -47,23 +46,19 @@ export interface AuthorizationRoleAssignmentsControllerListRoleAssignmentsForRes
 }
 export const AuthorizationRoleAssignmentsControllerListRoleAssignmentsForResourceOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["list"]),
     data: Schema.Array(
       Schema.Struct({
-        object: Schema.String,
+        object: Schema.Literals(["role_assignment"]),
         id: Schema.String,
         organization_membership_id: Schema.String,
         role: Schema.Struct({
-          slug: Schema.optional(Schema.String),
+          slug: Schema.String,
         }),
         resource: Schema.Struct({
           id: Schema.String,
           external_id: Schema.String,
           resource_type_slug: Schema.String,
-        }),
-        source: Schema.Struct({
-          type: Schema.Literals(["direct", "group"]),
-          group_role_assignment_id: Schema.NullOr(Schema.String),
         }),
         created_at: Schema.String,
         updated_at: Schema.String,
@@ -73,7 +68,7 @@ export const AuthorizationRoleAssignmentsControllerListRoleAssignmentsForResourc
       before: Schema.NullOr(Schema.String),
       after: Schema.NullOr(Schema.String),
     }),
-  }) as unknown as Schema.Codec<AuthorizationRoleAssignmentsControllerListRoleAssignmentsForResourceOutput>;
+  }) as unknown as GeneratedStructCodec<AuthorizationRoleAssignmentsControllerListRoleAssignmentsForResourceOutput>;
 
 // The operation
 /**

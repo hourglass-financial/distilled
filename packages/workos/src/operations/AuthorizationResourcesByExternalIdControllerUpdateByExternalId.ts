@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import {
   BadRequest,
   Forbidden,
@@ -35,11 +36,11 @@ export const AuthorizationResourcesByExternalIdControllerUpdateByExternalIdInput
       method: "PATCH",
       path: "/authorization/organizations/{organization_id}/resources/{resource_type_slug}/{external_id}",
     }),
-  ) as unknown as Schema.Codec<AuthorizationResourcesByExternalIdControllerUpdateByExternalIdInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationResourcesByExternalIdControllerUpdateByExternalIdInput>;
 
 // Output Schema
 export interface AuthorizationResourcesByExternalIdControllerUpdateByExternalIdOutput {
-  object: string;
+  object: "authorization_resource";
   name: string;
   description: string | null;
   organization_id: string;
@@ -52,7 +53,7 @@ export interface AuthorizationResourcesByExternalIdControllerUpdateByExternalIdO
 }
 export const AuthorizationResourcesByExternalIdControllerUpdateByExternalIdOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["authorization_resource"]),
     name: Schema.String,
     description: Schema.NullOr(Schema.String),
     organization_id: Schema.String,
@@ -62,7 +63,7 @@ export const AuthorizationResourcesByExternalIdControllerUpdateByExternalIdOutpu
     resource_type_slug: Schema.String,
     created_at: Schema.String,
     updated_at: Schema.String,
-  }) as unknown as Schema.Codec<AuthorizationResourcesByExternalIdControllerUpdateByExternalIdOutput>;
+  }) as unknown as GeneratedStructCodec<AuthorizationResourcesByExternalIdControllerUpdateByExternalIdOutput>;
 
 // The operation
 /**

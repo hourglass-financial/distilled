@@ -1,16 +1,17 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
 export interface ApplicationsControllerCreateInput {
-  name?: string;
-  application_type?: string;
+  name: string;
+  application_type: "oauth" | "m2m";
   description?: string | null;
   scopes?: ReadonlyArray<string> | null;
   redirect_uris?: ReadonlyArray<{
-    uri?: string;
+    uri: string;
     default?: boolean | null;
   }> | null;
   uses_pkce?: boolean | null;
@@ -19,15 +20,18 @@ export interface ApplicationsControllerCreateInput {
 }
 export const ApplicationsControllerCreateInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    name: Schema.optional(Schema.String),
-    application_type: Schema.optional(Schema.String),
+    name: Schema.String,
+    application_type: Schema.Union([
+      Schema.Literals(["oauth"]),
+      Schema.Literals(["m2m"]),
+    ]),
     description: Schema.optional(Schema.NullOr(Schema.String)),
     scopes: Schema.optional(Schema.NullOr(Schema.Array(Schema.String))),
     redirect_uris: Schema.optional(
       Schema.NullOr(
         Schema.Array(
           Schema.Struct({
-            uri: Schema.optional(Schema.String),
+            uri: Schema.String,
             default: Schema.optional(Schema.NullOr(Schema.Boolean)),
           }),
         ),
@@ -40,11 +44,11 @@ export const ApplicationsControllerCreateInput =
     ),
   }).pipe(
     T.Http({ method: "POST", path: "/connect/applications" }),
-  ) as unknown as Schema.Codec<ApplicationsControllerCreateInput>;
+  ) as unknown as GeneratedStructCodec<ApplicationsControllerCreateInput>;
 
 // Output Schema
 export interface ApplicationsControllerCreateOutput {
-  object: string;
+  object: "connect_application";
   id: string;
   client_id: string;
   description: string | null;
@@ -55,7 +59,7 @@ export interface ApplicationsControllerCreateOutput {
 }
 export const ApplicationsControllerCreateOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["connect_application"]),
     id: Schema.String,
     client_id: Schema.String,
     description: Schema.NullOr(Schema.String),
@@ -63,7 +67,7 @@ export const ApplicationsControllerCreateOutput =
     scopes: Schema.Array(Schema.String),
     created_at: Schema.String,
     updated_at: Schema.String,
-  }) as unknown as Schema.Codec<ApplicationsControllerCreateOutput>;
+  }) as unknown as GeneratedStructCodec<ApplicationsControllerCreateOutput>;
 
 // The operation
 /**

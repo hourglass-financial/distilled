@@ -1,6 +1,8 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import { StructWithAdditionalProperties } from "@distilled.cloud/core/openapi/additional-properties";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import {
   BadRequest,
   Forbidden,
@@ -19,6 +21,7 @@ export interface AccountsListAllRelationsInput {
     "created-at-start"?: string;
     "created-at-end"?: string;
   };
+  page?: { after?: string; before?: string; size?: number };
   keyInflection?: "camel" | "kebab" | "snake";
   idempotencyKey?: string;
   personaVersion?:
@@ -43,6 +46,13 @@ export const AccountsListAllRelationsInput =
       "created-at-start": Schema.optional(Schema.String),
       "created-at-end": Schema.optional(Schema.String),
     }).pipe(T.HttpQuery("filter", { style: "deepObject", explode: true })),
+    page: Schema.optional(
+      Schema.Struct({
+        after: Schema.optional(Schema.String),
+        before: Schema.optional(Schema.String),
+        size: Schema.optional(Schema.Number),
+      }),
+    ).pipe(T.HttpQuery("page", { style: "deepObject", explode: true })),
     keyInflection: Schema.optional(
       Schema.Literals(["camel", "kebab", "snake"]),
     ).pipe(T.HttpHeader("Key-Inflection")),
@@ -63,107 +73,44 @@ export const AccountsListAllRelationsInput =
     ).pipe(T.HttpHeader("Persona-Version")),
   }).pipe(
     T.Http({ method: "GET", path: "/accounts/{accountId}/relations" }),
-  ) as unknown as Schema.Codec<AccountsListAllRelationsInput>;
+  ) as unknown as GeneratedStructCodec<AccountsListAllRelationsInput>;
 
 // Output Schema
 export interface AccountsListAllRelationsOutput {
   data: ReadonlyArray<
-    | {
-        type?: string;
-        id?: string;
-        attributes?: {
-          "reference-id"?: string | null;
-          "account-type-name"?: string;
-          "created-at"?: string;
-          "updated-at"?: string;
-          "redacted-at"?: string | null;
-          fields?: {
-            name?: {
-              type?: string;
-              value?: {
-                first?: { type?: string; value?: string | null };
-                middle?: { type?: string; value?: string | null };
-                last?: { type?: string; value?: string | null };
-              };
-            };
-            address?: {
-              type?: string;
-              value?: {
-                street_1?: { type?: string; value?: string | null };
-                street_2?: { type?: string; value?: string | null };
-                subdivision?: { type?: string; value?: string | null };
-                city?: { type?: string; value?: string | null };
-                postal_code?: { type?: string; value?: string | null };
-                country_code?: { type?: string; value?: string | null };
-              };
-            };
-            identification_numbers?: {
-              type?: string;
-              value?: ReadonlyArray<{
-                type?: string;
-                value?: {
-                  identification_class?: { type?: string; value?: string };
-                  identification_number?: { type?: string; value?: string };
-                  issuing_country?: { type?: string; value?: string };
-                  hashed_identification_number?: {
-                    type?: string;
-                    value?: string | null;
-                  };
-                };
-              }>;
-            };
-            birthdate?: { type?: string; value?: string | null };
-            phone_number?: { type?: string; value?: string | null };
-            email_address?: { type?: string; value?: string | null };
-            selfie_photo?: {
-              type?: string;
-              value?: {
-                filename?: string;
-                url?: string;
-                "byte-size"?: number;
-              } | null;
-            };
-          } & Record<string, unknown>;
-          tags?: ReadonlyArray<unknown>;
-          "account-status"?: string;
-        };
-        relationships?: {
-          "account-type"?: { data?: { id?: string; type?: string } };
-        };
-      }
-    | {
-        id?: string;
-        type?: string;
-        attributes?: {
-          status?: string;
-          "reference-id"?: string | null;
-          fields?: Record<string, unknown>;
-          tags?: ReadonlyArray<string>;
-          "created-at"?: string;
-          "updated-at"?: string | null;
-        };
-        relationships?: {
-          reviewer?: { data?: { type?: string; id?: string } | null };
-          "transaction-label"?: {
-            data?: { type?: string; id?: string } | null;
-          };
-          "transaction-type"?: { data?: { type?: string; id?: string } };
-          "related-objects"?: {
-            data?: ReadonlyArray<{ type?: string; id?: string }>;
-          };
-        };
-      }
+    | ({ type: "account"; id: string } & Record<string, unknown>)
+    | ({ type: "transaction"; id: string } & Record<string, unknown>)
   >;
   links: { prev: string | null; next: string | null };
 }
 export const AccountsListAllRelationsOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    data: Schema.Array(Schema.Unknown),
+    data: Schema.Array(
+      Schema.Union(
+        [
+          StructWithAdditionalProperties(
+            Schema.Struct({
+              type: Schema.Literals(["account"]),
+              id: Schema.String,
+            }),
+            Schema.Unknown,
+          ),
+          StructWithAdditionalProperties(
+            Schema.Struct({
+              type: Schema.Literals(["transaction"]),
+              id: Schema.String,
+            }),
+            Schema.Unknown,
+          ),
+        ],
+        { mode: "oneOf" },
+      ),
+    ),
     links: Schema.Struct({
       prev: Schema.NullOr(Schema.String),
       next: Schema.NullOr(Schema.String),
     }),
-  }) as unknown as Schema.Codec<AccountsListAllRelationsOutput>;
+  }) as unknown as GeneratedStructCodec<AccountsListAllRelationsOutput>;
 
 // The operation
 /**

@@ -33,6 +33,13 @@ import {
 } from "./errors.ts";
 import { Credentials } from "./credentials.ts";
 
+type ClientError =
+  | InstanceType<(typeof HTTP_STATUS_MAP)[keyof typeof HTTP_STATUS_MAP]>
+  | InstanceType<
+      (typeof AZURE_ERROR_CODE_MAP)[keyof typeof AZURE_ERROR_CODE_MAP]
+    >
+  | UnknownAzureError;
+
 // Re-export for backwards compatibility
 export { UnknownAzureError } from "./errors.ts";
 
@@ -73,14 +80,15 @@ const matchError = (
   errorBody: unknown,
   _errors?: readonly unknown[],
   headers?: Record<string, string | undefined>,
-): Effect.Effect<never, unknown> => {
+): Effect.Effect<never, ClientError> => {
   // Try the ARM envelope format first: { error: { code, message } }
   try {
     const parsed = Schema.decodeUnknownSync(AzureErrorResponse)(errorBody);
     const err = parsed.error;
 
     // Match by Azure error code first for richer typed errors
-    const AzureErrorClass = AZURE_ERROR_CODE_MAP[err.code];
+    const AzureErrorClass =
+      AZURE_ERROR_CODE_MAP[err.code as keyof typeof AZURE_ERROR_CODE_MAP];
     if (AzureErrorClass) {
       return Effect.fail(
         new AzureErrorClass({
@@ -160,7 +168,7 @@ let _currentSubscriptionId: string | undefined;
  * Automatically injects `subscriptionId` into ARM path templates from
  * credentials when not provided in the operation input.
  */
-export const API = makeAPI<Credentials>({
+export const API = makeAPI<Credentials, never, ClientError, AzureParseError>({
   credentials: Credentials as any,
   getBaseUrl: (creds: any) => creds.apiBaseUrl,
   getAuthHeaders: (creds: any) => {

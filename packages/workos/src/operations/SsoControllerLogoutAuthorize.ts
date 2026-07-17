@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -12,18 +13,18 @@ export const SsoControllerLogoutAuthorizeInput =
     profile_id: Schema.String,
   }).pipe(
     T.Http({ method: "POST", path: "/sso/logout/authorize" }),
-  ) as unknown as Schema.Codec<SsoControllerLogoutAuthorizeInput>;
+  ) as unknown as GeneratedStructCodec<SsoControllerLogoutAuthorizeInput>;
 
 // Output Schema
 export interface SsoControllerLogoutAuthorizeOutput {
-  logout_url?: string;
-  logout_token?: string;
+  logout_url: string;
+  logout_token: string;
 }
 export const SsoControllerLogoutAuthorizeOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    logout_url: Schema.optional(Schema.String),
-    logout_token: Schema.optional(Schema.String),
-  }) as unknown as Schema.Codec<SsoControllerLogoutAuthorizeOutput>;
+    logout_url: Schema.String,
+    logout_token: Schema.String,
+  }) as unknown as GeneratedStructCodec<SsoControllerLogoutAuthorizeOutput>;
 
 // The operation
 /**

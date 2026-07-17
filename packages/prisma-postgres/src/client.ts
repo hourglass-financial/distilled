@@ -20,6 +20,10 @@ import {
 export { UnknownPrismaPostgresError } from "./errors.ts";
 import { Credentials } from "./credentials.ts";
 
+type ClientError =
+  | InstanceType<(typeof HTTP_STATUS_MAP)[keyof typeof HTTP_STATUS_MAP]>
+  | UnknownPrismaPostgresError;
+
 // API Error Response Schema — Prisma Postgres wraps errors in { error: { code, message, hint? } }
 const ApiErrorResponse = Schema.Struct({
   error: Schema.Struct({
@@ -37,7 +41,7 @@ const matchError = (
   errorBody: unknown,
   _errors?: readonly unknown[],
   headers?: Record<string, string | undefined>,
-): Effect.Effect<never, unknown> => {
+): Effect.Effect<never, ClientError> => {
   try {
     const parsed = Schema.decodeUnknownSync(ApiErrorResponse)(errorBody);
     const ErrorClass = (HTTP_STATUS_MAP as any)[status];
@@ -77,7 +81,12 @@ const matchError = (
 /**
  * Prisma Postgres API client.
  */
-export const API = makeAPI({
+export const API = makeAPI<
+  Credentials,
+  never,
+  ClientError,
+  PrismaPostgresParseError
+>({
   credentials: Credentials as any,
   getBaseUrl: (creds: any) => creds.apiBaseUrl,
   getAuthHeaders: (creds: any) => ({

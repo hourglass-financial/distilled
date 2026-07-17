@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -17,12 +18,12 @@ export const AuthorizationOrganizationRolesControllerGetInput =
       method: "GET",
       path: "/authorization/organizations/{organizationId}/roles/{slug}",
     }),
-  ) as unknown as Schema.Codec<AuthorizationOrganizationRolesControllerGetInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationOrganizationRolesControllerGetInput>;
 
 // Output Schema
 export interface AuthorizationOrganizationRolesControllerGetOutput {
   slug: string;
-  object: string;
+  object: "role";
   id: string;
   name: string;
   description: string | null;
@@ -35,7 +36,7 @@ export interface AuthorizationOrganizationRolesControllerGetOutput {
 export const AuthorizationOrganizationRolesControllerGetOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     slug: Schema.String,
-    object: Schema.String,
+    object: Schema.Literals(["role"]),
     id: Schema.String,
     name: Schema.String,
     description: Schema.NullOr(Schema.String),
@@ -44,7 +45,7 @@ export const AuthorizationOrganizationRolesControllerGetOutput =
     permissions: Schema.Array(Schema.String),
     created_at: Schema.String,
     updated_at: Schema.String,
-  }) as unknown as Schema.Codec<AuthorizationOrganizationRolesControllerGetOutput>;
+  }) as unknown as GeneratedStructCodec<AuthorizationOrganizationRolesControllerGetOutput>;
 
 // The operation
 /**

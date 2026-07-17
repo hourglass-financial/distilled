@@ -166,6 +166,7 @@ interface SchemaObject {
   items?: SchemaObject;
   required?: string[];
   enum?: (string | number | boolean)[];
+  const?: string | number | boolean | null;
   additionalProperties?: boolean | SchemaObject;
   description?: string;
   default?: unknown;
@@ -203,6 +204,10 @@ export interface GeneratorConfig {
   errorsImport?: string;
   /** Runtime helper import path for OpenAPI additional-property schemas */
   additionalPropertiesImport?: string;
+  /** Type-only helper import path for composable generated struct schemas */
+  generatedSchemaImport?: string;
+  /** Naming strategy for generated query/header input fields (default: camelCase) */
+  parameterFieldNaming?: "camelCase" | "preserve";
   /** Whether to include operation-specific error imports (default: true for Swagger, false for OAS 3.x) */
   includeOperationErrors?: boolean;
   /** Status codes to error class name mapping (only used when includeOperationErrors=true) */
@@ -262,8 +267,13 @@ function renderEnumLiterals(
   return `Schema.Literals([${literals}])`;
 }
 
-// HOURGLASS PATCH: Convert OpenAPI header names into usable input field names.
-function toParameterFieldName(name: string): string {
+// HOURGLASS PATCH: Keep parameter naming configurable so regenerated clients
+// can preserve an established public input surface without losing wire traits.
+function toParameterFieldName(
+  name: string,
+  naming: "camelCase" | "preserve" = "camelCase",
+): string {
+  if (naming === "preserve") return name;
   const camel = toCamelCase(name);
   return camel.charAt(0).toLowerCase() + camel.slice(1);
 }
@@ -447,6 +457,7 @@ function isScalarUnion(branches: SchemaObject[], spec: OpenAPISpec): boolean {
       return false;
     }
     if (branch.enum && branch.enum.length > 0) return true;
+    if (branch.const !== undefined) return true;
     const t = branch.type;
     return (
       t === "string" || t === "number" || t === "integer" || t === "boolean"
@@ -466,6 +477,7 @@ function isNullBranch(branch: SchemaObject, spec: any): boolean {
     b = resolveRef(spec, b.$ref);
   }
   if (b.type === "null") return true;
+  if (b.const === null) return true;
   if (Array.isArray(b.type) && b.type.every((t) => t === "null")) return true;
   if (
     Array.isArray(b.enum) &&
@@ -597,7 +609,7 @@ function generateObjectEffectSchema(
 }
 
 /**
- * Whether every `oneOf` member has the same required, single-value enum
+ * Whether every `oneOf` member has the same required, single-value literal
  * property with a distinct value. Only this unambiguous shape is safe to
  * decode using Effect's exclusive `oneOf` mode.
  */
@@ -629,19 +641,21 @@ function isUnambiguousDiscriminatedOneOf(
   const first = resolvedMembers[0];
   const candidateKeys = Object.entries(first.properties!).flatMap(
     ([key, schema]) =>
-      first.required?.includes(key) && schema.enum?.length === 1 ? [key] : [],
+      first.required?.includes(key) &&
+      (schema.enum?.length === 1 || schema.const !== undefined)
+        ? [key]
+        : [],
   );
 
   for (const key of candidateKeys) {
     const discriminatorValues = resolvedMembers.map((member) => {
       const discriminator = member.properties![key];
-      if (
-        !member.required?.includes(key) ||
-        discriminator?.enum?.length !== 1
-      ) {
+      if (!member.required?.includes(key) || discriminator === undefined) {
         return undefined;
       }
-      return discriminator.enum[0];
+      if (discriminator.const !== undefined) return discriminator.const;
+      if (discriminator.enum?.length === 1) return discriminator.enum[0];
+      return undefined;
     });
 
     if (discriminatorValues.some((value) => value === undefined)) continue;
@@ -775,6 +789,18 @@ function openApiTypeToEffectSchema(
           : `Schema.Union([${uniq.join(", ")}])`;
     const result = nullable ? `Schema.NullOr(${base})` : base;
     return result.length > MAX_UNION_INLINE_CHARS ? "Schema.Unknown" : result;
+  }
+
+  // HOURGLASS PATCH: OpenAPI 3.1 `const` is a literal constraint, including
+  // when no redundant `type` keyword is present.
+  if (prop.const !== undefined) {
+    const literal =
+      prop.const === null
+        ? "Schema.Null"
+        : renderEnumLiterals([prop.const], typeof prop.const);
+    return isNullable(prop) && prop.const !== null
+      ? `Schema.NullOr(${literal})`
+      : literal;
   }
 
   // Handle enum
@@ -1029,6 +1055,18 @@ function openApiTypeToTsType(
     return result.length > MAX_UNION_INLINE_CHARS ? "unknown" : result;
   }
 
+  if (prop.const !== undefined) {
+    const literal =
+      prop.const === null
+        ? "null"
+        : typeof prop.const === "string"
+          ? JSON.stringify(prop.const)
+          : String(prop.const);
+    return isNullable(prop) && prop.const !== null
+      ? `${literal} | null`
+      : literal;
+  }
+
   if (prop.enum && prop.enum.length > 0) {
     const base = prop.enum
       .map((v) => (typeof v === "string" ? JSON.stringify(v) : String(v)))
@@ -1150,11 +1188,15 @@ function emitTypedSchema(
   name: string,
   tsType: string,
   constCode: string,
+  structural: boolean = false,
 ): string {
+  const schemaType = structural
+    ? `GeneratedStructCodec<${name}>`
+    : `Schema.Codec<${name}>`;
   // Append the explicit cast to the schema const (before its terminating `;`).
   const castedConst = constCode.replace(
     /;\s*$/,
-    ` as unknown as Schema.Codec<${name}>;`,
+    ` as unknown as ${schemaType};`,
   );
   // Prefer an `interface` for *pure* object types (cheap, named) and a `type`
   // alias otherwise. A pure object literal both starts with `{` and ends with
@@ -1252,6 +1294,7 @@ function generateJsDoc(
   description: string | undefined,
   parameters: ParameterInfo[],
   bodyProperties?: Record<string, SchemaObject>,
+  parameterFieldNaming?: "camelCase" | "preserve",
 ): string {
   const lines: string[] = ["/**"];
 
@@ -1279,7 +1322,9 @@ function generateJsDoc(
       const desc = escapeJsDoc(param.description || "");
       // HOURGLASS PATCH: Query docs name the normalized TypeScript input field.
       const fieldName =
-        param.in === "query" ? toParameterFieldName(param.name) : param.name;
+        param.in === "query"
+          ? toParameterFieldName(param.name, parameterFieldNaming)
+          : param.name;
       lines.push(` * @param ${fieldName} - ${desc}`);
     }
   }
@@ -1429,6 +1474,7 @@ function generateInputSchemaSwagger(
   spec: Swagger2Spec,
   ctx?: SchemaGenerationContext,
   apiVersion?: string,
+  parameterFieldNaming?: "camelCase" | "preserve",
 ): { inputSchemaCode: string; inputSchemaName: string } {
   const inputSchemaName = `${toPascalCase(operationId)}Input`;
   const pathParams = parameters.filter((p) => p.in === "path");
@@ -1480,7 +1526,7 @@ function generateInputSchemaSwagger(
 
   // HOURGLASS PATCH: Keep Swagger query wire names when field names are normalized.
   for (const param of queryParams) {
-    const fieldName = toParameterFieldName(param.name);
+    const fieldName = toParameterFieldName(param.name, parameterFieldNaming);
     if (usedNames.has(fieldName)) continue;
     usedNames.add(fieldName);
     let schema = param.enum
@@ -1511,7 +1557,7 @@ function generateInputSchemaSwagger(
 
   // HOURGLASS PATCH: Emit Swagger 2.0 header params via T.HttpHeader.
   for (const param of headerParams) {
-    const fieldName = toParameterFieldName(param.name);
+    const fieldName = toParameterFieldName(param.name, parameterFieldNaming);
     if (usedNames.has(fieldName)) continue;
     usedNames.add(fieldName);
 
@@ -1583,6 +1629,7 @@ function generateInputSchemaSwagger(
     annotatePureExportConst(`export const ${inputSchemaName} = Schema.Struct({
 ${fields.join("\n")}
 }).pipe(T.Http({ ${swaggerHttpTraitParts.join(", ")} }));`),
+    true,
   );
 
   return { inputSchemaCode, inputSchemaName };
@@ -1632,6 +1679,7 @@ function generateInputSchema3(
   ctx?: SchemaGenerationContext,
   noFollowRedirect: boolean = false,
   apiVersion?: string,
+  parameterFieldNaming?: "camelCase" | "preserve",
 ): { inputSchemaCode: string; inputSchemaName: string } {
   // Resolve top-level $ref (e.g. #/components/requestBodies/Foo).
   const requestBody = requestBodyParam?.$ref
@@ -1671,7 +1719,7 @@ function generateInputSchema3(
 
   // HOURGLASS PATCH: Emit named OpenAPI query traits, including serialization metadata.
   for (const param of queryParams) {
-    const fieldName = toParameterFieldName(param.name);
+    const fieldName = toParameterFieldName(param.name, parameterFieldNaming);
     if (usedNames.has(fieldName)) continue;
     usedNames.add(fieldName);
     const schema = param.schema;
@@ -1690,7 +1738,7 @@ function generateInputSchema3(
 
   // HOURGLASS PATCH: Emit OpenAPI 3.x header params via T.HttpHeader.
   for (const param of headerParams) {
-    const fieldName = toParameterFieldName(param.name);
+    const fieldName = toParameterFieldName(param.name, parameterFieldNaming);
     if (usedNames.has(fieldName)) continue;
     usedNames.add(fieldName);
 
@@ -1786,6 +1834,7 @@ function generateInputSchema3(
     annotatePureExportConst(`export const ${inputSchemaName} = Schema.Struct({
 ${fields.join("\n")}
 }).pipe(${traitChain.join(", ")});`),
+    true,
   );
 
   return { inputSchemaCode, inputSchemaName };
@@ -1918,6 +1967,7 @@ function generateOutputSchema(
       outputSchemaName,
       responseTs,
       `export const ${outputSchemaName} = /*@__PURE__*/ /*#__PURE__*/ ${schemaCode};`,
+      schemaCode.startsWith("Schema.Struct("),
     ),
     outputSchemaName,
     sensitiveImports: {
@@ -2104,6 +2154,7 @@ export function generateFromOpenAPI(config: GeneratorConfig): void {
               enum: p.enum,
             })),
             parameters.find((p) => p.in === "body")?.schema?.properties,
+            config.parameterFieldNaming,
           );
 
           const sensitiveCtx: SchemaGenerationContext = {
@@ -2123,6 +2174,7 @@ export function generateFromOpenAPI(config: GeneratorConfig): void {
               swagger,
               sensitiveCtx,
               config.apiVersion,
+              config.parameterFieldNaming,
             );
 
           const responseSchema = getResponseSchema(
@@ -2227,6 +2279,8 @@ export function generateFromOpenAPI(config: GeneratorConfig): void {
               required: p.required,
               description: p.description,
             })),
+            undefined,
+            config.parameterFieldNaming,
           );
 
           const sensitiveCtx: SchemaGenerationContext = {
@@ -2268,6 +2322,7 @@ export function generateFromOpenAPI(config: GeneratorConfig): void {
             sensitiveCtx,
             noFollowRedirect,
             config.apiVersion,
+            config.parameterFieldNaming,
           );
 
           const responseSchema = getResponseSchema(
@@ -2511,6 +2566,8 @@ function buildOperationFile(
   const additionalPropertiesImportPath =
     config.additionalPropertiesImport ??
     "@distilled.cloud/core/openapi/additional-properties";
+  const generatedSchemaImportPath =
+    config.generatedSchemaImport ?? "@distilled.cloud/core/generated-schema";
 
   const hasErrors = operationErrors.length > 0;
   const errorsLine = hasErrors
@@ -2542,6 +2599,13 @@ import * as T from "${traitsImport}.ts";`;
     outputSchemaCode.includes("StructWithAdditionalProperties(")
   ) {
     imports += `\nimport { StructWithAdditionalProperties } from "${additionalPropertiesImportPath}";`;
+  }
+
+  if (
+    inputSchemaCode.includes("GeneratedStructCodec<") ||
+    outputSchemaCode.includes("GeneratedStructCodec<")
+  ) {
+    imports += `\nimport type { GeneratedStructCodec } from "${generatedSchemaImportPath}";`;
   }
 
   if (hasErrors) {

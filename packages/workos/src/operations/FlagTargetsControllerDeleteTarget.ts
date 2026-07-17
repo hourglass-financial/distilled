@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -17,7 +18,7 @@ export const FlagTargetsControllerDeleteTargetInput =
       method: "DELETE",
       path: "/feature-flags/{slug}/targets/{resourceId}",
     }),
-  ) as unknown as Schema.Codec<FlagTargetsControllerDeleteTargetInput>;
+  ) as unknown as GeneratedStructCodec<FlagTargetsControllerDeleteTargetInput>;
 
 // Output Schema
 export type FlagTargetsControllerDeleteTargetOutput = void;

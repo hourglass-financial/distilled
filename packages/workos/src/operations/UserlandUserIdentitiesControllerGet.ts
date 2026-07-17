@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound } from "../errors.ts";
 
 // Input Schema
@@ -12,12 +13,12 @@ export const UserlandUserIdentitiesControllerGetInput =
     id: Schema.String.pipe(T.PathParam()),
   }).pipe(
     T.Http({ method: "GET", path: "/user_management/users/{id}/identities" }),
-  ) as unknown as Schema.Codec<UserlandUserIdentitiesControllerGetInput>;
+  ) as unknown as GeneratedStructCodec<UserlandUserIdentitiesControllerGetInput>;
 
 // Output Schema
 export type UserlandUserIdentitiesControllerGetOutput = ReadonlyArray<{
   idp_id: string;
-  type: string;
+  type: "OAuth";
   provider:
     | "AppleOAuth"
     | "BitbucketOAuth"
@@ -38,7 +39,7 @@ export const UserlandUserIdentitiesControllerGetOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Array(
     Schema.Struct({
       idp_id: Schema.String,
-      type: Schema.String,
+      type: Schema.Literals(["OAuth"]),
       provider: Schema.Literals([
         "AppleOAuth",
         "BitbucketOAuth",

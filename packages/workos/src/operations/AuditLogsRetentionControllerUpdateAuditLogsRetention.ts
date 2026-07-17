@@ -1,29 +1,30 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
 export interface AuditLogsRetentionControllerUpdateAuditLogsRetentionInput {
   id: string;
-  retention_period_in_days?: number;
+  retention_period_in_days: number;
 }
 export const AuditLogsRetentionControllerUpdateAuditLogsRetentionInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
-    retention_period_in_days: Schema.optional(Schema.Number),
+    retention_period_in_days: Schema.Number,
   }).pipe(
     T.Http({ method: "PUT", path: "/organizations/{id}/audit_logs_retention" }),
-  ) as unknown as Schema.Codec<AuditLogsRetentionControllerUpdateAuditLogsRetentionInput>;
+  ) as unknown as GeneratedStructCodec<AuditLogsRetentionControllerUpdateAuditLogsRetentionInput>;
 
 // Output Schema
 export interface AuditLogsRetentionControllerUpdateAuditLogsRetentionOutput {
-  retention_period_in_days?: number | null;
+  retention_period_in_days: number | null;
 }
 export const AuditLogsRetentionControllerUpdateAuditLogsRetentionOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    retention_period_in_days: Schema.optional(Schema.NullOr(Schema.Number)),
-  }) as unknown as Schema.Codec<AuditLogsRetentionControllerUpdateAuditLogsRetentionOutput>;
+    retention_period_in_days: Schema.NullOr(Schema.Number),
+  }) as unknown as GeneratedStructCodec<AuditLogsRetentionControllerUpdateAuditLogsRetentionOutput>;
 
 // The operation
 /**

@@ -35,9 +35,9 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
  * its decoded type is strictly `Redacted<A>`, removing the need for callers to
  * narrow / coerce on every read site.
  */
-export const Sensitive = <A>(
-  schema: S.Schema<A>,
-): S.Schema<A | Redacted.Redacted<A>> =>
+export const Sensitive = <A, E, RD, RE>(
+  schema: S.Codec<A, E, RD, RE>,
+): S.Codec<A | Redacted.Redacted<A>, E, RD, RE> =>
   schema
     .pipe(
       S.decodeTo(
@@ -82,9 +82,9 @@ export const SensitiveNullableString = S.NullOr(SensitiveString).annotate({
  * underlying `A`. Use on response schemas so consumers don't have to narrow
  * `string | Redacted<string>` at every read site.
  */
-export const SensitiveOutput = <A>(
-  schema: S.Schema<A>,
-): S.Schema<Redacted.Redacted<A>> =>
+export const SensitiveOutput = <A, E, RD, RE>(
+  schema: S.Codec<A, E, RD, RE>,
+): S.Codec<Redacted.Redacted<A>, E, RD, RE> =>
   schema
     .pipe(
       S.decodeTo(

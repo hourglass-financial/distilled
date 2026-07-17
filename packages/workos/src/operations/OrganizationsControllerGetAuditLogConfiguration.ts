@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound } from "../errors.ts";
 
 // Input Schema
@@ -15,13 +16,13 @@ export const OrganizationsControllerGetAuditLogConfigurationInput =
       method: "GET",
       path: "/organizations/{id}/audit_log_configuration",
     }),
-  ) as unknown as Schema.Codec<OrganizationsControllerGetAuditLogConfigurationInput>;
+  ) as unknown as GeneratedStructCodec<OrganizationsControllerGetAuditLogConfigurationInput>;
 
 // Output Schema
 export interface OrganizationsControllerGetAuditLogConfigurationOutput {
-  organization_id?: string;
-  retention_period_in_days?: number;
-  state?: "active" | "inactive" | "disabled";
+  organization_id: string;
+  retention_period_in_days: number;
+  state: "active" | "inactive" | "disabled";
   log_stream?: {
     id: string;
     type:
@@ -39,9 +40,9 @@ export interface OrganizationsControllerGetAuditLogConfigurationOutput {
 }
 export const OrganizationsControllerGetAuditLogConfigurationOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    organization_id: Schema.optional(Schema.String),
-    retention_period_in_days: Schema.optional(Schema.Number),
-    state: Schema.optional(Schema.Literals(["active", "inactive", "disabled"])),
+    organization_id: Schema.String,
+    retention_period_in_days: Schema.Number,
+    state: Schema.Literals(["active", "inactive", "disabled"]),
     log_stream: Schema.optional(
       Schema.Struct({
         id: Schema.String,
@@ -59,7 +60,7 @@ export const OrganizationsControllerGetAuditLogConfigurationOutput =
         created_at: Schema.String,
       }),
     ),
-  }) as unknown as Schema.Codec<OrganizationsControllerGetAuditLogConfigurationOutput>;
+  }) as unknown as GeneratedStructCodec<OrganizationsControllerGetAuditLogConfigurationOutput>;
 
 // The operation
 /**

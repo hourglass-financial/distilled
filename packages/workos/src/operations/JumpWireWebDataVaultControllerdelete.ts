@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
@@ -11,10 +12,12 @@ export interface JumpWireWebDataVaultControllerdeleteInput {
 export const JumpWireWebDataVaultControllerdeleteInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
-    version_check: Schema.optional(Schema.String),
+    version_check: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("version_check"),
+    ),
   }).pipe(
     T.Http({ method: "DELETE", path: "/vault/v1/kv/{id}" }),
-  ) as unknown as Schema.Codec<JumpWireWebDataVaultControllerdeleteInput>;
+  ) as unknown as GeneratedStructCodec<JumpWireWebDataVaultControllerdeleteInput>;
 
 // Output Schema
 export interface JumpWireWebDataVaultControllerdeleteOutput {
@@ -25,7 +28,7 @@ export const JumpWireWebDataVaultControllerdeleteOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     name: Schema.String,
     success: Schema.Boolean,
-  }) as unknown as Schema.Codec<JumpWireWebDataVaultControllerdeleteOutput>;
+  }) as unknown as GeneratedStructCodec<JumpWireWebDataVaultControllerdeleteOutput>;
 
 // The operation
 /**

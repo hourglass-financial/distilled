@@ -27,6 +27,17 @@ import { Credentials } from "./credentials.ts";
 // Re-export for convenience
 export { UnknownStripeError } from "./errors.ts";
 
+type ClientError =
+  | InstanceType<(typeof HTTP_STATUS_MAP)[keyof typeof HTTP_STATUS_MAP]>
+  | InstanceType<
+      (typeof STRIPE_HTTP_STATUS_MAP)[keyof typeof STRIPE_HTTP_STATUS_MAP]
+    >
+  | CardError
+  | IdempotencyError
+  | InvalidRequestError
+  | ApiError
+  | UnknownStripeError;
+
 type StripeConnectRequestOptions =
   | {
       readonly stripeAccount?: string | undefined;
@@ -162,7 +173,7 @@ const matchError = (
   errorBody: unknown,
   _errors?: readonly unknown[],
   headers?: Record<string, string | undefined>,
-): Effect.Effect<never, unknown> => {
+): Effect.Effect<never, ClientError> => {
   try {
     const parsed = Schema.decodeUnknownSync(StripeErrorResponse)(errorBody);
     const err = parsed.error;
@@ -264,7 +275,12 @@ const matchError = (
 /**
  * Stripe API client.
  */
-export const API = makeAPI<Credentials, StripeRequestOptions>({
+export const API = makeAPI<
+  Credentials,
+  StripeRequestOptions,
+  ClientError,
+  StripeParseError
+>({
   credentials: Credentials as any,
   getBaseUrl: (creds: any) => creds.apiBaseUrl,
   getAuthHeaders: (creds: any) => ({

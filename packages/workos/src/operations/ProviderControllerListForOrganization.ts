@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound } from "../errors.ts";
 
 // Input Schema
@@ -15,13 +16,13 @@ export const ProviderControllerListForOrganizationInput =
       method: "GET",
       path: "/organizations/{organizationId}/data_integration_configurations",
     }),
-  ) as unknown as Schema.Codec<ProviderControllerListForOrganizationInput>;
+  ) as unknown as GeneratedStructCodec<ProviderControllerListForOrganizationInput>;
 
 // Output Schema
 export interface ProviderControllerListForOrganizationOutput {
-  object: string;
+  object: "list";
   data: ReadonlyArray<{
-    object: string;
+    object: "data_integration_configuration";
     id: string;
     organization_id: string;
     slug: string;
@@ -41,10 +42,10 @@ export interface ProviderControllerListForOrganizationOutput {
 }
 export const ProviderControllerListForOrganizationOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["list"]),
     data: Schema.Array(
       Schema.Struct({
-        object: Schema.String,
+        object: Schema.Literals(["data_integration_configuration"]),
         id: Schema.String,
         organization_id: Schema.String,
         slug: Schema.String,
@@ -68,7 +69,7 @@ export const ProviderControllerListForOrganizationOutput =
         ),
       }),
     ),
-  }) as unknown as Schema.Codec<ProviderControllerListForOrganizationOutput>;
+  }) as unknown as GeneratedStructCodec<ProviderControllerListForOrganizationOutput>;
 
 // The operation
 /**

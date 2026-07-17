@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import {
   BadRequest,
   Forbidden,
@@ -26,28 +27,28 @@ export const GroupsControllerUpdateInput =
       method: "PATCH",
       path: "/organizations/{organizationId}/groups/{groupId}",
     }),
-  ) as unknown as Schema.Codec<GroupsControllerUpdateInput>;
+  ) as unknown as GeneratedStructCodec<GroupsControllerUpdateInput>;
 
 // Output Schema
 export interface GroupsControllerUpdateOutput {
-  object?: string;
-  id?: string;
-  organization_id?: string;
-  name?: string;
-  description?: string | null;
-  created_at?: string;
-  updated_at?: string;
+  object: "group";
+  id: string;
+  organization_id: string;
+  name: string;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
 }
 export const GroupsControllerUpdateOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    id: Schema.optional(Schema.String),
-    organization_id: Schema.optional(Schema.String),
-    name: Schema.optional(Schema.String),
-    description: Schema.optional(Schema.NullOr(Schema.String)),
-    created_at: Schema.optional(Schema.String),
-    updated_at: Schema.optional(Schema.String),
-  }) as unknown as Schema.Codec<GroupsControllerUpdateOutput>;
+    object: Schema.Literals(["group"]),
+    id: Schema.String,
+    organization_id: Schema.String,
+    name: Schema.String,
+    description: Schema.NullOr(Schema.String),
+    created_at: Schema.String,
+    updated_at: Schema.String,
+  }) as unknown as GeneratedStructCodec<GroupsControllerUpdateOutput>;
 
 // The operation
 /**

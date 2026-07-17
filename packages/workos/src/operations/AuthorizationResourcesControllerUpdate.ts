@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import {
   BadRequest,
   Forbidden,
@@ -28,11 +29,11 @@ export const AuthorizationResourcesControllerUpdateInput =
     parent_resource_type_slug: Schema.optional(Schema.String),
   }).pipe(
     T.Http({ method: "PATCH", path: "/authorization/resources/{resource_id}" }),
-  ) as unknown as Schema.Codec<AuthorizationResourcesControllerUpdateInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationResourcesControllerUpdateInput>;
 
 // Output Schema
 export interface AuthorizationResourcesControllerUpdateOutput {
-  object: string;
+  object: "authorization_resource";
   name: string;
   description: string | null;
   organization_id: string;
@@ -45,7 +46,7 @@ export interface AuthorizationResourcesControllerUpdateOutput {
 }
 export const AuthorizationResourcesControllerUpdateOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["authorization_resource"]),
     name: Schema.String,
     description: Schema.NullOr(Schema.String),
     organization_id: Schema.String,
@@ -55,7 +56,7 @@ export const AuthorizationResourcesControllerUpdateOutput =
     resource_type_slug: Schema.String,
     created_at: Schema.String,
     updated_at: Schema.String,
-  }) as unknown as Schema.Codec<AuthorizationResourcesControllerUpdateOutput>;
+  }) as unknown as GeneratedStructCodec<AuthorizationResourcesControllerUpdateOutput>;
 
 // The operation
 /**

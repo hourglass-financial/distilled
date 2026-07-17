@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, Forbidden, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
@@ -17,7 +18,7 @@ export const AuthorizationOrganizationRolesControllerDeleteInput =
       method: "DELETE",
       path: "/authorization/organizations/{organizationId}/roles/{slug}",
     }),
-  ) as unknown as Schema.Codec<AuthorizationOrganizationRolesControllerDeleteInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationOrganizationRolesControllerDeleteInput>;
 
 // Output Schema
 export type AuthorizationOrganizationRolesControllerDeleteOutput = void;

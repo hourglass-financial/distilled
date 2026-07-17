@@ -1,24 +1,25 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { Conflict } from "../errors.ts";
 
 // Input Schema
 export interface OrganizationDomainsControllerCreateInput {
-  domain?: string;
-  organization_id?: string;
+  domain: string;
+  organization_id: string;
 }
 export const OrganizationDomainsControllerCreateInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    domain: Schema.optional(Schema.String),
-    organization_id: Schema.optional(Schema.String),
+    domain: Schema.String,
+    organization_id: Schema.String,
   }).pipe(
     T.Http({ method: "POST", path: "/organization_domains" }),
-  ) as unknown as Schema.Codec<OrganizationDomainsControllerCreateInput>;
+  ) as unknown as GeneratedStructCodec<OrganizationDomainsControllerCreateInput>;
 
 // Output Schema
 export interface OrganizationDomainsControllerCreateOutput {
-  object: string;
+  object: "organization_domain";
   id: string;
   organization_id: string;
   domain: string;
@@ -31,7 +32,7 @@ export interface OrganizationDomainsControllerCreateOutput {
 }
 export const OrganizationDomainsControllerCreateOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["organization_domain"]),
     id: Schema.String,
     organization_id: Schema.String,
     domain: Schema.String,
@@ -49,7 +50,7 @@ export const OrganizationDomainsControllerCreateOutput =
     verification_strategy: Schema.optional(Schema.Literals(["dns", "manual"])),
     created_at: Schema.String,
     updated_at: Schema.String,
-  }) as unknown as Schema.Codec<OrganizationDomainsControllerCreateOutput>;
+  }) as unknown as GeneratedStructCodec<OrganizationDomainsControllerCreateOutput>;
 
 // The operation
 /**

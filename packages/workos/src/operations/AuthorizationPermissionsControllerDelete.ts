@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -12,7 +13,7 @@ export const AuthorizationPermissionsControllerDeleteInput =
     slug: Schema.String.pipe(T.PathParam()),
   }).pipe(
     T.Http({ method: "DELETE", path: "/authorization/permissions/{slug}" }),
-  ) as unknown as Schema.Codec<AuthorizationPermissionsControllerDeleteInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationPermissionsControllerDeleteInput>;
 
 // Output Schema
 export type AuthorizationPermissionsControllerDeleteOutput = void;

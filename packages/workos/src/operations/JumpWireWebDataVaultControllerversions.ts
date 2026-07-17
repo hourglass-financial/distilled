@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -12,7 +13,7 @@ export const JumpWireWebDataVaultControllerversionsInput =
     id: Schema.String.pipe(T.PathParam()),
   }).pipe(
     T.Http({ method: "GET", path: "/vault/v1/kv/{id}/versions" }),
-  ) as unknown as Schema.Codec<JumpWireWebDataVaultControllerversionsInput>;
+  ) as unknown as GeneratedStructCodec<JumpWireWebDataVaultControllerversionsInput>;
 
 // Output Schema
 export interface JumpWireWebDataVaultControllerversionsOutput {
@@ -40,7 +41,7 @@ export const JumpWireWebDataVaultControllerversionsOutput =
       after: Schema.optional(Schema.NullOr(Schema.String)),
       before: Schema.optional(Schema.NullOr(Schema.String)),
     }),
-  }) as unknown as Schema.Codec<JumpWireWebDataVaultControllerversionsOutput>;
+  }) as unknown as GeneratedStructCodec<JumpWireWebDataVaultControllerversionsOutput>;
 
 // The operation
 /**

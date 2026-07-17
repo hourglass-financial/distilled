@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound } from "../errors.ts";
 
 // Input Schema
@@ -13,13 +14,15 @@ export const DataIntegrationsUserManagementControllerDeleteUserDataInstallationI
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     user_id: Schema.String.pipe(T.PathParam()),
     slug: Schema.String.pipe(T.PathParam()),
-    organization_id: Schema.optional(Schema.String),
+    organization_id: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("organization_id"),
+    ),
   }).pipe(
     T.Http({
       method: "DELETE",
       path: "/user_management/users/{user_id}/connected_accounts/{slug}",
     }),
-  ) as unknown as Schema.Codec<DataIntegrationsUserManagementControllerDeleteUserDataInstallationInput>;
+  ) as unknown as GeneratedStructCodec<DataIntegrationsUserManagementControllerDeleteUserDataInstallationInput>;
 
 // Output Schema
 export type DataIntegrationsUserManagementControllerDeleteUserDataInstallationOutput =

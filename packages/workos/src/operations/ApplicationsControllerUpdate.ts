@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
@@ -10,7 +11,7 @@ export interface ApplicationsControllerUpdateInput {
   description?: string | null;
   scopes?: ReadonlyArray<string> | null;
   redirect_uris?: ReadonlyArray<{
-    uri?: string;
+    uri: string;
     default?: boolean | null;
   }> | null;
 }
@@ -24,7 +25,7 @@ export const ApplicationsControllerUpdateInput =
       Schema.NullOr(
         Schema.Array(
           Schema.Struct({
-            uri: Schema.optional(Schema.String),
+            uri: Schema.String,
             default: Schema.optional(Schema.NullOr(Schema.Boolean)),
           }),
         ),
@@ -32,11 +33,11 @@ export const ApplicationsControllerUpdateInput =
     ),
   }).pipe(
     T.Http({ method: "PUT", path: "/connect/applications/{id}" }),
-  ) as unknown as Schema.Codec<ApplicationsControllerUpdateInput>;
+  ) as unknown as GeneratedStructCodec<ApplicationsControllerUpdateInput>;
 
 // Output Schema
 export interface ApplicationsControllerUpdateOutput {
-  object: string;
+  object: "connect_application";
   id: string;
   client_id: string;
   description: string | null;
@@ -47,7 +48,7 @@ export interface ApplicationsControllerUpdateOutput {
 }
 export const ApplicationsControllerUpdateOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["connect_application"]),
     id: Schema.String,
     client_id: Schema.String,
     description: Schema.NullOr(Schema.String),
@@ -55,7 +56,7 @@ export const ApplicationsControllerUpdateOutput =
     scopes: Schema.Array(Schema.String),
     created_at: Schema.String,
     updated_at: Schema.String,
-  }) as unknown as Schema.Codec<ApplicationsControllerUpdateOutput>;
+  }) as unknown as GeneratedStructCodec<ApplicationsControllerUpdateOutput>;
 
 // The operation
 /**

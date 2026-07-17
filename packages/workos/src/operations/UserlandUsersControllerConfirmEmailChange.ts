@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import {
   BadRequest,
   NotFound,
@@ -11,24 +12,24 @@ import {
 // Input Schema
 export interface UserlandUsersControllerConfirmEmailChangeInput {
   id: string;
-  code?: string;
+  code: string;
 }
 export const UserlandUsersControllerConfirmEmailChangeInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
-    code: Schema.optional(Schema.String),
+    code: Schema.String,
   }).pipe(
     T.Http({
       method: "POST",
       path: "/user_management/users/{id}/email_change/confirm",
     }),
-  ) as unknown as Schema.Codec<UserlandUsersControllerConfirmEmailChangeInput>;
+  ) as unknown as GeneratedStructCodec<UserlandUsersControllerConfirmEmailChangeInput>;
 
 // Output Schema
 export interface UserlandUsersControllerConfirmEmailChangeOutput {
-  object: string;
+  object: "email_change_confirmation";
   user: {
-    object: string;
+    object: "user";
     id: string;
     first_name: string | null;
     last_name: string | null;
@@ -46,9 +47,9 @@ export interface UserlandUsersControllerConfirmEmailChangeOutput {
 }
 export const UserlandUsersControllerConfirmEmailChangeOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["email_change_confirmation"]),
     user: Schema.Struct({
-      object: Schema.String,
+      object: Schema.Literals(["user"]),
       id: Schema.String,
       first_name: Schema.NullOr(Schema.String),
       last_name: Schema.NullOr(Schema.String),
@@ -63,7 +64,7 @@ export const UserlandUsersControllerConfirmEmailChangeOutput =
       created_at: Schema.String,
       updated_at: Schema.String,
     }),
-  }) as unknown as Schema.Codec<UserlandUsersControllerConfirmEmailChangeOutput>;
+  }) as unknown as GeneratedStructCodec<UserlandUsersControllerConfirmEmailChangeOutput>;
 
 // The operation
 /**

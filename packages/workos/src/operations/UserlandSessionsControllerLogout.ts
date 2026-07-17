@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
@@ -10,11 +11,11 @@ export interface UserlandSessionsControllerLogoutInput {
 }
 export const UserlandSessionsControllerLogoutInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    session_id: Schema.String,
-    return_to: Schema.optional(Schema.String),
+    session_id: Schema.String.pipe(T.HttpQuery("session_id")),
+    return_to: Schema.optional(Schema.String).pipe(T.HttpQuery("return_to")),
   }).pipe(
     T.Http({ method: "GET", path: "/user_management/sessions/logout" }),
-  ) as unknown as Schema.Codec<UserlandSessionsControllerLogoutInput>;
+  ) as unknown as GeneratedStructCodec<UserlandSessionsControllerLogoutInput>;
 
 // Output Schema
 export type UserlandSessionsControllerLogoutOutput = void;

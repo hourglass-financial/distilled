@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -31,7 +32,7 @@ export const RadarStandaloneControllerDeleteRadarListEntryInput =
     entry: Schema.String,
   }).pipe(
     T.Http({ method: "DELETE", path: "/radar/lists/{type}/{action}" }),
-  ) as unknown as Schema.Codec<RadarStandaloneControllerDeleteRadarListEntryInput>;
+  ) as unknown as GeneratedStructCodec<RadarStandaloneControllerDeleteRadarListEntryInput>;
 
 // Output Schema
 export type RadarStandaloneControllerDeleteRadarListEntryOutput = void;

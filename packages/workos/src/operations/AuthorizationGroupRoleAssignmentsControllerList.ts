@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -9,30 +10,32 @@ export interface AuthorizationGroupRoleAssignmentsControllerListInput {
   before?: string;
   after?: string;
   limit?: number;
-  order?: string;
+  order?: "normal" | "desc" | "asc";
 }
 export const AuthorizationGroupRoleAssignmentsControllerListInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     group_id: Schema.String.pipe(T.PathParam()),
-    before: Schema.optional(Schema.String),
-    after: Schema.optional(Schema.String),
-    limit: Schema.optional(Schema.Number),
-    order: Schema.optional(Schema.String),
+    before: Schema.optional(Schema.String).pipe(T.HttpQuery("before")),
+    after: Schema.optional(Schema.String).pipe(T.HttpQuery("after")),
+    limit: Schema.optional(Schema.Number).pipe(T.HttpQuery("limit")),
+    order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])).pipe(
+      T.HttpQuery("order"),
+    ),
   }).pipe(
     T.Http({
       method: "GET",
       path: "/authorization/groups/{group_id}/role_assignments",
     }),
-  ) as unknown as Schema.Codec<AuthorizationGroupRoleAssignmentsControllerListInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationGroupRoleAssignmentsControllerListInput>;
 
 // Output Schema
 export interface AuthorizationGroupRoleAssignmentsControllerListOutput {
-  object: string;
+  object: "list";
   data: ReadonlyArray<{
-    object: string;
+    object: "group_role_assignment";
     id: string;
     group_id: string;
-    role: { slug?: string };
+    role: { slug: string };
     resource: { id: string; external_id: string; resource_type_slug: string };
     created_at: string;
     updated_at: string;
@@ -41,14 +44,14 @@ export interface AuthorizationGroupRoleAssignmentsControllerListOutput {
 }
 export const AuthorizationGroupRoleAssignmentsControllerListOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["list"]),
     data: Schema.Array(
       Schema.Struct({
-        object: Schema.String,
+        object: Schema.Literals(["group_role_assignment"]),
         id: Schema.String,
         group_id: Schema.String,
         role: Schema.Struct({
-          slug: Schema.optional(Schema.String),
+          slug: Schema.String,
         }),
         resource: Schema.Struct({
           id: Schema.String,
@@ -63,7 +66,7 @@ export const AuthorizationGroupRoleAssignmentsControllerListOutput =
       before: Schema.NullOr(Schema.String),
       after: Schema.NullOr(Schema.String),
     }),
-  }) as unknown as Schema.Codec<AuthorizationGroupRoleAssignmentsControllerListOutput>;
+  }) as unknown as GeneratedStructCodec<AuthorizationGroupRoleAssignmentsControllerListOutput>;
 
 // The operation
 /**

@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { Forbidden, NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
@@ -23,7 +24,7 @@ export const AuthorizationGroupRoleAssignmentsControllerRemoveGroupRoleAssignmen
       method: "DELETE",
       path: "/authorization/groups/{group_id}/role_assignments",
     }),
-  ) as unknown as Schema.Codec<AuthorizationGroupRoleAssignmentsControllerRemoveGroupRoleAssignmentsInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationGroupRoleAssignmentsControllerRemoveGroupRoleAssignmentsInput>;
 
 // Output Schema
 export type AuthorizationGroupRoleAssignmentsControllerRemoveGroupRoleAssignmentsOutput =

@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import {
   BadRequest,
   Forbidden,
@@ -12,40 +13,40 @@ import {
 export interface GroupMembershipsControllerAddMemberInput {
   organizationId: string;
   groupId: string;
-  organization_membership_id?: string;
+  organization_membership_id: string;
 }
 export const GroupMembershipsControllerAddMemberInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     organizationId: Schema.String.pipe(T.PathParam()),
     groupId: Schema.String.pipe(T.PathParam()),
-    organization_membership_id: Schema.optional(Schema.String),
+    organization_membership_id: Schema.String,
   }).pipe(
     T.Http({
       method: "POST",
       path: "/organizations/{organizationId}/groups/{groupId}/organization-memberships",
     }),
-  ) as unknown as Schema.Codec<GroupMembershipsControllerAddMemberInput>;
+  ) as unknown as GeneratedStructCodec<GroupMembershipsControllerAddMemberInput>;
 
 // Output Schema
 export interface GroupMembershipsControllerAddMemberOutput {
-  object?: string;
-  id?: string;
-  organization_id?: string;
-  name?: string;
-  description?: string | null;
-  created_at?: string;
-  updated_at?: string;
+  object: "group";
+  id: string;
+  organization_id: string;
+  name: string;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
 }
 export const GroupMembershipsControllerAddMemberOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    id: Schema.optional(Schema.String),
-    organization_id: Schema.optional(Schema.String),
-    name: Schema.optional(Schema.String),
-    description: Schema.optional(Schema.NullOr(Schema.String)),
-    created_at: Schema.optional(Schema.String),
-    updated_at: Schema.optional(Schema.String),
-  }) as unknown as Schema.Codec<GroupMembershipsControllerAddMemberOutput>;
+    object: Schema.Literals(["group"]),
+    id: Schema.String,
+    organization_id: Schema.String,
+    name: Schema.String,
+    description: Schema.NullOr(Schema.String),
+    created_at: Schema.String,
+    updated_at: Schema.String,
+  }) as unknown as GeneratedStructCodec<GroupMembershipsControllerAddMemberOutput>;
 
 // The operation
 /**

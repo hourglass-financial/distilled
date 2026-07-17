@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, Forbidden } from "../errors.ts";
 
 // Input Schema
@@ -12,26 +13,26 @@ export const UserlandSsoControllerDeviceAuthorizationInput =
     client_id: Schema.String,
   }).pipe(
     T.Http({ method: "POST", path: "/user_management/authorize/device" }),
-  ) as unknown as Schema.Codec<UserlandSsoControllerDeviceAuthorizationInput>;
+  ) as unknown as GeneratedStructCodec<UserlandSsoControllerDeviceAuthorizationInput>;
 
 // Output Schema
 export interface UserlandSsoControllerDeviceAuthorizationOutput {
-  device_code?: string;
-  user_code?: string;
-  verification_uri?: string;
+  device_code: string;
+  user_code: string;
+  verification_uri: string;
   verification_uri_complete?: string;
-  expires_in?: number;
+  expires_in: number;
   interval?: number;
 }
 export const UserlandSsoControllerDeviceAuthorizationOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    device_code: Schema.optional(Schema.String),
-    user_code: Schema.optional(Schema.String),
-    verification_uri: Schema.optional(Schema.String),
+    device_code: Schema.String,
+    user_code: Schema.String,
+    verification_uri: Schema.String,
     verification_uri_complete: Schema.optional(Schema.String),
-    expires_in: Schema.optional(Schema.Number),
+    expires_in: Schema.Number,
     interval: Schema.optional(Schema.Number),
-  }) as unknown as Schema.Codec<UserlandSsoControllerDeviceAuthorizationOutput>;
+  }) as unknown as GeneratedStructCodec<UserlandSsoControllerDeviceAuthorizationOutput>;
 
 // The operation
 /**

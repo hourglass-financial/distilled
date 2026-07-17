@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import {
   BadRequest,
   Forbidden,
@@ -22,12 +23,12 @@ export const AuthorizationOrganizationRolePermissionsControllerAddPermissionInpu
       method: "POST",
       path: "/authorization/organizations/{organizationId}/roles/{slug}/permissions",
     }),
-  ) as unknown as Schema.Codec<AuthorizationOrganizationRolePermissionsControllerAddPermissionInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationOrganizationRolePermissionsControllerAddPermissionInput>;
 
 // Output Schema
 export interface AuthorizationOrganizationRolePermissionsControllerAddPermissionOutput {
   slug: string;
-  object: string;
+  object: "role";
   id: string;
   name: string;
   description: string | null;
@@ -40,7 +41,7 @@ export interface AuthorizationOrganizationRolePermissionsControllerAddPermission
 export const AuthorizationOrganizationRolePermissionsControllerAddPermissionOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     slug: Schema.String,
-    object: Schema.String,
+    object: Schema.Literals(["role"]),
     id: Schema.String,
     name: Schema.String,
     description: Schema.NullOr(Schema.String),
@@ -49,7 +50,7 @@ export const AuthorizationOrganizationRolePermissionsControllerAddPermissionOutp
     permissions: Schema.Array(Schema.String),
     created_at: Schema.String,
     updated_at: Schema.String,
-  }) as unknown as Schema.Codec<AuthorizationOrganizationRolePermissionsControllerAddPermissionOutput>;
+  }) as unknown as GeneratedStructCodec<AuthorizationOrganizationRolePermissionsControllerAddPermissionOutput>;
 
 // The operation
 /**

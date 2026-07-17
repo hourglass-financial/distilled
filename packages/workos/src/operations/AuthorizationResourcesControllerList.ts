@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, Forbidden, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
@@ -8,7 +9,7 @@ export interface AuthorizationResourcesControllerListInput {
   before?: string;
   after?: string;
   limit?: number;
-  order?: string;
+  order?: "normal" | "desc" | "asc";
   organization_id?: string;
   resource_type_slug?: string;
   resource_external_id?: string;
@@ -18,63 +19,73 @@ export interface AuthorizationResourcesControllerListInput {
 }
 export const AuthorizationResourcesControllerListInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    before: Schema.optional(Schema.String),
-    after: Schema.optional(Schema.String),
-    limit: Schema.optional(Schema.Number),
-    order: Schema.optional(Schema.String),
-    organization_id: Schema.optional(Schema.String),
-    resource_type_slug: Schema.optional(Schema.String),
-    resource_external_id: Schema.optional(Schema.String),
-    parent_resource_id: Schema.optional(Schema.String),
-    parent_resource_type_slug: Schema.optional(Schema.String),
-    parent_external_id: Schema.optional(Schema.String),
+    before: Schema.optional(Schema.String).pipe(T.HttpQuery("before")),
+    after: Schema.optional(Schema.String).pipe(T.HttpQuery("after")),
+    limit: Schema.optional(Schema.Number).pipe(T.HttpQuery("limit")),
+    order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])).pipe(
+      T.HttpQuery("order"),
+    ),
+    organization_id: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("organization_id"),
+    ),
+    resource_type_slug: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("resource_type_slug"),
+    ),
+    resource_external_id: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("resource_external_id"),
+    ),
+    parent_resource_id: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("parent_resource_id"),
+    ),
+    parent_resource_type_slug: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("parent_resource_type_slug"),
+    ),
+    parent_external_id: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("parent_external_id"),
+    ),
   }).pipe(
     T.Http({ method: "GET", path: "/authorization/resources" }),
-  ) as unknown as Schema.Codec<AuthorizationResourcesControllerListInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationResourcesControllerListInput>;
 
 // Output Schema
 export interface AuthorizationResourcesControllerListOutput {
-  object?: string;
-  data?: ReadonlyArray<{
-    object?: string;
-    name?: string;
-    description?: string | null;
-    organization_id?: string;
-    parent_resource_id?: string | null;
-    id?: string;
-    external_id?: string;
-    resource_type_slug?: string;
-    created_at?: string;
-    updated_at?: string;
+  object: "list";
+  data: ReadonlyArray<{
+    object: "authorization_resource";
+    name: string;
+    description: string | null;
+    organization_id: string;
+    parent_resource_id: string | null;
+    id: string;
+    external_id: string;
+    resource_type_slug: string;
+    created_at: string;
+    updated_at: string;
   }>;
-  list_metadata?: { before: string | null; after: string | null };
+  list_metadata: { before: string | null; after: string | null };
 }
 export const AuthorizationResourcesControllerListOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    data: Schema.optional(
-      Schema.Array(
-        Schema.Struct({
-          object: Schema.optional(Schema.String),
-          name: Schema.optional(Schema.String),
-          description: Schema.optional(Schema.NullOr(Schema.String)),
-          organization_id: Schema.optional(Schema.String),
-          parent_resource_id: Schema.optional(Schema.NullOr(Schema.String)),
-          id: Schema.optional(Schema.String),
-          external_id: Schema.optional(Schema.String),
-          resource_type_slug: Schema.optional(Schema.String),
-          created_at: Schema.optional(Schema.String),
-          updated_at: Schema.optional(Schema.String),
-        }),
-      ),
-    ),
-    list_metadata: Schema.optional(
+    object: Schema.Literals(["list"]),
+    data: Schema.Array(
       Schema.Struct({
-        before: Schema.NullOr(Schema.String),
-        after: Schema.NullOr(Schema.String),
+        object: Schema.Literals(["authorization_resource"]),
+        name: Schema.String,
+        description: Schema.NullOr(Schema.String),
+        organization_id: Schema.String,
+        parent_resource_id: Schema.NullOr(Schema.String),
+        id: Schema.String,
+        external_id: Schema.String,
+        resource_type_slug: Schema.String,
+        created_at: Schema.String,
+        updated_at: Schema.String,
       }),
     ),
-  }) as unknown as Schema.Codec<AuthorizationResourcesControllerListOutput>;
+    list_metadata: Schema.Struct({
+      before: Schema.NullOr(Schema.String),
+      after: Schema.NullOr(Schema.String),
+    }),
+  }) as unknown as GeneratedStructCodec<AuthorizationResourcesControllerListOutput>;
 
 // The operation
 /**

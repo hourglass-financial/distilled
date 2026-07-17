@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -17,7 +18,7 @@ export const FlagTargetsControllerCreateTargetInput =
       method: "POST",
       path: "/feature-flags/{slug}/targets/{resourceId}",
     }),
-  ) as unknown as Schema.Codec<FlagTargetsControllerCreateTargetInput>;
+  ) as unknown as GeneratedStructCodec<FlagTargetsControllerCreateTargetInput>;
 
 // Output Schema
 export type FlagTargetsControllerCreateTargetOutput = void;

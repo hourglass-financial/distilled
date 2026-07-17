@@ -36,6 +36,11 @@ import {
 export { UnknownEasError } from "./errors.ts";
 import { Credentials } from "./credentials.ts";
 
+type ClientError =
+  | InstanceType<(typeof HTTP_STATUS_MAP)[keyof typeof HTTP_STATUS_MAP]>
+  | InstanceType<(typeof EAS_ERROR_CODE_MAP)[keyof typeof EAS_ERROR_CODE_MAP]>
+  | UnknownEasError;
+
 /**
  * Single GraphQL error in the `errors[]` array of a response envelope.
  * Mirrors the shape produced by graphql-js and used by api.expo.dev.
@@ -76,7 +81,7 @@ const matchError = (
   errorBody: unknown,
   _errors?: readonly unknown[],
   headers?: Record<string, string | undefined>,
-): Effect.Effect<never, unknown> => {
+): Effect.Effect<never, ClientError> => {
   // Try GraphQL envelope first — works for both HTTP 200 with errors[] and
   // HTTP 400 responses returned by the GraphQL gateway.
   const envelope = decodeEnvelope(errorBody);
@@ -86,7 +91,8 @@ const matchError = (
     const message = first.message;
 
     if (code) {
-      const TypedClass = EAS_ERROR_CODE_MAP[code];
+      const TypedClass =
+        EAS_ERROR_CODE_MAP[code as keyof typeof EAS_ERROR_CODE_MAP];
       if (TypedClass) {
         return Effect.fail(new TypedClass({ message }));
       }
@@ -148,7 +154,7 @@ const matchError = (
 /**
  * EAS GraphQL API client.
  */
-export const API = makeAPI<Credentials>({
+export const API = makeAPI<Credentials, never, ClientError, EasParseError>({
   credentials: Credentials as any,
   getBaseUrl: (creds: any) => creds.apiBaseUrl,
   getAuthHeaders: (creds: any) => ({

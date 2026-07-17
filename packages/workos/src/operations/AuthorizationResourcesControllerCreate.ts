@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import {
   BadRequest,
   Forbidden,
@@ -32,11 +33,11 @@ export const AuthorizationResourcesControllerCreateInput =
     parent_resource_type_slug: Schema.optional(Schema.String),
   }).pipe(
     T.Http({ method: "POST", path: "/authorization/resources" }),
-  ) as unknown as Schema.Codec<AuthorizationResourcesControllerCreateInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationResourcesControllerCreateInput>;
 
 // Output Schema
 export interface AuthorizationResourcesControllerCreateOutput {
-  object: string;
+  object: "authorization_resource";
   name: string;
   description: string | null;
   organization_id: string;
@@ -49,7 +50,7 @@ export interface AuthorizationResourcesControllerCreateOutput {
 }
 export const AuthorizationResourcesControllerCreateOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["authorization_resource"]),
     name: Schema.String,
     description: Schema.NullOr(Schema.String),
     organization_id: Schema.String,
@@ -59,7 +60,7 @@ export const AuthorizationResourcesControllerCreateOutput =
     resource_type_slug: Schema.String,
     created_at: Schema.String,
     updated_at: Schema.String,
-  }) as unknown as Schema.Codec<AuthorizationResourcesControllerCreateOutput>;
+  }) as unknown as GeneratedStructCodec<AuthorizationResourcesControllerCreateOutput>;
 
 // The operation
 /**

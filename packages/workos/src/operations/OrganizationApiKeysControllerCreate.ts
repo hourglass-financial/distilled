@@ -1,19 +1,20 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
 export interface OrganizationApiKeysControllerCreateInput {
   organizationId: string;
-  name?: string;
+  name: string;
   permissions?: ReadonlyArray<string>;
   expires_at?: string;
 }
 export const OrganizationApiKeysControllerCreateInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     organizationId: Schema.String.pipe(T.PathParam()),
-    name: Schema.optional(Schema.String),
+    name: Schema.String,
     permissions: Schema.optional(Schema.Array(Schema.String)),
     expires_at: Schema.optional(Schema.String),
   }).pipe(
@@ -21,13 +22,13 @@ export const OrganizationApiKeysControllerCreateInput =
       method: "POST",
       path: "/organizations/{organizationId}/api_keys",
     }),
-  ) as unknown as Schema.Codec<OrganizationApiKeysControllerCreateInput>;
+  ) as unknown as GeneratedStructCodec<OrganizationApiKeysControllerCreateInput>;
 
 // Output Schema
 export interface OrganizationApiKeysControllerCreateOutput {
-  object: string;
+  object: "api_key";
   id: string;
-  owner: { type: string; id: string };
+  owner: { type: "organization"; id: string };
   name: string;
   obfuscated_value: string;
   last_used_at: string | null;
@@ -39,10 +40,10 @@ export interface OrganizationApiKeysControllerCreateOutput {
 }
 export const OrganizationApiKeysControllerCreateOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["api_key"]),
     id: Schema.String,
     owner: Schema.Struct({
-      type: Schema.String,
+      type: Schema.Literals(["organization"]),
       id: Schema.String,
     }),
     name: Schema.String,
@@ -53,7 +54,7 @@ export const OrganizationApiKeysControllerCreateOutput =
     created_at: Schema.String,
     updated_at: Schema.String,
     value: Schema.String,
-  }) as unknown as Schema.Codec<OrganizationApiKeysControllerCreateOutput>;
+  }) as unknown as GeneratedStructCodec<OrganizationApiKeysControllerCreateOutput>;
 
 // The operation
 /**

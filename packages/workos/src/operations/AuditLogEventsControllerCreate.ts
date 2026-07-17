@@ -1,73 +1,70 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
 export interface AuditLogEventsControllerCreateInput {
-  organization_id?: string;
-  event?: {
-    action?: string;
-    occurred_at?: string;
-    actor?: { id?: string; type?: string; name?: string; metadata?: unknown };
-    targets?: ReadonlyArray<{
-      id?: string;
-      type?: string;
+  "idempotency-key"?: string;
+  organization_id: string;
+  event: {
+    action: string;
+    occurred_at: string;
+    actor: { id: string; type: string; name?: string; metadata?: unknown };
+    targets: ReadonlyArray<{
+      id: string;
+      type: string;
       name?: string;
       metadata?: unknown;
     }>;
-    context?: { location?: string; user_agent?: string };
+    context: { location: string; user_agent?: string };
     metadata?: unknown;
     version?: number;
   };
 }
 export const AuditLogEventsControllerCreateInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    organization_id: Schema.optional(Schema.String),
-    event: Schema.optional(
-      Schema.Struct({
-        action: Schema.optional(Schema.String),
-        occurred_at: Schema.optional(Schema.String),
-        actor: Schema.optional(
-          Schema.Struct({
-            id: Schema.optional(Schema.String),
-            type: Schema.optional(Schema.String),
-            name: Schema.optional(Schema.String),
-            metadata: Schema.optional(Schema.Unknown),
-          }),
-        ),
-        targets: Schema.optional(
-          Schema.Array(
-            Schema.Struct({
-              id: Schema.optional(Schema.String),
-              type: Schema.optional(Schema.String),
-              name: Schema.optional(Schema.String),
-              metadata: Schema.optional(Schema.Unknown),
-            }),
-          ),
-        ),
-        context: Schema.optional(
-          Schema.Struct({
-            location: Schema.optional(Schema.String),
-            user_agent: Schema.optional(Schema.String),
-          }),
-        ),
-        metadata: Schema.optional(Schema.Unknown),
-        version: Schema.optional(Schema.Number),
-      }),
+    "idempotency-key": Schema.optional(Schema.String).pipe(
+      T.HttpHeader("idempotency-key"),
     ),
+    organization_id: Schema.String,
+    event: Schema.Struct({
+      action: Schema.String,
+      occurred_at: Schema.String,
+      actor: Schema.Struct({
+        id: Schema.String,
+        type: Schema.String,
+        name: Schema.optional(Schema.String),
+        metadata: Schema.optional(Schema.Unknown),
+      }),
+      targets: Schema.Array(
+        Schema.Struct({
+          id: Schema.String,
+          type: Schema.String,
+          name: Schema.optional(Schema.String),
+          metadata: Schema.optional(Schema.Unknown),
+        }),
+      ),
+      context: Schema.Struct({
+        location: Schema.String,
+        user_agent: Schema.optional(Schema.String),
+      }),
+      metadata: Schema.optional(Schema.Unknown),
+      version: Schema.optional(Schema.Number),
+    }),
   }).pipe(
     T.Http({ method: "POST", path: "/audit_logs/events" }),
-  ) as unknown as Schema.Codec<AuditLogEventsControllerCreateInput>;
+  ) as unknown as GeneratedStructCodec<AuditLogEventsControllerCreateInput>;
 
 // Output Schema
 export interface AuditLogEventsControllerCreateOutput {
-  success?: boolean;
+  success: boolean;
 }
 export const AuditLogEventsControllerCreateOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    success: Schema.optional(Schema.Boolean),
-  }) as unknown as Schema.Codec<AuditLogEventsControllerCreateOutput>;
+    success: Schema.Boolean,
+  }) as unknown as GeneratedStructCodec<AuditLogEventsControllerCreateOutput>;
 
 // The operation
 /**

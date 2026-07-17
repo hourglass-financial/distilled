@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { Forbidden, NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
@@ -8,65 +9,63 @@ export interface DirectoryGroupsControllerListInput {
   before?: string;
   after?: string;
   limit?: number;
-  order?: string;
+  order?: "normal" | "desc" | "asc";
   directory?: string;
   user?: string;
 }
 export const DirectoryGroupsControllerListInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    before: Schema.optional(Schema.String),
-    after: Schema.optional(Schema.String),
-    limit: Schema.optional(Schema.Number),
-    order: Schema.optional(Schema.String),
-    directory: Schema.optional(Schema.String),
-    user: Schema.optional(Schema.String),
+    before: Schema.optional(Schema.String).pipe(T.HttpQuery("before")),
+    after: Schema.optional(Schema.String).pipe(T.HttpQuery("after")),
+    limit: Schema.optional(Schema.Number).pipe(T.HttpQuery("limit")),
+    order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])).pipe(
+      T.HttpQuery("order"),
+    ),
+    directory: Schema.optional(Schema.String).pipe(T.HttpQuery("directory")),
+    user: Schema.optional(Schema.String).pipe(T.HttpQuery("user")),
   }).pipe(
     T.Http({ method: "GET", path: "/directory_groups" }),
-  ) as unknown as Schema.Codec<DirectoryGroupsControllerListInput>;
+  ) as unknown as GeneratedStructCodec<DirectoryGroupsControllerListInput>;
 
 // Output Schema
 export interface DirectoryGroupsControllerListOutput {
-  object?: string;
-  data?: ReadonlyArray<{
-    object?: string;
-    id?: string;
-    idp_id?: string;
-    directory_id?: string;
-    organization_id?: string;
-    name?: string;
+  object: "list";
+  data: ReadonlyArray<{
+    object: "directory_group";
+    id: string;
+    idp_id: string;
+    directory_id: string;
+    organization_id: string;
+    name: string;
     raw_attributes?: Record<string, unknown>;
-    created_at?: string;
-    updated_at?: string;
+    created_at: string;
+    updated_at: string;
   }>;
-  list_metadata?: { before: string | null; after: string | null };
+  list_metadata: { before: string | null; after: string | null };
 }
 export const DirectoryGroupsControllerListOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    data: Schema.optional(
-      Schema.Array(
-        Schema.Struct({
-          object: Schema.optional(Schema.String),
-          id: Schema.optional(Schema.String),
-          idp_id: Schema.optional(Schema.String),
-          directory_id: Schema.optional(Schema.String),
-          organization_id: Schema.optional(Schema.String),
-          name: Schema.optional(Schema.String),
-          raw_attributes: Schema.optional(
-            Schema.Record(Schema.String, Schema.Unknown),
-          ),
-          created_at: Schema.optional(Schema.String),
-          updated_at: Schema.optional(Schema.String),
-        }),
-      ),
-    ),
-    list_metadata: Schema.optional(
+    object: Schema.Literals(["list"]),
+    data: Schema.Array(
       Schema.Struct({
-        before: Schema.NullOr(Schema.String),
-        after: Schema.NullOr(Schema.String),
+        object: Schema.Literals(["directory_group"]),
+        id: Schema.String,
+        idp_id: Schema.String,
+        directory_id: Schema.String,
+        organization_id: Schema.String,
+        name: Schema.String,
+        raw_attributes: Schema.optional(
+          Schema.Record(Schema.String, Schema.Unknown),
+        ),
+        created_at: Schema.String,
+        updated_at: Schema.String,
       }),
     ),
-  }) as unknown as Schema.Codec<DirectoryGroupsControllerListOutput>;
+    list_metadata: Schema.Struct({
+      before: Schema.NullOr(Schema.String),
+      after: Schema.NullOr(Schema.String),
+    }),
+  }) as unknown as GeneratedStructCodec<DirectoryGroupsControllerListOutput>;
 
 // The operation
 /**

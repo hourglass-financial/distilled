@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
@@ -14,28 +15,28 @@ export const AuthenticationFactorsControllerChallengeInput =
     sms_template: Schema.optional(Schema.String),
   }).pipe(
     T.Http({ method: "POST", path: "/auth/factors/{id}/challenge" }),
-  ) as unknown as Schema.Codec<AuthenticationFactorsControllerChallengeInput>;
+  ) as unknown as GeneratedStructCodec<AuthenticationFactorsControllerChallengeInput>;
 
 // Output Schema
 export interface AuthenticationFactorsControllerChallengeOutput {
-  object?: string;
-  id?: string;
+  object: "authentication_challenge";
+  id: string;
   expires_at?: string;
   code?: string;
-  authentication_factor_id?: string;
-  created_at?: string;
-  updated_at?: string;
+  authentication_factor_id: string;
+  created_at: string;
+  updated_at: string;
 }
 export const AuthenticationFactorsControllerChallengeOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    id: Schema.optional(Schema.String),
+    object: Schema.Literals(["authentication_challenge"]),
+    id: Schema.String,
     expires_at: Schema.optional(Schema.String),
     code: Schema.optional(Schema.String),
-    authentication_factor_id: Schema.optional(Schema.String),
-    created_at: Schema.optional(Schema.String),
-    updated_at: Schema.optional(Schema.String),
-  }) as unknown as Schema.Codec<AuthenticationFactorsControllerChallengeOutput>;
+    authentication_factor_id: Schema.String,
+    created_at: Schema.String,
+    updated_at: Schema.String,
+  }) as unknown as GeneratedStructCodec<AuthenticationFactorsControllerChallengeOutput>;
 
 // The operation
 /**

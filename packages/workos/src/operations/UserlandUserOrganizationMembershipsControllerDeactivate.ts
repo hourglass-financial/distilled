@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
@@ -15,11 +16,11 @@ export const UserlandUserOrganizationMembershipsControllerDeactivateInput =
       method: "PUT",
       path: "/user_management/organization_memberships/{id}/deactivate",
     }),
-  ) as unknown as Schema.Codec<UserlandUserOrganizationMembershipsControllerDeactivateInput>;
+  ) as unknown as GeneratedStructCodec<UserlandUserOrganizationMembershipsControllerDeactivateInput>;
 
 // Output Schema
 export interface UserlandUserOrganizationMembershipsControllerDeactivateOutput {
-  object: string;
+  object: "organization_membership";
   id: string;
   user_id: string;
   organization_id: string;
@@ -29,28 +30,28 @@ export interface UserlandUserOrganizationMembershipsControllerDeactivateOutput {
   custom_attributes?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
-  role: { slug?: string };
-  roles: ReadonlyArray<{ slug?: string }>;
+  role: { slug: string };
+  roles: ReadonlyArray<{ slug: string }>;
   user: {
-    object?: string;
-    id?: string;
-    first_name?: string | null;
-    last_name?: string | null;
+    object: "user";
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
     name?: string | null;
-    profile_picture_url?: string | null;
-    email?: string;
-    email_verified?: boolean;
-    external_id?: string | null;
+    profile_picture_url: string | null;
+    email: string;
+    email_verified: boolean;
+    external_id: string | null;
     metadata?: Record<string, string>;
-    last_sign_in_at?: string | null;
+    last_sign_in_at: string | null;
     locale?: string | null;
-    created_at?: string;
-    updated_at?: string;
+    created_at: string;
+    updated_at: string;
   };
 }
 export const UserlandUserOrganizationMembershipsControllerDeactivateOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["organization_membership"]),
     id: Schema.String,
     user_id: Schema.String,
     organization_id: Schema.String,
@@ -63,30 +64,30 @@ export const UserlandUserOrganizationMembershipsControllerDeactivateOutput =
     created_at: Schema.String,
     updated_at: Schema.String,
     role: Schema.Struct({
-      slug: Schema.optional(Schema.String),
+      slug: Schema.String,
     }),
     roles: Schema.Array(
       Schema.Struct({
-        slug: Schema.optional(Schema.String),
+        slug: Schema.String,
       }),
     ),
     user: Schema.Struct({
-      object: Schema.optional(Schema.String),
-      id: Schema.optional(Schema.String),
-      first_name: Schema.optional(Schema.NullOr(Schema.String)),
-      last_name: Schema.optional(Schema.NullOr(Schema.String)),
+      object: Schema.Literals(["user"]),
+      id: Schema.String,
+      first_name: Schema.NullOr(Schema.String),
+      last_name: Schema.NullOr(Schema.String),
       name: Schema.optional(Schema.NullOr(Schema.String)),
-      profile_picture_url: Schema.optional(Schema.NullOr(Schema.String)),
-      email: Schema.optional(Schema.String),
-      email_verified: Schema.optional(Schema.Boolean),
-      external_id: Schema.optional(Schema.NullOr(Schema.String)),
+      profile_picture_url: Schema.NullOr(Schema.String),
+      email: Schema.String,
+      email_verified: Schema.Boolean,
+      external_id: Schema.NullOr(Schema.String),
       metadata: Schema.optional(Schema.Record(Schema.String, Schema.String)),
-      last_sign_in_at: Schema.optional(Schema.NullOr(Schema.String)),
+      last_sign_in_at: Schema.NullOr(Schema.String),
       locale: Schema.optional(Schema.NullOr(Schema.String)),
-      created_at: Schema.optional(Schema.String),
-      updated_at: Schema.optional(Schema.String),
+      created_at: Schema.String,
+      updated_at: Schema.String,
     }),
-  }) as unknown as Schema.Codec<UserlandUserOrganizationMembershipsControllerDeactivateOutput>;
+  }) as unknown as GeneratedStructCodec<UserlandUserOrganizationMembershipsControllerDeactivateOutput>;
 
 // The operation
 /**

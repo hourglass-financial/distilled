@@ -1,17 +1,17 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 
 // Input Schema
 export interface UserlandSsoControllerAuthorizeInput {
-  code_challenge_method?: string;
+  code_challenge_method?: "S256";
   code_challenge?: string;
   domain_hint?: string;
   connection_id?: string;
-  provider_query_params?: string;
-  provider_scopes?: string;
+  provider_query_params?: Record<string, string>;
+  provider_scopes?: ReadonlyArray<string>;
   invitation_token?: string;
-  max_age?: number;
   screen_hint?: "sign-up" | "sign-in";
   login_hint?: string;
   provider?:
@@ -32,22 +32,37 @@ export interface UserlandSsoControllerAuthorizeInput {
   prompt?: string;
   state?: string;
   organization_id?: string;
-  response_type: string;
+  response_type: "code";
   redirect_uri: string;
   client_id: string;
 }
 export const UserlandSsoControllerAuthorizeInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    code_challenge_method: Schema.optional(Schema.String),
-    code_challenge: Schema.optional(Schema.String),
-    domain_hint: Schema.optional(Schema.String),
-    connection_id: Schema.optional(Schema.String),
-    provider_query_params: Schema.optional(Schema.String),
-    provider_scopes: Schema.optional(Schema.String),
-    invitation_token: Schema.optional(Schema.String),
-    max_age: Schema.optional(Schema.Number),
-    screen_hint: Schema.optional(Schema.Literals(["sign-up", "sign-in"])),
-    login_hint: Schema.optional(Schema.String),
+    code_challenge_method: Schema.optional(Schema.Literals(["S256"])).pipe(
+      T.HttpQuery("code_challenge_method"),
+    ),
+    code_challenge: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("code_challenge"),
+    ),
+    domain_hint: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("domain_hint"),
+    ),
+    connection_id: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("connection_id"),
+    ),
+    provider_query_params: Schema.optional(
+      Schema.Record(Schema.String, Schema.String),
+    ).pipe(T.HttpQuery("provider_query_params")),
+    provider_scopes: Schema.optional(Schema.Array(Schema.String)).pipe(
+      T.HttpQuery("provider_scopes", { style: "form", explode: false }),
+    ),
+    invitation_token: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("invitation_token"),
+    ),
+    screen_hint: Schema.optional(Schema.Literals(["sign-up", "sign-in"])).pipe(
+      T.HttpQuery("screen_hint"),
+    ),
+    login_hint: Schema.optional(Schema.String).pipe(T.HttpQuery("login_hint")),
     provider: Schema.optional(
       Schema.Literals([
         "authkit",
@@ -65,16 +80,18 @@ export const UserlandSsoControllerAuthorizeInput =
         "VercelOAuth",
         "XeroOAuth",
       ]),
+    ).pipe(T.HttpQuery("provider")),
+    prompt: Schema.optional(Schema.String).pipe(T.HttpQuery("prompt")),
+    state: Schema.optional(Schema.String).pipe(T.HttpQuery("state")),
+    organization_id: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("organization_id"),
     ),
-    prompt: Schema.optional(Schema.String),
-    state: Schema.optional(Schema.String),
-    organization_id: Schema.optional(Schema.String),
-    response_type: Schema.String,
-    redirect_uri: Schema.String,
-    client_id: Schema.String,
+    response_type: Schema.Literals(["code"]).pipe(T.HttpQuery("response_type")),
+    redirect_uri: Schema.String.pipe(T.HttpQuery("redirect_uri")),
+    client_id: Schema.String.pipe(T.HttpQuery("client_id")),
   }).pipe(
     T.Http({ method: "GET", path: "/user_management/authorize" }),
-  ) as unknown as Schema.Codec<UserlandSsoControllerAuthorizeInput>;
+  ) as unknown as GeneratedStructCodec<UserlandSsoControllerAuthorizeInput>;
 
 // Output Schema
 export type UserlandSsoControllerAuthorizeOutput = void;
@@ -94,7 +111,6 @@ export const UserlandSsoControllerAuthorizeOutput =
  * @param provider_query_params - Key/value pairs of query parameters to pass to the OAuth provider.
  * @param provider_scopes - Additional OAuth scopes to request from the identity provider.
  * @param invitation_token - A token representing a user invitation to redeem during authentication.
- * @param max_age - Maximum allowable elapsed time, in seconds, since the user last actively authenticated. If the last authentication is older than this value, the user is prompted to re-authenticate; a value of `0` forces re-authentication. Only supported when the provider is `authkit`.
  * @param screen_hint - Used to specify which screen to display when the provider is `authkit`.
  * @param login_hint - A hint to the authorization server about the login identifier the user might use.
  * @param provider - The OAuth provider to authenticate with (e.g., GoogleOAuth, MicrosoftOAuth, GitHubOAuth).

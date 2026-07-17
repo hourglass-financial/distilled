@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound } from "../errors.ts";
 
 // Input Schema
@@ -12,14 +13,14 @@ export const SsoControllerJsonWebKeySetInput =
     clientId: Schema.String.pipe(T.PathParam()),
   }).pipe(
     T.Http({ method: "GET", path: "/sso/jwks/{clientId}" }),
-  ) as unknown as Schema.Codec<SsoControllerJsonWebKeySetInput>;
+  ) as unknown as GeneratedStructCodec<SsoControllerJsonWebKeySetInput>;
 
 // Output Schema
 export interface SsoControllerJsonWebKeySetOutput {
-  keys?: ReadonlyArray<{
-    alg: string;
-    kty: string;
-    use: string;
+  keys: ReadonlyArray<{
+    alg: "RS256";
+    kty: "RSA";
+    use: "sig";
     x5c: ReadonlyArray<string>;
     n: string;
     e: string;
@@ -29,21 +30,19 @@ export interface SsoControllerJsonWebKeySetOutput {
 }
 export const SsoControllerJsonWebKeySetOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    keys: Schema.optional(
-      Schema.Array(
-        Schema.Struct({
-          alg: Schema.String,
-          kty: Schema.String,
-          use: Schema.String,
-          x5c: Schema.Array(Schema.String),
-          n: Schema.String,
-          e: Schema.String,
-          kid: Schema.String,
-          "x5t#S256": Schema.String,
-        }),
-      ),
+    keys: Schema.Array(
+      Schema.Struct({
+        alg: Schema.Literals(["RS256"]),
+        kty: Schema.Literals(["RSA"]),
+        use: Schema.Literals(["sig"]),
+        x5c: Schema.Array(Schema.String),
+        n: Schema.String,
+        e: Schema.String,
+        kid: Schema.String,
+        "x5t#S256": Schema.String,
+      }),
     ),
-  }) as unknown as Schema.Codec<SsoControllerJsonWebKeySetOutput>;
+  }) as unknown as GeneratedStructCodec<SsoControllerJsonWebKeySetOutput>;
 
 // The operation
 /**

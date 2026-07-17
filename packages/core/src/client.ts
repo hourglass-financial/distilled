@@ -78,6 +78,17 @@ export type OperationMethod<I, A, E, R, RequestOptions = never> = Effect.Effect<
   ((input: I, requestOptions?: RequestOptions) => Effect.Effect<A, E, R>);
 
 /**
+ * Failures introduced by the shared HTTP client in addition to an operation's
+ * OpenAPI-declared errors.
+ */
+export type ClientOperationError<OperationError, ProviderError, ParseError> =
+  | OperationError
+  | ProviderError
+  | ParseError
+  | HttpClientError.HttpClientError
+  | HttpBody.HttpBodyError;
+
+/**
  * A paginated operation that additionally has `.pages()` and `.items()` methods.
  */
 type PaginatedItem<A> =
@@ -128,7 +139,12 @@ const isEffectLike = (value: unknown): value is Effect.Effect<unknown> =>
  * Configuration for the API client factory.
  * SDKs provide this to customize how errors are matched and credentials are applied.
  */
-export interface ClientConfig<Creds, RequestOptions = never> {
+export interface ClientConfig<
+  Creds,
+  RequestOptions = never,
+  ProviderError = unknown,
+  ParseError = unknown,
+> {
   /** The credentials service tag */
   credentials: Context.ServiceClass<any, any, Effect.Effect<Creds>>;
 
@@ -175,10 +191,10 @@ export interface ClientConfig<Creds, RequestOptions = never> {
     body: unknown,
     errors?: readonly ApiErrorClass[],
     headers?: Record<string, string | undefined>,
-  ) => Effect.Effect<never, unknown>;
+  ) => Effect.Effect<never, ProviderError>;
 
   /** Parse error class for schema decode failures */
-  ParseError: new (props: { body: unknown; cause: unknown }) => unknown;
+  ParseError: new (props: { body: unknown; cause: unknown }) => ParseError;
 
   /**
    * Optional transform applied to the response body before schema decoding.
@@ -531,15 +547,21 @@ function setBinaryBody(
  * });
  * ```
  */
-export const makeAPI = <Creds, RequestOptions = never>(
-  config: ClientConfig<Creds, RequestOptions>,
+// HOURGLASS PATCH: Expose every dependency and failure introduced by the
+// shared transport instead of advertising only spec-declared operation errors.
+export const makeAPI = <
+  Creds,
+  RequestOptions = never,
+  ProviderError = unknown,
+  ParseError = unknown,
+>(
+  config: ClientConfig<Creds, RequestOptions, ProviderError, ParseError>,
 ) => {
-  type _ClientErrors = HttpClientError.HttpClientError | HttpBody.HttpBodyError;
   type ResolvedCreds = ResolvedClientCredentials<Creds>;
 
   return {
     make: <
-      I extends Schema.Top,
+      I extends Schema.Top & { readonly EncodingServices: never },
       O extends Schema.Top,
       const E extends readonly ApiErrorClass[] = readonly [],
     >(
@@ -547,11 +569,18 @@ export const makeAPI = <Creds, RequestOptions = never>(
     ): OperationMethod<
       Schema.Schema.Type<I>,
       Schema.Schema.Type<O>,
-      InstanceType<E[number]>,
-      Creds,
+      ClientOperationError<InstanceType<E[number]>, ProviderError, ParseError>,
+      Creds | HttpClient.HttpClient | O["DecodingServices"],
       RequestOptions
     > => {
       type Input = Schema.Schema.Type<I>;
+      type Output = O["Type"];
+      type Error = ClientOperationError<
+        InstanceType<E[number]>,
+        ProviderError,
+        ParseError
+      >;
+      type Requirements = Creds | HttpClient.HttpClient | O["DecodingServices"];
 
       // Lazily resolve the operation config + schema traits on first use,
       // not at module-load time. Generated SDKs may wrap each request/response
@@ -615,7 +644,7 @@ export const makeAPI = <Creds, RequestOptions = never>(
       const innerFn = (
         input: Input,
         requestOptions?: RequestOptions,
-      ): Effect.Effect<any, any, any> =>
+      ): Effect.Effect<Output, Error, Requirements> =>
         Effect.gen(function* () {
           const {
             opConfig,
@@ -647,12 +676,16 @@ export const makeAPI = <Creds, RequestOptions = never>(
           const authHeaders = config.getAuthHeaders(creds as ResolvedCreds);
 
           // Use schema-aware request builder for proper camelCase → wire_name mapping
-          let parts = Traits.buildRequestParts(
-            inputAst,
-            httpTrait,
-            input as Record<string, unknown>,
-            inputSchema,
-          );
+          let parts = yield* Effect.try({
+            try: () =>
+              Traits.buildRequestParts(
+                inputAst,
+                httpTrait,
+                input as Record<string, unknown>,
+                inputSchema,
+              ),
+            catch: (cause) => new config.ParseError({ body: input, cause }),
+          });
 
           // GraphQL: wrap variables in the standard GraphQL request envelope.
           // All input fields become `variables`; `query` and `operationName`
@@ -1020,35 +1053,46 @@ export const makeAPI = <Creds, RequestOptions = never>(
           return yield* Schema.decodeUnknownEffect(outputSchema)(
             responseBody,
           ).pipe(
-            Effect.catchTag("SchemaError", (cause) =>
-              // A `result: null` success coerced to `{}` that the schema
-              // rejects: retry decoding the genuine `null` (the schema may be
-              // a nullable union). Only then surface the parse error.
-              resultWasNull
-                ? Schema.decodeUnknownEffect(outputSchema)(null).pipe(
+            Effect.catchTag(
+              "SchemaError",
+              (
+                cause,
+              ): Effect.Effect<
+                Output,
+                ParseError | HttpClientError.HttpClientError,
+                O["DecodingServices"]
+              > => {
+                // A `result: null` success coerced to `{}` that the schema
+                // rejects: retry decoding the genuine `null` (the schema may
+                // be a nullable union). Only then surface the parse error.
+                if (resultWasNull) {
+                  return Schema.decodeUnknownEffect(outputSchema)(null).pipe(
                     Effect.catchTag("SchemaError", () =>
                       Effect.fail(
                         new config.ParseError({ body: rawBody, cause }),
                       ),
                     ),
-                  )
-                : bodyIsEmpty
-                  ? Effect.fail(
-                      new HttpClientError.HttpClientError({
-                        reason: new HttpClientError.TransportError({
-                          request,
-                          cause,
-                          description:
-                            "Empty response body where a structured response was expected",
-                        }),
+                  );
+                }
+                if (bodyIsEmpty) {
+                  return Effect.fail(
+                    new HttpClientError.HttpClientError({
+                      reason: new HttpClientError.TransportError({
+                        request,
+                        cause,
+                        description:
+                          "Empty response body where a structured response was expected",
                       }),
-                    )
-                  : Effect.fail(
-                      new config.ParseError({ body: rawBody, cause }),
-                    ),
+                    }),
+                  );
+                }
+                return Effect.fail(
+                  new config.ParseError({ body: rawBody, cause }),
+                );
+              },
             ),
           );
-        });
+        }) as Effect.Effect<Output, Error, Requirements>;
 
       // Auto-retry every operation using the SDK's per-client `Retry`
       // Context.Service. The policy is read with `Effect.serviceOption`
@@ -1062,7 +1106,7 @@ export const makeAPI = <Creds, RequestOptions = never>(
       const fn = (
         input: Input,
         requestOptions?: RequestOptions,
-      ): Effect.Effect<any, any, any> => {
+      ): Effect.Effect<Output, Error, Requirements> => {
         const { spanName, method, httpTrait } = prepare();
         const withRetry = Effect.gen(function* () {
           const lastError = yield* Ref.make<unknown>(undefined);
@@ -1121,7 +1165,7 @@ export const makeAPI = <Creds, RequestOptions = never>(
     },
 
     makePaginated: <
-      I extends Schema.Top,
+      I extends Schema.Top & { readonly EncodingServices: never },
       O extends Schema.Top,
       const E extends readonly ApiErrorClass[] = readonly [],
     >(
@@ -1130,15 +1174,17 @@ export const makeAPI = <Creds, RequestOptions = never>(
     ): PaginatedOperationMethod<
       Schema.Schema.Type<I>,
       Schema.Schema.Type<O>,
-      InstanceType<E[number]>,
-      Creds,
+      ClientOperationError<InstanceType<E[number]>, ProviderError, ParseError>,
+      Creds | HttpClient.HttpClient | O["DecodingServices"],
       RequestOptions
     > => {
       const opConfig = configFn();
       const pagination = opConfig.pagination!;
 
       // Create the base operation
-      const baseFn = makeAPI(config).make(() => ({
+      const baseFn = makeAPI<Creds, RequestOptions, ProviderError, ParseError>(
+        config,
+      ).make(() => ({
         inputSchema: opConfig.inputSchema ?? opConfig.input,
         outputSchema: opConfig.outputSchema ?? opConfig.output,
         errors: opConfig.errors,

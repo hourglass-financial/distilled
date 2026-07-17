@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -12,15 +13,15 @@ export const DirectoriesControllerFindInput =
     id: Schema.String.pipe(T.PathParam()),
   }).pipe(
     T.Http({ method: "GET", path: "/directories/{id}" }),
-  ) as unknown as Schema.Codec<DirectoriesControllerFindInput>;
+  ) as unknown as GeneratedStructCodec<DirectoriesControllerFindInput>;
 
 // Output Schema
 export interface DirectoriesControllerFindOutput {
-  object?: string;
-  id?: string;
-  organization_id?: string;
-  external_key?: string;
-  type?:
+  object: "directory";
+  id: string;
+  organization_id: string;
+  external_key: string;
+  type:
     | "azure scim v2.0"
     | "bamboohr"
     | "breathe hr"
@@ -42,59 +43,55 @@ export interface DirectoriesControllerFindOutput {
     | "sftp"
     | "sftp workday"
     | "workday";
-  state?:
+  state:
     | "linked"
     | "validating"
     | "invalid_credentials"
     | "unlinked"
     | "deleting";
-  name?: string;
+  name: string;
   domain?: string;
   metadata?: { users: { active: number; inactive: number }; groups: number };
-  created_at?: string;
-  updated_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 export const DirectoriesControllerFindOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    id: Schema.optional(Schema.String),
-    organization_id: Schema.optional(Schema.String),
-    external_key: Schema.optional(Schema.String),
-    type: Schema.optional(
-      Schema.Literals([
-        "azure scim v2.0",
-        "bamboohr",
-        "breathe hr",
-        "cezanne hr",
-        "cyberark scim v2.0",
-        "fourth hr",
-        "generic scim v2.0",
-        "gsuite directory",
-        "hibob",
-        "sailpoint scim v2.0",
-        "jump cloud scim v2.0",
-        "okta scim v2.0",
-        "onelogin scim v2.0",
-        "people hr",
-        "personio",
-        "pingfederate scim v2.0",
-        "rippling scim v2.0",
-        "s3",
-        "sftp",
-        "sftp workday",
-        "workday",
-      ]),
-    ),
-    state: Schema.optional(
-      Schema.Literals([
-        "linked",
-        "validating",
-        "invalid_credentials",
-        "unlinked",
-        "deleting",
-      ]),
-    ),
-    name: Schema.optional(Schema.String),
+    object: Schema.Literals(["directory"]),
+    id: Schema.String,
+    organization_id: Schema.String,
+    external_key: Schema.String,
+    type: Schema.Literals([
+      "azure scim v2.0",
+      "bamboohr",
+      "breathe hr",
+      "cezanne hr",
+      "cyberark scim v2.0",
+      "fourth hr",
+      "generic scim v2.0",
+      "gsuite directory",
+      "hibob",
+      "sailpoint scim v2.0",
+      "jump cloud scim v2.0",
+      "okta scim v2.0",
+      "onelogin scim v2.0",
+      "people hr",
+      "personio",
+      "pingfederate scim v2.0",
+      "rippling scim v2.0",
+      "s3",
+      "sftp",
+      "sftp workday",
+      "workday",
+    ]),
+    state: Schema.Literals([
+      "linked",
+      "validating",
+      "invalid_credentials",
+      "unlinked",
+      "deleting",
+    ]),
+    name: Schema.String,
     domain: Schema.optional(Schema.String),
     metadata: Schema.optional(
       Schema.Struct({
@@ -105,9 +102,9 @@ export const DirectoriesControllerFindOutput =
         groups: Schema.Number,
       }),
     ),
-    created_at: Schema.optional(Schema.String),
-    updated_at: Schema.optional(Schema.String),
-  }) as unknown as Schema.Codec<DirectoriesControllerFindOutput>;
+    created_at: Schema.String,
+    updated_at: Schema.String,
+  }) as unknown as GeneratedStructCodec<DirectoriesControllerFindOutput>;
 
 // The operation
 /**

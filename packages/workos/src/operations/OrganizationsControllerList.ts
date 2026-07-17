@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
@@ -8,31 +9,35 @@ export interface OrganizationsControllerListInput {
   before?: string;
   after?: string;
   limit?: number;
-  order?: string;
-  domains?: string;
+  order?: "normal" | "desc" | "asc";
+  domains?: ReadonlyArray<string>;
   search?: string;
 }
 export const OrganizationsControllerListInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    before: Schema.optional(Schema.String),
-    after: Schema.optional(Schema.String),
-    limit: Schema.optional(Schema.Number),
-    order: Schema.optional(Schema.String),
-    domains: Schema.optional(Schema.String),
-    search: Schema.optional(Schema.String),
+    before: Schema.optional(Schema.String).pipe(T.HttpQuery("before")),
+    after: Schema.optional(Schema.String).pipe(T.HttpQuery("after")),
+    limit: Schema.optional(Schema.Number).pipe(T.HttpQuery("limit")),
+    order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])).pipe(
+      T.HttpQuery("order"),
+    ),
+    domains: Schema.optional(Schema.Array(Schema.String)).pipe(
+      T.HttpQuery("domains", { style: "form", explode: false }),
+    ),
+    search: Schema.optional(Schema.String).pipe(T.HttpQuery("search")),
   }).pipe(
     T.Http({ method: "GET", path: "/organizations" }),
-  ) as unknown as Schema.Codec<OrganizationsControllerListInput>;
+  ) as unknown as GeneratedStructCodec<OrganizationsControllerListInput>;
 
 // Output Schema
 export interface OrganizationsControllerListOutput {
-  object?: string;
-  data?: ReadonlyArray<{
-    object?: string;
-    id?: string;
-    name?: string;
-    domains?: ReadonlyArray<{
-      object: string;
+  object: "list";
+  data: ReadonlyArray<{
+    object: "organization";
+    id: string;
+    name: string;
+    domains: ReadonlyArray<{
+      object: "organization_domain";
       id: string;
       organization_id: string;
       domain: string;
@@ -48,68 +53,60 @@ export interface OrganizationsControllerListOutput {
       created_at: string;
       updated_at: string;
     }>;
-    metadata?: Record<string, string>;
-    external_id?: string | null;
+    metadata: Record<string, string>;
+    external_id: string | null;
     stripe_customer_id?: string;
-    created_at?: string;
-    updated_at?: string;
+    created_at: string;
+    updated_at: string;
     allow_profiles_outside_organization?: boolean;
   }>;
-  list_metadata?: { before: string | null; after: string | null };
+  list_metadata: { before: string | null; after: string | null };
 }
 export const OrganizationsControllerListOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    data: Schema.optional(
-      Schema.Array(
-        Schema.Struct({
-          object: Schema.optional(Schema.String),
-          id: Schema.optional(Schema.String),
-          name: Schema.optional(Schema.String),
-          domains: Schema.optional(
-            Schema.Array(
-              Schema.Struct({
-                object: Schema.String,
-                id: Schema.String,
-                organization_id: Schema.String,
-                domain: Schema.String,
-                state: Schema.optional(
-                  Schema.Literals([
-                    "failed",
-                    "legacy_verified",
-                    "pending",
-                    "unverified",
-                    "verified",
-                  ]),
-                ),
-                verification_prefix: Schema.optional(Schema.String),
-                verification_token: Schema.optional(Schema.String),
-                verification_strategy: Schema.optional(
-                  Schema.Literals(["dns", "manual"]),
-                ),
-                created_at: Schema.String,
-                updated_at: Schema.String,
-              }),
-            ),
-          ),
-          metadata: Schema.optional(
-            Schema.Record(Schema.String, Schema.String),
-          ),
-          external_id: Schema.optional(Schema.NullOr(Schema.String)),
-          stripe_customer_id: Schema.optional(Schema.String),
-          created_at: Schema.optional(Schema.String),
-          updated_at: Schema.optional(Schema.String),
-          allow_profiles_outside_organization: Schema.optional(Schema.Boolean),
-        }),
-      ),
-    ),
-    list_metadata: Schema.optional(
+    object: Schema.Literals(["list"]),
+    data: Schema.Array(
       Schema.Struct({
-        before: Schema.NullOr(Schema.String),
-        after: Schema.NullOr(Schema.String),
+        object: Schema.Literals(["organization"]),
+        id: Schema.String,
+        name: Schema.String,
+        domains: Schema.Array(
+          Schema.Struct({
+            object: Schema.Literals(["organization_domain"]),
+            id: Schema.String,
+            organization_id: Schema.String,
+            domain: Schema.String,
+            state: Schema.optional(
+              Schema.Literals([
+                "failed",
+                "legacy_verified",
+                "pending",
+                "unverified",
+                "verified",
+              ]),
+            ),
+            verification_prefix: Schema.optional(Schema.String),
+            verification_token: Schema.optional(Schema.String),
+            verification_strategy: Schema.optional(
+              Schema.Literals(["dns", "manual"]),
+            ),
+            created_at: Schema.String,
+            updated_at: Schema.String,
+          }),
+        ),
+        metadata: Schema.Record(Schema.String, Schema.String),
+        external_id: Schema.NullOr(Schema.String),
+        stripe_customer_id: Schema.optional(Schema.String),
+        created_at: Schema.String,
+        updated_at: Schema.String,
+        allow_profiles_outside_organization: Schema.optional(Schema.Boolean),
       }),
     ),
-  }) as unknown as Schema.Codec<OrganizationsControllerListOutput>;
+    list_metadata: Schema.Struct({
+      before: Schema.NullOr(Schema.String),
+      after: Schema.NullOr(Schema.String),
+    }),
+  }) as unknown as GeneratedStructCodec<OrganizationsControllerListOutput>;
 
 // The operation
 /**

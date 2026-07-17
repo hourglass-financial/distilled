@@ -1,11 +1,12 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
 export interface WidgetsPublicControllerIssueWidgetSessionTokenInput {
-  organization_id?: string;
+  organization_id: string;
   user_id?: string;
   scopes?: ReadonlyArray<
     | "widgets:users-table:manage"
@@ -19,7 +20,7 @@ export interface WidgetsPublicControllerIssueWidgetSessionTokenInput {
 }
 export const WidgetsPublicControllerIssueWidgetSessionTokenInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    organization_id: Schema.optional(Schema.String),
+    organization_id: Schema.String,
     user_id: Schema.optional(Schema.String),
     scopes: Schema.optional(
       Schema.Array(
@@ -36,16 +37,16 @@ export const WidgetsPublicControllerIssueWidgetSessionTokenInput =
     ),
   }).pipe(
     T.Http({ method: "POST", path: "/widgets/token" }),
-  ) as unknown as Schema.Codec<WidgetsPublicControllerIssueWidgetSessionTokenInput>;
+  ) as unknown as GeneratedStructCodec<WidgetsPublicControllerIssueWidgetSessionTokenInput>;
 
 // Output Schema
 export interface WidgetsPublicControllerIssueWidgetSessionTokenOutput {
-  token?: string;
+  token: string;
 }
 export const WidgetsPublicControllerIssueWidgetSessionTokenOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    token: Schema.optional(Schema.String),
-  }) as unknown as Schema.Codec<WidgetsPublicControllerIssueWidgetSessionTokenOutput>;
+    token: Schema.String,
+  }) as unknown as GeneratedStructCodec<WidgetsPublicControllerIssueWidgetSessionTokenOutput>;
 
 // The operation
 /**

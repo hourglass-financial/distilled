@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound } from "../errors.ts";
 
 // Input Schema
@@ -17,7 +18,7 @@ export const AuthorizedApplicationsControllerDeleteInput =
       method: "DELETE",
       path: "/user_management/users/{user_id}/authorized_applications/{application_id}",
     }),
-  ) as unknown as Schema.Codec<AuthorizedApplicationsControllerDeleteInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizedApplicationsControllerDeleteInput>;
 
 // Output Schema
 export type AuthorizedApplicationsControllerDeleteOutput = void;

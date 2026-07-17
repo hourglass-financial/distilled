@@ -19,6 +19,10 @@ import {
 export { UnknownPlanetScaleError } from "./errors.ts";
 import { Credentials, formatHeaders } from "./credentials.ts";
 
+type ClientError =
+  | InstanceType<(typeof HTTP_STATUS_MAP)[keyof typeof HTTP_STATUS_MAP]>
+  | UnknownPlanetScaleError;
+
 // API Error Response Schema
 const ApiErrorResponse = Schema.Struct({
   code: Schema.String,
@@ -33,7 +37,7 @@ const matchError = (
   errorBody: unknown,
   _errors?: readonly unknown[],
   headers?: Record<string, string | undefined>,
-): Effect.Effect<never, unknown> => {
+): Effect.Effect<never, ClientError> => {
   try {
     const parsed = Schema.decodeUnknownSync(ApiErrorResponse)(errorBody);
     const ErrorClass = (HTTP_STATUS_MAP as any)[status];
@@ -60,7 +64,12 @@ const matchError = (
 /**
  * PlanetScale API client.
  */
-export const API = makeAPI<Credentials>({
+export const API = makeAPI<
+  Credentials,
+  never,
+  ClientError,
+  PlanetScaleParseError
+>({
   credentials: Credentials as any,
   getBaseUrl: (creds: any) => creds.apiBaseUrl,
   getAuthHeaders: (creds: any) => formatHeaders(creds),

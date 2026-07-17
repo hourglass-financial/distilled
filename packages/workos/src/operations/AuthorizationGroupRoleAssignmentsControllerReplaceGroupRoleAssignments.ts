@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { Forbidden, NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
@@ -29,16 +30,16 @@ export const AuthorizationGroupRoleAssignmentsControllerReplaceGroupRoleAssignme
       method: "PUT",
       path: "/authorization/groups/{group_id}/role_assignments",
     }),
-  ) as unknown as Schema.Codec<AuthorizationGroupRoleAssignmentsControllerReplaceGroupRoleAssignmentsInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationGroupRoleAssignmentsControllerReplaceGroupRoleAssignmentsInput>;
 
 // Output Schema
 export interface AuthorizationGroupRoleAssignmentsControllerReplaceGroupRoleAssignmentsOutput {
-  object: string;
+  object: "list";
   data: ReadonlyArray<{
-    object: string;
+    object: "group_role_assignment";
     id: string;
     group_id: string;
-    role: { slug?: string };
+    role: { slug: string };
     resource: { id: string; external_id: string; resource_type_slug: string };
     created_at: string;
     updated_at: string;
@@ -47,14 +48,14 @@ export interface AuthorizationGroupRoleAssignmentsControllerReplaceGroupRoleAssi
 }
 export const AuthorizationGroupRoleAssignmentsControllerReplaceGroupRoleAssignmentsOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["list"]),
     data: Schema.Array(
       Schema.Struct({
-        object: Schema.String,
+        object: Schema.Literals(["group_role_assignment"]),
         id: Schema.String,
         group_id: Schema.String,
         role: Schema.Struct({
-          slug: Schema.optional(Schema.String),
+          slug: Schema.String,
         }),
         resource: Schema.Struct({
           id: Schema.String,
@@ -69,7 +70,7 @@ export const AuthorizationGroupRoleAssignmentsControllerReplaceGroupRoleAssignme
       before: Schema.NullOr(Schema.String),
       after: Schema.NullOr(Schema.String),
     }),
-  }) as unknown as Schema.Codec<AuthorizationGroupRoleAssignmentsControllerReplaceGroupRoleAssignmentsOutput>;
+  }) as unknown as GeneratedStructCodec<AuthorizationGroupRoleAssignmentsControllerReplaceGroupRoleAssignmentsOutput>;
 
 // The operation
 /**

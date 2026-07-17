@@ -20,6 +20,10 @@ import {
 export { UnknownAxiomError } from "./errors.ts";
 import { Credentials } from "./credentials.ts";
 
+type ClientError =
+  | InstanceType<(typeof HTTP_STATUS_MAP)[keyof typeof HTTP_STATUS_MAP]>
+  | UnknownAxiomError;
+
 /**
  * Axiom returns two error envelope shapes:
  *   - control-plane / edge-ingest: `{ "code": "...", "message": "..." }`
@@ -47,7 +51,7 @@ const matchError = (
   errorBody: unknown,
   _errors?: readonly unknown[],
   headers?: Record<string, string | undefined>,
-): Effect.Effect<never, unknown> => {
+): Effect.Effect<never, ClientError> => {
   const ErrorClass = (HTTP_STATUS_MAP as any)[status];
   let message = "";
   let code: string | number | undefined;
@@ -103,7 +107,7 @@ const stripNulls = (value: unknown): unknown => {
 /**
  * Axiom API client.
  */
-export const API = makeAPI<Credentials>({
+export const API = makeAPI<Credentials, never, ClientError, AxiomParseError>({
   credentials: Credentials as any,
   getBaseUrl: (creds: any) => creds.apiBaseUrl,
   getAuthHeaders: (creds: any) => {

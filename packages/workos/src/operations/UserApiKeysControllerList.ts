@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound } from "../errors.ts";
 
 // Input Schema
@@ -9,28 +10,32 @@ export interface UserApiKeysControllerListInput {
   before?: string;
   after?: string;
   limit?: number;
-  order?: string;
+  order?: "normal" | "desc" | "asc";
   organization_id?: string;
 }
 export const UserApiKeysControllerListInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     userId: Schema.String.pipe(T.PathParam()),
-    before: Schema.optional(Schema.String),
-    after: Schema.optional(Schema.String),
-    limit: Schema.optional(Schema.Number),
-    order: Schema.optional(Schema.String),
-    organization_id: Schema.optional(Schema.String),
+    before: Schema.optional(Schema.String).pipe(T.HttpQuery("before")),
+    after: Schema.optional(Schema.String).pipe(T.HttpQuery("after")),
+    limit: Schema.optional(Schema.Number).pipe(T.HttpQuery("limit")),
+    order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])).pipe(
+      T.HttpQuery("order"),
+    ),
+    organization_id: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("organization_id"),
+    ),
   }).pipe(
     T.Http({ method: "GET", path: "/user_management/users/{userId}/api_keys" }),
-  ) as unknown as Schema.Codec<UserApiKeysControllerListInput>;
+  ) as unknown as GeneratedStructCodec<UserApiKeysControllerListInput>;
 
 // Output Schema
 export interface UserApiKeysControllerListOutput {
-  object: string;
+  object: "list";
   data: ReadonlyArray<{
-    object: string;
+    object: "api_key";
     id: string;
-    owner: { type: string; id: string; organization_id: string };
+    owner: { type: "user"; id: string; organization_id: string };
     name: string;
     obfuscated_value: string;
     last_used_at: string | null;
@@ -43,13 +48,13 @@ export interface UserApiKeysControllerListOutput {
 }
 export const UserApiKeysControllerListOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["list"]),
     data: Schema.Array(
       Schema.Struct({
-        object: Schema.String,
+        object: Schema.Literals(["api_key"]),
         id: Schema.String,
         owner: Schema.Struct({
-          type: Schema.String,
+          type: Schema.Literals(["user"]),
           id: Schema.String,
           organization_id: Schema.String,
         }),
@@ -66,7 +71,7 @@ export const UserApiKeysControllerListOutput =
       before: Schema.NullOr(Schema.String),
       after: Schema.NullOr(Schema.String),
     }),
-  }) as unknown as Schema.Codec<UserApiKeysControllerListOutput>;
+  }) as unknown as GeneratedStructCodec<UserApiKeysControllerListOutput>;
 
 // The operation
 /**

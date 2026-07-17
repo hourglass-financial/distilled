@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound } from "../errors.ts";
 
 // Input Schema
@@ -12,26 +13,24 @@ export const AuthenticationFactorsControllerGetInput =
     id: Schema.String.pipe(T.PathParam()),
   }).pipe(
     T.Http({ method: "GET", path: "/auth/factors/{id}" }),
-  ) as unknown as Schema.Codec<AuthenticationFactorsControllerGetInput>;
+  ) as unknown as GeneratedStructCodec<AuthenticationFactorsControllerGetInput>;
 
 // Output Schema
 export interface AuthenticationFactorsControllerGetOutput {
-  object?: string;
-  id?: string;
-  type?: "generic_otp" | "sms" | "totp" | "webauthn";
+  object: "authentication_factor";
+  id: string;
+  type: "generic_otp" | "sms" | "totp" | "webauthn";
   user_id?: string;
   sms?: { phone_number: string };
   totp?: { issuer: string; user: string };
-  created_at?: string;
-  updated_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 export const AuthenticationFactorsControllerGetOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    id: Schema.optional(Schema.String),
-    type: Schema.optional(
-      Schema.Literals(["generic_otp", "sms", "totp", "webauthn"]),
-    ),
+    object: Schema.Literals(["authentication_factor"]),
+    id: Schema.String,
+    type: Schema.Literals(["generic_otp", "sms", "totp", "webauthn"]),
     user_id: Schema.optional(Schema.String),
     sms: Schema.optional(
       Schema.Struct({
@@ -44,9 +43,9 @@ export const AuthenticationFactorsControllerGetOutput =
         user: Schema.String,
       }),
     ),
-    created_at: Schema.optional(Schema.String),
-    updated_at: Schema.optional(Schema.String),
-  }) as unknown as Schema.Codec<AuthenticationFactorsControllerGetOutput>;
+    created_at: Schema.String,
+    updated_at: Schema.String,
+  }) as unknown as GeneratedStructCodec<AuthenticationFactorsControllerGetOutput>;
 
 // The operation
 /**

@@ -1,22 +1,23 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
 export interface RadarStandaloneControllerUpdateRadarAttemptInput {
   id: string;
-  challenge_status?: string;
-  attempt_status?: string;
+  challenge_status?: "success";
+  attempt_status?: "success";
 }
 export const RadarStandaloneControllerUpdateRadarAttemptInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
-    challenge_status: Schema.optional(Schema.String),
-    attempt_status: Schema.optional(Schema.String),
+    challenge_status: Schema.optional(Schema.Literals(["success"])),
+    attempt_status: Schema.optional(Schema.Literals(["success"])),
   }).pipe(
     T.Http({ method: "PUT", path: "/radar/attempts/{id}" }),
-  ) as unknown as Schema.Codec<RadarStandaloneControllerUpdateRadarAttemptInput>;
+  ) as unknown as GeneratedStructCodec<RadarStandaloneControllerUpdateRadarAttemptInput>;
 
 // Output Schema
 export type RadarStandaloneControllerUpdateRadarAttemptOutput = void;

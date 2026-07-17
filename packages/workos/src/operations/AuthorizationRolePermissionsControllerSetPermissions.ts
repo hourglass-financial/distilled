@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import {
   BadRequest,
   Forbidden,
@@ -11,20 +12,20 @@ import {
 // Input Schema
 export interface AuthorizationRolePermissionsControllerSetPermissionsInput {
   slug: string;
-  permissions?: ReadonlyArray<string>;
+  permissions: ReadonlyArray<string>;
 }
 export const AuthorizationRolePermissionsControllerSetPermissionsInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     slug: Schema.String.pipe(T.PathParam()),
-    permissions: Schema.optional(Schema.Array(Schema.String)),
+    permissions: Schema.Array(Schema.String),
   }).pipe(
     T.Http({ method: "PUT", path: "/authorization/roles/{slug}/permissions" }),
-  ) as unknown as Schema.Codec<AuthorizationRolePermissionsControllerSetPermissionsInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationRolePermissionsControllerSetPermissionsInput>;
 
 // Output Schema
 export interface AuthorizationRolePermissionsControllerSetPermissionsOutput {
   slug: string;
-  object: string;
+  object: "role";
   id: string;
   name: string;
   description: string | null;
@@ -37,7 +38,7 @@ export interface AuthorizationRolePermissionsControllerSetPermissionsOutput {
 export const AuthorizationRolePermissionsControllerSetPermissionsOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     slug: Schema.String,
-    object: Schema.String,
+    object: Schema.Literals(["role"]),
     id: Schema.String,
     name: Schema.String,
     description: Schema.NullOr(Schema.String),
@@ -46,7 +47,7 @@ export const AuthorizationRolePermissionsControllerSetPermissionsOutput =
     permissions: Schema.Array(Schema.String),
     created_at: Schema.String,
     updated_at: Schema.String,
-  }) as unknown as Schema.Codec<AuthorizationRolePermissionsControllerSetPermissionsOutput>;
+  }) as unknown as GeneratedStructCodec<AuthorizationRolePermissionsControllerSetPermissionsOutput>;
 
 // The operation
 /**

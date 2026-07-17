@@ -20,6 +20,10 @@ import {
 export { UnknownFlyIoError } from "./errors.ts";
 import { Credentials } from "./credentials.ts";
 
+type ClientError =
+  | InstanceType<(typeof HTTP_STATUS_MAP)[keyof typeof HTTP_STATUS_MAP]>
+  | UnknownFlyIoError;
+
 // API Error Response Schema — Fly.io returns { "error": "..." }
 const ApiErrorResponse = Schema.Struct({
   error: Schema.String,
@@ -33,7 +37,7 @@ const matchError = (
   errorBody: unknown,
   _errors?: readonly unknown[],
   headers?: Record<string, string | undefined>,
-): Effect.Effect<never, unknown> => {
+): Effect.Effect<never, ClientError> => {
   try {
     const parsed = Schema.decodeUnknownSync(ApiErrorResponse)(errorBody);
     const ErrorClass = (HTTP_STATUS_MAP as any)[status];
@@ -59,7 +63,7 @@ const matchError = (
 /**
  * Fly-io API client.
  */
-export const API = makeAPI<Credentials>({
+export const API = makeAPI<Credentials, never, ClientError, FlyIoParseError>({
   credentials: Credentials as any,
   getBaseUrl: (creds: any) => creds.apiBaseUrl,
   getAuthHeaders: (creds: any) => ({

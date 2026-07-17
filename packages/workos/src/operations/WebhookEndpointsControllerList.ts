@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { SensitiveOutputString } from "../sensitive.ts";
 import * as Redacted from "effect/Redacted";
 
@@ -9,57 +10,55 @@ export interface WebhookEndpointsControllerListInput {
   before?: string;
   after?: string;
   limit?: number;
-  order?: string;
+  order?: "normal" | "desc" | "asc";
 }
 export const WebhookEndpointsControllerListInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    before: Schema.optional(Schema.String),
-    after: Schema.optional(Schema.String),
-    limit: Schema.optional(Schema.Number),
-    order: Schema.optional(Schema.String),
+    before: Schema.optional(Schema.String).pipe(T.HttpQuery("before")),
+    after: Schema.optional(Schema.String).pipe(T.HttpQuery("after")),
+    limit: Schema.optional(Schema.Number).pipe(T.HttpQuery("limit")),
+    order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])).pipe(
+      T.HttpQuery("order"),
+    ),
   }).pipe(
     T.Http({ method: "GET", path: "/webhook_endpoints" }),
-  ) as unknown as Schema.Codec<WebhookEndpointsControllerListInput>;
+  ) as unknown as GeneratedStructCodec<WebhookEndpointsControllerListInput>;
 
 // Output Schema
 export interface WebhookEndpointsControllerListOutput {
-  object?: string;
-  data?: ReadonlyArray<{
-    object?: string;
-    id?: string;
-    endpoint_url?: string;
-    secret?: Redacted.Redacted<string>;
-    status?: "enabled" | "disabled";
-    events?: ReadonlyArray<string>;
-    created_at?: string;
-    updated_at?: string;
+  object: "list";
+  data: ReadonlyArray<{
+    object: "webhook_endpoint";
+    id: string;
+    endpoint_url: string;
+    secret: Redacted.Redacted<string>;
+    status: "enabled" | "disabled";
+    events: ReadonlyArray<string>;
+    created_at: string;
+    updated_at: string;
   }>;
-  list_metadata?: { before: string | null; after: string | null };
+  list_metadata: { before: string | null; after: string | null };
 }
 export const WebhookEndpointsControllerListOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    data: Schema.optional(
-      Schema.Array(
-        Schema.Struct({
-          object: Schema.optional(Schema.String),
-          id: Schema.optional(Schema.String),
-          endpoint_url: Schema.optional(Schema.String),
-          secret: Schema.optional(SensitiveOutputString),
-          status: Schema.optional(Schema.Literals(["enabled", "disabled"])),
-          events: Schema.optional(Schema.Array(Schema.String)),
-          created_at: Schema.optional(Schema.String),
-          updated_at: Schema.optional(Schema.String),
-        }),
-      ),
-    ),
-    list_metadata: Schema.optional(
+    object: Schema.Literals(["list"]),
+    data: Schema.Array(
       Schema.Struct({
-        before: Schema.NullOr(Schema.String),
-        after: Schema.NullOr(Schema.String),
+        object: Schema.Literals(["webhook_endpoint"]),
+        id: Schema.String,
+        endpoint_url: Schema.String,
+        secret: SensitiveOutputString,
+        status: Schema.Literals(["enabled", "disabled"]),
+        events: Schema.Array(Schema.String),
+        created_at: Schema.String,
+        updated_at: Schema.String,
       }),
     ),
-  }) as unknown as Schema.Codec<WebhookEndpointsControllerListOutput>;
+    list_metadata: Schema.Struct({
+      before: Schema.NullOr(Schema.String),
+      after: Schema.NullOr(Schema.String),
+    }),
+  }) as unknown as GeneratedStructCodec<WebhookEndpointsControllerListOutput>;
 
 // The operation
 /**

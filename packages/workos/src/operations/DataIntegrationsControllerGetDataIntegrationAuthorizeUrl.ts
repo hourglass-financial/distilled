@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -18,16 +19,16 @@ export const DataIntegrationsControllerGetDataIntegrationAuthorizeUrlInput =
     return_to: Schema.optional(Schema.String),
   }).pipe(
     T.Http({ method: "POST", path: "/data-integrations/{slug}/authorize" }),
-  ) as unknown as Schema.Codec<DataIntegrationsControllerGetDataIntegrationAuthorizeUrlInput>;
+  ) as unknown as GeneratedStructCodec<DataIntegrationsControllerGetDataIntegrationAuthorizeUrlInput>;
 
 // Output Schema
 export interface DataIntegrationsControllerGetDataIntegrationAuthorizeUrlOutput {
-  url?: string;
+  url: string;
 }
 export const DataIntegrationsControllerGetDataIntegrationAuthorizeUrlOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    url: Schema.optional(Schema.String),
-  }) as unknown as Schema.Codec<DataIntegrationsControllerGetDataIntegrationAuthorizeUrlOutput>;
+    url: Schema.String,
+  }) as unknown as GeneratedStructCodec<DataIntegrationsControllerGetDataIntegrationAuthorizeUrlOutput>;
 
 // The operation
 /**

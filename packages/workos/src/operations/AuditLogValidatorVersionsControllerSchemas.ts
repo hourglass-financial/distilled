@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
@@ -9,38 +10,40 @@ export interface AuditLogValidatorVersionsControllerSchemasInput {
   before?: string;
   after?: string;
   limit?: number;
-  order?: string;
+  order?: "normal" | "desc" | "asc";
 }
 export const AuditLogValidatorVersionsControllerSchemasInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     actionName: Schema.String.pipe(T.PathParam()),
-    before: Schema.optional(Schema.String),
-    after: Schema.optional(Schema.String),
-    limit: Schema.optional(Schema.Number),
-    order: Schema.optional(Schema.String),
+    before: Schema.optional(Schema.String).pipe(T.HttpQuery("before")),
+    after: Schema.optional(Schema.String).pipe(T.HttpQuery("after")),
+    limit: Schema.optional(Schema.Number).pipe(T.HttpQuery("limit")),
+    order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])).pipe(
+      T.HttpQuery("order"),
+    ),
   }).pipe(
     T.Http({ method: "GET", path: "/audit_logs/actions/{actionName}/schemas" }),
-  ) as unknown as Schema.Codec<AuditLogValidatorVersionsControllerSchemasInput>;
+  ) as unknown as GeneratedStructCodec<AuditLogValidatorVersionsControllerSchemasInput>;
 
 // Output Schema
 export interface AuditLogValidatorVersionsControllerSchemasOutput {
-  object?: string;
+  object?: "list";
   list_metadata?: { before: string | null; after: string | null };
   data?: ReadonlyArray<{
-    object?: string;
-    version?: number;
+    object: "audit_log_schema";
+    version: number;
     actor?: { metadata: Record<string, unknown> };
-    targets?: ReadonlyArray<{
+    targets: ReadonlyArray<{
       type: string;
       metadata?: Record<string, unknown>;
     }>;
     metadata?: Record<string, unknown>;
-    created_at?: string;
+    created_at: string;
   }>;
 }
 export const AuditLogValidatorVersionsControllerSchemasOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
+    object: Schema.optional(Schema.Literals(["list"])),
     list_metadata: Schema.optional(
       Schema.Struct({
         before: Schema.NullOr(Schema.String),
@@ -50,31 +53,29 @@ export const AuditLogValidatorVersionsControllerSchemasOutput =
     data: Schema.optional(
       Schema.Array(
         Schema.Struct({
-          object: Schema.optional(Schema.String),
-          version: Schema.optional(Schema.Number),
+          object: Schema.Literals(["audit_log_schema"]),
+          version: Schema.Number,
           actor: Schema.optional(
             Schema.Struct({
               metadata: Schema.Record(Schema.String, Schema.Unknown),
             }),
           ),
-          targets: Schema.optional(
-            Schema.Array(
-              Schema.Struct({
-                type: Schema.String,
-                metadata: Schema.optional(
-                  Schema.Record(Schema.String, Schema.Unknown),
-                ),
-              }),
-            ),
+          targets: Schema.Array(
+            Schema.Struct({
+              type: Schema.String,
+              metadata: Schema.optional(
+                Schema.Record(Schema.String, Schema.Unknown),
+              ),
+            }),
           ),
           metadata: Schema.optional(
             Schema.Record(Schema.String, Schema.Unknown),
           ),
-          created_at: Schema.optional(Schema.String),
+          created_at: Schema.String,
         }),
       ),
     ),
-  }) as unknown as Schema.Codec<AuditLogValidatorVersionsControllerSchemasOutput>;
+  }) as unknown as GeneratedStructCodec<AuditLogValidatorVersionsControllerSchemasOutput>;
 
 // The operation
 /**

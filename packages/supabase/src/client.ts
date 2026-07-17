@@ -21,6 +21,11 @@ import {
 export { UnknownSupabaseError } from "./errors.ts";
 import { Credentials } from "./credentials.ts";
 
+type ClientError =
+  | InstanceType<(typeof HTTP_STATUS_MAP)[keyof typeof HTTP_STATUS_MAP]>
+  | FreeProjectLimitReached
+  | UnknownSupabaseError;
+
 // API Error Response Schema
 const ApiErrorResponse = Schema.Struct({
   message: Schema.String,
@@ -34,7 +39,7 @@ const matchError = (
   errorBody: unknown,
   _errors?: readonly unknown[],
   headers?: Record<string, string | undefined>,
-): Effect.Effect<never, unknown> => {
+): Effect.Effect<never, ClientError> => {
   try {
     const parsed = Schema.decodeUnknownSync(ApiErrorResponse)(errorBody);
     // Supabase has no error code on the wire; the only signal for the
@@ -71,13 +76,15 @@ const matchError = (
 /**
  * Supabase API client.
  */
-export const API = makeAPI<Credentials>({
-  credentials: Credentials as any,
-  getBaseUrl: (creds: any) => creds.apiBaseUrl,
-  getAuthHeaders: (creds: any) => ({
-    Authorization: `Bearer ${Redacted.value(creds.accessToken)}`,
-  }),
-  matchError,
-  ParseError: SupabaseParseError as any,
-  retry: Retry as any,
-});
+export const API = makeAPI<Credentials, never, ClientError, SupabaseParseError>(
+  {
+    credentials: Credentials as any,
+    getBaseUrl: (creds: any) => creds.apiBaseUrl,
+    getAuthHeaders: (creds: any) => ({
+      Authorization: `Bearer ${Redacted.value(creds.accessToken)}`,
+    }),
+    matchError,
+    ParseError: SupabaseParseError as any,
+    retry: Retry as any,
+  },
+);

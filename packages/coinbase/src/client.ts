@@ -51,6 +51,17 @@ import { Retry } from "./retry.ts";
 // Re-export for convenience
 export { UnknownCoinbaseError } from "./errors.ts";
 
+type ClientError =
+  | InstanceType<(typeof HTTP_STATUS_MAP)[keyof typeof HTTP_STATUS_MAP]>
+  | InstanceType<
+      (typeof COINBASE_HTTP_STATUS_MAP)[keyof typeof COINBASE_HTTP_STATUS_MAP]
+    >
+  | InstanceType<(typeof ERROR_TYPE_MAP)[keyof typeof ERROR_TYPE_MAP]>
+  | InstanceType<
+      (typeof STANDARD_ERROR_TYPE_MAP)[keyof typeof STANDARD_ERROR_TYPE_MAP]
+    >
+  | UnknownCoinbaseError;
+
 // ============================================================================
 // JWT generation for Coinbase CDP API authentication
 // ============================================================================
@@ -224,7 +235,7 @@ const matchError = (
   errorBody: unknown,
   _errors?: readonly unknown[],
   headers?: Record<string, string | undefined>,
-): Effect.Effect<unknown, unknown> => {
+): Effect.Effect<unknown, ClientError> => {
   if (
     errorBody &&
     typeof errorBody === "object" &&
@@ -243,7 +254,8 @@ const matchError = (
     };
 
     // 1. Match by Coinbase-specific error type first
-    const TypedErrorClass = ERROR_TYPE_MAP[parsed.errorType];
+    const TypedErrorClass =
+      ERROR_TYPE_MAP[parsed.errorType as keyof typeof ERROR_TYPE_MAP];
     if (TypedErrorClass) {
       return Effect.fail(new TypedErrorClass(errorProps));
     }
@@ -252,7 +264,10 @@ const matchError = (
     // Maps error types like "not_found", "forbidden", "unauthorized", "invalid_request",
     // "rate_limit_exceeded", "internal_server_error", "bad_gateway", "service_unavailable"
     // to their corresponding core HTTP error classes.
-    const StandardErrorClass = STANDARD_ERROR_TYPE_MAP[parsed.errorType];
+    const StandardErrorClass =
+      STANDARD_ERROR_TYPE_MAP[
+        parsed.errorType as keyof typeof STANDARD_ERROR_TYPE_MAP
+      ];
     if (StandardErrorClass) {
       return Effect.fail(
         new StandardErrorClass({
@@ -300,25 +315,27 @@ const matchError = (
  *
  * Uses JWT bearer token authentication signed with your CDP API Key Secret.
  */
-export const API = makeAPI<Credentials>({
-  credentials: Credentials as any,
-  getBaseUrl: (creds: any) => (creds as Config).apiBaseUrl,
-  getAuthHeaders: () => ({}),
-  getRequestHeaders: (_requestOptions, { method, parts, credentials }) => {
-    const c = credentials as any;
-    const baseUrl = new URL(c.apiBaseUrl);
-    const uri = `${baseUrl.host}${baseUrl.pathname}${parts.path}`;
-    const jwt = generateJwt(
-      c.apiKeyId,
-      Redacted.value(c.apiKeySecret),
-      method,
-      uri,
-    );
-    return {
-      Authorization: `Bearer ${jwt}`,
-    };
+export const API = makeAPI<Credentials, never, ClientError, CoinbaseParseError>(
+  {
+    credentials: Credentials as any,
+    getBaseUrl: (creds: any) => (creds as Config).apiBaseUrl,
+    getAuthHeaders: () => ({}),
+    getRequestHeaders: (_requestOptions, { method, parts, credentials }) => {
+      const c = credentials as any;
+      const baseUrl = new URL(c.apiBaseUrl);
+      const uri = `${baseUrl.host}${baseUrl.pathname}${parts.path}`;
+      const jwt = generateJwt(
+        c.apiKeyId,
+        Redacted.value(c.apiKeySecret),
+        method,
+        uri,
+      );
+      return {
+        Authorization: `Bearer ${jwt}`,
+      };
+    },
+    matchError: matchError as any,
+    ParseError: CoinbaseParseError as any,
+    retry: Retry as any,
   },
-  matchError: matchError as any,
-  ParseError: CoinbaseParseError as any,
-  retry: Retry as any,
-});
+);
