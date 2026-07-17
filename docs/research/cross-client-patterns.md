@@ -1,6 +1,6 @@
 # Cross-Client Pattern Survey — Synthesis Catalog (Ticket #36)
 
-This is the synthesis of a 20-package survey of every SDK in `packages/` (one analyst
+This is the synthesis of a 21-package survey of every SDK in `packages/` (one analyst
 per package, answering the shared rubric in
 [`cross-client-patterns-rubric.md`](./cross-client-patterns-rubric.md)). It is the
 authoritative catalog for a v2 from-scratch rewrite: what every client is required to
@@ -9,7 +9,9 @@ lists imply for v2's codegen IR and runtime design.
 
 Packages surveyed: `aws`, `axiom`, `azure`, `cloudflare`, `coinbase`, `erebor`,
 `expo-eas`, `fly-io`, `gcp`, `kubernetes`, `mongodb-atlas`, `neon`, `persona`,
-`planetscale`, `posthog`, `prisma-postgres`, `stripe`, `supabase`, `turso`, `workos`.
+`planetscale`, `posthog`, `prisma-postgres`, `stripe`, `supabase`, `turso`, `typesense`,
+`workos`. (`typesense` was backfilled after the original 20-package fan-out — its
+analyst died on a connection error; see the coverage note in the Appendix.)
 Fork-only packages: `erebor`, `persona`, `kubernetes` (no `upstream/main` copy).
 `workos` exists upstream but the fork has materially diverged.
 
@@ -26,7 +28,7 @@ Specialized clients: `packages/aws/src/client/api.ts`, `packages/cloudflare/src/
 
 ## (a) Invariants — what every client shares
 
-These held across all 20 packages (deviations, where they exist, are enumerated as
+These held across all 21 packages (deviations, where they exist, are enumerated as
 variations in §b, not exceptions to the invariant). A v2 rewrite should treat each as a
 non-negotiable contract, not a convention.
 
@@ -106,7 +108,7 @@ Every fork `client.ts` threads an explicit `ClientError` union into
 fork's raison d'être (commits `0ba1fbe2f` "preserve precise operation error contracts",
 `e2813ddcb` "align generated contracts with runtime behavior"; core `HOURGLASS PATCH` at
 `packages/core/src/client.ts:565-566`). Present in `stripe`, `neon`, `planetscale`,
-`coinbase`, `turso`, `fly-io`, `supabase`, `mongodb-atlas`, `prisma-postgres`, `axiom`,
+`coinbase`, `turso`, `typesense`, `fly-io`, `supabase`, `mongodb-atlas`, `prisma-postgres`, `axiom`,
 `gcp`, `azure`, `cloudflare`, `posthog`, `expo-eas`, `erebor`, `persona`, `workos`.
 **Caveat (see §c2):** the typed union is present everywhere, but it is only *load-bearing*
 (narrows per operation) in `erebor`, `persona`, `workos`.
@@ -116,7 +118,10 @@ Where a package has tests, they use `testRunId`-suffixed unique resource names, 
 integration (not mocks, except `gcp`/`stripe`), `Effect.ensuring`/try-finally cleanup, and
 `Effect.flip` error assertions with raised timeouts. Evidence:
 `packages/cloudflare/test/kv.test.ts:17`, `packages/workos/test/ApiKeysControllerDelete.test.ts`.
-(Many packages ship zero tests — that is an accident, §c3, not a variation.)
+(Many packages ship zero tests — that is an accident, §c3, not a variation.) `typesense` is
+the fullest expression of this convention observed in the survey: 79/79 operations have a
+dedicated live-integration test file with `testRunId`-suffixed names, `Effect.ensuring`
+cleanup, and `Effect.flip` negative-path assertions (`packages/typesense/test/searchCollection.test.ts:1-104`).
 
 ---
 
@@ -129,7 +134,7 @@ orthogonal, typed configuration, not as one-off per-package escape hatches.
 ### B1. Spec format (7 distinct categories)
 | Format | Packages | Evidence |
 |---|---|---|
-| OpenAPI 3.0/3.1 | neon, planetscale, prisma-postgres, supabase, posthog, axiom, mongodb-atlas, fly-io, persona, erebor, turso, workos, stripe, coinbase | `packages/neon/scripts/generate.ts:8-20` |
+| OpenAPI 3.0/3.1 | neon, planetscale, prisma-postgres, supabase, posthog, axiom, mongodb-atlas, fly-io, persona, erebor, turso, typesense, workos, stripe, coinbase | `packages/neon/scripts/generate.ts:8-20` |
 | OpenAPI 2.0 / Swagger | azure, kubernetes, planetscale | `packages/azure/scripts/generate.ts:20-30`, `packages/kubernetes/scripts/generate.ts:19` |
 | Smithy models | aws | `packages/aws/scripts/model-schema.ts`, `generate.ts:1-30` |
 | GCP Discovery Documents | gcp | `packages/gcp/scripts/generate.ts:30-49` |
@@ -140,7 +145,7 @@ orthogonal, typed configuration, not as one-off per-package escape hatches.
 ### B2. Spec acquisition + fan-in
 - Direct vendor submodule: `stripe` (`stripe/openapi`), `coinbase` (`cdp-sdk`, YAML embedded
   in SDK repo), `persona`, `workos`, `azure`, `kubernetes` (full monorepo), `aws` (4
-  submodules), `turso` (docs repo), `expo-eas` (2 submodules, one never read).
+  submodules), `turso` (docs repo), `typesense` (`typesense/typesense-api-spec`, YAML), `expo-eas` (2 submodules, one never read).
 - `distilled-spec-*` mirror repo: `neon`, `planetscale`, `prisma-postgres`, `supabase`,
   `posthog`, `mongodb-atlas`, `fly-io`, `gcp`, `axiom`.
 - Docs-scraper (no submodule): `erebor` (Python Fern-docs mirror).
@@ -148,8 +153,8 @@ orthogonal, typed configuration, not as one-off per-package escape hatches.
   v2 + edge-ingest + edge-query) into one client via path-prefixing at generation time, with
   subpath re-export barrels (`packages/axiom/scripts/generate.ts:1-20,45-63`,
   `src/edge-ingest.ts`). v2 must support N-specs-to-one-client.
-- **YAML-in-repo:** `coinbase`/`workos` convert vendor YAML → JSON before the shared reader
-  (`packages/coinbase/scripts/generate.ts:10-38`).
+- **YAML-in-repo:** `coinbase`/`workos`/`typesense` convert vendor YAML → JSON before the shared
+  reader (`packages/coinbase/scripts/generate.ts:10-38`, `packages/typesense/scripts/generate.ts:10-22`).
 
 ### B3. Auth scheme (the widest axis — must be a pluggable strategy)
 | Scheme | Package | Evidence |
@@ -157,6 +162,7 @@ orthogonal, typed configuration, not as one-off per-package escape hatches.
 | `Bearer <key>` static | stripe, neon, fly-io, supabase, turso, workos, posthog, axiom, expo-eas, gcp, azure, prisma-postgres, kubernetes | `packages/stripe/src/client.ts:286-288` |
 | Raw `Authorization`, NO `Bearer` prefix | erebor | `packages/erebor/src/client.ts:185-187` (documented deviation) |
 | Custom header pair `X-Auth-Key`+`X-Auth-Email` | cloudflare (legacy scheme) | `packages/cloudflare/src/credentials.ts:245-248` |
+| Custom single header, not `Authorization`/`Bearer` | typesense (`X-TYPESENSE-API-KEY`) | `packages/typesense/src/client.ts:73-76` |
 | OAuth Bearer with auto-refresh | cloudflare | `packages/cloudflare/src/credentials.ts:159-183` |
 | Multiple simultaneous schemes (discriminated union) | cloudflare (3), planetscale (service-token `id:token` vs OAuth Bearer) | `packages/planetscale/src/credentials.ts:52-57` |
 | SigV4 request signing | aws | `packages/aws/src/client/api.ts:189-206` (`AwsV4Signer`) |
@@ -176,7 +182,7 @@ process/token-file/SSO/http) with TTL-aware caching (`packages/aws/src/credentia
 | Strategy | Package | Evidence |
 |---|---|---|
 | Constant `getBaseUrl(creds) => creds.apiBaseUrl` + default const | most packages | `packages/neon/src/client.ts:66` |
-| No default const (caller-supplied per-cluster) | kubernetes | `packages/kubernetes/src/credentials.ts:17-24` |
+| No default const (caller-supplied per-cluster) | kubernetes, typesense (`DEFAULT_API_BASE_URL = ""` — self-hosted or per-cluster Typesense Cloud, both required env vars) | `packages/kubernetes/src/credentials.ts:17-24`, `packages/typesense/src/credentials.ts:8-13` |
 | Per-service `Service` trait `rootUrl` (300+ hosts) | gcp | `packages/gcp/src/services/storage-v1.ts:14-19` |
 | Region/endpoint rules engine (virtual-host/dualstack/FIPS/access-point) | aws | `packages/aws/src/services/s3.ts:16-90`, `client/api.ts:15,68` |
 | Baked per-operation `api-version` query param | azure | `packages/azure/src/services/storage.ts:66-70`, applied by core `client.ts:733-738` |
@@ -198,7 +204,7 @@ IR needs `token`/`page`/`cursor`/`single` **plus** a "follow full URL" mode (azu
 ### B6. Error-dispatch strategy
 | Strategy | Package | Evidence |
 |---|---|---|
-| HTTP status → map only | fly-io, neon, planetscale, prisma-postgres, turso, kubernetes, supabase, posthog, mongodb-atlas, axiom, persona, workos | `packages/fly-io/src/client.ts:28-63` |
+| HTTP status → map only | fly-io, neon, planetscale, prisma-postgres, turso, typesense, kubernetes, supabase, posthog, mongodb-atlas, axiom, persona, workos | `packages/fly-io/src/client.ts:28-63` |
 | Body `type`/`code` field first, status fallback | stripe (`error.type`), coinbase (`errorType`) | `packages/stripe/src/client.ts:171-273` |
 | 2xx error envelope (`success:false`) | cloudflare | `packages/cloudflare/src/client/api.ts:576-580` |
 | Numeric `code` map independent of HTTP status | cloudflare | `packages/cloudflare/src/client/api.ts:74-135` |
@@ -210,7 +216,7 @@ IR needs `token`/`page`/`cursor`/`single` **plus** a "follow full URL" mode (azu
 
 ### B7. Per-endpoint error declarations vs global dispatcher
 A generator flag (`includeOperationErrors`) toggles between declaring `errors: [...]` on each
-operation (erebor, neon, planetscale, prisma-postgres, supabase, turso, posthog, workos,
+operation (erebor, neon, planetscale, prisma-postgres, supabase, turso, typesense, posthog, workos,
 persona, axiom, fly-io, kubernetes, gcp, mongodb-atlas, aws) and a single global dispatcher
 keyed on a body field (stripe `includeOperationErrors: false`
 `packages/stripe/scripts/generate.ts:21`; coinbase `generate.ts:33` "handles errors globally
@@ -220,7 +226,8 @@ shape for it), but see §c2 for the load-bearing caveat.
 
 ### B8. Error-patch mechanism
 - RFC-6902 JSON Patch on the spec: neon, planetscale, prisma-postgres, supabase, turso,
-  posthog, workos, persona, axiom, fly-io, kubernetes, stripe (`packages/turso/patches/001-add-error-responses.patch.json`).
+  typesense, posthog, workos, persona, axiom, fly-io, kubernetes, stripe (`packages/turso/patches/001-add-error-responses.patch.json`,
+  `packages/typesense/patches/conversation-models-404.patch.json`).
 - Smithy-model-edit-equivalent JSON: aws (`errorCategories` + per-op `errors` overrides,
   `packages/aws/patches/iam.json`).
 - Expression-DSL matchers `patches/<svc>/<op>.json`: cloudflare
@@ -273,10 +280,10 @@ mostly). `aws` needs a richer `Sensitive<A>` that also wraps blobs (`packages/aw
 | Convention | Package |
 |---|---|
 | PascalCase verb+path (`DeleteCouponsCoupon`, `ResourceGroupsList`, `ApiKeysControllerDelete`) | stripe, azure, workos, fly-io |
-| camelCase semantic (`createCounterparty`, `listObjects`) | erebor, neon, planetscale, prisma-postgres, supabase, turso, gcp, kubernetes, coinbase, axiom, mongodb-atlas |
+| camelCase semantic (`createCounterparty`, `listObjects`) | erebor, neon, planetscale, prisma-postgres, supabase, turso, typesense, gcp, kubernetes, coinbase, axiom, mongodb-atlas |
 | Full-phrase from OpenAPI summary (`archiveABrowserFingerprintListItem`) | persona |
 | GraphQL namespace-concat (`accountById`, `appCreateApp`) | expo-eas |
-| One file per operation | stripe, erebor, neon, planetscale, prisma-postgres, supabase, turso, coinbase, persona, axiom, fly-io, mongodb-atlas, expo-eas, workos |
+| One file per operation | stripe, erebor, neon, planetscale, prisma-postgres, supabase, turso, typesense, coinbase, persona, axiom, fly-io, mongodb-atlas, expo-eas, workos |
 | One module per service | aws (429), azure (218), cloudflare (118), gcp (520 incl. unstable), kubernetes (24) |
 | Per-OpenAPI-tag subdirectory (one file per op inside) | posthog (141 dirs) |
 
@@ -312,7 +319,8 @@ because a docs-scraped spec has no submodule-diff safety net
 delete mutations aren't flattened into typed ops).
 
 ### B17. Test infrastructure scaling
-`Effect.ensuring` per-test (cloudflare, workos, supabase) → suite-level `beforeAll`/`afterAll`
+`Effect.ensuring` per-test (cloudflare, workos, supabase, typesense — the last with the widest
+observed coverage, 79/79 ops) → suite-level `beforeAll`/`afterAll`
 teardown for slow-to-provision resources (planetscale 20-min DB timeout, prisma-postgres,
 neon) → custom Promise harness with cross-run orphan reconciliation via raw `fetch`
 (persona `safe-run.ts`/`recovery.ts`/`coverage.ts`, 200 live tests) → mocked HttpClient
@@ -443,13 +451,35 @@ Every fork package is `0.29.0` vs upstream `0.29.1` and is missing upstream's `b
 Rolldown smoke test + the `rolldown` devDependency. Uniform sync lag, not per-package intent —
 flag for an upstream-merge pass.
 
+### C19. typesense: object-shaped query params and raw-document bodies collapse to nothing or an opaque string
+A distinct flavor of "generator ran ≠ usable SDK" (cf. §c4/§c5), worse in one respect: it hits
+the package's core value proposition. The shared generator's request-body reader only expands
+`application/json`/`form-urlencoded`/`multipart` object schemas
+(`packages/core/scripts/generate-openapi.ts:1814-1823`), and its query-param renderer only
+expands scalar/array/typed-object schemas — so wherever Typesense's spec models a parameter as
+a single named blob (its documented search-parameter bundle) or the request body is a
+dynamic/schema-less document, the generator either emits one unannotated `Schema.String` field
+(`searchCollection`, `multiSearch`, `exportDocuments`, `deleteDocuments`, `importDocuments`,
+`updateDocuments`, `getCollections`) or drops the field entirely (`indexDocument`,
+`updateDocument`, `importStemmingDictionary`). Because the field is unannotated, the shared
+client's GET fallback (`packages/core/src/client.ts:823-836`) or non-GET JSON-body path
+(`:788,821`) routes it to the wrong transport for what Typesense actually expects (e.g.
+`updateDocuments`' `filter_by` needs to be a query param but lands in the PATCH body). Every
+affected operation's hand-written test bypasses the generated type with `as never` to inject
+the real payload — the workaround is documented only in test-file comments, never in the
+README (`packages/typesense/src/operations/searchCollection.ts:7-19`,
+`packages/typesense/test/searchCollection.test.ts:30-39`,
+`packages/typesense/test/updateDocuments.test.ts:39-48`). Distinct from C1 (pagination
+detection): this is a request-shape detection gap, not a response-shape one, and it makes ~10
+of typesense's 79 operations uncallable through their own declared TypeScript interface.
+
 ---
 
 ## (d) Implications for v2 codegen + runtime — ranked
 
 ### D1. Decide the error-contract model once, at the IR level (highest priority)
 The fork exists to make per-operation error unions precise, but the fix (`isErrorClassAllowedForOperation`)
-only reached 3 of 20 packages (§c2). v2 must make declared `errors: [...]` **load-bearing by
+only reached 3 of 21 packages (§c2). v2 must make declared `errors: [...]` **load-bearing by
 default** — `matchError` narrows the real type to the operation's declared set plus the universal
 transport-error channel — and the "documentation-only / global dispatcher" mode
 (`includeOperationErrors: false`, stripe/coinbase) must be an explicit, typed IR choice, not a
@@ -467,11 +497,14 @@ silently.
 
 ### D3. Separate "generator succeeded" from "generator produced a usable SDK" (validation gate)
 mongodb-atlas typechecks and builds with all-void outputs (§c4); coinbase ships uncallable
-documented endpoints (§c5). v2's generator must run post-generation assertions and fail (or loudly
-warn) on: all-void/empty output schemas, response bodies under unrecognized media types (support
-vendor-versioned `application/vnd.*+json`), documented auth headers with no request wiring,
-pagination-shaped responses with no mode, and generated-but-unwired operation files. Silent
-fallback is the root cause of the worst accidents.
+documented endpoints (§c5); typesense collapses ~10 of its core search/document operations'
+request shape into an opaque string or nothing at all, forcing every affected test to bypass the
+generated type with `as never` (§c19). v2's generator must run post-generation assertions and fail
+(or loudly warn) on: all-void/empty output schemas, response bodies under unrecognized media types
+(support vendor-versioned `application/vnd.*+json`), documented auth headers with no request
+wiring, object-shaped query params or schema-less request bodies that collapsed to an opaque
+string or were dropped, pagination-shaped responses with no mode, and generated-but-unwired
+operation files. Silent fallback is the root cause of the worst accidents.
 
 ### D4. Keep the shared-client contract, make the transport escape-hatchable
 aws proves a full bypass (SigV4 + rules engine + 5 protocols) works cleanly as long as the
@@ -564,5 +597,13 @@ tag-dedup, no unwired files, in-file DO-NOT-EDIT headers) to keep diffs meaningf
   files; body-text free-tier error + 406→404 remap.
 - **turso** — total-count pagination the detector can't see; stale stub README; deprecated files left
   on disk; zero tests.
+- **typesense (backfilled)** — the survey's 21st package, analyzed separately (ticket #36) after
+  the original 20-package fan-out because its analyst died on a connection error; per-item rubric
+  answers are folded into §a/§b/§c above rather than published as a standalone per-package file.
+  Custom single-header auth (`X-TYPESENSE-API-KEY`); no default base URL (self-hosted/per-cluster);
+  the fullest test coverage in the survey (79/79 ops, live-integration); but ~10 of those same ops —
+  including `searchCollection` and `multiSearch` — have their request shape collapsed to an opaque
+  string or dropped entirely by the generator, so every one of their tests bypasses the generated
+  type with `as never` (§c19).
 - **workos** — deliberately replaced a blanket required-strip with a 2-schema documented patch;
   load-bearing per-op errors; vestigial `tsconfig.test.json`.
