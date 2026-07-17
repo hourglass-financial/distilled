@@ -1,68 +1,65 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
 export interface ExternalAuthControllerCompleteLoginInput {
-  external_auth_id?: string;
-  user?: {
-    id?: string;
-    email?: string;
+  external_auth_id: string;
+  user: {
+    id: string;
+    email: string;
     first_name?: string;
     last_name?: string;
     name?: string;
     metadata?: Record<string, string>;
   };
   user_consent_options?: ReadonlyArray<{
-    claim?: string;
-    type?: string;
-    label?: string;
-    choices?: ReadonlyArray<{ value?: string; label?: string }>;
+    claim: string;
+    type: "enum";
+    label: string;
+    choices: ReadonlyArray<{ value?: string; label?: string }>;
   }>;
 }
 export const ExternalAuthControllerCompleteLoginInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    external_auth_id: Schema.optional(Schema.String),
-    user: Schema.optional(
-      Schema.Struct({
-        id: Schema.optional(Schema.String),
-        email: Schema.optional(Schema.String),
-        first_name: Schema.optional(Schema.String),
-        last_name: Schema.optional(Schema.String),
-        name: Schema.optional(Schema.String),
-        metadata: Schema.optional(Schema.Record(Schema.String, Schema.String)),
-      }),
-    ),
+    external_auth_id: Schema.String,
+    user: Schema.Struct({
+      id: Schema.String,
+      email: Schema.String,
+      first_name: Schema.optional(Schema.String),
+      last_name: Schema.optional(Schema.String),
+      name: Schema.optional(Schema.String),
+      metadata: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+    }),
     user_consent_options: Schema.optional(
       Schema.Array(
         Schema.Struct({
-          claim: Schema.optional(Schema.String),
-          type: Schema.optional(Schema.String),
-          label: Schema.optional(Schema.String),
-          choices: Schema.optional(
-            Schema.Array(
-              Schema.Struct({
-                value: Schema.optional(Schema.String),
-                label: Schema.optional(Schema.String),
-              }),
-            ),
+          claim: Schema.String,
+          type: Schema.Literals(["enum"]),
+          label: Schema.String,
+          choices: Schema.Array(
+            Schema.Struct({
+              value: Schema.optional(Schema.String),
+              label: Schema.optional(Schema.String),
+            }),
           ),
         }),
       ),
     ),
   }).pipe(
     T.Http({ method: "POST", path: "/authkit/oauth2/complete" }),
-  ) as unknown as Schema.Codec<ExternalAuthControllerCompleteLoginInput>;
+  ) as unknown as GeneratedStructCodec<ExternalAuthControllerCompleteLoginInput>;
 
 // Output Schema
 export interface ExternalAuthControllerCompleteLoginOutput {
-  redirect_uri?: string;
+  redirect_uri: string;
 }
 export const ExternalAuthControllerCompleteLoginOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    redirect_uri: Schema.optional(Schema.String),
-  }) as unknown as Schema.Codec<ExternalAuthControllerCompleteLoginOutput>;
+    redirect_uri: Schema.String,
+  }) as unknown as GeneratedStructCodec<ExternalAuthControllerCompleteLoginOutput>;
 
 // The operation
 /**

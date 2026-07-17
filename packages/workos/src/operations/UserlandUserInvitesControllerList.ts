@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
@@ -8,73 +9,75 @@ export interface UserlandUserInvitesControllerListInput {
   before?: string;
   after?: string;
   limit?: number;
-  order?: string;
+  order?: "normal" | "desc" | "asc";
   organization_id?: string;
   email?: string;
 }
 export const UserlandUserInvitesControllerListInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    before: Schema.optional(Schema.String),
-    after: Schema.optional(Schema.String),
-    limit: Schema.optional(Schema.Number),
-    order: Schema.optional(Schema.String),
-    organization_id: Schema.optional(Schema.String),
-    email: Schema.optional(Schema.String),
+    before: Schema.optional(Schema.String).pipe(T.HttpQuery("before")),
+    after: Schema.optional(Schema.String).pipe(T.HttpQuery("after")),
+    limit: Schema.optional(Schema.Number).pipe(T.HttpQuery("limit")),
+    order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])).pipe(
+      T.HttpQuery("order"),
+    ),
+    organization_id: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("organization_id"),
+    ),
+    email: Schema.optional(Schema.String).pipe(T.HttpQuery("email")),
   }).pipe(
     T.Http({ method: "GET", path: "/user_management/invitations" }),
-  ) as unknown as Schema.Codec<UserlandUserInvitesControllerListInput>;
+  ) as unknown as GeneratedStructCodec<UserlandUserInvitesControllerListInput>;
 
 // Output Schema
 export interface UserlandUserInvitesControllerListOutput {
-  object: string;
+  object: "list";
   data: ReadonlyArray<{
-    object?: string;
-    id?: string;
-    email?: string;
-    state?: "pending" | "accepted" | "expired" | "revoked";
-    accepted_at?: string | null;
-    revoked_at?: string | null;
-    expires_at?: string;
-    organization_id?: string | null;
-    inviter_user_id?: string | null;
-    accepted_user_id?: string | null;
-    role_slug?: string | null;
-    created_at?: string;
-    updated_at?: string;
-    token?: string;
-    accept_invitation_url?: string;
+    object: "invitation";
+    id: string;
+    email: string;
+    state: "pending" | "accepted" | "expired" | "revoked";
+    accepted_at: string | null;
+    revoked_at: string | null;
+    expires_at: string;
+    organization_id: string | null;
+    inviter_user_id: string | null;
+    accepted_user_id: string | null;
+    role_slug: string | null;
+    created_at: string;
+    updated_at: string;
+    token: string;
+    accept_invitation_url: string;
   }>;
   list_metadata: { before: string | null; after: string | null };
 }
 export const UserlandUserInvitesControllerListOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["list"]),
     data: Schema.Array(
       Schema.Struct({
-        object: Schema.optional(Schema.String),
-        id: Schema.optional(Schema.String),
-        email: Schema.optional(Schema.String),
-        state: Schema.optional(
-          Schema.Literals(["pending", "accepted", "expired", "revoked"]),
-        ),
-        accepted_at: Schema.optional(Schema.NullOr(Schema.String)),
-        revoked_at: Schema.optional(Schema.NullOr(Schema.String)),
-        expires_at: Schema.optional(Schema.String),
-        organization_id: Schema.optional(Schema.NullOr(Schema.String)),
-        inviter_user_id: Schema.optional(Schema.NullOr(Schema.String)),
-        accepted_user_id: Schema.optional(Schema.NullOr(Schema.String)),
-        role_slug: Schema.optional(Schema.NullOr(Schema.String)),
-        created_at: Schema.optional(Schema.String),
-        updated_at: Schema.optional(Schema.String),
-        token: Schema.optional(Schema.String),
-        accept_invitation_url: Schema.optional(Schema.String),
+        object: Schema.Literals(["invitation"]),
+        id: Schema.String,
+        email: Schema.String,
+        state: Schema.Literals(["pending", "accepted", "expired", "revoked"]),
+        accepted_at: Schema.NullOr(Schema.String),
+        revoked_at: Schema.NullOr(Schema.String),
+        expires_at: Schema.String,
+        organization_id: Schema.NullOr(Schema.String),
+        inviter_user_id: Schema.NullOr(Schema.String),
+        accepted_user_id: Schema.NullOr(Schema.String),
+        role_slug: Schema.NullOr(Schema.String),
+        created_at: Schema.String,
+        updated_at: Schema.String,
+        token: Schema.String,
+        accept_invitation_url: Schema.String,
       }),
     ),
     list_metadata: Schema.Struct({
       before: Schema.NullOr(Schema.String),
       after: Schema.NullOr(Schema.String),
     }),
-  }) as unknown as Schema.Codec<UserlandUserInvitesControllerListOutput>;
+  }) as unknown as GeneratedStructCodec<UserlandUserInvitesControllerListOutput>;
 
 // The operation
 /**

@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest } from "../errors.ts";
 
 // Input Schema
@@ -15,11 +16,11 @@ export const UserlandUserInvitesControllerRevokeInput =
       method: "POST",
       path: "/user_management/invitations/{id}/revoke",
     }),
-  ) as unknown as Schema.Codec<UserlandUserInvitesControllerRevokeInput>;
+  ) as unknown as GeneratedStructCodec<UserlandUserInvitesControllerRevokeInput>;
 
 // Output Schema
 export interface UserlandUserInvitesControllerRevokeOutput {
-  object: string;
+  object: "invitation";
   id: string;
   email: string;
   state: "pending" | "accepted" | "expired" | "revoked";
@@ -37,7 +38,7 @@ export interface UserlandUserInvitesControllerRevokeOutput {
 }
 export const UserlandUserInvitesControllerRevokeOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["invitation"]),
     id: Schema.String,
     email: Schema.String,
     state: Schema.Literals(["pending", "accepted", "expired", "revoked"]),
@@ -52,7 +53,7 @@ export const UserlandUserInvitesControllerRevokeOutput =
     updated_at: Schema.String,
     token: Schema.String,
     accept_invitation_url: Schema.String,
-  }) as unknown as Schema.Codec<UserlandUserInvitesControllerRevokeOutput>;
+  }) as unknown as GeneratedStructCodec<UserlandUserInvitesControllerRevokeOutput>;
 
 // The operation
 /**

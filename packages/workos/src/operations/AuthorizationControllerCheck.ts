@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { Forbidden, NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
@@ -23,16 +24,16 @@ export const AuthorizationControllerCheckInput =
       method: "POST",
       path: "/authorization/organization_memberships/{organization_membership_id}/check",
     }),
-  ) as unknown as Schema.Codec<AuthorizationControllerCheckInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationControllerCheckInput>;
 
 // Output Schema
 export interface AuthorizationControllerCheckOutput {
-  authorized?: boolean;
+  authorized: boolean;
 }
 export const AuthorizationControllerCheckOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    authorized: Schema.optional(Schema.Boolean),
-  }) as unknown as Schema.Codec<AuthorizationControllerCheckOutput>;
+    authorized: Schema.Boolean,
+  }) as unknown as GeneratedStructCodec<AuthorizationControllerCheckOutput>;
 
 // The operation
 /**

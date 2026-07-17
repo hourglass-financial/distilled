@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -10,28 +11,30 @@ export interface GroupMembershipsControllerListMembersInput {
   before?: string;
   after?: string;
   limit?: number;
-  order?: string;
+  order?: "normal" | "desc" | "asc";
 }
 export const GroupMembershipsControllerListMembersInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     organizationId: Schema.String.pipe(T.PathParam()),
     groupId: Schema.String.pipe(T.PathParam()),
-    before: Schema.optional(Schema.String),
-    after: Schema.optional(Schema.String),
-    limit: Schema.optional(Schema.Number),
-    order: Schema.optional(Schema.String),
+    before: Schema.optional(Schema.String).pipe(T.HttpQuery("before")),
+    after: Schema.optional(Schema.String).pipe(T.HttpQuery("after")),
+    limit: Schema.optional(Schema.Number).pipe(T.HttpQuery("limit")),
+    order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])).pipe(
+      T.HttpQuery("order"),
+    ),
   }).pipe(
     T.Http({
       method: "GET",
       path: "/organizations/{organizationId}/groups/{groupId}/organization-memberships",
     }),
-  ) as unknown as Schema.Codec<GroupMembershipsControllerListMembersInput>;
+  ) as unknown as GeneratedStructCodec<GroupMembershipsControllerListMembersInput>;
 
 // Output Schema
 export interface GroupMembershipsControllerListMembersOutput {
-  object?: string;
-  data?: ReadonlyArray<{
-    object: string;
+  object: "list";
+  data: ReadonlyArray<{
+    object: "organization_membership";
     id: string;
     user_id: string;
     organization_id: string;
@@ -42,36 +45,32 @@ export interface GroupMembershipsControllerListMembersOutput {
     created_at: string;
     updated_at: string;
   }>;
-  list_metadata?: { before: string | null; after: string | null };
+  list_metadata: { before: string | null; after: string | null };
 }
 export const GroupMembershipsControllerListMembersOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    data: Schema.optional(
-      Schema.Array(
-        Schema.Struct({
-          object: Schema.String,
-          id: Schema.String,
-          user_id: Schema.String,
-          organization_id: Schema.String,
-          status: Schema.Literals(["active", "inactive", "pending"]),
-          directory_managed: Schema.Boolean,
-          organization_name: Schema.optional(Schema.String),
-          custom_attributes: Schema.optional(
-            Schema.Record(Schema.String, Schema.Unknown),
-          ),
-          created_at: Schema.String,
-          updated_at: Schema.String,
-        }),
-      ),
-    ),
-    list_metadata: Schema.optional(
+    object: Schema.Literals(["list"]),
+    data: Schema.Array(
       Schema.Struct({
-        before: Schema.NullOr(Schema.String),
-        after: Schema.NullOr(Schema.String),
+        object: Schema.Literals(["organization_membership"]),
+        id: Schema.String,
+        user_id: Schema.String,
+        organization_id: Schema.String,
+        status: Schema.Literals(["active", "inactive", "pending"]),
+        directory_managed: Schema.Boolean,
+        organization_name: Schema.optional(Schema.String),
+        custom_attributes: Schema.optional(
+          Schema.Record(Schema.String, Schema.Unknown),
+        ),
+        created_at: Schema.String,
+        updated_at: Schema.String,
       }),
     ),
-  }) as unknown as Schema.Codec<GroupMembershipsControllerListMembersOutput>;
+    list_metadata: Schema.Struct({
+      before: Schema.NullOr(Schema.String),
+      after: Schema.NullOr(Schema.String),
+    }),
+  }) as unknown as GeneratedStructCodec<GroupMembershipsControllerListMembersOutput>;
 
 // The operation
 /**

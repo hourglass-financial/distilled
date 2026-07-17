@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { Forbidden, NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
@@ -11,65 +12,63 @@ export interface AuthorizationControllerListEffectivePermissionsByExternalIdInpu
   before?: string;
   after?: string;
   limit?: number;
-  order?: string;
+  order?: "normal" | "desc" | "asc";
 }
 export const AuthorizationControllerListEffectivePermissionsByExternalIdInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     organization_membership_id: Schema.String.pipe(T.PathParam()),
     resource_type_slug: Schema.String.pipe(T.PathParam()),
     external_id: Schema.String.pipe(T.PathParam()),
-    before: Schema.optional(Schema.String),
-    after: Schema.optional(Schema.String),
-    limit: Schema.optional(Schema.Number),
-    order: Schema.optional(Schema.String),
+    before: Schema.optional(Schema.String).pipe(T.HttpQuery("before")),
+    after: Schema.optional(Schema.String).pipe(T.HttpQuery("after")),
+    limit: Schema.optional(Schema.Number).pipe(T.HttpQuery("limit")),
+    order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])).pipe(
+      T.HttpQuery("order"),
+    ),
   }).pipe(
     T.Http({
       method: "GET",
       path: "/authorization/organization_memberships/{organization_membership_id}/resources/{resource_type_slug}/{external_id}/permissions",
     }),
-  ) as unknown as Schema.Codec<AuthorizationControllerListEffectivePermissionsByExternalIdInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationControllerListEffectivePermissionsByExternalIdInput>;
 
 // Output Schema
 export interface AuthorizationControllerListEffectivePermissionsByExternalIdOutput {
-  object?: string;
-  data?: ReadonlyArray<{
-    object?: string;
-    id?: string;
-    slug?: string;
-    name?: string;
-    description?: string | null;
-    system?: boolean;
-    resource_type_slug?: string;
-    created_at?: string;
-    updated_at?: string;
+  object: "list";
+  data: ReadonlyArray<{
+    object: "permission";
+    id: string;
+    slug: string;
+    name: string;
+    description: string | null;
+    system: boolean;
+    resource_type_slug: string;
+    created_at: string;
+    updated_at: string;
   }>;
-  list_metadata?: { before: string | null; after: string | null };
+  list_metadata: { before: string | null; after: string | null };
 }
 export const AuthorizationControllerListEffectivePermissionsByExternalIdOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    data: Schema.optional(
-      Schema.Array(
-        Schema.Struct({
-          object: Schema.optional(Schema.String),
-          id: Schema.optional(Schema.String),
-          slug: Schema.optional(Schema.String),
-          name: Schema.optional(Schema.String),
-          description: Schema.optional(Schema.NullOr(Schema.String)),
-          system: Schema.optional(Schema.Boolean),
-          resource_type_slug: Schema.optional(Schema.String),
-          created_at: Schema.optional(Schema.String),
-          updated_at: Schema.optional(Schema.String),
-        }),
-      ),
-    ),
-    list_metadata: Schema.optional(
+    object: Schema.Literals(["list"]),
+    data: Schema.Array(
       Schema.Struct({
-        before: Schema.NullOr(Schema.String),
-        after: Schema.NullOr(Schema.String),
+        object: Schema.Literals(["permission"]),
+        id: Schema.String,
+        slug: Schema.String,
+        name: Schema.String,
+        description: Schema.NullOr(Schema.String),
+        system: Schema.Boolean,
+        resource_type_slug: Schema.String,
+        created_at: Schema.String,
+        updated_at: Schema.String,
       }),
     ),
-  }) as unknown as Schema.Codec<AuthorizationControllerListEffectivePermissionsByExternalIdOutput>;
+    list_metadata: Schema.Struct({
+      before: Schema.NullOr(Schema.String),
+      after: Schema.NullOr(Schema.String),
+    }),
+  }) as unknown as GeneratedStructCodec<AuthorizationControllerListEffectivePermissionsByExternalIdOutput>;
 
 // The operation
 /**

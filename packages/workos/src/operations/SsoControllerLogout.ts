@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound } from "../errors.ts";
 
 // Input Schema
@@ -9,11 +10,11 @@ export interface SsoControllerLogoutInput {
 }
 export const SsoControllerLogoutInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    token: Schema.String,
+    token: Schema.String.pipe(T.HttpQuery("token")),
   }).pipe(
     T.Http({ method: "GET", path: "/sso/logout" }),
     T.NoFollowRedirect(),
-  ) as unknown as Schema.Codec<SsoControllerLogoutInput>;
+  ) as unknown as GeneratedStructCodec<SsoControllerLogoutInput>;
 
 // Output Schema
 export type SsoControllerLogoutOutput = void;

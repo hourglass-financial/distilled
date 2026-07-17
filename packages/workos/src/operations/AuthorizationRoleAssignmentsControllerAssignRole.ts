@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { Forbidden, NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
@@ -23,39 +24,34 @@ export const AuthorizationRoleAssignmentsControllerAssignRoleInput =
       method: "POST",
       path: "/authorization/organization_memberships/{organization_membership_id}/role_assignments",
     }),
-  ) as unknown as Schema.Codec<AuthorizationRoleAssignmentsControllerAssignRoleInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationRoleAssignmentsControllerAssignRoleInput>;
 
 // Output Schema
 export interface AuthorizationRoleAssignmentsControllerAssignRoleOutput {
-  object: string;
+  object: "role_assignment";
   id: string;
   organization_membership_id: string;
-  role: { slug?: string };
+  role: { slug: string };
   resource: { id: string; external_id: string; resource_type_slug: string };
-  source: { type: "direct" | "group"; group_role_assignment_id: string | null };
   created_at: string;
   updated_at: string;
 }
 export const AuthorizationRoleAssignmentsControllerAssignRoleOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["role_assignment"]),
     id: Schema.String,
     organization_membership_id: Schema.String,
     role: Schema.Struct({
-      slug: Schema.optional(Schema.String),
+      slug: Schema.String,
     }),
     resource: Schema.Struct({
       id: Schema.String,
       external_id: Schema.String,
       resource_type_slug: Schema.String,
     }),
-    source: Schema.Struct({
-      type: Schema.Literals(["direct", "group"]),
-      group_role_assignment_id: Schema.NullOr(Schema.String),
-    }),
     created_at: Schema.String,
     updated_at: Schema.String,
-  }) as unknown as Schema.Codec<AuthorizationRoleAssignmentsControllerAssignRoleOutput>;
+  }) as unknown as GeneratedStructCodec<AuthorizationRoleAssignmentsControllerAssignRoleOutput>;
 
 // The operation
 /**

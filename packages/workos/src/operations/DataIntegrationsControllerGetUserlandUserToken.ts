@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound, UnprocessableEntity } from "../errors.ts";
 import { SensitiveOutputString } from "../sensitive.ts";
 import * as Redacted from "effect/Redacted";
@@ -18,38 +19,41 @@ export const DataIntegrationsControllerGetUserlandUserTokenInput =
     organization_id: Schema.optional(Schema.String),
   }).pipe(
     T.Http({ method: "POST", path: "/data-integrations/{slug}/token" }),
-  ) as unknown as Schema.Codec<DataIntegrationsControllerGetUserlandUserTokenInput>;
+  ) as unknown as GeneratedStructCodec<DataIntegrationsControllerGetUserlandUserTokenInput>;
 
 // Output Schema
 export type DataIntegrationsControllerGetUserlandUserTokenOutput =
   | {
-      active: boolean;
+      active: true;
       access_token: {
-        object: string;
+        object: "access_token";
         access_token: Redacted.Redacted<string>;
         expires_at: string | null;
         scopes: ReadonlyArray<string>;
         missing_scopes: ReadonlyArray<string>;
       };
     }
-  | { active: boolean; error: "needs_reauthorization" | "not_installed" };
+  | { active: false; error: "needs_reauthorization" | "not_installed" };
 export const DataIntegrationsControllerGetUserlandUserTokenOutput =
-  /*@__PURE__*/ /*#__PURE__*/ Schema.Union([
-    Schema.Struct({
-      active: Schema.Boolean,
-      access_token: Schema.Struct({
-        object: Schema.String,
-        access_token: SensitiveOutputString,
-        expires_at: Schema.NullOr(Schema.String),
-        scopes: Schema.Array(Schema.String),
-        missing_scopes: Schema.Array(Schema.String),
+  /*@__PURE__*/ /*#__PURE__*/ Schema.Union(
+    [
+      Schema.Struct({
+        active: Schema.Literals([true]),
+        access_token: Schema.Struct({
+          object: Schema.Literals(["access_token"]),
+          access_token: SensitiveOutputString,
+          expires_at: Schema.NullOr(Schema.String),
+          scopes: Schema.Array(Schema.String),
+          missing_scopes: Schema.Array(Schema.String),
+        }),
       }),
-    }),
-    Schema.Struct({
-      active: Schema.Boolean,
-      error: Schema.Literals(["needs_reauthorization", "not_installed"]),
-    }),
-  ]) as unknown as Schema.Codec<DataIntegrationsControllerGetUserlandUserTokenOutput>;
+      Schema.Struct({
+        active: Schema.Literals([false]),
+        error: Schema.Literals(["needs_reauthorization", "not_installed"]),
+      }),
+    ],
+    { mode: "oneOf" },
+  ) as unknown as Schema.Codec<DataIntegrationsControllerGetUserlandUserTokenOutput>;
 
 // The operation
 /**

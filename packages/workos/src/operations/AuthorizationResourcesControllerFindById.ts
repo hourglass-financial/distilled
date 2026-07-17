@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { Forbidden, NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
@@ -12,34 +13,34 @@ export const AuthorizationResourcesControllerFindByIdInput =
     resource_id: Schema.String.pipe(T.PathParam()),
   }).pipe(
     T.Http({ method: "GET", path: "/authorization/resources/{resource_id}" }),
-  ) as unknown as Schema.Codec<AuthorizationResourcesControllerFindByIdInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationResourcesControllerFindByIdInput>;
 
 // Output Schema
 export interface AuthorizationResourcesControllerFindByIdOutput {
-  object?: string;
-  name?: string;
-  description?: string | null;
-  organization_id?: string;
-  parent_resource_id?: string | null;
-  id?: string;
-  external_id?: string;
-  resource_type_slug?: string;
-  created_at?: string;
-  updated_at?: string;
+  object: "authorization_resource";
+  name: string;
+  description: string | null;
+  organization_id: string;
+  parent_resource_id: string | null;
+  id: string;
+  external_id: string;
+  resource_type_slug: string;
+  created_at: string;
+  updated_at: string;
 }
 export const AuthorizationResourcesControllerFindByIdOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    name: Schema.optional(Schema.String),
-    description: Schema.optional(Schema.NullOr(Schema.String)),
-    organization_id: Schema.optional(Schema.String),
-    parent_resource_id: Schema.optional(Schema.NullOr(Schema.String)),
-    id: Schema.optional(Schema.String),
-    external_id: Schema.optional(Schema.String),
-    resource_type_slug: Schema.optional(Schema.String),
-    created_at: Schema.optional(Schema.String),
-    updated_at: Schema.optional(Schema.String),
-  }) as unknown as Schema.Codec<AuthorizationResourcesControllerFindByIdOutput>;
+    object: Schema.Literals(["authorization_resource"]),
+    name: Schema.String,
+    description: Schema.NullOr(Schema.String),
+    organization_id: Schema.String,
+    parent_resource_id: Schema.NullOr(Schema.String),
+    id: Schema.String,
+    external_id: Schema.String,
+    resource_type_slug: Schema.String,
+    created_at: Schema.String,
+    updated_at: Schema.String,
+  }) as unknown as GeneratedStructCodec<AuthorizationResourcesControllerFindByIdOutput>;
 
 // The operation
 /**

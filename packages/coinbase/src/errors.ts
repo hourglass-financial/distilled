@@ -563,10 +563,9 @@ export const COINBASE_HTTP_STATUS_MAP = {
  * Maps standard Coinbase `errorType` values to core HTTP error classes.
  * These represent generic error types that map directly to HTTP status codes.
  */
-export const STANDARD_ERROR_TYPE_MAP: Record<
-  string,
-  new (props: any) => unknown
-> = {
+// HOURGLASS PATCH: Preserve constructor identities so the shared client can
+// expose the complete provider-specific error union.
+export const STANDARD_ERROR_TYPE_MAP = {
   bad_gateway: BadGateway,
   forbidden: Forbidden,
   internal_server_error: InternalServerError,
@@ -581,7 +580,7 @@ export const STANDARD_ERROR_TYPE_MAP: Record<
  * Maps Coinbase-specific `errorType` values to their corresponding error classes.
  * Used by the client's matchError function for type-based error dispatching.
  */
-export const ERROR_TYPE_MAP: Record<string, new (props: any) => unknown> = {
+export const ERROR_TYPE_MAP = {
   // Resource conflicts
   already_exists: AlreadyExists,
   idempotency_error: IdempotencyError,

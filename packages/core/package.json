@@ -29,6 +29,11 @@
       "bun": "./src/errors.ts",
       "default": "./lib/errors.js"
     },
+    "./generated-schema": {
+      "types": "./lib/generated-schema.d.ts",
+      "bun": "./src/generated-schema.ts",
+      "default": "./lib/generated-schema.js"
+    },
     "./json-patch": {
       "types": "./lib/json-patch.d.ts",
       "bun": "./src/json-patch.ts",
@@ -84,7 +89,7 @@
     }
   },
   "scripts": {
-    "typecheck": "tsc && tsc -p tsconfig.scripts.json",
+    "typecheck": "tsc && tsc -p tsconfig.scripts.json && tsc -p tsconfig.contract-test.json",
     "build": "tsc -b",
     "fmt": "oxfmt --write src",
     "lint": "oxlint --fix src",

@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
@@ -8,62 +9,64 @@ export interface EventsControllerListInput {
   before?: string;
   after?: string;
   limit?: number;
-  order?: string;
-  events?: string;
+  order?: "normal" | "desc" | "asc";
+  events?: ReadonlyArray<string>;
   range_start?: string;
   range_end?: string;
   organization_id?: string;
 }
 export const EventsControllerListInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    before: Schema.optional(Schema.String),
-    after: Schema.optional(Schema.String),
-    limit: Schema.optional(Schema.Number),
-    order: Schema.optional(Schema.String),
-    events: Schema.optional(Schema.String),
-    range_start: Schema.optional(Schema.String),
-    range_end: Schema.optional(Schema.String),
-    organization_id: Schema.optional(Schema.String),
+    before: Schema.optional(Schema.String).pipe(T.HttpQuery("before")),
+    after: Schema.optional(Schema.String).pipe(T.HttpQuery("after")),
+    limit: Schema.optional(Schema.Number).pipe(T.HttpQuery("limit")),
+    order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])).pipe(
+      T.HttpQuery("order"),
+    ),
+    events: Schema.optional(Schema.Array(Schema.String)).pipe(
+      T.HttpQuery("events", { style: "form", explode: false }),
+    ),
+    range_start: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("range_start"),
+    ),
+    range_end: Schema.optional(Schema.String).pipe(T.HttpQuery("range_end")),
+    organization_id: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("organization_id"),
+    ),
   }).pipe(
     T.Http({ method: "GET", path: "/events" }),
-  ) as unknown as Schema.Codec<EventsControllerListInput>;
+  ) as unknown as GeneratedStructCodec<EventsControllerListInput>;
 
 // Output Schema
 export interface EventsControllerListOutput {
-  object?: string;
-  data?: ReadonlyArray<{
-    object: string;
+  object: "list";
+  data: ReadonlyArray<{
+    object: "event";
     id: string;
     event: string;
     data: Record<string, unknown>;
     created_at: string;
     context?: Record<string, unknown>;
   }>;
-  list_metadata?: { after: string | null };
+  list_metadata: { after: string | null };
 }
 export const EventsControllerListOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    data: Schema.optional(
-      Schema.Array(
-        Schema.Struct({
-          object: Schema.String,
-          id: Schema.String,
-          event: Schema.String,
-          data: Schema.Record(Schema.String, Schema.Unknown),
-          created_at: Schema.String,
-          context: Schema.optional(
-            Schema.Record(Schema.String, Schema.Unknown),
-          ),
-        }),
-      ),
-    ),
-    list_metadata: Schema.optional(
+    object: Schema.Literals(["list"]),
+    data: Schema.Array(
       Schema.Struct({
-        after: Schema.NullOr(Schema.String),
+        object: Schema.Literals(["event"]),
+        id: Schema.String,
+        event: Schema.String,
+        data: Schema.Record(Schema.String, Schema.Unknown),
+        created_at: Schema.String,
+        context: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
       }),
     ),
-  }) as unknown as Schema.Codec<EventsControllerListOutput>;
+    list_metadata: Schema.Struct({
+      after: Schema.NullOr(Schema.String),
+    }),
+  }) as unknown as GeneratedStructCodec<EventsControllerListOutput>;
 
 // The operation
 /**

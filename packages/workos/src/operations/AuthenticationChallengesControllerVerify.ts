@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
@@ -14,36 +15,34 @@ export const AuthenticationChallengesControllerVerifyInput =
     code: Schema.String,
   }).pipe(
     T.Http({ method: "POST", path: "/auth/challenges/{id}/verify" }),
-  ) as unknown as Schema.Codec<AuthenticationChallengesControllerVerifyInput>;
+  ) as unknown as GeneratedStructCodec<AuthenticationChallengesControllerVerifyInput>;
 
 // Output Schema
 export interface AuthenticationChallengesControllerVerifyOutput {
-  challenge?: {
-    object?: string;
-    id?: string;
+  challenge: {
+    object: "authentication_challenge";
+    id: string;
     expires_at?: string;
     code?: string;
-    authentication_factor_id?: string;
-    created_at?: string;
-    updated_at?: string;
+    authentication_factor_id: string;
+    created_at: string;
+    updated_at: string;
   };
-  valid?: boolean;
+  valid: boolean;
 }
 export const AuthenticationChallengesControllerVerifyOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    challenge: Schema.optional(
-      Schema.Struct({
-        object: Schema.optional(Schema.String),
-        id: Schema.optional(Schema.String),
-        expires_at: Schema.optional(Schema.String),
-        code: Schema.optional(Schema.String),
-        authentication_factor_id: Schema.optional(Schema.String),
-        created_at: Schema.optional(Schema.String),
-        updated_at: Schema.optional(Schema.String),
-      }),
-    ),
-    valid: Schema.optional(Schema.Boolean),
-  }) as unknown as Schema.Codec<AuthenticationChallengesControllerVerifyOutput>;
+    challenge: Schema.Struct({
+      object: Schema.Literals(["authentication_challenge"]),
+      id: Schema.String,
+      expires_at: Schema.optional(Schema.String),
+      code: Schema.optional(Schema.String),
+      authentication_factor_id: Schema.String,
+      created_at: Schema.String,
+      updated_at: Schema.String,
+    }),
+    valid: Schema.Boolean,
+  }) as unknown as GeneratedStructCodec<AuthenticationChallengesControllerVerifyOutput>;
 
 // The operation
 /**

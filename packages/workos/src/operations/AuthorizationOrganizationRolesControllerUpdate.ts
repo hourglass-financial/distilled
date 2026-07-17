@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import {
   BadRequest,
   Forbidden,
@@ -26,12 +27,12 @@ export const AuthorizationOrganizationRolesControllerUpdateInput =
       method: "PATCH",
       path: "/authorization/organizations/{organizationId}/roles/{slug}",
     }),
-  ) as unknown as Schema.Codec<AuthorizationOrganizationRolesControllerUpdateInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationOrganizationRolesControllerUpdateInput>;
 
 // Output Schema
 export interface AuthorizationOrganizationRolesControllerUpdateOutput {
   slug: string;
-  object: string;
+  object: "role";
   id: string;
   name: string;
   description: string | null;
@@ -44,7 +45,7 @@ export interface AuthorizationOrganizationRolesControllerUpdateOutput {
 export const AuthorizationOrganizationRolesControllerUpdateOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     slug: Schema.String,
-    object: Schema.String,
+    object: Schema.Literals(["role"]),
     id: Schema.String,
     name: Schema.String,
     description: Schema.NullOr(Schema.String),
@@ -53,7 +54,7 @@ export const AuthorizationOrganizationRolesControllerUpdateOutput =
     permissions: Schema.Array(Schema.String),
     created_at: Schema.String,
     updated_at: Schema.String,
-  }) as unknown as Schema.Codec<AuthorizationOrganizationRolesControllerUpdateOutput>;
+  }) as unknown as GeneratedStructCodec<AuthorizationOrganizationRolesControllerUpdateOutput>;
 
 // The operation
 /**

@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import {
   BadRequest,
   Forbidden,
@@ -14,7 +15,15 @@ import * as Redacted from "effect/Redacted";
 export interface UserlandSessionsControllerAuthenticate0Input {
   client_id: string;
   client_secret?: string | Redacted.Redacted<string>;
-  grant_type: string;
+  grant_type:
+    | "authorization_code"
+    | "password"
+    | "refresh_token"
+    | "urn:workos:oauth:grant-type:magic-auth:code"
+    | "urn:workos:oauth:grant-type:email-verification:code"
+    | "urn:workos:oauth:grant-type:mfa-totp"
+    | "urn:workos:oauth:grant-type:organization-selection"
+    | "urn:ietf:params:oauth:grant-type:device_code";
   code?: string;
   code_verifier?: string;
   invitation_token?: string;
@@ -33,7 +42,16 @@ export const UserlandSessionsControllerAuthenticate0Input =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     client_id: Schema.String,
     client_secret: Schema.optional(SensitiveString),
-    grant_type: Schema.String,
+    grant_type: Schema.Union([
+      Schema.Literals(["authorization_code"]),
+      Schema.Literals(["password"]),
+      Schema.Literals(["refresh_token"]),
+      Schema.Literals(["urn:workos:oauth:grant-type:magic-auth:code"]),
+      Schema.Literals(["urn:workos:oauth:grant-type:email-verification:code"]),
+      Schema.Literals(["urn:workos:oauth:grant-type:mfa-totp"]),
+      Schema.Literals(["urn:workos:oauth:grant-type:organization-selection"]),
+      Schema.Literals(["urn:ietf:params:oauth:grant-type:device_code"]),
+    ]),
     code: Schema.optional(Schema.String),
     code_verifier: Schema.optional(Schema.String),
     invitation_token: Schema.optional(Schema.String),
@@ -49,30 +67,30 @@ export const UserlandSessionsControllerAuthenticate0Input =
     device_code: Schema.optional(Schema.String),
   }).pipe(
     T.Http({ method: "POST", path: "/user_management/authenticate" }),
-  ) as unknown as Schema.Codec<UserlandSessionsControllerAuthenticate0Input>;
+  ) as unknown as GeneratedStructCodec<UserlandSessionsControllerAuthenticate0Input>;
 
 // Output Schema
 export interface UserlandSessionsControllerAuthenticate0Output {
-  user?: {
-    object?: string;
-    id?: string;
-    first_name?: string | null;
-    last_name?: string | null;
+  user: {
+    object: "user";
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
     name?: string | null;
-    profile_picture_url?: string | null;
-    email?: string;
-    email_verified?: boolean;
-    external_id?: string | null;
+    profile_picture_url: string | null;
+    email: string;
+    email_verified: boolean;
+    external_id: string | null;
     metadata?: Record<string, string>;
-    last_sign_in_at?: string | null;
+    last_sign_in_at: string | null;
     locale?: string | null;
-    created_at?: string;
-    updated_at?: string;
+    created_at: string;
+    updated_at: string;
   };
   organization_id?: string;
   authkit_authorization_code?: string;
-  access_token?: Redacted.Redacted<string>;
-  refresh_token?: Redacted.Redacted<string>;
+  access_token: Redacted.Redacted<string>;
+  refresh_token: Redacted.Redacted<string>;
   authentication_method?:
     | "SSO"
     | "Password"
@@ -107,28 +125,26 @@ export interface UserlandSessionsControllerAuthenticate0Output {
 }
 export const UserlandSessionsControllerAuthenticate0Output =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    user: Schema.optional(
-      Schema.Struct({
-        object: Schema.optional(Schema.String),
-        id: Schema.optional(Schema.String),
-        first_name: Schema.optional(Schema.NullOr(Schema.String)),
-        last_name: Schema.optional(Schema.NullOr(Schema.String)),
-        name: Schema.optional(Schema.NullOr(Schema.String)),
-        profile_picture_url: Schema.optional(Schema.NullOr(Schema.String)),
-        email: Schema.optional(Schema.String),
-        email_verified: Schema.optional(Schema.Boolean),
-        external_id: Schema.optional(Schema.NullOr(Schema.String)),
-        metadata: Schema.optional(Schema.Record(Schema.String, Schema.String)),
-        last_sign_in_at: Schema.optional(Schema.NullOr(Schema.String)),
-        locale: Schema.optional(Schema.NullOr(Schema.String)),
-        created_at: Schema.optional(Schema.String),
-        updated_at: Schema.optional(Schema.String),
-      }),
-    ),
+    user: Schema.Struct({
+      object: Schema.Literals(["user"]),
+      id: Schema.String,
+      first_name: Schema.NullOr(Schema.String),
+      last_name: Schema.NullOr(Schema.String),
+      name: Schema.optional(Schema.NullOr(Schema.String)),
+      profile_picture_url: Schema.NullOr(Schema.String),
+      email: Schema.String,
+      email_verified: Schema.Boolean,
+      external_id: Schema.NullOr(Schema.String),
+      metadata: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+      last_sign_in_at: Schema.NullOr(Schema.String),
+      locale: Schema.optional(Schema.NullOr(Schema.String)),
+      created_at: Schema.String,
+      updated_at: Schema.String,
+    }),
     organization_id: Schema.optional(Schema.String),
     authkit_authorization_code: Schema.optional(Schema.String),
-    access_token: Schema.optional(SensitiveOutputString),
-    refresh_token: Schema.optional(SensitiveOutputString),
+    access_token: SensitiveOutputString,
+    refresh_token: SensitiveOutputString,
     authentication_method: Schema.optional(
       Schema.Literals([
         "SSO",
@@ -170,7 +186,7 @@ export const UserlandSessionsControllerAuthenticate0Output =
         scopes: Schema.Array(Schema.String),
       }),
     ),
-  }) as unknown as Schema.Codec<UserlandSessionsControllerAuthenticate0Output>;
+  }) as unknown as GeneratedStructCodec<UserlandSessionsControllerAuthenticate0Output>;
 
 // The operation
 /**

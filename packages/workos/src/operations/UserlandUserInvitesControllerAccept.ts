@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -15,11 +16,11 @@ export const UserlandUserInvitesControllerAcceptInput =
       method: "POST",
       path: "/user_management/invitations/{id}/accept",
     }),
-  ) as unknown as Schema.Codec<UserlandUserInvitesControllerAcceptInput>;
+  ) as unknown as GeneratedStructCodec<UserlandUserInvitesControllerAcceptInput>;
 
 // Output Schema
 export interface UserlandUserInvitesControllerAcceptOutput {
-  object: string;
+  object: "invitation";
   id: string;
   email: string;
   state: "pending" | "accepted" | "expired" | "revoked";
@@ -37,7 +38,7 @@ export interface UserlandUserInvitesControllerAcceptOutput {
 }
 export const UserlandUserInvitesControllerAcceptOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["invitation"]),
     id: Schema.String,
     email: Schema.String,
     state: Schema.Literals(["pending", "accepted", "expired", "revoked"]),
@@ -52,7 +53,7 @@ export const UserlandUserInvitesControllerAcceptOutput =
     updated_at: Schema.String,
     token: Schema.String,
     accept_invitation_url: Schema.String,
-  }) as unknown as Schema.Codec<UserlandUserInvitesControllerAcceptOutput>;
+  }) as unknown as GeneratedStructCodec<UserlandUserInvitesControllerAcceptOutput>;
 
 // The operation
 /**

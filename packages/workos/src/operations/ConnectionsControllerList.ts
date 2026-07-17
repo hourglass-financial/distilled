@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { Forbidden, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
@@ -8,7 +9,7 @@ export interface ConnectionsControllerListInput {
   before?: string;
   after?: string;
   limit?: number;
-  order?: string;
+  order?: "normal" | "desc" | "asc";
   connection_type?:
     | "ADFSSAML"
     | "AdpOidc"
@@ -64,10 +65,12 @@ export interface ConnectionsControllerListInput {
 }
 export const ConnectionsControllerListInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    before: Schema.optional(Schema.String),
-    after: Schema.optional(Schema.String),
-    limit: Schema.optional(Schema.Number),
-    order: Schema.optional(Schema.String),
+    before: Schema.optional(Schema.String).pipe(T.HttpQuery("before")),
+    after: Schema.optional(Schema.String).pipe(T.HttpQuery("after")),
+    limit: Schema.optional(Schema.Number).pipe(T.HttpQuery("limit")),
+    order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])).pipe(
+      T.HttpQuery("order"),
+    ),
     connection_type: Schema.optional(
       Schema.Literals([
         "ADFSSAML",
@@ -119,22 +122,24 @@ export const ConnectionsControllerListInput =
         "VMwareSAML",
         "XeroOAuth",
       ]),
+    ).pipe(T.HttpQuery("connection_type")),
+    domain: Schema.optional(Schema.String).pipe(T.HttpQuery("domain")),
+    organization_id: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("organization_id"),
     ),
-    domain: Schema.optional(Schema.String),
-    organization_id: Schema.optional(Schema.String),
-    search: Schema.optional(Schema.String),
+    search: Schema.optional(Schema.String).pipe(T.HttpQuery("search")),
   }).pipe(
     T.Http({ method: "GET", path: "/connections" }),
-  ) as unknown as Schema.Codec<ConnectionsControllerListInput>;
+  ) as unknown as GeneratedStructCodec<ConnectionsControllerListInput>;
 
 // Output Schema
 export interface ConnectionsControllerListOutput {
-  object?: string;
-  data?: ReadonlyArray<{
-    object?: string;
-    id?: string;
+  object: "list";
+  data: ReadonlyArray<{
+    object: "connection";
+    id: string;
     organization_id?: string;
-    connection_type?:
+    connection_type:
       | "Pending"
       | "ADFSSAML"
       | "AdpOidc"
@@ -186,124 +191,118 @@ export interface ConnectionsControllerListOutput {
       | "VercelOAuth"
       | "VMwareSAML"
       | "XeroOAuth";
-    name?: string;
-    state?:
+    name: string;
+    state:
       | "requires_type"
       | "draft"
       | "active"
       | "validating"
       | "inactive"
       | "deleting";
-    status?: "linked" | "unlinked";
-    domains?: ReadonlyArray<{ id: string; object: string; domain: string }>;
+    status: "linked" | "unlinked";
+    domains: ReadonlyArray<{
+      id: string;
+      object: "connection_domain";
+      domain: string;
+    }>;
     options?: { signing_cert: string | null };
-    created_at?: string;
-    updated_at?: string;
+    created_at: string;
+    updated_at: string;
   }>;
-  list_metadata?: { before: string | null; after: string | null };
+  list_metadata: { before: string | null; after: string | null };
 }
 export const ConnectionsControllerListOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    data: Schema.optional(
-      Schema.Array(
-        Schema.Struct({
-          object: Schema.optional(Schema.String),
-          id: Schema.optional(Schema.String),
-          organization_id: Schema.optional(Schema.String),
-          connection_type: Schema.optional(
-            Schema.Literals([
-              "Pending",
-              "ADFSSAML",
-              "AdpOidc",
-              "AppleOAuth",
-              "Auth0Migration",
-              "Auth0SAML",
-              "AzureSAML",
-              "BitbucketOAuth",
-              "CasSAML",
-              "ClassLinkSAML",
-              "CleverOIDC",
-              "CloudflareSAML",
-              "CyberArkSAML",
-              "DiscordOAuth",
-              "DuoSAML",
-              "EntraIdOIDC",
-              "GenericOIDC",
-              "GenericSAML",
-              "GitHubOAuth",
-              "GitLabOAuth",
-              "GoogleOAuth",
-              "GoogleOIDC",
-              "GoogleSAML",
-              "IntuitOAuth",
-              "JumpCloudSAML",
-              "KeycloakSAML",
-              "LastPassSAML",
-              "LinkedInOAuth",
-              "LoginGovOidc",
-              "MagicLink",
-              "MicrosoftOAuth",
-              "MiniOrangeSAML",
-              "NetIqSAML",
-              "OktaOIDC",
-              "OktaSAML",
-              "OneLoginSAML",
-              "OracleSAML",
-              "PingFederateSAML",
-              "PingOneSAML",
-              "RipplingSAML",
-              "SalesforceSAML",
-              "ShibbolethGenericSAML",
-              "ShibbolethSAML",
-              "SimpleSamlPhpSAML",
-              "SalesforceOAuth",
-              "SlackOAuth",
-              "TestIdp",
-              "VercelMarketplaceOAuth",
-              "VercelOAuth",
-              "VMwareSAML",
-              "XeroOAuth",
-            ]),
-          ),
-          name: Schema.optional(Schema.String),
-          state: Schema.optional(
-            Schema.Literals([
-              "requires_type",
-              "draft",
-              "active",
-              "validating",
-              "inactive",
-              "deleting",
-            ]),
-          ),
-          status: Schema.optional(Schema.Literals(["linked", "unlinked"])),
-          domains: Schema.optional(
-            Schema.Array(
-              Schema.Struct({
-                id: Schema.String,
-                object: Schema.String,
-                domain: Schema.String,
-              }),
-            ),
-          ),
-          options: Schema.optional(
-            Schema.Struct({
-              signing_cert: Schema.NullOr(Schema.String),
-            }),
-          ),
-          created_at: Schema.optional(Schema.String),
-          updated_at: Schema.optional(Schema.String),
-        }),
-      ),
-    ),
-    list_metadata: Schema.optional(
+    object: Schema.Literals(["list"]),
+    data: Schema.Array(
       Schema.Struct({
-        before: Schema.NullOr(Schema.String),
-        after: Schema.NullOr(Schema.String),
+        object: Schema.Literals(["connection"]),
+        id: Schema.String,
+        organization_id: Schema.optional(Schema.String),
+        connection_type: Schema.Literals([
+          "Pending",
+          "ADFSSAML",
+          "AdpOidc",
+          "AppleOAuth",
+          "Auth0Migration",
+          "Auth0SAML",
+          "AzureSAML",
+          "BitbucketOAuth",
+          "CasSAML",
+          "ClassLinkSAML",
+          "CleverOIDC",
+          "CloudflareSAML",
+          "CyberArkSAML",
+          "DiscordOAuth",
+          "DuoSAML",
+          "EntraIdOIDC",
+          "GenericOIDC",
+          "GenericSAML",
+          "GitHubOAuth",
+          "GitLabOAuth",
+          "GoogleOAuth",
+          "GoogleOIDC",
+          "GoogleSAML",
+          "IntuitOAuth",
+          "JumpCloudSAML",
+          "KeycloakSAML",
+          "LastPassSAML",
+          "LinkedInOAuth",
+          "LoginGovOidc",
+          "MagicLink",
+          "MicrosoftOAuth",
+          "MiniOrangeSAML",
+          "NetIqSAML",
+          "OktaOIDC",
+          "OktaSAML",
+          "OneLoginSAML",
+          "OracleSAML",
+          "PingFederateSAML",
+          "PingOneSAML",
+          "RipplingSAML",
+          "SalesforceSAML",
+          "ShibbolethGenericSAML",
+          "ShibbolethSAML",
+          "SimpleSamlPhpSAML",
+          "SalesforceOAuth",
+          "SlackOAuth",
+          "TestIdp",
+          "VercelMarketplaceOAuth",
+          "VercelOAuth",
+          "VMwareSAML",
+          "XeroOAuth",
+        ]),
+        name: Schema.String,
+        state: Schema.Literals([
+          "requires_type",
+          "draft",
+          "active",
+          "validating",
+          "inactive",
+          "deleting",
+        ]),
+        status: Schema.Literals(["linked", "unlinked"]),
+        domains: Schema.Array(
+          Schema.Struct({
+            id: Schema.String,
+            object: Schema.Literals(["connection_domain"]),
+            domain: Schema.String,
+          }),
+        ),
+        options: Schema.optional(
+          Schema.Struct({
+            signing_cert: Schema.NullOr(Schema.String),
+          }),
+        ),
+        created_at: Schema.String,
+        updated_at: Schema.String,
       }),
     ),
-  }) as unknown as Schema.Codec<ConnectionsControllerListOutput>;
+    list_metadata: Schema.Struct({
+      before: Schema.NullOr(Schema.String),
+      after: Schema.NullOr(Schema.String),
+    }),
+  }) as unknown as GeneratedStructCodec<ConnectionsControllerListOutput>;
 
 // The operation
 /**

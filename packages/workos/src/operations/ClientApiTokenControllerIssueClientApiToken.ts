@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
@@ -14,7 +15,7 @@ export const ClientApiTokenControllerIssueClientApiTokenInput =
     user_id: Schema.String,
   }).pipe(
     T.Http({ method: "POST", path: "/client/token" }),
-  ) as unknown as Schema.Codec<ClientApiTokenControllerIssueClientApiTokenInput>;
+  ) as unknown as GeneratedStructCodec<ClientApiTokenControllerIssueClientApiTokenInput>;
 
 // Output Schema
 export interface ClientApiTokenControllerIssueClientApiTokenOutput {
@@ -23,7 +24,7 @@ export interface ClientApiTokenControllerIssueClientApiTokenOutput {
 export const ClientApiTokenControllerIssueClientApiTokenOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     token: Schema.String,
-  }) as unknown as Schema.Codec<ClientApiTokenControllerIssueClientApiTokenOutput>;
+  }) as unknown as GeneratedStructCodec<ClientApiTokenControllerIssueClientApiTokenOutput>;
 
 // The operation
 /**

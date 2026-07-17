@@ -1,18 +1,19 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest } from "../errors.ts";
 
 // Input Schema
 export interface UserlandSessionsControllerRevokeSessionInput {
-  session_id?: string;
+  session_id: string;
 }
 export const UserlandSessionsControllerRevokeSessionInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    session_id: Schema.optional(Schema.String),
+    session_id: Schema.String,
   }).pipe(
     T.Http({ method: "POST", path: "/user_management/sessions/revoke" }),
-  ) as unknown as Schema.Codec<UserlandSessionsControllerRevokeSessionInput>;
+  ) as unknown as GeneratedStructCodec<UserlandSessionsControllerRevokeSessionInput>;
 
 // Output Schema
 export type UserlandSessionsControllerRevokeSessionOutput = void;

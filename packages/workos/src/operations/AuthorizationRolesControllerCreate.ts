@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import {
   BadRequest,
   Forbidden,
@@ -11,25 +12,25 @@ import {
 
 // Input Schema
 export interface AuthorizationRolesControllerCreateInput {
-  slug?: string;
-  name?: string;
+  slug: string;
+  name: string;
   description?: string | null;
   resource_type_slug?: string;
 }
 export const AuthorizationRolesControllerCreateInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    slug: Schema.optional(Schema.String),
-    name: Schema.optional(Schema.String),
+    slug: Schema.String,
+    name: Schema.String,
     description: Schema.optional(Schema.NullOr(Schema.String)),
     resource_type_slug: Schema.optional(Schema.String),
   }).pipe(
     T.Http({ method: "POST", path: "/authorization/roles" }),
-  ) as unknown as Schema.Codec<AuthorizationRolesControllerCreateInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationRolesControllerCreateInput>;
 
 // Output Schema
 export interface AuthorizationRolesControllerCreateOutput {
   slug: string;
-  object: string;
+  object: "role";
   id: string;
   name: string;
   description: string | null;
@@ -42,7 +43,7 @@ export interface AuthorizationRolesControllerCreateOutput {
 export const AuthorizationRolesControllerCreateOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     slug: Schema.String,
-    object: Schema.String,
+    object: Schema.Literals(["role"]),
     id: Schema.String,
     name: Schema.String,
     description: Schema.NullOr(Schema.String),
@@ -51,7 +52,7 @@ export const AuthorizationRolesControllerCreateOutput =
     permissions: Schema.Array(Schema.String),
     created_at: Schema.String,
     updated_at: Schema.String,
-  }) as unknown as Schema.Codec<AuthorizationRolesControllerCreateOutput>;
+  }) as unknown as GeneratedStructCodec<AuthorizationRolesControllerCreateOutput>;
 
 // The operation
 /**

@@ -286,54 +286,55 @@ export class InvalidScope extends Schema.TaggedErrorClass<InvalidScope>()(
  * Azure error code to typed error class mapping.
  * Used by the client's `matchError` to dispatch by ARM error code.
  */
-export const AZURE_ERROR_CODE_MAP: Record<string, new (props: any) => unknown> =
-  {
-    // Not-found
-    ResourceNotFound: ResourceNotFound,
-    ResourceGroupNotFound: ResourceGroupNotFound,
-    MissingSubscription: SubscriptionNotFound,
-    SubscriptionNotFound: SubscriptionNotFound,
+// HOURGLASS PATCH: Preserve constructor identities so the shared client can
+// expose the complete provider-specific error union.
+export const AZURE_ERROR_CODE_MAP = {
+  // Not-found
+  ResourceNotFound: ResourceNotFound,
+  ResourceGroupNotFound: ResourceGroupNotFound,
+  MissingSubscription: SubscriptionNotFound,
+  SubscriptionNotFound: SubscriptionNotFound,
 
-    // Auth
-    AuthorizationFailed: AuthorizationFailed,
-    InvalidAuthenticationToken: InvalidAuthenticationToken,
-    InvalidAuthenticationTokenAudience: InvalidAuthenticationTokenAudience,
-    InvalidAuthenticationTokenTenant: InvalidAuthenticationTokenTenant,
-    LinkedAuthorizationFailed: LinkedAuthorizationFailed,
+  // Auth
+  AuthorizationFailed: AuthorizationFailed,
+  InvalidAuthenticationToken: InvalidAuthenticationToken,
+  InvalidAuthenticationTokenAudience: InvalidAuthenticationTokenAudience,
+  InvalidAuthenticationTokenTenant: InvalidAuthenticationTokenTenant,
+  LinkedAuthorizationFailed: LinkedAuthorizationFailed,
 
-    // Bad request / validation
-    InvalidParameter: InvalidParameter,
-    InvalidParameterValue: InvalidParameter,
-    InvalidResourceType: InvalidResourceType,
-    InvalidResourceName: InvalidResourceName,
-    InvalidResourceNameFormat: InvalidResourceName,
-    InvalidRequestContent: InvalidRequestContent,
-    MissingRequiredProperty: MissingRequiredProperty,
-    PropertyRequired: MissingRequiredProperty,
-    InvalidPropertyValue: InvalidPropertyValue,
-    PropertyValueExceedsMaxLength: InvalidPropertyValue,
+  // Bad request / validation
+  InvalidParameter: InvalidParameter,
+  InvalidParameterValue: InvalidParameter,
+  InvalidResourceType: InvalidResourceType,
+  InvalidResourceName: InvalidResourceName,
+  InvalidResourceNameFormat: InvalidResourceName,
+  InvalidRequestContent: InvalidRequestContent,
+  MissingRequiredProperty: MissingRequiredProperty,
+  PropertyRequired: MissingRequiredProperty,
+  InvalidPropertyValue: InvalidPropertyValue,
+  PropertyValueExceedsMaxLength: InvalidPropertyValue,
 
-    // Conflict
-    Conflict: ResourceConflict,
-    PreconditionFailed: PreconditionFailed,
-    ConditionNotMet: PreconditionFailed,
+  // Conflict
+  Conflict: ResourceConflict,
+  PreconditionFailed: PreconditionFailed,
+  ConditionNotMet: PreconditionFailed,
 
-    // Operation / registration
-    OperationNotAllowed: OperationNotAllowed,
-    MissingRegistrationForType: MissingRegistration,
-    MissingSubscriptionRegistration: MissingRegistration,
+  // Operation / registration
+  OperationNotAllowed: OperationNotAllowed,
+  MissingRegistrationForType: MissingRegistration,
+  MissingSubscriptionRegistration: MissingRegistration,
 
-    // Throttling / quota
-    QuotaExceeded: QuotaExceeded,
-    ExceededMaxAccountCount: QuotaExceeded,
-    RequestRateLimitExceeded: RequestRateLimitExceeded,
-    TooManyRequests: RequestRateLimitExceeded,
+  // Throttling / quota
+  QuotaExceeded: QuotaExceeded,
+  ExceededMaxAccountCount: QuotaExceeded,
+  RequestRateLimitExceeded: RequestRateLimitExceeded,
+  TooManyRequests: RequestRateLimitExceeded,
 
-    // Location / scope
-    LocationNotAvailableForResourceType: LocationNotAvailable,
-    InvalidResourceScope: InvalidScope,
-    ScopeNotValid: InvalidScope,
-  };
+  // Location / scope
+  LocationNotAvailableForResourceType: LocationNotAvailable,
+  InvalidResourceScope: InvalidScope,
+  ScopeNotValid: InvalidScope,
+} as const;
 
 // ---------------------------------------------------------------------------
 // Catch-all error classes

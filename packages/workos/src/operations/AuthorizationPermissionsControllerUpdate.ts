@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { Forbidden, NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
@@ -16,32 +17,32 @@ export const AuthorizationPermissionsControllerUpdateInput =
     description: Schema.optional(Schema.NullOr(Schema.String)),
   }).pipe(
     T.Http({ method: "PATCH", path: "/authorization/permissions/{slug}" }),
-  ) as unknown as Schema.Codec<AuthorizationPermissionsControllerUpdateInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationPermissionsControllerUpdateInput>;
 
 // Output Schema
 export interface AuthorizationPermissionsControllerUpdateOutput {
-  object?: string;
-  id?: string;
-  slug?: string;
-  name?: string;
-  description?: string | null;
-  system?: boolean;
-  resource_type_slug?: string;
-  created_at?: string;
-  updated_at?: string;
+  object: "permission";
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  system: boolean;
+  resource_type_slug: string;
+  created_at: string;
+  updated_at: string;
 }
 export const AuthorizationPermissionsControllerUpdateOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    id: Schema.optional(Schema.String),
-    slug: Schema.optional(Schema.String),
-    name: Schema.optional(Schema.String),
-    description: Schema.optional(Schema.NullOr(Schema.String)),
-    system: Schema.optional(Schema.Boolean),
-    resource_type_slug: Schema.optional(Schema.String),
-    created_at: Schema.optional(Schema.String),
-    updated_at: Schema.optional(Schema.String),
-  }) as unknown as Schema.Codec<AuthorizationPermissionsControllerUpdateOutput>;
+    object: Schema.Literals(["permission"]),
+    id: Schema.String,
+    slug: Schema.String,
+    name: Schema.String,
+    description: Schema.NullOr(Schema.String),
+    system: Schema.Boolean,
+    resource_type_slug: Schema.String,
+    created_at: Schema.String,
+    updated_at: Schema.String,
+  }) as unknown as GeneratedStructCodec<AuthorizationPermissionsControllerUpdateOutput>;
 
 // The operation
 /**

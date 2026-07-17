@@ -1,11 +1,12 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 
 // Input Schema
 export interface SsoControllerAuthorizeInput {
-  provider_scopes?: string;
-  provider_query_params?: string;
+  provider_scopes?: ReadonlyArray<string>;
+  provider_query_params?: Record<string, string>;
   client_id: string;
   domain?: string;
   provider?:
@@ -23,7 +24,7 @@ export interface SsoControllerAuthorizeInput {
     | "VercelOAuth"
     | "XeroOAuth";
   redirect_uri: string;
-  response_type: string;
+  response_type: "code";
   state?: string;
   connection?: string;
   organization?: string;
@@ -33,10 +34,14 @@ export interface SsoControllerAuthorizeInput {
 }
 export const SsoControllerAuthorizeInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    provider_scopes: Schema.optional(Schema.String),
-    provider_query_params: Schema.optional(Schema.String),
-    client_id: Schema.String,
-    domain: Schema.optional(Schema.String),
+    provider_scopes: Schema.optional(Schema.Array(Schema.String)).pipe(
+      T.HttpQuery("provider_scopes", { style: "form", explode: false }),
+    ),
+    provider_query_params: Schema.optional(
+      Schema.Record(Schema.String, Schema.String),
+    ).pipe(T.HttpQuery("provider_query_params")),
+    client_id: Schema.String.pipe(T.HttpQuery("client_id")),
+    domain: Schema.optional(Schema.String).pipe(T.HttpQuery("domain")),
     provider: Schema.optional(
       Schema.Literals([
         "AppleOAuth",
@@ -53,28 +58,32 @@ export const SsoControllerAuthorizeInput =
         "VercelOAuth",
         "XeroOAuth",
       ]),
+    ).pipe(T.HttpQuery("provider")),
+    redirect_uri: Schema.String.pipe(T.HttpQuery("redirect_uri")),
+    response_type: Schema.Literals(["code"]).pipe(T.HttpQuery("response_type")),
+    state: Schema.optional(Schema.String).pipe(T.HttpQuery("state")),
+    connection: Schema.optional(Schema.String).pipe(T.HttpQuery("connection")),
+    organization: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("organization"),
     ),
-    redirect_uri: Schema.String,
-    response_type: Schema.String,
-    state: Schema.optional(Schema.String),
-    connection: Schema.optional(Schema.String),
-    organization: Schema.optional(Schema.String),
-    domain_hint: Schema.optional(Schema.String),
-    login_hint: Schema.optional(Schema.String),
-    nonce: Schema.optional(Schema.String),
+    domain_hint: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("domain_hint"),
+    ),
+    login_hint: Schema.optional(Schema.String).pipe(T.HttpQuery("login_hint")),
+    nonce: Schema.optional(Schema.String).pipe(T.HttpQuery("nonce")),
   }).pipe(
     T.Http({ method: "GET", path: "/sso/authorize" }),
     T.NoFollowRedirect(),
-  ) as unknown as Schema.Codec<SsoControllerAuthorizeInput>;
+  ) as unknown as GeneratedStructCodec<SsoControllerAuthorizeInput>;
 
 // Output Schema
 export interface SsoControllerAuthorizeOutput {
-  url?: string;
+  url: string;
 }
 export const SsoControllerAuthorizeOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    url: Schema.optional(Schema.String),
-  }) as unknown as Schema.Codec<SsoControllerAuthorizeOutput>;
+    url: Schema.String,
+  }) as unknown as GeneratedStructCodec<SsoControllerAuthorizeOutput>;
 
 // The operation
 /**

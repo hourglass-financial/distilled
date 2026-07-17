@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
@@ -9,25 +10,27 @@ export interface UserlandUserSessionsControllerListInput {
   before?: string;
   after?: string;
   limit?: number;
-  order?: string;
+  order?: "normal" | "desc" | "asc";
 }
 export const UserlandUserSessionsControllerListInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     id: Schema.String.pipe(T.PathParam()),
-    before: Schema.optional(Schema.String),
-    after: Schema.optional(Schema.String),
-    limit: Schema.optional(Schema.Number),
-    order: Schema.optional(Schema.String),
+    before: Schema.optional(Schema.String).pipe(T.HttpQuery("before")),
+    after: Schema.optional(Schema.String).pipe(T.HttpQuery("after")),
+    limit: Schema.optional(Schema.Number).pipe(T.HttpQuery("limit")),
+    order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])).pipe(
+      T.HttpQuery("order"),
+    ),
   }).pipe(
     T.Http({ method: "GET", path: "/user_management/users/{id}/sessions" }),
-  ) as unknown as Schema.Codec<UserlandUserSessionsControllerListInput>;
+  ) as unknown as GeneratedStructCodec<UserlandUserSessionsControllerListInput>;
 
 // Output Schema
 export interface UserlandUserSessionsControllerListOutput {
-  object?: string;
+  object?: "list";
   list_metadata?: { before: string | null; after: string | null };
   data?: ReadonlyArray<{
-    object: string;
+    object: "session";
     id: string;
     impersonator?: { email: string; reason: string | null };
     ip_address: string | null;
@@ -54,7 +57,7 @@ export interface UserlandUserSessionsControllerListOutput {
 }
 export const UserlandUserSessionsControllerListOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
+    object: Schema.optional(Schema.Literals(["list"])),
     list_metadata: Schema.optional(
       Schema.Struct({
         before: Schema.NullOr(Schema.String),
@@ -64,7 +67,7 @@ export const UserlandUserSessionsControllerListOutput =
     data: Schema.optional(
       Schema.Array(
         Schema.Struct({
-          object: Schema.String,
+          object: Schema.Literals(["session"]),
           id: Schema.String,
           impersonator: Schema.optional(
             Schema.Struct({
@@ -96,7 +99,7 @@ export const UserlandUserSessionsControllerListOutput =
         }),
       ),
     ),
-  }) as unknown as Schema.Codec<UserlandUserSessionsControllerListOutput>;
+  }) as unknown as GeneratedStructCodec<UserlandUserSessionsControllerListOutput>;
 
 // The operation
 /**

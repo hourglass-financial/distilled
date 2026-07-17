@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound } from "../errors.ts";
 import { SensitiveOutputString } from "../sensitive.ts";
 import * as Redacted from "effect/Redacted";
@@ -14,30 +15,30 @@ export const UserlandUsersControllerGetPasswordResetInput =
     id: Schema.String.pipe(T.PathParam()),
   }).pipe(
     T.Http({ method: "GET", path: "/user_management/password_reset/{id}" }),
-  ) as unknown as Schema.Codec<UserlandUsersControllerGetPasswordResetInput>;
+  ) as unknown as GeneratedStructCodec<UserlandUsersControllerGetPasswordResetInput>;
 
 // Output Schema
 export interface UserlandUsersControllerGetPasswordResetOutput {
-  object?: string;
-  id?: string;
-  user_id?: string;
-  email?: string;
-  expires_at?: string;
-  created_at?: string;
-  password_reset_token?: Redacted.Redacted<string>;
-  password_reset_url?: Redacted.Redacted<string>;
+  object: "password_reset";
+  id: string;
+  user_id: string;
+  email: string;
+  expires_at: string;
+  created_at: string;
+  password_reset_token: Redacted.Redacted<string>;
+  password_reset_url: Redacted.Redacted<string>;
 }
 export const UserlandUsersControllerGetPasswordResetOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    id: Schema.optional(Schema.String),
-    user_id: Schema.optional(Schema.String),
-    email: Schema.optional(Schema.String),
-    expires_at: Schema.optional(Schema.String),
-    created_at: Schema.optional(Schema.String),
-    password_reset_token: Schema.optional(SensitiveOutputString),
-    password_reset_url: Schema.optional(SensitiveOutputString),
-  }) as unknown as Schema.Codec<UserlandUsersControllerGetPasswordResetOutput>;
+    object: Schema.Literals(["password_reset"]),
+    id: Schema.String,
+    user_id: Schema.String,
+    email: Schema.String,
+    expires_at: Schema.String,
+    created_at: Schema.String,
+    password_reset_token: SensitiveOutputString,
+    password_reset_url: SensitiveOutputString,
+  }) as unknown as GeneratedStructCodec<UserlandUsersControllerGetPasswordResetOutput>;
 
 // The operation
 /**

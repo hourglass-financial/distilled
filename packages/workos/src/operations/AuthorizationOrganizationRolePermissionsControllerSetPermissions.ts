@@ -1,30 +1,31 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { Forbidden, NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
 export interface AuthorizationOrganizationRolePermissionsControllerSetPermissionsInput {
   organizationId: string;
   slug: string;
-  permissions?: ReadonlyArray<string>;
+  permissions: ReadonlyArray<string>;
 }
 export const AuthorizationOrganizationRolePermissionsControllerSetPermissionsInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     organizationId: Schema.String.pipe(T.PathParam()),
     slug: Schema.String.pipe(T.PathParam()),
-    permissions: Schema.optional(Schema.Array(Schema.String)),
+    permissions: Schema.Array(Schema.String),
   }).pipe(
     T.Http({
       method: "PUT",
       path: "/authorization/organizations/{organizationId}/roles/{slug}/permissions",
     }),
-  ) as unknown as Schema.Codec<AuthorizationOrganizationRolePermissionsControllerSetPermissionsInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationOrganizationRolePermissionsControllerSetPermissionsInput>;
 
 // Output Schema
 export interface AuthorizationOrganizationRolePermissionsControllerSetPermissionsOutput {
   slug: string;
-  object: string;
+  object: "role";
   id: string;
   name: string;
   description: string | null;
@@ -37,7 +38,7 @@ export interface AuthorizationOrganizationRolePermissionsControllerSetPermission
 export const AuthorizationOrganizationRolePermissionsControllerSetPermissionsOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     slug: Schema.String,
-    object: Schema.String,
+    object: Schema.Literals(["role"]),
     id: Schema.String,
     name: Schema.String,
     description: Schema.NullOr(Schema.String),
@@ -46,7 +47,7 @@ export const AuthorizationOrganizationRolePermissionsControllerSetPermissionsOut
     permissions: Schema.Array(Schema.String),
     created_at: Schema.String,
     updated_at: Schema.String,
-  }) as unknown as Schema.Codec<AuthorizationOrganizationRolePermissionsControllerSetPermissionsOutput>;
+  }) as unknown as GeneratedStructCodec<AuthorizationOrganizationRolePermissionsControllerSetPermissionsOutput>;
 
 // The operation
 /**

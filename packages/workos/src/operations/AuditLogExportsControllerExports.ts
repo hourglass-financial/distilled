@@ -1,13 +1,14 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
 export interface AuditLogExportsControllerExportsInput {
-  organization_id?: string;
-  range_start?: string;
-  range_end?: string;
+  organization_id: string;
+  range_start: string;
+  range_end: string;
   actions?: ReadonlyArray<string>;
   actors?: ReadonlyArray<string>;
   actor_names?: ReadonlyArray<string>;
@@ -16,9 +17,9 @@ export interface AuditLogExportsControllerExportsInput {
 }
 export const AuditLogExportsControllerExportsInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    organization_id: Schema.optional(Schema.String),
-    range_start: Schema.optional(Schema.String),
-    range_end: Schema.optional(Schema.String),
+    organization_id: Schema.String,
+    range_start: Schema.String,
+    range_end: Schema.String,
     actions: Schema.optional(Schema.Array(Schema.String)),
     actors: Schema.optional(Schema.Array(Schema.String)),
     actor_names: Schema.optional(Schema.Array(Schema.String)),
@@ -26,28 +27,26 @@ export const AuditLogExportsControllerExportsInput =
     targets: Schema.optional(Schema.Array(Schema.String)),
   }).pipe(
     T.Http({ method: "POST", path: "/audit_logs/exports" }),
-  ) as unknown as Schema.Codec<AuditLogExportsControllerExportsInput>;
+  ) as unknown as GeneratedStructCodec<AuditLogExportsControllerExportsInput>;
 
 // Output Schema
 export interface AuditLogExportsControllerExportsOutput {
-  object?: string;
-  id?: string;
-  state?: "pending" | "ready" | "error" | "expired";
+  object: "audit_log_export";
+  id: string;
+  state: "pending" | "ready" | "error" | "expired";
   url?: string | null;
-  created_at?: string;
-  updated_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 export const AuditLogExportsControllerExportsOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    id: Schema.optional(Schema.String),
-    state: Schema.optional(
-      Schema.Literals(["pending", "ready", "error", "expired"]),
-    ),
+    object: Schema.Literals(["audit_log_export"]),
+    id: Schema.String,
+    state: Schema.Literals(["pending", "ready", "error", "expired"]),
     url: Schema.optional(Schema.NullOr(Schema.String)),
-    created_at: Schema.optional(Schema.String),
-    updated_at: Schema.optional(Schema.String),
-  }) as unknown as Schema.Codec<AuditLogExportsControllerExportsOutput>;
+    created_at: Schema.String,
+    updated_at: Schema.String,
+  }) as unknown as GeneratedStructCodec<AuditLogExportsControllerExportsOutput>;
 
 // The operation
 /**

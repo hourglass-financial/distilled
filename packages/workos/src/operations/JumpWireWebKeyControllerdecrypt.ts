@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest } from "../errors.ts";
 
 // Input Schema
@@ -12,7 +13,7 @@ export const JumpWireWebKeyControllerdecryptInput =
     keys: Schema.String,
   }).pipe(
     T.Http({ method: "POST", path: "/vault/v1/keys/decrypt" }),
-  ) as unknown as Schema.Codec<JumpWireWebKeyControllerdecryptInput>;
+  ) as unknown as GeneratedStructCodec<JumpWireWebKeyControllerdecryptInput>;
 
 // Output Schema
 export interface JumpWireWebKeyControllerdecryptOutput {
@@ -23,7 +24,7 @@ export const JumpWireWebKeyControllerdecryptOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     data_key: Schema.String,
     id: Schema.String,
-  }) as unknown as Schema.Codec<JumpWireWebKeyControllerdecryptOutput>;
+  }) as unknown as GeneratedStructCodec<JumpWireWebKeyControllerdecryptOutput>;
 
 // The operation
 /**

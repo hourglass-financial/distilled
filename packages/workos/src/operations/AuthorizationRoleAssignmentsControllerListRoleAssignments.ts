@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -9,7 +10,7 @@ export interface AuthorizationRoleAssignmentsControllerListRoleAssignmentsInput 
   before?: string;
   after?: string;
   limit?: number;
-  order?: string;
+  order?: "normal" | "desc" | "asc";
   resource_id?: string;
   resource_external_id?: string;
   resource_type_slug?: string;
@@ -17,33 +18,37 @@ export interface AuthorizationRoleAssignmentsControllerListRoleAssignmentsInput 
 export const AuthorizationRoleAssignmentsControllerListRoleAssignmentsInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     organization_membership_id: Schema.String.pipe(T.PathParam()),
-    before: Schema.optional(Schema.String),
-    after: Schema.optional(Schema.String),
-    limit: Schema.optional(Schema.Number),
-    order: Schema.optional(Schema.String),
-    resource_id: Schema.optional(Schema.String),
-    resource_external_id: Schema.optional(Schema.String),
-    resource_type_slug: Schema.optional(Schema.String),
+    before: Schema.optional(Schema.String).pipe(T.HttpQuery("before")),
+    after: Schema.optional(Schema.String).pipe(T.HttpQuery("after")),
+    limit: Schema.optional(Schema.Number).pipe(T.HttpQuery("limit")),
+    order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])).pipe(
+      T.HttpQuery("order"),
+    ),
+    resource_id: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("resource_id"),
+    ),
+    resource_external_id: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("resource_external_id"),
+    ),
+    resource_type_slug: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("resource_type_slug"),
+    ),
   }).pipe(
     T.Http({
       method: "GET",
       path: "/authorization/organization_memberships/{organization_membership_id}/role_assignments",
     }),
-  ) as unknown as Schema.Codec<AuthorizationRoleAssignmentsControllerListRoleAssignmentsInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationRoleAssignmentsControllerListRoleAssignmentsInput>;
 
 // Output Schema
 export interface AuthorizationRoleAssignmentsControllerListRoleAssignmentsOutput {
-  object: string;
+  object: "list";
   data: ReadonlyArray<{
-    object: string;
+    object: "role_assignment";
     id: string;
     organization_membership_id: string;
-    role: { slug?: string };
+    role: { slug: string };
     resource: { id: string; external_id: string; resource_type_slug: string };
-    source: {
-      type: "direct" | "group";
-      group_role_assignment_id: string | null;
-    };
     created_at: string;
     updated_at: string;
   }>;
@@ -51,23 +56,19 @@ export interface AuthorizationRoleAssignmentsControllerListRoleAssignmentsOutput
 }
 export const AuthorizationRoleAssignmentsControllerListRoleAssignmentsOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["list"]),
     data: Schema.Array(
       Schema.Struct({
-        object: Schema.String,
+        object: Schema.Literals(["role_assignment"]),
         id: Schema.String,
         organization_membership_id: Schema.String,
         role: Schema.Struct({
-          slug: Schema.optional(Schema.String),
+          slug: Schema.String,
         }),
         resource: Schema.Struct({
           id: Schema.String,
           external_id: Schema.String,
           resource_type_slug: Schema.String,
-        }),
-        source: Schema.Struct({
-          type: Schema.Literals(["direct", "group"]),
-          group_role_assignment_id: Schema.NullOr(Schema.String),
         }),
         created_at: Schema.String,
         updated_at: Schema.String,
@@ -77,7 +78,7 @@ export const AuthorizationRoleAssignmentsControllerListRoleAssignmentsOutput =
       before: Schema.NullOr(Schema.String),
       after: Schema.NullOr(Schema.String),
     }),
-  }) as unknown as Schema.Codec<AuthorizationRoleAssignmentsControllerListRoleAssignmentsOutput>;
+  }) as unknown as GeneratedStructCodec<AuthorizationRoleAssignmentsControllerListRoleAssignmentsOutput>;
 
 // The operation
 /**

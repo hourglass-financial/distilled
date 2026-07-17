@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound } from "../errors.ts";
 
 // Input Schema
@@ -8,15 +9,15 @@ export interface SsoControllerGetProfileInput {}
 export const SsoControllerGetProfileInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({}).pipe(
     T.Http({ method: "GET", path: "/sso/profile" }),
-  ) as unknown as Schema.Codec<SsoControllerGetProfileInput>;
+  ) as unknown as GeneratedStructCodec<SsoControllerGetProfileInput>;
 
 // Output Schema
 export interface SsoControllerGetProfileOutput {
-  object?: string;
-  id?: string;
-  organization_id?: string | null;
-  connection_id?: string;
-  connection_type?:
+  object: "profile";
+  id: string;
+  organization_id: string | null;
+  connection_id: string;
+  connection_type:
     | "Pending"
     | "ADFSSAML"
     | "AdpOidc"
@@ -68,87 +69,85 @@ export interface SsoControllerGetProfileOutput {
     | "VercelOAuth"
     | "VMwareSAML"
     | "XeroOAuth";
-  idp_id?: string;
-  email?: string;
-  first_name?: string | null;
-  last_name?: string | null;
-  name?: string | null;
-  role?: { slug?: string } | null;
-  roles?: ReadonlyArray<{ slug?: string }> | null;
+  idp_id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  name: string | null;
+  role?: { slug: string } | null;
+  roles?: ReadonlyArray<{ slug: string }> | null;
   groups?: ReadonlyArray<string>;
   custom_attributes?: Record<string, unknown>;
-  raw_attributes?: Record<string, unknown>;
+  raw_attributes: Record<string, unknown>;
 }
 export const SsoControllerGetProfileOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    id: Schema.optional(Schema.String),
-    organization_id: Schema.optional(Schema.NullOr(Schema.String)),
-    connection_id: Schema.optional(Schema.String),
-    connection_type: Schema.optional(
-      Schema.Literals([
-        "Pending",
-        "ADFSSAML",
-        "AdpOidc",
-        "AppleOAuth",
-        "Auth0Migration",
-        "Auth0SAML",
-        "AzureSAML",
-        "BitbucketOAuth",
-        "CasSAML",
-        "ClassLinkSAML",
-        "CleverOIDC",
-        "CloudflareSAML",
-        "CyberArkSAML",
-        "DiscordOAuth",
-        "DuoSAML",
-        "EntraIdOIDC",
-        "GenericOIDC",
-        "GenericSAML",
-        "GitHubOAuth",
-        "GitLabOAuth",
-        "GoogleOAuth",
-        "GoogleOIDC",
-        "GoogleSAML",
-        "IntuitOAuth",
-        "JumpCloudSAML",
-        "KeycloakSAML",
-        "LastPassSAML",
-        "LinkedInOAuth",
-        "LoginGovOidc",
-        "MagicLink",
-        "MicrosoftOAuth",
-        "MiniOrangeSAML",
-        "NetIqSAML",
-        "OktaOIDC",
-        "OktaSAML",
-        "OneLoginSAML",
-        "OracleSAML",
-        "PingFederateSAML",
-        "PingOneSAML",
-        "RipplingSAML",
-        "SalesforceSAML",
-        "ShibbolethGenericSAML",
-        "ShibbolethSAML",
-        "SimpleSamlPhpSAML",
-        "SalesforceOAuth",
-        "SlackOAuth",
-        "TestIdp",
-        "VercelMarketplaceOAuth",
-        "VercelOAuth",
-        "VMwareSAML",
-        "XeroOAuth",
-      ]),
-    ),
-    idp_id: Schema.optional(Schema.String),
-    email: Schema.optional(Schema.String),
-    first_name: Schema.optional(Schema.NullOr(Schema.String)),
-    last_name: Schema.optional(Schema.NullOr(Schema.String)),
-    name: Schema.optional(Schema.NullOr(Schema.String)),
+    object: Schema.Literals(["profile"]),
+    id: Schema.String,
+    organization_id: Schema.NullOr(Schema.String),
+    connection_id: Schema.String,
+    connection_type: Schema.Literals([
+      "Pending",
+      "ADFSSAML",
+      "AdpOidc",
+      "AppleOAuth",
+      "Auth0Migration",
+      "Auth0SAML",
+      "AzureSAML",
+      "BitbucketOAuth",
+      "CasSAML",
+      "ClassLinkSAML",
+      "CleverOIDC",
+      "CloudflareSAML",
+      "CyberArkSAML",
+      "DiscordOAuth",
+      "DuoSAML",
+      "EntraIdOIDC",
+      "GenericOIDC",
+      "GenericSAML",
+      "GitHubOAuth",
+      "GitLabOAuth",
+      "GoogleOAuth",
+      "GoogleOIDC",
+      "GoogleSAML",
+      "IntuitOAuth",
+      "JumpCloudSAML",
+      "KeycloakSAML",
+      "LastPassSAML",
+      "LinkedInOAuth",
+      "LoginGovOidc",
+      "MagicLink",
+      "MicrosoftOAuth",
+      "MiniOrangeSAML",
+      "NetIqSAML",
+      "OktaOIDC",
+      "OktaSAML",
+      "OneLoginSAML",
+      "OracleSAML",
+      "PingFederateSAML",
+      "PingOneSAML",
+      "RipplingSAML",
+      "SalesforceSAML",
+      "ShibbolethGenericSAML",
+      "ShibbolethSAML",
+      "SimpleSamlPhpSAML",
+      "SalesforceOAuth",
+      "SlackOAuth",
+      "TestIdp",
+      "VercelMarketplaceOAuth",
+      "VercelOAuth",
+      "VMwareSAML",
+      "XeroOAuth",
+    ]),
+    idp_id: Schema.String,
+    email: Schema.String,
+    first_name: Schema.NullOr(Schema.String),
+    last_name: Schema.NullOr(Schema.String),
+    name: Schema.NullOr(Schema.String),
     role: Schema.optional(
       Schema.NullOr(
         Schema.Struct({
-          slug: Schema.optional(Schema.String),
+          slug: Schema.String,
         }),
       ),
     ),
@@ -156,7 +155,7 @@ export const SsoControllerGetProfileOutput =
       Schema.NullOr(
         Schema.Array(
           Schema.Struct({
-            slug: Schema.optional(Schema.String),
+            slug: Schema.String,
           }),
         ),
       ),
@@ -165,10 +164,8 @@ export const SsoControllerGetProfileOutput =
     custom_attributes: Schema.optional(
       Schema.Record(Schema.String, Schema.Unknown),
     ),
-    raw_attributes: Schema.optional(
-      Schema.Record(Schema.String, Schema.Unknown),
-    ),
-  }) as unknown as Schema.Codec<SsoControllerGetProfileOutput>;
+    raw_attributes: Schema.Record(Schema.String, Schema.Unknown),
+  }) as unknown as GeneratedStructCodec<SsoControllerGetProfileOutput>;
 
 // The operation
 /**

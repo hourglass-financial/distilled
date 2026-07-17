@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -17,25 +18,25 @@ export const AuthorizationGroupRoleAssignmentsControllerGetInput =
       method: "GET",
       path: "/authorization/groups/{group_id}/role_assignments/{role_assignment_id}",
     }),
-  ) as unknown as Schema.Codec<AuthorizationGroupRoleAssignmentsControllerGetInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationGroupRoleAssignmentsControllerGetInput>;
 
 // Output Schema
 export interface AuthorizationGroupRoleAssignmentsControllerGetOutput {
-  object: string;
+  object: "group_role_assignment";
   id: string;
   group_id: string;
-  role: { slug?: string };
+  role: { slug: string };
   resource: { id: string; external_id: string; resource_type_slug: string };
   created_at: string;
   updated_at: string;
 }
 export const AuthorizationGroupRoleAssignmentsControllerGetOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["group_role_assignment"]),
     id: Schema.String,
     group_id: Schema.String,
     role: Schema.Struct({
-      slug: Schema.optional(Schema.String),
+      slug: Schema.String,
     }),
     resource: Schema.Struct({
       id: Schema.String,
@@ -44,7 +45,7 @@ export const AuthorizationGroupRoleAssignmentsControllerGetOutput =
     }),
     created_at: Schema.String,
     updated_at: Schema.String,
-  }) as unknown as Schema.Codec<AuthorizationGroupRoleAssignmentsControllerGetOutput>;
+  }) as unknown as GeneratedStructCodec<AuthorizationGroupRoleAssignmentsControllerGetOutput>;
 
 // The operation
 /**

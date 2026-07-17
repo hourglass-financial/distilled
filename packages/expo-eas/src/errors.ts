@@ -202,8 +202,9 @@ export class EasDevDomainNameTaken extends Schema.TaggedErrorClass<EasDevDomainN
  * Map from EAS GraphQL `extensions.errorCode` → typed error class.
  * Used by the client to surface known errors with a dedicated tag.
  */
-// biome-ignore lint/suspicious/noExplicitAny: heterogeneous error class map
-export const EAS_ERROR_CODE_MAP: Record<string, any> = {
+// HOURGLASS PATCH: Preserve constructor identities so the shared client can
+// expose the complete provider-specific error union.
+export const EAS_ERROR_CODE_MAP = {
   // The EAS backend emits the bare code `EAS_CLI_UPGRADE_REQUIRED`
   // (see eas-cli's EAS_CLI_UPGRADE_REQUIRED_ERROR_CODE constant which holds
   // the literal "EAS_CLI_UPGRADE_REQUIRED"). We previously mapped the wrong
@@ -228,4 +229,4 @@ export const EAS_ERROR_CODE_MAP: Record<string, any> = {
   EXPERIENCE_NOT_FOUND: EasExperienceNotFound,
   APP_NO_DEV_DOMAIN_NAME: EasAppNoDevDomainName,
   DEV_DOMAIN_NAME_TAKEN: EasDevDomainNameTaken,
-};
+} as const;

@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest } from "../errors.ts";
 
 // Input Schema
@@ -18,7 +19,6 @@ export interface RadarStandaloneControllerAssessInput {
     | "SSO"
     | "Other";
   action: "sign-up" | "sign-in";
-  signals_id?: string;
 }
 export const RadarStandaloneControllerAssessInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
@@ -36,16 +36,15 @@ export const RadarStandaloneControllerAssessInput =
       "Other",
     ]),
     action: Schema.Literals(["sign-up", "sign-in"]),
-    signals_id: Schema.optional(Schema.String),
   }).pipe(
     T.Http({ method: "POST", path: "/radar/attempts" }),
-  ) as unknown as Schema.Codec<RadarStandaloneControllerAssessInput>;
+  ) as unknown as GeneratedStructCodec<RadarStandaloneControllerAssessInput>;
 
 // Output Schema
 export interface RadarStandaloneControllerAssessOutput {
-  verdict?: "allow" | "block" | "challenge";
-  reason?: string;
-  attempt_id?: string;
+  verdict: "allow" | "block" | "challenge";
+  reason: string;
+  attempt_id: string;
   control?:
     | "bot_detection"
     | "brute_force_attack"
@@ -65,9 +64,9 @@ export interface RadarStandaloneControllerAssessOutput {
 }
 export const RadarStandaloneControllerAssessOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    verdict: Schema.optional(Schema.Literals(["allow", "block", "challenge"])),
-    reason: Schema.optional(Schema.String),
-    attempt_id: Schema.optional(Schema.String),
+    verdict: Schema.Literals(["allow", "block", "challenge"]),
+    reason: Schema.String,
+    attempt_id: Schema.String,
     control: Schema.optional(
       Schema.Literals([
         "bot_detection",
@@ -90,7 +89,7 @@ export const RadarStandaloneControllerAssessOutput =
         "country",
       ]),
     ),
-  }) as unknown as Schema.Codec<RadarStandaloneControllerAssessOutput>;
+  }) as unknown as GeneratedStructCodec<RadarStandaloneControllerAssessOutput>;
 
 // The operation
 /**

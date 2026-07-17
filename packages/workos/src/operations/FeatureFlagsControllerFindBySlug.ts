@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound } from "../errors.ts";
 
 // Input Schema
@@ -12,48 +13,46 @@ export const FeatureFlagsControllerFindBySlugInput =
     slug: Schema.String.pipe(T.PathParam()),
   }).pipe(
     T.Http({ method: "GET", path: "/feature-flags/{slug}" }),
-  ) as unknown as Schema.Codec<FeatureFlagsControllerFindBySlugInput>;
+  ) as unknown as GeneratedStructCodec<FeatureFlagsControllerFindBySlugInput>;
 
 // Output Schema
 export interface FeatureFlagsControllerFindBySlugOutput {
-  object?: string;
-  id?: string;
-  slug?: string;
-  name?: string;
-  description?: string | null;
-  owner?: {
+  object: "feature_flag";
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  owner: {
     email: string;
     first_name: string | null;
     last_name: string | null;
   } | null;
-  tags?: ReadonlyArray<string>;
-  enabled?: boolean;
-  default_value?: boolean;
-  created_at?: string;
-  updated_at?: string;
+  tags: ReadonlyArray<string>;
+  enabled: boolean;
+  default_value: boolean;
+  created_at: string;
+  updated_at: string;
 }
 export const FeatureFlagsControllerFindBySlugOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    id: Schema.optional(Schema.String),
-    slug: Schema.optional(Schema.String),
-    name: Schema.optional(Schema.String),
-    description: Schema.optional(Schema.NullOr(Schema.String)),
-    owner: Schema.optional(
-      Schema.NullOr(
-        Schema.Struct({
-          email: Schema.String,
-          first_name: Schema.NullOr(Schema.String),
-          last_name: Schema.NullOr(Schema.String),
-        }),
-      ),
+    object: Schema.Literals(["feature_flag"]),
+    id: Schema.String,
+    slug: Schema.String,
+    name: Schema.String,
+    description: Schema.NullOr(Schema.String),
+    owner: Schema.NullOr(
+      Schema.Struct({
+        email: Schema.String,
+        first_name: Schema.NullOr(Schema.String),
+        last_name: Schema.NullOr(Schema.String),
+      }),
     ),
-    tags: Schema.optional(Schema.Array(Schema.String)),
-    enabled: Schema.optional(Schema.Boolean),
-    default_value: Schema.optional(Schema.Boolean),
-    created_at: Schema.optional(Schema.String),
-    updated_at: Schema.optional(Schema.String),
-  }) as unknown as Schema.Codec<FeatureFlagsControllerFindBySlugOutput>;
+    tags: Schema.Array(Schema.String),
+    enabled: Schema.Boolean,
+    default_value: Schema.Boolean,
+    created_at: Schema.String,
+    updated_at: Schema.String,
+  }) as unknown as GeneratedStructCodec<FeatureFlagsControllerFindBySlugOutput>;
 
 // The operation
 /**

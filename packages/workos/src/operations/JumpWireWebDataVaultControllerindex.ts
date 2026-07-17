@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest } from "../errors.ts";
 
 // Input Schema
@@ -14,15 +15,19 @@ export interface JumpWireWebDataVaultControllerindexInput {
 }
 export const JumpWireWebDataVaultControllerindexInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    limit: Schema.optional(Schema.Number),
-    before: Schema.optional(Schema.String),
-    after: Schema.optional(Schema.String),
-    order: Schema.optional(Schema.Literals(["asc", "desc"])),
-    search: Schema.optional(Schema.String),
-    updatedAfter: Schema.optional(Schema.String),
+    limit: Schema.optional(Schema.Number).pipe(T.HttpQuery("limit")),
+    before: Schema.optional(Schema.String).pipe(T.HttpQuery("before")),
+    after: Schema.optional(Schema.String).pipe(T.HttpQuery("after")),
+    order: Schema.optional(Schema.Literals(["asc", "desc"])).pipe(
+      T.HttpQuery("order"),
+    ),
+    search: Schema.optional(Schema.String).pipe(T.HttpQuery("search")),
+    updatedAfter: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("updatedAfter"),
+    ),
   }).pipe(
     T.Http({ method: "GET", path: "/vault/v1/kv" }),
-  ) as unknown as Schema.Codec<JumpWireWebDataVaultControllerindexInput>;
+  ) as unknown as GeneratedStructCodec<JumpWireWebDataVaultControllerindexInput>;
 
 // Output Schema
 export interface JumpWireWebDataVaultControllerindexOutput {
@@ -42,7 +47,7 @@ export const JumpWireWebDataVaultControllerindexOutput =
       after: Schema.optional(Schema.NullOr(Schema.String)),
       before: Schema.optional(Schema.NullOr(Schema.String)),
     }),
-  }) as unknown as Schema.Codec<JumpWireWebDataVaultControllerindexOutput>;
+  }) as unknown as GeneratedStructCodec<JumpWireWebDataVaultControllerindexOutput>;
 
 // The operation
 /**

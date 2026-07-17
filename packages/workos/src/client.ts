@@ -20,6 +20,10 @@ import {
 export { UnknownWorkosError } from "./errors.ts";
 import { Credentials } from "./credentials.ts";
 
+type ClientError =
+  | InstanceType<(typeof HTTP_STATUS_MAP)[keyof typeof HTTP_STATUS_MAP]>
+  | UnknownWorkosError;
+
 /**
  * WorkOS API Error Response Schema.
  *
@@ -43,7 +47,7 @@ const matchError = (
   errorBody: unknown,
   _errors?: readonly unknown[],
   headers?: Record<string, string | undefined>,
-): Effect.Effect<never, unknown> => {
+): Effect.Effect<never, ClientError> => {
   // Try to extract a message and code from the body, but fall through to
   // status-code mapping regardless of whether the body parses as the
   // canonical WorkOS error shape. Some endpoints return non-JSON or
@@ -84,7 +88,7 @@ const matchError = (
 /**
  * WorkOS API client.
  */
-export const API = makeAPI<Credentials>({
+export const API = makeAPI<Credentials, never, ClientError, WorkosParseError>({
   credentials: Credentials as any,
   getBaseUrl: (creds: any) => creds.apiBaseUrl,
   getAuthHeaders: (creds: any) => ({

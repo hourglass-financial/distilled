@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound } from "../errors.ts";
 
 // Input Schema
@@ -9,79 +10,75 @@ export interface OrganizationFeatureFlagsControllerListInput {
   before?: string;
   after?: string;
   limit?: number;
-  order?: string;
+  order?: "normal" | "desc" | "asc";
 }
 export const OrganizationFeatureFlagsControllerListInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
     organizationId: Schema.String.pipe(T.PathParam()),
-    before: Schema.optional(Schema.String),
-    after: Schema.optional(Schema.String),
-    limit: Schema.optional(Schema.Number),
-    order: Schema.optional(Schema.String),
+    before: Schema.optional(Schema.String).pipe(T.HttpQuery("before")),
+    after: Schema.optional(Schema.String).pipe(T.HttpQuery("after")),
+    limit: Schema.optional(Schema.Number).pipe(T.HttpQuery("limit")),
+    order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])).pipe(
+      T.HttpQuery("order"),
+    ),
   }).pipe(
     T.Http({
       method: "GET",
       path: "/organizations/{organizationId}/feature-flags",
     }),
-  ) as unknown as Schema.Codec<OrganizationFeatureFlagsControllerListInput>;
+  ) as unknown as GeneratedStructCodec<OrganizationFeatureFlagsControllerListInput>;
 
 // Output Schema
 export interface OrganizationFeatureFlagsControllerListOutput {
-  object?: string;
-  data?: ReadonlyArray<{
-    object?: string;
-    id?: string;
-    slug?: string;
-    name?: string;
-    description?: string | null;
-    owner?: {
+  object: "list";
+  data: ReadonlyArray<{
+    object: "feature_flag";
+    id: string;
+    slug: string;
+    name: string;
+    description: string | null;
+    owner: {
       email: string;
       first_name: string | null;
       last_name: string | null;
     } | null;
-    tags?: ReadonlyArray<string>;
-    enabled?: boolean;
-    default_value?: boolean;
-    created_at?: string;
-    updated_at?: string;
+    tags: ReadonlyArray<string>;
+    enabled: boolean;
+    default_value: boolean;
+    created_at: string;
+    updated_at: string;
   }>;
-  list_metadata?: { before: string | null; after: string | null };
+  list_metadata: { before: string | null; after: string | null };
 }
 export const OrganizationFeatureFlagsControllerListOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    data: Schema.optional(
-      Schema.Array(
-        Schema.Struct({
-          object: Schema.optional(Schema.String),
-          id: Schema.optional(Schema.String),
-          slug: Schema.optional(Schema.String),
-          name: Schema.optional(Schema.String),
-          description: Schema.optional(Schema.NullOr(Schema.String)),
-          owner: Schema.optional(
-            Schema.NullOr(
-              Schema.Struct({
-                email: Schema.String,
-                first_name: Schema.NullOr(Schema.String),
-                last_name: Schema.NullOr(Schema.String),
-              }),
-            ),
-          ),
-          tags: Schema.optional(Schema.Array(Schema.String)),
-          enabled: Schema.optional(Schema.Boolean),
-          default_value: Schema.optional(Schema.Boolean),
-          created_at: Schema.optional(Schema.String),
-          updated_at: Schema.optional(Schema.String),
-        }),
-      ),
-    ),
-    list_metadata: Schema.optional(
+    object: Schema.Literals(["list"]),
+    data: Schema.Array(
       Schema.Struct({
-        before: Schema.NullOr(Schema.String),
-        after: Schema.NullOr(Schema.String),
+        object: Schema.Literals(["feature_flag"]),
+        id: Schema.String,
+        slug: Schema.String,
+        name: Schema.String,
+        description: Schema.NullOr(Schema.String),
+        owner: Schema.NullOr(
+          Schema.Struct({
+            email: Schema.String,
+            first_name: Schema.NullOr(Schema.String),
+            last_name: Schema.NullOr(Schema.String),
+          }),
+        ),
+        tags: Schema.Array(Schema.String),
+        enabled: Schema.Boolean,
+        default_value: Schema.Boolean,
+        created_at: Schema.String,
+        updated_at: Schema.String,
       }),
     ),
-  }) as unknown as Schema.Codec<OrganizationFeatureFlagsControllerListOutput>;
+    list_metadata: Schema.Struct({
+      before: Schema.NullOr(Schema.String),
+      after: Schema.NullOr(Schema.String),
+    }),
+  }) as unknown as GeneratedStructCodec<OrganizationFeatureFlagsControllerListOutput>;
 
 // The operation
 /**

@@ -1,0 +1,32 @@
+{
+  "description": "Restore the documented cursor pagination input on the Account relations endpoint and require the JSON:API type/id envelope while retaining Persona's complete account and transaction resource schemas.",
+  "patches": [
+    {
+      "op": "add",
+      "path": "/paths/~1accounts~1{accountId}~1relations/get/parameters/-",
+      "value": {
+        "$ref": "#/components/parameters/pagination-query-params"
+      }
+    },
+    {
+      "op": "replace",
+      "path": "/paths/~1accounts~1{accountId}~1relations/get/responses/200/content/application~1json/schema/properties/data/items/oneOf/0",
+      "value": {
+        "allOf": [
+          { "$ref": "#/components/schemas/account" },
+          { "type": "object", "required": ["type", "id"] }
+        ]
+      }
+    },
+    {
+      "op": "replace",
+      "path": "/paths/~1accounts~1{accountId}~1relations/get/responses/200/content/application~1json/schema/properties/data/items/oneOf/1",
+      "value": {
+        "allOf": [
+          { "$ref": "#/components/schemas/transaction" },
+          { "type": "object", "required": ["type", "id"] }
+        ]
+      }
+    }
+  ]
+}

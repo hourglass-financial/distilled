@@ -1,0 +1,54 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "Const union fixture", "version": "1.0.0" },
+  "paths": {
+    "/events": {
+      "get": {
+        "operationId": "getConstEvent",
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "oneOf": [
+                        { "$ref": "#/components/schemas/AlphaEvent" },
+                        { "$ref": "#/components/schemas/BetaEvent" }
+                      ]
+                    }
+                  },
+                  "required": ["data"]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AlphaEvent": {
+        "type": "object",
+        "properties": {
+          "type": { "const": "alpha" },
+          "payload": { "type": "string" },
+          "revision": { "const": 2 },
+          "enabled": { "const": true }
+        },
+        "required": ["type", "payload", "revision", "enabled"]
+      },
+      "BetaEvent": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "const": "beta" },
+          "count": { "type": "integer" }
+        },
+        "required": ["type", "count"]
+      }
+    }
+  }
+}

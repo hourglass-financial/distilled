@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { Forbidden, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -15,46 +16,42 @@ export const AuthorizationOrganizationRolesControllerListInput =
       method: "GET",
       path: "/authorization/organizations/{organizationId}/roles",
     }),
-  ) as unknown as Schema.Codec<AuthorizationOrganizationRolesControllerListInput>;
+  ) as unknown as GeneratedStructCodec<AuthorizationOrganizationRolesControllerListInput>;
 
 // Output Schema
 export interface AuthorizationOrganizationRolesControllerListOutput {
-  object?: string;
-  data?: ReadonlyArray<{
-    slug?: string;
-    object?: string;
-    id?: string;
-    name?: string;
-    description?: string | null;
-    type?: "EnvironmentRole" | "OrganizationRole";
-    resource_type_slug?: string;
-    permissions?: ReadonlyArray<string>;
-    created_at?: string;
-    updated_at?: string;
+  object: "list";
+  data: ReadonlyArray<{
+    slug: string;
+    object: "role";
+    id: string;
+    name: string;
+    description: string | null;
+    type: "EnvironmentRole" | "OrganizationRole";
+    resource_type_slug: string;
+    permissions: ReadonlyArray<string>;
+    created_at: string;
+    updated_at: string;
   }>;
 }
 export const AuthorizationOrganizationRolesControllerListOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    data: Schema.optional(
-      Schema.Array(
-        Schema.Struct({
-          slug: Schema.optional(Schema.String),
-          object: Schema.optional(Schema.String),
-          id: Schema.optional(Schema.String),
-          name: Schema.optional(Schema.String),
-          description: Schema.optional(Schema.NullOr(Schema.String)),
-          type: Schema.optional(
-            Schema.Literals(["EnvironmentRole", "OrganizationRole"]),
-          ),
-          resource_type_slug: Schema.optional(Schema.String),
-          permissions: Schema.optional(Schema.Array(Schema.String)),
-          created_at: Schema.optional(Schema.String),
-          updated_at: Schema.optional(Schema.String),
-        }),
-      ),
+    object: Schema.Literals(["list"]),
+    data: Schema.Array(
+      Schema.Struct({
+        slug: Schema.String,
+        object: Schema.Literals(["role"]),
+        id: Schema.String,
+        name: Schema.String,
+        description: Schema.NullOr(Schema.String),
+        type: Schema.Literals(["EnvironmentRole", "OrganizationRole"]),
+        resource_type_slug: Schema.String,
+        permissions: Schema.Array(Schema.String),
+        created_at: Schema.String,
+        updated_at: Schema.String,
+      }),
     ),
-  }) as unknown as Schema.Codec<AuthorizationOrganizationRolesControllerListOutput>;
+  }) as unknown as GeneratedStructCodec<AuthorizationOrganizationRolesControllerListOutput>;
 
 // The operation
 /**

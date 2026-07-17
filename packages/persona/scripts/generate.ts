@@ -98,6 +98,10 @@ generateFromOpenAPI({
   errorsImport: "../errors",
   includeOperationErrors: true,
   skipDeprecated: true,
+  // This finite, documented two-resource union is larger than the shared
+  // conservative default but is not recursive. Keep the override scoped so
+  // unrelated Persona unions retain the default expansion guard.
+  operationUnionInlineChars: { "accounts-list-all-relations": 16_000 },
   statusToErrorClass: {
     "400": "BadRequest",
     "403": "Forbidden",

@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import {
   BadRequest,
   Forbidden,
@@ -21,6 +22,10 @@ export interface PortalSessionsControllerCreateInput {
     | "domain_verification"
     | "certificate_renewal"
     | "bring_your_own_key";
+  intent_options?: {
+    sso?: { bookmark_slug?: string; provider_type?: "GoogleSAML" };
+    domain_verification?: { domain_name?: string };
+  };
   it_contact_emails?: ReadonlyArray<string>;
 }
 export const PortalSessionsControllerCreateInput =
@@ -39,19 +44,34 @@ export const PortalSessionsControllerCreateInput =
         "bring_your_own_key",
       ]),
     ),
+    intent_options: Schema.optional(
+      Schema.Struct({
+        sso: Schema.optional(
+          Schema.Struct({
+            bookmark_slug: Schema.optional(Schema.String),
+            provider_type: Schema.optional(Schema.Literals(["GoogleSAML"])),
+          }),
+        ),
+        domain_verification: Schema.optional(
+          Schema.Struct({
+            domain_name: Schema.optional(Schema.String),
+          }),
+        ),
+      }),
+    ),
     it_contact_emails: Schema.optional(Schema.Array(Schema.String)),
   }).pipe(
     T.Http({ method: "POST", path: "/portal/generate_link" }),
-  ) as unknown as Schema.Codec<PortalSessionsControllerCreateInput>;
+  ) as unknown as GeneratedStructCodec<PortalSessionsControllerCreateInput>;
 
 // Output Schema
 export interface PortalSessionsControllerCreateOutput {
-  link?: string;
+  link: string;
 }
 export const PortalSessionsControllerCreateOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    link: Schema.optional(Schema.String),
-  }) as unknown as Schema.Codec<PortalSessionsControllerCreateOutput>;
+    link: Schema.String,
+  }) as unknown as GeneratedStructCodec<PortalSessionsControllerCreateOutput>;
 
 // The operation
 /**

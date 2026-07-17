@@ -18,14 +18,18 @@ import {
 } from "./errors.ts";
 
 // Extend the core status map with Atlas-specific error classes
-const STATUS_MAP: Record<number, any> = {
+const STATUS_MAP = {
   ...HTTP_STATUS_MAP,
   402: PaymentRequired,
-};
+} as const;
 
 // Re-export for backwards compatibility
 export { UnknownMongodbAtlasError } from "./errors.ts";
 import { Credentials } from "./credentials.ts";
+
+type ClientError =
+  | InstanceType<(typeof STATUS_MAP)[keyof typeof STATUS_MAP]>
+  | UnknownMongodbAtlasError;
 
 // MongoDB Atlas API Error Response Schema
 // Matches the ApiError model: { error: int, errorCode: string, reason?: string, detail?: string }
@@ -44,10 +48,10 @@ const matchError = (
   errorBody: unknown,
   _errors?: readonly unknown[],
   headers?: Record<string, string | undefined>,
-): Effect.Effect<never, unknown> => {
+): Effect.Effect<never, ClientError> => {
   try {
     const parsed = Schema.decodeUnknownSync(ApiErrorResponse)(errorBody);
-    const ErrorClass = STATUS_MAP[status];
+    const ErrorClass = STATUS_MAP[status as keyof typeof STATUS_MAP];
     if (ErrorClass) {
       return Effect.fail(
         new ErrorClass({
@@ -72,7 +76,12 @@ const matchError = (
 /**
  * Mongodb-atlas API client.
  */
-export const API = makeAPI<Credentials>({
+export const API = makeAPI<
+  Credentials,
+  never,
+  ClientError,
+  MongodbAtlasParseError
+>({
   credentials: Credentials as any,
   getBaseUrl: (creds: any) => creds.apiBaseUrl,
   getAuthHeaders: (creds: any) => ({

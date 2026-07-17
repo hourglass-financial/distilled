@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound } from "../errors.ts";
 
 // Input Schema
@@ -12,11 +13,11 @@ export const ApplicationsControllerFindInput =
     id: Schema.String.pipe(T.PathParam()),
   }).pipe(
     T.Http({ method: "GET", path: "/connect/applications/{id}" }),
-  ) as unknown as Schema.Codec<ApplicationsControllerFindInput>;
+  ) as unknown as GeneratedStructCodec<ApplicationsControllerFindInput>;
 
 // Output Schema
 export interface ApplicationsControllerFindOutput {
-  object: string;
+  object: "connect_application";
   id: string;
   client_id: string;
   description: string | null;
@@ -27,7 +28,7 @@ export interface ApplicationsControllerFindOutput {
 }
 export const ApplicationsControllerFindOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.String,
+    object: Schema.Literals(["connect_application"]),
     id: Schema.String,
     client_id: Schema.String,
     description: Schema.NullOr(Schema.String),
@@ -35,7 +36,7 @@ export const ApplicationsControllerFindOutput =
     scopes: Schema.Array(Schema.String),
     created_at: Schema.String,
     updated_at: Schema.String,
-  }) as unknown as Schema.Codec<ApplicationsControllerFindOutput>;
+  }) as unknown as GeneratedStructCodec<ApplicationsControllerFindOutput>;
 
 // The operation
 /**

@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
@@ -8,43 +9,45 @@ export interface AuditLogValidatorsControllerListInput {
   before?: string;
   after?: string;
   limit?: number;
-  order?: string;
+  order?: "normal" | "desc" | "asc";
 }
 export const AuditLogValidatorsControllerListInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    before: Schema.optional(Schema.String),
-    after: Schema.optional(Schema.String),
-    limit: Schema.optional(Schema.Number),
-    order: Schema.optional(Schema.String),
+    before: Schema.optional(Schema.String).pipe(T.HttpQuery("before")),
+    after: Schema.optional(Schema.String).pipe(T.HttpQuery("after")),
+    limit: Schema.optional(Schema.Number).pipe(T.HttpQuery("limit")),
+    order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])).pipe(
+      T.HttpQuery("order"),
+    ),
   }).pipe(
     T.Http({ method: "GET", path: "/audit_logs/actions" }),
-  ) as unknown as Schema.Codec<AuditLogValidatorsControllerListInput>;
+  ) as unknown as GeneratedStructCodec<AuditLogValidatorsControllerListInput>;
 
 // Output Schema
 export interface AuditLogValidatorsControllerListOutput {
-  object?: string;
+  object?: "list";
   list_metadata?: { before: string | null; after: string | null };
   data?: ReadonlyArray<{
-    object?: string;
-    name?: string;
-    schema?: {
-      object?: string;
-      version?: number;
+    object: "audit_log_action";
+    name: string;
+    schema: {
+      object: "audit_log_schema";
+      version: number;
       actor?: { metadata: Record<string, unknown> };
-      targets?: ReadonlyArray<{
+      targets: ReadonlyArray<{
         type: string;
         metadata?: Record<string, unknown>;
       }>;
       metadata?: Record<string, unknown>;
-      created_at?: string;
+      created_at: string;
     };
-    created_at?: string;
-    updated_at?: string;
+    created_at: string;
+    updated_at: string;
   }>;
 }
 export const AuditLogValidatorsControllerListOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
+    object: Schema.optional(Schema.Literals(["list"])),
     list_metadata: Schema.optional(
       Schema.Struct({
         before: Schema.NullOr(Schema.String),
@@ -54,39 +57,35 @@ export const AuditLogValidatorsControllerListOutput =
     data: Schema.optional(
       Schema.Array(
         Schema.Struct({
-          object: Schema.optional(Schema.String),
-          name: Schema.optional(Schema.String),
-          schema: Schema.optional(
-            Schema.Struct({
-              object: Schema.optional(Schema.String),
-              version: Schema.optional(Schema.Number),
-              actor: Schema.optional(
-                Schema.Struct({
-                  metadata: Schema.Record(Schema.String, Schema.Unknown),
-                }),
-              ),
-              targets: Schema.optional(
-                Schema.Array(
-                  Schema.Struct({
-                    type: Schema.String,
-                    metadata: Schema.optional(
-                      Schema.Record(Schema.String, Schema.Unknown),
-                    ),
-                  }),
+          object: Schema.Literals(["audit_log_action"]),
+          name: Schema.String,
+          schema: Schema.Struct({
+            object: Schema.Literals(["audit_log_schema"]),
+            version: Schema.Number,
+            actor: Schema.optional(
+              Schema.Struct({
+                metadata: Schema.Record(Schema.String, Schema.Unknown),
+              }),
+            ),
+            targets: Schema.Array(
+              Schema.Struct({
+                type: Schema.String,
+                metadata: Schema.optional(
+                  Schema.Record(Schema.String, Schema.Unknown),
                 ),
-              ),
-              metadata: Schema.optional(
-                Schema.Record(Schema.String, Schema.Unknown),
-              ),
-              created_at: Schema.optional(Schema.String),
-            }),
-          ),
-          created_at: Schema.optional(Schema.String),
-          updated_at: Schema.optional(Schema.String),
+              }),
+            ),
+            metadata: Schema.optional(
+              Schema.Record(Schema.String, Schema.Unknown),
+            ),
+            created_at: Schema.String,
+          }),
+          created_at: Schema.String,
+          updated_at: Schema.String,
         }),
       ),
     ),
-  }) as unknown as Schema.Codec<AuditLogValidatorsControllerListOutput>;
+  }) as unknown as GeneratedStructCodec<AuditLogValidatorsControllerListOutput>;
 
 // The operation
 /**

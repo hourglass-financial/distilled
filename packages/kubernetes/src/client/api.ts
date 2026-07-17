@@ -24,6 +24,10 @@ import { Retry } from "../retry.ts";
 
 export type { OperationMethod, PaginatedOperationMethod };
 
+type ClientError =
+  | InstanceType<(typeof HTTP_STATUS_MAP)[keyof typeof HTTP_STATUS_MAP]>
+  | UnknownKubernetesError;
+
 // Re-export for backwards compatibility
 export { UnknownKubernetesError } from "../errors.ts";
 
@@ -65,7 +69,7 @@ const matchError = (
   errorBody: unknown,
   _errors?: readonly unknown[],
   headers?: Record<string, string | undefined>,
-): Effect.Effect<never, unknown> => {
+): Effect.Effect<never, ClientError> => {
   try {
     const parsed = Schema.decodeUnknownSync(ApiErrorResponse)(errorBody);
     const ErrorClass = (HTTP_STATUS_MAP as any)[status];
@@ -94,7 +98,7 @@ const matchError = (
  *
  * Uses bearer token authentication against the cluster API server.
  */
-const _API = makeAPI<Credentials>({
+const _API = makeAPI<Credentials, never, ClientError, KubernetesParseError>({
   credentials: Credentials as any,
   getBaseUrl: (creds: any) => creds.apiBaseUrl,
   getAuthHeaders: (creds: any) => ({

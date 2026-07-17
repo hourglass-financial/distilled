@@ -16,6 +16,10 @@ import { HTTP_STATUS_MAP, UnknownNeonError, NeonParseError } from "./errors.ts";
 export { UnknownNeonError } from "./errors.ts";
 import { Credentials } from "./credentials.ts";
 
+type ClientError =
+  | InstanceType<(typeof HTTP_STATUS_MAP)[keyof typeof HTTP_STATUS_MAP]>
+  | UnknownNeonError;
+
 // API Error Response Schema
 const ApiErrorResponse = Schema.Struct({
   code: Schema.optional(Schema.String),
@@ -30,7 +34,7 @@ const matchError = (
   errorBody: unknown,
   _errors?: readonly unknown[],
   headers?: Record<string, string | undefined>,
-): Effect.Effect<never, unknown> => {
+): Effect.Effect<never, ClientError> => {
   try {
     const parsed = Schema.decodeUnknownSync(ApiErrorResponse)(errorBody);
     const ErrorClass = (HTTP_STATUS_MAP as any)[status];
@@ -57,7 +61,7 @@ const matchError = (
 /**
  * Neon API client.
  */
-export const API = makeAPI<Credentials>({
+export const API = makeAPI<Credentials, never, ClientError, NeonParseError>({
   credentials: Credentials as any,
   getBaseUrl: (creds: any) => creds.apiBaseUrl,
   getAuthHeaders: (creds: any) => ({

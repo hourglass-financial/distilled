@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest } from "../errors.ts";
 
 // Input Schema
@@ -31,16 +32,16 @@ export const RadarStandaloneControllerUpdateRadarListInput =
     entry: Schema.String,
   }).pipe(
     T.Http({ method: "POST", path: "/radar/lists/{type}/{action}" }),
-  ) as unknown as Schema.Codec<RadarStandaloneControllerUpdateRadarListInput>;
+  ) as unknown as GeneratedStructCodec<RadarStandaloneControllerUpdateRadarListInput>;
 
 // Output Schema
 export interface RadarStandaloneControllerUpdateRadarListOutput {
-  message?: string;
+  message: string;
 }
 export const RadarStandaloneControllerUpdateRadarListOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    message: Schema.optional(Schema.String),
-  }) as unknown as Schema.Codec<RadarStandaloneControllerUpdateRadarListOutput>;
+    message: Schema.String,
+  }) as unknown as GeneratedStructCodec<RadarStandaloneControllerUpdateRadarListOutput>;
 
 // The operation
 /**

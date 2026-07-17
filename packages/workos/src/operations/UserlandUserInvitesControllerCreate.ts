@@ -1,11 +1,12 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound, UnprocessableEntity } from "../errors.ts";
 
 // Input Schema
 export interface UserlandUserInvitesControllerCreateInput {
-  email?: string;
+  email: string;
   organization_id?: string;
   role_slug?: string;
   expires_in_days?: number;
@@ -104,7 +105,7 @@ export interface UserlandUserInvitesControllerCreateInput {
 }
 export const UserlandUserInvitesControllerCreateInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    email: Schema.optional(Schema.String),
+    email: Schema.String,
     organization_id: Schema.optional(Schema.String),
     role_slug: Schema.optional(Schema.String),
     expires_in_days: Schema.optional(Schema.Number),
@@ -205,46 +206,44 @@ export const UserlandUserInvitesControllerCreateInput =
     ),
   }).pipe(
     T.Http({ method: "POST", path: "/user_management/invitations" }),
-  ) as unknown as Schema.Codec<UserlandUserInvitesControllerCreateInput>;
+  ) as unknown as GeneratedStructCodec<UserlandUserInvitesControllerCreateInput>;
 
 // Output Schema
 export interface UserlandUserInvitesControllerCreateOutput {
-  object?: string;
-  id?: string;
-  email?: string;
-  state?: "pending" | "accepted" | "expired" | "revoked";
-  accepted_at?: string | null;
-  revoked_at?: string | null;
-  expires_at?: string;
-  organization_id?: string | null;
-  inviter_user_id?: string | null;
-  accepted_user_id?: string | null;
-  role_slug?: string | null;
-  created_at?: string;
-  updated_at?: string;
-  token?: string;
-  accept_invitation_url?: string;
+  object: "invitation";
+  id: string;
+  email: string;
+  state: "pending" | "accepted" | "expired" | "revoked";
+  accepted_at: string | null;
+  revoked_at: string | null;
+  expires_at: string;
+  organization_id: string | null;
+  inviter_user_id: string | null;
+  accepted_user_id: string | null;
+  role_slug: string | null;
+  created_at: string;
+  updated_at: string;
+  token: string;
+  accept_invitation_url: string;
 }
 export const UserlandUserInvitesControllerCreateOutput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    object: Schema.optional(Schema.String),
-    id: Schema.optional(Schema.String),
-    email: Schema.optional(Schema.String),
-    state: Schema.optional(
-      Schema.Literals(["pending", "accepted", "expired", "revoked"]),
-    ),
-    accepted_at: Schema.optional(Schema.NullOr(Schema.String)),
-    revoked_at: Schema.optional(Schema.NullOr(Schema.String)),
-    expires_at: Schema.optional(Schema.String),
-    organization_id: Schema.optional(Schema.NullOr(Schema.String)),
-    inviter_user_id: Schema.optional(Schema.NullOr(Schema.String)),
-    accepted_user_id: Schema.optional(Schema.NullOr(Schema.String)),
-    role_slug: Schema.optional(Schema.NullOr(Schema.String)),
-    created_at: Schema.optional(Schema.String),
-    updated_at: Schema.optional(Schema.String),
-    token: Schema.optional(Schema.String),
-    accept_invitation_url: Schema.optional(Schema.String),
-  }) as unknown as Schema.Codec<UserlandUserInvitesControllerCreateOutput>;
+    object: Schema.Literals(["invitation"]),
+    id: Schema.String,
+    email: Schema.String,
+    state: Schema.Literals(["pending", "accepted", "expired", "revoked"]),
+    accepted_at: Schema.NullOr(Schema.String),
+    revoked_at: Schema.NullOr(Schema.String),
+    expires_at: Schema.String,
+    organization_id: Schema.NullOr(Schema.String),
+    inviter_user_id: Schema.NullOr(Schema.String),
+    accepted_user_id: Schema.NullOr(Schema.String),
+    role_slug: Schema.NullOr(Schema.String),
+    created_at: Schema.String,
+    updated_at: Schema.String,
+    token: Schema.String,
+    accept_invitation_url: Schema.String,
+  }) as unknown as GeneratedStructCodec<UserlandUserInvitesControllerCreateOutput>;
 
 // The operation
 /**

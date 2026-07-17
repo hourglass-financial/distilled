@@ -2,6 +2,7 @@ import { config } from "dotenv";
 import { Effect, Layer } from "effect";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import { CredentialsFromEnv } from "../src/credentials.ts";
+import * as Retry from "../src/retry.ts";
 
 // Load environment variables from .env file
 config();
@@ -24,7 +25,10 @@ export const testRunId: string = crypto
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const runEffect = <A, E>(effect: Effect.Effect<A, E, any>): Promise<A> =>
   Effect.runPromise(
-    effect.pipe(Effect.provide(MainLayer)) as Effect.Effect<A, E, never>,
+    effect.pipe(
+      Retry.policy(Retry.makeDefault),
+      Effect.provide(MainLayer),
+    ) as Effect.Effect<A, E, never>,
   );
 
 /**
