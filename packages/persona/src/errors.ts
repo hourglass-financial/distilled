@@ -63,7 +63,7 @@ export class UnknownPersonaError extends Schema.TaggedErrorClass<UnknownPersonaE
     errors: Schema.optional(Schema.Array(PersonaErrorDetail)),
     body: Schema.Unknown,
   },
-).pipe(Category.withServerError) {}
+) {}
 
 // Schema parse error wrapper
 export class PersonaParseError extends Schema.TaggedErrorClass<PersonaParseError>()(

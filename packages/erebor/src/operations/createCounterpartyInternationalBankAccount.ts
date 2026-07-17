@@ -1,7 +1,13 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
-import { BadRequest, Conflict, UnprocessableEntity } from "../errors.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
+import {
+  BadRequest,
+  Conflict,
+  UnprocessableEntity,
+  EreborValidationError,
+} from "../errors.ts";
 
 // Input Schema
 export interface CreateCounterpartyInternationalBankAccountInput {
@@ -57,7 +63,7 @@ export const CreateCounterpartyInternationalBankAccountInput =
       method: "POST",
       path: "/counterparty_international_bank_accounts",
     }),
-  ) as unknown as Schema.Codec<CreateCounterpartyInternationalBankAccountInput>;
+  ) as unknown as GeneratedStructCodec<CreateCounterpartyInternationalBankAccountInput>;
 
 // Output Schema
 export interface CreateCounterpartyInternationalBankAccountOutput {
@@ -118,7 +124,7 @@ export const CreateCounterpartyInternationalBankAccountOutput =
     custom_fields: Schema.optional(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
-  }) as unknown as Schema.Codec<CreateCounterpartyInternationalBankAccountOutput>;
+  }) as unknown as GeneratedStructCodec<CreateCounterpartyInternationalBankAccountOutput>;
 
 // The operation
 /**
@@ -126,14 +132,19 @@ export const CreateCounterpartyInternationalBankAccountOutput =
  *
  * Create a new international bank account for a Counterparty
  *
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
- * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
+ * @param ereborIdempotencyKey - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
  */
 export const createCounterpartyInternationalBankAccount =
   /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
     inputSchema: CreateCounterpartyInternationalBankAccountInput,
     outputSchema: CreateCounterpartyInternationalBankAccountOutput,
-    errors: [BadRequest, Conflict, UnprocessableEntity] as const,
+    errors: [
+      BadRequest,
+      Conflict,
+      UnprocessableEntity,
+      EreborValidationError,
+    ] as const,
   }));

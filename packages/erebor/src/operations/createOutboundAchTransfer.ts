@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, Conflict } from "../errors.ts";
 
 // Input Schema
@@ -45,7 +46,7 @@ export const CreateOutboundAchTransferInput =
     ),
   }).pipe(
     T.Http({ method: "POST", path: "/ach_out" }),
-  ) as unknown as Schema.Codec<CreateOutboundAchTransferInput>;
+  ) as unknown as GeneratedStructCodec<CreateOutboundAchTransferInput>;
 
 // Output Schema
 export interface CreateOutboundAchTransferOutput {
@@ -114,7 +115,7 @@ export const CreateOutboundAchTransferOutput =
     ),
     return_code: Schema.optional(Schema.NullOr(Schema.String)),
     returned_at: Schema.optional(Schema.NullOr(Schema.String)),
-  }) as unknown as Schema.Codec<CreateOutboundAchTransferOutput>;
+  }) as unknown as GeneratedStructCodec<CreateOutboundAchTransferOutput>;
 
 // The operation
 /**
@@ -122,9 +123,9 @@ export const CreateOutboundAchTransferOutput =
  *
  * Create a new Outbound ACH Transfer
  *
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
- * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
+ * @param ereborIdempotencyKey - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
  */
 export const createOutboundAchTransfer = /*@__PURE__*/ /*#__PURE__*/ API.make(

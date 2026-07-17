@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound } from "../errors.ts";
 import { SensitiveOutputNullableString } from "../sensitive.ts";
 import * as Redacted from "effect/Redacted";
@@ -17,7 +18,7 @@ export const GetWebhookInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   ),
 }).pipe(
   T.Http({ method: "GET", path: "/webhooks/{id}" }),
-) as unknown as Schema.Codec<GetWebhookInput>;
+) as unknown as GeneratedStructCodec<GetWebhookInput>;
 
 // Output Schema
 export interface GetWebhookOutput {
@@ -235,7 +236,7 @@ export const GetWebhookOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   custom_fields: Schema.optional(
     Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
   ),
-}) as unknown as Schema.Codec<GetWebhookOutput>;
+}) as unknown as GeneratedStructCodec<GetWebhookOutput>;
 
 // The operation
 /**
@@ -244,7 +245,7 @@ export const GetWebhookOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
  * Retrieve a specific Webhook by ID.
  *
  * @param id - Webhook ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const getWebhook = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

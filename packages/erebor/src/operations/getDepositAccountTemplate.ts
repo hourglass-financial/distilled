@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -16,7 +17,7 @@ export const GetDepositAccountTemplateInput =
     ),
   }).pipe(
     T.Http({ method: "GET", path: "/deposit_account_templates/{id}" }),
-  ) as unknown as Schema.Codec<GetDepositAccountTemplateInput>;
+  ) as unknown as GeneratedStructCodec<GetDepositAccountTemplateInput>;
 
 // Output Schema
 export interface GetDepositAccountTemplateOutput {
@@ -158,7 +159,7 @@ export const GetDepositAccountTemplateOutput =
       starting_on: Schema.optional(Schema.NullOr(Schema.String)),
       ending_on: Schema.optional(Schema.NullOr(Schema.String)),
     }),
-  }) as unknown as Schema.Codec<GetDepositAccountTemplateOutput>;
+  }) as unknown as GeneratedStructCodec<GetDepositAccountTemplateOutput>;
 
 // The operation
 /**
@@ -167,7 +168,7 @@ export const GetDepositAccountTemplateOutput =
  * Retrieve a specific Deposit Account Template by ID
  *
  * @param id - Deposit account template ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const getDepositAccountTemplate = /*@__PURE__*/ /*#__PURE__*/ API.make(

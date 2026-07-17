@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 
 // Input Schema
 export interface ListPersonApplicantsInput {
@@ -13,17 +14,21 @@ export interface ListPersonApplicantsInput {
 }
 export const ListPersonApplicantsInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    page_size: Schema.optional(Schema.Number),
-    starting_after: Schema.optional(Schema.String),
-    ending_before: Schema.optional(Schema.String),
-    program_id: Schema.optional(Schema.String),
-    custom_ref: Schema.optional(Schema.String),
+    page_size: Schema.optional(Schema.Number).pipe(T.HttpQuery("page_size")),
+    starting_after: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("starting_after"),
+    ),
+    ending_before: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("ending_before"),
+    ),
+    program_id: Schema.optional(Schema.String).pipe(T.HttpQuery("program_id")),
+    custom_ref: Schema.optional(Schema.String).pipe(T.HttpQuery("custom_ref")),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
   }).pipe(
     T.Http({ method: "GET", path: "/person_applicants" }),
-  ) as unknown as Schema.Codec<ListPersonApplicantsInput>;
+  ) as unknown as GeneratedStructCodec<ListPersonApplicantsInput>;
 
 // Output Schema
 export interface ListPersonApplicantsOutput {
@@ -278,7 +283,7 @@ export const ListPersonApplicantsOutput =
     page_next: Schema.optional(Schema.NullOr(Schema.String)),
     page_prev: Schema.optional(Schema.NullOr(Schema.String)),
     url: Schema.String,
-  }) as unknown as Schema.Codec<ListPersonApplicantsOutput>;
+  }) as unknown as GeneratedStructCodec<ListPersonApplicantsOutput>;
 
 // The operation
 /**
@@ -291,7 +296,7 @@ export const ListPersonApplicantsOutput =
  * @param ending_before - Cursor for pagination (exclusive end)
  * @param program_id - Filter by program ID
  * @param custom_ref - Filter by exact `custom_ref` match (case-sensitive, up to 255 characters).
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const listPersonApplicants = /*@__PURE__*/ /*#__PURE__*/ API.make(

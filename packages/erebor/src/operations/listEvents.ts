@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 
 // Input Schema
 export interface ListEventsInput {
@@ -91,9 +92,13 @@ export interface ListEventsInput {
   ereborVersion?: string;
 }
 export const ListEventsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  page_size: Schema.optional(Schema.Number),
-  starting_after: Schema.optional(Schema.String),
-  ending_before: Schema.optional(Schema.String),
+  page_size: Schema.optional(Schema.Number).pipe(T.HttpQuery("page_size")),
+  starting_after: Schema.optional(Schema.String).pipe(
+    T.HttpQuery("starting_after"),
+  ),
+  ending_before: Schema.optional(Schema.String).pipe(
+    T.HttpQuery("ending_before"),
+  ),
   event_type: Schema.optional(
     Schema.Literals([
       "DEPOSIT_ACCOUNT.CREATED",
@@ -176,14 +181,14 @@ export const ListEventsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "COUNTERPARTY_RAIL_ADDRESS.ARCHIVED",
       "CUSTOMER.CREATED",
     ]),
-  ),
-  program_id: Schema.optional(Schema.String),
+  ).pipe(T.HttpQuery("event_type")),
+  program_id: Schema.optional(Schema.String).pipe(T.HttpQuery("program_id")),
   ereborVersion: Schema.optional(Schema.String).pipe(
     T.HttpHeader("Erebor-Version"),
   ),
 }).pipe(
   T.Http({ method: "GET", path: "/events" }),
-) as unknown as Schema.Codec<ListEventsInput>;
+) as unknown as GeneratedStructCodec<ListEventsInput>;
 
 // Output Schema
 export interface ListEventsOutput {
@@ -396,7 +401,7 @@ export const ListEventsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   page_next: Schema.optional(Schema.NullOr(Schema.String)),
   page_prev: Schema.optional(Schema.NullOr(Schema.String)),
   url: Schema.String,
-}) as unknown as Schema.Codec<ListEventsOutput>;
+}) as unknown as GeneratedStructCodec<ListEventsOutput>;
 
 // The operation
 /**
@@ -409,7 +414,7 @@ export const ListEventsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
  * @param ending_before - Cursor for pagination (exclusive end)
  * @param event_type - Filter by event type. See [Supported Events](/api-reference/events/supported-events) for a list of available event types.
  * @param program_id - Filter by program ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const listEvents = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

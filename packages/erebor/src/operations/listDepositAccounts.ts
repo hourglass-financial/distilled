@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 
 // Input Schema
 export interface ListDepositAccountsInput {
@@ -17,25 +18,33 @@ export interface ListDepositAccountsInput {
 }
 export const ListDepositAccountsInput =
   /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-    page_size: Schema.optional(Schema.Number),
-    starting_after: Schema.optional(Schema.String),
-    ending_before: Schema.optional(Schema.String),
+    page_size: Schema.optional(Schema.Number).pipe(T.HttpQuery("page_size")),
+    starting_after: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("starting_after"),
+    ),
+    ending_before: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("ending_before"),
+    ),
     status: Schema.optional(
       Schema.Literals(["PENDING", "OPEN", "CLOSED", "FROZEN"]),
-    ),
+    ).pipe(T.HttpQuery("status")),
     deposit_account_type: Schema.optional(
       Schema.Literals(["DDA", "FBO", "OMNIBUS", "VIRTUAL_DDA"]),
+    ).pipe(T.HttpQuery("deposit_account_type")),
+    customer_id: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("customer_id"),
     ),
-    customer_id: Schema.optional(Schema.String),
-    program_id: Schema.optional(Schema.String),
-    parent_account_id: Schema.optional(Schema.String),
-    custom_ref: Schema.optional(Schema.String),
+    program_id: Schema.optional(Schema.String).pipe(T.HttpQuery("program_id")),
+    parent_account_id: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("parent_account_id"),
+    ),
+    custom_ref: Schema.optional(Schema.String).pipe(T.HttpQuery("custom_ref")),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
   }).pipe(
     T.Http({ method: "GET", path: "/deposit_accounts" }),
-  ) as unknown as Schema.Codec<ListDepositAccountsInput>;
+  ) as unknown as GeneratedStructCodec<ListDepositAccountsInput>;
 
 // Output Schema
 export interface ListDepositAccountsOutput {
@@ -269,7 +278,7 @@ export const ListDepositAccountsOutput =
     page_next: Schema.optional(Schema.NullOr(Schema.String)),
     page_prev: Schema.optional(Schema.NullOr(Schema.String)),
     url: Schema.String,
-  }) as unknown as Schema.Codec<ListDepositAccountsOutput>;
+  }) as unknown as GeneratedStructCodec<ListDepositAccountsOutput>;
 
 // The operation
 /**
@@ -284,7 +293,7 @@ export const ListDepositAccountsOutput =
  * @param program_id - Filter by program ID
  * @param parent_account_id - Filter by parent account ID (for virtual DDA accounts)
  * @param custom_ref - Filter by exact `custom_ref` match (case-sensitive, up to 255 characters).
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const listDepositAccounts = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

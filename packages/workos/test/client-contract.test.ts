@@ -10,72 +10,61 @@ import { Credentials } from "../src/credentials.ts";
 import {
   BadGateway,
   BadRequest,
-  Conflict,
-  EreborFeatureNotEnabled,
-  EreborParseError,
-  EreborValidationError,
-  Forbidden,
   GatewayTimeout,
   InternalServerError,
   NotFound,
   ServiceUnavailable,
   TooManyRequests,
   Unauthorized,
-  UnknownEreborError,
+  UnknownWorkosError,
   UnprocessableEntity,
+  WorkosParseError,
 } from "../src/errors.ts";
-import { createBusinessApplicant } from "../src/operations/createBusinessApplicant.ts";
-import { getProgram } from "../src/operations/getProgram.ts";
+import { UserlandUserOrganizationMembershipsControllerUpdate } from "../src/operations/UserlandUserOrganizationMembershipsControllerUpdate.ts";
 
-describe("Erebor operation type contract", () => {
-  it("keeps lookup errors precise while retaining universal failures", () => {
-    type DirectEffect = ReturnType<typeof getProgram>;
+// HOURGLASS PATCH: Typecheck the built-client contract independently of the
+// broader legacy WorkOS test suite, which still has unrelated strictness debt.
+describe("WorkOS operation type contract", () => {
+  it("keeps membership update errors precise while retaining universal failures", () => {
+    type DirectEffect = ReturnType<
+      typeof UserlandUserOrganizationMembershipsControllerUpdate
+    >;
     type DirectErrors = Effect.Error<DirectEffect>;
     type DirectServices = Effect.Services<DirectEffect>;
     type ExpectedErrors =
-      | BadRequest
       | NotFound
+      | UnprocessableEntity
       | Unauthorized
-      | Forbidden
       | TooManyRequests
       | InternalServerError
       | BadGateway
       | ServiceUnavailable
       | GatewayTimeout
-      | EreborFeatureNotEnabled
-      | UnknownEreborError
-      | EreborParseError
+      | UnknownWorkosError
+      | WorkosParseError
       | HttpClientError.HttpClientError
       | HttpBody.HttpBodyError;
 
+    expectTypeOf<DirectErrors>().toEqualTypeOf<ExpectedErrors>();
+    expectTypeOf<BadRequest>().not.toMatchTypeOf<DirectErrors>();
     expectTypeOf<Credentials>().toMatchTypeOf<DirectServices>();
     expectTypeOf<HttpClient.HttpClient>().toMatchTypeOf<DirectServices>();
-    expectTypeOf<DirectErrors>().toEqualTypeOf<ExpectedErrors>();
-    expectTypeOf<Conflict>().not.toMatchTypeOf<DirectErrors>();
-    expectTypeOf<UnprocessableEntity>().not.toMatchTypeOf<DirectErrors>();
-    expectTypeOf<EreborValidationError>().not.toMatchTypeOf<DirectErrors>();
-  });
-
-  it("retains structured validation errors only on operations declaring 422", () => {
-    type ApplicantErrors = Effect.Error<
-      ReturnType<typeof createBusinessApplicant>
-    >;
-
-    expectTypeOf<EreborValidationError>().toMatchTypeOf<ApplicantErrors>();
-    expectTypeOf<UnprocessableEntity>().toMatchTypeOf<ApplicantErrors>();
   });
 
   it.each([
-    { status: 409, tag: "UnknownEreborError" },
-    { status: 403, tag: "Forbidden" },
+    { status: 400, tag: "UnknownWorkosError" },
+    { status: 401, tag: "Unauthorized" },
   ])(
     "maps HTTP $status to $tag for this operation",
     async ({ status, tag }) => {
       let requests = 0;
-      const credentials = Layer.succeed(Credentials, {
-        apiKey: Redacted.make("erebor_contract"),
-        apiBaseUrl: "https://erebor.example",
-      });
+      const credentials = Layer.succeed(
+        Credentials,
+        Effect.succeed({
+          apiKey: Redacted.make("sk_test_contract"),
+          apiBaseUrl: "https://workos.example",
+        }),
+      );
       const transport = Layer.succeed(
         HttpClient.HttpClient,
         HttpClient.make((request) => {
@@ -83,20 +72,19 @@ describe("Erebor operation type contract", () => {
           return Effect.succeed(
             HttpClientResponse.fromWeb(
               request,
-              new Response(
-                JSON.stringify({ error: "CONTRACT_ERROR", message: "test" }),
-                {
-                  status,
-                  headers: { "content-type": "application/json" },
-                },
-              ),
+              new Response(JSON.stringify({ message: "bad request" }), {
+                status,
+                headers: { "content-type": "application/json" },
+              }),
             ),
           );
         }),
       );
 
       const error = await Effect.runPromise(
-        getProgram({ id: "prg_contract" }).pipe(
+        UserlandUserOrganizationMembershipsControllerUpdate({
+          id: "om_test",
+        }).pipe(
           Effect.flip,
           Effect.provide(Layer.merge(credentials, transport)),
         ),

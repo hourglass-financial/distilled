@@ -1,7 +1,13 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
-import { BadRequest, Conflict, UnprocessableEntity } from "../errors.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
+import {
+  BadRequest,
+  Conflict,
+  UnprocessableEntity,
+  EreborValidationError,
+} from "../errors.ts";
 
 // Input Schema
 export interface CreateOutboundInternationalWireTransferInput {
@@ -37,7 +43,7 @@ export const CreateOutboundInternationalWireTransferInput =
     ),
   }).pipe(
     T.Http({ method: "POST", path: "/international_wire_out" }),
-  ) as unknown as Schema.Codec<CreateOutboundInternationalWireTransferInput>;
+  ) as unknown as GeneratedStructCodec<CreateOutboundInternationalWireTransferInput>;
 
 // Output Schema
 export interface CreateOutboundInternationalWireTransferOutput {
@@ -90,7 +96,7 @@ export const CreateOutboundInternationalWireTransferOutput =
     custom_fields: Schema.optional(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
-  }) as unknown as Schema.Codec<CreateOutboundInternationalWireTransferOutput>;
+  }) as unknown as GeneratedStructCodec<CreateOutboundInternationalWireTransferOutput>;
 
 // The operation
 /**
@@ -98,14 +104,19 @@ export const CreateOutboundInternationalWireTransferOutput =
  *
  * Create a new Outbound International Wire
  *
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
- * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
+ * @param ereborIdempotencyKey - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
  */
 export const createOutboundInternationalWireTransfer =
   /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
     inputSchema: CreateOutboundInternationalWireTransferInput,
     outputSchema: CreateOutboundInternationalWireTransferOutput,
-    errors: [BadRequest, Conflict, UnprocessableEntity] as const,
+    errors: [
+      BadRequest,
+      Conflict,
+      UnprocessableEntity,
+      EreborValidationError,
+    ] as const,
   }));

@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -15,7 +16,7 @@ export const GetTransactionInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   ),
 }).pipe(
   T.Http({ method: "GET", path: "/transactions/{id}" }),
-) as unknown as Schema.Codec<GetTransactionInput>;
+) as unknown as GeneratedStructCodec<GetTransactionInput>;
 
 // Output Schema
 export interface GetTransactionOutput {
@@ -134,7 +135,7 @@ export const GetTransactionOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       }),
     ),
   ),
-}) as unknown as Schema.Codec<GetTransactionOutput>;
+}) as unknown as GeneratedStructCodec<GetTransactionOutput>;
 
 // The operation
 /**
@@ -143,7 +144,7 @@ export const GetTransactionOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
  * Transactions represent the complete history of balance changes across all accounts. Unlike Payments, which are instructions to move money, transactions are records that represent balance movements in the bank's ledger. This endpoint retrieves a specific Transaction by its ID.
  *
  * @param id - Transaction ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const getTransaction = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

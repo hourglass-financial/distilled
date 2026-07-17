@@ -5,6 +5,18 @@
     "/events": {
       "get": {
         "operationId": "getConstEvent",
+        "parameters": [
+          {
+            "name": "page_size",
+            "in": "query",
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "X-Request-ID",
+            "in": "header",
+            "schema": { "type": "string" }
+          }
+        ],
         "responses": {
           "200": {
             "description": "ok",
@@ -24,6 +36,9 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "validation error"
           }
         }
       }

@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -16,7 +17,7 @@ export const GetInboundBlockchainTransferInput =
     ),
   }).pipe(
     T.Http({ method: "GET", path: "/blockchain_in/{id}" }),
-  ) as unknown as Schema.Codec<GetInboundBlockchainTransferInput>;
+  ) as unknown as GeneratedStructCodec<GetInboundBlockchainTransferInput>;
 
 // Output Schema
 export interface GetInboundBlockchainTransferOutput {
@@ -77,7 +78,7 @@ export const GetInboundBlockchainTransferOutput =
     custom_fields: Schema.optional(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
-  }) as unknown as Schema.Codec<GetInboundBlockchainTransferOutput>;
+  }) as unknown as GeneratedStructCodec<GetInboundBlockchainTransferOutput>;
 
 // The operation
 /**
@@ -86,7 +87,7 @@ export const GetInboundBlockchainTransferOutput =
  * Retrieve a specific Inbound Blockchain Transfer by ID
  *
  * @param id - Inbound blockchain transfer ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const getInboundBlockchainTransfer =

@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 
 // Input Schema
 export interface ListTransactionsInput {
@@ -30,12 +31,16 @@ export interface ListTransactionsInput {
   ereborVersion?: string;
 }
 export const ListTransactionsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
-  page_size: Schema.optional(Schema.Number),
-  starting_after: Schema.optional(Schema.String),
-  ending_before: Schema.optional(Schema.String),
-  account_id: Schema.optional(Schema.String),
-  from_id: Schema.optional(Schema.String),
-  to_id: Schema.optional(Schema.String),
+  page_size: Schema.optional(Schema.Number).pipe(T.HttpQuery("page_size")),
+  starting_after: Schema.optional(Schema.String).pipe(
+    T.HttpQuery("starting_after"),
+  ),
+  ending_before: Schema.optional(Schema.String).pipe(
+    T.HttpQuery("ending_before"),
+  ),
+  account_id: Schema.optional(Schema.String).pipe(T.HttpQuery("account_id")),
+  from_id: Schema.optional(Schema.String).pipe(T.HttpQuery("from_id")),
+  to_id: Schema.optional(Schema.String).pipe(T.HttpQuery("to_id")),
   transaction_type: Schema.optional(
     Schema.Literals([
       "ACH_IN",
@@ -53,17 +58,19 @@ export const ListTransactionsInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       "FEE",
       "ADJUSTMENT",
     ]),
-  ),
+  ).pipe(T.HttpQuery("transaction_type")),
   status: Schema.optional(
     Schema.Literals(["CREATED", "PENDING", "SETTLED", "FAILED", "REVERSED"]),
+  ).pipe(T.HttpQuery("status")),
+  associated_payment_id: Schema.optional(Schema.String).pipe(
+    T.HttpQuery("associated_payment_id"),
   ),
-  associated_payment_id: Schema.optional(Schema.String),
   ereborVersion: Schema.optional(Schema.String).pipe(
     T.HttpHeader("Erebor-Version"),
   ),
 }).pipe(
   T.Http({ method: "GET", path: "/transactions" }),
-) as unknown as Schema.Codec<ListTransactionsInput>;
+) as unknown as GeneratedStructCodec<ListTransactionsInput>;
 
 // Output Schema
 export interface ListTransactionsOutput {
@@ -200,7 +207,7 @@ export const ListTransactionsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
     page_prev: Schema.optional(Schema.NullOr(Schema.String)),
     url: Schema.String,
   },
-) as unknown as Schema.Codec<ListTransactionsOutput>;
+) as unknown as GeneratedStructCodec<ListTransactionsOutput>;
 
 // The operation
 /**
@@ -217,7 +224,7 @@ export const ListTransactionsOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
  * @param transaction_type - Filter by transaction type
  * @param status - Filter by transaction status
  * @param associated_payment_id - Filter by associated payment resource ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const listTransactions = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

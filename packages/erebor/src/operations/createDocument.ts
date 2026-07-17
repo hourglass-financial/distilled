@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, Conflict } from "../errors.ts";
 
 // Input Schema
@@ -42,7 +43,7 @@ export const CreateDocumentInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   custom_fields: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
 }).pipe(
   T.Http({ method: "POST", path: "/documents", contentType: "multipart" }),
-) as unknown as Schema.Codec<CreateDocumentInput>;
+) as unknown as GeneratedStructCodec<CreateDocumentInput>;
 
 // Output Schema
 export interface CreateDocumentOutput {
@@ -93,7 +94,7 @@ export const CreateDocumentOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   custom_fields: Schema.optional(
     Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
   ),
-}) as unknown as Schema.Codec<CreateDocumentOutput>;
+}) as unknown as GeneratedStructCodec<CreateDocumentOutput>;
 
 // The operation
 /**
@@ -101,9 +102,9 @@ export const CreateDocumentOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
  *
  * Upload a document for Onboarding verification
  *
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
- * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
+ * @param ereborIdempotencyKey - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
  */
 export const createDocument = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

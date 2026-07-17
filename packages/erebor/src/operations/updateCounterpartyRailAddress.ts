@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
@@ -28,7 +29,7 @@ export const UpdateCounterpartyRailAddressInput =
     ),
   }).pipe(
     T.Http({ method: "PATCH", path: "/counterparty_rail_addresses/{id}" }),
-  ) as unknown as Schema.Codec<UpdateCounterpartyRailAddressInput>;
+  ) as unknown as GeneratedStructCodec<UpdateCounterpartyRailAddressInput>;
 
 // Output Schema
 export interface UpdateCounterpartyRailAddressOutput {
@@ -63,7 +64,7 @@ export const UpdateCounterpartyRailAddressOutput =
     custom_fields: Schema.optional(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
-  }) as unknown as Schema.Codec<UpdateCounterpartyRailAddressOutput>;
+  }) as unknown as GeneratedStructCodec<UpdateCounterpartyRailAddressOutput>;
 
 // The operation
 /**
@@ -72,9 +73,9 @@ export const UpdateCounterpartyRailAddressOutput =
  * Update a counterparty rail address's `description`, `custom_ref`, or `custom_fields`. The rail address handle is immutable.
  *
  * @param id - Rail address ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
- * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
+ * @param ereborIdempotencyKey - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
  */
 export const updateCounterpartyRailAddress =

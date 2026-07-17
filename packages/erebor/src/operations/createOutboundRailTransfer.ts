@@ -1,7 +1,13 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
-import { BadRequest, Conflict, UnprocessableEntity } from "../errors.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
+import {
+  BadRequest,
+  Conflict,
+  UnprocessableEntity,
+  EreborValidationError,
+} from "../errors.ts";
 
 // Input Schema
 export interface CreateOutboundRailTransferInput {
@@ -39,7 +45,7 @@ export const CreateOutboundRailTransferInput =
     ),
   }).pipe(
     T.Http({ method: "POST", path: "/rail_out" }),
-  ) as unknown as Schema.Codec<CreateOutboundRailTransferInput>;
+  ) as unknown as GeneratedStructCodec<CreateOutboundRailTransferInput>;
 
 // Output Schema
 export interface CreateOutboundRailTransferOutput {
@@ -90,7 +96,7 @@ export const CreateOutboundRailTransferOutput =
     custom_fields: Schema.optional(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
-  }) as unknown as Schema.Codec<CreateOutboundRailTransferOutput>;
+  }) as unknown as GeneratedStructCodec<CreateOutboundRailTransferOutput>;
 
 // The operation
 /**
@@ -98,15 +104,20 @@ export const CreateOutboundRailTransferOutput =
  *
  * Create a new Outbound Rail Transfer
  *
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
- * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
+ * @param ereborIdempotencyKey - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
  */
 export const createOutboundRailTransfer = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({
     inputSchema: CreateOutboundRailTransferInput,
     outputSchema: CreateOutboundRailTransferOutput,
-    errors: [BadRequest, Conflict, UnprocessableEntity] as const,
+    errors: [
+      BadRequest,
+      Conflict,
+      UnprocessableEntity,
+      EreborValidationError,
+    ] as const,
   }),
 );

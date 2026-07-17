@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
@@ -20,7 +21,7 @@ export const CloseDepositAccountInput =
     ),
   }).pipe(
     T.Http({ method: "POST", path: "/deposit_accounts/{id}/close" }),
-  ) as unknown as Schema.Codec<CloseDepositAccountInput>;
+  ) as unknown as GeneratedStructCodec<CloseDepositAccountInput>;
 
 // Output Schema
 export interface CloseDepositAccountOutput {
@@ -238,7 +239,7 @@ export const CloseDepositAccountOutput =
     custom_fields: Schema.optional(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
-  }) as unknown as Schema.Codec<CloseDepositAccountOutput>;
+  }) as unknown as GeneratedStructCodec<CloseDepositAccountOutput>;
 
 // The operation
 /**
@@ -249,9 +250,9 @@ export const CloseDepositAccountOutput =
  * </Callout>
  *
  * @param id - Deposit Account ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
- * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
+ * @param ereborIdempotencyKey - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
  */
 export const closeDepositAccount = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

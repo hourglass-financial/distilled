@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -16,7 +17,7 @@ export const GetPersonApplicantInput =
     ),
   }).pipe(
     T.Http({ method: "GET", path: "/person_applicants/{id}" }),
-  ) as unknown as Schema.Codec<GetPersonApplicantInput>;
+  ) as unknown as GeneratedStructCodec<GetPersonApplicantInput>;
 
 // Output Schema
 export interface GetPersonApplicantOutput {
@@ -249,7 +250,7 @@ export const GetPersonApplicantOutput =
     custom_fields: Schema.optional(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
-  }) as unknown as Schema.Codec<GetPersonApplicantOutput>;
+  }) as unknown as GeneratedStructCodec<GetPersonApplicantOutput>;
 
 // The operation
 /**
@@ -258,7 +259,7 @@ export const GetPersonApplicantOutput =
  * Retrieve a specific Person Applicant by ID
  *
  * @param id - Person applicant ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const getPersonApplicant = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

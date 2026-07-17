@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { NotFound } from "../errors.ts";
 import { SensitiveOutputNullableString } from "../sensitive.ts";
 import * as Redacted from "effect/Redacted";
@@ -17,7 +18,7 @@ export const ArchiveWebhookInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   ),
 }).pipe(
   T.Http({ method: "POST", path: "/webhooks/{id}/archive" }),
-) as unknown as Schema.Codec<ArchiveWebhookInput>;
+) as unknown as GeneratedStructCodec<ArchiveWebhookInput>;
 
 // Output Schema
 export interface ArchiveWebhookOutput {
@@ -235,7 +236,7 @@ export const ArchiveWebhookOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   custom_fields: Schema.optional(
     Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
   ),
-}) as unknown as Schema.Codec<ArchiveWebhookOutput>;
+}) as unknown as GeneratedStructCodec<ArchiveWebhookOutput>;
 
 // The operation
 /**
@@ -244,7 +245,7 @@ export const ArchiveWebhookOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
  * Archive a webhook. This soft-deletes it — `status` becomes `ARCHIVED`, `archived_at` is set to the current time, and the webhook stops delivering events. Archiving is idempotent; calling it on an already-archived webhook returns the same webhook unchanged.
  *
  * @param id - Webhook ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const archiveWebhook = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

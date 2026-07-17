@@ -1,0 +1,33 @@
+{
+  "description": "Add HTTP 422 validation responses observed from the live Erebor API but omitted by the vendor OpenAPI snapshot. Unknown deposit-account references produce the same structured VALIDATION_ERROR envelope used by the other create operations.",
+  "patches": [
+    {
+      "op": "add",
+      "path": "/paths/~1account_numbers/post/responses/422",
+      "value": {
+        "description": "Unprocessable content — the referenced deposit account failed validation",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    },
+    {
+      "op": "add",
+      "path": "/paths/~1blockchain_addresses/post/responses/422",
+      "value": {
+        "description": "Unprocessable content — the referenced deposit account failed validation",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

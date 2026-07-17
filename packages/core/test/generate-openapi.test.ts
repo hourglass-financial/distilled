@@ -57,6 +57,8 @@ let createMembershipInputSchema: Schema.Top;
 let constUnionSource: string;
 let limitedConstUnionSource: string;
 let operationLimitedConstUnionSource: string;
+let multipleStatusErrorsSource: string;
+let locationSpecificParameterNamesSource: string;
 let constUnionOutputSchema: Schema.Top;
 
 beforeAll(async () => {
@@ -130,6 +132,34 @@ beforeAll(async () => {
     join(operationLimitedConstUnionGeneratedDir, "getConstEvent.ts"),
     "utf8",
   );
+
+  const multipleStatusErrorsGeneratedDir = generateFixture(
+    "const-discriminated-union.json",
+    "distilled-openapi-multiple-status-errors-",
+    {
+      includeOperationErrors: true,
+      defaultErrorStatuses: new Set(),
+      statusToErrorClass: {
+        "422": ["UnprocessableEntity", "StructuredValidationError"],
+      },
+    },
+  );
+  multipleStatusErrorsSource = readFileSync(
+    join(multipleStatusErrorsGeneratedDir, "getConstEvent.ts"),
+    "utf8",
+  );
+
+  const locationSpecificParameterNamesDir = generateFixture(
+    "const-discriminated-union.json",
+    "distilled-openapi-location-specific-parameter-names-",
+    {
+      parameterFieldNaming: { query: "preserve", header: "camelCase" },
+    },
+  );
+  locationSpecificParameterNamesSource = readFileSync(
+    join(locationSpecificParameterNamesDir, "getConstEvent.ts"),
+    "utf8",
+  );
 });
 
 afterAll(() => {
@@ -187,6 +217,30 @@ describe("OpenAPI 3.1 const and generated struct typing", () => {
     expect(operationLimitedConstUnionSource).toContain('type: "alpha"');
     expect(operationLimitedConstUnionSource).toContain(
       'Schema.Literals(["alpha"])',
+    );
+  });
+
+  it("supports multiple runtime error variants for one response status", () => {
+    expect(multipleStatusErrorsSource).toContain(
+      "errors: [UnprocessableEntity, StructuredValidationError] as const",
+    );
+    expect(multipleStatusErrorsSource).toContain(
+      "import { UnprocessableEntity, StructuredValidationError } from",
+    );
+  });
+
+  it("configures query and header field naming independently", () => {
+    expect(locationSpecificParameterNamesSource).toContain(
+      "page_size?: number",
+    );
+    expect(locationSpecificParameterNamesSource).toContain(
+      'page_size: Schema.optional(Schema.Number).pipe(T.HttpQuery("page_size"))',
+    );
+    expect(locationSpecificParameterNamesSource).toContain(
+      "xRequestID?: string",
+    );
+    expect(locationSpecificParameterNamesSource).toContain(
+      'xRequestID: Schema.optional(Schema.String).pipe(T.HttpHeader("X-Request-ID"))',
     );
   });
 });

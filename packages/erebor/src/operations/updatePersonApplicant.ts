@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
@@ -26,7 +27,7 @@ export const UpdatePersonApplicantInput =
     ),
   }).pipe(
     T.Http({ method: "PATCH", path: "/person_applicants/{id}" }),
-  ) as unknown as Schema.Codec<UpdatePersonApplicantInput>;
+  ) as unknown as GeneratedStructCodec<UpdatePersonApplicantInput>;
 
 // Output Schema
 export interface UpdatePersonApplicantOutput {
@@ -259,7 +260,7 @@ export const UpdatePersonApplicantOutput =
     custom_fields: Schema.optional(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
-  }) as unknown as Schema.Codec<UpdatePersonApplicantOutput>;
+  }) as unknown as GeneratedStructCodec<UpdatePersonApplicantOutput>;
 
 // The operation
 /**
@@ -268,9 +269,9 @@ export const UpdatePersonApplicantOutput =
  * Update a person applicant's `custom_ref` or `custom_fields`. Identity fields used for KYC are immutable.
  *
  * @param id - Person applicant ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
- * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
+ * @param ereborIdempotencyKey - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
  */
 export const updatePersonApplicant = /*@__PURE__*/ /*#__PURE__*/ API.make(

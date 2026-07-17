@@ -1,7 +1,13 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
-import { BadRequest, Conflict } from "../errors.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
+import {
+  BadRequest,
+  Conflict,
+  UnprocessableEntity,
+  EreborValidationError,
+} from "../errors.ts";
 
 // Input Schema
 export interface CreateBlockchainAddressInput {
@@ -30,7 +36,7 @@ export const CreateBlockchainAddressInput =
     ),
   }).pipe(
     T.Http({ method: "POST", path: "/blockchain_addresses" }),
-  ) as unknown as Schema.Codec<CreateBlockchainAddressInput>;
+  ) as unknown as GeneratedStructCodec<CreateBlockchainAddressInput>;
 
 // Output Schema
 export interface CreateBlockchainAddressOutput {
@@ -67,7 +73,7 @@ export const CreateBlockchainAddressOutput =
     custom_fields: Schema.optional(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
-  }) as unknown as Schema.Codec<CreateBlockchainAddressOutput>;
+  }) as unknown as GeneratedStructCodec<CreateBlockchainAddressOutput>;
 
 // The operation
 /**
@@ -75,15 +81,20 @@ export const CreateBlockchainAddressOutput =
  *
  * Create a new Blockchain Address for a Deposit Account
  *
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
- * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
+ * @param ereborIdempotencyKey - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
  */
 export const createBlockchainAddress = /*@__PURE__*/ /*#__PURE__*/ API.make(
   () => ({
     inputSchema: CreateBlockchainAddressInput,
     outputSchema: CreateBlockchainAddressOutput,
-    errors: [BadRequest, Conflict] as const,
+    errors: [
+      BadRequest,
+      Conflict,
+      UnprocessableEntity,
+      EreborValidationError,
+    ] as const,
   }),
 );

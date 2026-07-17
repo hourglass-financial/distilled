@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
@@ -28,7 +29,7 @@ export const UpdateBlockchainAddressInput =
     ),
   }).pipe(
     T.Http({ method: "PATCH", path: "/blockchain_addresses/{id}" }),
-  ) as unknown as Schema.Codec<UpdateBlockchainAddressInput>;
+  ) as unknown as GeneratedStructCodec<UpdateBlockchainAddressInput>;
 
 // Output Schema
 export interface UpdateBlockchainAddressOutput {
@@ -65,7 +66,7 @@ export const UpdateBlockchainAddressOutput =
     custom_fields: Schema.optional(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
-  }) as unknown as Schema.Codec<UpdateBlockchainAddressOutput>;
+  }) as unknown as GeneratedStructCodec<UpdateBlockchainAddressOutput>;
 
 // The operation
 /**
@@ -74,9 +75,9 @@ export const UpdateBlockchainAddressOutput =
  * Update a blockchain address's `custom_ref` or `custom_fields`. Renaming is not yet available — requests that include `name` return a `429 RATE_LIMITED` error and no changes are applied. The on-chain address, address type, and network set are immutable.
  *
  * @param id - Blockchain address ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
- * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
+ * @param ereborIdempotencyKey - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
  */
 export const updateBlockchainAddress = /*@__PURE__*/ /*#__PURE__*/ API.make(

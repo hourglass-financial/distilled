@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -15,7 +16,7 @@ export const GetEventInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   ),
 }).pipe(
   T.Http({ method: "GET", path: "/events/{id}" }),
-) as unknown as Schema.Codec<GetEventInput>;
+) as unknown as GeneratedStructCodec<GetEventInput>;
 
 // Output Schema
 export interface GetEventOutput {
@@ -210,7 +211,7 @@ export const GetEventOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
       request_idempotency_key: Schema.optional(Schema.NullOr(Schema.String)),
     }),
   ),
-}) as unknown as Schema.Codec<GetEventOutput>;
+}) as unknown as GeneratedStructCodec<GetEventOutput>;
 
 // The operation
 /**
@@ -219,7 +220,7 @@ export const GetEventOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
  * Retrieve a specific Event by ID
  *
  * @param id - Event ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const getEvent = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

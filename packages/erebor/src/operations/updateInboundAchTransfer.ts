@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
@@ -26,7 +27,7 @@ export const UpdateInboundAchTransferInput =
     ),
   }).pipe(
     T.Http({ method: "PATCH", path: "/ach_in/{id}" }),
-  ) as unknown as Schema.Codec<UpdateInboundAchTransferInput>;
+  ) as unknown as GeneratedStructCodec<UpdateInboundAchTransferInput>;
 
 // Output Schema
 export interface UpdateInboundAchTransferOutput {
@@ -146,7 +147,7 @@ export const UpdateInboundAchTransferOutput =
     custom_fields: Schema.optional(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
-  }) as unknown as Schema.Codec<UpdateInboundAchTransferOutput>;
+  }) as unknown as GeneratedStructCodec<UpdateInboundAchTransferOutput>;
 
 // The operation
 /**
@@ -155,9 +156,9 @@ export const UpdateInboundAchTransferOutput =
  * Update an inbound ACH transfer's `custom_ref` or `custom_fields` for reconciliation. All other fields are immutable.
  *
  * @param id - Inbound ACH transfer ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
- * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
+ * @param ereborIdempotencyKey - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
  */
 export const updateInboundAchTransfer = /*@__PURE__*/ /*#__PURE__*/ API.make(

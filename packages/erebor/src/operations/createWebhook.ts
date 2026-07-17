@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 import { SensitiveOutputNullableString } from "../sensitive.ts";
 import * as Redacted from "effect/Redacted";
@@ -209,7 +210,7 @@ export const CreateWebhookInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   custom_fields: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
 }).pipe(
   T.Http({ method: "POST", path: "/webhooks" }),
-) as unknown as Schema.Codec<CreateWebhookInput>;
+) as unknown as GeneratedStructCodec<CreateWebhookInput>;
 
 // Output Schema
 export interface CreateWebhookOutput {
@@ -427,7 +428,7 @@ export const CreateWebhookOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   custom_fields: Schema.optional(
     Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
   ),
-}) as unknown as Schema.Codec<CreateWebhookOutput>;
+}) as unknown as GeneratedStructCodec<CreateWebhookOutput>;
 
 // The operation
 /**
@@ -435,9 +436,9 @@ export const CreateWebhookOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
  *
  * Create a new Webhook endpoint.
  *
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
- * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
+ * @param ereborIdempotencyKey - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
  */
 export const createWebhook = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

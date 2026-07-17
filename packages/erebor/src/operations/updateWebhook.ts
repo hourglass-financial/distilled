@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 import { SensitiveOutputNullableString } from "../sensitive.ts";
 import * as Redacted from "effect/Redacted";
@@ -215,7 +216,7 @@ export const UpdateWebhookInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   custom_fields: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
 }).pipe(
   T.Http({ method: "PATCH", path: "/webhooks/{id}" }),
-) as unknown as Schema.Codec<UpdateWebhookInput>;
+) as unknown as GeneratedStructCodec<UpdateWebhookInput>;
 
 // Output Schema
 export interface UpdateWebhookOutput {
@@ -433,7 +434,7 @@ export const UpdateWebhookOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
   custom_fields: Schema.optional(
     Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
   ),
-}) as unknown as Schema.Codec<UpdateWebhookOutput>;
+}) as unknown as GeneratedStructCodec<UpdateWebhookOutput>;
 
 // The operation
 /**
@@ -442,9 +443,9 @@ export const UpdateWebhookOutput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct({
  * Update a webhook's `name`, `webhook_url`, `event_types`, or `status`. Toggle `status` between `ENABLED` and `DISABLED` to pause and resume delivery. To archive a webhook, use `POST /webhooks/{id}/archive`.
  *
  * @param id - Webhook ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
- * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
+ * @param ereborIdempotencyKey - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
  */
 export const updateWebhook = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

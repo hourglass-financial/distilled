@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
@@ -28,7 +29,7 @@ export const UpdateAccountNumberInput =
     ),
   }).pipe(
     T.Http({ method: "PATCH", path: "/account_numbers/{id}" }),
-  ) as unknown as Schema.Codec<UpdateAccountNumberInput>;
+  ) as unknown as GeneratedStructCodec<UpdateAccountNumberInput>;
 
 // Output Schema
 export interface UpdateAccountNumberOutput {
@@ -65,7 +66,7 @@ export const UpdateAccountNumberOutput =
     custom_fields: Schema.optional(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
-  }) as unknown as Schema.Codec<UpdateAccountNumberOutput>;
+  }) as unknown as GeneratedStructCodec<UpdateAccountNumberOutput>;
 
 // The operation
 /**
@@ -74,9 +75,9 @@ export const UpdateAccountNumberOutput =
  * Update an account number's `name`, `custom_ref`, or `custom_fields`. The account number, routing number, and default flag are immutable.
  *
  * @param id - Account number ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
- * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
+ * @param ereborIdempotencyKey - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
  */
 export const updateAccountNumber = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

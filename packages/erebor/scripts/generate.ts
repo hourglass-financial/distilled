@@ -67,6 +67,16 @@ generateFromOpenAPI({
   traitsImport: "../traits",
   sensitiveImport: "../sensitive",
   errorsImport: "../errors",
+  // Preserve the existing Erebor SDK's snake_case query contract while
+  // retaining its established camelCase header fields.
+  parameterFieldNaming: { query: "preserve", header: "camelCase" },
   includeOperationErrors: true,
   skipDeprecated: true,
+  statusToErrorClass: {
+    "400": "BadRequest",
+    "403": "Forbidden",
+    "404": "NotFound",
+    "409": "Conflict",
+    "422": ["UnprocessableEntity", "EreborValidationError"],
+  },
 });

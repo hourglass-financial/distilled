@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound } from "../errors.ts";
 
 // Input Schema
@@ -16,7 +17,7 @@ export const GetInboundAchTransferInput =
     ),
   }).pipe(
     T.Http({ method: "GET", path: "/ach_in/{id}" }),
-  ) as unknown as Schema.Codec<GetInboundAchTransferInput>;
+  ) as unknown as GeneratedStructCodec<GetInboundAchTransferInput>;
 
 // Output Schema
 export interface GetInboundAchTransferOutput {
@@ -136,7 +137,7 @@ export const GetInboundAchTransferOutput =
     custom_fields: Schema.optional(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
-  }) as unknown as Schema.Codec<GetInboundAchTransferOutput>;
+  }) as unknown as GeneratedStructCodec<GetInboundAchTransferOutput>;
 
 // The operation
 /**
@@ -145,7 +146,7 @@ export const GetInboundAchTransferOutput =
  * Retrieve a specific Inbound ACH Transfer by ID
  *
  * @param id - Inbound ACH transfer ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const getInboundAchTransfer = /*@__PURE__*/ /*#__PURE__*/ API.make(

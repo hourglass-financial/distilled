@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 
 // Input Schema
 export interface ListBookTransfersInput {
@@ -15,22 +16,30 @@ export interface ListBookTransfersInput {
 }
 export const ListBookTransfersInput = /*@__PURE__*/ /*#__PURE__*/ Schema.Struct(
   {
-    page_size: Schema.optional(Schema.Number),
-    starting_after: Schema.optional(Schema.String),
-    ending_before: Schema.optional(Schema.String),
-    from_deposit_account_id: Schema.optional(Schema.String),
-    to_deposit_account_id: Schema.optional(Schema.String),
+    page_size: Schema.optional(Schema.Number).pipe(T.HttpQuery("page_size")),
+    starting_after: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("starting_after"),
+    ),
+    ending_before: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("ending_before"),
+    ),
+    from_deposit_account_id: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("from_deposit_account_id"),
+    ),
+    to_deposit_account_id: Schema.optional(Schema.String).pipe(
+      T.HttpQuery("to_deposit_account_id"),
+    ),
     status: Schema.optional(
       Schema.Literals(["PENDING", "FAILED", "SETTLED", "CREATED"]),
-    ),
-    custom_ref: Schema.optional(Schema.String),
+    ).pipe(T.HttpQuery("status")),
+    custom_ref: Schema.optional(Schema.String).pipe(T.HttpQuery("custom_ref")),
     ereborVersion: Schema.optional(Schema.String).pipe(
       T.HttpHeader("Erebor-Version"),
     ),
   },
 ).pipe(
   T.Http({ method: "GET", path: "/book_transfers" }),
-) as unknown as Schema.Codec<ListBookTransfersInput>;
+) as unknown as GeneratedStructCodec<ListBookTransfersInput>;
 
 // Output Schema
 export interface ListBookTransfersOutput {
@@ -93,7 +102,7 @@ export const ListBookTransfersOutput =
     page_next: Schema.optional(Schema.NullOr(Schema.String)),
     page_prev: Schema.optional(Schema.NullOr(Schema.String)),
     url: Schema.String,
-  }) as unknown as Schema.Codec<ListBookTransfersOutput>;
+  }) as unknown as GeneratedStructCodec<ListBookTransfersOutput>;
 
 // The operation
 /**
@@ -108,7 +117,7 @@ export const ListBookTransfersOutput =
  * @param to_deposit_account_id - Filter by destination account ID
  * @param status - Filter by transfer status
  * @param custom_ref - Filter by exact `custom_ref` match (case-sensitive, up to 255 characters).
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
  */
 export const listBookTransfers = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({

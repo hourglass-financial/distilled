@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, Forbidden, Conflict } from "../errors.ts";
 
 // Input Schema
@@ -57,7 +58,7 @@ export const SimulateInternationalWireInInput =
     memo: Schema.optional(Schema.NullOr(Schema.String)),
   }).pipe(
     T.Http({ method: "POST", path: "/simulation/international_wire_in" }),
-  ) as unknown as Schema.Codec<SimulateInternationalWireInInput>;
+  ) as unknown as GeneratedStructCodec<SimulateInternationalWireInInput>;
 
 // Output Schema
 export interface SimulateInternationalWireInOutput {
@@ -81,7 +82,7 @@ export const SimulateInternationalWireInOutput =
       "FAILED",
       "RETURNED",
     ]),
-  }) as unknown as Schema.Codec<SimulateInternationalWireInOutput>;
+  }) as unknown as GeneratedStructCodec<SimulateInternationalWireInOutput>;
 
 // The operation
 /**
@@ -92,9 +93,9 @@ export const SimulateInternationalWireInOutput =
  * The response returns the new transfer's customer-facing ID with status `PENDING`. Settlement (`SETTLED`) is asynchronous — typically within seconds. Poll `GET /international_wire_in/{international_wire_in_id}` or listen for the `INTERNATIONAL_WIRE_IN.SETTLED` webhook to observe the transition.
  * Idempotency: when retrying with the same `Erebor-Idempotency-Key`, the response reflects the existing row's current status (`PENDING` or `SETTLED`). A key reused across customers returns `409 Conflict` — regenerate the key.
  *
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
- * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
+ * @param ereborIdempotencyKey - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
  */
 export const simulateInternationalWireIn = /*@__PURE__*/ /*#__PURE__*/ API.make(

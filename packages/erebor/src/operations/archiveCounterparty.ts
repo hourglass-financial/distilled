@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { API } from "../client.ts";
 import * as T from "../traits.ts";
+import type { GeneratedStructCodec } from "@distilled.cloud/core/generated-schema";
 import { BadRequest, NotFound, Conflict } from "../errors.ts";
 
 // Input Schema
@@ -20,7 +21,7 @@ export const ArchiveCounterpartyInput =
     ),
   }).pipe(
     T.Http({ method: "POST", path: "/counterparties/{id}/archive" }),
-  ) as unknown as Schema.Codec<ArchiveCounterpartyInput>;
+  ) as unknown as GeneratedStructCodec<ArchiveCounterpartyInput>;
 
 // Output Schema
 export interface ArchiveCounterpartyOutput {
@@ -65,7 +66,7 @@ export const ArchiveCounterpartyOutput =
     custom_fields: Schema.optional(
       Schema.NullOr(Schema.Record(Schema.String, Schema.Unknown)),
     ),
-  }) as unknown as Schema.Codec<ArchiveCounterpartyOutput>;
+  }) as unknown as GeneratedStructCodec<ArchiveCounterpartyOutput>;
 
 // The operation
 /**
@@ -74,9 +75,9 @@ export const ArchiveCounterpartyOutput =
  * Soft-deletes a Counterparty by setting `archived_at`. In the same transaction, the Counterparty's linked address book entries are archived, and its saved bank accounts and addresses are unlinked rather than deleted: they remain retrievable by ID, but their `counterparty_id` becomes `null` and they no longer match `counterparty_id` list filters. Archiving a Counterparty that is already archived returns `404`. Emits a `COUNTERPARTY.ARCHIVED` event.
  *
  * @param id - Counterparty ID
- * @param Erebor-Version - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
+ * @param ereborVersion - Pins the API version used to process this request. Format is `YYYY-MM-DD`. When omitted, the current default version is used.
 
- * @param Erebor-Idempotency-Key - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
+ * @param ereborIdempotencyKey - Optional idempotency key to safely retry requests. If provided, multiple requests with the same key will only perform the action once and return the same result (even if the result was an error).
 
  */
 export const archiveCounterparty = /*@__PURE__*/ /*#__PURE__*/ API.make(() => ({
