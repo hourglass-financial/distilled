@@ -30,7 +30,8 @@
     "test": "bunx vitest run test"
   },
   "dependencies": {
-    "@hourglass-financial/api-factory-core": "workspace:*"
+    "@hourglass-financial/api-factory-core": "workspace:*",
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@types/bun": "catalog:",

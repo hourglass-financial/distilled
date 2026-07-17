@@ -29,6 +29,9 @@
     "check": "bun run typecheck && oxlint src test && oxfmt --check src test",
     "test": "bunx vitest run test"
   },
+  "dependencies": {
+    "effect": "catalog:"
+  },
   "devDependencies": {
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
