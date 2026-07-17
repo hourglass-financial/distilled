@@ -3,7 +3,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import * as Headers from "effect/unstable/http/Headers";
-import type { ErrorMeta } from "../src/category.ts";
+import { Meta, MetaKey } from "../src/category.ts";
 import { makeMatchError } from "../src/client.ts";
 import {
   BadRequest,
@@ -23,14 +23,14 @@ class SpecialCode extends Schema.TaggedErrorClass<SpecialCode>()(
     code: Schema.String,
   },
 ) {
-  static readonly meta: ErrorMeta = { category: "unknown", retry: "none" };
+  readonly [MetaKey] = Meta.unknown;
 }
 
 class UnknownTestError extends Schema.TaggedErrorClass<UnknownTestError>()(
   "UnknownTestError",
   { status: Schema.optional(Schema.Number), message: Schema.String },
 ) {
-  static readonly meta: ErrorMeta = { category: "unknown", retry: "none" };
+  readonly [MetaKey] = Meta.unknown;
 }
 
 type Extra = InstanceType<(typeof DEFAULT_ERRORS)[number]> | UnknownTestError;

@@ -1,16 +1,16 @@
 /**
  * Base HTTP-status error classes shared by every generated client.
  *
- * Each class is a schema-validated `Schema.TaggedErrorClass` and carries its
- * retry/category classification as a static `meta` property (see
- * `category.ts`) — no prototype mutation.
+ * Each class is a schema-validated `Schema.TaggedErrorClass` carrying its
+ * classification as a symbol-keyed instance field (`readonly [MetaKey] =
+ * Meta.…` — see `category.ts` for why this is the mechanism).
  *
  * Vendors re-export these and add their own code-discriminated errors; the
  * shared classes cover the status codes every REST API can return.
  */
 import * as Duration from "effect/Duration";
 import * as Schema from "effect/Schema";
-import type { ErrorMeta } from "./category.ts";
+import { type Classified, Meta, MetaKey } from "./category.ts";
 
 /**
  * Opaque schema for an Effect `Duration`. Retryable errors carry a
@@ -29,7 +29,7 @@ export class BadRequest extends Schema.TaggedErrorClass<BadRequest>()(
   "BadRequest",
   { message: Schema.String },
 ) {
-  static readonly meta: ErrorMeta = { category: "bad-request", retry: "none" };
+  readonly [MetaKey] = Meta.badRequest;
 }
 
 /** 401 — authentication failed (missing/invalid API key). */
@@ -37,7 +37,7 @@ export class Unauthorized extends Schema.TaggedErrorClass<Unauthorized>()(
   "Unauthorized",
   { message: Schema.String },
 ) {
-  static readonly meta: ErrorMeta = { category: "auth", retry: "none" };
+  readonly [MetaKey] = Meta.auth;
 }
 
 /** 403 — authenticated but not permitted. */
@@ -45,21 +45,21 @@ export class Forbidden extends Schema.TaggedErrorClass<Forbidden>()(
   "Forbidden",
   { message: Schema.String },
 ) {
-  static readonly meta: ErrorMeta = { category: "auth", retry: "none" };
+  readonly [MetaKey] = Meta.auth;
 }
 
 /** 404 — the resource does not exist. */
 export class NotFound extends Schema.TaggedErrorClass<NotFound>()("NotFound", {
   message: Schema.String,
 }) {
-  static readonly meta: ErrorMeta = { category: "not-found", retry: "none" };
+  readonly [MetaKey] = Meta.notFound;
 }
 
 /** 409 — the request conflicts with existing state. */
 export class Conflict extends Schema.TaggedErrorClass<Conflict>()("Conflict", {
   message: Schema.String,
 }) {
-  static readonly meta: ErrorMeta = { category: "conflict", retry: "none" };
+  readonly [MetaKey] = Meta.conflict;
 }
 
 /** 422 — the request was well-formed but semantically invalid. */
@@ -67,10 +67,7 @@ export class UnprocessableEntity extends Schema.TaggedErrorClass<UnprocessableEn
   "UnprocessableEntity",
   { message: Schema.String },
 ) {
-  static readonly meta: ErrorMeta = {
-    category: "unprocessable",
-    retry: "none",
-  };
+  readonly [MetaKey] = Meta.unprocessable;
 }
 
 // ---------------------------------------------------------------------------
@@ -82,7 +79,7 @@ export class Locked extends Schema.TaggedErrorClass<Locked>()("Locked", {
   message: Schema.String,
   retryAfter: Schema.optional(DurationFromSelf),
 }) {
-  static readonly meta: ErrorMeta = { category: "locked", retry: "transient" };
+  readonly [MetaKey] = Meta.locked;
 }
 
 /** 429 — rate limited; retry honoring `Retry-After`. */
@@ -93,10 +90,7 @@ export class TooManyRequests extends Schema.TaggedErrorClass<TooManyRequests>()(
     retryAfter: Schema.optional(DurationFromSelf),
   },
 ) {
-  static readonly meta: ErrorMeta = {
-    category: "throttling",
-    retry: "throttling",
-  };
+  readonly [MetaKey] = Meta.throttling;
 }
 
 /** 500 — the server failed unexpectedly. */
@@ -107,7 +101,7 @@ export class InternalServerError extends Schema.TaggedErrorClass<InternalServerE
     retryAfter: Schema.optional(DurationFromSelf),
   },
 ) {
-  static readonly meta: ErrorMeta = { category: "server", retry: "transient" };
+  readonly [MetaKey] = Meta.server;
 }
 
 /** 502 — a bad response from an upstream. */
@@ -118,7 +112,7 @@ export class BadGateway extends Schema.TaggedErrorClass<BadGateway>()(
     retryAfter: Schema.optional(DurationFromSelf),
   },
 ) {
-  static readonly meta: ErrorMeta = { category: "server", retry: "transient" };
+  readonly [MetaKey] = Meta.server;
 }
 
 /** 503 — the server is temporarily unavailable. */
@@ -129,7 +123,7 @@ export class ServiceUnavailable extends Schema.TaggedErrorClass<ServiceUnavailab
     retryAfter: Schema.optional(DurationFromSelf),
   },
 ) {
-  static readonly meta: ErrorMeta = { category: "server", retry: "transient" };
+  readonly [MetaKey] = Meta.server;
 }
 
 /** 504 — an upstream timed out. */
@@ -140,7 +134,7 @@ export class GatewayTimeout extends Schema.TaggedErrorClass<GatewayTimeout>()(
     retryAfter: Schema.optional(DurationFromSelf),
   },
 ) {
-  static readonly meta: ErrorMeta = { category: "server", retry: "transient" };
+  readonly [MetaKey] = Meta.server;
 }
 
 // ---------------------------------------------------------------------------
@@ -152,7 +146,7 @@ export class ConfigError extends Schema.TaggedErrorClass<ConfigError>()(
   "ConfigError",
   { message: Schema.String },
 ) {
-  static readonly meta: ErrorMeta = { category: "config", retry: "none" };
+  readonly [MetaKey] = Meta.config;
 }
 
 // ---------------------------------------------------------------------------
@@ -171,13 +165,16 @@ export type ErrorClass = new (
 ) => { readonly _tag: string; readonly message: string };
 
 /**
- * An {@link ErrorClass} that also carries its static {@link ErrorMeta}
- * classification. Every matcher table and operation error tuple requires this
- * bound, so an error class missing its `meta` fails `tsc` at the table that
- * would construct it — a missing classification can never silently degrade to
- * "unclassified" at runtime.
+ * An {@link ErrorClass} whose instances carry their classification (the
+ * `Classified` brand). Every matcher table and operation error tuple requires
+ * this bound, so an error class missing its `readonly [MetaKey]` field fails
+ * `tsc` at the table that would construct it — a missing classification can
+ * never silently degrade to "unclassified" at runtime.
  */
-export type ClassifiedErrorClass = ErrorClass & { readonly meta: ErrorMeta };
+export type ClassifiedErrorClass = new (
+  // oxlint-disable-next-line no-explicit-any
+  ...args: any[]
+) => { readonly _tag: string; readonly message: string } & Classified;
 
 /** HTTP status → shared error class. */
 export const STATUS_ERRORS = {

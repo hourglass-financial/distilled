@@ -12,9 +12,10 @@
  * spec's discriminated `oneOf` error tables.
  */
 import {
-  type Category,
   type ClassifiedErrorClass,
   DEFAULT_ERRORS as CORE_DEFAULT_ERRORS,
+  Meta,
+  MetaKey,
   RedactedValue,
   STATUS_ERRORS as CORE_STATUS_ERRORS,
 } from "@hourglass-financial/api-factory-core";
@@ -52,10 +53,7 @@ export class InvalidCredentials extends Schema.TaggedErrorClass<InvalidCredentia
   "InvalidCredentials",
   { message: Schema.String, code: Schema.Literal("invalid_credentials") },
 ) {
-  static readonly meta: Category.ErrorMeta = {
-    category: "auth",
-    retry: "none",
-  };
+  readonly [MetaKey] = Meta.auth;
 }
 
 /** 400 `invalid_grant` — the grant (e.g. credentials or token) is invalid. */
@@ -63,10 +61,7 @@ export class InvalidGrant extends Schema.TaggedErrorClass<InvalidGrant>()(
   "InvalidGrant",
   { message: Schema.String, code: Schema.Literal("invalid_grant") },
 ) {
-  static readonly meta: Category.ErrorMeta = {
-    category: "auth",
-    retry: "none",
-  };
+  readonly [MetaKey] = Meta.auth;
 }
 
 /** 400 `invalid_client` — the `client_id` is unknown or malformed. */
@@ -74,10 +69,7 @@ export class InvalidClient extends Schema.TaggedErrorClass<InvalidClient>()(
   "InvalidClient",
   { message: Schema.String, code: Schema.Literal("invalid_client") },
 ) {
-  static readonly meta: Category.ErrorMeta = {
-    category: "auth",
-    retry: "none",
-  };
+  readonly [MetaKey] = Meta.auth;
 }
 
 /** 403 `email_verification_required` — the user must verify their email first. */
@@ -88,10 +80,7 @@ export class EmailVerificationRequired extends Schema.TaggedErrorClass<EmailVeri
     code: Schema.Literal("email_verification_required"),
   },
 ) {
-  static readonly meta: Category.ErrorMeta = {
-    category: "challenge",
-    retry: "none",
-  };
+  readonly [MetaKey] = Meta.challenge;
 }
 
 /** 403 `email_password_auth_disabled` — password auth is off for this environment. */
@@ -102,10 +91,7 @@ export class EmailPasswordAuthDisabled extends Schema.TaggedErrorClass<EmailPass
     code: Schema.Literal("email_password_auth_disabled"),
   },
 ) {
-  static readonly meta: Category.ErrorMeta = {
-    category: "auth",
-    retry: "none",
-  };
+  readonly [MetaKey] = Meta.auth;
 }
 
 /** 403 `mfa_enrollment` — the user must enroll in MFA before continuing. */
@@ -113,10 +99,7 @@ export class MfaEnrollment extends Schema.TaggedErrorClass<MfaEnrollment>()(
   "MfaEnrollment",
   { message: Schema.String, code: Schema.Literal("mfa_enrollment") },
 ) {
-  static readonly meta: Category.ErrorMeta = {
-    category: "challenge",
-    retry: "none",
-  };
+  readonly [MetaKey] = Meta.challenge;
 }
 
 /** 403 `mfa_challenge` — the user must complete an MFA challenge to continue. */
@@ -124,10 +107,7 @@ export class MfaChallenge extends Schema.TaggedErrorClass<MfaChallenge>()(
   "MfaChallenge",
   { message: Schema.String, code: Schema.Literal("mfa_challenge") },
 ) {
-  static readonly meta: Category.ErrorMeta = {
-    category: "challenge",
-    retry: "none",
-  };
+  readonly [MetaKey] = Meta.challenge;
 }
 
 /** 403 `organization_selection_required` — the user must pick an organization. */
@@ -138,10 +118,7 @@ export class OrganizationSelectionRequired extends Schema.TaggedErrorClass<Organ
     code: Schema.Literal("organization_selection_required"),
   },
 ) {
-  static readonly meta: Category.ErrorMeta = {
-    category: "challenge",
-    retry: "none",
-  };
+  readonly [MetaKey] = Meta.challenge;
 }
 
 /** 403 `radar_challenge` — WorkOS Radar requires a bot-detection challenge. */
@@ -149,10 +126,7 @@ export class RadarChallenge extends Schema.TaggedErrorClass<RadarChallenge>()(
   "RadarChallenge",
   { message: Schema.String, code: Schema.Literal("radar_challenge") },
 ) {
-  static readonly meta: Category.ErrorMeta = {
-    category: "challenge",
-    retry: "none",
-  };
+  readonly [MetaKey] = Meta.challenge;
 }
 
 // ---------------------------------------------------------------------------
@@ -173,10 +147,7 @@ export class UnknownWorkosError extends Schema.TaggedErrorClass<UnknownWorkosErr
     body: Schema.Unknown,
   },
 ) {
-  static readonly meta: Category.ErrorMeta = {
-    category: "unknown",
-    retry: "none",
-  };
+  readonly [MetaKey] = Meta.unknown;
 }
 
 /**
@@ -189,10 +160,7 @@ export class WorkosTransportError extends Schema.TaggedErrorClass<WorkosTranspor
   "WorkosTransportError",
   { message: Schema.String, cause: Schema.Unknown },
 ) {
-  static readonly meta: Category.ErrorMeta = {
-    category: "transport",
-    retry: "transient",
-  };
+  readonly [MetaKey] = Meta.transport;
 }
 
 /**
@@ -210,10 +178,7 @@ export class WorkosDecodeError extends Schema.TaggedErrorClass<WorkosDecodeError
     cause: RedactedValue,
   },
 ) {
-  static readonly meta: Category.ErrorMeta = {
-    category: "parse",
-    retry: "none",
-  };
+  readonly [MetaKey] = Meta.parse;
 }
 
 // ---------------------------------------------------------------------------

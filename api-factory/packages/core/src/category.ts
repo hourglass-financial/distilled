@@ -1,18 +1,40 @@
 /**
- * Error classification — the "better mechanism" that replaces v1's
- * prototype-mutation category system.
+ * Error classification — instance-carried, symbol-keyed metadata in the style
+ * of Effect's own `TypeId` branding.
  *
- * v1 (`packages/core/src/category.ts`) stamped category/retryability booleans
- * onto each error class's `prototype` under symbol keys. That was rejected in
- * the core-runtime inventory (#21): prototype writes are invisible to the type
- * system, non-obvious to readers, and pollute every instance's inspected shape.
+ * Every error class in the factory declares its classification once, as a
+ * symbol-keyed class field pointing at a shared literal-typed constant:
  *
- * Here, classification is a plain **static property** (`meta`) on each error
- * class, declared alongside the class and therefore mechanically checkable by
- * `tsc`. The runtime reads it back through the instance's constructor. No
- * prototype writes, no per-instance fields, no symbol indirection.
+ * ```ts
+ * class Unauthorized extends Schema.TaggedErrorClass<Unauthorized>()(
+ *   "Unauthorized",
+ *   { message: Schema.String },
+ * ) {
+ *   readonly [MetaKey] = Meta.auth;
+ * }
+ * ```
+ *
+ * The symbol key puts the classification in every instance's *type* (the
+ * {@link Classified} interface) while keeping it out of every instance's
+ * *data*: symbol keys never appear in `JSON.stringify`, string-keyed
+ * enumeration, or wire payloads. Checks are ordinary type guards — no
+ * constructor reflection, no shape sniffing — and because each `Meta.*`
+ * constant is literal-typed, {@link hasCategory} is a refinement that narrows
+ * an error union to the members in the given categories:
+ *
+ * ```ts
+ * program.pipe(
+ *   Effect.catchIf(hasCategory("challenge"), (e) => handleChallenge(e)),
+ * ); // e: only the union members whose category is "challenge"
+ * ```
+ *
+ * Two earlier mechanisms were rejected: v1 stamped booleans onto class
+ * prototypes under symbol keys (invisible to the type system — #21), and a
+ * `static meta` variant read via `error.constructor` (reflection, and no
+ * value-level narrowing).
  */
 import * as Duration from "effect/Duration";
+import * as Predicate from "effect/Predicate";
 import * as HttpClientError from "effect/unstable/http/HttpClientError";
 
 /**
@@ -43,33 +65,84 @@ export type Category =
  */
 export type RetryDisposition = "none" | "transient" | "throttling";
 
-/**
- * Static classification metadata attached to an error class. Emitted (or
- * hand-written) as `static readonly meta` next to the class definition.
- */
+/** Classification metadata carried by every factory error. */
 export interface ErrorMeta {
   readonly category: Category;
   readonly retry: RetryDisposition;
 }
 
-const isErrorMeta = (value: unknown): value is ErrorMeta =>
-  typeof value === "object" &&
-  value !== null &&
-  "category" in value &&
-  "retry" in value;
+/** The symbol under which an error instance carries its {@link ErrorMeta}. */
+export const MetaKey: unique symbol = Symbol.for(
+  "@hourglass-financial/api-factory-core/ErrorMeta",
+);
 
 /**
- * Read the static {@link ErrorMeta} off an error value via its constructor.
- * Returns `undefined` for errors that carry no classification (e.g. Effect's
- * own `HttpClientError`, or a plain thrown value).
+ * An error value carrying its classification. `M` stays literal-typed when a
+ * class assigns one of the {@link Meta} constants, which is what lets
+ * {@link hasCategory} narrow unions.
  */
-export const metaOf = (error: unknown): ErrorMeta | undefined => {
-  if (typeof error !== "object" || error === null) return undefined;
-  const ctor = (error as { readonly constructor?: unknown }).constructor;
-  if (typeof ctor !== "function") return undefined;
-  const meta = (ctor as { readonly meta?: unknown }).meta;
-  return isErrorMeta(meta) ? meta : undefined;
-};
+export interface Classified<out M extends ErrorMeta = ErrorMeta> {
+  readonly [MetaKey]: M;
+}
+
+/**
+ * The classification vocabulary — every category paired with its one honest
+ * retry disposition. A vendor needing an exotic pairing can still assign its
+ * own `{ category, retry } as const satisfies ErrorMeta`; these constants
+ * cover every pairing the HTTP domain actually has.
+ */
+export const Meta = {
+  auth: { category: "auth", retry: "none" },
+  badRequest: { category: "bad-request", retry: "none" },
+  notFound: { category: "not-found", retry: "none" },
+  conflict: { category: "conflict", retry: "none" },
+  unprocessable: { category: "unprocessable", retry: "none" },
+  throttling: { category: "throttling", retry: "throttling" },
+  server: { category: "server", retry: "transient" },
+  locked: { category: "locked", retry: "transient" },
+  quota: { category: "quota", retry: "none" },
+  challenge: { category: "challenge", retry: "none" },
+  config: { category: "config", retry: "none" },
+  parse: { category: "parse", retry: "none" },
+  transport: { category: "transport", retry: "transient" },
+  unknown: { category: "unknown", retry: "none" },
+} as const satisfies Record<string, ErrorMeta>;
+
+/** True when `value` carries factory classification metadata. */
+export const isClassified = (value: unknown): value is Classified =>
+  Predicate.hasProperty(value, MetaKey);
+
+/**
+ * The classification carried by `error`, or `undefined` for values from
+ * outside the factory (Effect's own errors, plain thrown values).
+ */
+export const metaOf = (error: unknown): ErrorMeta | undefined =>
+  isClassified(error) ? error[MetaKey] : undefined;
+
+/**
+ * Refinement matching errors in any of the given categories. Narrows a typed
+ * error union to exactly the members whose declared category matches, so a
+ * handler sees only what it can actually receive:
+ *
+ * ```ts
+ * authenticateWithPassword(input).pipe(
+ *   Effect.catchIf(hasCategory("challenge"), redirectToChallenge),
+ * );
+ * ```
+ */
+export const hasCategory =
+  <const C extends Category>(
+    ...categories: readonly [C, ...ReadonlyArray<C>]
+  ) =>
+  <E>(
+    error: E,
+  ): error is Extract<E, Classified<ErrorMeta & { category: C }>> => {
+    const meta = metaOf(error);
+    return (
+      meta !== undefined &&
+      (categories as ReadonlyArray<Category>).includes(meta.category)
+    );
+  };
 
 /**
  * True when `error` is an Effect `HttpClientError` caused by a wire-level
@@ -110,8 +183,8 @@ export const isTransient = (error: unknown): boolean => {
  * `Retry-After` / `RateLimit` headers by the vendor's error matcher). Returns
  * `undefined` when the error carries no hint.
  */
-export const retryAfterOf = (error: unknown): Duration.Duration | undefined => {
-  const hint = (error as { readonly retryAfter?: unknown } | null | undefined)
-    ?.retryAfter;
-  return Duration.isDuration(hint) ? hint : undefined;
-};
+export const retryAfterOf = (error: unknown): Duration.Duration | undefined =>
+  Predicate.hasProperty(error, "retryAfter") &&
+  Duration.isDuration(error.retryAfter)
+    ? error.retryAfter
+    : undefined;

@@ -13,8 +13,11 @@
 // Base HTTP-status errors, maps, and the `ErrorClass` bound.
 export * from "./errors.ts";
 
-// Static error classification (categories + retry disposition).
+// Error classification (categories + retry disposition), carried on every
+// error instance under the `MetaKey` symbol. `Meta`/`MetaKey` are top-level
+// because every generated error class declares `readonly [MetaKey] = Meta.…`.
 export * as Category from "./category.ts";
+export { Meta, MetaKey } from "./category.ts";
 
 // Redaction helpers for request/response secrets and error-carried values.
 export { RedactedValue, Secret } from "./redaction.ts";

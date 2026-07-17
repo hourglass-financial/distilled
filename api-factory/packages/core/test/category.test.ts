@@ -9,8 +9,8 @@ import {
   TooManyRequests,
 } from "../src/errors.ts";
 
-describe("Category classification (static meta, no prototype mutation)", () => {
-  it("reads meta off an error via its constructor", () => {
+describe("Category classification (symbol-keyed instance metadata)", () => {
+  it("reads classification off an error instance", () => {
     expect(Category.metaOf(new TooManyRequests({ message: "x" }))).toEqual({
       category: "throttling",
       retry: "throttling",
@@ -27,16 +27,36 @@ describe("Category classification (static meta, no prototype mutation)", () => {
     expect(Category.metaOf("nope")).toBeUndefined();
   });
 
-  it("keeps classification on the class, not on the instance (no pollution)", () => {
+  it("keeps classification out of the instance's data shape", () => {
     const error = new TooManyRequests({ message: "x" });
-    // Neither the instance nor its prototype chain carries classification...
+    // No string-keyed classification props pollute the data...
     expect("category" in error).toBe(false);
     expect("retry" in error).toBe(false);
     expect("meta" in error).toBe(false);
-    // ...it lives statically on the constructor, where `metaOf` reads it.
+    // ...and the symbol key never serializes.
+    const printed = JSON.stringify({ ...error, message: error.message });
+    expect(printed).not.toContain("throttling");
+    // Yet the instance itself is the evidence — no constructor reflection.
+    expect(Category.isClassified(error)).toBe(true);
+    expect(error[Category.MetaKey]).toBe(Category.Meta.throttling);
+  });
+
+  it("hasCategory filters at runtime and narrows at compile time", () => {
+    const errors: Array<TooManyRequests | BadRequest | NotFound> = [
+      new TooManyRequests({ message: "x", retryAfter: Duration.seconds(2) }),
+      new BadRequest({ message: "y" }),
+      new NotFound({ message: "z" }),
+    ];
+    const throttled = errors.filter(Category.hasCategory("throttling"));
+    // The refinement narrowed the union: `retryAfter` is only on
+    // TooManyRequests, so this line type-checks only if narrowing worked.
+    expect(throttled.map((e) => e.retryAfter)).toStrictEqual([
+      Duration.seconds(2),
+    ]);
     expect(
-      (error.constructor as { readonly meta?: unknown }).meta,
-    ).toBeDefined();
+      errors.filter(Category.hasCategory("bad-request", "not-found")).length,
+    ).toBe(2);
+    expect(Category.hasCategory("auth")(new Error("plain"))).toBe(false);
   });
 
   it("classifies transient vs terminal errors", () => {

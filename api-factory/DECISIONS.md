@@ -110,13 +110,23 @@ program.pipe(Effect.provide(layerFromEnv)); // one layer: fetch transport + env 
 
 ## 5. Error classification
 
-- **Choice:** `static readonly meta: ErrorMeta` (category + retry disposition)
-  on each error class, read via `error.constructor.meta`. Matcher tables and
-  operation error tuples require the `ClassifiedErrorClass` bound, so a class
-  missing its classification **fails `tsc`** rather than silently degrading.
-- **Rejected:** v1's prototype-mutation registry (invisible to the type system;
-  rejected in #21) and per-instance `readonly category` fields (every error's
-  inspected/serialized shape grows a non-wire field).
+- **Choice:** instance-carried, symbol-keyed metadata — the same branding idiom
+  Effect uses for its own `TypeId`s. Each class declares
+  `readonly [MetaKey] = Meta.auth` (a shared, literal-typed constant); the
+  `Classified` interface puts the classification in every instance's *type*
+  while the symbol key keeps it out of every instance's *data* (symbol keys
+  never JSON-serialize). Checks are plain type guards
+  (`Predicate.hasProperty`), and because the `Meta.*` constants are
+  literal-typed, `Category.hasCategory("challenge")` is a refinement that
+  **narrows the error union** inside `Effect.catchIf` — the handler sees only
+  the members it can actually receive. Matcher tables and operation error
+  tuples require the `ClassifiedErrorClass` bound, so a class missing its
+  classification fails `tsc`.
+- **Rejected:** v1's prototype-mutation registry (invisible to the type
+  system; #21); per-instance string-keyed `category` fields (pollute the
+  serialized shape); and a `static meta` read via `error.constructor`
+  (constructor reflection plus shape-sniffing, and no value-level narrowing —
+  replaced in the taste pass).
 
 ## 6. Retry
 

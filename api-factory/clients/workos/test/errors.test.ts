@@ -10,7 +10,11 @@
  * entry must be a classified error class, and every code-mapped class must
  * accept its own wire code. Behavioral coverage lives in `vendors/workos`.
  */
-import type { ClassifiedErrorClass } from "@hourglass-financial/api-factory-core";
+import {
+  Category,
+  type ClassifiedErrorClass,
+} from "@hourglass-financial/api-factory-core";
+import * as Redacted from "effect/Redacted";
 import { describe, expect, it } from "vitest";
 import {
   CODE_ERRORS,
@@ -21,29 +25,11 @@ import {
   WorkosTransportError,
 } from "../src/errors.ts";
 
-const CATEGORIES = new Set([
-  "auth",
-  "bad-request",
-  "not-found",
-  "conflict",
-  "unprocessable",
-  "throttling",
-  "server",
-  "locked",
-  "quota",
-  "challenge",
-  "config",
-  "parse",
-  "transport",
-  "unknown",
-]);
-const DISPOSITIONS = new Set(["none", "transient", "throttling"]);
-
 describe("matcher tables", () => {
-  it("every status-mapped class carries a valid classification", () => {
+  it("every status-mapped class produces classified instances", () => {
     for (const [status, Cls] of Object.entries(STATUS_ERRORS)) {
-      expect(CATEGORIES.has(Cls.meta.category), `${status}`).toBe(true);
-      expect(DISPOSITIONS.has(Cls.meta.retry), `${status}`).toBe(true);
+      const meta = Category.metaOf(new Cls({ message: "boom" }));
+      expect(meta, status).toBeDefined();
     }
   });
 
@@ -58,29 +44,28 @@ describe("matcher tables", () => {
     const table: ReadonlyArray<readonly [string, ClassifiedErrorClass]> =
       Object.entries(CODE_ERRORS);
     for (const [code, Cls] of table) {
-      const instance = new Cls({ message: "boom", code }) as unknown as {
+      const instance = new Cls({ message: "boom", code });
+      const shaped = instance as unknown as {
         readonly code: string;
         readonly message: string;
       };
-      expect(instance.code, code).toBe(code);
-      expect(instance.message).toBe("boom");
-      expect(Cls.meta.retry, code).toBe("none");
-      expect(CATEGORIES.has(Cls.meta.category), code).toBe(true);
+      expect(shaped.code, code).toBe(code);
+      expect(shaped.message).toBe("boom");
+      expect(Category.metaOf(instance)?.retry, code).toBe("none");
     }
   });
 
   it("the fallback and wrapper errors are classified", () => {
-    expect(UnknownWorkosError.meta).toEqual({
-      category: "unknown",
-      retry: "none",
-    });
-    expect(WorkosTransportError.meta).toEqual({
-      category: "transport",
-      retry: "transient",
-    });
-    expect(WorkosDecodeError.meta).toEqual({
-      category: "parse",
-      retry: "none",
-    });
+    expect(
+      Category.metaOf(new UnknownWorkosError({ message: "x", body: null })),
+    ).toEqual({ category: "unknown", retry: "none" });
+    expect(
+      Category.metaOf(new WorkosTransportError({ message: "x", cause: null })),
+    ).toEqual({ category: "transport", retry: "transient" });
+    expect(
+      Category.metaOf(
+        new WorkosDecodeError({ message: "x", cause: Redacted.make(null) }),
+      ),
+    ).toEqual({ category: "parse", retry: "none" });
   });
 });

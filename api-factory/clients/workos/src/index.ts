@@ -51,5 +51,7 @@ export * from "./errors.ts";
 // Wire schemas (values double as types for consumers who want them).
 export * from "./schemas.ts";
 
-// Redaction re-export so consumers wrap secrets without importing core directly.
-export { Secret } from "@hourglass-financial/api-factory-core";
+// Core re-exports so consumers never import core directly: `Secret` to wrap
+// request secrets, `Category` for classification helpers (`Category.hasCategory`
+// narrows the error union inside `Effect.catchIf`).
+export { Category, Secret } from "@hourglass-financial/api-factory-core";
