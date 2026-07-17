@@ -52,14 +52,6 @@ export interface ErrorMeta {
   readonly retry: RetryDisposition;
 }
 
-/**
- * An error class that carries {@link ErrorMeta} as a static property.
- * `defineError`-style helpers and the base HTTP error classes satisfy this.
- */
-export interface ClassifiedErrorClass {
-  readonly meta: ErrorMeta;
-}
-
 const isErrorMeta = (value: unknown): value is ErrorMeta =>
   typeof value === "object" &&
   value !== null &&

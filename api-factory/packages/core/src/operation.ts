@@ -12,7 +12,8 @@
  */
 import * as Schema from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
-import type { ErrorClass } from "./errors.ts";
+import type { RetryDisposition } from "./category.ts";
+import type { ClassifiedErrorClass } from "./errors.ts";
 
 /** HTTP methods a generated operation can use. */
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD";
@@ -27,11 +28,21 @@ export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD";
 export interface Operation<
   IS extends Schema.Top,
   OS extends Schema.Top,
-  EC extends readonly ErrorClass[],
+  EC extends readonly ClassifiedErrorClass[],
 > {
   /** Clean, public dotted id, e.g. `"organizations.create"`. Used as span name. */
   readonly id: string;
   readonly method: HttpMethod;
+  /**
+   * What this operation may retry, derived from method semantics by the
+   * generator: `"transient"` for safe/idempotent reads (GET/HEAD), where a
+   * replayed request is harmless; `"throttling"` for mutating operations
+   * (POST/DELETE/...), where replaying after an ambiguous transport failure
+   * could double-create — or, for a DELETE that already succeeded, surface a
+   * spurious 403/404 — so only explicit rate limits are retried. The consumer's
+   * `RetryPolicy` further narrows (never widens) this; see `Retry.apply`.
+   */
+  readonly retry: RetryDisposition;
   /** Path template with `{param}` placeholders. */
   readonly pathTemplate: string;
   /** Input field names bound into the path template. */
@@ -78,6 +89,12 @@ const isEmpty = (record: Record<string, unknown>): boolean =>
  * Path params substitute into the template; query params serialize (arrays
  * comma-joined, WorkOS's `form`/`explode: false` convention); everything else,
  * for body-bearing methods, becomes the JSON body alongside any `constantBody`.
+ *
+ * Generator invariant: the descriptor's `pathParams`/`queryParams` name keys of
+ * the *decoded* input type, but the planner reads them off the *encoded* wire
+ * record. The two agree only while the input schema maps every field to the
+ * same key on the wire (the snake-case-verbatim convention). A generator that
+ * ever introduces key renaming must bind these to encoded names instead.
  */
 export const planRequest = (
   op: RequestSpec,

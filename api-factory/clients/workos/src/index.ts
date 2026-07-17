@@ -11,8 +11,8 @@
  *
  * const program = Effect.gen(function* () {
  *   const org = yield* organizations.create({ name: "Acme" });
- *   const all = yield* organizations.listItems({}).pipe(Stream.runCollect);
- *   yield* organizations.remove({ id: org.id });
+ *   const all = yield* organizations.listItems().pipe(Stream.runCollect);
+ *   yield* organizations.delete({ id: org.id });
  *   return all;
  * });
  *

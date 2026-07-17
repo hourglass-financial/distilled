@@ -21,11 +21,15 @@ import type * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import { run, type WorkosClient, type WorkosError } from "../client.ts";
 import {
+  EmailPasswordAuthDisabled,
   EmailVerificationRequired,
+  InvalidClient,
   InvalidCredentials,
   InvalidGrant,
+  MfaChallenge,
   MfaEnrollment,
   OrganizationSelectionRequired,
+  RadarChallenge,
 } from "../errors.ts";
 import { AuthenticationResponse } from "../schemas.ts";
 
@@ -48,11 +52,15 @@ export interface AuthenticateWithPasswordInput extends Schema.Schema.Type<
 > {}
 
 const authenticateErrors = [
+  InvalidClient,
   InvalidCredentials,
   InvalidGrant,
+  EmailPasswordAuthDisabled,
   EmailVerificationRequired,
+  MfaChallenge,
   MfaEnrollment,
   OrganizationSelectionRequired,
+  RadarChallenge,
   NotFound,
   UnprocessableEntity,
 ] as const;
@@ -64,6 +72,7 @@ const authenticateOp: Operation<
 > = {
   id: "userManagement.authenticateWithPassword",
   method: "POST",
+  retry: "throttling",
   pathTemplate: "/user_management/authenticate",
   pathParams: [],
   queryParams: [],

@@ -23,7 +23,7 @@ import type { HttpClient } from "effect/unstable/http/HttpClient";
 import * as HttpClientError from "effect/unstable/http/HttpClientError";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import type * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
-import type { ErrorClass } from "./errors.ts";
+import type { ClassifiedErrorClass } from "./errors.ts";
 import { isVoidOutput, planRequest, type Operation } from "./operation.ts";
 import { apply, type RetryPolicy } from "./retry.ts";
 
@@ -46,11 +46,11 @@ export interface MatchErrorConfig<Extra> {
   /** Extract message + discriminator from a parsed error body. */
   readonly decodeEnvelope: (body: unknown) => ErrorEnvelope;
   /** HTTP status → error class. */
-  readonly statusErrors: Readonly<Record<number, ErrorClass>>;
+  readonly statusErrors: Readonly<Record<number, ClassifiedErrorClass>>;
   /** Discriminator code → error class (takes precedence over status). */
-  readonly codeErrors: Readonly<Record<string, ErrorClass>>;
+  readonly codeErrors: Readonly<Record<string, ClassifiedErrorClass>>;
   /** Errors valid for every operation (401/429/5xx). */
-  readonly universalErrors: readonly ErrorClass[];
+  readonly universalErrors: readonly ClassifiedErrorClass[];
   /** Statuses whose class accepts a `retryAfter` hint. */
   readonly retryableStatuses: ReadonlySet<number>;
   /** Parse a `Retry-After` hint for a retryable status. */
@@ -69,7 +69,7 @@ export interface MatchErrorConfig<Extra> {
  * A per-operation error matcher. Its failure channel is exactly the operation's
  * declared errors plus the vendor's `Extra` union — honest by construction.
  */
-export type MatchError<Extra> = <EC extends readonly ErrorClass[]>(
+export type MatchError<Extra> = <EC extends readonly ClassifiedErrorClass[]>(
   status: number,
   body: unknown,
   headers: Headers.Headers,
@@ -78,7 +78,7 @@ export type MatchError<Extra> = <EC extends readonly ErrorClass[]>(
 
 export const makeMatchError =
   <Extra>(config: MatchErrorConfig<Extra>): MatchError<Extra> =>
-  <EC extends readonly ErrorClass[]>(
+  <EC extends readonly ClassifiedErrorClass[]>(
     status: number,
     body: unknown,
     headers: Headers.Headers,
@@ -94,7 +94,7 @@ export const makeMatchError =
         InstanceType<EC[number]> | Extra
       >;
 
-    const allowed = (cls: ErrorClass): boolean =>
+    const allowed = (cls: ClassifiedErrorClass): boolean =>
       config.universalErrors.includes(cls) || operationErrors.includes(cls);
 
     const envelope = config.decodeEnvelope(body);
@@ -157,7 +157,7 @@ export interface RunnerDeps<Extra> {
 export type Runner<Extra> = <
   IS extends Schema.Top & { readonly EncodingServices: never },
   OS extends Schema.Top & { readonly DecodingServices: never },
-  EC extends readonly ErrorClass[],
+  EC extends readonly ClassifiedErrorClass[],
 >(
   op: Operation<IS, OS, EC>,
   input: IS["Type"],
@@ -226,7 +226,7 @@ export const makeRunner =
     // the `HttpClientError` reason (only genuine transport faults are retried);
     // the survivor is then wrapped into the vendor's transport error.
     return attempt.pipe(
-      apply(deps.retry),
+      apply(deps.retry, op.retry),
       Effect.mapError((error) =>
         HttpClientError.isHttpClientError(error)
           ? deps.toTransport(error)

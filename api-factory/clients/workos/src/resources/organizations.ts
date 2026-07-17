@@ -60,6 +60,7 @@ const createOp: Operation<
 > = {
   id: "organizations.create",
   method: "POST",
+  retry: "throttling",
   pathTemplate: "/organizations",
   pathParams: [],
   queryParams: [],
@@ -70,7 +71,7 @@ const createOp: Operation<
 
 /** Create an organization in the current environment. */
 export const create = (
-  input: CreateOrganizationInput,
+  input: CreateOrganizationInput = {},
 ): Effect.Effect<
   Organization,
   WorkosError<typeof createErrors>,
@@ -97,6 +98,7 @@ const getOp: Operation<
 > = {
   id: "organizations.get",
   method: "GET",
+  retry: "transient",
   pathTemplate: "/organizations/{id}",
   pathParams: ["id"],
   queryParams: [],
@@ -112,7 +114,7 @@ export const get = (
   run(getOp, input);
 
 // ===========================================================================
-// organizations.remove — DELETE /organizations/{id}
+// organizations.delete — DELETE /organizations/{id}
 // ===========================================================================
 
 export const DeleteOrganizationInput = Schema.Struct({
@@ -125,28 +127,33 @@ export interface DeleteOrganizationInput extends Schema.Schema.Type<
 // The spec documents only 200/202/403 for delete — a missing organization
 // returns 403, not 404 — so `Forbidden` is the only declared error. (v1 also
 // listed `NotFound`, which delete cannot actually produce.)
-const removeErrors = [Forbidden] as const;
+const deleteErrors = [Forbidden] as const;
 
-const removeOp: Operation<
+const deleteOp: Operation<
   typeof DeleteOrganizationInput,
   typeof Schema.Void,
-  typeof removeErrors
+  typeof deleteErrors
 > = {
-  id: "organizations.remove",
+  id: "organizations.delete",
   method: "DELETE",
+  retry: "throttling",
   pathTemplate: "/organizations/{id}",
   pathParams: ["id"],
   queryParams: [],
   input: DeleteOrganizationInput,
   output: Schema.Void,
-  errors: removeErrors,
+  errors: deleteErrors,
 };
 
 /** Permanently delete an organization. Cannot be undone. */
-export const remove = (
+const deleteOrganization = (
   input: DeleteOrganizationInput,
-): Effect.Effect<void, WorkosError<typeof removeErrors>, WorkosClient> =>
-  run(removeOp, input);
+): Effect.Effect<void, WorkosError<typeof deleteErrors>, WorkosClient> =>
+  run(deleteOp, input);
+
+// `delete` is a reserved word as a declaration name but a legal export name;
+// the rename-export keeps the public surface on the API's own verb.
+export { deleteOrganization as delete };
 
 // ===========================================================================
 // organizations.list — GET /organizations (cursor paginated)
@@ -173,6 +180,7 @@ const listOp: Operation<
 > = {
   id: "organizations.list",
   method: "GET",
+  retry: "transient",
   pathTemplate: "/organizations",
   pathParams: [],
   queryParams: ["before", "after", "limit", "order", "domains", "search"],
@@ -183,7 +191,7 @@ const listOp: Operation<
 
 /** Fetch a single page of organizations. */
 export const list = (
-  input: ListOrganizationsInput,
+  input: ListOrganizationsInput = {},
 ): Effect.Effect<
   OrganizationList,
   WorkosError<typeof listErrors>,
@@ -196,13 +204,14 @@ const listPagination: Pagination.CursorPagination<
   Organization
 > = {
   cursorParam: "after",
+  clear: ["before"],
   nextCursor: (page) => page.list_metadata.after,
   items: (page) => page.data,
 };
 
 /** Stream every page of organizations, following the `after` cursor. */
 export const listPages = (
-  input: ListOrganizationsInput,
+  input: ListOrganizationsInput = {},
 ): Stream.Stream<
   OrganizationList,
   WorkosError<typeof listErrors>,
@@ -211,6 +220,6 @@ export const listPages = (
 
 /** Stream every organization across every page. */
 export const listItems = (
-  input: ListOrganizationsInput,
+  input: ListOrganizationsInput = {},
 ): Stream.Stream<Organization, WorkosError<typeof listErrors>, WorkosClient> =>
   Pagination.items(list, input, listPagination);

@@ -11,7 +11,7 @@
  * thing a consumer wires; everything else is a tree-shakeable operation import.
  */
 import {
-  type ErrorClass,
+  type ClassifiedErrorClass,
   makeMatchError,
   makeRunner,
   type Operation,
@@ -92,7 +92,7 @@ const matchError = makeMatchError<WorkosExtraError>({
  * errors plus the universal defaults, `Unknown*` fallback, and transport/decode
  * wrappers. Every generated operation annotates its result with this.
  */
-export type WorkosError<EC extends readonly ErrorClass[]> =
+export type WorkosError<EC extends readonly ClassifiedErrorClass[]> =
   | InstanceType<EC[number]>
   | WorkosExtraError;
 
@@ -162,7 +162,7 @@ export const layerFromEnv = layer.pipe(
 export const run = <
   IS extends Schema.Top & { readonly EncodingServices: never },
   OS extends Schema.Top & { readonly DecodingServices: never },
-  EC extends readonly ErrorClass[],
+  EC extends readonly ClassifiedErrorClass[],
 >(
   op: Operation<IS, OS, EC>,
   input: IS["Type"],

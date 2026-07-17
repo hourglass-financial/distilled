@@ -1,9 +1,21 @@
 /**
- * Unit-level contract tests: the whole request pipeline (encode → plan →
- * execute → status branch → decode / match) driven against a mock transport.
- * No network, no credentials required.
+ * Contract tests: the whole request pipeline (encode → plan → execute → status
+ * branch → decode / match) driven against a mock transport through the
+ * client's public surface. No network, no credentials required.
+ *
+ * These are agent-writable (they live in `vendors/`, not the machine-owned
+ * `clients/` tree) and exercise the behavior the generated client must
+ * preserve across regenerations.
  */
 import { Retry } from "@hourglass-financial/api-factory-core";
+import {
+  credentialsOf,
+  layerWith,
+  organizations,
+  userManagement,
+  type WorkosClient,
+  type WorkosClientOptions,
+} from "@hourglass-financial/api-factory-workos";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
@@ -13,10 +25,6 @@ import type * as HttpClientRequest from "effect/unstable/http/HttpClientRequest"
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import * as UrlParams from "effect/unstable/http/UrlParams";
 import { describe, expect, it } from "vitest";
-import { layerWith, type WorkosClient } from "../src/client.ts";
-import { credentialsOf } from "../src/config.ts";
-import * as organizations from "../src/resources/organizations.ts";
-import * as userManagement from "../src/resources/user-management.ts";
 
 interface MockReply {
   readonly status: number;
@@ -35,12 +43,16 @@ const requestBodyJson = (
 };
 
 const harness = (
-  handler: (request: HttpClientRequest.HttpClientRequest) => MockReply,
+  handler: (
+    request: HttpClientRequest.HttpClientRequest,
+    index: number,
+  ) => MockReply,
+  options: WorkosClientOptions = { retry: Retry.disabled },
 ) => {
   const requests: Array<HttpClientRequest.HttpClientRequest> = [];
   const mock = HttpClientModule.make((request) => {
     requests.push(request);
-    const reply = handler(request);
+    const reply = handler(request, requests.length - 1);
     const payload =
       reply.body === undefined ? null : JSON.stringify(reply.body);
     return Effect.succeed(
@@ -53,7 +65,7 @@ const harness = (
       ),
     );
   });
-  const layer = layerWith({ retry: Retry.disabled }).pipe(
+  const layer = layerWith(options).pipe(
     Layer.provide(Layer.succeed(HttpClientModule.HttpClient, mock)),
     Layer.provide(
       credentialsOf({
@@ -77,6 +89,12 @@ const organizationBody = {
   created_at: "2026-01-01T00:00:00Z",
   updated_at: "2026-01-01T00:00:00Z",
 };
+
+const listPage = (id: string, after: string | null): MockReply["body"] => ({
+  object: "list",
+  data: [{ ...organizationBody, id }],
+  list_metadata: { before: null, after },
+});
 
 describe("organizations", () => {
   it("create — POSTs to /organizations with bearer auth and decodes the org", async () => {
@@ -117,34 +135,18 @@ describe("organizations", () => {
     expect(error._tag).toBe("NotFound");
   });
 
-  it("remove — treats a 200 empty body as void success", async () => {
+  it("delete — treats a 200 empty body as void success", async () => {
     const { run } = harness(() => ({ status: 200 }));
-    const result = await run(organizations.remove({ id: "org_123" }));
+    const result = await run(organizations.delete({ id: "org_123" }));
     expect(result).toBeUndefined();
   });
 
   it("list — serializes query params and follows the cursor via listItems", async () => {
     const { run, requests } = harness((request) => {
       const params = UrlParams.toRecord(request.urlParams);
-      const after = params.after;
-      if (after === undefined) {
-        return {
-          status: 200,
-          body: {
-            object: "list",
-            data: [{ ...organizationBody, id: "org_1" }],
-            list_metadata: { before: null, after: "cur_1" },
-          },
-        };
-      }
-      return {
-        status: 200,
-        body: {
-          object: "list",
-          data: [{ ...organizationBody, id: "org_2" }],
-          list_metadata: { before: null, after: null },
-        },
-      };
+      return params.after === undefined
+        ? { status: 200, body: listPage("org_1", "cur_1") }
+        : { status: 200, body: listPage("org_2", null) };
     });
     const all = await run(
       Stream.runCollect(organizations.listItems({ limit: 1 })),
@@ -156,6 +158,47 @@ describe("organizations", () => {
       limit: "1",
       after: "cur_1",
     });
+  });
+
+  it("list — a caller-supplied `before` scopes only the first request", async () => {
+    const { run, requests } = harness((_request, index) =>
+      index === 0
+        ? { status: 200, body: listPage("org_1", "cur_1") }
+        : { status: 200, body: listPage("org_2", null) },
+    );
+    await run(Stream.runCollect(organizations.listItems({ before: "cur_b" })));
+    // The walk starts from the caller's `before` window...
+    expect(UrlParams.toRecord(requests[0]!.urlParams)).toEqual({
+      before: "cur_b",
+    });
+    // ...but once the forward cursor advances, `before` is dropped rather than
+    // sending both directions at once.
+    expect(UrlParams.toRecord(requests[1]!.urlParams)).toEqual({
+      after: "cur_1",
+    });
+  });
+});
+
+describe("retry disposition", () => {
+  const flaky = (index: number): MockReply =>
+    index === 0
+      ? { status: 503, body: { message: "unavailable" } }
+      : { status: 200, body: organizationBody };
+
+  it("an idempotent GET retries a transient 503 under the default policy", async () => {
+    const { run, requests } = harness((_request, index) => flaky(index), {});
+    const org = await run(organizations.get({ id: "org_123" }));
+    expect(org.id).toBe("org_123");
+    expect(requests.length).toBe(2);
+  });
+
+  it("a mutating POST does not retry a transient 503 — only throttling", async () => {
+    const { run, requests } = harness((_request, index) => flaky(index), {});
+    const error = await run(
+      organizations.create({ name: "Acme" }).pipe(Effect.flip),
+    );
+    expect(error._tag).toBe("ServiceUnavailable");
+    expect(requests.length).toBe(1);
   });
 });
 
@@ -245,7 +288,7 @@ describe("userManagement.authenticateWithPassword", () => {
   it("falls back to UnknownWorkosError for an unmodeled code", async () => {
     const { run } = harness(() => ({
       status: 403,
-      body: { code: "radar_challenge", message: "challenge" },
+      body: { code: "passkey_progressive_enrollment", message: "challenge" },
     }));
     const error = await run(
       userManagement.authenticateWithPassword(authInput).pipe(Effect.flip),

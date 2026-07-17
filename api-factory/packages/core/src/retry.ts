@@ -128,15 +128,29 @@ export const forDispositions = (
   };
 };
 
+/** True when the operation's disposition permits retrying this error. */
+const allowedByDisposition = (
+  error: unknown,
+  disposition: RetryDisposition,
+): boolean =>
+  disposition === "transient" ? isTransient(error) : isThrottling(error);
+
 /**
- * Apply a retry policy to an effect. A no-op when the policy disables retrying.
+ * Apply a retry policy to an effect, bounded by the operation's declared
+ * disposition. The disposition says what the operation *may* retry (an
+ * idempotent read may retry any transient failure; a mutating call only
+ * explicit throttling); the policy says what the consumer *wants* retried and
+ * on what schedule. The effective predicate is the conjunction, so a permissive
+ * policy can never widen a mutating operation into transport replay. A no-op
+ * when the disposition is `"none"` or the policy disables retrying.
  */
 export const apply =
-  (policy: RetryPolicy) =>
+  (policy: RetryPolicy, disposition: RetryDisposition) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
-    policy.schedule === undefined
+    disposition === "none" || policy.schedule === undefined
       ? effect
       : Effect.retry(effect, {
-          while: policy.while,
+          while: (error) =>
+            allowedByDisposition(error, disposition) && policy.while(error),
           schedule: policy.schedule,
         });

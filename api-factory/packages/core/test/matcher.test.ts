@@ -3,11 +3,12 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import * as Headers from "effect/unstable/http/Headers";
+import type { ErrorMeta } from "../src/category.ts";
 import { makeMatchError } from "../src/client.ts";
 import {
   BadRequest,
+  type ClassifiedErrorClass,
   DEFAULT_ERRORS,
-  type ErrorClass,
   NotFound,
   RETRYABLE_STATUSES,
   STATUS_ERRORS,
@@ -21,12 +22,16 @@ class SpecialCode extends Schema.TaggedErrorClass<SpecialCode>()(
     message: Schema.String,
     code: Schema.String,
   },
-) {}
+) {
+  static readonly meta: ErrorMeta = { category: "unknown", retry: "none" };
+}
 
 class UnknownTestError extends Schema.TaggedErrorClass<UnknownTestError>()(
   "UnknownTestError",
   { status: Schema.optional(Schema.Number), message: Schema.String },
-) {}
+) {
+  static readonly meta: ErrorMeta = { category: "unknown", retry: "none" };
+}
 
 type Extra = InstanceType<(typeof DEFAULT_ERRORS)[number]> | UnknownTestError;
 
@@ -40,7 +45,10 @@ const matchError = makeMatchError<Extra>({
     };
   },
   statusErrors: STATUS_ERRORS,
-  codeErrors: { special_code: SpecialCode } as Record<string, ErrorClass>,
+  codeErrors: { special_code: SpecialCode } as Record<
+    string,
+    ClassifiedErrorClass
+  >,
   universalErrors: DEFAULT_ERRORS,
   retryableStatuses: RETRYABLE_STATUSES,
   retryAfterFor: (status, headers) =>
@@ -49,7 +57,7 @@ const matchError = makeMatchError<Extra>({
     new UnknownTestError({ status, message: envelope.message }),
 });
 
-const failWith = <EC extends readonly ErrorClass[]>(
+const failWith = <EC extends readonly ClassifiedErrorClass[]>(
   status: number,
   body: unknown,
   operationErrors: EC,

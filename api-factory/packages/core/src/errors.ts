@@ -170,6 +170,15 @@ export type ErrorClass = new (
   ...args: any[]
 ) => { readonly _tag: string; readonly message: string };
 
+/**
+ * An {@link ErrorClass} that also carries its static {@link ErrorMeta}
+ * classification. Every matcher table and operation error tuple requires this
+ * bound, so an error class missing its `meta` fails `tsc` at the table that
+ * would construct it — a missing classification can never silently degrade to
+ * "unclassified" at runtime.
+ */
+export type ClassifiedErrorClass = ErrorClass & { readonly meta: ErrorMeta };
+
 /** HTTP status → shared error class. */
 export const STATUS_ERRORS = {
   400: BadRequest,
@@ -184,7 +193,7 @@ export const STATUS_ERRORS = {
   502: BadGateway,
   503: ServiceUnavailable,
   504: GatewayTimeout,
-} as const satisfies Record<number, ErrorClass>;
+} as const satisfies Record<number, ClassifiedErrorClass>;
 
 /**
  * Statuses whose error class declares a `retryAfter` field. The matcher only
@@ -207,7 +216,7 @@ export const DEFAULT_ERRORS = [
   BadGateway,
   ServiceUnavailable,
   GatewayTimeout,
-] as const satisfies readonly ErrorClass[];
+] as const satisfies readonly ClassifiedErrorClass[];
 
 /** Instance union of {@link DEFAULT_ERRORS}. */
 export type DefaultError = InstanceType<(typeof DEFAULT_ERRORS)[number]>;

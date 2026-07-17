@@ -17,7 +17,7 @@ describe("organizations (live)", () => {
             .get({ id: org.id })
             .pipe(
               Effect.ensuring(
-                organizations.remove({ id: org.id }).pipe(Effect.ignore),
+                organizations.delete({ id: org.id }).pipe(Effect.ignore),
               ),
             );
           return { org, fetched };

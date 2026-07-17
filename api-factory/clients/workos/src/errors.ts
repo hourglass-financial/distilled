@@ -13,7 +13,7 @@
  */
 import {
   type Category,
-  type ErrorClass,
+  type ClassifiedErrorClass,
   DEFAULT_ERRORS as CORE_DEFAULT_ERRORS,
   STATUS_ERRORS as CORE_STATUS_ERRORS,
 } from "@hourglass-financial/api-factory-core";
@@ -37,13 +37,13 @@ export {
   UnprocessableEntity,
 } from "@hourglass-financial/api-factory-core";
 
-type ErrorMeta = {
-  readonly category: Category.Category;
-  readonly retry: "none";
-};
-
 // ---------------------------------------------------------------------------
 // Code-discriminated authentication errors (POST /user_management/authenticate)
+//
+// The spec's 400/403 tables for this endpoint enumerate ~35 discriminator
+// codes across every grant type; this fragment models the password-grant
+// subset. The full generator emits one class per documented code, in this
+// exact per-class shape.
 // ---------------------------------------------------------------------------
 
 /** 400 `invalid_credentials` — the email/password pair was rejected. */
@@ -51,7 +51,10 @@ export class InvalidCredentials extends Schema.TaggedErrorClass<InvalidCredentia
   "InvalidCredentials",
   { message: Schema.String, code: Schema.Literal("invalid_credentials") },
 ) {
-  static readonly meta: ErrorMeta = { category: "auth", retry: "none" };
+  static readonly meta: Category.ErrorMeta = {
+    category: "auth",
+    retry: "none",
+  };
 }
 
 /** 400 `invalid_grant` — the grant (e.g. credentials or token) is invalid. */
@@ -59,7 +62,21 @@ export class InvalidGrant extends Schema.TaggedErrorClass<InvalidGrant>()(
   "InvalidGrant",
   { message: Schema.String, code: Schema.Literal("invalid_grant") },
 ) {
-  static readonly meta: ErrorMeta = { category: "auth", retry: "none" };
+  static readonly meta: Category.ErrorMeta = {
+    category: "auth",
+    retry: "none",
+  };
+}
+
+/** 400 `invalid_client` — the `client_id` is unknown or malformed. */
+export class InvalidClient extends Schema.TaggedErrorClass<InvalidClient>()(
+  "InvalidClient",
+  { message: Schema.String, code: Schema.Literal("invalid_client") },
+) {
+  static readonly meta: Category.ErrorMeta = {
+    category: "auth",
+    retry: "none",
+  };
 }
 
 /** 403 `email_verification_required` — the user must verify their email first. */
@@ -70,7 +87,24 @@ export class EmailVerificationRequired extends Schema.TaggedErrorClass<EmailVeri
     code: Schema.Literal("email_verification_required"),
   },
 ) {
-  static readonly meta: ErrorMeta = { category: "challenge", retry: "none" };
+  static readonly meta: Category.ErrorMeta = {
+    category: "challenge",
+    retry: "none",
+  };
+}
+
+/** 403 `email_password_auth_disabled` — password auth is off for this environment. */
+export class EmailPasswordAuthDisabled extends Schema.TaggedErrorClass<EmailPasswordAuthDisabled>()(
+  "EmailPasswordAuthDisabled",
+  {
+    message: Schema.String,
+    code: Schema.Literal("email_password_auth_disabled"),
+  },
+) {
+  static readonly meta: Category.ErrorMeta = {
+    category: "auth",
+    retry: "none",
+  };
 }
 
 /** 403 `mfa_enrollment` — the user must enroll in MFA before continuing. */
@@ -78,7 +112,21 @@ export class MfaEnrollment extends Schema.TaggedErrorClass<MfaEnrollment>()(
   "MfaEnrollment",
   { message: Schema.String, code: Schema.Literal("mfa_enrollment") },
 ) {
-  static readonly meta: ErrorMeta = { category: "challenge", retry: "none" };
+  static readonly meta: Category.ErrorMeta = {
+    category: "challenge",
+    retry: "none",
+  };
+}
+
+/** 403 `mfa_challenge` — the user must complete an MFA challenge to continue. */
+export class MfaChallenge extends Schema.TaggedErrorClass<MfaChallenge>()(
+  "MfaChallenge",
+  { message: Schema.String, code: Schema.Literal("mfa_challenge") },
+) {
+  static readonly meta: Category.ErrorMeta = {
+    category: "challenge",
+    retry: "none",
+  };
 }
 
 /** 403 `organization_selection_required` — the user must pick an organization. */
@@ -89,7 +137,21 @@ export class OrganizationSelectionRequired extends Schema.TaggedErrorClass<Organ
     code: Schema.Literal("organization_selection_required"),
   },
 ) {
-  static readonly meta: ErrorMeta = { category: "challenge", retry: "none" };
+  static readonly meta: Category.ErrorMeta = {
+    category: "challenge",
+    retry: "none",
+  };
+}
+
+/** 403 `radar_challenge` — WorkOS Radar requires a bot-detection challenge. */
+export class RadarChallenge extends Schema.TaggedErrorClass<RadarChallenge>()(
+  "RadarChallenge",
+  { message: Schema.String, code: Schema.Literal("radar_challenge") },
+) {
+  static readonly meta: Category.ErrorMeta = {
+    category: "challenge",
+    retry: "none",
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -110,7 +172,10 @@ export class UnknownWorkosError extends Schema.TaggedErrorClass<UnknownWorkosErr
     body: Schema.Unknown,
   },
 ) {
-  static readonly meta = { category: "unknown", retry: "none" } as const;
+  static readonly meta: Category.ErrorMeta = {
+    category: "unknown",
+    retry: "none",
+  };
 }
 
 /** A wire-level transport failure (DNS, connect/read timeout, socket reset). */
@@ -118,7 +183,10 @@ export class WorkosTransportError extends Schema.TaggedErrorClass<WorkosTranspor
   "WorkosTransportError",
   { message: Schema.String, cause: Schema.Unknown },
 ) {
-  static readonly meta = { category: "transport", retry: "transient" } as const;
+  static readonly meta: Category.ErrorMeta = {
+    category: "transport",
+    retry: "transient",
+  };
 }
 
 /** A response body (or request input) that did not match its schema. */
@@ -126,7 +194,10 @@ export class WorkosDecodeError extends Schema.TaggedErrorClass<WorkosDecodeError
   "WorkosDecodeError",
   { message: Schema.String, body: Schema.Unknown, cause: Schema.Unknown },
 ) {
-  static readonly meta = { category: "parse", retry: "none" } as const;
+  static readonly meta: Category.ErrorMeta = {
+    category: "parse",
+    retry: "none",
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -138,12 +209,16 @@ export const STATUS_ERRORS = CORE_STATUS_ERRORS;
 
 /** WorkOS discriminator code → typed error class. */
 export const CODE_ERRORS = {
+  email_password_auth_disabled: EmailPasswordAuthDisabled,
+  email_verification_required: EmailVerificationRequired,
+  invalid_client: InvalidClient,
   invalid_credentials: InvalidCredentials,
   invalid_grant: InvalidGrant,
-  email_verification_required: EmailVerificationRequired,
+  mfa_challenge: MfaChallenge,
   mfa_enrollment: MfaEnrollment,
   organization_selection_required: OrganizationSelectionRequired,
-} as const satisfies Record<string, ErrorClass>;
+  radar_challenge: RadarChallenge,
+} as const satisfies Record<string, ClassifiedErrorClass>;
 
 /** Errors that can arise on any WorkOS operation (401/429/5xx). */
 export const DEFAULT_ERRORS = CORE_DEFAULT_ERRORS;

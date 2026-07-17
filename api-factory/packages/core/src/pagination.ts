@@ -23,17 +23,31 @@ import * as Stream from "effect/Stream";
 export interface CursorPagination<I, Page, Item> {
   /** Input field that carries the forward cursor (WorkOS: `"after"`). */
   readonly cursorParam: keyof I & string;
+  /**
+   * Input fields to drop once the walk advances past the first page — the
+   * opposing-direction cursor (WorkOS: `["before"]`). A caller-supplied
+   * `before` scopes the *first* request; carrying it into subsequent requests
+   * alongside the forward cursor would send both directions at once.
+   */
+  readonly clear?: ReadonlyArray<keyof I & string>;
   /** The next-page cursor, or null/undefined at the end of the list. */
   readonly nextCursor: (page: Page) => string | null | undefined;
   /** The items contained in a page. */
   readonly items: (page: Page) => ReadonlyArray<Item>;
 }
 
-const withCursor = <I>(
+const withCursor = <I, Page, Item>(
   input: I,
-  cursorParam: keyof I & string,
+  config: CursorPagination<I, Page, Item>,
   cursor: string,
-): I => ({ ...input, [cursorParam]: cursor });
+): I => {
+  const next: Record<string, unknown> = {
+    ...(input as Record<string, unknown>),
+    [config.cursorParam]: cursor,
+  };
+  for (const param of config.clear ?? []) delete next[param];
+  return next as I;
+};
 
 const step =
   <I, Page, Item, E, R, T>(
@@ -51,9 +65,7 @@ const step =
   > =>
     Effect.map(
       fetchPage(
-        Option.isSome(cursor)
-          ? withCursor(input, config.cursorParam, cursor.value)
-          : input,
+        Option.isSome(cursor) ? withCursor(input, config, cursor.value) : input,
       ),
       (page) => {
         const next = config.nextCursor(page);
