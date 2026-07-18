@@ -10,13 +10,20 @@ lockfile, catalog, tsconfig base, and lint/format config. Packages publish
 
 ```
 api-factory/
-├── packages/            # factory machinery (hand-written)
+├── packages/            # factory machinery (hand-written; agent-writable)
 │   ├── core/            # @hourglass-financial/api-factory-core — shared runtime
 │   ├── codegen/         # @hourglass-financial/api-factory-codegen — codegen engine
 │   └── harness/         # @hourglass-financial/api-factory-harness — test harness
-└── clients/             # factory outputs (generated; hand-edits forbidden —
-    └── workos/          #   enforcement mechanism is a separate upcoming decision)
+├── clients/             # factory outputs (machine-owned; hand edits fail the regen gate)
+│   └── workos/
+└── vendors/             # per-vendor spec snapshot + patches + config + tests
+    └── workos/
 ```
+
+Ownership classes, the layer model, and the sanctioned fix paths are defined
+in [AGENTS.md](./AGENTS.md); vocabulary in [CONTEXT.md](./CONTEXT.md);
+decision records in [docs/adr/](./docs/adr/README.md) and (for the exemplar)
+[DECISIONS.md](./DECISIONS.md).
 
 ## Gates
 
