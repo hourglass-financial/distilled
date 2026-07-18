@@ -10,13 +10,23 @@
  * is the JSON body. No AST introspection, no casts — a deterministic emitter
  * writes this, and `tsc` checks every field name against the input type.
  */
-import * as Schema from "effect/Schema";
+import type * as Schema from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import type { RetryDisposition } from "./category.ts";
 import type { ClassifiedErrorClass } from "./errors.ts";
 
 /** HTTP methods a generated operation can use. */
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD";
+
+/**
+ * Bound for operation input schemas: encodable without services, so the
+ * runner's requirement channel stays `never`. A service-bearing schema is a
+ * compile error at the descriptor, not a silent requirement leak.
+ */
+export type InputSchema = Schema.Top & { readonly EncodingServices: never };
+
+/** Bound for operation output schemas: decodable without services. */
+export type OutputSchema = Schema.Top & { readonly DecodingServices: never };
 
 /**
  * A single API operation.
@@ -26,8 +36,8 @@ export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD";
  * @typeParam EC - the operation's declared typed errors (a `const` tuple).
  */
 export interface Operation<
-  IS extends Schema.Top,
-  OS extends Schema.Top,
+  IS extends InputSchema,
+  OS extends OutputSchema,
   EC extends readonly ClassifiedErrorClass[],
 > {
   /** Clean, public dotted id, e.g. `"organizations.create"`. Used as span name. */

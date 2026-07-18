@@ -45,8 +45,8 @@ describe("matcher tables", () => {
       Object.entries(CODE_ERRORS);
     for (const [code, Cls] of table) {
       const instance = new Cls({ message: "boom", code });
-      const shaped = instance as unknown as {
-        readonly code: string;
+      const shaped = instance as {
+        readonly code?: string;
         readonly message: string;
       };
       expect(shaped.code, code).toBe(code);

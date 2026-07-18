@@ -10,7 +10,7 @@
  * lives behind this small surface.
  */
 
-// Base HTTP-status errors, maps, and the `ErrorClass` bound.
+// Base HTTP-status errors, matcher tables, and the `ClassifiedErrorClass` bound.
 export * from "./errors.ts";
 
 // Error classification (categories + retry disposition), carried on every
@@ -36,10 +36,13 @@ export * as Pagination from "./pagination.ts";
 // Operation descriptor + request planning.
 export {
   type HttpMethod,
+  type InputSchema,
   isVoidOutput,
   type Operation,
+  type OutputSchema,
   planRequest,
   type RequestPlan,
+  type RequestSpec,
 } from "./operation.ts";
 
 // Request execution + error matching.

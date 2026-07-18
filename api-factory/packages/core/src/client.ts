@@ -24,7 +24,13 @@ import * as HttpClientError from "effect/unstable/http/HttpClientError";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import type * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import type { ClassifiedErrorClass } from "./errors.ts";
-import { isVoidOutput, planRequest, type Operation } from "./operation.ts";
+import {
+  type InputSchema,
+  isVoidOutput,
+  type Operation,
+  type OutputSchema,
+  planRequest,
+} from "./operation.ts";
 import { apply, type RetryPolicy } from "./retry.ts";
 
 // ---------------------------------------------------------------------------
@@ -199,8 +205,8 @@ export interface RunnerDeps<Extra> {
  * error union.
  */
 export type Runner<Extra> = <
-  IS extends Schema.Top & { readonly EncodingServices: never },
-  OS extends Schema.Top & { readonly DecodingServices: never },
+  IS extends InputSchema,
+  OS extends OutputSchema,
   EC extends readonly ClassifiedErrorClass[],
 >(
   op: Operation<IS, OS, EC>,

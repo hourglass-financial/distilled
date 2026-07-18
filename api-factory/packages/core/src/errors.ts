@@ -8,17 +8,8 @@
  * Vendors re-export these and add their own code-discriminated errors; the
  * shared classes cover the status codes every REST API can return.
  */
-import * as Duration from "effect/Duration";
 import * as Schema from "effect/Schema";
 import { type Classified, Meta, MetaKey } from "./category.ts";
-
-/**
- * Opaque schema for an Effect `Duration`. Retryable errors carry a
- * server-provided wait hint here (parsed from `Retry-After` at runtime); it is
- * never decoded from the wire, so a `declare` guard is all that's needed.
- */
-export const DurationFromSelf: Schema.declare<Duration.Duration> =
-  Schema.declare(Duration.isDuration);
 
 // ---------------------------------------------------------------------------
 // 4xx — client errors (not retryable)
@@ -77,7 +68,7 @@ export class UnprocessableEntity extends Schema.TaggedErrorClass<UnprocessableEn
 /** 423 — the resource is temporarily locked; retry after a short delay. */
 export class Locked extends Schema.TaggedErrorClass<Locked>()("Locked", {
   message: Schema.String,
-  retryAfter: Schema.optional(DurationFromSelf),
+  retryAfter: Schema.optional(Schema.Duration),
 }) {
   readonly [MetaKey] = Meta.locked;
 }
@@ -87,7 +78,7 @@ export class TooManyRequests extends Schema.TaggedErrorClass<TooManyRequests>()(
   "TooManyRequests",
   {
     message: Schema.String,
-    retryAfter: Schema.optional(DurationFromSelf),
+    retryAfter: Schema.optional(Schema.Duration),
   },
 ) {
   readonly [MetaKey] = Meta.throttling;
@@ -98,7 +89,7 @@ export class InternalServerError extends Schema.TaggedErrorClass<InternalServerE
   "InternalServerError",
   {
     message: Schema.String,
-    retryAfter: Schema.optional(DurationFromSelf),
+    retryAfter: Schema.optional(Schema.Duration),
   },
 ) {
   readonly [MetaKey] = Meta.server;
@@ -109,7 +100,7 @@ export class BadGateway extends Schema.TaggedErrorClass<BadGateway>()(
   "BadGateway",
   {
     message: Schema.String,
-    retryAfter: Schema.optional(DurationFromSelf),
+    retryAfter: Schema.optional(Schema.Duration),
   },
 ) {
   readonly [MetaKey] = Meta.server;
@@ -120,7 +111,7 @@ export class ServiceUnavailable extends Schema.TaggedErrorClass<ServiceUnavailab
   "ServiceUnavailable",
   {
     message: Schema.String,
-    retryAfter: Schema.optional(DurationFromSelf),
+    retryAfter: Schema.optional(Schema.Duration),
   },
 ) {
   readonly [MetaKey] = Meta.server;
@@ -131,7 +122,7 @@ export class GatewayTimeout extends Schema.TaggedErrorClass<GatewayTimeout>()(
   "GatewayTimeout",
   {
     message: Schema.String,
-    retryAfter: Schema.optional(DurationFromSelf),
+    retryAfter: Schema.optional(Schema.Duration),
   },
 ) {
   readonly [MetaKey] = Meta.server;
@@ -154,22 +145,14 @@ export class ConfigError extends Schema.TaggedErrorClass<ConfigError>()(
 // ---------------------------------------------------------------------------
 
 /**
- * Any error class with a `_tag` — the shape stored in operation error tuples
- * and the status/code matcher maps. The `any[]` constructor is the standard
- * "some error class" bound; concrete `errors` tuples keep the public unions
- * precise via `InstanceType<EC[number]>`.
- */
-export type ErrorClass = new (
-  // oxlint-disable-next-line no-explicit-any
-  ...args: any[]
-) => { readonly _tag: string; readonly message: string };
-
-/**
- * An {@link ErrorClass} whose instances carry their classification (the
- * `Classified` brand). Every matcher table and operation error tuple requires
- * this bound, so an error class missing its `readonly [MetaKey]` field fails
- * `tsc` at the table that would construct it — a missing classification can
- * never silently degrade to "unclassified" at runtime.
+ * The shape stored in operation error tuples and the status/code matcher
+ * maps: a tagged error class whose instances carry their classification (the
+ * `Classified` brand). The `any[]` constructor is the standard "some error
+ * class" bound — concrete `errors` tuples keep the public unions precise via
+ * `InstanceType<EC[number]>` — and requiring the brand here means a class
+ * missing its `readonly [MetaKey]` field fails `tsc` at the table that would
+ * construct it: a missing classification can never silently degrade to
+ * "unclassified" at runtime.
  */
 export type ClassifiedErrorClass = new (
   // oxlint-disable-next-line no-explicit-any

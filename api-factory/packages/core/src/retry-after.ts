@@ -29,8 +29,8 @@ export const parseRetryAfter = (
   const now = options.now ?? Date.now();
 
   const raw =
-    headerValue(headers, "retry-after") ??
-    headerValue(headers, "ratelimit-reset");
+    headerValue(headers, "Retry-After") ??
+    headerValue(headers, "RateLimit-Reset");
   if (raw === undefined) return undefined;
 
   const trimmed = raw.trim();

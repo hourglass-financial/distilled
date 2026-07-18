@@ -13,10 +13,10 @@
  */
 import {
   NotFound,
+  type Operation,
   Secret,
   UnprocessableEntity,
 } from "@hourglass-financial/api-factory-core";
-import { type Operation } from "@hourglass-financial/api-factory-core";
 import type * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import { run, type WorkosClient, type WorkosError } from "../client.ts";
@@ -52,11 +52,11 @@ export interface AuthenticateWithPasswordInput extends Schema.Schema.Type<
 > {}
 
 const authenticateErrors = [
+  EmailPasswordAuthDisabled,
+  EmailVerificationRequired,
   InvalidClient,
   InvalidCredentials,
   InvalidGrant,
-  EmailPasswordAuthDisabled,
-  EmailVerificationRequired,
   MfaChallenge,
   MfaEnrollment,
   OrganizationSelectionRequired,

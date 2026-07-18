@@ -19,6 +19,7 @@ import {
   retryAfterOf,
   type RetryDisposition,
 } from "./category.ts";
+import { MAX_HINT } from "./retry-after.ts";
 
 /**
  * A retry policy: which errors to retry (`while`) and the schedule that spaces
@@ -39,7 +40,7 @@ export interface BackoffOptions {
   readonly maxRetries?: number;
   /**
    * Upper bound on an honored server `Retry-After` hint. A misbehaving server
-   * could otherwise park a fiber indefinitely. Default 60s.
+   * could otherwise park a fiber indefinitely. Default `MAX_HINT` (60s).
    */
   readonly maxHint?: Duration.Input;
   /**
@@ -72,9 +73,7 @@ const resolveDelay = (
 export const backoffSchedule = (
   options: BackoffOptions = {},
 ): Schedule.Schedule<unknown> => {
-  const maxHint = Duration.fromInputUnsafe(
-    options.maxHint ?? Duration.seconds(60),
-  );
+  const maxHint = Duration.fromInputUnsafe(options.maxHint ?? MAX_HINT);
   const throttleFloor = Duration.fromInputUnsafe(
     options.throttleFloor ?? Duration.millis(500),
   );

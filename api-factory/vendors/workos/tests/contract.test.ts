@@ -49,13 +49,14 @@ const harness = (
   handler: (
     request: HttpClientRequest.HttpClientRequest,
     index: number,
-  ) => MockReply,
+  ) => MockReply | HttpClientError.HttpClientError,
   options: WorkosClientOptions = { retry: Retry.disabled },
 ) => {
   const requests: Array<HttpClientRequest.HttpClientRequest> = [];
   const mock = HttpClientModule.make((request) => {
     requests.push(request);
     const reply = handler(request, requests.length - 1);
+    if (HttpClientError.isHttpClientError(reply)) return Effect.fail(reply);
     const payload =
       reply.body === undefined ? null : JSON.stringify(reply.body);
     return Effect.succeed(
@@ -360,29 +361,17 @@ describe("userManagement.authenticateWithPassword", () => {
   });
 
   it("a transport failure carries no secrets in its error chain", async () => {
-    const failing = HttpClientModule.make((request) =>
-      Effect.fail(
+    const { run } = harness(
+      (request) =>
         new HttpClientError.HttpClientError({
           reason: new HttpClientError.TransportError({
             request,
             description: "socket reset",
           }),
         }),
-      ),
     );
-    const layer = layerWith({ retry: Retry.disabled }).pipe(
-      Layer.provide(Layer.succeed(HttpClientModule.HttpClient, failing)),
-      Layer.provide(
-        credentialsOf({
-          apiKey: Redacted.make("sk_test_123"),
-          baseUrl: "https://api.workos.test",
-        }),
-      ),
-    );
-    const error = await Effect.runPromise(
-      userManagement
-        .authenticateWithPassword(authInput)
-        .pipe(Effect.flip, Effect.provide(layer)),
+    const error = await run(
+      userManagement.authenticateWithPassword(authInput).pipe(Effect.flip),
     );
     expect(error._tag).toBe("WorkosTransportError");
     const transportError = error as WorkosTransportError;
@@ -390,6 +379,7 @@ describe("userManagement.authenticateWithPassword", () => {
     expect(transportError.cause).toMatchObject({
       reason: "TransportError",
       method: "POST",
+      description: "socket reset",
     });
     const printed = JSON.stringify(transportError);
     expect(printed).not.toContain("s3cret-password");

@@ -45,8 +45,39 @@ export {
 // The spec's 400/403 tables for this endpoint enumerate ~35 discriminator
 // codes across every grant type; this fragment models the password-grant
 // subset. The full generator emits one class per documented code, in this
-// exact per-class shape.
+// exact per-class shape, ordered alphabetically by discriminator code — the
+// same order as CODE_ERRORS and every declared-errors tuple.
 // ---------------------------------------------------------------------------
+
+/** 403 `email_password_auth_disabled` — password auth is off for this environment. */
+export class EmailPasswordAuthDisabled extends Schema.TaggedErrorClass<EmailPasswordAuthDisabled>()(
+  "EmailPasswordAuthDisabled",
+  {
+    message: Schema.String,
+    code: Schema.Literal("email_password_auth_disabled"),
+  },
+) {
+  readonly [MetaKey] = Meta.auth;
+}
+
+/** 403 `email_verification_required` — the user must verify their email first. */
+export class EmailVerificationRequired extends Schema.TaggedErrorClass<EmailVerificationRequired>()(
+  "EmailVerificationRequired",
+  {
+    message: Schema.String,
+    code: Schema.Literal("email_verification_required"),
+  },
+) {
+  readonly [MetaKey] = Meta.challenge;
+}
+
+/** 400 `invalid_client` — the `client_id` is unknown or malformed. */
+export class InvalidClient extends Schema.TaggedErrorClass<InvalidClient>()(
+  "InvalidClient",
+  { message: Schema.String, code: Schema.Literal("invalid_client") },
+) {
+  readonly [MetaKey] = Meta.auth;
+}
 
 /** 400 `invalid_credentials` — the email/password pair was rejected. */
 export class InvalidCredentials extends Schema.TaggedErrorClass<InvalidCredentials>()(
@@ -64,48 +95,18 @@ export class InvalidGrant extends Schema.TaggedErrorClass<InvalidGrant>()(
   readonly [MetaKey] = Meta.auth;
 }
 
-/** 400 `invalid_client` — the `client_id` is unknown or malformed. */
-export class InvalidClient extends Schema.TaggedErrorClass<InvalidClient>()(
-  "InvalidClient",
-  { message: Schema.String, code: Schema.Literal("invalid_client") },
-) {
-  readonly [MetaKey] = Meta.auth;
-}
-
-/** 403 `email_verification_required` — the user must verify their email first. */
-export class EmailVerificationRequired extends Schema.TaggedErrorClass<EmailVerificationRequired>()(
-  "EmailVerificationRequired",
-  {
-    message: Schema.String,
-    code: Schema.Literal("email_verification_required"),
-  },
+/** 403 `mfa_challenge` — the user must complete an MFA challenge to continue. */
+export class MfaChallenge extends Schema.TaggedErrorClass<MfaChallenge>()(
+  "MfaChallenge",
+  { message: Schema.String, code: Schema.Literal("mfa_challenge") },
 ) {
   readonly [MetaKey] = Meta.challenge;
-}
-
-/** 403 `email_password_auth_disabled` — password auth is off for this environment. */
-export class EmailPasswordAuthDisabled extends Schema.TaggedErrorClass<EmailPasswordAuthDisabled>()(
-  "EmailPasswordAuthDisabled",
-  {
-    message: Schema.String,
-    code: Schema.Literal("email_password_auth_disabled"),
-  },
-) {
-  readonly [MetaKey] = Meta.auth;
 }
 
 /** 403 `mfa_enrollment` — the user must enroll in MFA before continuing. */
 export class MfaEnrollment extends Schema.TaggedErrorClass<MfaEnrollment>()(
   "MfaEnrollment",
   { message: Schema.String, code: Schema.Literal("mfa_enrollment") },
-) {
-  readonly [MetaKey] = Meta.challenge;
-}
-
-/** 403 `mfa_challenge` — the user must complete an MFA challenge to continue. */
-export class MfaChallenge extends Schema.TaggedErrorClass<MfaChallenge>()(
-  "MfaChallenge",
-  { message: Schema.String, code: Schema.Literal("mfa_challenge") },
 ) {
   readonly [MetaKey] = Meta.challenge;
 }

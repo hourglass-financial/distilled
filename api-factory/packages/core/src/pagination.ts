@@ -49,33 +49,27 @@ const withCursor = <I, Page, Item>(
   return next as I;
 };
 
+// The paginate state is simply the next request: the seed is the caller's
+// input verbatim, and each step derives the following request (or ends the
+// walk) from the page it fetched.
 const step =
   <I, Page, Item, E, R, T>(
     fetchPage: (input: I) => Effect.Effect<Page, E, R>,
-    input: I,
     config: CursorPagination<I, Page, Item>,
     project: (page: Page) => ReadonlyArray<T>,
   ) =>
   (
-    cursor: Option.Option<string>,
-  ): Effect.Effect<
-    readonly [ReadonlyArray<T>, Option.Option<Option.Option<string>>],
-    E,
-    R
-  > =>
-    Effect.map(
-      fetchPage(
-        Option.isSome(cursor) ? withCursor(input, config, cursor.value) : input,
-      ),
-      (page) => {
-        const next = config.nextCursor(page);
-        const nextState =
-          next === null || next === undefined
-            ? Option.none<Option.Option<string>>()
-            : Option.some(Option.some(next));
-        return [project(page), nextState] as const;
-      },
-    );
+    request: I,
+  ): Effect.Effect<readonly [ReadonlyArray<T>, Option.Option<I>], E, R> =>
+    Effect.map(fetchPage(request), (page) => {
+      const next = config.nextCursor(page);
+      return [
+        project(page),
+        next === null || next === undefined
+          ? Option.none<I>()
+          : Option.some(withCursor(request, config, next)),
+      ] as const;
+    });
 
 /**
  * Stream every page of a cursor-paginated list. The first request sends
@@ -89,8 +83,8 @@ export const pages = <I, Page, Item, E, R>(
   config: CursorPagination<I, Page, Item>,
 ): Stream.Stream<Page, E, R> =>
   Stream.paginate(
-    Option.none<string>(),
-    step(fetchPage, input, config, (page) => [page]),
+    input,
+    step(fetchPage, config, (page) => [page]),
   );
 
 /**
@@ -103,7 +97,4 @@ export const items = <I, Page, Item, E, R>(
   input: I,
   config: CursorPagination<I, Page, Item>,
 ): Stream.Stream<Item, E, R> =>
-  Stream.paginate(
-    Option.none<string>(),
-    step(fetchPage, input, config, config.items),
-  );
+  Stream.paginate(input, step(fetchPage, config, config.items));

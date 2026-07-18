@@ -13,9 +13,11 @@
 import {
   Category,
   type ClassifiedErrorClass,
+  type InputSchema,
   makeMatchError,
   makeRunner,
   type Operation,
+  type OutputSchema,
   RETRYABLE_STATUSES,
   retryAfterForStatus,
   Retry,
@@ -26,7 +28,6 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
-import * as Schema from "effect/Schema";
 import { HttpClient } from "effect/unstable/http/HttpClient";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import { credentialsFromEnv, Credentials } from "./config.ts";
@@ -188,18 +189,11 @@ export const layerFromEnv = layer.pipe(
 
 /** Dispatch a declared operation through the client service. */
 export const run = <
-  IS extends Schema.Top & { readonly EncodingServices: never },
-  OS extends Schema.Top & { readonly DecodingServices: never },
+  IS extends InputSchema,
+  OS extends OutputSchema,
   EC extends readonly ClassifiedErrorClass[],
 >(
   op: Operation<IS, OS, EC>,
   input: IS["Type"],
-): Effect.Effect<
-  OS["Type"],
-  InstanceType<EC[number]> | WorkosExtraError,
-  WorkosClient
-> =>
-  Effect.gen(function* () {
-    const client = yield* WorkosClient;
-    return yield* client.run(op, input);
-  });
+): Effect.Effect<OS["Type"], WorkosError<EC>, WorkosClient> =>
+  Effect.flatMap(WorkosClient, (client) => client.run(op, input));
