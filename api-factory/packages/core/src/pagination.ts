@@ -50,11 +50,14 @@ const withCursor = <I, Page, Item>(
 };
 
 // The paginate state is simply the next request: the seed is the caller's
-// input verbatim, and each step derives the following request (or ends the
-// walk) from the page it fetched.
+// input verbatim, and each step yields the following request (or ends the
+// walk). Every subsequent request is rebuilt from the caller's ORIGINAL
+// input — cursor substituted, `clear` params dropped — so pagination
+// parameters can never drift between pages, whatever `fetchPage` does.
 const step =
   <I, Page, Item, E, R, T>(
     fetchPage: (input: I) => Effect.Effect<Page, E, R>,
+    input: I,
     config: CursorPagination<I, Page, Item>,
     project: (page: Page) => ReadonlyArray<T>,
   ) =>
@@ -67,7 +70,7 @@ const step =
         project(page),
         next === null || next === undefined
           ? Option.none<I>()
-          : Option.some(withCursor(request, config, next)),
+          : Option.some(withCursor(input, config, next)),
       ] as const;
     });
 
@@ -84,7 +87,7 @@ export const pages = <I, Page, Item, E, R>(
 ): Stream.Stream<Page, E, R> =>
   Stream.paginate(
     input,
-    step(fetchPage, config, (page) => [page]),
+    step(fetchPage, input, config, (page) => [page]),
   );
 
 /**
@@ -97,4 +100,4 @@ export const items = <I, Page, Item, E, R>(
   input: I,
   config: CursorPagination<I, Page, Item>,
 ): Stream.Stream<Item, E, R> =>
-  Stream.paginate(input, step(fetchPage, config, config.items));
+  Stream.paginate(input, step(fetchPage, input, config, config.items));
