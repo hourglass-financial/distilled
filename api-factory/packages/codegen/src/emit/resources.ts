@@ -69,7 +69,7 @@ const emitOperation = (
   writer: ReturnType<typeof createWriter>,
   operation: OperationIr,
   prefix: string,
-): void => {
+): string => {
   writer
     .writeLine(
       operationSection(
@@ -219,6 +219,7 @@ const emitOperation = (
       ),
     );
   }
+  return qualified(operation);
 };
 
 export const emitResource = (
@@ -275,12 +276,13 @@ export const emitResource = (
     ),
   );
   writer.writeLine(imports.render());
+  const dispatchOps: string[] = [];
   for (const operation of resource.operations) {
     writer.blankLine();
-    emitOperation(writer, operation, ir.vendor.prefix);
+    dispatchOps.push(emitOperation(writer, operation, ir.vendor.prefix));
   }
   return emitted(`src/resources/${resource.fileName}`, finishWriter(writer), {
-    dispatchOps: resource.operations.map(qualified),
+    dispatchOps,
   });
 };
 

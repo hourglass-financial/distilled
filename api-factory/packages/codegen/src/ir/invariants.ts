@@ -1,10 +1,12 @@
 import { CodegenError, type CodegenViolation } from "../errors.ts";
+import { reservedEmitterBindings } from "../emit/reserved.ts";
 import type {
   ClientIr,
   CodeErrorIr,
   NamedSchemaIr,
   OperationIr,
 } from "./model.ts";
+import { coreReexportNames } from "./model.ts";
 import type { SchemaNode } from "./nodes.ts";
 
 const identifierPattern =
@@ -135,6 +137,58 @@ const checkDocs = (
   }
 };
 
+const checkSingleLine = (
+  value: string,
+  construct: string,
+  violations: CodegenViolation[],
+): void => {
+  if (/\r|\n/u.test(value)) {
+    add(
+      violations,
+      "comment.single-line",
+      construct,
+      "single-line comment content contains a raw newline",
+    );
+  }
+};
+
+const checkEmitterReserved = (
+  value: string,
+  construct: string,
+  reservedBindings: ReadonlySet<string>,
+  violations: CodegenViolation[],
+): void => {
+  if (reservedBindings.has(value)) {
+    add(
+      violations,
+      "identifier.emitter-reserved",
+      construct,
+      `${JSON.stringify(value)} collides with reserved emitter binding ${JSON.stringify(value)}`,
+    );
+  }
+};
+
+const isStringRecordKey = (node: SchemaNode): boolean => {
+  switch (node.kind) {
+    case "string":
+      return true;
+    case "literal":
+      return typeof node.value === "string";
+    case "literals":
+      return node.values.every((value) => typeof value === "string");
+    case "array":
+    case "struct":
+    case "record":
+    case "union":
+    case "secret":
+    case "void":
+    case "named-ref":
+    case "boolean":
+    case "number":
+      return false;
+  }
+};
+
 const nodeKey = (node: SchemaNode): string => JSON.stringify(node);
 
 const visitNode = (
@@ -168,6 +222,14 @@ const visitNode = (
       return;
     }
     case "record":
+      if (!isStringRecordKey(node.key)) {
+        add(
+          violations,
+          "record.key-kind",
+          `${construct} key`,
+          `record key must be string-kind, received ${JSON.stringify(node.key.kind)}`,
+        );
+      }
       visitNode(node.key, `${construct} key`, violations, onRef);
       visitNode(node.value, `${construct} value`, violations, onRef);
       return;
@@ -275,6 +337,12 @@ const checkOperation = (
   );
   checkDocs(operation.docs, `${construct} docs`, violations);
   checkDocs(operation.errorsDocs, `${construct} errorsDocs`, violations);
+  checkDocs(operation.pathTemplate, `${construct} pathTemplate`, violations);
+  checkSingleLine(
+    operation.pathTemplate,
+    `${construct} pathTemplate`,
+    violations,
+  );
 
   if (operation.publicName.resource !== resourceName) {
     add(
@@ -323,6 +391,32 @@ const checkOperation = (
   }
 
   const inputNames = new Set(operation.input.fields.map((entry) => entry.name));
+  const placeholders = [
+    ...operation.pathTemplate.matchAll(/\{([^{}]+)\}/gu),
+  ].map((match) => match[1]!);
+  const placeholderNames = new Set<string>();
+  for (const placeholder of placeholders) {
+    if (placeholderNames.has(placeholder)) {
+      add(
+        violations,
+        "operation.path-placeholder.duplicate",
+        `${construct} pathTemplate placeholder ${placeholder}`,
+        `path placeholder ${JSON.stringify(placeholder)} occurs more than once`,
+      );
+    }
+    placeholderNames.add(placeholder);
+  }
+  const pathParamNames = new Set(operation.pathParams);
+  for (const placeholder of placeholderNames) {
+    if (!pathParamNames.has(placeholder)) {
+      add(
+        violations,
+        "operation.path-placeholder.missing-param",
+        `${construct} pathTemplate placeholder ${placeholder}`,
+        `path placeholder ${JSON.stringify(placeholder)} is absent from pathParams`,
+      );
+    }
+  }
   for (const name of operation.pathParams) {
     if (!inputNames.has(name)) {
       add(
@@ -330,6 +424,14 @@ const checkOperation = (
         "operation.path-param",
         `${construct} pathParams.${name}`,
         "path parameter does not name an input field",
+      );
+    }
+    if (!placeholderNames.has(name)) {
+      add(
+        violations,
+        "operation.path-param.missing-placeholder",
+        `${construct} pathParams.${name}`,
+        `path parameter ${JSON.stringify(name)} has no pathTemplate placeholder`,
       );
     }
   }
@@ -448,26 +550,44 @@ const checkOperation = (
       "items path must name at least one field",
     );
   }
-  if (
-    resolvePath(pagination.pageSchema, pagination.nextCursorPath, schemas) ===
-    undefined
-  ) {
+  const nextCursorNode = resolvePath(
+    pagination.pageSchema,
+    pagination.nextCursorPath,
+    schemas,
+  );
+  if (nextCursorNode === undefined) {
     add(
       violations,
       "pagination.next-cursor-path",
       paginationConstruct,
       `next cursor path ${pagination.nextCursorPath.join(".")} does not resolve`,
     );
+  } else if (nextCursorNode.kind !== "string") {
+    add(
+      violations,
+      "pagination.next-cursor-kind",
+      `${paginationConstruct} nextCursorPath ${pagination.nextCursorPath.join(".")}`,
+      `next cursor path ${pagination.nextCursorPath.join(".")} has actual kind ${JSON.stringify(nextCursorNode.kind)}; expected "string"`,
+    );
   }
-  if (
-    resolvePath(pagination.pageSchema, pagination.itemsPath, schemas) ===
-    undefined
-  ) {
+  const itemsNode = resolvePath(
+    pagination.pageSchema,
+    pagination.itemsPath,
+    schemas,
+  );
+  if (itemsNode === undefined) {
     add(
       violations,
       "pagination.items-path",
       paginationConstruct,
       `items path ${pagination.itemsPath.join(".")} does not resolve`,
+    );
+  } else if (itemsNode.kind !== "array") {
+    add(
+      violations,
+      "pagination.items-kind",
+      `${paginationConstruct} itemsPath ${pagination.itemsPath.join(".")}`,
+      `items path ${pagination.itemsPath.join(".")} has actual kind ${JSON.stringify(itemsNode.kind)}; expected "array"`,
     );
   }
 };
@@ -518,7 +638,12 @@ const checkResourceOrderAgreement = (
 
 export const checkInvariants = (ir: ClientIr): void => {
   const violations: CodegenViolation[] = [];
+  const reservedBindings = reservedEmitterBindings(ir.vendor.prefix);
   checkIdentifier(ir.vendor.prefix, "vendor prefix", violations);
+  checkDocs(ir.vendor.display, "vendor display", violations);
+  checkDocs(ir.packageName, "packageName", violations);
+  checkDocs(ir.envVars.apiKey, "envVars.apiKey", violations);
+  checkDocs(ir.envVars.baseUrl, "envVars.baseUrl", violations);
   checkUnique(
     ir.resources,
     (resource) => resource.name,
@@ -565,6 +690,11 @@ export const checkInvariants = (ir: ClientIr): void => {
     "code errors section title",
     violations,
   );
+  checkSingleLine(
+    ir.errors.codeErrorsSectionTitle,
+    "code errors section title",
+    violations,
+  );
   checkDocs(ir.errors.codeErrorsDocs, "code errors docs", violations);
   checkDocs(ir.envelope.decodeDocs, "envelope decode docs", violations);
   checkDocs(
@@ -581,7 +711,15 @@ export const checkInvariants = (ir: ClientIr): void => {
   );
   for (const [index, schema] of ir.namedSchemas.entries()) {
     checkIdentifier(schema.name, `schema ${schema.name} name`, violations);
+    checkEmitterReserved(
+      schema.name,
+      `schema ${schema.name} name`,
+      reservedBindings,
+      violations,
+    );
     checkDocs(schema.docs, `schema ${schema.name} docs`, violations);
+    checkDocs(schema.group, `schema ${schema.name} group`, violations);
+    checkSingleLine(schema.group, `schema ${schema.name} group`, violations);
     visitNode(
       schema.schema,
       `schema ${schema.name}`,
@@ -614,6 +752,14 @@ export const checkInvariants = (ir: ClientIr): void => {
       violations,
     );
     checkIdentifier(error.tag, `error ${error.className} tag`, violations);
+    checkEmitterReserved(
+      error.className,
+      `error ${error.className} className`,
+      reservedBindings,
+      violations,
+    );
+    checkDocs(error.code, `error ${error.className} code`, violations);
+    checkSingleLine(error.code, `error ${error.className} code`, violations);
     checkDocs(
       error.docsProse,
       `error ${error.className} docsProse`,
@@ -628,8 +774,17 @@ export const checkInvariants = (ir: ClientIr): void => {
       );
     }
   }
+  const coreReexportSet: ReadonlySet<string> = new Set(coreReexportNames);
   for (const name of ir.errors.coreReexports) {
     checkIdentifier(name, `core error ${name}`, violations);
+    if (!coreReexportSet.has(name)) {
+      add(
+        violations,
+        "error.core-reexport",
+        `core error ${name}`,
+        `${JSON.stringify(name)} is not an exported core error class`,
+      );
+    }
   }
 
   const operations = ir.resources.flatMap((resource) => resource.operations);
@@ -659,6 +814,24 @@ export const checkInvariants = (ir: ClientIr): void => {
       violations,
     );
     checkDocs(resource.docs, `resource ${resource.name} docs`, violations);
+    checkDocs(
+      resource.runtimeBannerConcern,
+      `resource ${resource.name} runtimeBannerConcern`,
+      violations,
+    );
+    checkSingleLine(
+      resource.runtimeBannerConcern,
+      `resource ${resource.name} runtimeBannerConcern`,
+      violations,
+    );
+    if (resource.operations.length === 0) {
+      add(
+        violations,
+        "resource.operations.non-empty",
+        `resource ${resource.name}`,
+        "resource must declare at least one operation",
+      );
+    }
     if (!fileNamePattern.test(resource.fileName)) {
       add(
         violations,
@@ -693,6 +866,7 @@ export const checkInvariants = (ir: ClientIr): void => {
             ]),
       ] as const;
       for (const [name, construct] of names) {
+        checkEmitterReserved(name, construct, reservedBindings, violations);
         const existing = declarations.get(name);
         if (existing !== undefined) {
           add(

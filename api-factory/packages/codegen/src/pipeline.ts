@@ -249,7 +249,7 @@ export const generateToDir = (
   return files;
 };
 
-const ignoredVerifyTopLevel = new Set([
+export const ignoredVerifyTopLevel: ReadonlySet<string> = new Set([
   ".turbo",
   "lib",
   "node_modules",

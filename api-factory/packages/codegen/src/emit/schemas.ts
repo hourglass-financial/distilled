@@ -69,7 +69,11 @@ export const emitSchemaNode = (node: SchemaNode): string => {
 };
 
 const propertyName = (name: string): string =>
-  /^[$A-Z_a-z][$\w]*$/u.test(name) ? name : stringLiteral(name);
+  name === "__proto__"
+    ? `[${stringLiteral(name)}]`
+    : /^[$A-Z_a-z][$\w]*$/u.test(name)
+      ? name
+      : stringLiteral(name);
 
 export const emitField = (field: FieldIr): string => {
   let schema = emitSchemaNode(field.schema);

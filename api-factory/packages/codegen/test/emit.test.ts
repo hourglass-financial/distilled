@@ -4,6 +4,7 @@ import { emitConsistencyTest } from "../src/emit/consistency-test.ts";
 import { emitErrors } from "../src/emit/errors.ts";
 import { ImportCollector } from "../src/emit/imports.ts";
 import { emitResources } from "../src/emit/resources.ts";
+import { emitField } from "../src/emit/schemas.ts";
 import { generate, type Formatter } from "../src/index.ts";
 import { errorsRichFixture } from "./fixtures/errors-rich.ts";
 import { fixtures } from "./fixtures/index.ts";
@@ -110,6 +111,17 @@ describe("reviewed exemplar conventions", () => {
     expect(emitConsistencyTest(minimalFixture).contents).toContain(
       "Behavioral coverage lives in `vendors/northstar`.",
     );
+  });
+
+  it("emits __proto__ fields as computed properties", () => {
+    expect(
+      emitField({
+        name: "__proto__",
+        schema: { kind: "string" },
+        optional: false,
+        nullable: false,
+      }),
+    ).toBe('["__proto__"]: Schema.String');
   });
 });
 

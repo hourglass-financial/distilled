@@ -51,6 +51,7 @@ describe("generation determinism", () => {
   });
 
   it("sorts punctuation, case, and non-ASCII names by UTF-16 code unit", () => {
+    const sourceOperation = minimalFixture.resources[0]!.operations[0]!;
     const ir: ClientIr = {
       ...minimalFixture,
       resources: ["éclair", "alpha", "_under", "Zulu", "$cash"].map((name) => ({
@@ -58,7 +59,14 @@ describe("generation determinism", () => {
         fileName: `${name}.ts`,
         docs: `${name} operations.`,
         runtimeBannerConcern: "request execution",
-        operations: [],
+        operations: [
+          {
+            ...sourceOperation,
+            publicName: { ...sourceOperation.publicName, resource: name },
+            opId: `${name}.${sourceOperation.publicName.method}`,
+            pathTemplate: `/${name}/{id}`,
+          },
+        ],
       })),
     };
     const index = generate(ir).find((file) => file.path === "src/index.ts")!;

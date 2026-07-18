@@ -107,12 +107,30 @@ export interface CodeErrorIr {
   readonly docsProse: string;
 }
 
+export const coreReexportNames = [
+  "BadRequest",
+  "Unauthorized",
+  "Forbidden",
+  "NotFound",
+  "Conflict",
+  "UnprocessableEntity",
+  "Locked",
+  "TooManyRequests",
+  "InternalServerError",
+  "BadGateway",
+  "ServiceUnavailable",
+  "GatewayTimeout",
+  "ConfigError",
+] as const;
+
+export type CoreReexportIr = (typeof coreReexportNames)[number];
+
 export interface ErrorsIr {
   readonly docs?: string | undefined;
   readonly codeErrorsSectionTitle: string;
   readonly codeErrorsDocs?: string | undefined;
   readonly codeErrors: ReadonlyArray<CodeErrorIr>;
-  readonly coreReexports: ReadonlyArray<string>;
+  readonly coreReexports: ReadonlyArray<CoreReexportIr>;
 }
 
 export interface EnvelopeIr {
@@ -328,7 +346,7 @@ export const ClientIrSchema: Schema.Codec<ClientIr> = Schema.Struct({
         docsProse: Schema.String,
       }),
     ),
-    coreReexports: Schema.Array(Schema.String),
+    coreReexports: Schema.Array(Schema.Literals(coreReexportNames)),
   }),
   envelope: Schema.Struct({
     decodeDocs: Schema.String,

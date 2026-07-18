@@ -1,5 +1,6 @@
 import { join } from "node:path";
 import { describe, it } from "vitest";
+import { ignoredVerifyTopLevel } from "../src/pipeline.ts";
 import { workosFixture } from "./fixtures/workos.ts";
 import {
   emitToTemp,
@@ -15,13 +16,7 @@ describe("WorkOS exemplar", () => {
     const actual = emitToTemp(workosFixture);
     try {
       expectTreesEqual(workosRoot, actual, {
-        ignoredExpectedTopLevel: [
-          ".turbo",
-          "lib",
-          "node_modules",
-          "tsconfig.test.tsbuildinfo",
-          "tsconfig.tsbuildinfo",
-        ],
+        ignoredExpectedTopLevel: [...ignoredVerifyTopLevel],
       });
     } finally {
       removeTemp(actual);

@@ -141,6 +141,58 @@ const baseIr = (): ClientIr => ({
   },
 });
 
+const paginatedIr = (): ClientIr => {
+  const ir = baseIr();
+  return {
+    ...ir,
+    resources: [
+      {
+        ...ir.resources[0]!,
+        operations: [
+          operation({
+            input: {
+              kind: "struct",
+              fields: [
+                field("id"),
+                field("after", stringNode, { optional: true }),
+              ],
+            },
+            output: { kind: "named-ref", name: "WidgetPage" },
+            pagination: {
+              cursorParam: "after",
+              clear: [],
+              nextCursorPath: ["next"],
+              itemsPath: ["items"],
+              pageSchema: { kind: "named-ref", name: "WidgetPage" },
+              itemSchema: { kind: "named-ref", name: "Widget" },
+              pagesDocs: "Stream every page of widgets.",
+              itemsDocs: "Stream every widget.",
+            },
+          }),
+        ],
+      },
+    ],
+    namedSchemas: [
+      ...ir.namedSchemas,
+      {
+        name: "WidgetPage",
+        group: "Widgets",
+        docs: "A page of widgets.",
+        schema: {
+          kind: "struct",
+          fields: [
+            field("next", stringNode, { optional: true, nullable: true }),
+            field("items", {
+              kind: "array",
+              item: { kind: "named-ref", name: "Widget" },
+            }),
+          ],
+        },
+      },
+    ],
+  };
+};
+
 const invariantError = (ir: ClientIr): CodegenError => {
   try {
     checkInvariants(ir);
@@ -392,6 +444,292 @@ describe("checkInvariants", () => {
     );
   });
 
+  it("rejects a vendor display containing a comment terminator", () => {
+    const ir = baseIr();
+    expectConstruct(
+      { ...ir, vendor: { ...ir.vendor, display: "Acme */ injected" } },
+      "vendor display",
+    );
+  });
+
+  it("rejects a package name containing a comment terminator", () => {
+    const ir = baseIr();
+    expectConstruct(
+      { ...ir, packageName: "@acme/sdk */ injected" },
+      "packageName",
+    );
+  });
+
+  it.each(["apiKey", "baseUrl"] as const)(
+    "rejects envVars.%s containing a comment terminator",
+    (name) => {
+      const ir = baseIr();
+      expectConstruct(
+        {
+          ...ir,
+          envVars: { ...ir.envVars, [name]: "ACME */ injected" },
+        },
+        `envVars.${name}`,
+      );
+    },
+  );
+
+  it("rejects a runtime banner concern containing a comment terminator", () => {
+    const ir = baseIr();
+    expectConstruct(
+      {
+        ...ir,
+        resources: [
+          {
+            ...ir.resources[0]!,
+            runtimeBannerConcern: "request execution */ injected",
+          },
+        ],
+      },
+      "resource widgets runtimeBannerConcern",
+    );
+  });
+
+  it("rejects a path template containing a newline", () => {
+    const ir = baseIr();
+    expectConstruct(
+      {
+        ...ir,
+        resources: [
+          {
+            ...ir.resources[0]!,
+            operations: [
+              operation({ pathTemplate: "/widgets/{id}\n// injected" }),
+            ],
+          },
+        ],
+      },
+      "operation widgets.get pathTemplate",
+    );
+  });
+
+  it("rejects an error code containing a comment terminator", () => {
+    const ir = baseIr();
+    expectConstruct(
+      {
+        ...ir,
+        errors: {
+          ...ir.errors,
+          codeErrors: [
+            {
+              className: "InjectedError",
+              tag: "InjectedError",
+              code: "bad */ code",
+              meta: "badRequest",
+              docsStatus: 400,
+              docsProse: "Bad input.",
+            },
+          ],
+        },
+      },
+      "error InjectedError code",
+    );
+  });
+
+  it("rejects a code-error section title containing a newline", () => {
+    const ir = baseIr();
+    expectConstruct(
+      {
+        ...ir,
+        errors: {
+          ...ir.errors,
+          codeErrorsSectionTitle: "Code errors\nInjected section",
+        },
+      },
+      "code errors section title",
+    );
+  });
+
+  it("rejects an unsafe schema section title", () => {
+    const ir = baseIr();
+    const error = expectConstruct(
+      {
+        ...ir,
+        namedSchemas: [
+          { ...ir.namedSchemas[0]!, group: "Widgets */\nInjected section" },
+        ],
+      },
+      "schema Widget group",
+    );
+    expect(error.violations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ rule: "docs.comment-terminator" }),
+        expect.objectContaining({ rule: "comment.single-line" }),
+      ]),
+    );
+  });
+
+  it("rejects a resource with no operations", () => {
+    const ir = baseIr();
+    expectConstruct(
+      {
+        ...ir,
+        resources: [{ ...ir.resources[0]!, operations: [] }],
+      },
+      "resource widgets",
+    );
+  });
+
+  it("rejects schema names reserved by the emitter", () => {
+    const ir = baseIr();
+    expectConstruct(
+      {
+        ...ir,
+        resources: [
+          {
+            ...ir.resources[0]!,
+            operations: [
+              operation({ output: { kind: "named-ref", name: "Schema" } }),
+            ],
+          },
+        ],
+        namedSchemas: [{ ...ir.namedSchemas[0]!, name: "Schema" }],
+      },
+      "schema Schema name",
+    );
+  });
+
+  it("rejects non-string record keys", () => {
+    const ir = baseIr();
+    expectConstruct(
+      {
+        ...ir,
+        namedSchemas: [
+          {
+            ...ir.namedSchemas[0]!,
+            schema: {
+              kind: "struct",
+              fields: [
+                field("metadata", {
+                  kind: "record",
+                  key: { kind: "array", item: stringNode },
+                  value: stringNode,
+                }),
+              ],
+            },
+          },
+        ],
+      },
+      "schema Widget.metadata key",
+    );
+  });
+
+  it("rejects a pagination items path that does not resolve to an array", () => {
+    const ir = paginatedIr();
+    expectConstruct(
+      {
+        ...ir,
+        namedSchemas: ir.namedSchemas.map((schema) =>
+          schema.name === "WidgetPage"
+            ? {
+                ...schema,
+                schema: {
+                  ...schema.schema,
+                  fields: schema.schema.fields.map((entry) =>
+                    entry.name === "items"
+                      ? { ...entry, schema: stringNode }
+                      : entry,
+                  ),
+                },
+              }
+            : schema,
+        ),
+      },
+      "operation widgets.get pagination itemsPath items",
+    );
+  });
+
+  it("rejects a pagination cursor path that does not resolve to a string", () => {
+    const ir = paginatedIr();
+    expectConstruct(
+      {
+        ...ir,
+        namedSchemas: ir.namedSchemas.map((schema) =>
+          schema.name === "WidgetPage"
+            ? {
+                ...schema,
+                schema: {
+                  ...schema.schema,
+                  fields: schema.schema.fields.map((entry) =>
+                    entry.name === "next"
+                      ? { ...entry, schema: { kind: "number" } }
+                      : entry,
+                  ),
+                },
+              }
+            : schema,
+        ),
+      },
+      "operation widgets.get pagination nextCursorPath next",
+    );
+  });
+
+  it("rejects a path placeholder missing from pathParams", () => {
+    const ir = baseIr();
+    expectConstruct(
+      {
+        ...ir,
+        resources: [
+          {
+            ...ir.resources[0]!,
+            operations: [
+              operation({
+                pathTemplate: "/widgets/{id}/{slug}",
+                input: { kind: "struct", fields: [field("id"), field("slug")] },
+              }),
+            ],
+          },
+        ],
+      },
+      "operation widgets.get pathTemplate placeholder slug",
+    );
+  });
+
+  it("rejects a pathParam absent from the path template", () => {
+    const ir = baseIr();
+    expectConstruct(
+      {
+        ...ir,
+        resources: [
+          {
+            ...ir.resources[0]!,
+            operations: [
+              operation({
+                pathParams: ["id", "extra"],
+                input: {
+                  kind: "struct",
+                  fields: [field("id"), field("extra")],
+                },
+              }),
+            ],
+          },
+        ],
+      },
+      "operation widgets.get pathParams.extra",
+    );
+  });
+
+  it("rejects a duplicate path placeholder", () => {
+    const ir = baseIr();
+    expectConstruct(
+      {
+        ...ir,
+        resources: [
+          {
+            ...ir.resources[0]!,
+            operations: [operation({ pathTemplate: "/widgets/{id}/{id}" })],
+          },
+        ],
+      },
+      "operation widgets.get pathTemplate placeholder id",
+    );
+  });
+
   it("rejects constant-body keys colliding with input fields", () => {
     const ir = baseIr();
     expectConstruct(
@@ -621,6 +959,22 @@ describe("IR JSON", () => {
   it("rejects excess properties", () => {
     try {
       decodeIr({ ...baseIr(), unexpected: true });
+      throw new Error("expected decodeIr to throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(CodegenError);
+      expect((error as CodegenError).violations).toEqual([
+        expect.objectContaining({ rule: "ir.decode" }),
+      ]);
+    }
+  });
+
+  it("rejects a core re-export outside the closed vocabulary", () => {
+    const value = structuredClone(baseIr()) as unknown as {
+      errors: { coreReexports: Array<string> };
+    };
+    value.errors.coreReexports = ["ImaginaryCoreError"];
+    try {
+      decodeIr(value);
       throw new Error("expected decodeIr to throw");
     } catch (error) {
       expect(error).toBeInstanceOf(CodegenError);
