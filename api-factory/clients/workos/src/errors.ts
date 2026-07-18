@@ -12,6 +12,7 @@
  * spec's discriminated `oneOf` error tables.
  */
 import {
+  byCode,
   type ClassifiedErrorClass,
   DEFAULT_ERRORS as CORE_DEFAULT_ERRORS,
   Meta,
@@ -192,18 +193,23 @@ export class WorkosDecodeError extends Schema.TaggedErrorClass<WorkosDecodeError
 /** HTTP status → shared error class (core's table, re-exported). */
 export const STATUS_ERRORS = CORE_STATUS_ERRORS;
 
-/** WorkOS discriminator code → typed error class. */
-export const CODE_ERRORS = {
-  email_password_auth_disabled: EmailPasswordAuthDisabled,
-  email_verification_required: EmailVerificationRequired,
-  invalid_client: InvalidClient,
-  invalid_credentials: InvalidCredentials,
-  invalid_grant: InvalidGrant,
-  mfa_challenge: MfaChallenge,
-  mfa_enrollment: MfaEnrollment,
-  organization_selection_required: OrganizationSelectionRequired,
-  radar_challenge: RadarChallenge,
-} as const satisfies Record<string, ClassifiedErrorClass>;
+/**
+ * WorkOS discriminator code → typed error class, derived from each class's
+ * own `code` schema literal — a map key can never disagree with the literal
+ * the class validates.
+ */
+export const CODE_ERRORS: Readonly<Record<string, ClassifiedErrorClass>> =
+  byCode([
+    EmailPasswordAuthDisabled,
+    EmailVerificationRequired,
+    InvalidClient,
+    InvalidCredentials,
+    InvalidGrant,
+    MfaChallenge,
+    MfaEnrollment,
+    OrganizationSelectionRequired,
+    RadarChallenge,
+  ]);
 
 /** Errors that can arise on any WorkOS operation (401/429/5xx). */
 export const DEFAULT_ERRORS = CORE_DEFAULT_ERRORS;

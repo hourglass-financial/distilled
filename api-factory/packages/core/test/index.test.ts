@@ -10,7 +10,8 @@ describe("core barrel", () => {
     expect(Core.Secret).toBeDefined();
     expect(Core.DEFAULT_ERRORS.length).toBeGreaterThan(0);
     expect(Core.STATUS_ERRORS[404]).toBe(Core.NotFound);
-    expect(Core.RETRYABLE_STATUSES.has(429)).toBe(true);
+    expect(Core.STATUS_ERRORS[429]).toBe(Core.TooManyRequests);
+    expect(Core.acceptsRetryAfter(Core.TooManyRequests)).toBe(true);
     expect(typeof Core.Retry.defaultPolicy.while).toBe("function");
     expect(typeof Core.Pagination.items).toBe("function");
     expect(typeof Core.Category.isTransient).toBe("function");

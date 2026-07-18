@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import * as Duration from "effect/Duration";
-import { parseRetryAfter, retryAfterForStatus } from "../src/retry-after.ts";
-import { RETRYABLE_STATUSES } from "../src/errors.ts";
+import { parseRetryAfter } from "../src/retry-after.ts";
+import {
+  acceptsRetryAfter,
+  BadRequest,
+  TooManyRequests,
+} from "../src/errors.ts";
 
 describe("parseRetryAfter", () => {
   it("parses delta-seconds", () => {
@@ -38,14 +42,10 @@ describe("parseRetryAfter", () => {
     expect(parseRetryAfter({ "retry-after": "not-a-date" })).toBeUndefined();
   });
 
-  it("only threads a hint for retryable statuses", () => {
-    const headers = { "retry-after": "5" };
-    expect(retryAfterForStatus(429, headers, RETRYABLE_STATUSES)).toStrictEqual(
-      Duration.seconds(5),
-    );
-    // A 400 is not retryable — never receives a stale hint.
-    expect(
-      retryAfterForStatus(400, headers, RETRYABLE_STATUSES),
-    ).toBeUndefined();
+  it("hint-carrying is the class's own schema fact, not a status list", () => {
+    // The matcher threads a hint only into a class whose schema declares
+    // `retryAfter` — read from the class itself, nothing to drift.
+    expect(acceptsRetryAfter(TooManyRequests)).toBe(true);
+    expect(acceptsRetryAfter(BadRequest)).toBe(false);
   });
 });

@@ -107,6 +107,13 @@ program.pipe(Effect.provide(layerFromEnv)); // one layer: fetch transport + env 
   documents 200/202/403 (a missing org 403s); v1's declared `NotFound` was a
   lying union. Verified against `open-api-spec.yaml`, as was every other
   declared error and schema field in the fragment.
+- **Single source of truth:** every wire fact lives on the class itself — the
+  HTTP status as `static status`, the discriminator as the schema's `code`
+  literal, hint-carrying as the schema's own `retryAfter` field. The matcher
+  tables are derived (`byStatus`/`byCode`, fail-loud on duplicate claims), and
+  the matcher asks the matched class whether it accepts a hint — the former
+  hand-written `RETRYABLE_STATUSES` set is gone. The one deliberate list left
+  is `DEFAULT_ERRORS`: universality is API-domain policy, not a class fact.
 
 ## 5. Error classification
 

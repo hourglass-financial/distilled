@@ -24,11 +24,7 @@ export { RedactedValue, Secret } from "./redaction.ts";
 
 // Retry policy + honest `Retry-After` backoff schedule.
 export * as Retry from "./retry.ts";
-export {
-  MAX_HINT,
-  parseRetryAfter,
-  retryAfterForStatus,
-} from "./retry-after.ts";
+export { MAX_HINT, parseRetryAfter } from "./retry-after.ts";
 
 // Cursor pagination (Stream of pages / Stream of items).
 export * as Pagination from "./pagination.ts";

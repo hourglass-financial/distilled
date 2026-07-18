@@ -49,15 +49,3 @@ export const parseRetryAfter = (
   if (deltaMs <= 0) return Duration.zero;
   return Duration.min(Duration.millis(deltaMs), max);
 };
-
-/**
- * Convenience for error matchers: return a hint only for retryable statuses,
- * so non-retryable error classes never receive a stale `retryAfter`.
- */
-export const retryAfterForStatus = (
-  status: number,
-  headers: Readonly<Record<string, string | undefined>>,
-  retryableStatuses: ReadonlySet<number>,
-  options?: { readonly max?: Duration.Duration; readonly now?: number },
-): Duration.Duration | undefined =>
-  retryableStatuses.has(status) ? parseRetryAfter(headers, options) : undefined;

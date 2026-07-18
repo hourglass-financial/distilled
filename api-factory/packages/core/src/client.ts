@@ -23,7 +23,7 @@ import type { HttpClient } from "effect/unstable/http/HttpClient";
 import * as HttpClientError from "effect/unstable/http/HttpClientError";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import type * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
-import type { ClassifiedErrorClass } from "./errors.ts";
+import { acceptsRetryAfter, type ClassifiedErrorClass } from "./errors.ts";
 import {
   type InputSchema,
   isVoidOutput,
@@ -57,11 +57,12 @@ export interface MatchErrorConfig<Extra> {
   readonly codeErrors: Readonly<Record<string, ClassifiedErrorClass>>;
   /** Errors valid for every operation (401/429/5xx). */
   readonly universalErrors: readonly ClassifiedErrorClass[];
-  /** Statuses whose class accepts a `retryAfter` hint. */
-  readonly retryableStatuses: ReadonlySet<number>;
-  /** Parse a `Retry-After` hint for a retryable status. */
-  readonly retryAfterFor: (
-    status: number,
+  /**
+   * Parse a server wait hint from response headers. Only consulted for a
+   * matched class whose own schema declares `retryAfter` (see
+   * `acceptsRetryAfter`), so non-retryable classes never carry a stale hint.
+   */
+  readonly retryAfter: (
     headers: Headers.Headers,
   ) => Duration.Duration | undefined;
   /** Build the vendor's fallback error for an unmatched response. */
@@ -119,11 +120,12 @@ export const makeMatchError =
       }
     }
 
-    // 2. Status-mapped error, with a `Retry-After` hint for retryable statuses.
+    // 2. Status-mapped error. The hint is threaded only into a class whose
+    //    own schema declares `retryAfter` — the class is the source of truth.
     const StatusClass = config.statusErrors[status];
     if (StatusClass !== undefined && allowed(StatusClass)) {
-      const retryAfter = config.retryableStatuses.has(status)
-        ? config.retryAfterFor(status, headers)
+      const retryAfter = acceptsRetryAfter(StatusClass)
+        ? config.retryAfter(headers)
         : undefined;
       return fail(
         new StatusClass(

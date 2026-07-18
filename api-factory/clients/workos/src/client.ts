@@ -18,8 +18,7 @@ import {
   makeRunner,
   type Operation,
   type OutputSchema,
-  RETRYABLE_STATUSES,
-  retryAfterForStatus,
+  parseRetryAfter,
   Retry,
   type Runner,
   summarizeHttpClientError,
@@ -75,9 +74,7 @@ const matchError = makeMatchError<WorkosExtraError>({
   statusErrors: STATUS_ERRORS,
   codeErrors: CODE_ERRORS,
   universalErrors: DEFAULT_ERRORS,
-  retryableStatuses: RETRYABLE_STATUSES,
-  retryAfterFor: (status, headers) =>
-    retryAfterForStatus(status, headers, RETRYABLE_STATUSES),
+  retryAfter: parseRetryAfter,
   makeUnknown: ({ status, envelope }) =>
     new UnknownWorkosError({
       status,

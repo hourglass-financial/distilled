@@ -10,11 +10,10 @@ import {
   type ClassifiedErrorClass,
   DEFAULT_ERRORS,
   NotFound,
-  RETRYABLE_STATUSES,
   STATUS_ERRORS,
   TooManyRequests,
 } from "../src/errors.ts";
-import { retryAfterForStatus } from "../src/retry-after.ts";
+import { parseRetryAfter } from "../src/retry-after.ts";
 
 class SpecialCode extends Schema.TaggedErrorClass<SpecialCode>()(
   "SpecialCode",
@@ -50,9 +49,7 @@ const matchError = makeMatchError<Extra>({
     ClassifiedErrorClass
   >,
   universalErrors: DEFAULT_ERRORS,
-  retryableStatuses: RETRYABLE_STATUSES,
-  retryAfterFor: (status, headers) =>
-    retryAfterForStatus(status, headers, RETRYABLE_STATUSES),
+  retryAfter: parseRetryAfter,
   makeUnknown: ({ status, envelope }) =>
     new UnknownTestError({ status, message: envelope.message }),
 });
