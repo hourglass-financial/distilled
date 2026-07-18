@@ -21,7 +21,9 @@ import { type QuarryClient, type QuarryError, run } from "../client.ts";
 // artifacts.delete — DELETE /artifacts/{id}
 // ===========================================================================
 
-export const DeleteArtifactInput = Schema.Struct({ id: Schema.String });
+export const DeleteArtifactInput = Schema.Struct({
+  id: Schema.String,
+});
 export interface DeleteArtifactInput extends Schema.Schema.Type<
   typeof DeleteArtifactInput
 > {}

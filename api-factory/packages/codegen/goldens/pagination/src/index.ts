@@ -44,7 +44,6 @@ export * from "./errors.ts";
 // Wire schemas (values double as types for consumers who want them).
 export * from "./schemas.ts";
 
-// Canonical operation registry for coverage and regeneration audits.
 export { operations, type OperationName } from "./registry.ts";
 
 // Core re-exports so consumers never import core directly: `Secret` to wrap

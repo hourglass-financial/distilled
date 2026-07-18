@@ -95,9 +95,6 @@ export const emitBarrel = (ir: ClientIr): EmittedFile => {
     "// Wire schemas (values double as types for consumers who want them).",
   );
   writer.writeLine('export * from "./schemas.ts";').blankLine();
-  writer.writeLine(
-    "// Canonical operation registry for coverage and regeneration audits.",
-  );
   writer
     .writeLine(
       'export { operations, type OperationName } from "./registry.ts";',

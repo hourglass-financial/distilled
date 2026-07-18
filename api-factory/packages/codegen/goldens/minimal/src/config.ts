@@ -22,7 +22,7 @@ export interface NorthstarConfig {
   readonly baseUrl: string;
 }
 
-/** Context service carrying the resolved credentials. */
+/** Context service carrying the resolved Northstar credentials. */
 export class Credentials extends Context.Service<
   Credentials,
   NorthstarConfig

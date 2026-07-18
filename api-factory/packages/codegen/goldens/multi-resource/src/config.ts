@@ -22,7 +22,7 @@ export interface MosaicConfig {
   readonly baseUrl: string;
 }
 
-/** Context service carrying the resolved credentials. */
+/** Context service carrying the resolved Mosaic credentials. */
 export class Credentials extends Context.Service<Credentials, MosaicConfig>()(
   "@hourglass-financial/api-factory-mosaic/Credentials",
 ) {}

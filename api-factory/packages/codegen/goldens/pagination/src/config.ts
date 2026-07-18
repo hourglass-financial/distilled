@@ -22,7 +22,7 @@ export interface OrbitConfig {
   readonly baseUrl: string;
 }
 
-/** Context service carrying the resolved credentials. */
+/** Context service carrying the resolved Orbit credentials. */
 export class Credentials extends Context.Service<Credentials, OrbitConfig>()(
   "@hourglass-financial/api-factory-orbit/Credentials",
 ) {}

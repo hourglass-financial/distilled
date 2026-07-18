@@ -22,7 +22,7 @@ export interface GlyphConfig {
   readonly baseUrl: string;
 }
 
-/** Context service carrying the resolved credentials. */
+/** Context service carrying the resolved Glyph credentials. */
 export class Credentials extends Context.Service<Credentials, GlyphConfig>()(
   "@hourglass-financial/api-factory-glyph/Credentials",
 ) {}

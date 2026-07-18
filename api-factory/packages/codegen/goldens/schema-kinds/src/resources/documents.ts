@@ -58,7 +58,9 @@ export const get = (
 // documents.remove — DELETE /documents/{id}
 // ===========================================================================
 
-export const RemoveDocumentInput = Schema.Struct({ id: Schema.String });
+export const RemoveDocumentInput = Schema.Struct({
+  id: Schema.String,
+});
 export interface RemoveDocumentInput extends Schema.Schema.Type<
   typeof RemoveDocumentInput
 > {}

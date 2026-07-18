@@ -22,7 +22,9 @@ import { Account } from "../schemas.ts";
 // accounts.create — POST /accounts
 // ===========================================================================
 
-export const CreateAccountInput = Schema.Struct({ name: Schema.String });
+export const CreateAccountInput = Schema.Struct({
+  name: Schema.String,
+});
 export interface CreateAccountInput extends Schema.Schema.Type<
   typeof CreateAccountInput
 > {}
@@ -55,7 +57,9 @@ export const create = (
 // accounts.get — GET /accounts/{id}
 // ===========================================================================
 
-export const GetAccountInput = Schema.Struct({ id: Schema.String });
+export const GetAccountInput = Schema.Struct({
+  id: Schema.String,
+});
 export interface GetAccountInput extends Schema.Schema.Type<
   typeof GetAccountInput
 > {}

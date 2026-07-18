@@ -1,7 +1,7 @@
 import type { ClientIr, OperationIr, ResourceIr } from "../ir/model.ts";
 import type { SchemaNode } from "../ir/nodes.ts";
 import { ImportCollector } from "./imports.ts";
-import { emitSchemaNode, hasSecret } from "./schemas.ts";
+import { emitField, hasSecret } from "./schemas.ts";
 import {
   banner,
   CORE_PACKAGE,
@@ -80,9 +80,13 @@ const emitOperation = (
       ),
     )
     .blankLine();
-  writer.writeLine(
-    `export const ${operation.inputName} = ${emitSchemaNode(operation.input)};`,
-  );
+  writer.writeLine(`export const ${operation.inputName} = Schema.Struct({`);
+  writer.indent(() => {
+    for (const field of operation.input.fields) {
+      writer.writeLine(`${emitField(field)},`);
+    }
+  });
+  writer.writeLine("});");
   writer.writeLine(
     `export interface ${operation.inputName} extends Schema.Schema.Type<typeof ${operation.inputName}> {}`,
   );

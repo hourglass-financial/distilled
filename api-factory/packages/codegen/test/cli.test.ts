@@ -5,7 +5,10 @@ import { spawnSync, type SpawnSyncReturns } from "node:child_process";
 import { describe, expect, it } from "vitest";
 import { decodeIr, dumpIr } from "../src/index.ts";
 import { minimalFixture } from "./fixtures/minimal.ts";
+import { workosFixture } from "./fixtures/workos.ts";
 import { packageRoot } from "./helpers.ts";
+
+const workosRoot = join(packageRoot, "../../clients/workos");
 
 const spawn = (args: ReadonlyArray<string>): SpawnSyncReturns<string> =>
   spawnSync("bun", ["run", "src/cli.ts", ...args], {
@@ -63,6 +66,18 @@ describe("codegen CLI", () => {
       const changed = spawn(["verify", "--ir", irPath, "--against", out]);
       expect(changed.status).toBe(2);
       expect(changed.stderr).toContain("changed src/schemas.ts");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("verifies the committed WorkOS exemplar through dumped IR", () => {
+    const dir = mkdtempSync(join(tmpdir(), "api-factory-codegen-workos-cli-"));
+    try {
+      const irPath = join(dir, "workos.json");
+      writeFileSync(irPath, dumpIr(workosFixture));
+      const result = spawn(["verify", "--ir", irPath, "--against", workosRoot]);
+      expect(result.status, result.stderr).toBe(0);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

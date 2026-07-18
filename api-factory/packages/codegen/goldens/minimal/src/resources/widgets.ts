@@ -22,7 +22,9 @@ import { Widget } from "../schemas.ts";
 // widgets.get — GET /widgets/{id}
 // ===========================================================================
 
-export const GetWidgetInput = Schema.Struct({ id: Schema.String });
+export const GetWidgetInput = Schema.Struct({
+  id: Schema.String,
+});
 export interface GetWidgetInput extends Schema.Schema.Type<
   typeof GetWidgetInput
 > {}

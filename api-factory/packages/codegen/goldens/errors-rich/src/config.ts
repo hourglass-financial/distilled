@@ -22,7 +22,7 @@ export interface BastionConfig {
   readonly baseUrl: string;
 }
 
-/** Context service carrying the resolved credentials. */
+/** Context service carrying the resolved Bastion credentials. */
 export class Credentials extends Context.Service<Credentials, BastionConfig>()(
   "@hourglass-financial/api-factory-bastion/Credentials",
 ) {}

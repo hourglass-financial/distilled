@@ -22,7 +22,7 @@ export interface QuarryConfig {
   readonly baseUrl: string;
 }
 
-/** Context service carrying the resolved credentials. */
+/** Context service carrying the resolved Quarry credentials. */
 export class Credentials extends Context.Service<Credentials, QuarryConfig>()(
   "@hourglass-financial/api-factory-quarry/Credentials",
 ) {}

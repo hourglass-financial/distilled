@@ -49,7 +49,9 @@ export const emitConfig = (ir: ClientIr): EmittedFile => {
     writer.writeLine("readonly baseUrl: string;");
   });
   writer.writeLine("}").blankLine();
-  writer.writeLine("/** Context service carrying the resolved credentials. */");
+  writer.writeLine(
+    `/** Context service carrying the resolved ${display} credentials. */`,
+  );
   writer.writeLine(
     `export class Credentials extends Context.Service<Credentials, ${prefix}Config>()(`,
   );

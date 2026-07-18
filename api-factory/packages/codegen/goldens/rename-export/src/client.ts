@@ -133,6 +133,12 @@ export const layerWith = (
         baseUrl,
         retry: options.retry ?? Retry.defaultPolicy,
         matchError,
+        // Only a genuine wire-level fault is the (retryable) transport error;
+        // every other HttpClientError reason (encode, response read/decode,
+        // invalid URL) is a non-retryable decode-class failure. Both carry a
+        // secret-free summary, never the raw error with its embedded request,
+        // and both messages are built from structured parts — no lower-layer
+        // free text can flow into a logged headline.
         toTransport: (cause) => {
           const failure = summarizeHttpClientError(cause);
           return Category.isTransportError(cause)
@@ -145,6 +151,8 @@ export const layerWith = (
                 cause: Redacted.make(failure),
               });
         },
+        // The raw value and schema issue stay reachable via Redacted.value;
+        // the message is fixed text so no field value can leak through it.
         toDecode: (phase, body, cause) =>
           new QuarryDecodeError({
             message:

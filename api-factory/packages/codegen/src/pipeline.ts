@@ -249,9 +249,18 @@ export const generateToDir = (
   return files;
 };
 
+const ignoredVerifyTopLevel = new Set([
+  ".turbo",
+  "lib",
+  "node_modules",
+  "tsconfig.test.tsbuildinfo",
+  "tsconfig.tsbuildinfo",
+]);
+
 const listFiles = (root: string, current = root): ReadonlyArray<string> => {
   const entries = readdirSync(current, { withFileTypes: true });
   return entries.flatMap((entry) => {
+    if (current === root && ignoredVerifyTopLevel.has(entry.name)) return [];
     const path = join(current, entry.name);
     if (entry.isDirectory()) return listFiles(root, path);
     return [path.slice(root.length + 1)];

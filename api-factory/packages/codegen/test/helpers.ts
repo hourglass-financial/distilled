@@ -18,11 +18,16 @@ import {
 export const packageRoot = fileURLToPath(new URL("../", import.meta.url));
 export const goldensRoot = join(packageRoot, "goldens");
 
-const listFiles = (root: string, current = root): ReadonlyArray<string> =>
+const listFiles = (
+  root: string,
+  current = root,
+  ignoredTopLevel: ReadonlySet<string> = new Set(),
+): ReadonlyArray<string> =>
   readdirSync(current, { withFileTypes: true }).flatMap((entry) => {
+    if (current === root && ignoredTopLevel.has(entry.name)) return [];
     const path = join(current, entry.name);
     return entry.isDirectory()
-      ? listFiles(root, path)
+      ? listFiles(root, path, ignoredTopLevel)
       : [path.slice(root.length + 1)];
   });
 
@@ -41,8 +46,17 @@ const firstDifference = (expected: string, actual: string): string => {
 export const expectTreesEqual = (
   expectedRoot: string,
   actualRoot: string,
+  options: {
+    readonly ignoredExpectedTopLevel?: ReadonlyArray<string>;
+  } = {},
 ): void => {
-  const expectedFiles = [...listFiles(expectedRoot)].sort();
+  const expectedFiles = [
+    ...listFiles(
+      expectedRoot,
+      expectedRoot,
+      new Set(options.ignoredExpectedTopLevel),
+    ),
+  ].sort();
   const actualFiles = [...listFiles(actualRoot)].sort();
   expect(actualFiles, "emitted file set").toEqual(expectedFiles);
   for (const path of expectedFiles) {

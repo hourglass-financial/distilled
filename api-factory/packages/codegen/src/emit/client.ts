@@ -205,6 +205,22 @@ export const emitClient = (ir: ClientIr): EmittedFile => {
           writer.writeLine("baseUrl,");
           writer.writeLine("retry: options.retry ?? Retry.defaultPolicy,");
           writer.writeLine("matchError,");
+          writer.writeLine(
+            "// Only a genuine wire-level fault is the (retryable) transport error;",
+          );
+          writer.writeLine(
+            "// every other HttpClientError reason (encode, response read/decode,",
+          );
+          writer.writeLine(
+            "// invalid URL) is a non-retryable decode-class failure. Both carry a",
+          );
+          writer.writeLine(
+            "// secret-free summary, never the raw error with its embedded request,",
+          );
+          writer.writeLine(
+            "// and both messages are built from structured parts — no lower-layer",
+          );
+          writer.writeLine("// free text can flow into a logged headline.");
           writer.writeLine("toTransport: (cause) => {");
           writer.indent(() => {
             writer.writeLine(
@@ -231,6 +247,12 @@ export const emitClient = (ir: ClientIr): EmittedFile => {
             });
           });
           writer.writeLine("},");
+          writer.writeLine(
+            "// The raw value and schema issue stay reachable via Redacted.value;",
+          );
+          writer.writeLine(
+            "// the message is fixed text so no field value can leak through it.",
+          );
           writer.writeLine("toDecode: (phase, body, cause) =>");
           writer.indent(() => {
             writer.writeLine(`new ${prefix}DecodeError({`);
