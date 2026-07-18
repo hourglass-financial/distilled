@@ -59,9 +59,9 @@ const authenticateErrors = [
   InvalidGrant,
   MfaChallenge,
   MfaEnrollment,
+  NotFound,
   OrganizationSelectionRequired,
   RadarChallenge,
-  NotFound,
   UnprocessableEntity,
 ] as const;
 

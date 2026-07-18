@@ -27,17 +27,17 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
-import { HttpClient } from "effect/unstable/http/HttpClient";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
-import { credentialsFromEnv, Credentials } from "./config.ts";
+import { HttpClient } from "effect/unstable/http/HttpClient";
+import { Credentials, credentialsFromEnv } from "./config.ts";
 import {
   CODE_ERRORS,
   DEFAULT_ERRORS,
   STATUS_ERRORS,
   UnknownWorkosError,
   WorkosDecodeError,
-  WorkosTransportError,
   type WorkosExtraError,
+  WorkosTransportError,
 } from "./errors.ts";
 
 // ---------------------------------------------------------------------------

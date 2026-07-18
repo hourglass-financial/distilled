@@ -12,7 +12,8 @@
   "module": "src/index.ts",
   "files": [
     "lib",
-    "src"
+    "src",
+    "MANIFEST"
   ],
   "exports": {
     ".": {

@@ -77,41 +77,6 @@ export const create = (
 > => run(createOp, input);
 
 // ===========================================================================
-// organizations.get — GET /organizations/{id}
-// ===========================================================================
-
-export const GetOrganizationInput = Schema.Struct({
-  id: Schema.String,
-});
-export interface GetOrganizationInput extends Schema.Schema.Type<
-  typeof GetOrganizationInput
-> {}
-
-const getErrors = [NotFound] as const;
-
-const getOp: Operation<
-  typeof GetOrganizationInput,
-  typeof Organization,
-  typeof getErrors
-> = {
-  id: "organizations.get",
-  method: "GET",
-  retry: "transient",
-  pathTemplate: "/organizations/{id}",
-  pathParams: ["id"],
-  queryParams: [],
-  input: GetOrganizationInput,
-  output: Organization,
-  errors: getErrors,
-};
-
-/** Fetch a single organization by id. */
-export const get = (
-  input: GetOrganizationInput,
-): Effect.Effect<Organization, WorkosError<typeof getErrors>, WorkosClient> =>
-  run(getOp, input);
-
-// ===========================================================================
 // organizations.delete — DELETE /organizations/{id}
 // ===========================================================================
 
@@ -152,6 +117,41 @@ const deleteOrganization = (
 // `delete` is a reserved word as a declaration name but a legal export name;
 // the rename-export keeps the public surface on the API's own verb.
 export { deleteOrganization as delete };
+
+// ===========================================================================
+// organizations.get — GET /organizations/{id}
+// ===========================================================================
+
+export const GetOrganizationInput = Schema.Struct({
+  id: Schema.String,
+});
+export interface GetOrganizationInput extends Schema.Schema.Type<
+  typeof GetOrganizationInput
+> {}
+
+const getErrors = [NotFound] as const;
+
+const getOp: Operation<
+  typeof GetOrganizationInput,
+  typeof Organization,
+  typeof getErrors
+> = {
+  id: "organizations.get",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/organizations/{id}",
+  pathParams: ["id"],
+  queryParams: [],
+  input: GetOrganizationInput,
+  output: Organization,
+  errors: getErrors,
+};
+
+/** Fetch a single organization by id. */
+export const get = (
+  input: GetOrganizationInput,
+): Effect.Effect<Organization, WorkosError<typeof getErrors>, WorkosClient> =>
+  run(getOp, input);
 
 // ===========================================================================
 // organizations.list — GET /organizations (cursor paginated)
