@@ -129,6 +129,18 @@ The gold-standard hand-authored WorkOS client fragment the emitter must
 reproduce byte-for-byte — the emit target until real generation lands.
 _Avoid_: prototype, sample
 
+**Op registry**:
+The generated `src/registry.ts` in each client: the canonical-sorted tuple
+of qualified operation public names (`resource.method`; a pagination trio
+is one entry). The credential-free bridge from client to coverage audit.
+_Avoid_: operation list, op table
+
+**Golden**:
+A byte-frozen expected output tree for one synthetic codegen fixture,
+compared both directions against a real emission. Regenerated only
+explicitly, never by a gate.
+_Avoid_: snapshot, baseline
+
 ### Testing
 
 **Coverage manifest**:
