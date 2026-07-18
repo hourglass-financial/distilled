@@ -1,9 +1,13 @@
 import * as Schema from "effect/Schema";
 import {
+  LiteralValueSchema,
   type NamedRefNode,
+  NamedRefNodeSchema,
   type StructNode,
+  StructNodeSchema,
   type VoidNode,
-  SchemaNodeSchema,
+  VoidNodeSchema,
+  type LiteralValue,
 } from "./nodes.ts";
 
 export interface VendorIr {
@@ -37,6 +41,8 @@ export interface PaginationIr {
   readonly itemsPath: ReadonlyArray<string>;
   readonly pageSchema: NamedRefNode;
   readonly itemSchema: NamedRefNode;
+  readonly pagesDocs: string;
+  readonly itemsDocs: string;
 }
 
 export interface OperationIr {
@@ -65,6 +71,7 @@ export interface ResourceIr {
   readonly name: string;
   readonly fileName: string;
   readonly docs: string;
+  readonly runtimeBannerConcern: string;
   readonly operations: ReadonlyArray<OperationIr>;
 }
 
@@ -102,12 +109,14 @@ export interface CodeErrorIr {
 
 export interface ErrorsIr {
   readonly docs?: string | undefined;
+  readonly codeErrorsSectionTitle: string;
   readonly codeErrorsDocs?: string | undefined;
   readonly codeErrors: ReadonlyArray<CodeErrorIr>;
   readonly coreReexports: ReadonlyArray<string>;
 }
 
 export interface EnvelopeIr {
+  readonly decodeDocs: string;
   readonly messageFields: ReadonlyArray<string>;
   readonly discriminatorFields: ReadonlyArray<string>;
   readonly stringBodyIsMessage: boolean;
@@ -186,30 +195,9 @@ export interface ClientIr {
   readonly namedSchemas: ReadonlyArray<NamedSchemaIr>;
   readonly errors: ErrorsIr;
   readonly envelope: EnvelopeIr;
+  readonly behavioralCoverageLocation: string;
   readonly scaffold: ScaffoldIr;
 }
-
-export type LiteralValue = string | number | boolean;
-
-const NamedRefNodeSchema = Schema.Struct({
-  kind: Schema.Literal("named-ref"),
-  name: Schema.String,
-});
-
-const VoidNodeSchema = Schema.Struct({ kind: Schema.Literal("void") });
-
-const StructNodeSchema = Schema.Struct({
-  kind: Schema.Literal("struct"),
-  fields: Schema.Array(
-    Schema.Struct({
-      name: Schema.String,
-      schema: SchemaNodeSchema,
-      optional: Schema.Boolean,
-      nullable: Schema.Boolean,
-      docs: Schema.optional(Schema.String),
-    }),
-  ),
-});
 
 const DependencyIrSchema = Schema.Struct({
   name: Schema.String,
@@ -235,12 +223,6 @@ const TsconfigIrSchema = Schema.Struct({
   references: Schema.Array(Schema.String),
 });
 
-const LiteralValueSchema = Schema.Union([
-  Schema.String,
-  Schema.Number,
-  Schema.Boolean,
-]);
-
 export const ClientIrSchema: Schema.Codec<ClientIr> = Schema.Struct({
   vendor: Schema.Struct({
     slug: Schema.String,
@@ -260,6 +242,7 @@ export const ClientIrSchema: Schema.Codec<ClientIr> = Schema.Struct({
       name: Schema.String,
       fileName: Schema.String,
       docs: Schema.String,
+      runtimeBannerConcern: Schema.String,
       operations: Schema.Array(
         Schema.Struct({
           publicName: Schema.Struct({
@@ -300,6 +283,8 @@ export const ClientIrSchema: Schema.Codec<ClientIr> = Schema.Struct({
               itemsPath: Schema.Array(Schema.String),
               pageSchema: NamedRefNodeSchema,
               itemSchema: NamedRefNodeSchema,
+              pagesDocs: Schema.String,
+              itemsDocs: Schema.String,
             }),
           ),
         }),
@@ -316,6 +301,7 @@ export const ClientIrSchema: Schema.Codec<ClientIr> = Schema.Struct({
   ),
   errors: Schema.Struct({
     docs: Schema.optional(Schema.String),
+    codeErrorsSectionTitle: Schema.String,
     codeErrorsDocs: Schema.optional(Schema.String),
     codeErrors: Schema.Array(
       Schema.Struct({
@@ -345,10 +331,12 @@ export const ClientIrSchema: Schema.Codec<ClientIr> = Schema.Struct({
     coreReexports: Schema.Array(Schema.String),
   }),
   envelope: Schema.Struct({
+    decodeDocs: Schema.String,
     messageFields: Schema.Array(Schema.String),
     discriminatorFields: Schema.Array(Schema.String),
     stringBodyIsMessage: Schema.Boolean,
   }),
+  behavioralCoverageLocation: Schema.String,
   scaffold: Schema.Struct({
     version: Schema.String,
     private: Schema.Boolean,

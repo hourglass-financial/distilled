@@ -7,6 +7,16 @@ export { canonicalize } from "./ir/canonical.ts";
 export { decodeIr, dumpIr } from "./ir/dump.ts";
 export { checkInvariants } from "./ir/invariants.ts";
 export {
+  formatWithOxfmt,
+  generate,
+  generateToDir,
+  type Formatter,
+  type GenerateOptions,
+  type VerifyResult,
+  verifyAgainstDir,
+} from "./pipeline.ts";
+export type { EmittedFile } from "./emit/shared.ts";
+export {
   type ClientIr,
   ClientIrSchema,
   type CodeErrorIr,

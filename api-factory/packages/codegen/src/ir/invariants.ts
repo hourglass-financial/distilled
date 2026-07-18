@@ -387,6 +387,16 @@ const checkOperation = (
   if (operation.pagination === undefined) return;
   const paginationConstruct = `${construct} pagination`;
   const pagination = operation.pagination;
+  checkDocs(
+    pagination.pagesDocs,
+    `${paginationConstruct} pagesDocs`,
+    violations,
+  );
+  checkDocs(
+    pagination.itemsDocs,
+    `${paginationConstruct} itemsDocs`,
+    violations,
+  );
   if (!inputNames.has(pagination.cursorParam)) {
     add(
       violations,
@@ -484,6 +494,28 @@ const checkCodeErrorOrder = (
   }
 };
 
+const checkResourceOrderAgreement = (
+  resources: ClientIr["resources"],
+  violations: CodegenViolation[],
+): void => {
+  const byName = [...resources].sort((left, right) =>
+    compare(left.name, right.name),
+  );
+  const byFileName = [...resources].sort((left, right) =>
+    compare(left.fileName, right.fileName),
+  );
+  if (
+    byName.some((resource, index) => resource.name !== byFileName[index]?.name)
+  ) {
+    add(
+      violations,
+      "resource.order-agreement",
+      "resource declarations",
+      "resource name order and fileName order do not agree",
+    );
+  }
+};
+
 export const checkInvariants = (ir: ClientIr): void => {
   const violations: CodegenViolation[] = [];
   checkIdentifier(ir.vendor.prefix, "vendor prefix", violations);
@@ -494,6 +526,7 @@ export const checkInvariants = (ir: ClientIr): void => {
     (_resource, name) => `resource ${name}`,
     violations,
   );
+  checkResourceOrderAgreement(ir.resources, violations);
   checkUnique(
     ir.resources,
     (resource) => resource.fileName,
@@ -527,7 +560,18 @@ export const checkInvariants = (ir: ClientIr): void => {
   );
   checkCodeErrorOrder(ir.errors.codeErrors, violations);
   checkDocs(ir.errors.docs, "errors docs", violations);
+  checkDocs(
+    ir.errors.codeErrorsSectionTitle,
+    "code errors section title",
+    violations,
+  );
   checkDocs(ir.errors.codeErrorsDocs, "code errors docs", violations);
+  checkDocs(ir.envelope.decodeDocs, "envelope decode docs", violations);
+  checkDocs(
+    ir.behavioralCoverageLocation,
+    "behavioral coverage location",
+    violations,
+  );
 
   const schemas = new Map(
     ir.namedSchemas.map((schema) => [schema.name, schema]),

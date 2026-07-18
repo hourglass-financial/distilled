@@ -60,6 +60,7 @@ const baseIr = (): ClientIr => ({
       name: "widgets",
       fileName: "widgets.ts",
       docs: "Widget operations.",
+      runtimeBannerConcern: "request execution, retry, pagination",
       operations: [operation()],
     },
   ],
@@ -72,14 +73,17 @@ const baseIr = (): ClientIr => ({
     },
   ],
   errors: {
+    codeErrorsSectionTitle: "Code-discriminated errors",
     codeErrors: [],
     coreReexports: ["NotFound"],
   },
   envelope: {
+    decodeDocs: "Normalize Acme error envelopes.",
     messageFields: ["message", "error"],
     discriminatorFields: ["code", "error"],
     stringBodyIsMessage: true,
   },
+  behavioralCoverageLocation: "vendors/acme",
   scaffold: {
     version: "0.0.0",
     private: true,
@@ -315,6 +319,8 @@ describe("checkInvariants", () => {
                   itemsPath: ["data"],
                   pageSchema: { kind: "named-ref", name: "Widget" },
                   itemSchema: { kind: "named-ref", name: "Widget" },
+                  pagesDocs: "Stream every page of widgets.",
+                  itemsDocs: "Stream every widget across every page.",
                 },
               }),
             ],
@@ -375,6 +381,17 @@ describe("checkInvariants", () => {
     );
   });
 
+  it("rejects resolved envelope docs containing a comment terminator", () => {
+    const ir = baseIr();
+    expectConstruct(
+      {
+        ...ir,
+        envelope: { ...ir.envelope, decodeDocs: "bad */ docs" },
+      },
+      "envelope decode docs",
+    );
+  });
+
   it("rejects constant-body keys colliding with input fields", () => {
     const ir = baseIr();
     expectConstruct(
@@ -421,6 +438,32 @@ describe("checkInvariants", () => {
       "code-error declarations",
     );
   });
+
+  it("rejects resources whose name and fileName orders disagree", () => {
+    const ir = baseIr();
+    expectConstruct(
+      {
+        ...ir,
+        resources: [
+          {
+            name: "alpha",
+            fileName: "zulu.ts",
+            docs: "Alpha operations.",
+            runtimeBannerConcern: "request execution",
+            operations: [],
+          },
+          {
+            name: "zulu",
+            fileName: "alpha.ts",
+            docs: "Zulu operations.",
+            runtimeBannerConcern: "request execution",
+            operations: [],
+          },
+        ],
+      },
+      "resource declarations",
+    );
+  });
 });
 
 describe("canonicalize", () => {
@@ -433,6 +476,7 @@ describe("canonicalize", () => {
         name,
         fileName: `${name}.ts`,
         docs: `${name}.`,
+        runtimeBannerConcern: "request execution",
         operations: [],
       })),
     });
@@ -563,11 +607,27 @@ describe("IR JSON", () => {
     value.resources[0]!.operations[0]!.input.fields[0]!.schema = {
       kind: "passthrough",
     };
-    expect(() => decodeIr(value)).toThrow();
+    try {
+      decodeIr(value);
+      throw new Error("expected decodeIr to throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(CodegenError);
+      expect((error as CodegenError).violations).toEqual([
+        expect.objectContaining({ rule: "ir.decode" }),
+      ]);
+    }
   });
 
   it("rejects excess properties", () => {
-    expect(() => decodeIr({ ...baseIr(), unexpected: true })).toThrow();
+    try {
+      decodeIr({ ...baseIr(), unexpected: true });
+      throw new Error("expected decodeIr to throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(CodegenError);
+      expect((error as CodegenError).violations).toEqual([
+        expect.objectContaining({ rule: "ir.decode" }),
+      ]);
+    }
   });
 
   it("round-trips canonical JSON through the fail-closed decoder", () => {

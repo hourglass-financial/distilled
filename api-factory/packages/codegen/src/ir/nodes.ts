@@ -80,7 +80,7 @@ export type SchemaNode =
   | VoidNode
   | NamedRefNode;
 
-const LiteralValueSchema = Schema.Union([
+export const LiteralValueSchema: Schema.Codec<LiteralValue> = Schema.Union([
   Schema.String,
   Schema.Number,
   Schema.Boolean,
@@ -94,6 +94,23 @@ export const FieldIrSchema: Schema.Codec<FieldIr> = Schema.suspend(
       optional: Schema.Boolean,
       nullable: Schema.Boolean,
       docs: Schema.optional(Schema.String),
+    }),
+);
+
+export const NamedRefNodeSchema: Schema.Codec<NamedRefNode> = Schema.Struct({
+  kind: Schema.Literal("named-ref"),
+  name: Schema.String,
+});
+
+export const VoidNodeSchema: Schema.Codec<VoidNode> = Schema.Struct({
+  kind: Schema.Literal("void"),
+});
+
+export const StructNodeSchema: Schema.Codec<StructNode> = Schema.suspend(
+  (): Schema.Codec<StructNode> =>
+    Schema.Struct({
+      kind: Schema.Literal("struct"),
+      fields: Schema.Array(FieldIrSchema),
     }),
 );
 
@@ -115,10 +132,7 @@ export const SchemaNodeSchema: Schema.Codec<SchemaNode> = Schema.suspend(
         kind: Schema.Literal("array"),
         item: SchemaNodeSchema,
       }),
-      Schema.Struct({
-        kind: Schema.Literal("struct"),
-        fields: Schema.Array(FieldIrSchema),
-      }),
+      StructNodeSchema,
       Schema.Struct({
         kind: Schema.Literal("record"),
         key: SchemaNodeSchema,
@@ -129,10 +143,7 @@ export const SchemaNodeSchema: Schema.Codec<SchemaNode> = Schema.suspend(
         members: Schema.Array(SchemaNodeSchema),
       }),
       Schema.Struct({ kind: Schema.Literal("secret") }),
-      Schema.Struct({ kind: Schema.Literal("void") }),
-      Schema.Struct({
-        kind: Schema.Literal("named-ref"),
-        name: Schema.String,
-      }),
+      VoidNodeSchema,
+      NamedRefNodeSchema,
     ]),
 );
