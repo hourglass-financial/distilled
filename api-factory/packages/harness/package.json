@@ -32,9 +32,13 @@
   "dependencies": {
     "@hourglass-financial/api-factory-core": "workspace:*"
   },
+  "peerDependencies": {
+    "effect": "catalog:"
+  },
   "devDependencies": {
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
+    "effect": "catalog:",
     "vitest": "catalog:"
   }
 }
