@@ -87,9 +87,13 @@ export interface Classified<out M extends ErrorMeta = ErrorMeta> {
 
 /**
  * The classification vocabulary — every category paired with its one honest
- * retry disposition. A vendor needing an exotic pairing can still assign its
- * own `{ category, retry } as const satisfies ErrorMeta`; these constants
- * cover every pairing the HTTP domain actually has.
+ * retry disposition. The vocabulary is closed and core-owned; a category
+ * earns a seat only under the admission criterion in ADR-0005 (protocol
+ * grounding or ≥2-vendor evidence, plus a distinct handling contract), and
+ * the category↔retry pairing is fixed — needing an exotic pairing means the
+ * category is wrong, not that the pairing should be overridden. Vendor
+ * specificity lives on the code-discriminated error class, mapped to the
+ * nearest coarse category.
  */
 export const Meta = {
   auth: { category: "auth", retry: "none" },
