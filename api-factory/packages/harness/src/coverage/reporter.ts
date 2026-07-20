@@ -151,9 +151,12 @@ export const observe = (
 };
 
 /**
- * The vitest reporter. Wire it in the vendor's `vitest.config.ts`:
+ * The vitest reporter. Wire it in the vendor's `vitest.config.ts` — and
+ * import it from the vitest-free `/reporter` subpath, because config files
+ * (like probe specs) must not pull the barrel's runtime `vitest` imports:
  *
  * ```ts
+ * import { HarnessCoverageReporter } from "@hourglass-financial/api-factory-harness/reporter";
  * import manifest from "./tests/coverage.ts";
  * export default defineConfig({
  *   test: {

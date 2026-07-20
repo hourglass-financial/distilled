@@ -28,3 +28,27 @@ Run from `api-factory/`: `bun run test` (all packages) or
 
 Live-test conventions: resource names embed the per-run `testRunId`, and every
 created resource is deleted via `Effect.ensuring` even when assertions fail.
+(The harness package now ships these as primitives — `resourceName`,
+`resource()`, `makeLiveTest` — which the suites here migrate onto under
+[#52](https://github.com/hourglass-financial/distilled/issues/52).)
+
+## Coverage audit
+
+`bun run audit:coverage` checks `tests/coverage.ts` (once #52 authors it)
+against the generated client's `src/registry.ts`: JSON report on stdout,
+paste-ready stubs for missing entries on stderr, exit 1 on drift. It never
+writes — commit manifest edits yourself.
+
+## Probes and evidence
+
+`probes/<id>.ts` files are named raw-request specs (`defineProbe`) — the
+sanctioned way to capture wire behavior as patch evidence. Run one with
+credentials in the environment:
+
+```
+bun run probe organizations-get-missing
+```
+
+The scrubbed capture lands in `evidence/<id>.json` (auto-scrub of
+secret-shaped fields and the API key; never bypass it with plain `fetch`).
+Patch entries cite probes by id.

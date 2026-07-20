@@ -89,3 +89,43 @@ describe("coverage audit CLI", () => {
     ).toBe(2);
   });
 });
+
+describe("probe CLI", () => {
+  const runProbeCli = (
+    args: readonly string[],
+  ): { status: number | null; stderr: string } => {
+    const result = spawnSync("bun", ["src/probe-cli.ts", ...args], {
+      cwd: packageRoot,
+      encoding: "utf8",
+      // A probe fixture must never see real credentials from the caller's
+      // shell — the test asserts the credential-less path.
+      env: { ...process.env, FIXTURE_PROBE_KEY: "" },
+    });
+    return { status: result.status, stderr: result.stderr };
+  };
+
+  const baseArgs = [
+    "--probes",
+    "test/fixtures/probes",
+    "--vendor",
+    "fixture",
+    "--api-key-var",
+    "FIXTURE_PROBE_KEY",
+    "--base-url",
+    "https://api.fixture.test",
+  ] as const;
+
+  it("loads a spec outside vitest (the barrel-free import chain) and gates on credentials", () => {
+    // Regression pin: probe specs and the CLI must never pull the harness
+    // barrel, whose runtime `vitest` imports throw outside a test run.
+    const result = runProbeCli([...baseArgs, "fixture-probe"]);
+    expect(result.stderr).not.toContain("Vitest");
+    expect(result.stderr).toContain("FIXTURE_PROBE_KEY");
+    expect(result.status).toBe(2);
+  });
+
+  it("exits 2 on usage errors and unknown probe ids", () => {
+    expect(runProbeCli([]).status).toBe(2);
+    expect(runProbeCli([...baseArgs, "no-such-probe"]).status).toBe(2);
+  });
+});

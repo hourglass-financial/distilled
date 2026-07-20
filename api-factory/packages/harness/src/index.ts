@@ -12,8 +12,11 @@
  *   `coverage/cli.ts`), `coverageSuite()`, `HarnessCoverageReporter`.
  * - Probes: `defineProbe`, `runProbe` (+ CLI at `probe-cli.ts`).
  *
- * The two CLIs are deliberately not re-exported here: they are `bun`-run
- * entry points, and this barrel stays importable outside a vitest context.
+ * This barrel imports `vitest` at runtime (wrappers + projection), so it is
+ * for TEST FILES only. Non-test contexts use the vitest-free subpaths:
+ * probe specs import `@hourglass-financial/api-factory-harness/probe`,
+ * vitest configs import `…/reporter`. The two CLIs are `bun`-run entry
+ * points (`coverage/cli.ts`, `probe-cli.ts`), not exports.
  */
 
 // Run-unique naming.

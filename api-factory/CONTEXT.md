@@ -184,6 +184,18 @@ _Avoid_: tier
 A named, checked-in raw-request spec under `vendors/<v>/probes/`, runnable
 individually, whose scrubbed capture backs patch evidence.
 
+**Op stamp**:
+The `[lane:resource.method]` marker a harness test wrapper appends to a test
+title — how a test declares the operation it covers and what the coverage
+reporter parses back out of a run.
+_Avoid_: tag, test label
+
+**Gated skip**:
+A harness-issued skip whose title carries `[gated: …]` naming the missing
+credential or capability. The only skip that excuses a `tested` claim as
+unverified rather than stale.
+_Avoid_: soft skip, conditional skip
+
 **testRunId**:
 The per-process 8-hex random id embedded in every live resource name
 (`distilled-af-{vendor}-{name}-{testRunId}`) so parallel runs never collide.

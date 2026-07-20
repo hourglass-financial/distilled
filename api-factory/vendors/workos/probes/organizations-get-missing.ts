@@ -9,7 +9,9 @@
  * bun run probe organizations-get-missing
  * ```
  */
-import { defineProbe } from "@hourglass-financial/api-factory-harness";
+// Probe specs run under `bun` (no vitest), so they import the vitest-free
+// subpath — never the harness barrel.
+import { defineProbe } from "@hourglass-financial/api-factory-harness/probe";
 
 export default defineProbe({
   id: "organizations-get-missing",
