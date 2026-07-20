@@ -27,10 +27,11 @@
     "fmt": "oxfmt --write src test",
     "lint": "oxlint --fix src test",
     "check": "bun run typecheck && oxlint src test && oxfmt --check src test",
-    "test": "bunx vitest run test"
+    "test": "bunx vitest run --dir test"
   },
   "dependencies": {
-    "@hourglass-financial/api-factory-core": "workspace:*"
+    "@hourglass-financial/api-factory-core": "workspace:*",
+    "code-block-writer": "catalog:"
   },
   "peerDependencies": {
     "effect": "catalog:"

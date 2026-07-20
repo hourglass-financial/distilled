@@ -51,6 +51,8 @@ export * from "./errors.ts";
 // Wire schemas (values double as types for consumers who want them).
 export * from "./schemas.ts";
 
+export { operations, type OperationName } from "./registry.ts";
+
 // Core re-exports so consumers never import core directly: `Secret` to wrap
 // request secrets, `Category` for classification helpers (`Category.hasCategory`
 // narrows the error union inside `Effect.catchIf`).

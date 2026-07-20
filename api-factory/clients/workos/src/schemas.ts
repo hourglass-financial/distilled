@@ -17,6 +17,13 @@ import * as Schema from "effect/Schema";
 // Organizations
 // ---------------------------------------------------------------------------
 
+/** Cursor pointers returned with every WorkOS list response. */
+export const ListMetadata = Schema.Struct({
+  before: Schema.NullOr(Schema.String),
+  after: Schema.NullOr(Schema.String),
+});
+export interface ListMetadata extends Schema.Schema.Type<typeof ListMetadata> {}
+
 /** A verified or pending domain attached to an organization. */
 export const OrganizationDomain = Schema.Struct({
   object: Schema.Literal("organization_domain"),
@@ -57,13 +64,6 @@ export const Organization = Schema.Struct({
 });
 export interface Organization extends Schema.Schema.Type<typeof Organization> {}
 
-/** Cursor pointers returned with every WorkOS list response. */
-export const ListMetadata = Schema.Struct({
-  before: Schema.NullOr(Schema.String),
-  after: Schema.NullOr(Schema.String),
-});
-export interface ListMetadata extends Schema.Schema.Type<typeof ListMetadata> {}
-
 /** A page of organizations. */
 export const OrganizationList = Schema.Struct({
   object: Schema.Literal("list"),
@@ -77,6 +77,23 @@ export interface OrganizationList extends Schema.Schema.Type<
 // ---------------------------------------------------------------------------
 // User Management
 // ---------------------------------------------------------------------------
+
+/** Present when a session was created via dashboard impersonation. */
+export const Impersonator = Schema.Struct({
+  email: Schema.String,
+  reason: Schema.NullOr(Schema.String),
+});
+export interface Impersonator extends Schema.Schema.Type<typeof Impersonator> {}
+
+/** OAuth provider tokens, when the session was created via an OAuth provider. */
+export const OAuthTokens = Schema.Struct({
+  provider: Schema.String,
+  refresh_token: Secret,
+  access_token: Secret,
+  expires_at: Schema.Number,
+  scopes: Schema.Array(Schema.String),
+});
+export interface OAuthTokens extends Schema.Schema.Type<typeof OAuthTokens> {}
 
 /** A WorkOS AuthKit user. */
 export const User = Schema.Struct({
@@ -96,23 +113,6 @@ export const User = Schema.Struct({
   updated_at: Schema.String,
 });
 export interface User extends Schema.Schema.Type<typeof User> {}
-
-/** Present when a session was created via dashboard impersonation. */
-export const Impersonator = Schema.Struct({
-  email: Schema.String,
-  reason: Schema.NullOr(Schema.String),
-});
-export interface Impersonator extends Schema.Schema.Type<typeof Impersonator> {}
-
-/** OAuth provider tokens, when the session was created via an OAuth provider. */
-export const OAuthTokens = Schema.Struct({
-  provider: Schema.String,
-  refresh_token: Secret,
-  access_token: Secret,
-  expires_at: Schema.Number,
-  scopes: Schema.Array(Schema.String),
-});
-export interface OAuthTokens extends Schema.Schema.Type<typeof OAuthTokens> {}
 
 /**
  * The response from a successful authentication. `access_token` and
