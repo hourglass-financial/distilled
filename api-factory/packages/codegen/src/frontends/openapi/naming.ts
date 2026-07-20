@@ -1,6 +1,7 @@
 import type { CodegenViolation } from "../../errors.ts";
 import { reservedWords } from "../../ir/invariants.ts";
 import type { OperationNamingOverride } from "../../ir/vendor-config.ts";
+import { ownValue } from "./json.ts";
 
 /**
  * Naming derivation (#31 §7): fixed engine rules derive resource grouping
@@ -106,7 +107,7 @@ export const deriveOperationNames = (
   const override = context.override ?? {};
 
   const derivedResource = deriveRawResource(context.tags, context.pathSegments);
-  const renamed = context.resourceRenames[derivedResource];
+  const renamed = ownValue(context.resourceRenames, derivedResource);
   const resource = override.resource ?? renamed ?? derivedResource;
   if (resource.length === 0) {
     violations.push({

@@ -51,6 +51,8 @@ const httpMethods = new Set([
   "trace",
 ]);
 
+const isIndex = (segment: string): boolean => /^\d+$/u.test(segment);
+
 const classify = (
   segments: ReadonlyArray<string>,
   change: SpecDiffChange,
@@ -58,29 +60,31 @@ const classify = (
   const last = segments.at(-1) ?? "";
   const parent = segments.at(-2) ?? "";
   if (last === "type" && change === "changed") return "type-changed";
-  if (parent === "required" || (last === "required" && change !== "changed")) {
+  if (parent === "required" && isIndex(last) && change !== "changed") {
     return change === "removed"
       ? "required-entry-removed"
       : "required-entry-added";
   }
   if (parent === "enum" || last === "enum") return "enum-changed";
-  if (parent === "parameters" || segments.at(-3) === "parameters") {
+  if (parent === "parameters" && isIndex(last) && change !== "changed") {
     return change === "removed" ? "parameter-removed" : "parameter-added";
   }
-  if (parent === "responses") {
+  if (parent === "responses" && change !== "changed") {
     return change === "removed" ? "response-removed" : "response-added";
   }
   if (
     segments.length === 3 &&
     segments[0] === "paths" &&
-    httpMethods.has(last)
+    httpMethods.has(last) &&
+    change !== "changed"
   ) {
     return change === "removed" ? "operation-removed" : "operation-added";
   }
   if (
     segments.length === 3 &&
     segments[0] === "components" &&
-    segments[1] === "schemas"
+    segments[1] === "schemas" &&
+    change !== "changed"
   ) {
     return change === "removed" ? "schema-removed" : "schema-added";
   }

@@ -1,5 +1,6 @@
 import {
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
@@ -297,6 +298,12 @@ describe("CLI --vendor", () => {
         (field) => field.name === "name",
       )?.schema.kind,
     ).toBe("secret");
+
+    const audit = auditPatchLocalityFrom(loadVendorDir(vendorDir), {
+      generateOptions: { formatter: identity },
+    });
+    expect(audit.ok, JSON.stringify(audit.entries, null, 2)).toBe(true);
+    expect(audit.entries[0]!.actualOperations).toEqual(["widgets.get"]);
   });
 
   it("rejects a patch file whose id does not match its basename", () => {
@@ -313,6 +320,33 @@ describe("CLI --vendor", () => {
       },
     });
     expect(() => loadVendorDir(vendorDir)).toThrow(/patch\.id/u);
+  });
+
+  it("rejects stray files in the patches directory", () => {
+    const dir = temp();
+    const vendorDir = join(dir, "vendor");
+    writeVendorDir(vendorDir, {
+      spec: northstarSpec,
+      config: northstarConfig,
+    });
+    const patchesDir = join(vendorDir, "patches");
+    mkdirSync(patchesDir, { recursive: true });
+    writeFileSync(join(patchesDir, "001-typo.patch.jsonn"), "{}");
+    expect(() => loadVendorDir(vendorDir)).toThrow(/patch\.stray-file/u);
+  });
+
+  it("rejects --reconcile outside generate", () => {
+    const result = spawn([
+      "verify",
+      "--vendor",
+      "v",
+      "--against",
+      "a",
+      "--reconcile",
+      "r.json",
+    ]);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("--reconcile is only valid on generate");
   });
 });
 

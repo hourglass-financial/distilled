@@ -24,6 +24,7 @@ import {
   getAtPointer,
   isJsonArray,
   isJsonObject,
+  ownValue,
   type JsonObject,
   type JsonValue,
 } from "./json.ts";
@@ -557,8 +558,16 @@ class Normalizer {
     const rawResourceNames = new Set<string>();
 
     for (const [path, item] of Object.entries(paths)) {
-      if (!path.startsWith("/")) continue;
+      if (path.startsWith("x-")) continue;
       const itemPointer = formatPointer(["paths", path]);
+      if (!path.startsWith("/")) {
+        this.add(
+          "openapi.path-item",
+          itemPointer,
+          `path key ${JSON.stringify(path)} does not start with "/"; its operations cannot be silently dropped`,
+        );
+        continue;
+      }
       if (!isJsonObject(item)) {
         this.add(
           "openapi.path-item",
@@ -713,14 +722,14 @@ class Normalizer {
         tags,
         pathSegments,
         resourceRenames: naming.resources ?? {},
-        override: naming.operations?.[operationId],
+        override: ownValue(naming.operations, operationId),
       },
       this.violations,
     );
     if (names === undefined) return;
     derivedResourceNames.add(names.resource);
     const qualified = `${names.resource}.${names.method}`;
-    const overrides = this.config.operations?.[qualified];
+    const overrides = ownValue(this.config.operations, qualified);
 
     const {
       fields: parameterFields,
@@ -812,13 +821,11 @@ class Normalizer {
     const opParameters = operation["parameters"] ?? [];
     for (const source of [opParameters, itemParameters]) {
       if (!isJsonArray(source)) {
-        if (source !== undefined && merged.length === 0) {
-          this.add(
-            "openapi.parameter",
-            `${pointer}/parameters`,
-            "parameters must be an array",
-          );
-        }
+        this.add(
+          "openapi.parameter",
+          `${pointer}/parameters`,
+          "parameters must be an array",
+        );
         continue;
       }
       for (const raw of source) {
@@ -827,7 +834,15 @@ class Normalizer {
           "parameters",
           `${pointer}/parameters`,
         );
-        if (resolved === undefined || !isJsonObject(resolved)) continue;
+        if (resolved === undefined) continue;
+        if (!isJsonObject(resolved)) {
+          this.add(
+            "openapi.parameter",
+            `${pointer}/parameters`,
+            "a parameter entry is not an object",
+          );
+          continue;
+        }
         const name = resolved["name"];
         const where = resolved["in"];
         if (typeof name !== "string" || typeof where !== "string") {
@@ -1050,7 +1065,15 @@ class Normalizer {
         "responses",
         statusPointer,
       );
-      if (response === undefined || !isJsonObject(response)) continue;
+      if (response === undefined) continue;
+      if (!isJsonObject(response)) {
+        this.add(
+          "openapi.response",
+          statusPointer,
+          "the response is not an object; a declared status cannot be silently dropped",
+        );
+        continue;
+      }
       const statusNumber = Number(status);
 
       if (statusNumber >= 200 && statusNumber < 300) {
@@ -1133,7 +1156,14 @@ class Normalizer {
     }
     const media = content["application/json"];
     const schema = isJsonObject(media) ? media["schema"] : undefined;
-    if (schema === undefined) return undefined;
+    if (schema === undefined) {
+      this.add(
+        "openapi.response.success",
+        pointer,
+        "the success response declares application/json content without a schema; the body cannot be silently typed away",
+      );
+      return undefined;
+    }
     if (!isJsonObject(schema)) {
       this.add("openapi.response.success", pointer, "schema is not an object");
       return undefined;
@@ -1166,10 +1196,25 @@ class Normalizer {
     if (!isJsonObject(content)) return undefined;
     const media = content["application/json"];
     if (!isJsonObject(media)) return undefined;
-    const schema = media["schema"];
+    let schema = media["schema"];
     if (!isJsonObject(schema)) return undefined;
+    if (schema["$ref"] !== undefined) {
+      const target = this.refTarget(schema);
+      const resolved =
+        target === undefined ? undefined : this.componentSchemas.get(target);
+      if (!isJsonObject(resolved)) return undefined;
+      schema = resolved;
+    }
     const members = schema["oneOf"] ?? schema["anyOf"];
     if (!isJsonArray(members)) return undefined;
+    if (members.length === 0) {
+      this.add(
+        "openapi.error.member",
+        pointer,
+        "the error response declares an empty union; a declared status cannot be silently dropped",
+      );
+      return [];
+    }
 
     const classNames: string[] = [];
     let lifted = true;
@@ -1249,7 +1294,7 @@ class Normalizer {
 
   private memberDiscriminator(properties: JsonObject): string | undefined {
     for (const field of this.config.envelope.discriminatorFields) {
-      const property = properties[field];
+      const property = ownValue(properties, field);
       if (!isJsonObject(property)) continue;
       const constValue = property["const"];
       if (typeof constValue === "string") return constValue;
@@ -1373,7 +1418,7 @@ class Normalizer {
     }
     const resources: ResourceIr[] = [];
     for (const [name, ops] of byResource) {
-      const override = this.config.resources?.[name];
+      const override = ownValue(this.config.resources, name);
       const paginated = ops.some((op) => op.pagination !== undefined);
       resources.push({
         name,
@@ -1548,7 +1593,7 @@ class Normalizer {
     const codeErrors: CodeErrorIr[] = [];
     const codeMeta = this.config.errors.codeMeta;
     for (const seed of this.codeErrors.values()) {
-      const meta = codeMeta[seed.code] as ErrorMetaIr | undefined;
+      const meta = ownValue(codeMeta, seed.code) as ErrorMetaIr | undefined;
       if (meta === undefined) {
         this.add(
           "config.error-meta.missing",

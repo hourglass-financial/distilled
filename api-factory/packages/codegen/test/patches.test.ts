@@ -218,6 +218,25 @@ describe("patch kinds — single-semantics evaluation", () => {
     ).toThrow(CodegenError);
   });
 
+  it("evaluates raw ops strictly in sequence (a test guards the state before it)", () => {
+    const sequenced = (expected: string) =>
+      decode(
+        patchEntry("011-sequenced", {
+          kind: "raw",
+          ops: [
+            { op: "replace", path: "/openapi", value: "3.1.9" },
+            { op: "test", path: "/openapi", value: expected },
+          ],
+        }),
+      );
+    expect(evaluateEntry(document, sequenced("3.1.9")).classification).toBe(
+      "still_needed",
+    );
+    expect(evaluateEntry(document, sequenced("3.1.0")).classification).toBe(
+      "conflict",
+    );
+  });
+
   it("requires the full structured envelope at decode time", () => {
     const complete = patchEntry("010-full", {
       kind: "spec-pruning",

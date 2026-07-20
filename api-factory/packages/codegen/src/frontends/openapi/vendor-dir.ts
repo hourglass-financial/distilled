@@ -125,9 +125,20 @@ const loadPatches = (
 ): { readonly patches: ReadonlyArray<PatchEntry>; readonly hash: string } => {
   const patchesDir = join(dir, PATCHES_DIR);
   if (!existsSync(patchesDir)) return { patches: [], hash: sha256("") };
-  const names = readdirSync(patchesDir)
-    .filter((name) => name.endsWith(PATCH_SUFFIX))
-    .sort(codeUnitCompare);
+  const entries = readdirSync(patchesDir).sort(codeUnitCompare);
+  for (const name of entries) {
+    // Dotfiles (e.g. .DS_Store) are tolerated; anything else that is not a
+    // patch file would otherwise sit in the patch directory and silently
+    // never apply, never hash, and never reach a gate.
+    if (!name.startsWith(".") && !name.endsWith(PATCH_SUFFIX)) {
+      fail(
+        "patch.stray-file",
+        `${PATCHES_DIR}/${name}`,
+        `only *.patch.json files may live in ${PATCHES_DIR}/`,
+      );
+    }
+  }
+  const names = entries.filter((name) => name.endsWith(PATCH_SUFFIX));
   const patches: PatchEntry[] = [];
   const digest = createHash("sha256");
   for (const name of names) {

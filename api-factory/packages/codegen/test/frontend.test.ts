@@ -348,6 +348,100 @@ describe("OpenAPI frontend normalization", () => {
     );
   });
 
+  it("hard-errors on an empty error-response union instead of dropping the status", () => {
+    const spec = patchSpec(bastionSpec, (draft) => {
+      const responses = (
+        (draft["paths"] as JsonObject)["/sessions/authenticate"] as {
+          post: { responses: Record<string, unknown> };
+        }
+      ).post.responses;
+      responses["400"] = {
+        description: "Bad request.",
+        content: { "application/json": { schema: { oneOf: [] } } },
+      };
+    });
+    expectViolation(
+      () => normalize(spec, bastionConfig),
+      "openapi.error.member",
+      "~1sessions~1authenticate/post/responses/400",
+    );
+  });
+
+  it("hard-errors on a path key that does not start with a slash", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      const paths = draft["paths"] as Record<string, unknown>;
+      paths["widgets-broken"] = { get: { operationId: "broken" } };
+    });
+    expectViolation(
+      () => normalize(spec, northstarConfig),
+      "openapi.path-item",
+      "widgets-broken",
+    );
+  });
+
+  it("lifts a discriminated error table referenced through a component $ref", () => {
+    const spec = patchSpec(bastionSpec, (draft) => {
+      const components = (draft["components"] as JsonObject)[
+        "schemas"
+      ] as Record<string, unknown>;
+      const post = (
+        (draft["paths"] as JsonObject)["/sessions/authenticate"] as {
+          post: {
+            responses: Record<
+              string,
+              { content: { "application/json": { schema: unknown } } }
+            >;
+          };
+        }
+      ).post;
+      components["BadRequestTable"] =
+        post.responses["400"]!.content["application/json"].schema;
+      post.responses["400"]!.content["application/json"].schema = {
+        $ref: "#/components/schemas/BadRequestTable",
+      };
+    });
+    const ir = normalize(spec, bastionConfig);
+    expect(ir.errors.codeErrors.map((error) => error.code).sort()).toEqual([
+      "alpha_challenge",
+      "invalid_token",
+    ]);
+  });
+
+  it("cannot be bypassed by prototype-key discriminator codes", () => {
+    const spec = patchSpec(bastionSpec, (draft) => {
+      const member = (
+        (draft["paths"] as JsonObject)["/sessions/authenticate"] as {
+          post: {
+            responses: Record<
+              string,
+              {
+                content: {
+                  "application/json": {
+                    schema: {
+                      oneOf: Array<{
+                        properties: { code: { const: string } };
+                      }>;
+                    };
+                  };
+                };
+              }
+            >;
+          };
+        }
+      ).post.responses["400"]!.content["application/json"].schema.oneOf[0]!;
+      member.properties.code.const = "constructor";
+    });
+    const config = JSON.parse(JSON.stringify(bastionConfig)) as {
+      errors: { codeMeta: Record<string, string> };
+    };
+    delete config.errors.codeMeta["invalid_token"];
+    expectViolation(
+      () => normalize(spec, config as JsonValue),
+      "config.error-meta.missing",
+      "constructor",
+    );
+  });
+
   it("rejects a stray key in the vendor config (fail-closed decode)", () => {
     expect(() =>
       decodeVendorConfig({

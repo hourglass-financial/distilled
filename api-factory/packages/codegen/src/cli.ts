@@ -33,10 +33,11 @@ const fail = (rule: string, construct: string, message: string): never => {
 
 const valueFor = (args: ReadonlyArray<string>, flag: string): string => {
   const index = args.indexOf(flag);
-  if (index === -1 || args[index + 1] === undefined) {
+  const value = index === -1 ? undefined : args[index + 1];
+  if (value === undefined || value.startsWith("--")) {
     return fail("cli.arguments", flag, `missing required ${flag} value`);
   }
-  return args[index + 1]!;
+  return value;
 };
 
 const optionalValueFor = (
@@ -45,10 +46,11 @@ const optionalValueFor = (
 ): string | undefined => {
   const index = args.indexOf(flag);
   if (index === -1) return undefined;
-  if (args[index + 1] === undefined) {
+  const value = args[index + 1];
+  if (value === undefined || value.startsWith("--")) {
     return fail("cli.arguments", flag, `missing ${flag} value`);
   }
-  return args[index + 1]!;
+  return value;
 };
 
 const readJson = (path: string, rule: string): unknown => {
@@ -73,7 +75,10 @@ interface ResolvedInput {
  * Resolve the IR source: `--ir <file.json>` (the raw engine interchange,
  * ADR-0002) or `--vendor <dir>` (the OpenAPI frontend, #48). Exactly one.
  */
-const resolveInput = (args: ReadonlyArray<string>): ResolvedInput => {
+const resolveInput = (
+  args: ReadonlyArray<string>,
+  options: { readonly allowReconcile: boolean } = { allowReconcile: false },
+): ResolvedInput => {
   const irPath = optionalValueFor(args, "--ir");
   const vendorDir = optionalValueFor(args, "--vendor");
   const reconcileReportPath = optionalValueFor(args, "--reconcile");
@@ -82,6 +87,15 @@ const resolveInput = (args: ReadonlyArray<string>): ResolvedInput => {
       "cli.arguments",
       "--ir/--vendor",
       "exactly one of --ir and --vendor is required",
+    );
+  }
+  // Reconciliation is a generate-only affordance: running the verify gate or
+  // an IR dump in lenient patch mode would defeat their point.
+  if (reconcileReportPath !== undefined && !options.allowReconcile) {
+    return fail(
+      "cli.arguments",
+      "--reconcile",
+      "--reconcile is only valid on generate",
     );
   }
   if (reconcileReportPath !== undefined && vendorDir === undefined) {
@@ -136,7 +150,7 @@ export const runCli = async (args: ReadonlyArray<string>): Promise<number> => {
       return 0;
     }
     if (args[0] === "generate") {
-      const input = resolveInput(args);
+      const input = resolveInput(args, { allowReconcile: true });
       generateToDir(input.ir, valueFor(args, "--out"), input.generateOptions);
       return 0;
     }

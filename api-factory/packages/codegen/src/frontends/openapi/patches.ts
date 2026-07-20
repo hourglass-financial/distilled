@@ -272,7 +272,7 @@ type LoweringOutcome =
  */
 const lowerEntry = (
   document: JsonValue,
-  entry: PatchEntry,
+  entry: Exclude<PatchEntry, { readonly kind: "raw" }>,
 ): LoweringOutcome => {
   switch (entry.kind) {
     case "error-response-injection": {
@@ -416,33 +416,55 @@ const lowerEntry = (
         ],
       };
     }
-    case "raw": {
-      const edits: JsonEdit[] = [];
-      for (const op of entry.ops) {
-        if (op.op === "test") continue;
-        edits.push(
-          op.op === "remove"
-            ? { op: "remove", path: op.path }
-            : { op: op.op, path: op.path, value: op.value },
-        );
-      }
-      return { outcome: "lowered", edits };
-    }
   }
 };
 
-const applyRawTests = (
+/**
+ * Raw entries evaluate their ops strictly in sequence with RFC 6902
+ * semantics: each `test` guards the document state produced by the ops
+ * before it, never the original document.
+ */
+const evaluateRawEntry = (
   document: JsonValue,
   entry: PatchEntry & { readonly kind: "raw" },
-): string | undefined => {
+): PatchEvaluation => {
+  const precondition = preconditionHolds(document, entry.precondition);
+  if (!precondition.holds) {
+    return { classification: "conflict", detail: precondition.detail };
+  }
+  let current = document;
   for (const op of entry.ops) {
-    if (op.op !== "test") continue;
-    const actual = getAtPointer(document, op.path);
-    if (actual === undefined || !deepEqual(actual, op.value)) {
-      return `raw test op at ${JSON.stringify(op.path)} does not hold`;
+    if (op.op === "test") {
+      const actual = getAtPointer(current, op.path);
+      if (actual === undefined || !deepEqual(actual, op.value)) {
+        return {
+          classification: "conflict",
+          detail: `raw test op at ${JSON.stringify(op.path)} does not hold`,
+        };
+      }
+      continue;
+    }
+    try {
+      current = applyEdit(
+        current,
+        op.op === "remove"
+          ? { op: "remove", path: op.path }
+          : { op: op.op, path: op.path, value: op.value },
+      );
+    } catch (cause) {
+      if (!(cause instanceof JsonEditError)) throw cause;
+      return {
+        classification:
+          cause.reason === "target-exists" ? "unsupported" : "stale",
+        detail: cause.message,
+      };
     }
   }
-  return undefined;
+  return {
+    classification: "still_needed",
+    detail: "precondition holds and all edits apply",
+    result: current,
+  };
 };
 
 /**
@@ -464,6 +486,9 @@ export const evaluateEntry = (
   document: JsonValue,
   entry: PatchEntry,
 ): PatchEvaluation => {
+  if (entry.kind === "raw") {
+    return evaluateRawEntry(document, entry);
+  }
   const lowering = lowerEntry(document, entry);
   if (lowering.outcome === "already-applied") {
     return { classification: "redundant", detail: lowering.detail };
@@ -478,25 +503,12 @@ export const evaluateEntry = (
   if (!precondition.holds) {
     return { classification: "conflict", detail: precondition.detail };
   }
-  if (entry.kind === "raw") {
-    const testFailure = applyRawTests(document, entry);
-    if (testFailure !== undefined) {
-      return { classification: "conflict", detail: testFailure };
-    }
-  }
   let current = document;
   for (const edit of lowering.edits) {
     try {
       current = applyEdit(current, edit);
     } catch (cause) {
       if (!(cause instanceof JsonEditError)) throw cause;
-      if (entry.kind === "raw") {
-        return {
-          classification:
-            cause.reason === "target-exists" ? "unsupported" : "stale",
-          detail: cause.message,
-        };
-      }
       return {
         classification: cause.reason === "target-exists" ? "conflict" : "stale",
         detail: cause.message,

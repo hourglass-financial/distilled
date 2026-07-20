@@ -10,8 +10,13 @@ import {
   type PatchEntry,
   type PatchTargetRole,
 } from "./patches.ts";
-import { loadVendorDir, type VendorDir } from "./vendor-dir.ts";
+import {
+  auditAttestation,
+  loadVendorDir,
+  type VendorDir,
+} from "./vendor-dir.ts";
 import { parsePointer } from "./json.ts";
+import { CodegenError } from "../../errors.ts";
 
 /**
  * The patch-locality audit (#29, #27 gate 3): every entry's declared blast
@@ -242,6 +247,7 @@ const diffIr = (before: ClientIr, after: ClientIr): FacetDiff => {
   const afterSchemas = schemasByName(after);
   const usage = schemaUsage(after);
   const usageBefore = schemaUsage(before);
+  const structurallyChangedSchemas = new Set<string>();
   for (const name of new Set([
     ...beforeSchemas.keys(),
     ...afterSchemas.keys(),
@@ -256,6 +262,7 @@ const diffIr = (before: ClientIr, after: ClientIr): FacetDiff => {
       facets.add("metadata");
       continue;
     }
+    structurallyChangedSchemas.add(name);
     const inRequest = usage.request.has(name) || usageBefore.request.has(name);
     const inResponse =
       usage.response.has(name) || usageBefore.response.has(name);
@@ -265,6 +272,49 @@ const diffIr = (before: ClientIr, after: ClientIr): FacetDiff => {
       notes.push(
         `schema ${name} is reachable from both request and response positions; no single role covers it`,
       );
+    }
+  }
+
+  // A structurally-changed schema affects every operation whose input or
+  // output transitively references it — that attribution is what lets a
+  // truthfully-enumerated component patch pass symmetrically, and what
+  // catches an upstream operation newly referencing a patched schema.
+  if (structurallyChangedSchemas.size > 0) {
+    for (const ir of [before, after]) {
+      const schemas = schemasByName(ir);
+      const closure = (node: SchemaNode): ReadonlySet<string> => {
+        const seen = new Set<string>();
+        const queue: string[] = [];
+        collectRefs(node, seen);
+        queue.push(...seen);
+        while (queue.length > 0) {
+          const name = queue.pop()!;
+          const schema = schemas.get(name);
+          if (schema === undefined) continue;
+          const refs = new Set<string>();
+          collectRefs(schema.schema, refs);
+          for (const ref of refs) {
+            if (!seen.has(ref)) {
+              seen.add(ref);
+              queue.push(ref);
+            }
+          }
+        }
+        return seen;
+      };
+      for (const resource of ir.resources) {
+        for (const operation of resource.operations) {
+          const reachable = new Set([
+            ...closure(operation.input),
+            ...closure(operation.output),
+          ]);
+          for (const name of structurallyChangedSchemas) {
+            if (reachable.has(name)) {
+              changedOperations.add(qualifiedName(operation));
+            }
+          }
+        }
+      }
     }
   }
 
@@ -447,5 +497,16 @@ export const auditPatchLocalityFrom = (
 export const auditPatchLocality = (
   vendorDir: string,
   options: PatchLocalityOptions = {},
-): PatchLocalityResult =>
-  auditPatchLocalityFrom(loadVendorDir(vendorDir), options);
+): PatchLocalityResult => {
+  const attestation = auditAttestation(vendorDir);
+  if (!attestation.ok) {
+    throw new CodegenError([
+      {
+        rule: "attestation.mismatch",
+        construct: attestation.specFile,
+        message: `snapshot hash ${attestation.actualHash} does not match the provenance record's ${attestation.expectedHash}; the locality audit refuses a tampered snapshot`,
+      },
+    ]);
+  }
+  return auditPatchLocalityFrom(loadVendorDir(vendorDir), options);
+};

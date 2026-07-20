@@ -241,3 +241,14 @@ export const applyEdit = (document: JsonValue, edit: JsonEdit): JsonValue => {
 /** Stable serialization for checked-in JSON artifacts: 2-space, trailing newline. */
 export const printJson = (value: JsonValue): string =>
   `${JSON.stringify(value, null, 2)}\n`;
+
+/**
+ * Own-property record lookup for dynamic keys sourced from specs or vendor
+ * config. A bare `record[key]` would resolve prototype members for keys like
+ * `"constructor"`, letting spec-supplied data bypass fail-closed gates.
+ */
+export const ownValue = <T>(
+  record: Readonly<Record<string, T>> | undefined,
+  key: string,
+): T | undefined =>
+  record !== undefined && Object.hasOwn(record, key) ? record[key] : undefined;
