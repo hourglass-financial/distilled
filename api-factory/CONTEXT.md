@@ -93,6 +93,16 @@ entry's behavior claim.
 The refresh-workflow-only patch-application mode: stale entries are collected
 into a report that gates the PR instead of aborting generation.
 
+**Patch classification**:
+The five-way verdict the shared applier/classifier gives one patch entry
+against the (incrementally patched) snapshot: `still_needed`, `redundant`
+(upstream adopted the fix), `stale` (target vanished), `conflict`
+(unexpected state), `unsupported` (raw entries only).
+
+**Spec-diff**:
+The pointer-level, classified delta between two snapshots (parameter added,
+type changed, required entry removed, …) — never an opaque hash pair.
+
 ### Codegen
 
 **IR**:

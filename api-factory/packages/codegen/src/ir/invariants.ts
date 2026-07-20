@@ -14,7 +14,7 @@ const identifierPattern =
 const fileNamePattern =
   /^[$_\p{ID_Start}](?:[$_\p{ID_Continue}]|\u{200c}|\u{200d})*(?:-[$_\p{ID_Start}](?:[$_\p{ID_Continue}]|\u{200c}|\u{200d})*)*\.ts$/u;
 
-const reservedWords = new Set([
+export const reservedWords: ReadonlySet<string> = new Set([
   "await",
   "arguments",
   "break",

@@ -31,9 +31,17 @@ export type Formatter = (
   files: ReadonlyArray<EmittedFile>,
 ) => ReadonlyArray<EmittedFile>;
 
+export interface GenerateProvenance {
+  readonly specHash: string;
+  readonly configHash: string;
+  readonly patchesHash: string;
+}
+
 export interface GenerateOptions {
   readonly formatter?: Formatter;
   readonly engineVersion?: string;
+  /** Vendor-tree input hashes recorded in the MANIFEST (ADR-0003, #48). */
+  readonly provenance?: GenerateProvenance;
   readonly transformEmittedFiles?: (
     files: ReadonlyArray<EmittedFile>,
   ) => ReadonlyArray<EmittedFile>;
@@ -235,7 +243,10 @@ export const generate = (
   checkAccounting(ir, formatted);
   return [
     ...formatted,
-    emitManifest(formatted, options.engineVersion ?? defaultEngineVersion()),
+    emitManifest(formatted, {
+      engineVersion: options.engineVersion ?? defaultEngineVersion(),
+      ...options.provenance,
+    }),
   ];
 };
 
