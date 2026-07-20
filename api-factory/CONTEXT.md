@@ -141,6 +141,20 @@ compared both directions against a real emission. Regenerated only
 explicitly, never by a gate.
 _Avoid_: snapshot, baseline
 
+### Classification
+
+**Category**:
+A member of the closed, core-owned error-classification vocabulary — the
+coarse cross-vendor grouping an error class declares via its `Meta` constant,
+each category carrying exactly one retry disposition. Admission is governed
+by the criterion in ADR-0005.
+_Avoid_: error kind, error family
+
+**Code (error code)**:
+The vendor's fine-grained discriminator, carried as a schema literal on the
+error class — where vendor-specific semantics live when no category fits.
+_Avoid_: error type (ambiguous with the class itself)
+
 ### Testing
 
 **Coverage manifest**:
