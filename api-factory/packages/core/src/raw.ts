@@ -72,7 +72,11 @@ export type RawRequestBody =
    * Verbatim text bytes — the negative-test escape hatch (#29): malformed
    * JSON, wrong content types, truncated payloads.
    */
-  | { readonly kind: "text"; readonly value: string; readonly contentType?: string };
+  | {
+      readonly kind: "text";
+      readonly value: string;
+      readonly contentType?: string;
+    };
 
 /** Query parameter values, serialized exactly like operation query params. */
 export type RawQueryValue =
@@ -114,9 +118,7 @@ export type RawRequest = (
   options: RawRequestOptions,
 ) => Effect.Effect<RawResponse, RawTransportError>;
 
-const headersToRecord = (
-  headers: object,
-): Readonly<Record<string, string>> => {
+const headersToRecord = (headers: object): Readonly<Record<string, string>> => {
   const record: Record<string, string> = {};
   for (const [key, value] of Object.entries(headers)) {
     if (typeof value === "string") record[key] = value;

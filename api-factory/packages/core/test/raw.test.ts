@@ -135,7 +135,11 @@ describe("makeRawRequest", () => {
     const response = await run({
       method: "POST",
       pathTemplate: "/organizations",
-      body: { kind: "text", value: '{"name": tru', contentType: "application/json" },
+      body: {
+        kind: "text",
+        value: '{"name": tru',
+        contentType: "application/json",
+      },
     });
     expect(response.status).toBe(400);
     expect(requestBodyText(requests[0]!)).toBe('{"name": tru');
