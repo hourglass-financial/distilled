@@ -1,7 +1,21 @@
+import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vitest";
 import * as Core from "../src/index.ts";
 
 describe("core barrel", () => {
+  it("TransportFailure is schema-first: the value is the schema, the guard derives from it", () => {
+    const summary = Core.TransportFailure.make({
+      reason: "TransportError",
+      method: "GET",
+      url: "https://api.vendor.test/status",
+      description: undefined,
+    });
+    expect(Schema.is(Core.TransportFailure)(summary)).toBe(true);
+    expect(
+      Schema.is(Core.TransportFailure)({ reason: 42, method: "GET" }),
+    ).toBe(false);
+  });
+
   it("exposes the machinery a generated client imports", () => {
     expect(typeof Core.makeRunner).toBe("function");
     expect(typeof Core.makeMatchError).toBe("function");

@@ -11,13 +11,16 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.test.json",
     "build": "tsc -p tsconfig.test.json",
-    "fmt": "oxfmt --write tests",
-    "lint": "oxlint --fix tests",
-    "check": "bun run typecheck && oxlint tests && oxfmt --check tests",
-    "test": "bunx vitest run tests"
+    "fmt": "oxfmt --write tests probes",
+    "lint": "oxlint --fix tests probes",
+    "check": "bun run typecheck && oxlint tests probes && oxfmt --check tests probes",
+    "test": "bunx vitest run tests",
+    "audit:coverage": "bun ../../packages/harness/src/coverage/cli.ts --vendor workos --registry ../../clients/workos/src/registry.ts --manifest ./tests/coverage.ts",
+    "probe": "bun ../../packages/harness/src/probe-cli.ts --probes ./probes --vendor workos --api-key-var WORKOS_API_KEY --base-url-var WORKOS_API_URL --base-url https://api.workos.com --evidence ./evidence"
   },
   "dependencies": {
     "@hourglass-financial/api-factory-core": "workspace:*",
+    "@hourglass-financial/api-factory-harness": "workspace:*",
     "@hourglass-financial/api-factory-workos": "workspace:*",
     "effect": "catalog:"
   },

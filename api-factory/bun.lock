@@ -73,6 +73,7 @@
       },
       "peerDependencies": {
         "effect": "catalog:",
+        "vitest": "catalog:",
       },
     },
     "vendors/workos": {
@@ -80,6 +81,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@hourglass-financial/api-factory-core": "workspace:*",
+        "@hourglass-financial/api-factory-harness": "workspace:*",
         "@hourglass-financial/api-factory-workos": "workspace:*",
         "effect": "catalog:",
       },

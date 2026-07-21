@@ -22,7 +22,6 @@ import type * as Headers from "effect/unstable/http/Headers";
 import type { HttpClient } from "effect/unstable/http/HttpClient";
 import * as HttpClientError from "effect/unstable/http/HttpClientError";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
-import type * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import { acceptsRetryAfter, type ClassifiedErrorClass } from "./errors.ts";
 import {
   type InputSchema,
@@ -32,6 +31,7 @@ import {
   planRequest,
 } from "./operation.ts";
 import { apply, type RetryPolicy } from "./retry.ts";
+import { assembleRequest, readBody } from "./transport.ts";
 
 // ---------------------------------------------------------------------------
 // Error matching
@@ -147,39 +147,6 @@ export const makeMatchError =
 /** Which half of the pipeline a schema failure occurred in. */
 export type DecodePhase = "request-encode" | "response-decode";
 
-/**
- * Secret-free summary of an HTTP client failure, safe to carry on a vendor
- * error. Never wrap the `HttpClientError` itself: its `reason` holds the full
- * request — encoded body and auth header included — so preserving it verbatim
- * would leak secrets through any logged error chain. Vendor error *messages*
- * are built from the structured parts here, never from the reason's formatted
- * free text.
- */
-export interface TransportFailure {
-  readonly reason: string;
-  readonly method: string;
-  readonly url: string;
-  /**
-   * Transport-authored detail (e.g. "socket reset"), when the reason carries
-   * one. Authored by the transport layer, never from request payloads.
-   */
-  readonly description?: string | undefined;
-}
-
-/** Build a {@link TransportFailure} from a raw HTTP client error. */
-export const summarizeHttpClientError = (
-  error: HttpClientError.HttpClientError,
-): TransportFailure => ({
-  reason: error.reason._tag,
-  method: error.reason.request.method,
-  url: error.reason.request.url,
-  description:
-    "description" in error.reason &&
-    typeof error.reason.description === "string"
-      ? error.reason.description
-      : undefined,
-});
-
 /** Everything the runner captures once, at layer-construction time. */
 export interface RunnerDeps<Extra> {
   readonly http: HttpClient;
@@ -215,11 +182,6 @@ export type Runner<Extra> = <
   input: IS["Type"],
 ) => Effect.Effect<OS["Type"], InstanceType<EC[number]> | Extra, never>;
 
-const readBody = (
-  response: HttpClientResponse.HttpClientResponse,
-): Effect.Effect<unknown, HttpClientError.HttpClientError> =>
-  response.json.pipe(Effect.catch(() => response.text));
-
 export const makeRunner =
   <Extra>(deps: RunnerDeps<Extra>): Runner<Extra> =>
   (op, input) => {
@@ -234,15 +196,7 @@ export const makeRunner =
 
       const plan = planRequest(op, wire);
 
-      let request = HttpClientRequest.make(op.method)(
-        deps.baseUrl + plan.path,
-      ).pipe(
-        HttpClientRequest.bearerToken(deps.apiKey),
-        HttpClientRequest.acceptJson,
-      );
-      if (Object.keys(plan.query).length > 0) {
-        request = HttpClientRequest.setUrlParams(request, plan.query);
-      }
+      let request = assembleRequest(deps, op.method, plan);
       if (plan.body !== undefined) {
         // The body is a plain record built from schema-encoded scalars, arrays,
         // and nested objects — always JSON-serializable, so the unsafe (sync)

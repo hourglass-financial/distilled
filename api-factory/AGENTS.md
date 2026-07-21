@@ -263,7 +263,10 @@ packages; the exact pin is provisional pending
   exemplar changes only through design-reviewed edits that keep
   `DECISIONS.md` in sync — after that, the regen gate takes over and hand
   edits become build failures.
-- The L0 snapshot + provenance, `patches/`, vendor config, `probes/`,
-  `evidence/`, `coverage.ts`, and the harness primitives are settled by
-  decision but not yet on disk; gates 1–4 land with their implementing
-  tickets. Today's mechanical gates are the turbo scripts above.
+- The harness primitives, coverage audit (gate 3's coverage leg, run via the
+  vendor's `audit:coverage` script), and `probes/` tooling are on disk
+  ([#49](https://github.com/hourglass-financial/distilled/issues/49)). The L0
+  snapshot + provenance, `patches/`, vendor config, and the WorkOS
+  `coverage.ts` + suite migration are settled by decision but not yet on
+  disk; the remaining gates land with their implementing tickets. Today's
+  mechanical gates are the turbo scripts above.

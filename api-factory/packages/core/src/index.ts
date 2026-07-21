@@ -51,6 +51,27 @@ export {
   type MatchErrorConfig,
   type Runner,
   type RunnerDeps,
-  summarizeHttpClientError,
-  type TransportFailure,
 } from "./client.ts";
+
+// Request assembly + response reading — the transport seam shared by the
+// runner and the raw-request primitive.
+export {
+  assembleRequest,
+  type AuthDeps,
+  readBody,
+  summarizeHttpClientError,
+  TransportFailure,
+} from "./transport.ts";
+
+// Raw requests for probes and negative tests (#30 decision 8): the planner's
+// auth/transport path minus encode/decode/matching; non-2xx is data.
+export {
+  makeRawRequest,
+  type RawQueryValue,
+  type RawRequest,
+  type RawRequestBody,
+  type RawRequestDeps,
+  type RawRequestOptions,
+  type RawResponse,
+  RawTransportError,
+} from "./raw.ts";
