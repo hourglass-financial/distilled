@@ -1381,18 +1381,21 @@ class Normalizer {
       const className = pascalWords(splitWords(code));
       const existing = this.codeErrors.get(code);
       if (existing !== undefined) {
-        if (
-          existing.docsStatus !== status ||
-          existing.docsProse !== docsProse
-        ) {
+        if (existing.docsProse !== docsProse) {
           this.add(
             "openapi.error.code-conflict",
             memberPointer,
-            `code ${JSON.stringify(code)} was already lifted at ${existing.origin} with a different status or description`,
+            `code ${JSON.stringify(code)} was already lifted at ${existing.origin} with different effective prose (${JSON.stringify(existing.docsProse)} vs ${JSON.stringify(docsProse)})`,
           );
           lifted = false;
           return;
         }
+        // Codes match before status, so status is documentation rather than
+        // identity. Keep the lowest occurrence for deterministic docs.
+        this.codeErrors.set(code, {
+          ...existing,
+          docsStatus: Math.min(existing.docsStatus, status),
+        });
       } else {
         this.codeErrors.set(code, {
           code,

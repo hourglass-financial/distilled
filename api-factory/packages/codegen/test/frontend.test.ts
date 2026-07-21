@@ -28,6 +28,7 @@ const expectViolation = (
   fn: () => unknown,
   rule: string,
   constructFragment: string,
+  messageFragment?: string,
 ): void => {
   try {
     fn();
@@ -38,7 +39,9 @@ const expectViolation = (
     const match = violations.find(
       (violation) =>
         violation.rule === rule &&
-        violation.construct.includes(constructFragment),
+        violation.construct.includes(constructFragment) &&
+        (messageFragment === undefined ||
+          violation.message.includes(messageFragment)),
     );
     expect(
       match,
@@ -54,6 +57,42 @@ const patchSpec = (
   const draft = JSON.parse(JSON.stringify(spec)) as JsonObject;
   patch(draft);
   return draft;
+};
+
+interface ErrorTableMember {
+  description?: string;
+  properties: { code: { const: string } };
+}
+
+const bastionErrorResponses = (draft: JsonObject): Record<string, JsonObject> =>
+  (
+    ((draft["paths"] as JsonObject)["/sessions/authenticate"] as JsonObject)[
+      "post"
+    ] as JsonObject
+  )["responses"] as Record<string, JsonObject>;
+
+const bastionErrorMembers = (
+  responses: Record<string, JsonObject>,
+  status: string,
+): Array<ErrorTableMember> =>
+  (
+    (
+      (responses[status]!["content"] as JsonObject)[
+        "application/json"
+      ] as JsonObject
+    )["schema"] as JsonObject
+  )["oneOf"] as unknown as Array<ErrorTableMember>;
+
+const duplicateBastionErrorResponse = (
+  draft: JsonObject,
+  sourceStatus: string,
+  targetStatus: string,
+): ErrorTableMember => {
+  const responses = bastionErrorResponses(draft);
+  responses[targetStatus] = JSON.parse(
+    JSON.stringify(responses[sourceStatus]),
+  ) as JsonObject;
+  return bastionErrorMembers(responses, targetStatus)[0]!;
 };
 
 const reconcile = (spec: JsonValue, config: JsonValue) =>
@@ -622,6 +661,91 @@ describe("OpenAPI frontend normalization", () => {
       ir.errors.codeErrors.find((error) => error.code === "invalid_token")
         ?.docsProse,
     ).toBe("configured invalid-token prose.");
+  });
+
+  it("unifies matching codeProse across 400 and 422 at the lowest docs status", () => {
+    const spec = patchSpec(bastionSpec, (draft) => {
+      duplicateBastionErrorResponse(draft, "400", "422");
+    });
+    const ir = normalize(spec, {
+      ...(bastionConfig as JsonObject),
+      errors: {
+        ...((bastionConfig as JsonObject)["errors"] as JsonObject),
+        codeProse: { invalid_token: "configured invalid-token prose." },
+      },
+    });
+
+    expect(
+      ir.errors.codeErrors.find((error) => error.code === "invalid_token"),
+    ).toMatchObject({
+      docsStatus: 400,
+      docsProse: "configured invalid-token prose.",
+    });
+  });
+
+  it("keeps 403 as docsStatus when the same code also appears at 409", () => {
+    const spec = patchSpec(bastionSpec, (draft) => {
+      duplicateBastionErrorResponse(draft, "403", "409");
+    });
+    const ir = normalize(spec, bastionConfig);
+
+    expect(
+      ir.errors.codeErrors.find((error) => error.code === "alpha_challenge"),
+    ).toMatchObject({ docsStatus: 403 });
+  });
+
+  it("hard-errors when duplicate codes have different effective prose", () => {
+    const spec = patchSpec(bastionSpec, (draft) => {
+      const duplicate = duplicateBastionErrorResponse(draft, "400", "422");
+      duplicate.description = "the token failed validation differently.";
+    });
+
+    expectViolation(
+      () => normalize(spec, bastionConfig),
+      "openapi.error.code-conflict",
+      "/responses/422/",
+      "effective prose",
+    );
+  });
+
+  it("uses codeProse to unify a described and undescribed duplicate", () => {
+    const spec = patchSpec(bastionSpec, (draft) => {
+      const duplicate = duplicateBastionErrorResponse(draft, "400", "422");
+      delete duplicate.description;
+    });
+    const ir = normalize(spec, {
+      ...(bastionConfig as JsonObject),
+      errors: {
+        ...((bastionConfig as JsonObject)["errors"] as JsonObject),
+        codeProse: { invalid_token: "configured invalid-token prose." },
+      },
+    });
+
+    expect(
+      ir.errors.codeErrors.find((error) => error.code === "invalid_token"),
+    ).toMatchObject({
+      docsStatus: 400,
+      docsProse: "configured invalid-token prose.",
+    });
+  });
+
+  it("reports an undescribed duplicate as an error member before code conflict", () => {
+    const spec = patchSpec(bastionSpec, (draft) => {
+      const duplicate = duplicateBastionErrorResponse(draft, "400", "422");
+      delete duplicate.description;
+    });
+
+    try {
+      normalize(spec, bastionConfig);
+      throw new Error("expected missing member prose to fail normalization");
+    } catch (error) {
+      expect(error).toBeInstanceOf(CodegenError);
+      const rules = (error as CodegenError).violations.map(
+        (violation) => violation.rule,
+      );
+      expect(rules).toContain("openapi.error.member");
+      expect(rules).not.toContain("openapi.error.code-conflict");
+    }
   });
 
   it("hard-errors on schema config keys that do not resolve to emitted schemas", () => {
