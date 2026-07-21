@@ -532,9 +532,17 @@ export interface PatchReportEntry {
   readonly authoredAgainstCurrent: boolean;
 }
 
+export interface ConfigShadow {
+  readonly kind: "schema.docs" | "error.codeProse" | "operation.docs";
+  readonly configKey: string;
+  readonly specPointer: string;
+}
+
 export interface PatchReconciliation {
   readonly document: JsonValue;
   readonly entries: ReadonlyArray<PatchReportEntry>;
+  /** Config prose that now shadows prose supplied by the refreshed spec. */
+  readonly configShadows: ReadonlyArray<ConfigShadow>;
   /** True when every entry is `still_needed` — the PR gate condition. */
   readonly clean: boolean;
 }
@@ -598,6 +606,7 @@ export const applyPatchesReconciling = (
   return {
     document: current,
     entries: report,
+    configShadows: [],
     clean: report.every((entry) => entry.classification === "still_needed"),
   };
 };

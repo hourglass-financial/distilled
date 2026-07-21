@@ -73,6 +73,7 @@ const PaginationConfigSchema = Schema.Union([
 const ErrorsConfigSchema = Schema.Struct({
   coreReexports: Schema.Literals(["all", "referenced"]),
   codeMeta: Schema.Record(Schema.String, Schema.Literals(metaNames)),
+  codeProse: Schema.optional(Schema.Record(Schema.String, Schema.String)),
   sectionTitle: Schema.optional(Schema.String),
   docs: Schema.optional(Schema.String),
   codeDocs: Schema.optional(Schema.String),
@@ -95,6 +96,7 @@ const OperationNamingOverrideSchema = Schema.Struct({
 
 const NamingConfigSchema = Schema.Struct({
   resources: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+  schemas: Schema.optional(Schema.Record(Schema.String, Schema.String)),
   operations: Schema.optional(
     Schema.Record(Schema.String, OperationNamingOverrideSchema),
   ),
@@ -112,6 +114,11 @@ const OperationOverrideSchema = Schema.Struct({
   errorsDocs: Schema.optional(Schema.String),
 });
 
+/** Prose override for one emitted named schema, keyed by its public name. */
+const SchemaOverrideSchema = Schema.Struct({
+  docs: Schema.String,
+});
+
 export const VendorConfigSchema = Schema.Struct({
   vendor: VendorIdentitySchema,
   baseUrl: Schema.String,
@@ -124,6 +131,7 @@ export const VendorConfigSchema = Schema.Struct({
   resources: Schema.optional(
     Schema.Record(Schema.String, ResourceOverrideSchema),
   ),
+  schemas: Schema.optional(Schema.Record(Schema.String, SchemaOverrideSchema)),
   operations: Schema.optional(
     Schema.Record(Schema.String, OperationOverrideSchema),
   ),

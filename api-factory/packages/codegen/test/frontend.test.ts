@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   canonicalize,
+  buildVendorIrFrom,
   checkInvariants,
   CodegenError,
   decodeVendorConfig,
   normalizeOpenApi,
   type JsonObject,
   type JsonValue,
+  type VendorDir,
 } from "../src/index.ts";
 import { minimalFixture } from "./fixtures/minimal.ts";
 import {
@@ -53,6 +55,27 @@ const patchSpec = (
   patch(draft);
   return draft;
 };
+
+const reconcile = (spec: JsonValue, config: JsonValue) =>
+  buildVendorIrFrom(
+    {
+      dir: "synthetic-vendor",
+      spec,
+      provenance: {
+        sourceUrl: "https://specs.example.test/openapi.json",
+        upstreamRef: "v1",
+        fetchedAt: "2026-07-21T00:00:00.000Z",
+        contentHash: "synthetic",
+        sourceFormat: "json",
+      },
+      config: decodeVendorConfig(config),
+      patches: [],
+      specHash: "synthetic",
+      configHash: "synthetic",
+      patchesHash: "synthetic",
+    } satisfies VendorDir,
+    "reconcile",
+  ).reconciliation!;
 
 describe("OpenAPI frontend normalization", () => {
   it("normalizes the northstar spec to the minimal engine fixture", () => {
@@ -346,6 +369,307 @@ describe("OpenAPI frontend normalization", () => {
       "config.resource-override.unknown",
       "ghosts",
     );
+  });
+
+  it("applies schema renames at every named-ref site and orders by public name", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      const schemas = (draft["components"] as JsonObject)["schemas"] as Record<
+        string,
+        JsonObject
+      >;
+      schemas["InternalOwner"] = {
+        type: "object",
+        description: "The widget owner.",
+        properties: { id: { type: "string" } },
+        required: ["id"],
+      };
+      (schemas["Widget"]!["properties"] as Record<string, unknown>)["owner"] = {
+        $ref: "#/components/schemas/InternalOwner",
+      };
+    });
+    const ir = canonicalize(
+      normalize(spec, {
+        ...(northstarConfig as JsonObject),
+        naming: {
+          schemas: { Widget: "PublicWidget", InternalOwner: "AccountOwner" },
+        },
+        schemas: {
+          PublicWidget: { docs: "Configured public widget prose." },
+        },
+      }),
+    );
+    expect(ir.resources[0]!.operations[0]!.output).toEqual({
+      kind: "named-ref",
+      name: "PublicWidget",
+    });
+    expect(ir.namedSchemas.map((schema) => schema.name)).toEqual([
+      "AccountOwner",
+      "PublicWidget",
+    ]);
+    expect(
+      ir.namedSchemas
+        .find((schema) => schema.name === "PublicWidget")!
+        .schema.fields.find((field) => field.name === "owner")!.schema,
+    ).toEqual({ kind: "named-ref", name: "AccountOwner" });
+    expect(
+      ir.namedSchemas.find((schema) => schema.name === "PublicWidget")!.docs,
+    ).toBe("Configured public widget prose.");
+  });
+
+  it("hard-errors on colliding schema public names", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      const schemas = (draft["components"] as JsonObject)["schemas"] as Record<
+        string,
+        JsonObject
+      >;
+      schemas["Owner"] = {
+        type: "object",
+        description: "The owner.",
+        properties: { id: { type: "string" } },
+      };
+    });
+    expectViolation(
+      () =>
+        normalize(spec, {
+          ...(northstarConfig as JsonObject),
+          naming: { schemas: { Widget: "Owner" } },
+        }),
+      "config.naming.schema-collision",
+      "Owner",
+    );
+  });
+
+  it("hard-errors on unknown, invalid, and reserved schema renames", () => {
+    expectViolation(
+      () =>
+        normalize(northstarSpec, {
+          ...(northstarConfig as JsonObject),
+          naming: { schemas: { Ghost: "Specter" } },
+        }),
+      "config.naming.unknown-schema",
+      "Ghost",
+    );
+    for (const target of ["not-valid", "class"]) {
+      expectViolation(
+        () =>
+          normalize(northstarSpec, {
+            ...(northstarConfig as JsonObject),
+            naming: { schemas: { Widget: target } },
+          }),
+        "config.naming.invalid-schema",
+        target,
+      );
+    }
+  });
+
+  it("hard-errors when a schema rename collides in the unified export namespace", () => {
+    const ir = canonicalize(
+      normalize(northstarSpec, {
+        ...(northstarConfig as JsonObject),
+        naming: { schemas: { Widget: "BadRequest" } },
+        errors: {
+          coreReexports: "all",
+          codeMeta: {},
+        },
+      }),
+    );
+    expectViolation(
+      () => checkInvariants(ir),
+      "identifier.export-collision",
+      "BadRequest",
+    );
+  });
+
+  it("uses schema docs and code prose from config when the spec omits them", () => {
+    const schemaSpec = patchSpec(northstarSpec, (draft) => {
+      const widget = (
+        (draft["components"] as JsonObject)["schemas"] as Record<
+          string,
+          JsonObject
+        >
+      )["Widget"]!;
+      delete (widget as Record<string, unknown>)["description"];
+    });
+    const schemaIr = normalize(schemaSpec, {
+      ...(northstarConfig as JsonObject),
+      schemas: { Widget: { docs: "A documented public widget." } },
+    });
+    expect(schemaIr.namedSchemas[0]!.docs).toBe("A documented public widget.");
+
+    const errorSpec = patchSpec(bastionSpec, (draft) => {
+      const member = (
+        (draft["paths"] as JsonObject)["/sessions/authenticate"] as {
+          post: {
+            responses: Record<
+              string,
+              {
+                content: {
+                  "application/json": {
+                    schema: { oneOf: Array<Record<string, unknown>> };
+                  };
+                };
+              }
+            >;
+          };
+        }
+      ).post.responses["400"]!.content["application/json"].schema.oneOf[0]!;
+      delete member["description"];
+    });
+    const errorIr = normalize(errorSpec, {
+      ...(bastionConfig as JsonObject),
+      errors: {
+        ...((bastionConfig as JsonObject)["errors"] as JsonObject),
+        codeProse: { invalid_token: "the configured token prose." },
+      },
+    });
+    expect(
+      errorIr.errors.codeErrors.find((error) => error.code === "invalid_token")
+        ?.docsProse,
+    ).toBe("the configured token prose.");
+  });
+
+  it("retains missing-prose hard errors when neither spec nor config supplies prose", () => {
+    const schemaSpec = patchSpec(northstarSpec, (draft) => {
+      const widget = (
+        (draft["components"] as JsonObject)["schemas"] as Record<
+          string,
+          JsonObject
+        >
+      )["Widget"]!;
+      delete (widget as Record<string, unknown>)["description"];
+    });
+    expectViolation(
+      () => normalize(schemaSpec, northstarConfig),
+      "openapi.schema.docs",
+      "/components/schemas/Widget",
+    );
+
+    const errorSpec = patchSpec(bastionSpec, (draft) => {
+      const member = (
+        (draft["paths"] as JsonObject)["/sessions/authenticate"] as {
+          post: {
+            responses: Record<
+              string,
+              {
+                content: {
+                  "application/json": {
+                    schema: { oneOf: Array<Record<string, unknown>> };
+                  };
+                };
+              }
+            >;
+          };
+        }
+      ).post.responses["400"]!.content["application/json"].schema.oneOf[0]!;
+      delete member["description"];
+    });
+    expectViolation(
+      () => normalize(errorSpec, bastionConfig),
+      "openapi.error.member",
+      "/responses/400/",
+    );
+  });
+
+  it("gives config prose precedence over existing spec descriptions", () => {
+    const ir = normalize(bastionSpec, {
+      ...(bastionConfig as JsonObject),
+      schemas: { Session: { docs: "Configured session prose." } },
+      errors: {
+        ...((bastionConfig as JsonObject)["errors"] as JsonObject),
+        codeProse: { invalid_token: "configured invalid-token prose." },
+      },
+    });
+    expect(ir.namedSchemas[0]!.docs).toBe("Configured session prose.");
+    expect(
+      ir.errors.codeErrors.find((error) => error.code === "invalid_token")
+        ?.docsProse,
+    ).toBe("configured invalid-token prose.");
+  });
+
+  it("hard-errors on schema config keys that do not resolve to emitted schemas", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      const schemas = (draft["components"] as JsonObject)["schemas"] as Record<
+        string,
+        JsonObject
+      >;
+      schemas["Unreachable"] = {
+        type: "object",
+        properties: { id: { type: "string" } },
+      };
+    });
+    expectViolation(
+      () =>
+        normalize(spec, {
+          ...(northstarConfig as JsonObject),
+          naming: { schemas: { Unreachable: "Hidden" } },
+        }),
+      "config.naming.unused-schema",
+      "Unreachable",
+    );
+    expectViolation(
+      () =>
+        normalize(spec, {
+          ...(northstarConfig as JsonObject),
+          schemas: { Unreachable: { docs: "Never emitted." } },
+        }),
+      "config.schema-override.unknown",
+      "Unreachable",
+    );
+  });
+
+  it("hard-errors on codeProse for a code that was not lifted", () => {
+    expectViolation(
+      () =>
+        normalize(bastionSpec, {
+          ...(bastionConfig as JsonObject),
+          errors: {
+            ...((bastionConfig as JsonObject)["errors"] as JsonObject),
+            codeProse: { never_lifted: "Unknown prose." },
+          },
+        }),
+      "config.error-prose.unused",
+      "never_lifted",
+    );
+  });
+
+  it("reports prose overrides that shadow spec descriptions during reconciliation", () => {
+    const report = reconcile(bastionSpec, {
+      ...(bastionConfig as JsonObject),
+      schemas: { Session: { docs: "Configured session prose." } },
+      errors: {
+        ...((bastionConfig as JsonObject)["errors"] as JsonObject),
+        codeProse: { invalid_token: "Configured error prose." },
+      },
+      operations: {
+        ...((bastionConfig as JsonObject)["operations"] as JsonObject),
+        "sessions.authenticate": {
+          docs: "Configured operation prose.",
+          errorsDocs: "The endpoint returns typed discriminator errors.",
+        },
+      },
+    });
+    expect(report.configShadows).toEqual([
+      {
+        kind: "error.codeProse",
+        configKey: "errors.codeProse.invalid_token",
+        specPointer:
+          "/paths/~1sessions~1authenticate/post/responses/400/content/application~1json/schema/oneOf/0/description",
+      },
+      {
+        kind: "operation.docs",
+        configKey: "operations.sessions.authenticate.docs",
+        specPointer: "/paths/~1sessions~1authenticate/post/description",
+      },
+      {
+        kind: "schema.docs",
+        configKey: "schemas.Session.docs",
+        specPointer: "/components/schemas/Session/description",
+      },
+    ]);
+  });
+
+  it("reports an empty configShadows section when config shadows nothing", () => {
+    expect(reconcile(bastionSpec, bastionConfig).configShadows).toEqual([]);
   });
 
   it("hard-errors on an empty error-response union instead of dropping the status", () => {

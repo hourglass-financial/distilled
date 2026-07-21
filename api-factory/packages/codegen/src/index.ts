@@ -41,6 +41,7 @@ export {
   evaluateEntry,
   type PatchBlastRadius,
   type PatchClassification,
+  type ConfigShadow,
   type PatchEntry,
   PatchEntrySchema,
   type PatchEvaluation,

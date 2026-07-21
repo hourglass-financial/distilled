@@ -65,6 +65,9 @@ export const reservedWords: ReadonlySet<string> = new Set([
   "yield",
 ]);
 
+export const isValidIdentifier = (value: string): boolean =>
+  identifierPattern.test(value) && !reservedWords.has(value);
+
 const compare = (left: string, right: string): number =>
   left < right ? -1 : left > right ? 1 : 0;
 
@@ -666,6 +669,68 @@ const checkResourceOrderAgreement = (
   }
 };
 
+const checkUnifiedExportNamespace = (
+  ir: ClientIr,
+  violations: CodegenViolation[],
+): void => {
+  const prefix = ir.vendor.prefix;
+  const exports: Array<readonly [string, string]> = [
+    ...ir.resources.map(
+      (resource) =>
+        [resource.name, `resource ${resource.name} binding`] as const,
+    ),
+    ["Credentials", "credentials service"],
+    ["credentialsFromEnv", "credentialsFromEnv binding"],
+    ["credentialsOf", "credentialsOf binding"],
+    ["DEFAULT_BASE_URL", "DEFAULT_BASE_URL binding"],
+    [`${prefix}Config`, `${prefix}Config type`],
+    ["layer", "client layer binding"],
+    ["layerFromEnv", "layerFromEnv binding"],
+    ["layerWith", "layerWith binding"],
+    ["run", "client run binding"],
+    [`${prefix}ClientOptions`, `${prefix}ClientOptions type`],
+    [`${prefix}ClientShape`, `${prefix}ClientShape type`],
+    [`${prefix}Client`, `${prefix}Client class`],
+    [`${prefix}Error`, `${prefix}Error type`],
+    ...ir.errors.coreReexports.map(
+      (name) => [name, `core error ${name} re-export`] as const,
+    ),
+    ...ir.errors.codeErrors.map(
+      (error) =>
+        [error.className, `code error ${error.className} class`] as const,
+    ),
+    [`Unknown${prefix}Error`, `Unknown${prefix}Error wrapper class`],
+    [`${prefix}TransportError`, `${prefix}TransportError wrapper class`],
+    [`${prefix}DecodeError`, `${prefix}DecodeError wrapper class`],
+    ["STATUS_ERRORS", "STATUS_ERRORS binding"],
+    ["CODE_ERRORS", "CODE_ERRORS binding"],
+    ["DEFAULT_ERRORS", "DEFAULT_ERRORS binding"],
+    [`${prefix}UniversalError`, `${prefix}UniversalError type`],
+    [`${prefix}ExtraError`, `${prefix}ExtraError type`],
+    ...ir.namedSchemas.map(
+      (schema) => [schema.name, `schema ${schema.name} export`] as const,
+    ),
+    ["operations", "operation registry binding"],
+    ["OperationName", "OperationName type"],
+    ["Category", "core Category re-export"],
+    ["Secret", "core Secret re-export"],
+  ];
+  const seen = new Map<string, string>();
+  for (const [name, construct] of exports) {
+    const existing = seen.get(name);
+    if (existing !== undefined) {
+      add(
+        violations,
+        "identifier.export-collision",
+        construct,
+        `${JSON.stringify(name)} collides with ${existing} in the package export namespace`,
+      );
+    } else {
+      seen.set(name, construct);
+    }
+  }
+};
+
 export const checkInvariants = (ir: ClientIr): void => {
   const violations: CodegenViolation[] = [];
   const reservedBindings = reservedEmitterBindings(ir.vendor.prefix);
@@ -818,6 +883,7 @@ export const checkInvariants = (ir: ClientIr): void => {
   }
 
   const operations = ir.resources.flatMap((resource) => resource.operations);
+  checkUnifiedExportNamespace(ir, violations);
   checkUnique(
     operations,
     (operation) =>

@@ -19,6 +19,7 @@ import type {
   StructNode,
 } from "../../ir/nodes.ts";
 import type { VendorConfig } from "../../ir/vendor-config.ts";
+import { isValidIdentifier, reservedWords } from "../../ir/invariants.ts";
 import {
   formatPointer,
   getAtPointer,
@@ -37,6 +38,7 @@ import {
   pascalWords,
   splitWords,
 } from "./naming.ts";
+import type { ConfigShadow } from "./patches.ts";
 
 /**
  * The OpenAPI normalizer: patched snapshot + vendor config → the fully
@@ -99,11 +101,14 @@ class Normalizer {
   private readonly document: JsonObject;
   private readonly config: VendorConfig;
   private readonly componentSchemas: ReadonlyMap<string, JsonValue>;
+  private readonly componentSpecNames: ReadonlyMap<string, string>;
+  private readonly publicSchemaNames: ReadonlyMap<string, string>;
   private readonly structComponents: ReadonlySet<string>;
   private readonly aliasCache = new Map<string, MappedSchema>();
   private readonly aliasResolving = new Set<string>();
   private readonly codeErrors = new Map<string, CodeErrorSeed>();
   private readonly referencedCoreClasses = new Set<CoreReexportIr>();
+  private readonly configShadows: ConfigShadow[] = [];
 
   constructor(document: JsonValue, config: VendorConfig) {
     if (!isJsonObject(document)) {
@@ -125,6 +130,9 @@ class Normalizer {
     }
     const schemas = getAtPointer(document, "/components/schemas");
     const componentSchemas = new Map<string, JsonValue>();
+    const componentSpecNames = new Map<string, string>();
+    const publicSchemaNames = new Map<string, string>();
+    const schemaRenames = config.naming?.schemas ?? {};
     if (schemas !== undefined) {
       if (!isJsonObject(schemas)) {
         throw this.fatal(
@@ -134,10 +142,47 @@ class Normalizer {
         );
       }
       for (const [name, schema] of Object.entries(schemas)) {
-        componentSchemas.set(name, schema);
+        const configuredPublicName = ownValue(schemaRenames, name);
+        const publicName = configuredPublicName ?? name;
+        publicSchemaNames.set(name, publicName);
+        if (
+          configuredPublicName !== undefined &&
+          !isValidIdentifier(publicName)
+        ) {
+          const reason = reservedWords.has(publicName)
+            ? "is a reserved word"
+            : "is not a TypeScript identifier";
+          this.add(
+            "config.naming.invalid-schema",
+            `naming.schemas.${name} -> ${publicName}`,
+            `public schema name ${JSON.stringify(publicName)} ${reason}`,
+          );
+        }
+        const existing = componentSpecNames.get(publicName);
+        if (existing !== undefined) {
+          this.add(
+            "config.naming.schema-collision",
+            `schema ${publicName}`,
+            `components ${JSON.stringify(existing)} and ${JSON.stringify(name)} both resolve to public schema name ${JSON.stringify(publicName)}`,
+          );
+          continue;
+        }
+        componentSchemas.set(publicName, schema);
+        componentSpecNames.set(publicName, name);
+      }
+    }
+    for (const name of Object.keys(schemaRenames).sort(compare)) {
+      if (!publicSchemaNames.has(name)) {
+        this.add(
+          "config.naming.unknown-schema",
+          `naming.schemas.${name}`,
+          `no component schema in the spec is named ${JSON.stringify(name)}`,
+        );
       }
     }
     this.componentSchemas = componentSchemas;
+    this.componentSpecNames = componentSpecNames;
+    this.publicSchemaNames = publicSchemaNames;
     const structComponents = new Set<string>();
     for (const [name, schema] of componentSchemas) {
       if (this.isStructShaped(schema)) structComponents.add(name);
@@ -157,6 +202,14 @@ class Normalizer {
     this.violations.push({ rule, construct, message });
   }
 
+  shadows(): ReadonlyArray<ConfigShadow> {
+    return [...this.configShadows].sort(
+      (left, right) =>
+        compare(left.configKey, right.configKey) ||
+        compare(left.specPointer, right.specPointer),
+    );
+  }
+
   private isStructShaped(schema: JsonValue): boolean {
     if (!isJsonObject(schema)) return false;
     const type = schema["type"];
@@ -169,10 +222,22 @@ class Normalizer {
   private refTarget(schema: JsonObject): string | undefined {
     const ref = schema["$ref"];
     if (typeof ref !== "string") return undefined;
-    return ref.startsWith("#/components/schemas/") &&
+    const specName =
+      ref.startsWith("#/components/schemas/") &&
       !ref.slice("#/components/schemas/".length).includes("/")
-      ? ref.slice("#/components/schemas/".length)
-      : undefined;
+        ? ref.slice("#/components/schemas/".length)
+        : undefined;
+    return specName === undefined
+      ? undefined
+      : (this.publicSchemaNames.get(specName) ?? specName);
+  }
+
+  private schemaPointer(publicName: string): string {
+    return formatPointer([
+      "components",
+      "schemas",
+      this.componentSpecNames.get(publicName) ?? publicName,
+    ]);
   }
 
   /** Map one schema object to an IR node plus field-level nullability. */
@@ -507,7 +572,7 @@ class Normalizer {
     this.aliasResolving.add(name);
     const mapped = this.mapSchema(
       this.componentSchemas.get(name)!,
-      `/components/schemas/${name}`,
+      this.schemaPointer(name),
     );
     this.aliasResolving.delete(name);
     this.aliasCache.set(name, mapped);
@@ -768,6 +833,17 @@ class Normalizer {
         : typeof summary === "string" && summary.length > 0
           ? summary
           : undefined;
+    if (
+      overrides?.docs !== undefined &&
+      typeof description === "string" &&
+      description.length > 0
+    ) {
+      this.configShadows.push({
+        kind: "operation.docs",
+        configKey: `operations.${qualified}.docs`,
+        specPointer: `${pointer}/description`,
+      });
+    }
     const docs = overrides?.docs ?? specDocs;
     if (docs === undefined) {
       this.add(
@@ -1214,14 +1290,17 @@ class Normalizer {
     if (!isJsonObject(media)) return undefined;
     let schema = media["schema"];
     if (!isJsonObject(schema)) return undefined;
+    let schemaPointer = `${pointer}/content/application~1json/schema`;
     if (schema["$ref"] !== undefined) {
       const target = this.refTarget(schema);
-      const resolved =
-        target === undefined ? undefined : this.componentSchemas.get(target);
+      if (target === undefined) return undefined;
+      const resolved = this.componentSchemas.get(target);
       if (!isJsonObject(resolved)) return undefined;
       schema = resolved;
+      schemaPointer = this.schemaPointer(target);
     }
-    const members = schema["oneOf"] ?? schema["anyOf"];
+    const keyword = schema["oneOf"] !== undefined ? "oneOf" : "anyOf";
+    const members = schema[keyword];
     if (!isJsonArray(members)) return undefined;
     if (members.length === 0) {
       this.add(
@@ -1235,7 +1314,8 @@ class Normalizer {
     const classNames: string[] = [];
     let lifted = true;
     members.forEach((memberRaw, index) => {
-      const memberPointer = `${pointer}/content/application~1json/schema/oneOf/${index}`;
+      const memberPointer = `${schemaPointer}/${keyword}/${index}`;
+      let descriptionPointer = `${memberPointer}/description`;
       let member = memberRaw;
       if (isJsonObject(memberRaw) && memberRaw["$ref"] !== undefined) {
         const target = this.refTarget(memberRaw);
@@ -1249,6 +1329,7 @@ class Normalizer {
           return;
         }
         member = this.componentSchemas.get(target)!;
+        descriptionPointer = `${this.schemaPointer(target)}/description`;
       }
       if (!isJsonObject(member) || !isJsonObject(member["properties"])) {
         this.add(
@@ -1270,21 +1351,34 @@ class Normalizer {
         return;
       }
       const description = member["description"];
-      if (typeof description !== "string" || description.length === 0) {
+      const codeProse = ownValue(this.config.errors.codeProse, code);
+      const specProse =
+        typeof description === "string" && description.length > 0
+          ? description
+          : undefined;
+      const docsProse = codeProse ?? specProse;
+      if (docsProse === undefined) {
         this.add(
           "openapi.error.member",
           memberPointer,
-          `error member ${JSON.stringify(code)} has no description; add one via a metadata patch`,
+          `error member ${JSON.stringify(code)} has no description; add one via a metadata patch or errors.codeProse`,
         );
         lifted = false;
         return;
+      }
+      if (codeProse !== undefined && specProse !== undefined) {
+        this.configShadows.push({
+          kind: "error.codeProse",
+          configKey: `errors.codeProse.${code}`,
+          specPointer: descriptionPointer,
+        });
       }
       const className = pascalWords(splitWords(code));
       const existing = this.codeErrors.get(code);
       if (existing !== undefined) {
         if (
           existing.docsStatus !== status ||
-          existing.docsProse !== description
+          existing.docsProse !== docsProse
         ) {
           this.add(
             "openapi.error.code-conflict",
@@ -1299,7 +1393,7 @@ class Normalizer {
           code,
           className,
           docsStatus: status,
-          docsProse: description,
+          docsProse,
           origin: memberPointer,
         });
       }
@@ -1391,7 +1485,7 @@ class Normalizer {
     if (!this.structComponents.has(name)) return undefined;
     const schema = this.componentSchemas.get(name)!;
     if (!isJsonObject(schema)) return undefined;
-    return this.mapStruct(schema, `/components/schemas/${name}`);
+    return this.mapStruct(schema, this.schemaPointer(name));
   }
 
   private resolveFieldPath(
@@ -1492,7 +1586,7 @@ class Normalizer {
           groups.set(node.name, group);
           const struct = this.mapStruct(
             this.componentSchemas.get(node.name) as JsonObject,
-            `/components/schemas/${node.name}`,
+            this.schemaPointer(node.name),
           );
           structs.set(node.name, struct);
           visit(struct, group);
@@ -1525,24 +1619,61 @@ class Normalizer {
 
     this.checkSchemaCycles(structs);
 
+    for (const specName of Object.keys(this.config.naming?.schemas ?? {}).sort(
+      compare,
+    )) {
+      const publicName = this.publicSchemaNames.get(specName);
+      if (publicName !== undefined && !structs.has(publicName)) {
+        this.add(
+          "config.naming.unused-schema",
+          `naming.schemas.${specName}`,
+          `component ${JSON.stringify(specName)} resolves to ${JSON.stringify(publicName)}, but it is not an emitted named schema`,
+        );
+      }
+    }
+    for (const publicName of Object.keys(this.config.schemas ?? {}).sort(
+      compare,
+    )) {
+      if (!structs.has(publicName)) {
+        this.add(
+          "config.schema-override.unknown",
+          `schemas.${publicName}`,
+          `no emitted named schema is named ${JSON.stringify(publicName)}`,
+        );
+      }
+    }
+
     const named: NamedSchemaIr[] = [];
     for (const [name, schema] of structs) {
       const component = this.componentSchemas.get(name);
       const description = isJsonObject(component)
         ? component["description"]
         : undefined;
-      if (typeof description !== "string" || description.length === 0) {
+      const specDocs =
+        typeof description === "string" && description.length > 0
+          ? description
+          : undefined;
+      const override = ownValue(this.config.schemas, name);
+      const docs = override?.docs ?? specDocs;
+      if (docs === undefined) {
         this.add(
           "openapi.schema.docs",
-          `/components/schemas/${name}`,
-          "the component schema has no description; add one via a metadata patch",
+          this.schemaPointer(name),
+          "the component schema has no description; add one via a metadata patch or schemas override",
         );
         continue;
+      }
+      if (override !== undefined && specDocs !== undefined) {
+        this.configShadows.push({
+          kind: "schema.docs",
+          configKey: `schemas.${name}.docs`,
+          specPointer: `${this.schemaPointer(name)}/description`,
+        });
       }
       named.push({
         name,
         group: groups.get(name)!,
-        docs: description,
+        docs,
         schema,
       });
     }
@@ -1652,6 +1783,17 @@ class Normalizer {
           "config.error-meta.unused",
           `error code ${code}`,
           `errors.codeMeta assigns ${JSON.stringify(code)}, but no lifted error carries that code`,
+        );
+      }
+    }
+    for (const code of Object.keys(this.config.errors.codeProse ?? {}).sort(
+      compare,
+    )) {
+      if (!this.codeErrors.has(code)) {
+        this.add(
+          "config.error-prose.unused",
+          `error code ${code}`,
+          `errors.codeProse assigns ${JSON.stringify(code)}, but no lifted error carries that code`,
         );
       }
     }
@@ -1778,4 +1920,16 @@ const isLiteralValue = (value: JsonValue): value is LiteralValue =>
 export const normalizeOpenApi = (
   document: JsonValue,
   config: VendorConfig,
-): ClientIr => new Normalizer(document, config).normalize();
+): ClientIr => normalizeOpenApiWithConfigShadows(document, config).ir;
+
+export const normalizeOpenApiWithConfigShadows = (
+  document: JsonValue,
+  config: VendorConfig,
+): {
+  readonly ir: ClientIr;
+  readonly configShadows: ReadonlyArray<ConfigShadow>;
+} => {
+  const normalizer = new Normalizer(document, config);
+  const ir = normalizer.normalize();
+  return { ir, configShadows: normalizer.shadows() };
+};
