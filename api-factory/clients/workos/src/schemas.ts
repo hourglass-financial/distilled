@@ -14,86 +14,792 @@ import { Secret } from "@hourglass-financial/api-factory-core";
 import * as Schema from "effect/Schema";
 
 // ---------------------------------------------------------------------------
-// Organizations
+// Agents
 // ---------------------------------------------------------------------------
 
-/** Cursor pointers returned with every WorkOS list response. */
-export const ListMetadata = Schema.Struct({
-  before: Schema.NullOr(Schema.String),
-  after: Schema.NullOr(Schema.String),
+/** Result of validating an agent credential, reporting whether it is valid and, if so, its registration and expiry. */
+export const AgentCredentialValidation = Schema.Struct({
+  valid: Schema.Boolean,
+  registration_id: Schema.NullOr(Schema.String),
+  expires_at: Schema.NullOr(Schema.String),
 });
-export interface ListMetadata extends Schema.Schema.Type<typeof ListMetadata> {}
+export interface AgentCredentialValidation extends Schema.Schema.Type<
+  typeof AgentCredentialValidation
+> {}
 
-/** A verified or pending domain attached to an organization. */
-export const OrganizationDomain = Schema.Struct({
-  object: Schema.Literal("organization_domain"),
+/** An agent registered to an organization, with its identity, verification status, kind, and optional claim. */
+export const AgentRegistration = Schema.Struct({
   id: Schema.String,
+  agent_identity: Schema.Struct({
+    id: Schema.String,
+    userland_user_id: Schema.NullOr(Schema.String),
+    created_at: Schema.String,
+    updated_at: Schema.String,
+  }),
   organization_id: Schema.String,
-  domain: Schema.String,
-  state: Schema.optional(
-    Schema.Literals([
-      "failed",
-      "legacy_verified",
-      "pending",
-      "unverified",
-      "verified",
-    ]),
+  status: Schema.Literals(["unverified", "verified", "expired", "revoked"]),
+  kind: Schema.Literals(["anonymous", "service_auth", "identity_assertion"]),
+  claim: Schema.NullOr(
+    Schema.Struct({
+      id: Schema.String,
+      claim_completion: Schema.NullOr(
+        Schema.Struct({
+          id: Schema.String,
+          created_at: Schema.String,
+          updated_at: Schema.String,
+          expires_at: Schema.String,
+          claimed_at: Schema.String,
+        }),
+      ),
+      created_at: Schema.String,
+      updated_at: Schema.String,
+      expires_at: Schema.String,
+    }),
   ),
-  verification_prefix: Schema.optional(Schema.String),
-  verification_token: Schema.optional(Schema.String),
-  verification_strategy: Schema.optional(Schema.Literals(["dns", "manual"])),
   created_at: Schema.String,
   updated_at: Schema.String,
 });
-export interface OrganizationDomain extends Schema.Schema.Type<
-  typeof OrganizationDomain
+export interface AgentRegistration extends Schema.Schema.Type<
+  typeof AgentRegistration
 > {}
 
-/** A WorkOS organization. */
-export const Organization = Schema.Struct({
-  object: Schema.Literal("organization"),
+/** The state of an agent registration claim, including the user code the agent presents and the organizations offered as placement choices. */
+export const ClaimViewResponse = Schema.Struct({
+  id: Schema.String,
+  status: Schema.Literals(["unverified", "verified", "expired", "revoked"]),
+  user_code: Schema.String,
+  organizations: Schema.Array(
+    Schema.Struct({ id: Schema.String, name: Schema.String }),
+  ),
+});
+export interface ClaimViewResponse extends Schema.Schema.Type<
+  typeof ClaimViewResponse
+> {}
+
+// ---------------------------------------------------------------------------
+// Api Keys
+// ---------------------------------------------------------------------------
+
+/** A WorkOS API Key issued to an organization or user, with its permissions and obfuscated value. */
+export const ApiKey = Schema.Struct({
+  object: Schema.Literal("api_key"),
+  id: Schema.String,
+  owner: Schema.Union([
+    Schema.Struct({ type: Schema.Literal("organization"), id: Schema.String }),
+    Schema.Struct({
+      type: Schema.Literal("user"),
+      id: Schema.String,
+      organization_id: Schema.String,
+    }),
+  ]),
+  name: Schema.String,
+  obfuscated_value: Schema.String,
+  last_used_at: Schema.NullOr(Schema.String),
+  expires_at: Schema.NullOr(Schema.String),
+  permissions: Schema.Array(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface ApiKey extends Schema.Schema.Type<typeof ApiKey> {}
+
+/** Result of validating an API Key, returning the resolved key and the agent registration it was issued for, if any. */
+export const ApiKeyValidationResponse = Schema.Struct({
+  api_key: Schema.NullOr(ApiKey),
+  agent_registration_id: Schema.optional(Schema.String),
+});
+export interface ApiKeyValidationResponse extends Schema.Schema.Type<
+  typeof ApiKeyValidationResponse
+> {}
+
+/** An API key scoped to a WorkOS organization. */
+export const OrganizationApiKey = Schema.Struct({
+  object: Schema.Literal("api_key"),
+  id: Schema.String,
+  owner: Schema.Struct({
+    type: Schema.Literal("organization"),
+    id: Schema.String,
+  }),
+  name: Schema.String,
+  obfuscated_value: Schema.String,
+  last_used_at: Schema.NullOr(Schema.String),
+  expires_at: Schema.NullOr(Schema.String),
+  permissions: Schema.Array(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface OrganizationApiKey extends Schema.Schema.Type<
+  typeof OrganizationApiKey
+> {}
+
+/** A page of organization API keys. */
+export const OrganizationApiKeyList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(OrganizationApiKey),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+});
+export interface OrganizationApiKeyList extends Schema.Schema.Type<
+  typeof OrganizationApiKeyList
+> {}
+
+/** An organization API key including its full plaintext value, returned only once at creation time. */
+export const OrganizationApiKeyWithValue = Schema.Struct({
+  object: Schema.Literal("api_key"),
+  id: Schema.String,
+  owner: Schema.Struct({
+    type: Schema.Literal("organization"),
+    id: Schema.String,
+  }),
+  name: Schema.String,
+  obfuscated_value: Schema.String,
+  last_used_at: Schema.NullOr(Schema.String),
+  expires_at: Schema.NullOr(Schema.String),
+  permissions: Schema.Array(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+  value: Schema.String,
+});
+export interface OrganizationApiKeyWithValue extends Schema.Schema.Type<
+  typeof OrganizationApiKeyWithValue
+> {}
+
+/** A WorkOS API key owned by a user and scoped to an organization, without its secret value. */
+export const UserApiKey = Schema.Struct({
+  object: Schema.Literal("api_key"),
+  id: Schema.String,
+  owner: Schema.Struct({
+    type: Schema.Literal("user"),
+    id: Schema.String,
+    organization_id: Schema.String,
+  }),
+  name: Schema.String,
+  obfuscated_value: Schema.String,
+  last_used_at: Schema.NullOr(Schema.String),
+  expires_at: Schema.NullOr(Schema.String),
+  permissions: Schema.Array(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface UserApiKey extends Schema.Schema.Type<typeof UserApiKey> {}
+
+/** A page of API keys. */
+export const UserApiKeyList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(UserApiKey),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+});
+export interface UserApiKeyList extends Schema.Schema.Type<
+  typeof UserApiKeyList
+> {}
+
+/** A WorkOS API key including its full plaintext value, returned only once at creation. */
+export const UserApiKeyWithValue = Schema.Struct({
+  object: Schema.Literal("api_key"),
+  id: Schema.String,
+  owner: Schema.Struct({
+    type: Schema.Literal("user"),
+    id: Schema.String,
+    organization_id: Schema.String,
+  }),
+  name: Schema.String,
+  obfuscated_value: Schema.String,
+  last_used_at: Schema.NullOr(Schema.String),
+  expires_at: Schema.NullOr(Schema.String),
+  permissions: Schema.Array(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+  value: Schema.String,
+});
+export interface UserApiKeyWithValue extends Schema.Schema.Type<
+  typeof UserApiKeyWithValue
+> {}
+
+// ---------------------------------------------------------------------------
+// Applications
+// ---------------------------------------------------------------------------
+
+/** A WorkOS Connect application. */
+export const ConnectApplication = Schema.Struct({
+  object: Schema.Literal("connect_application"),
+  id: Schema.String,
+  client_id: Schema.String,
+  description: Schema.NullOr(Schema.String),
+  name: Schema.String,
+  scopes: Schema.Array(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+  application_type: Schema.Literal("m2m"),
+  redirect_uris: Schema.optional(
+    Schema.Array(
+      Schema.Struct({ uri: Schema.String, default: Schema.Boolean }),
+    ),
+  ),
+  uses_pkce: Schema.optional(Schema.Boolean),
+  organization_id: Schema.optional(Schema.String),
+  is_first_party: Schema.optional(Schema.Literal(false)),
+  was_dynamically_registered: Schema.optional(Schema.Literal(true)),
+});
+export interface ConnectApplication extends Schema.Schema.Type<
+  typeof ConnectApplication
+> {}
+
+/** A client secret issued for a Connect application. */
+export const ConnectApplicationClientSecret = Schema.Struct({
+  object: Schema.Literal("connect_application_secret"),
+  id: Schema.String,
+  secret_hint: Schema.String,
+  last_used_at: Schema.NullOr(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface ConnectApplicationClientSecret extends Schema.Schema.Type<
+  typeof ConnectApplicationClientSecret
+> {}
+
+/** A page of Connect applications. */
+export const ConnectApplicationList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(ConnectApplication),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+});
+export interface ConnectApplicationList extends Schema.Schema.Type<
+  typeof ConnectApplicationList
+> {}
+
+/** A newly created client secret for a Connect application; the plaintext `secret` is returned only at creation time. */
+export const NewConnectApplicationSecret = Schema.Struct({
+  object: Schema.Literal("connect_application_secret"),
+  id: Schema.String,
+  secret_hint: Schema.String,
+  last_used_at: Schema.NullOr(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+  secret: Schema.String,
+});
+export interface NewConnectApplicationSecret extends Schema.Schema.Type<
+  typeof NewConnectApplicationSecret
+> {}
+
+/** Request body specifying a redirect URI to register, and whether it is the default. */
+export const RedirectUriDto = Schema.Struct({
+  uri: Schema.String,
+  default: Schema.optional(Schema.NullOr(Schema.Boolean)),
+});
+export interface RedirectUriDto extends Schema.Schema.Type<
+  typeof RedirectUriDto
+> {}
+
+// ---------------------------------------------------------------------------
+// Audit Logs
+// ---------------------------------------------------------------------------
+
+/** The actor that performed an Audit Logs event. */
+export const AuditLogEventActorDto = Schema.Struct({
+  id: Schema.String,
+  type: Schema.String,
+  name: Schema.optional(Schema.String),
+  metadata: Schema.optional(
+    Schema.Record(
+      Schema.String,
+      Schema.Union([Schema.String, Schema.Number, Schema.Boolean]),
+    ),
+  ),
+});
+export interface AuditLogEventActorDto extends Schema.Schema.Type<
+  typeof AuditLogEventActorDto
+> {}
+
+/** Location and user-agent context describing where and how an Audit Logs event occurred. */
+export const AuditLogEventContextDto = Schema.Struct({
+  location: Schema.String,
+  user_agent: Schema.optional(Schema.String),
+});
+export interface AuditLogEventContextDto extends Schema.Schema.Type<
+  typeof AuditLogEventContextDto
+> {}
+
+/** Confirmation that an Audit Logs event was created. */
+export const AuditLogEventCreateResponse = Schema.Struct({
+  success: Schema.Boolean,
+});
+export interface AuditLogEventCreateResponse extends Schema.Schema.Type<
+  typeof AuditLogEventCreateResponse
+> {}
+
+/** A resource affected by an Audit Logs event. */
+export const AuditLogEventTargetDto = Schema.Struct({
+  id: Schema.String,
+  type: Schema.String,
+  name: Schema.optional(Schema.String),
+  metadata: Schema.optional(
+    Schema.Record(
+      Schema.String,
+      Schema.Union([Schema.String, Schema.Number, Schema.Boolean]),
+    ),
+  ),
+});
+export interface AuditLogEventTargetDto extends Schema.Schema.Type<
+  typeof AuditLogEventTargetDto
+> {}
+
+/** An Audit Logs event describing an action, its actor, affected targets, and context. */
+export const AuditLogEventDto = Schema.Struct({
+  action: Schema.String,
+  occurred_at: Schema.String,
+  actor: AuditLogEventActorDto,
+  targets: Schema.Array(AuditLogEventTargetDto),
+  context: AuditLogEventContextDto,
+  metadata: Schema.optional(
+    Schema.Record(
+      Schema.String,
+      Schema.Union([Schema.String, Schema.Number, Schema.Boolean]),
+    ),
+  ),
+  version: Schema.optional(Schema.Number),
+});
+export interface AuditLogEventDto extends Schema.Schema.Type<
+  typeof AuditLogEventDto
+> {}
+
+/** An Audit Logs export job and, once ready, a URL to its CSV file. */
+export const AuditLogExportJson = Schema.Struct({
+  object: Schema.Literal("audit_log_export"),
+  id: Schema.String,
+  state: Schema.Literals(["pending", "ready", "error", "expired"]),
+  url: Schema.optional(Schema.NullOr(Schema.String)),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface AuditLogExportJson extends Schema.Schema.Type<
+  typeof AuditLogExportJson
+> {}
+
+/** The JSON Schema for an Audit Logs action's actor metadata. */
+export const AuditLogSchemaActorDto = Schema.Struct({
+  metadata: Schema.Record(Schema.String, Schema.Json),
+});
+export interface AuditLogSchemaActorDto extends Schema.Schema.Type<
+  typeof AuditLogSchemaActorDto
+> {}
+
+/** A versioned schema describing the actor, targets, and metadata shape of an Audit Logs action. */
+export const AuditLogSchemaJson = Schema.Struct({
+  object: Schema.Literal("audit_log_schema"),
+  version: Schema.Number,
+  actor: Schema.optional(
+    Schema.Struct({ metadata: Schema.Record(Schema.String, Schema.Json) }),
+  ),
+  targets: Schema.Array(
+    Schema.Struct({
+      type: Schema.String,
+      metadata: Schema.optional(Schema.Record(Schema.String, Schema.Json)),
+    }),
+  ),
+  metadata: Schema.optional(Schema.Record(Schema.String, Schema.Json)),
+  created_at: Schema.String,
+});
+export interface AuditLogSchemaJson extends Schema.Schema.Type<
+  typeof AuditLogSchemaJson
+> {}
+
+/** A defined Audit Logs action along with its associated schema. */
+export const AuditLogActionJson = Schema.Struct({
+  object: Schema.Literal("audit_log_action"),
+  name: Schema.String,
+  schema: AuditLogSchemaJson,
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface AuditLogActionJson extends Schema.Schema.Type<
+  typeof AuditLogActionJson
+> {}
+
+/** A page of audit log actions. */
+export const AuditLogActionList = Schema.Struct({
+  object: Schema.Literal("list"),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+  data: Schema.Array(AuditLogActionJson),
+});
+export interface AuditLogActionList extends Schema.Schema.Type<
+  typeof AuditLogActionList
+> {}
+
+/** A page of audit log action schemas. */
+export const AuditLogSchemaList = Schema.Struct({
+  object: Schema.Literal("list"),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+  data: Schema.Array(AuditLogSchemaJson),
+});
+export interface AuditLogSchemaList extends Schema.Schema.Type<
+  typeof AuditLogSchemaList
+> {}
+
+/** A target type and its metadata JSON Schema within an Audit Logs action schema. */
+export const AuditLogSchemaTargetDto = Schema.Struct({
+  type: Schema.String,
+  metadata: Schema.optional(Schema.Record(Schema.String, Schema.Json)),
+});
+export interface AuditLogSchemaTargetDto extends Schema.Schema.Type<
+  typeof AuditLogSchemaTargetDto
+> {}
+
+/** The number of days Audit Logs events are retained before deletion. */
+export const AuditLogsRetentionJson = Schema.Struct({
+  retention_period_in_days: Schema.NullOr(Schema.Number),
+});
+export interface AuditLogsRetentionJson extends Schema.Schema.Type<
+  typeof AuditLogsRetentionJson
+> {}
+
+// ---------------------------------------------------------------------------
+// Authorization
+// ---------------------------------------------------------------------------
+
+/** The result of a fine-grained authorization (FGA) permission check on a resource. */
+export const AuthorizationCheck = Schema.Struct({ authorized: Schema.Boolean });
+export interface AuthorizationCheck extends Schema.Schema.Type<
+  typeof AuthorizationCheck
+> {}
+
+/** A permission that can be granted on a resource type in WorkOS fine-grained authorization (FGA). */
+export const AuthorizationPermission = Schema.Struct({
+  object: Schema.Literal("permission"),
+  id: Schema.String,
+  slug: Schema.String,
+  name: Schema.String,
+  description: Schema.NullOr(Schema.String),
+  system: Schema.Boolean,
+  resource_type_slug: Schema.String,
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface AuthorizationPermission extends Schema.Schema.Type<
+  typeof AuthorizationPermission
+> {}
+
+/** A page of fine-grained authorization (FGA) permissions. */
+export const AuthorizationPermissionList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(AuthorizationPermission),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+});
+export interface AuthorizationPermissionList extends Schema.Schema.Type<
+  typeof AuthorizationPermissionList
+> {}
+
+/** A resource instance governed by WorkOS fine-grained authorization (FGA). */
+export const AuthorizationResource = Schema.Struct({
+  object: Schema.Literal("authorization_resource"),
+  name: Schema.String,
+  description: Schema.NullOr(Schema.String),
+  organization_id: Schema.String,
+  parent_resource_id: Schema.NullOr(Schema.String),
+  id: Schema.String,
+  external_id: Schema.String,
+  resource_type_slug: Schema.String,
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface AuthorizationResource extends Schema.Schema.Type<
+  typeof AuthorizationResource
+> {}
+
+/** A newly created authorization resource. */
+export const AuthorizationResourceCreateResponse = Schema.Struct({
+  object: Schema.Literal("authorization_resource"),
+  name: Schema.String,
+  description: Schema.NullOr(Schema.String),
+  organization_id: Schema.String,
+  parent_resource_id: Schema.NullOr(Schema.String),
+  id: Schema.String,
+  external_id: Schema.String,
+  resource_type_slug: Schema.String,
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface AuthorizationResourceCreateResponse extends Schema.Schema.Type<
+  typeof AuthorizationResourceCreateResponse
+> {}
+
+/** An authorization resource updated by external identifier. */
+export const AuthorizationResourceExternalUpdateResponse = Schema.Struct({
+  object: Schema.Literal("authorization_resource"),
+  name: Schema.String,
+  description: Schema.NullOr(Schema.String),
+  organization_id: Schema.String,
+  parent_resource_id: Schema.NullOr(Schema.String),
+  id: Schema.String,
+  external_id: Schema.String,
+  resource_type_slug: Schema.String,
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface AuthorizationResourceExternalUpdateResponse extends Schema
+  .Schema.Type<typeof AuthorizationResourceExternalUpdateResponse> {}
+
+/** A page of fine-grained authorization (FGA) resources. */
+export const AuthorizationResourceList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(AuthorizationResource),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+});
+export interface AuthorizationResourceList extends Schema.Schema.Type<
+  typeof AuthorizationResourceList
+> {}
+
+/** An updated authorization resource. */
+export const AuthorizationResourceUpdateResponse = Schema.Struct({
+  object: Schema.Literal("authorization_resource"),
+  name: Schema.String,
+  description: Schema.NullOr(Schema.String),
+  organization_id: Schema.String,
+  parent_resource_id: Schema.NullOr(Schema.String),
+  id: Schema.String,
+  external_id: Schema.String,
+  resource_type_slug: Schema.String,
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface AuthorizationResourceUpdateResponse extends Schema.Schema.Type<
+  typeof AuthorizationResourceUpdateResponse
+> {}
+
+/** An environment role after adding a permission. */
+export const EnvironmentRoleAddPermissionResponse = Schema.Struct({
+  slug: Schema.String,
+  object: Schema.Literal("role"),
   id: Schema.String,
   name: Schema.String,
-  domains: Schema.Array(OrganizationDomain),
-  metadata: Schema.Record(Schema.String, Schema.String),
-  external_id: Schema.NullOr(Schema.String),
-  stripe_customer_id: Schema.optional(Schema.String),
+  description: Schema.NullOr(Schema.String),
+  type: Schema.Literals(["EnvironmentRole", "OrganizationRole"]),
+  resource_type_slug: Schema.String,
+  permissions: Schema.Array(Schema.String),
   created_at: Schema.String,
   updated_at: Schema.String,
-  allow_profiles_outside_organization: Schema.optional(Schema.Boolean),
 });
-export interface Organization extends Schema.Schema.Type<typeof Organization> {}
+export interface EnvironmentRoleAddPermissionResponse extends Schema.Schema
+  .Type<typeof EnvironmentRoleAddPermissionResponse> {}
 
-/** A page of organizations. */
-export const OrganizationList = Schema.Struct({
-  object: Schema.Literal("list"),
-  data: Schema.Array(Organization),
-  list_metadata: ListMetadata,
+/** A newly created environment role. */
+export const EnvironmentRoleCreateResponse = Schema.Struct({
+  slug: Schema.String,
+  object: Schema.Literal("role"),
+  id: Schema.String,
+  name: Schema.String,
+  description: Schema.NullOr(Schema.String),
+  type: Schema.Literals(["EnvironmentRole", "OrganizationRole"]),
+  resource_type_slug: Schema.String,
+  permissions: Schema.Array(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
 });
-export interface OrganizationList extends Schema.Schema.Type<
-  typeof OrganizationList
+export interface EnvironmentRoleCreateResponse extends Schema.Schema.Type<
+  typeof EnvironmentRoleCreateResponse
 > {}
 
-// ---------------------------------------------------------------------------
-// User Management
-// ---------------------------------------------------------------------------
-
-/** Present when a session was created via dashboard impersonation. */
-export const Impersonator = Schema.Struct({
-  email: Schema.String,
-  reason: Schema.NullOr(Schema.String),
+/** An environment role after replacing its permissions. */
+export const EnvironmentRoleSetPermissionsResponse = Schema.Struct({
+  slug: Schema.String,
+  object: Schema.Literal("role"),
+  id: Schema.String,
+  name: Schema.String,
+  description: Schema.NullOr(Schema.String),
+  type: Schema.Literals(["EnvironmentRole", "OrganizationRole"]),
+  resource_type_slug: Schema.String,
+  permissions: Schema.Array(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
 });
-export interface Impersonator extends Schema.Schema.Type<typeof Impersonator> {}
+export interface EnvironmentRoleSetPermissionsResponse extends Schema.Schema
+  .Type<typeof EnvironmentRoleSetPermissionsResponse> {}
 
-/** OAuth provider tokens, when the session was created via an OAuth provider. */
-export const OAuthTokens = Schema.Struct({
-  provider: Schema.String,
-  refresh_token: Secret,
-  access_token: Secret,
-  expires_at: Schema.Number,
-  scopes: Schema.Array(Schema.String),
+/** An updated environment role. */
+export const EnvironmentRoleUpdateResponse = Schema.Struct({
+  slug: Schema.String,
+  object: Schema.Literal("role"),
+  id: Schema.String,
+  name: Schema.String,
+  description: Schema.NullOr(Schema.String),
+  type: Schema.Literals(["EnvironmentRole", "OrganizationRole"]),
+  resource_type_slug: Schema.String,
+  permissions: Schema.Array(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
 });
-export interface OAuthTokens extends Schema.Schema.Type<typeof OAuthTokens> {}
+export interface EnvironmentRoleUpdateResponse extends Schema.Schema.Type<
+  typeof EnvironmentRoleUpdateResponse
+> {}
+
+/** An organization role after adding a permission. */
+export const OrganizationRoleAddPermissionResponse = Schema.Struct({
+  slug: Schema.String,
+  object: Schema.Literal("role"),
+  id: Schema.String,
+  name: Schema.String,
+  description: Schema.NullOr(Schema.String),
+  type: Schema.Literals(["EnvironmentRole", "OrganizationRole"]),
+  resource_type_slug: Schema.String,
+  permissions: Schema.Array(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface OrganizationRoleAddPermissionResponse extends Schema.Schema
+  .Type<typeof OrganizationRoleAddPermissionResponse> {}
+
+/** A newly created organization role. */
+export const OrganizationRoleCreateResponse = Schema.Struct({
+  slug: Schema.String,
+  object: Schema.Literal("role"),
+  id: Schema.String,
+  name: Schema.String,
+  description: Schema.NullOr(Schema.String),
+  type: Schema.Literals(["EnvironmentRole", "OrganizationRole"]),
+  resource_type_slug: Schema.String,
+  permissions: Schema.Array(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface OrganizationRoleCreateResponse extends Schema.Schema.Type<
+  typeof OrganizationRoleCreateResponse
+> {}
+
+/** An organization role returned by slug. */
+export const OrganizationRoleGetResponse = Schema.Struct({
+  slug: Schema.String,
+  object: Schema.Literal("role"),
+  id: Schema.String,
+  name: Schema.String,
+  description: Schema.NullOr(Schema.String),
+  type: Schema.Literals(["EnvironmentRole", "OrganizationRole"]),
+  resource_type_slug: Schema.String,
+  permissions: Schema.Array(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface OrganizationRoleGetResponse extends Schema.Schema.Type<
+  typeof OrganizationRoleGetResponse
+> {}
+
+/** An organization role after replacing its permissions. */
+export const OrganizationRoleSetPermissionsResponse = Schema.Struct({
+  slug: Schema.String,
+  object: Schema.Literal("role"),
+  id: Schema.String,
+  name: Schema.String,
+  description: Schema.NullOr(Schema.String),
+  type: Schema.Literals(["EnvironmentRole", "OrganizationRole"]),
+  resource_type_slug: Schema.String,
+  permissions: Schema.Array(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface OrganizationRoleSetPermissionsResponse extends Schema.Schema
+  .Type<typeof OrganizationRoleSetPermissionsResponse> {}
+
+/** An updated organization role. */
+export const OrganizationRoleUpdateResponse = Schema.Struct({
+  slug: Schema.String,
+  object: Schema.Literal("role"),
+  id: Schema.String,
+  name: Schema.String,
+  description: Schema.NullOr(Schema.String),
+  type: Schema.Literals(["EnvironmentRole", "OrganizationRole"]),
+  resource_type_slug: Schema.String,
+  permissions: Schema.Array(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface OrganizationRoleUpdateResponse extends Schema.Schema.Type<
+  typeof OrganizationRoleUpdateResponse
+> {}
+
+/** A single RBAC role assignment granting a group a role on a resource or the organization itself. */
+export const ReplaceGroupRoleAssignmentEntryDto = Schema.Struct({
+  role_slug: Schema.String,
+  resource_id: Schema.optional(Schema.String),
+  resource_external_id: Schema.optional(Schema.String),
+  resource_type_slug: Schema.optional(Schema.String),
+});
+export interface ReplaceGroupRoleAssignmentEntryDto extends Schema.Schema.Type<
+  typeof ReplaceGroupRoleAssignmentEntryDto
+> {}
+
+/** An RBAC role defined at the environment or organization level, carrying its assigned permissions. */
+export const Role = Schema.Struct({
+  slug: Schema.String,
+  object: Schema.Literal("role"),
+  id: Schema.String,
+  name: Schema.String,
+  description: Schema.NullOr(Schema.String),
+  type: Schema.Literals(["EnvironmentRole", "OrganizationRole"]),
+  resource_type_slug: Schema.String,
+  permissions: Schema.Array(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface Role extends Schema.Schema.Type<typeof Role> {}
+
+/** A list of RBAC roles. */
+export const RoleList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(Role),
+});
+export interface RoleList extends Schema.Schema.Type<typeof RoleList> {}
+
+/** A minimal reference to an RBAC role, identified by its slug. */
+export const SlimRole = Schema.Struct({ slug: Schema.String });
+export interface SlimRole extends Schema.Schema.Type<typeof SlimRole> {}
+
+/** An RBAC/FGA assignment granting a group a role on a specific resource. */
+export const GroupRoleAssignment = Schema.Struct({
+  object: Schema.Literal("group_role_assignment"),
+  id: Schema.String,
+  group_id: Schema.String,
+  role: SlimRole,
+  resource: Schema.Struct({
+    id: Schema.String,
+    external_id: Schema.String,
+    resource_type_slug: Schema.String,
+  }),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface GroupRoleAssignment extends Schema.Schema.Type<
+  typeof GroupRoleAssignment
+> {}
+
+/** A page of group role assignments. */
+export const GroupRoleAssignmentList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(GroupRoleAssignment),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+});
+export interface GroupRoleAssignmentList extends Schema.Schema.Type<
+  typeof GroupRoleAssignmentList
+> {}
 
 /** A WorkOS AuthKit user. */
 export const User = Schema.Struct({
@@ -113,6 +819,1481 @@ export const User = Schema.Struct({
   updated_at: Schema.String,
 });
 export interface User extends Schema.Schema.Type<typeof User> {}
+
+/** An AuthKit organization membership with its user embedded. */
+export const OrganizationMembershipWithUser = Schema.Struct({
+  object: Schema.Literal("organization_membership"),
+  id: Schema.String,
+  user_id: Schema.String,
+  organization_id: Schema.String,
+  status: Schema.Literals(["active", "inactive", "pending"]),
+  directory_managed: Schema.Boolean,
+  organization_name: Schema.optional(Schema.String),
+  custom_attributes: Schema.optional(Schema.Record(Schema.String, Schema.Json)),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+  user: User,
+});
+export interface OrganizationMembershipWithUser extends Schema.Schema.Type<
+  typeof OrganizationMembershipWithUser
+> {}
+
+/** A page of AuthKit organization memberships, each with its user embedded. */
+export const OrganizationMembershipWithUserList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(OrganizationMembershipWithUser),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+});
+export interface OrganizationMembershipWithUserList extends Schema.Schema.Type<
+  typeof OrganizationMembershipWithUserList
+> {}
+
+/** A WorkOS RBAC role assignment linking a role to an organization membership on a resource. */
+export const UserRoleAssignment = Schema.Struct({
+  object: Schema.Literal("role_assignment"),
+  id: Schema.String,
+  organization_membership_id: Schema.String,
+  role: SlimRole,
+  resource: Schema.Struct({
+    id: Schema.String,
+    external_id: Schema.String,
+    resource_type_slug: Schema.String,
+  }),
+  source: Schema.Struct({
+    type: Schema.Literals(["direct", "group"]),
+    group_role_assignment_id: Schema.NullOr(Schema.String),
+  }),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface UserRoleAssignment extends Schema.Schema.Type<
+  typeof UserRoleAssignment
+> {}
+
+/** A page of user role assignments. */
+export const UserRoleAssignmentList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(UserRoleAssignment),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+});
+export interface UserRoleAssignmentList extends Schema.Schema.Type<
+  typeof UserRoleAssignmentList
+> {}
+
+// ---------------------------------------------------------------------------
+// Client Tokens
+// ---------------------------------------------------------------------------
+
+/** The Client API token issued for an organization and user. */
+export const ClientApiTokenResponse = Schema.Struct({ token: Schema.String });
+export interface ClientApiTokenResponse extends Schema.Schema.Type<
+  typeof ClientApiTokenResponse
+> {}
+
+// ---------------------------------------------------------------------------
+// Connections
+// ---------------------------------------------------------------------------
+
+/** An SSO connection between an organization and its identity provider. */
+export const Connection = Schema.Struct({
+  object: Schema.Literal("connection"),
+  id: Schema.String,
+  organization_id: Schema.optional(Schema.String),
+  connection_type: Schema.Literals([
+    "Pending",
+    "ADFSSAML",
+    "AdpOidc",
+    "AppleOAuth",
+    "Auth0Migration",
+    "Auth0SAML",
+    "AzureSAML",
+    "BitbucketOAuth",
+    "CasSAML",
+    "ClassLinkSAML",
+    "CleverOIDC",
+    "CloudflareSAML",
+    "CyberArkSAML",
+    "DiscordOAuth",
+    "DuoSAML",
+    "EntraIdOIDC",
+    "GenericOIDC",
+    "GenericSAML",
+    "GitHubOAuth",
+    "GitLabOAuth",
+    "GoogleOAuth",
+    "GoogleOIDC",
+    "GoogleSAML",
+    "IntuitOAuth",
+    "JumpCloudSAML",
+    "KeycloakSAML",
+    "LastPassSAML",
+    "LinkedInOAuth",
+    "LoginGovOidc",
+    "MagicLink",
+    "MicrosoftOAuth",
+    "MiniOrangeSAML",
+    "NetIqSAML",
+    "OktaOIDC",
+    "OktaSAML",
+    "OneLoginSAML",
+    "OracleSAML",
+    "PingFederateSAML",
+    "PingOneSAML",
+    "RipplingSAML",
+    "SalesforceSAML",
+    "ShibbolethGenericSAML",
+    "ShibbolethSAML",
+    "SimpleSamlPhpSAML",
+    "SalesforceOAuth",
+    "SlackOAuth",
+    "TestIdp",
+    "VercelMarketplaceOAuth",
+    "VercelOAuth",
+    "VMwareSAML",
+    "XeroOAuth",
+  ]),
+  name: Schema.String,
+  state: Schema.Literals([
+    "requires_type",
+    "draft",
+    "active",
+    "validating",
+    "inactive",
+    "deleting",
+  ]),
+  status: Schema.Literals(["linked", "unlinked"]),
+  domains: Schema.Array(
+    Schema.Struct({
+      id: Schema.String,
+      object: Schema.Literal("connection_domain"),
+      domain: Schema.String,
+    }),
+  ),
+  callback_endpoint: Schema.optional(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface Connection extends Schema.Schema.Type<typeof Connection> {}
+
+/** A page of SSO connections. */
+export const ConnectionList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(Connection),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+});
+export interface ConnectionList extends Schema.Schema.Type<
+  typeof ConnectionList
+> {}
+
+// ---------------------------------------------------------------------------
+// Directory Sync
+// ---------------------------------------------------------------------------
+
+/** A Directory Sync directory connected to an external identity provider. */
+export const Directory = Schema.Struct({
+  object: Schema.Literal("directory"),
+  id: Schema.String,
+  organization_id: Schema.String,
+  external_key: Schema.String,
+  type: Schema.Literals([
+    "azure scim v2.0",
+    "bamboohr",
+    "breathe hr",
+    "cezanne hr",
+    "cyberark scim v2.0",
+    "fourth hr",
+    "generic scim v2.0",
+    "gsuite directory",
+    "hibob",
+    "sailpoint scim v2.0",
+    "jump cloud scim v2.0",
+    "okta scim v2.0",
+    "onelogin scim v2.0",
+    "people hr",
+    "personio",
+    "pingfederate scim v2.0",
+    "rippling scim v2.0",
+    "s3",
+    "sftp",
+    "sftp workday",
+    "workday",
+  ]),
+  state: Schema.Literals([
+    "linked",
+    "validating",
+    "invalid_credentials",
+    "unlinked",
+    "deleting",
+  ]),
+  name: Schema.String,
+  domain: Schema.optional(Schema.String),
+  metadata: Schema.optional(
+    Schema.Struct({
+      users: Schema.Struct({ active: Schema.Number, inactive: Schema.Number }),
+      groups: Schema.Number,
+    }),
+  ),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface Directory extends Schema.Schema.Type<typeof Directory> {}
+
+/** A group synced from a Directory Sync directory. */
+export const DirectoryGroup = Schema.Struct({
+  object: Schema.Literal("directory_group"),
+  id: Schema.String,
+  idp_id: Schema.String,
+  directory_id: Schema.String,
+  organization_id: Schema.String,
+  name: Schema.String,
+  raw_attributes: Schema.optional(Schema.Record(Schema.String, Schema.Json)),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface DirectoryGroup extends Schema.Schema.Type<
+  typeof DirectoryGroup
+> {}
+
+/** A page of Directory Sync groups. */
+export const DirectoryGroupList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(DirectoryGroup),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+});
+export interface DirectoryGroupList extends Schema.Schema.Type<
+  typeof DirectoryGroupList
+> {}
+
+/** A page of Directory Sync directories. */
+export const DirectoryList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(Directory),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+});
+export interface DirectoryList extends Schema.Schema.Type<
+  typeof DirectoryList
+> {}
+
+/** A Directory Sync user together with the groups they belong to. */
+export const DirectoryUserWithGroups = Schema.Struct({
+  object: Schema.Literal("directory_user"),
+  id: Schema.String,
+  directory_id: Schema.String,
+  organization_id: Schema.String,
+  idp_id: Schema.String,
+  email: Schema.NullOr(Schema.String),
+  first_name: Schema.optional(Schema.NullOr(Schema.String)),
+  last_name: Schema.optional(Schema.NullOr(Schema.String)),
+  name: Schema.optional(Schema.NullOr(Schema.String)),
+  emails: Schema.optional(
+    Schema.Array(
+      Schema.Struct({
+        primary: Schema.optional(Schema.Boolean),
+        type: Schema.optional(Schema.String),
+        value: Schema.optional(Schema.NullOr(Schema.String)),
+      }),
+    ),
+  ),
+  job_title: Schema.optional(Schema.NullOr(Schema.String)),
+  username: Schema.optional(Schema.NullOr(Schema.String)),
+  state: Schema.Literals(["active", "suspended", "inactive"]),
+  raw_attributes: Schema.Record(Schema.String, Schema.Json),
+  custom_attributes: Schema.Record(Schema.String, Schema.Json),
+  role: Schema.optional(SlimRole),
+  roles: Schema.optional(Schema.Array(SlimRole)),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+  groups: Schema.Array(DirectoryGroup),
+});
+export interface DirectoryUserWithGroups extends Schema.Schema.Type<
+  typeof DirectoryUserWithGroups
+> {}
+
+/** A page of Directory Sync users. */
+export const DirectoryUserList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(DirectoryUserWithGroups),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+});
+export interface DirectoryUserList extends Schema.Schema.Type<
+  typeof DirectoryUserList
+> {}
+
+// ---------------------------------------------------------------------------
+// Events
+// ---------------------------------------------------------------------------
+
+/** An event emitted by WorkOS. */
+export const EventSchema = Schema.Struct({
+  object: Schema.Literal("event"),
+  id: Schema.String,
+  event: Schema.String,
+  data: Schema.Record(Schema.String, Schema.Json),
+  created_at: Schema.String,
+  context: Schema.optional(Schema.Record(Schema.String, Schema.Json)),
+});
+export interface EventSchema extends Schema.Schema.Type<typeof EventSchema> {}
+
+/** A page of WorkOS events. */
+export const EventList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(EventSchema),
+  list_metadata: Schema.Struct({ after: Schema.NullOr(Schema.String) }),
+});
+export interface EventList extends Schema.Schema.Type<typeof EventList> {}
+
+// ---------------------------------------------------------------------------
+// Feature Flags
+// ---------------------------------------------------------------------------
+
+/** A feature flag after being disabled. */
+export const FeatureFlagDisableResponse = Schema.Struct({
+  object: Schema.Literal("feature_flag"),
+  id: Schema.String,
+  slug: Schema.String,
+  name: Schema.String,
+  description: Schema.NullOr(Schema.String),
+  owner: Schema.NullOr(
+    Schema.Struct({
+      email: Schema.String,
+      first_name: Schema.NullOr(Schema.String),
+      last_name: Schema.NullOr(Schema.String),
+    }),
+  ),
+  tags: Schema.Array(Schema.String),
+  enabled: Schema.Boolean,
+  default_value: Schema.Boolean,
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface FeatureFlagDisableResponse extends Schema.Schema.Type<
+  typeof FeatureFlagDisableResponse
+> {}
+
+/** A feature flag after being enabled. */
+export const FeatureFlagEnableResponse = Schema.Struct({
+  object: Schema.Literal("feature_flag"),
+  id: Schema.String,
+  slug: Schema.String,
+  name: Schema.String,
+  description: Schema.NullOr(Schema.String),
+  owner: Schema.NullOr(
+    Schema.Struct({
+      email: Schema.String,
+      first_name: Schema.NullOr(Schema.String),
+      last_name: Schema.NullOr(Schema.String),
+    }),
+  ),
+  tags: Schema.Array(Schema.String),
+  enabled: Schema.Boolean,
+  default_value: Schema.Boolean,
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface FeatureFlagEnableResponse extends Schema.Schema.Type<
+  typeof FeatureFlagEnableResponse
+> {}
+
+/** A WorkOS Feature Flag. */
+export const Flag = Schema.Struct({
+  object: Schema.Literal("feature_flag"),
+  id: Schema.String,
+  slug: Schema.String,
+  name: Schema.String,
+  description: Schema.NullOr(Schema.String),
+  owner: Schema.NullOr(
+    Schema.Struct({
+      email: Schema.String,
+      first_name: Schema.NullOr(Schema.String),
+      last_name: Schema.NullOr(Schema.String),
+    }),
+  ),
+  tags: Schema.Array(Schema.String),
+  enabled: Schema.Boolean,
+  default_value: Schema.Boolean,
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface Flag extends Schema.Schema.Type<typeof Flag> {}
+
+/** A page of Feature Flags. */
+export const FlagList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(Flag),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+});
+export interface FlagList extends Schema.Schema.Type<typeof FlagList> {}
+
+// ---------------------------------------------------------------------------
+// Groups
+// ---------------------------------------------------------------------------
+
+/** A named group of users within a WorkOS organization. */
+export const Group = Schema.Struct({
+  object: Schema.Literal("group"),
+  id: Schema.String,
+  organization_id: Schema.String,
+  name: Schema.String,
+  description: Schema.NullOr(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface Group extends Schema.Schema.Type<typeof Group> {}
+
+/** A page of groups. */
+export const GroupList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(Group),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+});
+export interface GroupList extends Schema.Schema.Type<typeof GroupList> {}
+
+/** An organization membership summary in a group member list. */
+export const OrganizationMembershipBaseListItem = Schema.Struct({
+  object: Schema.Literal("organization_membership"),
+  id: Schema.String,
+  user_id: Schema.String,
+  organization_id: Schema.String,
+  status: Schema.Literals(["active", "inactive", "pending"]),
+  directory_managed: Schema.Boolean,
+  organization_name: Schema.optional(Schema.String),
+  custom_attributes: Schema.optional(Schema.Record(Schema.String, Schema.Json)),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface OrganizationMembershipBaseListItem extends Schema.Schema.Type<
+  typeof OrganizationMembershipBaseListItem
+> {}
+
+/** A page of AuthKit organization memberships, without embedded user or role details. */
+export const OrganizationMembershipBaseList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(OrganizationMembershipBaseListItem),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+});
+export interface OrganizationMembershipBaseList extends Schema.Schema.Type<
+  typeof OrganizationMembershipBaseList
+> {}
+
+// ---------------------------------------------------------------------------
+// Multi Factor Auth
+// ---------------------------------------------------------------------------
+
+/** An MFA authentication challenge issued for an authentication factor. */
+export const AuthenticationChallenge = Schema.Struct({
+  object: Schema.Literal("authentication_challenge"),
+  id: Schema.String,
+  expires_at: Schema.optional(Schema.String),
+  code: Schema.optional(Schema.String),
+  authentication_factor_id: Schema.String,
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface AuthenticationChallenge extends Schema.Schema.Type<
+  typeof AuthenticationChallenge
+> {}
+
+/** Result of verifying an MFA authentication challenge code. */
+export const AuthenticationChallengeVerifyResponse = Schema.Struct({
+  challenge: AuthenticationChallenge,
+  valid: Schema.Boolean,
+});
+export interface AuthenticationChallengeVerifyResponse extends Schema.Schema
+  .Type<typeof AuthenticationChallengeVerifyResponse> {}
+
+/** A multi-factor authentication factor (SMS, TOTP, or WebAuthn) enrolled for an AuthKit user. */
+export const AuthenticationFactor = Schema.Struct({
+  object: Schema.Literal("authentication_factor"),
+  id: Schema.String,
+  type: Schema.Literals(["generic_otp", "sms", "totp", "webauthn"]),
+  user_id: Schema.optional(Schema.String),
+  sms: Schema.optional(Schema.Struct({ phone_number: Schema.String })),
+  totp: Schema.optional(
+    Schema.Struct({ issuer: Schema.String, user: Schema.String }),
+  ),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface AuthenticationFactor extends Schema.Schema.Type<
+  typeof AuthenticationFactor
+> {}
+
+/** A newly enrolled AuthKit multi-factor authentication factor, including the TOTP secret, QR code, and URI returned only at enrollment time. */
+export const AuthenticationFactorEnrolled = Schema.Struct({
+  object: Schema.Literal("authentication_factor"),
+  id: Schema.String,
+  type: Schema.Literals(["generic_otp", "sms", "totp", "webauthn"]),
+  user_id: Schema.optional(Schema.String),
+  sms: Schema.optional(Schema.Struct({ phone_number: Schema.String })),
+  totp: Schema.optional(
+    Schema.Struct({
+      issuer: Schema.String,
+      user: Schema.String,
+      secret: Schema.String,
+      qr_code: Schema.String,
+      uri: Schema.String,
+    }),
+  ),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface AuthenticationFactorEnrolled extends Schema.Schema.Type<
+  typeof AuthenticationFactorEnrolled
+> {}
+
+// ---------------------------------------------------------------------------
+// Organization Domains
+// ---------------------------------------------------------------------------
+
+/** A newly created organization domain. */
+export const OrganizationDomainCreateResponse = Schema.Struct({
+  object: Schema.Literal("organization_domain"),
+  id: Schema.String,
+  organization_id: Schema.String,
+  domain: Schema.String,
+  state: Schema.optional(
+    Schema.Literals([
+      "failed",
+      "legacy_verified",
+      "pending",
+      "unverified",
+      "verified",
+    ]),
+  ),
+  verification_prefix: Schema.optional(Schema.String),
+  verification_token: Schema.optional(Schema.String),
+  verification_strategy: Schema.optional(Schema.Literals(["dns", "manual"])),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface OrganizationDomainCreateResponse extends Schema.Schema.Type<
+  typeof OrganizationDomainCreateResponse
+> {}
+
+/** A verified or pending domain attached to an organization, including its DNS verification token and strategy. */
+export const OrganizationDomainStandAlone = Schema.Struct({
+  object: Schema.Literal("organization_domain"),
+  id: Schema.String,
+  organization_id: Schema.String,
+  domain: Schema.String,
+  state: Schema.optional(
+    Schema.Literals([
+      "failed",
+      "legacy_verified",
+      "pending",
+      "unverified",
+      "verified",
+    ]),
+  ),
+  verification_prefix: Schema.optional(Schema.String),
+  verification_token: Schema.optional(Schema.String),
+  verification_strategy: Schema.optional(Schema.Literals(["dns", "manual"])),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface OrganizationDomainStandAlone extends Schema.Schema.Type<
+  typeof OrganizationDomainStandAlone
+> {}
+
+// ---------------------------------------------------------------------------
+// Organizations
+// ---------------------------------------------------------------------------
+
+/** An organization's Audit Logs settings, including retention period, state, and configured log stream. */
+export const AuditLogConfiguration = Schema.Struct({
+  organization_id: Schema.String,
+  retention_period_in_days: Schema.Number,
+  state: Schema.Literals(["active", "inactive", "disabled"]),
+  log_stream: Schema.optional(
+    Schema.Struct({
+      id: Schema.String,
+      type: Schema.Literals([
+        "AzureSentinel",
+        "Datadog",
+        "GenericHttps",
+        "GoogleCloudStorage",
+        "S3",
+        "Snowflake",
+        "Splunk",
+      ]),
+      state: Schema.Literals(["active", "inactive", "error", "invalid"]),
+      last_synced_at: Schema.NullOr(Schema.String),
+      created_at: Schema.String,
+    }),
+  ),
+});
+export interface AuditLogConfiguration extends Schema.Schema.Type<
+  typeof AuditLogConfiguration
+> {}
+
+/** A WorkOS organization. */
+export const Organization = Schema.Struct({
+  object: Schema.Literal("organization"),
+  id: Schema.String,
+  name: Schema.String,
+  domains: Schema.Array(
+    Schema.Struct({
+      object: Schema.Literal("organization_domain"),
+      id: Schema.String,
+      organization_id: Schema.String,
+      domain: Schema.String,
+      state: Schema.optional(
+        Schema.Literals([
+          "failed",
+          "legacy_verified",
+          "pending",
+          "unverified",
+          "verified",
+        ]),
+      ),
+      verification_prefix: Schema.optional(Schema.String),
+      verification_token: Schema.optional(Schema.String),
+      verification_strategy: Schema.optional(
+        Schema.Literals(["dns", "manual"]),
+      ),
+      created_at: Schema.String,
+      updated_at: Schema.String,
+    }),
+  ),
+  metadata: Schema.Record(Schema.String, Schema.String),
+  external_id: Schema.NullOr(Schema.String),
+  stripe_customer_id: Schema.optional(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+  allow_profiles_outside_organization: Schema.optional(Schema.Boolean),
+});
+export interface Organization extends Schema.Schema.Type<typeof Organization> {}
+
+/** A Connect application authorized for an organization user. */
+export const OrganizationAuthorizedApplication = Schema.Struct({
+  object: Schema.Literal("authorized_connect_application"),
+  id: Schema.String,
+  granted_scopes: Schema.Array(Schema.String),
+  oauth_resource: Schema.optional(Schema.String),
+  application: ConnectApplication,
+  user_id: Schema.String,
+});
+export interface OrganizationAuthorizedApplication extends Schema.Schema.Type<
+  typeof OrganizationAuthorizedApplication
+> {}
+
+/** A page of Connect applications a user has authorized to access an organization. */
+export const OrganizationAuthorizedConnectApplicationList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(OrganizationAuthorizedApplication),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+});
+export interface OrganizationAuthorizedConnectApplicationList extends Schema
+  .Schema.Type<typeof OrganizationAuthorizedConnectApplicationList> {}
+
+/** A domain and its verification state supplied when creating or updating an organization. */
+export const OrganizationDomainDataDto = Schema.Struct({
+  domain: Schema.String,
+  state: Schema.Literals(["pending", "verified"]),
+});
+export interface OrganizationDomainDataDto extends Schema.Schema.Type<
+  typeof OrganizationDomainDataDto
+> {}
+
+/** A page of organizations. */
+export const OrganizationList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(Organization),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+});
+export interface OrganizationList extends Schema.Schema.Type<
+  typeof OrganizationList
+> {}
+
+// ---------------------------------------------------------------------------
+// Permissions
+// ---------------------------------------------------------------------------
+
+/** A newly created authorization permission. */
+export const AuthorizationPermissionCreateResponse = Schema.Struct({
+  object: Schema.Literal("permission"),
+  id: Schema.String,
+  slug: Schema.String,
+  name: Schema.String,
+  description: Schema.NullOr(Schema.String),
+  system: Schema.Boolean,
+  resource_type_slug: Schema.String,
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface AuthorizationPermissionCreateResponse extends Schema.Schema
+  .Type<typeof AuthorizationPermissionCreateResponse> {}
+
+// ---------------------------------------------------------------------------
+// Pipes
+// ---------------------------------------------------------------------------
+
+/** Request to store a third-party API key secret for a Connect installation, scoped to a user and optionally an organization. */
+export const ApiKeyInstallationDto = Schema.Struct({
+  secret: Schema.String,
+  user_id: Schema.String,
+  organization_id: Schema.optional(Schema.String),
+});
+export interface ApiKeyInstallationDto extends Schema.Schema.Type<
+  typeof ApiKeyInstallationDto
+> {}
+
+/** A third-party account connected to a user or organization via OAuth or API key in WorkOS Connect. */
+export const ConnectedAccount = Schema.Struct({
+  object: Schema.Literal("connected_account"),
+  id: Schema.String,
+  user_id: Schema.NullOr(Schema.String),
+  organization_id: Schema.NullOr(Schema.String),
+  scopes: Schema.Array(Schema.String),
+  auth_method: Schema.optional(Schema.Literals(["oauth", "api_key"])),
+  api_key_last_4: Schema.optional(Schema.NullOr(Schema.String)),
+  state: Schema.Literals([
+    "connected",
+    "needs_reauthorization",
+    "disconnected",
+  ]),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface ConnectedAccount extends Schema.Schema.Type<
+  typeof ConnectedAccount
+> {}
+
+/** OAuth configuration defining a custom data provider for Pipes/Connect. */
+export const CustomProviderDefinitionDto = Schema.Struct({
+  name: Schema.String,
+  authorization_url: Schema.String,
+  token_url: Schema.String,
+  refresh_token_url: Schema.optional(Schema.NullOr(Schema.String)),
+  pkce_enabled: Schema.optional(Schema.Boolean),
+  request_scope_separator: Schema.optional(Schema.String),
+  scopes_required: Schema.optional(Schema.Boolean),
+  client_secret_required: Schema.optional(Schema.Boolean),
+  additional_authorization_parameters: Schema.optional(
+    Schema.Record(Schema.String, Schema.String),
+  ),
+  token_body_content_type: Schema.optional(Schema.String),
+  authenticate_via: Schema.optional(
+    Schema.Literals(["request_body", "basic_auth_header"]),
+  ),
+});
+export interface CustomProviderDefinitionDto extends Schema.Schema.Type<
+  typeof CustomProviderDefinitionDto
+> {}
+
+/** A configured data provider integration for Pipes/Connect. */
+export const DataIntegration = Schema.Struct({
+  object: Schema.Literal("data_integration"),
+  id: Schema.String,
+  slug: Schema.String,
+  integration_type: Schema.String,
+  description: Schema.NullOr(Schema.String),
+  enabled: Schema.Boolean,
+  state: Schema.Literals(["valid", "invalid", "requested"]),
+  scopes: Schema.NullOr(Schema.Array(Schema.String)),
+  redirect_uri: Schema.String,
+  auth_methods: Schema.Array(Schema.Literals(["oauth", "api_key"])),
+  credentials: Schema.Struct({
+    type: Schema.Literals(["custom", "organization"]),
+    client_id: Schema.NullOr(Schema.String),
+    redacted_client_secret: Schema.NullOr(Schema.String),
+  }),
+  installation: Schema.NullOr(
+    Schema.Struct({
+      id: Schema.String,
+      user_id: Schema.String,
+      organization_id: Schema.NullOr(Schema.String),
+      api_key_last_4: Schema.NullOr(Schema.String),
+    }),
+  ),
+  custom_provider: Schema.NullOr(
+    Schema.Struct({
+      name: Schema.String,
+      authorization_url: Schema.NullOr(Schema.String),
+      token_url: Schema.NullOr(Schema.String),
+      refresh_token_url: Schema.NullOr(Schema.String),
+      pkce_enabled: Schema.Boolean,
+      request_scope_separator: Schema.String,
+      scopes_required: Schema.Boolean,
+      client_secret_required: Schema.Boolean,
+      additional_authorization_parameters: Schema.Record(
+        Schema.String,
+        Schema.String,
+      ),
+      token_body_content_type: Schema.String,
+      authenticate_via: Schema.Literals(["request_body", "basic_auth_header"]),
+    }),
+  ),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface DataIntegration extends Schema.Schema.Type<
+  typeof DataIntegration
+> {}
+
+/** An active data integration access token response. */
+export const DataIntegrationAccessTokenResponse = Schema.Struct({
+  active: Schema.Literal(true),
+  access_token: Schema.Struct({
+    object: Schema.Literal("access_token"),
+    access_token: Schema.String,
+    expires_at: Schema.NullOr(Schema.String),
+    scopes: Schema.Array(Schema.String),
+    missing_scopes: Schema.Array(Schema.String),
+  }),
+});
+export interface DataIntegrationAccessTokenResponse extends Schema.Schema.Type<
+  typeof DataIntegrationAccessTokenResponse
+> {}
+
+/** The OAuth authorization URL to redirect a user to when connecting a data provider account (Pipes/Connect). */
+export const DataIntegrationAuthorizeUrlResponse = Schema.Struct({
+  url: Schema.String,
+});
+export interface DataIntegrationAuthorizeUrlResponse extends Schema.Schema.Type<
+  typeof DataIntegrationAuthorizeUrlResponse
+> {}
+
+/** Organization-supplied OAuth credentials for a data provider integration (Pipes/Connect). */
+export const DataIntegrationCredentials = Schema.Struct({
+  credentials_type: Schema.Literals(["shared", "custom", "organization"]),
+  has_credentials: Schema.Boolean,
+  client_id: Schema.NullOr(Schema.String),
+  client_secret_last_four: Schema.NullOr(Schema.String),
+  redirect_uri: Schema.String,
+});
+export interface DataIntegrationCredentials extends Schema.Schema.Type<
+  typeof DataIntegrationCredentials
+> {}
+
+/** A data provider's configuration as it applies to a single organization (Pipes/Connect). */
+export const DataIntegrationConfigurationResponse = Schema.Struct({
+  object: Schema.Literal("data_integration_configuration"),
+  id: Schema.String,
+  organization_id: Schema.String,
+  slug: Schema.String,
+  name: Schema.String,
+  enabled: Schema.Boolean,
+  scopes: Schema.NullOr(Schema.Array(Schema.String)),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+  credentials: Schema.optional(DataIntegrationCredentials),
+});
+export interface DataIntegrationConfigurationResponse extends Schema.Schema
+  .Type<typeof DataIntegrationConfigurationResponse> {}
+
+/** A list of per-organization data provider configurations (Pipes/Connect). */
+export const DataIntegrationConfigurationListResponse = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(DataIntegrationConfigurationResponse),
+});
+export interface DataIntegrationConfigurationListResponse extends Schema.Schema
+  .Type<typeof DataIntegrationConfigurationListResponse> {}
+
+/** Request body specifying the OAuth credentials for a data provider integration (Pipes/Connect). */
+export const DataIntegrationCredentialsDto = Schema.Struct({
+  type: Schema.Literals(["custom", "organization"]),
+  client_id: Schema.optional(Schema.String),
+  client_secret: Schema.optional(Schema.String),
+});
+export interface DataIntegrationCredentialsDto extends Schema.Schema.Type<
+  typeof DataIntegrationCredentialsDto
+> {}
+
+/** An active data integration credential response. */
+export const DataIntegrationCredentialsResponse = Schema.Struct({
+  active: Schema.Literal(true),
+  credential: Schema.Struct({
+    object: Schema.Literal("credential"),
+    auth_method: Schema.Literal("oauth"),
+    value: Schema.String,
+    expires_at: Schema.NullOr(Schema.String),
+    scopes: Schema.Array(Schema.String),
+    missing_scopes: Schema.Array(Schema.String),
+  }),
+});
+export interface DataIntegrationCredentialsResponse extends Schema.Schema.Type<
+  typeof DataIntegrationCredentialsResponse
+> {}
+
+/** A page of Pipes data providers. */
+export const DataIntegrationList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(DataIntegration),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+});
+export interface DataIntegrationList extends Schema.Schema.Type<
+  typeof DataIntegrationList
+> {}
+
+/** Request body updating a custom OAuth provider definition used by a Pipes/Connect data provider integration. */
+export const UpdateCustomProviderDefinitionDto = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  authorization_url: Schema.optional(Schema.String),
+  token_url: Schema.optional(Schema.String),
+  refresh_token_url: Schema.optional(Schema.NullOr(Schema.String)),
+  pkce_enabled: Schema.optional(Schema.Boolean),
+  request_scope_separator: Schema.optional(Schema.String),
+  scopes_required: Schema.optional(Schema.Boolean),
+  client_secret_required: Schema.optional(Schema.Boolean),
+  additional_authorization_parameters: Schema.optional(
+    Schema.Record(Schema.String, Schema.String),
+  ),
+  token_body_content_type: Schema.optional(Schema.String),
+  authenticate_via: Schema.optional(
+    Schema.Literals(["request_body", "basic_auth_header"]),
+  ),
+});
+export interface UpdateCustomProviderDefinitionDto extends Schema.Schema.Type<
+  typeof UpdateCustomProviderDefinitionDto
+> {}
+
+// ---------------------------------------------------------------------------
+// Portal
+// ---------------------------------------------------------------------------
+
+/** An ephemeral link used to launch a WorkOS Admin Portal session. */
+export const PortalLinkResponse = Schema.Struct({ link: Schema.String });
+export interface PortalLinkResponse extends Schema.Schema.Type<
+  typeof PortalLinkResponse
+> {}
+
+// ---------------------------------------------------------------------------
+// Radar
+// ---------------------------------------------------------------------------
+
+/** Returned when a Radar blocklist or allowlist entry being added already exists. */
+export const RadarListEntryAlreadyPresentResponse = Schema.Struct({
+  message: Schema.String,
+});
+export interface RadarListEntryAlreadyPresentResponse extends Schema.Schema
+  .Type<typeof RadarListEntryAlreadyPresentResponse> {}
+
+/** The verdict of a standalone Radar risk assessment, indicating whether an authentication attempt should be allowed, blocked, or challenged and why. */
+export const RadarStandaloneResponse = Schema.Struct({
+  verdict: Schema.Literals(["allow", "block", "challenge"]),
+  reason: Schema.String,
+  attempt_id: Schema.String,
+  control: Schema.optional(
+    Schema.Literals([
+      "bot_detection",
+      "brute_force_attack",
+      "impossible_travel",
+      "repeat_sign_up",
+      "stale_account",
+      "unrecognized_device",
+      "restriction",
+    ]),
+  ),
+  blocklist_type: Schema.optional(
+    Schema.Literals([
+      "ip_address",
+      "domain",
+      "email",
+      "device",
+      "user_agent",
+      "device_fingerprint",
+      "country",
+    ]),
+  ),
+});
+export interface RadarStandaloneResponse extends Schema.Schema.Type<
+  typeof RadarStandaloneResponse
+> {}
+
+// ---------------------------------------------------------------------------
+// Sso
+// ---------------------------------------------------------------------------
+
+/** An SSO user profile returned by an identity provider, including its attributes, groups, and assigned roles. */
+export const Profile = Schema.Struct({
+  object: Schema.Literal("profile"),
+  id: Schema.String,
+  organization_id: Schema.NullOr(Schema.String),
+  connection_id: Schema.String,
+  connection_type: Schema.Literals([
+    "Pending",
+    "ADFSSAML",
+    "AdpOidc",
+    "AppleOAuth",
+    "Auth0Migration",
+    "Auth0SAML",
+    "AzureSAML",
+    "BitbucketOAuth",
+    "CasSAML",
+    "ClassLinkSAML",
+    "CleverOIDC",
+    "CloudflareSAML",
+    "CyberArkSAML",
+    "DiscordOAuth",
+    "DuoSAML",
+    "EntraIdOIDC",
+    "GenericOIDC",
+    "GenericSAML",
+    "GitHubOAuth",
+    "GitLabOAuth",
+    "GoogleOAuth",
+    "GoogleOIDC",
+    "GoogleSAML",
+    "IntuitOAuth",
+    "JumpCloudSAML",
+    "KeycloakSAML",
+    "LastPassSAML",
+    "LinkedInOAuth",
+    "LoginGovOidc",
+    "MagicLink",
+    "MicrosoftOAuth",
+    "MiniOrangeSAML",
+    "NetIqSAML",
+    "OktaOIDC",
+    "OktaSAML",
+    "OneLoginSAML",
+    "OracleSAML",
+    "PingFederateSAML",
+    "PingOneSAML",
+    "RipplingSAML",
+    "SalesforceSAML",
+    "ShibbolethGenericSAML",
+    "ShibbolethSAML",
+    "SimpleSamlPhpSAML",
+    "SalesforceOAuth",
+    "SlackOAuth",
+    "TestIdp",
+    "VercelMarketplaceOAuth",
+    "VercelOAuth",
+    "VMwareSAML",
+    "XeroOAuth",
+  ]),
+  idp_id: Schema.String,
+  email: Schema.String,
+  first_name: Schema.NullOr(Schema.String),
+  last_name: Schema.NullOr(Schema.String),
+  name: Schema.NullOr(Schema.String),
+  role: Schema.optional(Schema.NullOr(SlimRole)),
+  roles: Schema.optional(Schema.NullOr(Schema.Array(SlimRole))),
+  groups: Schema.optional(Schema.Array(Schema.String)),
+  custom_attributes: Schema.optional(Schema.Record(Schema.String, Schema.Json)),
+  raw_attributes: Schema.Record(Schema.String, Schema.Json),
+});
+export interface Profile extends Schema.Schema.Type<typeof Profile> {}
+
+/** Returns the OAuth 2.0 authorization URL to redirect a user to in order to begin SSO. */
+export const SsoAuthorizeUrlResponse = Schema.Struct({ url: Schema.String });
+export interface SsoAuthorizeUrlResponse extends Schema.Schema.Type<
+  typeof SsoAuthorizeUrlResponse
+> {}
+
+/** Returns the SSO logout redirect URL and token used to sign a user out at their identity provider. */
+export const SsoLogoutAuthorizeResponse = Schema.Struct({
+  logout_url: Schema.String,
+  logout_token: Schema.String,
+});
+export interface SsoLogoutAuthorizeResponse extends Schema.Schema.Type<
+  typeof SsoLogoutAuthorizeResponse
+> {}
+
+/** The result of exchanging an SSO authorization code, including the access token, user profile, and any identity provider OAuth tokens. */
+export const SsoTokenResponse = Schema.Struct({
+  token_type: Schema.Literal("Bearer"),
+  access_token: Secret,
+  expires_in: Schema.Number,
+  profile: Profile,
+  oauth_tokens: Schema.optional(
+    Schema.Struct({
+      provider: Schema.String,
+      refresh_token: Secret,
+      access_token: Secret,
+      expires_at: Schema.Number,
+      scopes: Schema.Array(Schema.String),
+    }),
+  ),
+});
+export interface SsoTokenResponse extends Schema.Schema.Type<
+  typeof SsoTokenResponse
+> {}
+
+// ---------------------------------------------------------------------------
+// User Management
+// ---------------------------------------------------------------------------
+
+/** The response from enrolling an AuthKit MFA authentication factor, containing the factor and its initial challenge. */
+export const AuthenticationFactorEnrollResponse = Schema.Struct({
+  authentication_factor: AuthenticationFactorEnrolled,
+  authentication_challenge: AuthenticationChallenge,
+});
+export interface AuthenticationFactorEnrollResponse extends Schema.Schema.Type<
+  typeof AuthenticationFactorEnrollResponse
+> {}
+
+/** A page of authentication factors enrolled by an AuthKit user. */
+export const AuthenticationFactorList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(AuthenticationFactor),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+});
+export interface AuthenticationFactorList extends Schema.Schema.Type<
+  typeof AuthenticationFactorList
+> {}
+
+/** A Connect application authorized by a user. */
+export const AuthorizedApplication = Schema.Struct({
+  object: Schema.Literal("authorized_connect_application"),
+  id: Schema.String,
+  granted_scopes: Schema.Array(Schema.String),
+  oauth_resource: Schema.optional(Schema.String),
+  application: ConnectApplication,
+});
+export interface AuthorizedApplication extends Schema.Schema.Type<
+  typeof AuthorizedApplication
+> {}
+
+/** A page of Connect applications a user has authorized, each with the scopes granted to it. */
+export const AuthorizedConnectApplicationList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(AuthorizedApplication),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+});
+export interface AuthorizedConnectApplicationList extends Schema.Schema.Type<
+  typeof AuthorizedConnectApplicationList
+> {}
+
+/** A CORS origin allowed to make cross-origin requests. */
+export const CorsOriginResponse = Schema.Struct({
+  object: Schema.Literal("cors_origin"),
+  id: Schema.String,
+  origin: Schema.String,
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface CorsOriginResponse extends Schema.Schema.Type<
+  typeof CorsOriginResponse
+> {}
+
+/** A page of allowed CORS origins. */
+export const CorsOriginList = Schema.Struct({
+  object: Schema.Literal("list"),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+  data: Schema.Array(CorsOriginResponse),
+});
+export interface CorsOriginList extends Schema.Schema.Type<
+  typeof CorsOriginList
+> {}
+
+/** A list of Pipes data providers, each including the current user's connected-account status. */
+export const DataIntegrationsListResponse = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(
+    Schema.Struct({
+      object: Schema.Literal("data_provider"),
+      id: Schema.String,
+      name: Schema.String,
+      description: Schema.NullOr(Schema.String),
+      slug: Schema.String,
+      integration_type: Schema.String,
+      credentials_type: Schema.String,
+      scopes: Schema.NullOr(Schema.Array(Schema.String)),
+      auth_methods: Schema.optional(
+        Schema.Array(Schema.Literals(["oauth", "api_key"])),
+      ),
+      ownership: Schema.Literals(["userland_user", "organization"]),
+      created_at: Schema.String,
+      updated_at: Schema.String,
+      integrationType: Schema.String,
+      credentialsType: Schema.String,
+      createdAt: Schema.String,
+      updatedAt: Schema.String,
+      connected_account: Schema.NullOr(
+        Schema.Struct({
+          object: Schema.Literal("connected_account"),
+          id: Schema.String,
+          user_id: Schema.NullOr(Schema.String),
+          organization_id: Schema.NullOr(Schema.String),
+          scopes: Schema.Array(Schema.String),
+          auth_method: Schema.optional(Schema.Literals(["oauth", "api_key"])),
+          api_key_last_4: Schema.optional(Schema.NullOr(Schema.String)),
+          state: Schema.Literals([
+            "connected",
+            "needs_reauthorization",
+            "disconnected",
+          ]),
+          created_at: Schema.String,
+          updated_at: Schema.String,
+          userlandUserId: Schema.NullOr(Schema.String),
+          organizationId: Schema.NullOr(Schema.String),
+          createdAt: Schema.String,
+          updatedAt: Schema.String,
+        }),
+      ),
+    }),
+  ),
+});
+export interface DataIntegrationsListResponse extends Schema.Schema.Type<
+  typeof DataIntegrationsListResponse
+> {}
+
+/** Codes and verification URIs returned to begin the OAuth 2.0 device authorization flow. */
+export const DeviceAuthorizationResponse = Schema.Struct({
+  device_code: Schema.String,
+  user_code: Schema.String,
+  verification_uri: Schema.String,
+  verification_uri_complete: Schema.optional(Schema.String),
+  expires_in: Schema.Number,
+  interval: Schema.optional(Schema.Number),
+});
+export interface DeviceAuthorizationResponse extends Schema.Schema.Type<
+  typeof DeviceAuthorizationResponse
+> {}
+
+/** A pending email-change challenge for an AuthKit user. */
+export const EmailChange = Schema.Struct({
+  object: Schema.Literal("email_change"),
+  user: User,
+  new_email: Schema.String,
+  expires_at: Schema.String,
+  created_at: Schema.String,
+});
+export interface EmailChange extends Schema.Schema.Type<typeof EmailChange> {}
+
+/** A confirmed user email change. */
+export const EmailChangeConfirmation = Schema.Struct({
+  object: Schema.Literal("email_change_confirmation"),
+  user: Schema.Struct({
+    object: Schema.Literal("user"),
+    id: Schema.String,
+    first_name: Schema.NullOr(Schema.String),
+    last_name: Schema.NullOr(Schema.String),
+    name: Schema.optional(Schema.NullOr(Schema.String)),
+    profile_picture_url: Schema.NullOr(Schema.String),
+    email: Schema.String,
+    email_verified: Schema.Boolean,
+    external_id: Schema.NullOr(Schema.String),
+    metadata: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+    last_sign_in_at: Schema.NullOr(Schema.String),
+    locale: Schema.optional(Schema.NullOr(Schema.String)),
+    created_at: Schema.String,
+    updated_at: Schema.String,
+  }),
+});
+export interface EmailChangeConfirmation extends Schema.Schema.Type<
+  typeof EmailChangeConfirmation
+> {}
+
+/** An email verification code issued to an AuthKit user. */
+export const EmailVerification = Schema.Struct({
+  object: Schema.Literal("email_verification"),
+  id: Schema.String,
+  user_id: Schema.String,
+  email: Schema.String,
+  expires_at: Schema.String,
+  created_at: Schema.String,
+  updated_at: Schema.String,
+  code: Schema.String,
+});
+export interface EmailVerification extends Schema.Schema.Type<
+  typeof EmailVerification
+> {}
+
+/** Redirect URI returned to resume the AuthKit OAuth flow after external authentication. */
+export const ExternalAuthCompleteResponse = Schema.Struct({
+  redirect_uri: Schema.String,
+});
+export interface ExternalAuthCompleteResponse extends Schema.Schema.Type<
+  typeof ExternalAuthCompleteResponse
+> {}
+
+/** An AuthKit invitation for a recipient to join an organization. */
+export const Invitation = Schema.Struct({
+  object: Schema.Literal("invitation"),
+  id: Schema.String,
+  email: Schema.String,
+  state: Schema.Literals(["pending", "accepted", "expired", "revoked"]),
+  accepted_at: Schema.NullOr(Schema.String),
+  revoked_at: Schema.NullOr(Schema.String),
+  expires_at: Schema.String,
+  organization_id: Schema.NullOr(Schema.String),
+  inviter_user_id: Schema.NullOr(Schema.String),
+  accepted_user_id: Schema.NullOr(Schema.String),
+  role_slug: Schema.NullOr(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+  token: Schema.String,
+  accept_invitation_url: Schema.String,
+});
+export interface Invitation extends Schema.Schema.Type<typeof Invitation> {}
+
+/** An accepted user invitation. */
+export const InvitationAcceptResponse = Schema.Struct({
+  object: Schema.Literal("invitation"),
+  id: Schema.String,
+  email: Schema.String,
+  state: Schema.Literals(["pending", "accepted", "expired", "revoked"]),
+  accepted_at: Schema.NullOr(Schema.String),
+  revoked_at: Schema.NullOr(Schema.String),
+  expires_at: Schema.String,
+  organization_id: Schema.NullOr(Schema.String),
+  inviter_user_id: Schema.NullOr(Schema.String),
+  accepted_user_id: Schema.NullOr(Schema.String),
+  role_slug: Schema.NullOr(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+  token: Schema.String,
+  accept_invitation_url: Schema.String,
+});
+export interface InvitationAcceptResponse extends Schema.Schema.Type<
+  typeof InvitationAcceptResponse
+> {}
+
+/** A page of AuthKit invitations. */
+export const InvitationList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(Invitation),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+});
+export interface InvitationList extends Schema.Schema.Type<
+  typeof InvitationList
+> {}
+
+/** A revoked user invitation. */
+export const InvitationRevokeResponse = Schema.Struct({
+  object: Schema.Literal("invitation"),
+  id: Schema.String,
+  email: Schema.String,
+  state: Schema.Literals(["pending", "accepted", "expired", "revoked"]),
+  accepted_at: Schema.NullOr(Schema.String),
+  revoked_at: Schema.NullOr(Schema.String),
+  expires_at: Schema.String,
+  organization_id: Schema.NullOr(Schema.String),
+  inviter_user_id: Schema.NullOr(Schema.String),
+  accepted_user_id: Schema.NullOr(Schema.String),
+  role_slug: Schema.NullOr(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+  token: Schema.String,
+  accept_invitation_url: Schema.String,
+});
+export interface InvitationRevokeResponse extends Schema.Schema.Type<
+  typeof InvitationRevokeResponse
+> {}
+
+/** A JWKS document of RSA public keys used to verify AuthKit-issued access tokens. */
+export const JwksResponse = Schema.Struct({
+  keys: Schema.Array(
+    Schema.Struct({
+      alg: Schema.Literal("RS256"),
+      kty: Schema.Literal("RSA"),
+      use: Schema.Literal("sig"),
+      x5c: Schema.Array(Schema.String),
+      n: Schema.String,
+      e: Schema.String,
+      kid: Schema.String,
+      "x5t#S256": Schema.String,
+    }),
+  ),
+});
+export interface JwksResponse extends Schema.Schema.Type<typeof JwksResponse> {}
+
+/** A Liquid template that customizes the claims embedded in AuthKit-issued JWT access tokens. */
+export const JwtTemplate = Schema.Struct({
+  object: Schema.Literal("jwt_template"),
+  content: Schema.String,
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface JwtTemplate extends Schema.Schema.Type<typeof JwtTemplate> {}
+
+/** Cursor pointers returned with every WorkOS list response. */
+export const ListMetadata = Schema.Struct({
+  after: Schema.NullOr(Schema.String),
+  before: Schema.NullOr(Schema.String),
+});
+export interface ListMetadata extends Schema.Schema.Type<typeof ListMetadata> {}
+
+/** An AuthKit Magic Auth one-time code issued to a user's email address. */
+export const MagicAuth = Schema.Struct({
+  object: Schema.Literal("magic_auth"),
+  id: Schema.String,
+  user_id: Schema.String,
+  email: Schema.String,
+  expires_at: Schema.String,
+  created_at: Schema.String,
+  updated_at: Schema.String,
+  code: Schema.String,
+});
+export interface MagicAuth extends Schema.Schema.Type<typeof MagicAuth> {}
+
+/** A newly created Magic Auth challenge. */
+export const MagicAuthCreateResponse = Schema.Struct({
+  object: Schema.Literal("magic_auth"),
+  id: Schema.String,
+  user_id: Schema.String,
+  email: Schema.String,
+  expires_at: Schema.String,
+  created_at: Schema.String,
+  updated_at: Schema.String,
+  code: Schema.String,
+  radar_auth_attempt_id: Schema.optional(Schema.String),
+});
+export interface MagicAuthCreateResponse extends Schema.Schema.Type<
+  typeof MagicAuthCreateResponse
+> {}
+
+/** The OAuth tokens from the identity provider, if applicable. */
+export const OAuthTokens = Schema.Struct({
+  provider: Schema.String,
+  refresh_token: Secret,
+  access_token: Secret,
+  expires_at: Schema.Number,
+  scopes: Schema.Array(Schema.String),
+});
+export interface OAuthTokens extends Schema.Schema.Type<typeof OAuthTokens> {}
 
 /**
  * The response from a successful authentication. `access_token` and
@@ -150,9 +2331,446 @@ export const AuthenticationResponse = Schema.Struct({
       "MigratedSession",
     ]),
   ),
-  impersonator: Schema.optional(Impersonator),
+  impersonator: Schema.optional(
+    Schema.Struct({
+      email: Schema.String,
+      reason: Schema.NullOr(Schema.String),
+    }),
+  ),
   oauth_tokens: Schema.optional(OAuthTokens),
 });
 export interface AuthenticationResponse extends Schema.Schema.Type<
   typeof AuthenticationResponse
+> {}
+
+/** An AuthKit user's membership in an organization, including its assigned roles and the embedded user. */
+export const OrganizationMembership = Schema.Struct({
+  object: Schema.Literal("organization_membership"),
+  id: Schema.String,
+  user_id: Schema.String,
+  organization_id: Schema.String,
+  status: Schema.Literals(["active", "inactive", "pending"]),
+  directory_managed: Schema.Boolean,
+  organization_name: Schema.optional(Schema.String),
+  custom_attributes: Schema.optional(Schema.Record(Schema.String, Schema.Json)),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+  role: SlimRole,
+  roles: Schema.Array(SlimRole),
+  user: User,
+});
+export interface OrganizationMembership extends Schema.Schema.Type<
+  typeof OrganizationMembership
+> {}
+
+/** A newly created organization membership. */
+export const OrganizationMembershipCreateResponse = Schema.Struct({
+  object: Schema.Literal("organization_membership"),
+  id: Schema.String,
+  user_id: Schema.String,
+  organization_id: Schema.String,
+  status: Schema.Literals(["active", "inactive", "pending"]),
+  directory_managed: Schema.Boolean,
+  organization_name: Schema.optional(Schema.String),
+  custom_attributes: Schema.optional(Schema.Record(Schema.String, Schema.Json)),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+  role: SlimRole,
+  roles: Schema.Array(SlimRole),
+  user: User,
+});
+export interface OrganizationMembershipCreateResponse extends Schema.Schema
+  .Type<typeof OrganizationMembershipCreateResponse> {}
+
+/** A deactivated organization membership. */
+export const OrganizationMembershipDeactivateResponse = Schema.Struct({
+  object: Schema.Literal("organization_membership"),
+  id: Schema.String,
+  user_id: Schema.String,
+  organization_id: Schema.String,
+  status: Schema.Literals(["active", "inactive", "pending"]),
+  directory_managed: Schema.Boolean,
+  organization_name: Schema.optional(Schema.String),
+  custom_attributes: Schema.optional(Schema.Record(Schema.String, Schema.Json)),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+  role: SlimRole,
+  roles: Schema.Array(SlimRole),
+  user: User,
+});
+export interface OrganizationMembershipDeactivateResponse extends Schema.Schema
+  .Type<typeof OrganizationMembershipDeactivateResponse> {}
+
+/** A page of AuthKit organization memberships. */
+export const OrganizationMembershipList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(OrganizationMembership),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+});
+export interface OrganizationMembershipList extends Schema.Schema.Type<
+  typeof OrganizationMembershipList
+> {}
+
+/** An AuthKit password reset token, with the reset URL and expiry, created when a user requests to reset their password. */
+export const PasswordReset = Schema.Struct({
+  object: Schema.Literal("password_reset"),
+  id: Schema.String,
+  user_id: Schema.String,
+  email: Schema.String,
+  expires_at: Schema.String,
+  created_at: Schema.String,
+  password_reset_token: Schema.String,
+  password_reset_url: Schema.String,
+});
+export interface PasswordReset extends Schema.Schema.Type<
+  typeof PasswordReset
+> {}
+
+/** A Radar email verification challenge issued during authentication, carrying the code and its expiry. */
+export const RadarChallengeDetails = Schema.Struct({
+  object: Schema.Literal("radar_challenge"),
+  id: Schema.String,
+  type: Schema.Literal("email"),
+  user_id: Schema.String,
+  email: Schema.String,
+  expires_at: Schema.String,
+  created_at: Schema.String,
+  updated_at: Schema.String,
+  code: Schema.String,
+});
+export interface RadarChallengeDetails extends Schema.Schema.Type<
+  typeof RadarChallengeDetails
+> {}
+
+/** A redirect URI registered for a WorkOS environment, used as an allowed callback destination for SSO and AuthKit. */
+export const RedirectUri = Schema.Struct({
+  object: Schema.Literal("redirect_uri"),
+  id: Schema.String,
+  uri: Schema.String,
+  default: Schema.Boolean,
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface RedirectUri extends Schema.Schema.Type<typeof RedirectUri> {}
+
+/** A page of allowed redirect URIs. */
+export const RedirectUriList = Schema.Struct({
+  object: Schema.Literal("list"),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+  data: Schema.Array(RedirectUri),
+});
+export interface RedirectUriList extends Schema.Schema.Type<
+  typeof RedirectUriList
+> {}
+
+/** Returns the AuthKit user whose password was reset. */
+export const ResetPasswordResponse = Schema.Struct({ user: User });
+export interface ResetPasswordResponse extends Schema.Schema.Type<
+  typeof ResetPasswordResponse
+> {}
+
+/** Returns the verification ID and phone number for a dispatched Radar SMS challenge. */
+export const SendRadarSmsChallengeResponse = Schema.Struct({
+  verification_id: Schema.String,
+  phone_number: Schema.String,
+});
+export interface SendRadarSmsChallengeResponse extends Schema.Schema.Type<
+  typeof SendRadarSmsChallengeResponse
+> {}
+
+/** Returns the AuthKit user to whom an email verification message was sent. */
+export const SendVerificationEmailResponse = Schema.Struct({ user: User });
+export interface SendVerificationEmailResponse extends Schema.Schema.Type<
+  typeof SendVerificationEmailResponse
+> {}
+
+/** A user authentication session. */
+export const Session = Schema.Struct({
+  object: Schema.Literal("session"),
+  id: Schema.String,
+  impersonator: Schema.optional(
+    Schema.Struct({
+      email: Schema.String,
+      reason: Schema.NullOr(Schema.String),
+    }),
+  ),
+  ip_address: Schema.NullOr(Schema.String),
+  organization_id: Schema.optional(Schema.String),
+  user_agent: Schema.NullOr(Schema.String),
+  user_id: Schema.String,
+  auth_method: Schema.Literals([
+    "cross_app_auth",
+    "external_auth",
+    "impersonation",
+    "magic_code",
+    "migrated_session",
+    "oauth",
+    "passkey",
+    "password",
+    "sso",
+    "unknown",
+  ]),
+  status: Schema.Literals(["active", "expired", "revoked"]),
+  expires_at: Schema.String,
+  ended_at: Schema.NullOr(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface Session extends Schema.Schema.Type<typeof Session> {}
+
+/** A page of user sessions. */
+export const SessionList = Schema.Struct({
+  object: Schema.Literal("list"),
+  list_metadata: ListMetadata,
+  data: Schema.Array(Session),
+});
+export interface SessionList extends Schema.Schema.Type<typeof SessionList> {}
+
+/** A consent option collected from a user during authentication. */
+export const UserConsentOption = Schema.Struct({
+  claim: Schema.String,
+  type: Schema.Literal("enum"),
+  label: Schema.String,
+  choices: Schema.Array(
+    Schema.Struct({
+      value: Schema.optional(Schema.String),
+      label: Schema.optional(Schema.String),
+    }),
+  ),
+});
+export interface UserConsentOption extends Schema.Schema.Type<
+  typeof UserConsentOption
+> {}
+
+/** A newly created user. */
+export const UserCreateResponse = Schema.Struct({
+  object: Schema.Literal("user"),
+  id: Schema.String,
+  first_name: Schema.NullOr(Schema.String),
+  last_name: Schema.NullOr(Schema.String),
+  name: Schema.optional(Schema.NullOr(Schema.String)),
+  profile_picture_url: Schema.NullOr(Schema.String),
+  email: Schema.String,
+  email_verified: Schema.Boolean,
+  external_id: Schema.NullOr(Schema.String),
+  metadata: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+  last_sign_in_at: Schema.NullOr(Schema.String),
+  locale: Schema.optional(Schema.NullOr(Schema.String)),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+  radar_auth_attempt_id: Schema.optional(Schema.String),
+});
+export interface UserCreateResponse extends Schema.Schema.Type<
+  typeof UserCreateResponse
+> {}
+
+/** An external OAuth identity linked to a user. */
+export const UserIdentity = Schema.Struct({
+  idp_id: Schema.String,
+  type: Schema.Literal("OAuth"),
+  provider: Schema.Literals([
+    "AppleOAuth",
+    "BitbucketOAuth",
+    "DiscordOAuth",
+    "GithubOAuth",
+    "GitLabOAuth",
+    "GoogleOAuth",
+    "IntuitOAuth",
+    "LinkedInOAuth",
+    "MicrosoftOAuth",
+    "SalesforceOAuth",
+    "SlackOAuth",
+    "VercelMarketplaceOAuth",
+    "VercelOAuth",
+    "XeroOAuth",
+  ]),
+});
+export interface UserIdentity extends Schema.Schema.Type<typeof UserIdentity> {}
+
+/** A page of AuthKit users. */
+export const UserList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(User),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+});
+export interface UserList extends Schema.Schema.Type<typeof UserList> {}
+
+/** User details to create or update in AuthKit, keyed by your application's own user identifier. */
+export const UserObject = Schema.Struct({
+  id: Schema.String,
+  email: Schema.String,
+  first_name: Schema.optional(Schema.String),
+  last_name: Schema.optional(Schema.String),
+  name: Schema.optional(Schema.String),
+  metadata: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+});
+export interface UserObject extends Schema.Schema.Type<typeof UserObject> {}
+
+/** The AuthKit user returned after successful email verification. */
+export const VerifyEmailResponse = Schema.Struct({ user: User });
+export interface VerifyEmailResponse extends Schema.Schema.Type<
+  typeof VerifyEmailResponse
+> {}
+
+// ---------------------------------------------------------------------------
+// Vault
+// ---------------------------------------------------------------------------
+
+/** The user or API key that performed an action. */
+export const Actor = Schema.Struct({ id: Schema.String, name: Schema.String });
+export interface Actor extends Schema.Schema.Type<typeof Actor> {}
+
+/** A newly generated Vault data encryption key, returned with its encrypted key blob and encryption context. */
+export const CreateDataKeyResponse = Schema.Struct({
+  context: Schema.Record(Schema.String, Schema.String),
+  data_key: Schema.String,
+  encrypted_keys: Schema.String,
+  id: Schema.String,
+});
+export interface CreateDataKeyResponse extends Schema.Schema.Type<
+  typeof CreateDataKeyResponse
+> {}
+
+/** A decrypted Vault data key. */
+export const DecryptResponse = Schema.Struct({
+  data_key: Schema.String,
+  id: Schema.String,
+});
+export interface DecryptResponse extends Schema.Schema.Type<
+  typeof DecryptResponse
+> {}
+
+/** Result of deleting a Vault object. */
+export const DeleteObjectResponse = Schema.Struct({
+  name: Schema.String,
+  success: Schema.Boolean,
+});
+export interface DeleteObjectResponse extends Schema.Schema.Type<
+  typeof DeleteObjectResponse
+> {}
+
+/** Metadata for a stored Vault object, including its encryption key, key-derivation context, and current version. */
+export const ObjectMetadata = Schema.Struct({
+  context: Schema.Record(Schema.String, Schema.String),
+  environment_id: Schema.String,
+  id: Schema.String,
+  key_id: Schema.String,
+  updated_at: Schema.String,
+  updated_by: Actor,
+  version_id: Schema.optional(Schema.NullOr(Schema.String)),
+});
+export interface ObjectMetadata extends Schema.Schema.Type<
+  typeof ObjectMetadata
+> {}
+
+/** A condensed Vault object entry returned in list responses. */
+export const ObjectSummary = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  updated_at: Schema.optional(Schema.NullOr(Schema.String)),
+});
+export interface ObjectSummary extends Schema.Schema.Type<
+  typeof ObjectSummary
+> {}
+
+/** A page of Vault object summaries. */
+export const ObjectListResponse = Schema.Struct({
+  data: Schema.Array(ObjectSummary),
+  list_metadata: ListMetadata,
+});
+export interface ObjectListResponse extends Schema.Schema.Type<
+  typeof ObjectListResponse
+> {}
+
+/** A single stored version (immutable snapshot) of a Vault object. */
+export const ObjectVersion = Schema.Struct({
+  created_at: Schema.String,
+  current_version: Schema.Boolean,
+  etag: Schema.String,
+  id: Schema.String,
+  size: Schema.Number,
+});
+export interface ObjectVersion extends Schema.Schema.Type<
+  typeof ObjectVersion
+> {}
+
+/** A Vault object and its metadata with the decrypted value omitted. */
+export const ObjectWithoutValue = Schema.Struct({
+  id: Schema.String,
+  metadata: ObjectMetadata,
+  name: Schema.String,
+});
+export interface ObjectWithoutValue extends Schema.Schema.Type<
+  typeof ObjectWithoutValue
+> {}
+
+/** A WorkOS Vault object with its decrypted value and metadata. */
+export const VaultObject = Schema.Struct({
+  id: Schema.String,
+  metadata: ObjectMetadata,
+  name: Schema.String,
+  value: Schema.String,
+});
+export interface VaultObject extends Schema.Schema.Type<typeof VaultObject> {}
+
+/** A page of stored versions for a Vault object. */
+export const VersionListResponse = Schema.Struct({
+  data: Schema.Array(ObjectVersion),
+  list_metadata: ListMetadata,
+});
+export interface VersionListResponse extends Schema.Schema.Type<
+  typeof VersionListResponse
+> {}
+
+// ---------------------------------------------------------------------------
+// Webhooks
+// ---------------------------------------------------------------------------
+
+/** A configured endpoint that receives WorkOS webhook event notifications. */
+export const WebhookEndpointJson = Schema.Struct({
+  object: Schema.Literal("webhook_endpoint"),
+  id: Schema.String,
+  endpoint_url: Schema.String,
+  secret: Schema.String,
+  status: Schema.Literals(["enabled", "disabled"]),
+  events: Schema.Array(Schema.String),
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+export interface WebhookEndpointJson extends Schema.Schema.Type<
+  typeof WebhookEndpointJson
+> {}
+
+/** A page of webhook endpoints. */
+export const WebhookEndpointList = Schema.Struct({
+  object: Schema.Literal("list"),
+  data: Schema.Array(WebhookEndpointJson),
+  list_metadata: Schema.Struct({
+    before: Schema.NullOr(Schema.String),
+    after: Schema.NullOr(Schema.String),
+  }),
+});
+export interface WebhookEndpointList extends Schema.Schema.Type<
+  typeof WebhookEndpointList
+> {}
+
+// ---------------------------------------------------------------------------
+// Widgets
+// ---------------------------------------------------------------------------
+
+/** The session token used to authenticate an embedded WorkOS Widget. */
+export const WidgetSessionTokenResponse = Schema.Struct({
+  token: Schema.String,
+});
+export interface WidgetSessionTokenResponse extends Schema.Schema.Type<
+  typeof WidgetSessionTokenResponse
 > {}
