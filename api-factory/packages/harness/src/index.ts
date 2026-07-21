@@ -91,10 +91,14 @@ export {
 // Probes + evidence captures.
 export {
   buildCapture,
+  type CaptureInputs,
   defineProbe,
+  normalizeParams,
   type ProbeCapture,
   type ProbeEnv,
   ProbeError,
+  type ProbeParams,
+  type ProbeParamSource,
   type ProbeResult,
   type ProbeSpec,
   type RunProbeOptions,

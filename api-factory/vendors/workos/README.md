@@ -52,3 +52,12 @@ bun run probe organizations-get-missing
 The scrubbed capture lands in `evidence/<id>.json` (auto-scrub of
 secret-shaped fields and the API key; never bypass it with plain `fetch`).
 Patch entries cite probes by id.
+
+A probe that needs world-state declares it (ADR-0007): `setup` creates
+prerequisite resources through the typed client with Scope-guaranteed
+teardown and returns params the request is templated over
+(`organizations-get-ok.ts` is the pattern); `envParams` binds
+dashboard-seeded ids to env vars — never hard-code an id in a spec — and
+`bun run probe <id> --param k=v` substitutes one by hand. Param values are
+normalized to `<name>` placeholders in the evidence, so recaptures diff
+clean and workspace ids never land in the repo.
