@@ -27,6 +27,7 @@ const mockRaw = (
     request: HttpClientRequest.HttpClientRequest,
     index: number,
   ) => MockReply | HttpClientError.HttpClientError,
+  baseUrl = "https://api.vendor.test",
 ) => {
   const requests: Array<HttpClientRequest.HttpClientRequest> = [];
   const http = HttpClientModule.make((request) => {
@@ -47,7 +48,7 @@ const mockRaw = (
   });
   const rawRequest = makeRawRequest({
     http,
-    baseUrl: "https://api.vendor.test",
+    baseUrl,
     apiKey: Redacted.make("sk_raw_test_secret"),
   });
   const run = (options: RawRequestOptions) =>
@@ -86,6 +87,32 @@ describe("makeRawRequest", () => {
       limit: "5",
       domains: "a.com,b.com",
     });
+  });
+
+  it("joins base URL and path with exactly one slash — trailing-slash bases and bare paths both normalize", async () => {
+    // The classic *_API_URL misconfiguration: a trailing slash must not
+    // produce a //double-slash path.
+    const slashed = mockRaw(
+      () => ({ status: 200, body: "{}" }),
+      "https://api.vendor.test/",
+    );
+    await slashed.run({
+      method: "GET",
+      pathTemplate: "/organizations/{id}",
+      pathParams: { id: "org_1" },
+    });
+    expect(slashed.requests[0]!.url).toBe(
+      "https://api.vendor.test/organizations/org_1",
+    );
+
+    // A base path prefix survives (new URL() would drop it), and a path
+    // template without a leading slash gains one.
+    const prefixed = mockRaw(
+      () => ({ status: 200, body: "{}" }),
+      "https://api.vendor.test/v2",
+    );
+    await prefixed.run({ method: "GET", pathTemplate: "status" });
+    expect(prefixed.requests[0]!.url).toBe("https://api.vendor.test/v2/status");
   });
 
   it("non-2xx is data: a 404 resolves with status, headers, and parsed body", async () => {

@@ -31,13 +31,20 @@ export interface AuthDeps {
  * unwraps it), JSON accept header, and query parameters. Body attachment is
  * the caller's job — the runner encodes through the operation's schema, the
  * raw primitive passes bytes through verbatim.
+ *
+ * The base URL and path join via `prependUrl` (one slash trimmed or
+ * inserted), so a trailing slash in a configured base URL — the classic
+ * `*_API_URL` misconfiguration — cannot produce a `//double-slash` path.
+ * Not `new URL(path, base)`, which would silently drop a base path prefix
+ * like `/v2`.
  */
 export const assembleRequest = (
   deps: AuthDeps,
   method: HttpMethod,
   plan: RequestPlan,
 ): HttpClientRequest.HttpClientRequest => {
-  let request = HttpClientRequest.make(method)(deps.baseUrl + plan.path).pipe(
+  let request = HttpClientRequest.make(method)(plan.path).pipe(
+    HttpClientRequest.prependUrl(deps.baseUrl),
     HttpClientRequest.bearerToken(deps.apiKey),
     HttpClientRequest.acceptJson,
   );
