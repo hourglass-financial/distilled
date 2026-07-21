@@ -72,6 +72,34 @@ const blockedSpec = (): JsonObject => {
   return spec;
 };
 
+const blockedSpecWithUnrelatedOperation = (): JsonObject => {
+  const spec = blockedSpec();
+  (spec["paths"] as Record<string, JsonValue>)["/health"] = {
+    get: {
+      operationId: "getHealth",
+      tags: ["Health"],
+      responses: {
+        "200": {
+          description: "Service health.",
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/Health" },
+            },
+          },
+        },
+      },
+    },
+  };
+  ((spec["components"] as JsonObject)["schemas"] as Record<string, JsonValue>)[
+    "Health"
+  ] = {
+    type: "object",
+    properties: { ok: { type: "boolean" } },
+    required: ["ok"],
+  };
+  return spec;
+};
+
 const allOfBefore = (spec: JsonObject): JsonValue =>
   (
     (
@@ -191,7 +219,146 @@ const auditRepairWithConstruct = (construct: string) => {
   }
 };
 
+const auditComponentRepairWithConstruct = (
+  construct: string,
+  spec: JsonObject = blockedSpec(),
+) => {
+  const dir = temp();
+  try {
+    (
+      (spec["components"] as JsonObject)["schemas"] as Record<string, JsonValue>
+    )["UnrelatedBroken"] = { type: "object" };
+    (spec["paths"] as Record<string, JsonValue>)["/broken"] = {
+      get: {
+        operationId: "getBroken",
+        tags: ["Broken"],
+        responses: {
+          "200": {
+            description: "An unrelated broken response.",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/UnrelatedBroken" },
+              },
+            },
+          },
+        },
+      },
+    };
+    writeVendorDir(dir, {
+      spec,
+      config: northstarConfig,
+      patches: {
+        "010-repair-widget.patch.json": patchEntry(
+          "010-repair-widget",
+          {
+            kind: "raw",
+            ops: [
+              {
+                op: "replace",
+                path: "/components/schemas/Widget/properties/labels",
+                value: {
+                  type: "object",
+                  properties: { free: { type: "string" } },
+                  required: ["free"],
+                },
+              },
+            ],
+          },
+          {
+            blastRadius: {
+              role: "response",
+              clears: [{ rule: "openapi.schema.allof", construct }],
+            },
+          },
+        ),
+      },
+    });
+    return audit(dir, {
+      normalize: normalizeWithConstruct("openapi.schema.allof", construct),
+    }).entries[0]!;
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+};
+
 describe("patch-locality repair mode", () => {
+  it("captures an intermediate invariant failure and audits the later repair", () => {
+    const dir = temp();
+    try {
+      const spec = blockedSpec();
+      const patches = repairPatches(spec);
+      delete patches["030-widget-conflict.patch.json"];
+      patches["030-clear-invariant.patch.json"] = patchEntry(
+        "030-clear-invariant",
+        {
+          kind: "raw",
+          ops: [
+            {
+              op: "replace",
+              path: "/info/title",
+              value: "Northstar repaired",
+            },
+          ],
+        },
+        {
+          blastRadius: {
+            role: "request",
+            clears: [
+              {
+                rule: "operation.constant-body-collision",
+                construct: "operation widgets.get constantBody.id",
+              },
+            ],
+          },
+        },
+      );
+      writeVendorDir(dir, { spec, config: northstarConfig, patches });
+
+      const result = audit(dir, {
+        normalize: (document, config) => {
+          const ir = normalizeOpenApi(document, config);
+          const title = ((document as JsonObject)["info"] as JsonObject)[
+            "title"
+          ];
+          if (title === "Northstar repaired") return ir;
+          return {
+            ...ir,
+            resources: ir.resources.map((resource) => ({
+              ...resource,
+              operations: resource.operations.map((operation) => ({
+                ...operation,
+                constantBody: { ...operation.constantBody, id: "fixed" },
+              })),
+            })),
+          };
+        },
+      });
+
+      expect(JSON.parse(JSON.stringify(result))).toEqual(result);
+      expect(result.ok, JSON.stringify(result.entries, null, 2)).toBe(true);
+      expect(result.entries.map((entry) => entry.mode)).toEqual([
+        "repair",
+        "repair",
+        "repair",
+      ]);
+      expect(result.entries[1]!.exposed).toEqual([
+        expect.objectContaining({
+          rule: "operation.constant-body-collision",
+          construct: "operation widgets.get constantBody.id",
+        }),
+      ]);
+      expect(result.entries[2]!.actualClears).toEqual([
+        expect.objectContaining({
+          rule: "operation.constant-body-collision",
+          construct: "operation widgets.get constantBody.id",
+        }),
+      ]);
+      expect(result.entries[2]!.ok).toBe(true);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it("audits a mixed repair-to-diff sequence, reports exposed violations, and memoizes prefixes", () => {
     const dir = temp();
     try {
@@ -315,7 +482,7 @@ describe("patch-locality repair mode", () => {
       "/components/schemas/Widget/properties/labels (response labels)",
     );
 
-    expect(entry.ok).toBe(true);
+    expect(entry.ok, JSON.stringify(entry, null, 2)).toBe(true);
     expect(entry.targetScopeViolations).toEqual([]);
   });
 
@@ -339,6 +506,29 @@ describe("patch-locality repair mode", () => {
 
     expect(entry.ok).toBe(true);
     expect(entry.targetScopeViolations).toEqual([]);
+  });
+
+  it("scopes a component edit to a cleared violation at a referencing operation", () => {
+    const construct =
+      "/paths/~1widgets~1{id}/get/responses/200/content/application~1json/schema";
+    const entry = auditComponentRepairWithConstruct(construct);
+
+    expect(entry.ok, JSON.stringify(entry, null, 2)).toBe(true);
+    expect(entry.targetScopeViolations).toEqual([]);
+  });
+
+  it("rejects component scoping through an operation that does not reference it", () => {
+    const construct =
+      "/paths/~1health/get/responses/200/content/application~1json/schema";
+    const entry = auditComponentRepairWithConstruct(
+      construct,
+      blockedSpecWithUnrelatedOperation(),
+    );
+
+    expect(entry.ok).toBe(false);
+    expect(entry.targetScopeViolations).toEqual([
+      expect.stringContaining("/components/schemas/Widget/properties/labels"),
+    ]);
   });
 
   it("ignores config-rule flaps while auditing repair clears", () => {

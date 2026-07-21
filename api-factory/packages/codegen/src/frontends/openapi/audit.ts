@@ -4,7 +4,12 @@ import type { SchemaNode } from "../../ir/nodes.ts";
 import type { VendorConfig } from "../../ir/vendor-config.ts";
 import { generate, type GenerateOptions } from "../../pipeline.ts";
 import { normalizeOpenApi } from "./normalize.ts";
-import type { JsonValue } from "./json.ts";
+import {
+  formatPointer,
+  getAtPointer,
+  isJsonObject,
+  type JsonValue,
+} from "./json.ts";
 import {
   applyPatchesStrict,
   entryTargetPointers,
@@ -157,6 +162,31 @@ const schemaUsage = (
   return { request: close(requestSeed), response: close(responseSeed) };
 };
 
+// HOURGLASS PATCH: Reuse diff attribution for component-scoped repairs.
+const operationSchemaClosure = (
+  ir: ClientIr,
+  operation: OperationIr,
+): ReadonlySet<string> => {
+  const schemas = schemasByName(ir);
+  const seen = new Set<string>();
+  collectRefs(operation.input, seen);
+  collectRefs(operation.output, seen);
+  const queue = [...seen];
+  while (queue.length > 0) {
+    const schema = schemas.get(queue.pop()!);
+    if (schema === undefined) continue;
+    const refs = new Set<string>();
+    collectRefs(schema.schema, refs);
+    for (const ref of refs) {
+      if (!seen.has(ref)) {
+        seen.add(ref);
+        queue.push(ref);
+      }
+    }
+  }
+  return seen;
+};
+
 interface FacetDiff {
   readonly operations: ReadonlyArray<string>;
   readonly facets: ReadonlySet<PatchTargetRole>;
@@ -290,33 +320,9 @@ const diffIr = (before: ClientIr, after: ClientIr): FacetDiff => {
   // catches an upstream operation newly referencing a patched schema.
   if (structurallyChangedSchemas.size > 0) {
     for (const ir of [before, after]) {
-      const schemas = schemasByName(ir);
-      const closure = (node: SchemaNode): ReadonlySet<string> => {
-        const seen = new Set<string>();
-        const queue: string[] = [];
-        collectRefs(node, seen);
-        queue.push(...seen);
-        while (queue.length > 0) {
-          const name = queue.pop()!;
-          const schema = schemas.get(name);
-          if (schema === undefined) continue;
-          const refs = new Set<string>();
-          collectRefs(schema.schema, refs);
-          for (const ref of refs) {
-            if (!seen.has(ref)) {
-              seen.add(ref);
-              queue.push(ref);
-            }
-          }
-        }
-        return seen;
-      };
       for (const resource of ir.resources) {
         for (const operation of resource.operations) {
-          const reachable = new Set([
-            ...closure(operation.input),
-            ...closure(operation.output),
-          ]);
+          const reachable = operationSchemaClosure(ir, operation);
           for (const name of structurallyChangedSchemas) {
             if (reachable.has(name)) {
               changedOperations.add(qualifiedName(operation));
@@ -427,6 +433,7 @@ type PrefixNormalization =
   | {
       readonly normalizable: false;
       readonly violations: ReadonlyArray<CodegenViolation>;
+      readonly ir?: ClientIr;
     };
 
 const violationKey = (violation: PatchViolationIdentity): string =>
@@ -473,9 +480,123 @@ const pointerHasPrefix = (pointer: string, prefix: string): boolean => {
 const leadingConstructPointer = (construct: string): string | undefined =>
   construct.startsWith("/") ? construct.split(/\s/, 1)[0] : undefined;
 
+const collectLocalRefs = (value: JsonValue, refs: Set<string>): void => {
+  if (Array.isArray(value)) {
+    for (const item of value) collectLocalRefs(item, refs);
+    return;
+  }
+  if (!isJsonObject(value)) return;
+  const ref = value["$ref"];
+  if (typeof ref === "string" && ref.startsWith("#/")) refs.add(ref.slice(1));
+  for (const child of Object.values(value)) collectLocalRefs(child, refs);
+};
+
+const documentOperationReferencesComponent = (
+  document: JsonValue,
+  constructSegments: ReadonlyArray<string>,
+  componentName: string,
+): boolean => {
+  const pathItem = getAtPointer(
+    document,
+    formatPointer(constructSegments.slice(0, 2)),
+  );
+  const operation = getAtPointer(
+    document,
+    formatPointer(constructSegments.slice(0, 3)),
+  );
+  if (operation === undefined) return false;
+  const refs = new Set<string>();
+  collectLocalRefs(operation, refs);
+  if (isJsonObject(pathItem) && pathItem["parameters"] !== undefined) {
+    collectLocalRefs(pathItem["parameters"], refs);
+  }
+  const queue = [...refs];
+  const visited = new Set<string>();
+  while (queue.length > 0) {
+    const pointer = queue.pop()!;
+    if (visited.has(pointer)) continue;
+    visited.add(pointer);
+    let segments: ReadonlyArray<string>;
+    try {
+      segments = parsePointer(pointer);
+    } catch {
+      continue;
+    }
+    if (
+      segments[0] === "components" &&
+      segments[1] === "schemas" &&
+      segments[2] === componentName
+    ) {
+      return true;
+    }
+    const referenced = getAtPointer(document, pointer);
+    if (referenced === undefined) continue;
+    const nested = new Set<string>();
+    collectLocalRefs(referenced, nested);
+    for (const ref of nested) {
+      if (!visited.has(ref)) queue.push(ref);
+    }
+  }
+  return false;
+};
+
+const componentTargetScopesOperation = (
+  targetPointer: string,
+  constructPointer: string,
+  irs: ReadonlyArray<ClientIr>,
+  documents: ReadonlyArray<JsonValue>,
+): boolean => {
+  let targetSegments: ReadonlyArray<string>;
+  let constructSegments: ReadonlyArray<string>;
+  try {
+    targetSegments = parsePointer(targetPointer);
+    constructSegments = parsePointer(constructPointer);
+  } catch {
+    return false;
+  }
+  if (
+    targetSegments[0] !== "components" ||
+    targetSegments[1] !== "schemas" ||
+    targetSegments[2] === undefined ||
+    constructSegments[0] !== "paths" ||
+    constructSegments[1] === undefined ||
+    constructSegments[2] === undefined
+  ) {
+    return false;
+  }
+  const componentName = targetSegments[2];
+  const pathTemplate = constructSegments[1];
+  const httpMethod = constructSegments[2].toUpperCase();
+  const attributedByIr = irs.some((ir) => {
+    const operation = ir.resources
+      .flatMap((resource) => resource.operations)
+      .find(
+        (candidate) =>
+          candidate.pathTemplate === pathTemplate &&
+          candidate.httpMethod === httpMethod,
+      );
+    return (
+      operation !== undefined &&
+      operationSchemaClosure(ir, operation).has(componentName)
+    );
+  });
+  return (
+    attributedByIr ||
+    documents.some((document) =>
+      documentOperationReferencesComponent(
+        document,
+        constructSegments,
+        componentName,
+      ),
+    )
+  );
+};
+
 const repairTargetScopeViolations = (
   entry: PatchEntry,
   clears: ReadonlyArray<PatchViolationIdentity>,
+  irs: ReadonlyArray<ClientIr>,
+  documents: ReadonlyArray<JsonValue>,
 ): ReadonlyArray<string> =>
   entryTargetPointers(entry)
     .filter(
@@ -485,7 +606,13 @@ const repairTargetScopeViolations = (
           return (
             constructPointer === undefined ||
             pointerHasPrefix(pointer, constructPointer) ||
-            pointerHasPrefix(constructPointer, pointer)
+            pointerHasPrefix(constructPointer, pointer) ||
+            componentTargetScopesOperation(
+              pointer,
+              constructPointer,
+              irs,
+              documents,
+            )
           );
         }),
     )
@@ -508,25 +635,27 @@ export const auditPatchLocalityFrom = (
   ): PrefixNormalization => {
     const cached = prefixNormalizations.get(index);
     if (cached !== undefined) return cached;
-    let ir: ClientIr;
+    // HOURGLASS PATCH: Treat invariant-stage CodegenErrors as repair prefixes.
+    let ir: ClientIr | undefined;
     try {
       ir = normalize(document, vendor.config);
+      const outcome: PrefixNormalization = {
+        normalizable: true,
+        ir,
+        files: generate(ir as unknown, generateOptions),
+      };
+      prefixNormalizations.set(index, outcome);
+      return outcome;
     } catch (cause) {
       if (!(cause instanceof CodegenError)) throw cause;
       const outcome: PrefixNormalization = {
         normalizable: false,
         violations: cause.violations,
+        ...(ir === undefined ? {} : { ir }),
       };
       prefixNormalizations.set(index, outcome);
       return outcome;
     }
-    const outcome: PrefixNormalization = {
-      normalizable: true,
-      ir,
-      files: generate(ir as unknown, generateOptions),
-    };
-    prefixNormalizations.set(index, outcome);
-    return outcome;
   };
 
   let document: JsonValue = vendor.spec;
@@ -628,6 +757,10 @@ export const auditPatchLocalityFrom = (
         targetScopeViolations = repairTargetScopeViolations(
           entry,
           declaredClears,
+          [before.ir, after.ir].filter(
+            (ir): ir is ClientIr => ir !== undefined,
+          ),
+          [document, nextDocument],
         );
       } else {
         unexpectedClears = actualClears;
