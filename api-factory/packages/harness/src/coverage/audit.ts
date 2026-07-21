@@ -15,7 +15,6 @@
  */
 import {
   type CoverageManifest,
-  type EntryProblem,
   statusOf,
   validateManifest,
 } from "./manifest.ts";

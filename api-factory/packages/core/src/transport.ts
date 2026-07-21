@@ -10,6 +10,7 @@
  */
 import * as Effect from "effect/Effect";
 import type * as Redacted from "effect/Redacted";
+import * as Schema from "effect/Schema";
 import type * as HttpClientError from "effect/unstable/http/HttpClientError";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import type * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
@@ -62,28 +63,31 @@ export const readBody = (
  * would leak secrets through any logged error chain. Vendor error *messages*
  * are built from the structured parts here, never from the reason's formatted
  * free text.
+ *
+ * Defined schema-first (the value doubles as the type): error classes embed
+ * it as a field directly, and construction flows through the schema's own
+ * `make` — no hand-written guard to drift from the shape. `description` is
+ * transport-authored detail (e.g. "socket reset"), never request payload.
  */
-export interface TransportFailure {
-  readonly reason: string;
-  readonly method: string;
-  readonly url: string;
-  /**
-   * Transport-authored detail (e.g. "socket reset"), when the reason carries
-   * one. Authored by the transport layer, never from request payloads.
-   */
-  readonly description?: string | undefined;
-}
+export const TransportFailure = Schema.Struct({
+  reason: Schema.String,
+  method: Schema.String,
+  url: Schema.String,
+  description: Schema.optional(Schema.String),
+});
+export type TransportFailure = typeof TransportFailure.Type;
 
 /** Build a {@link TransportFailure} from a raw HTTP client error. */
 export const summarizeHttpClientError = (
   error: HttpClientError.HttpClientError,
-): TransportFailure => ({
-  reason: error.reason._tag,
-  method: error.reason.request.method,
-  url: error.reason.request.url,
-  description:
-    "description" in error.reason &&
-    typeof error.reason.description === "string"
-      ? error.reason.description
-      : undefined,
-});
+): TransportFailure =>
+  TransportFailure.make({
+    reason: error.reason._tag,
+    method: error.reason.request.method,
+    url: error.reason.request.url,
+    description:
+      "description" in error.reason &&
+      typeof error.reason.description === "string"
+        ? error.reason.description
+        : undefined,
+  });

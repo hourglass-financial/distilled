@@ -31,26 +31,21 @@ import {
   type AuthDeps,
   readBody,
   summarizeHttpClientError,
-  type TransportFailure,
+  TransportFailure,
 } from "./transport.ts";
-
-const isTransportFailure = (value: unknown): value is TransportFailure =>
-  typeof value === "object" &&
-  value !== null &&
-  "reason" in value &&
-  "method" in value &&
-  "url" in value;
 
 /**
  * Wire-level failure of a raw request. Carries only the secret-free
  * {@link TransportFailure} summary — never the raw `HttpClientError`, whose
- * `reason` embeds the full request including the auth header.
+ * `reason` embeds the full request including the auth header. The `cause`
+ * field is the `TransportFailure` schema itself, so the shape is validated
+ * at construction rather than asserted by a hand-written guard.
  */
 export class RawTransportError extends Schema.TaggedErrorClass<RawTransportError>()(
   "RawTransportError",
   {
     message: Schema.String,
-    cause: Schema.declare(isTransportFailure),
+    cause: TransportFailure,
   },
 ) {
   readonly [MetaKey] = Meta.transport;

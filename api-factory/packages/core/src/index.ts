@@ -60,7 +60,7 @@ export {
   type AuthDeps,
   readBody,
   summarizeHttpClientError,
-  type TransportFailure,
+  TransportFailure,
 } from "./transport.ts";
 
 // Raw requests for probes and negative tests (#30 decision 8): the planner's
