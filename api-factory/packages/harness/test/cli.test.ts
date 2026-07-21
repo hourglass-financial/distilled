@@ -93,13 +93,19 @@ describe("coverage audit CLI", () => {
 describe("probe CLI", () => {
   const runProbeCli = (
     args: readonly string[],
+  ): { status: number | null; stderr: string } => runProbeCliWith(args, {});
+
+  const runProbeCliWith = (
+    args: readonly string[],
+    envOverrides: Readonly<Record<string, string>>,
   ): { status: number | null; stderr: string } => {
     const result = spawnSync("bun", ["src/probe-cli.ts", ...args], {
       cwd: packageRoot,
       encoding: "utf8",
       // A probe fixture must never see real credentials from the caller's
-      // shell — the test asserts the credential-less path.
-      env: { ...process.env, FIXTURE_PROBE_KEY: "" },
+      // shell — only what the test injects. The fake base URL is never
+      // reached: every path asserted here refuses before any request.
+      env: { ...process.env, FIXTURE_PROBE_KEY: "", ...envOverrides },
     });
     return { status: result.status, stderr: result.stderr };
   };
@@ -127,5 +133,19 @@ describe("probe CLI", () => {
   it("exits 2 on usage errors and unknown probe ids", () => {
     expect(runProbeCli([]).status).toBe(2);
     expect(runProbeCli([...baseArgs, "no-such-probe"]).status).toBe(2);
+    // Malformed --param (no key=value) is a usage error.
+    expect(
+      runProbeCli([...baseArgs, "--param", "flagId", "fixture-probe-params"])
+        .status,
+    ).toBe(2);
+  });
+
+  it("an unresolved declared param refuses by name before touching the wire", () => {
+    const result = runProbeCliWith([...baseArgs, "fixture-probe-params"], {
+      FIXTURE_PROBE_KEY: "sk_fixture",
+    });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('"flagId"');
+    expect(result.stderr).toContain("FIXTURE_FLAG_ID");
   });
 });

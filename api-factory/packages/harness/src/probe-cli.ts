@@ -10,18 +10,23 @@
  *   --probes ./probes --vendor workos \
  *   --api-key-var WORKOS_API_KEY --base-url https://api.workos.com \
  *   [--base-url-var WORKOS_API_URL] [--evidence ./evidence] \
+ *   [--param k=v]... \
  *   <probe-id>
  * ```
  *
- * Exit codes: 0 captured, 1 transport failure, 2 usage/credentials error.
- * Prints the scrubbed capture to stdout, the evidence path to stderr.
+ * `--param` supplies (or overrides) a declared param by hand — seeded ids
+ * belong in env vars, but an operator can substitute one for a single run.
+ *
+ * Exit codes: 0 captured, 1 probe failed (unresolved params, setup,
+ * transport), 2 usage/credentials error. Prints the scrubbed capture to
+ * stdout, the evidence path to stderr.
  */
 import * as path from "node:path";
 import { pathToFileURL } from "node:url";
 import * as Effect from "effect/Effect";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import { defineEnv } from "./env.ts";
-import { type ProbeSpec, runProbe } from "./probe.ts";
+import { type ProbeParams, type ProbeSpec, runProbe } from "./probe.ts";
 
 interface CliArgs {
   readonly probes: string;
@@ -31,13 +36,18 @@ interface CliArgs {
   readonly baseUrlVar?: string;
   readonly evidence?: string;
   readonly id: string;
+  readonly params: ProbeParams;
 }
 
 const usage =
   "usage: probe-cli.ts --probes <dir> --vendor <name> --api-key-var <VAR> " +
-  "--base-url <url> [--base-url-var <VAR>] [--evidence <dir>] <probe-id>";
+  "--base-url <url> [--base-url-var <VAR>] [--evidence <dir>] " +
+  "[--param k=v]... <probe-id>";
 
-const FLAGS: Record<string, keyof CliArgs> = {
+const FLAGS: Record<
+  string,
+  "probes" | "vendor" | "apiKeyVar" | "baseUrl" | "baseUrlVar" | "evidence"
+> = {
   "--probes": "probes",
   "--vendor": "vendor",
   "--api-key-var": "apiKeyVar",
@@ -47,7 +57,8 @@ const FLAGS: Record<string, keyof CliArgs> = {
 };
 
 const parseArgs = (argv: readonly string[]): CliArgs | undefined => {
-  const values: Partial<Record<keyof CliArgs, string>> = {};
+  const values: Partial<Record<(typeof FLAGS)[string], string>> = {};
+  const params: Record<string, string> = {};
   let id: string | undefined;
   let index = 0;
   while (index < argv.length) {
@@ -57,6 +68,12 @@ const parseArgs = (argv: readonly string[]): CliArgs | undefined => {
       const value = argv[index + 1];
       if (value === undefined) return undefined;
       values[flag] = value;
+      index += 2;
+    } else if (token === "--param") {
+      const pair = argv[index + 1];
+      const equals = pair?.indexOf("=") ?? -1;
+      if (pair === undefined || equals < 1) return undefined;
+      params[pair.slice(0, equals)] = pair.slice(equals + 1);
       index += 2;
     } else if (!token.startsWith("--") && id === undefined) {
       id = token;
@@ -74,7 +91,7 @@ const parseArgs = (argv: readonly string[]): CliArgs | undefined => {
   ) {
     return undefined;
   }
-  return { ...values, id } as CliArgs;
+  return { ...values, id, params } as CliArgs;
 };
 
 const main = async (): Promise<number> => {
@@ -127,7 +144,7 @@ const main = async (): Promise<number> => {
   );
 
   const exit = await Effect.runPromiseExit(
-    runProbe(spec, { env, evidenceDir }).pipe(
+    runProbe(spec, { env, evidenceDir, params: args.params }).pipe(
       Effect.provide(FetchHttpClient.layer),
     ),
   );
