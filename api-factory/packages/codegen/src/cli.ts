@@ -150,8 +150,11 @@ export const runCli = async (args: ReadonlyArray<string>): Promise<number> => {
       return 0;
     }
     if (args[0] === "generate") {
+      // Validate --out before resolveInput so a failed invocation cannot
+      // leave a stray reconcile report behind.
+      const out = valueFor(args, "--out");
       const input = resolveInput(args, { allowReconcile: true });
-      generateToDir(input.ir, valueFor(args, "--out"), input.generateOptions);
+      generateToDir(input.ir, out, input.generateOptions);
       return 0;
     }
     if (args[0] === "verify") {

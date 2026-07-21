@@ -397,6 +397,40 @@ describe("patch-locality audit (blast-radius symmetry)", () => {
     expect(symmetric.entries[0]!.staleAuthorship).toBe(true);
   });
 
+  it("audit-patches CLI exits 2 on asymmetry and 1 on a tampered snapshot", () => {
+    const dir = temp();
+    const vendorDir = join(dir, "vendor");
+    writeVendorDir(vendorDir, {
+      spec: northstarSpec,
+      config: northstarConfig,
+      patches: {
+        "001-widget-get-conflict.patch.json": conflictInjection({
+          blastRadius: {
+            role: "error",
+            expectedFiles: ["src/never-touched.ts"],
+          },
+        }),
+      },
+    });
+    const asymmetric = spawn(["audit-patches", "--vendor", vendorDir]);
+    expect(asymmetric.status, asymmetric.stderr).toBe(2);
+    const report = JSON.parse(asymmetric.stdout) as {
+      ok: boolean;
+      entries: ReadonlyArray<{ missingFiles: ReadonlyArray<string> }>;
+    };
+    expect(report.ok).toBe(false);
+    expect(report.entries[0]!.missingFiles).toContain("src/never-touched.ts");
+
+    const specPath = join(vendorDir, "spec.json");
+    writeFileSync(
+      specPath,
+      readFileSync(specPath, "utf8").replace("3.1.0", "3.1.1"),
+    );
+    const tampered = spawn(["audit-patches", "--vendor", vendorDir]);
+    expect(tampered.status).toBe(1);
+    expect(tampered.stderr).toContain("attestation.mismatch");
+  });
+
   it("flags a declared role the actual diff does not fit", () => {
     const dir = temp();
     const vendorDir = join(dir, "vendor");

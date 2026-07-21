@@ -79,6 +79,39 @@ describe("fail-closed pipeline paths", () => {
     );
   });
 
+  it("rejects a declared binding colliding with an imported schema or error name", () => {
+    const schemaCollision = JSON.parse(
+      JSON.stringify(minimalFixture),
+    ) as typeof minimalFixture;
+    const renamed = schemaCollision as unknown as {
+      namedSchemas: Array<{ name: string }>;
+      resources: Array<{
+        operations: Array<{ output: { name: string }; errors: string[] }>;
+      }>;
+    };
+    renamed.namedSchemas[0]!.name = "GetWidgetInput";
+    renamed.resources[0]!.operations[0]!.output.name = "GetWidgetInput";
+    expectRule(
+      () => generate(schemaCollision, { formatter: identity }),
+      "identifier.import-collision",
+      "widgets.get inputName",
+    );
+
+    const errorCollision = JSON.parse(
+      JSON.stringify(minimalFixture),
+    ) as typeof minimalFixture;
+    (
+      errorCollision as unknown as {
+        resources: Array<{ operations: Array<{ errorsName: string }> }>;
+      }
+    ).resources[0]!.operations[0]!.errorsName = "NotFound";
+    expectRule(
+      () => generate(errorCollision, { formatter: identity }),
+      "identifier.import-collision",
+      "widgets.get errorsName",
+    );
+  });
+
   it("returns exit 1 for invalid CLI IR JSON", () => {
     const dir = mkdtempSync(join(tmpdir(), "api-factory-codegen-negative-"));
     try {

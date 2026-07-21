@@ -196,7 +196,14 @@ class Normalizer {
         return fallback;
       }
       if (this.structComponents.has(target)) {
-        return { node: { kind: "named-ref", name: target }, nullable: false };
+        // A 3.0-style `nullable: true` on the struct component itself is a
+        // wire fact; the alias and inline paths already propagate it, and the
+        // ref site must too or a legal null fails to decode.
+        const component = this.componentSchemas.get(target);
+        return {
+          node: { kind: "named-ref", name: target },
+          nullable: isJsonObject(component) && component["nullable"] === true,
+        };
       }
       if (!this.componentSchemas.has(target)) {
         this.add(
@@ -1174,6 +1181,15 @@ class Normalizer {
         "openapi.response.success",
         `${pointer}/content/application~1json/schema`,
         "success schemas must be a $ref to an object-shaped component schema; name the shape in components.schemas (via a patch when the spec inlines it)",
+      );
+      return undefined;
+    }
+    const component = this.componentSchemas.get(target);
+    if (isJsonObject(component) && component["nullable"] === true) {
+      this.add(
+        "openapi.nullable.position",
+        `${pointer}/content/application~1json/schema`,
+        `success schema ${JSON.stringify(target)} declares nullable: true, which is not representable as an operation output`,
       );
       return undefined;
     }

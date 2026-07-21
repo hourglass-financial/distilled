@@ -442,6 +442,49 @@ describe("OpenAPI frontend normalization", () => {
     );
   });
 
+  it("propagates a component-level nullable through struct refs", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      const components = (draft["components"] as JsonObject)[
+        "schemas"
+      ] as Record<string, unknown>;
+      components["Owner"] = {
+        type: "object",
+        nullable: true,
+        description: "The widget's owner, when assigned.",
+        properties: { id: { type: "string" } },
+        required: ["id"],
+      };
+      (
+        components["Widget"] as {
+          properties: Record<string, unknown>;
+          required: string[];
+        }
+      ).properties["owner"] = { $ref: "#/components/schemas/Owner" };
+      (components["Widget"] as { required: string[] }).required.push("owner");
+    });
+    const ir = normalize(spec, northstarConfig);
+    const owner = ir.namedSchemas
+      .find((schema) => schema.name === "Widget")!
+      .schema.fields.find((field) => field.name === "owner")!;
+    expect(owner.schema).toEqual({ kind: "named-ref", name: "Owner" });
+    expect(owner.nullable).toBe(true);
+    expect(owner.optional).toBe(false);
+  });
+
+  it("hard-errors on a nullable success output (unrepresentable position)", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      const components = (draft["components"] as JsonObject)[
+        "schemas"
+      ] as Record<string, { nullable?: boolean }>;
+      components["Widget"]!.nullable = true;
+    });
+    expectViolation(
+      () => normalize(spec, northstarConfig),
+      "openapi.nullable.position",
+      "~1widgets~1{id}/get/responses/200",
+    );
+  });
+
   it("rejects a stray key in the vendor config (fail-closed decode)", () => {
     expect(() =>
       decodeVendorConfig({
