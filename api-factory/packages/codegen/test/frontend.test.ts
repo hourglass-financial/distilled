@@ -169,21 +169,59 @@ describe("OpenAPI frontend normalization", () => {
     );
   });
 
+  it("maps exact free-form record values to closed json nodes", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      const components = draft["components"] as {
+        schemas: Record<string, { properties: Record<string, unknown> }>;
+      };
+      components.schemas["Widget"]!.properties["raw_attributes"] = {
+        type: "object",
+        additionalProperties: {},
+      };
+      components.schemas["Widget"]!.properties["custom_attributes"] = {
+        type: "object",
+        additionalProperties: true,
+      };
+    });
+
+    const ir = normalize(spec, northstarConfig);
+    const fields = ir.namedSchemas.find((schema) => schema.name === "Widget")!
+      .schema.fields;
+    for (const name of ["raw_attributes", "custom_attributes"]) {
+      expect(fields.find((field) => field.name === name)?.schema).toEqual({
+        kind: "record",
+        key: { kind: "string" },
+        value: { kind: "json" },
+      });
+    }
+  });
+
+  it("keeps a bare empty schema outside record-value position fatal", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      const components = draft["components"] as {
+        schemas: Record<string, { properties: Record<string, unknown> }>;
+      };
+      components.schemas["Widget"]!.properties["blob"] = {};
+    });
+    expectViolation(
+      () => normalize(spec, northstarConfig),
+      "openapi.schema.type",
+      "/components/schemas/Widget/properties/blob",
+    );
+  });
+
   it("hard-errors instead of collapsing an unrepresentable union member", () => {
     const spec = patchSpec(northstarSpec, (draft) => {
       const components = draft["components"] as {
         schemas: Record<string, { properties: Record<string, unknown> }>;
       };
       components.schemas["Widget"]!.properties["blob"] = {
-        oneOf: [
-          { type: "string" },
-          { type: "object", additionalProperties: true },
-        ],
+        oneOf: [{ type: "string" }, {}],
       };
     });
     expectViolation(
       () => normalize(spec, northstarConfig),
-      "openapi.schema.free-form",
+      "openapi.schema.type",
       "/components/schemas/Widget/properties/blob/oneOf/1",
     );
   });

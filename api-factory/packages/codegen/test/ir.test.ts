@@ -936,6 +936,34 @@ describe("canonicalize", () => {
 });
 
 describe("IR JSON", () => {
+  it.each([
+    ["property leaf", { kind: "json" }],
+    ["array item", { kind: "array", item: { kind: "json" } }],
+    [
+      "union member",
+      {
+        kind: "union",
+        members: [{ kind: "string" }, { kind: "json" }],
+      },
+    ],
+  ])("rejects json in %s position during decode", (_position, schema) => {
+    const value = structuredClone(baseIr()) as unknown as {
+      namedSchemas: Array<{
+        schema: { fields: Array<{ schema: unknown }> };
+      }>;
+    };
+    value.namedSchemas[0]!.schema.fields[0]!.schema = schema;
+    try {
+      decodeIr(value);
+      throw new Error("expected decodeIr to throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(CodegenError);
+      expect((error as CodegenError).violations).toEqual([
+        expect.objectContaining({ rule: "json.record-value-only" }),
+      ]);
+    }
+  });
+
   it("rejects an unknown schema-node kind", () => {
     const value = structuredClone(baseIr()) as unknown as {
       resources: Array<{

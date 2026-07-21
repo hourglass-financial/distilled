@@ -35,4 +35,16 @@ describe("Secret (redaction)", () => {
     expect(Redacted.value(decoded.password)).toBe("s3cret");
     expect(JSON.stringify(decoded)).not.toContain("s3cret");
   });
+
+  it("rejects a Redacted value nested inside a json record during request encode", () => {
+    const Request = Schema.Struct({
+      raw_attributes: Schema.Record(Schema.String, Schema.Json),
+    });
+
+    expect(() =>
+      Schema.encodeUnknownSync(Request)({
+        raw_attributes: { token: Redacted.make("s3cret") },
+      }),
+    ).toThrow();
+  });
 });

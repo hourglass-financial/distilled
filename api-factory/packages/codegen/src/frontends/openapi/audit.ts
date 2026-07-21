@@ -114,6 +114,7 @@ const collectRefs = (node: SchemaNode, refs: Set<string>): void => {
     case "string":
     case "boolean":
     case "number":
+    case "json":
     case "literal":
     case "literals":
     case "secret":

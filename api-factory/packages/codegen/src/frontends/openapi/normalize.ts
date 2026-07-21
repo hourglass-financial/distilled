@@ -440,14 +440,6 @@ class Normalizer {
   ): MappedSchema {
     const properties = schema["properties"];
     const additional = schema["additionalProperties"];
-    if (additional === true) {
-      this.add(
-        "openapi.schema.free-form",
-        pointer,
-        "additionalProperties: true is not representable; there is no unknown node",
-      );
-      return { node: { kind: "string" }, nullable };
-    }
     if (isJsonObject(properties)) {
       if (additional !== undefined && additional !== false) {
         this.add(
@@ -459,6 +451,19 @@ class Normalizer {
       }
       return {
         node: this.mapStruct(schema, pointer),
+        nullable,
+      };
+    }
+    if (
+      additional === true ||
+      (isJsonObject(additional) && Object.keys(additional).length === 0)
+    ) {
+      return {
+        node: {
+          kind: "record",
+          key: { kind: "string" },
+          value: { kind: "json" },
+        },
         nullable,
       };
     }
@@ -1595,6 +1600,7 @@ class Normalizer {
         case "string":
         case "boolean":
         case "number":
+        case "json":
         case "literal":
         case "literals":
         case "secret":
@@ -1704,6 +1710,7 @@ class Normalizer {
         case "string":
         case "boolean":
         case "number":
+        case "json":
         case "literal":
         case "literals":
         case "secret":

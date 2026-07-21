@@ -143,6 +143,7 @@ export {
   type BooleanNode,
   type FieldIr,
   FieldIrSchema,
+  type JsonNode,
   type LiteralNode,
   type LiteralsNode,
   type LiteralValue,

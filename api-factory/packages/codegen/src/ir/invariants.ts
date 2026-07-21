@@ -188,6 +188,7 @@ const isStringRecordKey = (node: SchemaNode): boolean => {
     case "named-ref":
     case "boolean":
     case "number":
+    case "json":
       return false;
   }
 };
@@ -216,6 +217,7 @@ const collectNodeRefs = (node: SchemaNode, refs: Set<string>): void => {
     case "string":
     case "boolean":
     case "number":
+    case "json":
     case "literal":
     case "literals":
     case "secret":
@@ -303,11 +305,101 @@ const visitNode = (
     case "string":
     case "boolean":
     case "number":
+    case "json":
     case "literal":
     case "literals":
     case "secret":
       return;
   }
+};
+
+const collectJsonPlacementViolations = (
+  node: SchemaNode,
+  construct: string,
+  violations: CodegenViolation[],
+  recordValue = false,
+): void => {
+  switch (node.kind) {
+    case "array":
+      collectJsonPlacementViolations(node.item, `${construct}[]`, violations);
+      return;
+    case "struct":
+      for (const field of node.fields) {
+        collectJsonPlacementViolations(
+          field.schema,
+          `${construct}.${field.name}`,
+          violations,
+        );
+      }
+      return;
+    case "record":
+      collectJsonPlacementViolations(node.key, `${construct} key`, violations);
+      collectJsonPlacementViolations(
+        node.value,
+        `${construct} value`,
+        violations,
+        true,
+      );
+      return;
+    case "union":
+      for (const member of node.members) {
+        collectJsonPlacementViolations(member, construct, violations);
+      }
+      return;
+    case "json":
+      if (!recordValue) {
+        add(
+          violations,
+          "json.record-value-only",
+          construct,
+          "json is only valid as the direct value node of a record",
+        );
+      }
+      return;
+    case "string":
+    case "boolean":
+    case "number":
+    case "literal":
+    case "literals":
+    case "secret":
+    case "void":
+    case "named-ref":
+      return;
+  }
+};
+
+const appendJsonPlacementViolations = (
+  ir: ClientIr,
+  violations: CodegenViolation[],
+): void => {
+  for (const schema of ir.namedSchemas) {
+    collectJsonPlacementViolations(
+      schema.schema,
+      `schema ${schema.name}`,
+      violations,
+    );
+  }
+  for (const resource of ir.resources) {
+    for (const operation of resource.operations) {
+      const construct = `operation ${operation.publicName.resource}.${operation.publicName.method}`;
+      collectJsonPlacementViolations(
+        operation.input,
+        `${construct} input`,
+        violations,
+      );
+      collectJsonPlacementViolations(
+        operation.output,
+        `${construct} output`,
+        violations,
+      );
+    }
+  }
+};
+
+export const checkJsonRecordValueOnly = (ir: ClientIr): void => {
+  const violations: CodegenViolation[] = [];
+  appendJsonPlacementViolations(ir, violations);
+  if (violations.length > 0) throw new CodegenError(violations);
 };
 
 const resolveNode = (
@@ -733,6 +825,7 @@ const checkUnifiedExportNamespace = (
 
 export const checkInvariants = (ir: ClientIr): void => {
   const violations: CodegenViolation[] = [];
+  appendJsonPlacementViolations(ir, violations);
   const reservedBindings = reservedEmitterBindings(ir.vendor.prefix);
   checkIdentifier(ir.vendor.prefix, "vendor prefix", violations);
   checkDocs(ir.vendor.display, "vendor display", violations);

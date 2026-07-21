@@ -28,6 +28,7 @@ export const hasSecret = (node: SchemaNode): boolean => {
     case "string":
     case "boolean":
     case "number":
+    case "json":
     case "literal":
     case "literals":
     case "void":
@@ -47,6 +48,9 @@ export const emitSchemaNode = (node: SchemaNode): string => {
       return "Schema.Boolean";
     case "number":
       return "Schema.Number";
+    case "json":
+      // Schema.Json identity-decodes any valid JSON and rejects non-JSON prototypes.
+      return "Schema.Json";
     case "literal":
       return `Schema.Literal(${literalValue(node.value)})`;
     case "literals":

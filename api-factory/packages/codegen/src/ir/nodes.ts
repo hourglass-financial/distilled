@@ -14,6 +14,14 @@ export interface NumberNode {
   readonly kind: "number";
 }
 
+/**
+ * An arbitrary JSON value. It identity-decodes any valid JSON and is not
+ * secret-aware: non-JSON values such as Redacted are rejected during encode.
+ */
+export interface JsonNode {
+  readonly kind: "json";
+}
+
 export interface LiteralNode {
   readonly kind: "literal";
   readonly value: LiteralValue;
@@ -70,6 +78,7 @@ export type SchemaNode =
   | StringNode
   | BooleanNode
   | NumberNode
+  | JsonNode
   | LiteralNode
   | LiteralsNode
   | ArrayNode
@@ -120,6 +129,7 @@ export const SchemaNodeSchema: Schema.Codec<SchemaNode> = Schema.suspend(
       Schema.Struct({ kind: Schema.Literal("string") }),
       Schema.Struct({ kind: Schema.Literal("boolean") }),
       Schema.Struct({ kind: Schema.Literal("number") }),
+      Schema.Struct({ kind: Schema.Literal("json") }),
       Schema.Struct({
         kind: Schema.Literal("literal"),
         value: LiteralValueSchema,
