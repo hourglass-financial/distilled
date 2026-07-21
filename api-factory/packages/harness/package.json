@@ -19,6 +19,16 @@
       "types": "./lib/index.d.ts",
       "bun": "./src/index.ts",
       "default": "./lib/index.js"
+    },
+    "./probe": {
+      "types": "./lib/probe.d.ts",
+      "bun": "./src/probe.ts",
+      "default": "./lib/probe.js"
+    },
+    "./reporter": {
+      "types": "./lib/coverage/reporter.d.ts",
+      "bun": "./src/coverage/reporter.ts",
+      "default": "./lib/coverage/reporter.js"
     }
   },
   "scripts": {
@@ -33,7 +43,8 @@
     "@hourglass-financial/api-factory-core": "workspace:*"
   },
   "peerDependencies": {
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "vitest": "catalog:"
   },
   "devDependencies": {
     "@types/bun": "catalog:",

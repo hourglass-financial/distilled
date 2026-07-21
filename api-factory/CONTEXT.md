@@ -191,8 +191,28 @@ A named out-of-band ingredient a live test needs (e.g. `authkit`,
 _Avoid_: tier
 
 **Probe**:
-A named, checked-in raw-request spec under `vendors/<v>/probes/`, runnable
-individually, whose scrubbed capture backs patch evidence.
+A named, checked-in spec under `vendors/<v>/probes/`, runnable individually:
+one pre-decode raw-request *observation* plus its declared experimental
+context (`setup`, env-bound params). Its scrubbed, placeholder-normalized
+capture backs patch evidence.
+
+**Probe setup**:
+A probe's declared prerequisite state: a Scoped Effect built on `resource()`
+and the vendor's typed client, returning the params the observation is
+templated over. Torn down after the capture, on failure too.
+_Avoid_: fixture (ambiguous with test fixtures), preamble
+
+**Op stamp**:
+The `[lane:resource.method]` marker a harness test wrapper appends to a test
+title — how a test declares the operation it covers and what the coverage
+reporter parses back out of a run.
+_Avoid_: tag, test label
+
+**Gated skip**:
+A harness-issued skip whose title carries `[gated: …]` naming the missing
+credential or capability. The only skip that excuses a `tested` claim as
+unverified rather than stale.
+_Avoid_: soft skip, conditional skip
 
 **testRunId**:
 The per-process 8-hex random id embedded in every live resource name
