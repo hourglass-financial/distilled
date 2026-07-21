@@ -555,6 +555,90 @@ describe("OpenAPI frontend normalization", () => {
     );
   });
 
+  it("applies codeClassNames without changing canonical code order", () => {
+    const ir = canonicalize(
+      normalize(bastionSpec, {
+        ...(bastionConfig as JsonObject),
+        errors: {
+          ...((bastionConfig as JsonObject)["errors"] as JsonObject),
+          codeClassNames: { invalid_token: "AInvalidToken" },
+        },
+      }),
+    );
+    checkInvariants(ir);
+
+    expect(
+      ir.errors.codeErrors.map(({ code, className, tag }) => ({
+        code,
+        className,
+        tag,
+      })),
+    ).toEqual([
+      {
+        code: "alpha_challenge",
+        className: "AlphaChallenge",
+        tag: "AlphaChallenge",
+      },
+      {
+        code: "invalid_token",
+        className: "AInvalidToken",
+        tag: "AInvalidToken",
+      },
+    ]);
+    expect(ir.resources[0]!.operations[0]!.errors).toContain("AInvalidToken");
+  });
+
+  it("hard-errors on an unused codeClassNames assignment", () => {
+    expectViolation(
+      () =>
+        normalize(bastionSpec, {
+          ...(bastionConfig as JsonObject),
+          errors: {
+            ...((bastionConfig as JsonObject)["errors"] as JsonObject),
+            codeClassNames: { never_lifted: "NeverLifted" },
+          },
+        }),
+      "config.error-class-name.unused",
+      "never_lifted",
+    );
+  });
+
+  it("leaves invalid and reserved codeClassNames to existing identifier checks", () => {
+    for (const [className, rule] of [
+      ["not-valid", "identifier"],
+      ["class", "identifier.reserved"],
+    ] as const) {
+      const ir = canonicalize(
+        normalize(bastionSpec, {
+          ...(bastionConfig as JsonObject),
+          errors: {
+            ...((bastionConfig as JsonObject)["errors"] as JsonObject),
+            codeClassNames: { invalid_token: className },
+          },
+        }),
+      );
+      expectViolation(() => checkInvariants(ir), rule, className);
+    }
+  });
+
+  it("leaves colliding codeClassNames to the existing namespace check", () => {
+    const ir = canonicalize(
+      normalize(bastionSpec, {
+        ...(bastionConfig as JsonObject),
+        errors: {
+          ...((bastionConfig as JsonObject)["errors"] as JsonObject),
+          coreReexports: "all",
+          codeClassNames: { invalid_token: "BadRequest" },
+        },
+      }),
+    );
+    expectViolation(
+      () => checkInvariants(ir),
+      "identifier.export-collision",
+      "BadRequest",
+    );
+  });
+
   it("hard-errors on config overrides naming unknown constructs", () => {
     expectViolation(
       () =>

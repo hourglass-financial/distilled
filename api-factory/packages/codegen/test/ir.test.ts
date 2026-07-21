@@ -776,7 +776,7 @@ describe("checkInvariants", () => {
     );
   });
 
-  it("rejects code errors whose code and class-name orders disagree", () => {
+  it("rejects code errors that are not ordered by code", () => {
     const ir = baseIr();
     expectConstruct(
       {
@@ -785,20 +785,20 @@ describe("checkInvariants", () => {
           ...ir.errors,
           codeErrors: [
             {
-              className: "ZuluError",
-              tag: "ZuluError",
-              code: "alpha_error",
-              meta: "auth",
-              docsStatus: 400,
-              docsProse: "Alpha.",
-            },
-            {
               className: "AlphaError",
               tag: "AlphaError",
               code: "zulu_error",
               meta: "auth",
               docsStatus: 400,
               docsProse: "Zulu.",
+            },
+            {
+              className: "ZuluError",
+              tag: "ZuluError",
+              code: "alpha_error",
+              meta: "auth",
+              docsStatus: 400,
+              docsProse: "Alpha.",
             },
           ],
         },

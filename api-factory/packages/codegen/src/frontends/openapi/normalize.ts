@@ -1417,7 +1417,9 @@ class Normalizer {
           specPointer: descriptionPointer,
         });
       }
-      const className = pascalWords(splitWords(code));
+      const className =
+        ownValue(this.config.errors.codeClassNames, code) ??
+        pascalWords(splitWords(code));
       const existing = this.codeErrors.get(code);
       if (existing !== undefined) {
         if (existing.docsProse !== docsProse) {
@@ -1851,6 +1853,17 @@ class Normalizer {
           "config.error-prose.unused",
           `error code ${code}`,
           `errors.codeProse assigns ${JSON.stringify(code)}, but no lifted error carries that code`,
+        );
+      }
+    }
+    for (const code of Object.keys(
+      this.config.errors.codeClassNames ?? {},
+    ).sort(compare)) {
+      if (!this.codeErrors.has(code)) {
+        this.add(
+          "config.error-class-name.unused",
+          `error code ${code}`,
+          `errors.codeClassNames assigns ${JSON.stringify(code)}, but no lifted error carries that code`,
         );
       }
     }

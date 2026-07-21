@@ -731,17 +731,12 @@ const checkCodeErrorOrder = (
   const byCode = [...codeErrors].sort((left, right) =>
     compare(left.code, right.code),
   );
-  const byClass = [...codeErrors].sort((left, right) =>
-    compare(left.className, right.className),
-  );
-  if (
-    byCode.some((entry, index) => entry.className !== byClass[index]?.className)
-  ) {
+  if (byCode.some((entry, index) => entry.code !== codeErrors[index]?.code)) {
     add(
       violations,
       "error.order-agreement",
       "code-error declarations",
-      "code order and class-name order do not agree",
+      "code-error declarations are not ordered by discriminator code",
     );
   }
 };

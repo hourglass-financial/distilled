@@ -5,12 +5,20 @@ import { emitErrors } from "../src/emit/errors.ts";
 import { ImportCollector } from "../src/emit/imports.ts";
 import { emitResources } from "../src/emit/resources.ts";
 import { emitField } from "../src/emit/schemas.ts";
-import { generate, type Formatter } from "../src/index.ts";
+import {
+  canonicalize,
+  decodeVendorConfig,
+  generate,
+  normalizeOpenApi,
+  type Formatter,
+  type JsonObject,
+} from "../src/index.ts";
 import { errorsRichFixture } from "./fixtures/errors-rich.ts";
 import { arraySuccessFixture } from "./fixtures/array-success.ts";
 import { fixtures } from "./fixtures/index.ts";
 import { minimalFixture } from "./fixtures/minimal.ts";
 import { paginationFixture } from "./fixtures/pagination.ts";
+import { bastionConfig, bastionSpec } from "./fixtures/openapi.ts";
 import {
   emitToTemp,
   expectTreesEqual,
@@ -131,6 +139,33 @@ describe("reviewed exemplar conventions", () => {
         nullable: false,
       }),
     ).toBe('["__proto__"]: Schema.String');
+  });
+
+  it("emits overridden code error names through declarations and references", () => {
+    const config = {
+      ...(bastionConfig as JsonObject),
+      errors: {
+        ...((bastionConfig as JsonObject)["errors"] as JsonObject),
+        codeClassNames: { invalid_token: "AInvalidToken" },
+      },
+    };
+    const ir = canonicalize(
+      normalizeOpenApi(bastionSpec, decodeVendorConfig(config)),
+    );
+    const files = generate(ir, { formatter: identity });
+    const errors = files.find((file) => file.path === "src/errors.ts")!;
+    const sessions = files.find(
+      (file) => file.path === "src/resources/sessions.ts",
+    )!;
+
+    expect(errors.contents).toContain("export class AInvalidToken extends");
+    expect(errors.contents).toContain('  "AInvalidToken",');
+    expect(errors.contents).toContain(
+      "byCode([\n    AlphaChallenge,\n    AInvalidToken,",
+    );
+    expect(sessions.contents).toContain(
+      "const authenticateErrors = [AInvalidToken, AlphaChallenge, NotFound, TooManyRequests] as const;",
+    );
   });
 });
 
