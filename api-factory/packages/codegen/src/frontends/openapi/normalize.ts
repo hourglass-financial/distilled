@@ -1498,6 +1498,17 @@ class Normalizer {
     }
     const pageStruct = this.structNodeFor(output.name);
     if (pageStruct === undefined) return undefined;
+    if (
+      !this.paginationPathIsSound(
+        pageStruct,
+        pagination.nextCursorPath,
+        "next cursor",
+        construct,
+        true,
+      )
+    ) {
+      return undefined;
+    }
     const nextCursor = this.resolveFieldPath(
       pageStruct,
       pagination.nextCursorPath,
@@ -1508,6 +1519,17 @@ class Normalizer {
         construct,
         `next cursor path ${pagination.nextCursorPath.join(".")} does not resolve to a string on ${output.name}; a silently unpaginated operation is not permitted`,
       );
+      return undefined;
+    }
+    if (
+      !this.paginationPathIsSound(
+        pageStruct,
+        pagination.itemsPath,
+        "items",
+        construct,
+        false,
+      )
+    ) {
       return undefined;
     }
     const items = this.resolveFieldPath(pageStruct, pagination.itemsPath);
@@ -1536,6 +1558,43 @@ class Normalizer {
       pagesDocs: `Stream every page of ${humanizeWords(resourceWords).toLowerCase()}, following the \`${pagination.cursorParam}\` cursor.`,
       itemsDocs: `Stream every ${humanizeWords(itemWords).toLowerCase()} across every page.`,
     };
+  }
+
+  private paginationPathIsSound(
+    start: StructNode,
+    path: ReadonlyArray<string>,
+    pathName: string,
+    construct: string,
+    allowNullableLeaf: boolean,
+  ): boolean {
+    let current: SchemaNode = start;
+    for (const [index, segment] of path.entries()) {
+      if (current.kind === "named-ref") {
+        const next = this.structNodeFor(current.name);
+        if (next === undefined) return true;
+        current = next;
+      }
+      if (current.kind !== "struct") return true;
+      const field: FieldIr | undefined = current.fields.find(
+        (entry) => entry.name === segment,
+      );
+      if (field === undefined) return true;
+      const violation = field.optional
+        ? "optional"
+        : field.nullable && !(allowNullableLeaf && index === path.length - 1)
+          ? "nullable"
+          : undefined;
+      if (violation !== undefined) {
+        this.add(
+          "pagination.detect",
+          construct,
+          `${pathName} path ${path.join(".")} traverses ${violation} field ${JSON.stringify(segment)}; use a document patch to mark the envelope field required and non-nullable`,
+        );
+        return false;
+      }
+      current = field.schema;
+    }
+    return true;
   }
 
   private structNodeFor(name: string): StructNode | undefined {

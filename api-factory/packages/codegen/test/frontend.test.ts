@@ -154,7 +154,7 @@ describe("OpenAPI frontend normalization", () => {
     );
   });
 
-  it("normalizes the orbit spec to the pagination engine fixture", () => {
+  it("normalizes a required pagination envelope to the pagination engine fixture", () => {
     const ir = canonicalize(normalize(orbitSpec, orbitConfig));
     checkInvariants(ir);
     expect(ir).toEqual(
@@ -460,6 +460,54 @@ describe("OpenAPI frontend normalization", () => {
       () => normalize(spec, orbitConfig),
       "pagination.detect",
       "operation satellites.list",
+    );
+  });
+
+  it("hard-errors when a pagination path traverses an optional intermediate field", () => {
+    const spec = patchSpec(orbitSpec, (draft) => {
+      const components = draft["components"] as {
+        schemas: Record<string, { required: string[] }>;
+      };
+      components.schemas["SatellitePage"]!.required = ["data"];
+    });
+
+    expectViolation(
+      () => normalize(spec, orbitConfig),
+      "pagination.detect",
+      "operation satellites.list pagination",
+      'next cursor path meta.after traverses optional field "meta"; use a document patch to mark the envelope field required and non-nullable',
+    );
+  });
+
+  it("hard-errors when a pagination path resolves through an optional leaf field", () => {
+    const spec = patchSpec(orbitSpec, (draft) => {
+      const components = draft["components"] as {
+        schemas: Record<string, { required: string[] }>;
+      };
+      components.schemas["SatellitePage"]!.required = ["meta"];
+    });
+
+    expectViolation(
+      () => normalize(spec, orbitConfig),
+      "pagination.detect",
+      "operation satellites.list pagination",
+      'items path data traverses optional field "data"; use a document patch to mark the envelope field required and non-nullable',
+    );
+  });
+
+  it("hard-errors when a pagination path traverses a nullable intermediate field", () => {
+    const spec = patchSpec(orbitSpec, (draft) => {
+      const components = draft["components"] as {
+        schemas: Record<string, { nullable?: boolean }>;
+      };
+      components.schemas["PageMeta"]!.nullable = true;
+    });
+
+    expectViolation(
+      () => normalize(spec, orbitConfig),
+      "pagination.detect",
+      "operation satellites.list pagination",
+      'next cursor path meta.after traverses nullable field "meta"; use a document patch to mark the envelope field required and non-nullable',
     );
   });
 
