@@ -54,14 +54,20 @@ const outputName = (operation: OperationIr): string =>
 const outputSchemaType = (operation: OperationIr): string =>
   operation.output.kind === "array"
     ? `Schema.$Array<typeof ${operation.output.item.name}>`
-    : `typeof ${outputName(operation)}`;
+    : operation.output.kind === "union"
+      ? `Schema.Union<readonly [${operation.output.members
+          .map((member) => `typeof ${member.name}`)
+          .join(", ")}]>`
+      : `typeof ${outputName(operation)}`;
 
 const outputType = (operation: OperationIr): string =>
   operation.output.kind === "void"
     ? "void"
     : operation.output.kind === "array"
       ? `ReadonlyArray<${operation.output.item.name}>`
-      : operation.output.name;
+      : operation.output.kind === "union"
+        ? operation.output.members.map((member) => member.name).join(" | ")
+        : operation.output.name;
 
 const allOptional = (operation: OperationIr): boolean =>
   operation.input.fields.every((field) => field.optional);

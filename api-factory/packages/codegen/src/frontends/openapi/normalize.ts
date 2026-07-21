@@ -15,6 +15,7 @@ import {
 import type {
   FieldIr,
   LiteralValue,
+  NamedRefNode,
   SchemaNode,
   StructNode,
 } from "../../ir/nodes.ts";
@@ -1171,7 +1172,9 @@ class Normalizer {
         const source =
           successOutput.kind === "array"
             ? `${successOutput.item.name}[]`
-            : successOutput.name;
+            : successOutput.kind === "union"
+              ? successOutput.members.map((member) => member.name).join(" | ")
+              : successOutput.name;
         if (outputSource !== undefined && outputSource !== source) {
           this.add(
             "openapi.response.success",
@@ -1261,6 +1264,59 @@ class Normalizer {
       return undefined;
     }
     const schemaPointer = `${pointer}/content/application~1json/schema`;
+    const unionKeyword =
+      schema["oneOf"] !== undefined
+        ? "oneOf"
+        : schema["anyOf"] !== undefined
+          ? "anyOf"
+          : undefined;
+    if (unionKeyword !== undefined) {
+      const unionPointer = `${schemaPointer}/${unionKeyword}`;
+      const members = schema[unionKeyword];
+      if (!isJsonArray(members) || members.length === 0) {
+        this.add(
+          "openapi.response.success",
+          unionPointer,
+          "a success response union must contain at least one member",
+        );
+        return undefined;
+      }
+      const refs: NamedRefNode[] = [];
+      let valid = true;
+      for (const [index, member] of members.entries()) {
+        const memberPointer = `${unionPointer}/${index}`;
+        const target = isJsonObject(member)
+          ? this.refTarget(member)
+          : undefined;
+        if (target === undefined || !this.structComponents.has(target)) {
+          this.add(
+            "openapi.response.success",
+            memberPointer,
+            "success union members must be a $ref to an object-shaped component schema",
+          );
+          valid = false;
+          continue;
+        }
+        const component = this.componentSchemas.get(target);
+        if (isJsonObject(component) && component["nullable"] === true) {
+          this.add(
+            "openapi.nullable.position",
+            memberPointer,
+            `success union member schema ${JSON.stringify(target)} declares nullable: true, which is not representable as an operation output`,
+          );
+          valid = false;
+          continue;
+        }
+        refs.push({ kind: "named-ref", name: target });
+      }
+      if (!valid) return undefined;
+      return refs.length === 1
+        ? refs[0]!
+        : {
+            kind: "union",
+            members: [refs[0]!, refs[1]!, ...refs.slice(2)],
+          };
+    }
     if (schema["type"] === "array") {
       if (schema["nullable"] === true) {
         this.add(
@@ -1485,6 +1541,14 @@ class Normalizer {
         "pagination.detect",
         construct,
         "array output cannot use cursor pagination; cursor pagination requires a struct envelope",
+      );
+      return undefined;
+    }
+    if (output.kind === "union") {
+      this.add(
+        "pagination.detect",
+        construct,
+        "union output cannot use cursor pagination; cursor pagination requires a single struct envelope",
       );
       return undefined;
     }

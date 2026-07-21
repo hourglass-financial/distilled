@@ -7,6 +7,7 @@ import { paginationFixture } from "./pagination.ts";
 import { recordJsonFixture } from "./record-json.ts";
 import { renameExportFixture } from "./rename-export.ts";
 import { schemaKindsFixture } from "./schema-kinds.ts";
+import { unionSuccessFixture } from "./union-success.ts";
 import { workosFixture } from "./workos.ts";
 
 export const fixtures = {
@@ -19,6 +20,7 @@ export const fixtures = {
   "rename-export": renameExportFixture,
   "multi-resource": multiResourceFixture,
   "envelope-variants": envelopeVariantsFixture,
+  "union-success": unionSuccessFixture,
   // The #28 exemplar's hand-built IR, kept as the richest end-to-end fixture
   // (pagination + code errors + rename-export + envelope in one tree) after the
   // vendor-backed regen gate took over the byte-pinning of clients/workos.

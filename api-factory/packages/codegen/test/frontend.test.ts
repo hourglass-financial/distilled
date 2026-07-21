@@ -344,6 +344,68 @@ describe("OpenAPI frontend normalization", () => {
     );
   });
 
+  it.each(["oneOf", "anyOf"] as const)(
+    "normalizes an inline %s of named struct success schemas in spec order",
+    (keyword) => {
+      const spec = patchSpec(northstarSpec, (draft) => {
+        const components = draft["components"] as {
+          schemas: Record<string, JsonObject>;
+        };
+        components.schemas["ArchivedWidget"] = {
+          type: "object",
+          description: "An archived widget.",
+          properties: { id: { type: "string" } },
+          required: ["id"],
+        };
+        setNorthstarSuccessSchema(draft, {
+          [keyword]: [
+            { $ref: "#/components/schemas/Widget" },
+            { $ref: "#/components/schemas/ArchivedWidget" },
+          ],
+        });
+      });
+
+      const operation = normalize(spec, northstarConfig).resources[0]!
+        .operations[0]!;
+      expect(operation.output).toEqual({
+        kind: "union",
+        members: [
+          { kind: "named-ref", name: "Widget" },
+          { kind: "named-ref", name: "ArchivedWidget" },
+        ],
+      });
+    },
+  );
+
+  it("collapses a single-member success union to a named reference", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      setNorthstarSuccessSchema(draft, {
+        oneOf: [{ $ref: "#/components/schemas/Widget" }],
+      });
+    });
+
+    const operation = normalize(spec, northstarConfig).resources[0]!
+      .operations[0]!;
+    expect(operation.output).toEqual({ kind: "named-ref", name: "Widget" });
+  });
+
+  it("hard-errors on a success union with an inline member", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      setNorthstarSuccessSchema(draft, {
+        oneOf: [
+          { $ref: "#/components/schemas/Widget" },
+          { type: "object", properties: { id: { type: "string" } } },
+        ],
+      });
+    });
+
+    expectViolation(
+      () => normalize(spec, northstarConfig),
+      "openapi.response.success",
+      "schema/oneOf/1",
+    );
+  });
+
   it("normalizes an inline array of a named struct success schema", () => {
     const spec = patchSpec(northstarSpec, (draft) => {
       setNorthstarSuccessSchema(draft, {
@@ -444,6 +506,48 @@ describe("OpenAPI frontend normalization", () => {
       "pagination.detect",
       "operation widgets.get pagination",
       "array output cannot use cursor pagination; cursor pagination requires a struct envelope",
+    );
+  });
+
+  it("rejects cursor pagination on a union success output", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      const components = draft["components"] as {
+        schemas: Record<string, JsonObject>;
+      };
+      components.schemas["ArchivedWidget"] = {
+        type: "object",
+        properties: { id: { type: "string" } },
+        required: ["id"],
+      };
+      const get = setNorthstarSuccessSchema(draft, {
+        oneOf: [
+          { $ref: "#/components/schemas/Widget" },
+          { $ref: "#/components/schemas/ArchivedWidget" },
+        ],
+      });
+      get.parameters.push({
+        name: "after",
+        in: "query",
+        required: false,
+        schema: { type: "string" },
+      });
+    });
+    const config = {
+      ...(northstarConfig as JsonObject),
+      pagination: {
+        mode: "cursor",
+        cursorParam: "after",
+        clearParams: [],
+        nextCursorPath: ["meta", "after"],
+        itemsPath: ["data"],
+      },
+    };
+
+    expectViolation(
+      () => normalize(spec, config),
+      "pagination.detect",
+      "operation widgets.get pagination",
+      "union output cannot use cursor pagination",
     );
   });
 

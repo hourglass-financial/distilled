@@ -295,7 +295,7 @@ describe("patch-locality repair mode", () => {
           ops: [
             {
               op: "replace",
-              path: "/info/title",
+              path: "/paths/~1widgets~1{id}/get/description",
               value: "Northstar repaired",
             },
           ],
@@ -317,10 +317,12 @@ describe("patch-locality repair mode", () => {
       const result = audit(dir, {
         normalize: (document, config) => {
           const ir = normalizeOpenApi(document, config);
-          const title = ((document as JsonObject)["info"] as JsonObject)[
-            "title"
-          ];
-          if (title === "Northstar repaired") return ir;
+          const title = (
+            ((document as JsonObject)["paths"] as JsonObject)[
+              "/widgets/{id}"
+            ] as JsonObject
+          )["get"] as JsonObject;
+          if (title["description"] === "Northstar repaired") return ir;
           return {
             ...ir,
             resources: ir.resources.map((resource) => ({
@@ -477,6 +479,25 @@ describe("patch-locality repair mode", () => {
     }
   });
 
+  it("fails the run when the full patch sequence remains non-normalizable", () => {
+    const dir = temp();
+    try {
+      const spec = blockedSpec();
+      const patches = repairPatches(spec);
+      delete patches["020-shape-labels.patch.json"];
+      delete patches["030-widget-conflict.patch.json"];
+      writeVendorDir(dir, { spec, config: northstarConfig, patches });
+
+      const result = audit(dir);
+      expect(result.entries).toHaveLength(1);
+      expect(result.entries[0]!.ok).toBe(true);
+      expect(result.entries[0]!.exposed).toHaveLength(1);
+      expect(result.ok).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it("scopes an annotated violation by its leading JSON pointer", () => {
     const entry = auditRepairWithConstruct(
       "/components/schemas/Widget/properties/labels (response labels)",
@@ -499,13 +520,34 @@ describe("patch-locality repair mode", () => {
     },
   );
 
-  it("exempts non-pointer violation constructs from target scoping", () => {
-    const entry = auditRepairWithConstruct(
+  it("scopes a non-pointer operation construct to the named operation's reach", () => {
+    const entry = auditComponentRepairWithConstruct(
+      "operation health.get constantBody.grant_type",
+      blockedSpecWithUnrelatedOperation(),
+    );
+
+    expect(entry.ok).toBe(false);
+    expect(entry.targetScopeViolations).toEqual([
+      expect.stringContaining("/components/schemas/Widget/properties/labels"),
+    ]);
+  });
+
+  it("accepts a component edit referenced by a named operation construct", () => {
+    const entry = auditComponentRepairWithConstruct(
       "operation widgets.get constantBody.grant_type",
     );
 
-    expect(entry.ok).toBe(true);
+    expect(entry.ok, JSON.stringify(entry, null, 2)).toBe(true);
     expect(entry.targetScopeViolations).toEqual([]);
+  });
+
+  it("rejects a construct that is neither a pointer nor a resolvable operation", () => {
+    const entry = auditRepairWithConstruct("schema Widget labels");
+
+    expect(entry.ok).toBe(false);
+    expect(entry.targetScopeViolations).toEqual(
+      expect.arrayContaining([expect.stringContaining("schema Widget labels")]),
+    );
   });
 
   it("scopes a component edit to a cleared violation at a referencing operation", () => {

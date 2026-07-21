@@ -413,6 +413,102 @@ describe("checkInvariants", () => {
     );
   });
 
+  it("rejects pagination on a union output", () => {
+    const ir = paginatedIr();
+    const error = invariantError({
+      ...ir,
+      resources: [
+        {
+          ...ir.resources[0]!,
+          operations: [
+            operation({
+              ...ir.resources[0]!.operations[0]!,
+              output: {
+                kind: "union",
+                members: [
+                  { kind: "named-ref", name: "WidgetPage" },
+                  { kind: "named-ref", name: "Widget" },
+                ],
+              },
+            }),
+          ],
+        },
+      ],
+    });
+
+    expect(error.violations).toContainEqual(
+      expect.objectContaining({
+        rule: "pagination.output",
+        message:
+          "union output cannot be paginated; cursor pagination requires a single struct envelope",
+      }),
+    );
+  });
+
+  it.each(["optional", "nullable"] as const)(
+    "rejects pagination paths traversing a %s intermediate field",
+    (modifier) => {
+      const ir = paginatedIr();
+      const unsafe = ir.namedSchemas.map((schema) =>
+        schema.name === "WidgetPage"
+          ? {
+              ...schema,
+              schema: {
+                ...schema.schema,
+                fields: [
+                  field(
+                    "payload",
+                    {
+                      kind: "struct" as const,
+                      fields: schema.schema.fields,
+                    },
+                    { [modifier]: true },
+                  ),
+                ],
+              },
+            }
+          : schema,
+      );
+      const operation = ir.resources[0]!.operations[0]!;
+      const error = invariantError({
+        ...ir,
+        namedSchemas: unsafe,
+        resources: [
+          {
+            ...ir.resources[0]!,
+            operations: [
+              {
+                ...operation,
+                pagination: {
+                  ...operation.pagination!,
+                  nextCursorPath: ["payload", "next"],
+                  itemsPath: ["payload", "items"],
+                },
+              },
+            ],
+          },
+        ],
+      });
+
+      expect(error.violations).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            rule: "pagination.next-cursor-path",
+            message: expect.stringContaining(
+              `traverses ${modifier} intermediate field "payload"`,
+            ),
+          }),
+          expect.objectContaining({
+            rule: "pagination.items-path",
+            message: expect.stringContaining(
+              `traverses ${modifier} intermediate field "payload"`,
+            ),
+          }),
+        ]),
+      );
+    },
+  );
+
   it("rejects an invalid identifier", () => {
     const ir = baseIr();
     expectConstruct(
@@ -978,6 +1074,50 @@ describe("IR JSON", () => {
     };
 
     expect(decodeIr(JSON.parse(dumpIr(decodeIr(value))))).toEqual(value);
+  });
+
+  it("round-trips a union output while preserving member order", () => {
+    const value = structuredClone(baseIr()) as unknown as {
+      resources: Array<{
+        operations: Array<{ output: unknown }>;
+      }>;
+      namedSchemas: Array<unknown>;
+    };
+    value.namedSchemas.push({
+      name: "ArchivedWidget",
+      group: "Widgets",
+      docs: "An archived widget.",
+      schema: { kind: "struct", fields: [field("id")] },
+    });
+    value.resources[0]!.operations[0]!.output = {
+      kind: "union",
+      members: [
+        { kind: "named-ref", name: "Widget" },
+        { kind: "named-ref", name: "ArchivedWidget" },
+      ],
+    };
+
+    const roundTripped = decodeIr(JSON.parse(dumpIr(decodeIr(value))));
+    expect(roundTripped.resources[0]!.operations[0]!.output).toEqual(
+      value.resources[0]!.operations[0]!.output,
+    );
+  });
+
+  it.each([
+    ["single member", [{ kind: "named-ref", name: "Widget" }]],
+    [
+      "non-reference member",
+      [{ kind: "named-ref", name: "Widget" }, { kind: "string" }],
+    ],
+  ])("rejects a union output with %s", (_name, members) => {
+    const value = structuredClone(baseIr()) as unknown as {
+      resources: Array<{
+        operations: Array<{ output: unknown }>;
+      }>;
+    };
+    value.resources[0]!.operations[0]!.output = { kind: "union", members };
+
+    expect(() => decodeIr(value)).toThrow(CodegenError);
   });
 
   it.each([

@@ -151,6 +151,8 @@ export {
   type NumberNode,
   type OutputArrayNode,
   OutputArraySchema,
+  type OutputUnionNode,
+  OutputUnionSchema,
   type RecordNode,
   type SchemaNode,
   SchemaNodeSchema,

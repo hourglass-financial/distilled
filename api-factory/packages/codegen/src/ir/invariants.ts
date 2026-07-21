@@ -7,7 +7,7 @@ import type {
   OperationIr,
 } from "./model.ts";
 import { coreReexportNames } from "./model.ts";
-import type { SchemaNode } from "./nodes.ts";
+import type { FieldIr, SchemaNode } from "./nodes.ts";
 
 const identifierPattern =
   /^[$_\p{ID_Start}](?:[$_\p{ID_Continue}]|\u{200c}|\u{200d})*$/u;
@@ -423,6 +423,30 @@ const resolvePath = (
   return current === undefined ? undefined : resolveNode(current, schemas);
 };
 
+const unsafeIntermediateField = (
+  start: SchemaNode,
+  path: ReadonlyArray<string>,
+  schemas: ReadonlyMap<string, NamedSchemaIr>,
+):
+  | { readonly name: string; readonly modifier: "optional" | "nullable" }
+  | undefined => {
+  let current: SchemaNode | undefined = start;
+  for (const [index, segment] of path.entries()) {
+    current = current === undefined ? undefined : resolveNode(current, schemas);
+    if (current?.kind !== "struct") return undefined;
+    const field: FieldIr | undefined = current.fields.find(
+      (entry) => entry.name === segment,
+    );
+    if (field === undefined) return undefined;
+    if (index < path.length - 1) {
+      if (field.optional) return { name: segment, modifier: "optional" };
+      if (field.nullable) return { name: segment, modifier: "nullable" };
+    }
+    current = field.schema;
+  }
+  return undefined;
+};
+
 const checkOperation = (
   operation: OperationIr,
   resourceName: string,
@@ -649,6 +673,13 @@ const checkOperation = (
       paginationConstruct,
       "array output cannot be paginated; cursor pagination requires a struct envelope",
     );
+  } else if (operation.output.kind === "union") {
+    add(
+      violations,
+      "pagination.output",
+      paginationConstruct,
+      "union output cannot be paginated; cursor pagination requires a single struct envelope",
+    );
   } else if (operation.output.kind === "void") {
     add(
       violations,
@@ -680,6 +711,32 @@ const checkOperation = (
       "pagination.items-path",
       paginationConstruct,
       "items path must name at least one field",
+    );
+  }
+  const unsafeNextCursor = unsafeIntermediateField(
+    pagination.pageSchema,
+    pagination.nextCursorPath,
+    schemas,
+  );
+  if (unsafeNextCursor !== undefined) {
+    add(
+      violations,
+      "pagination.next-cursor-path",
+      paginationConstruct,
+      `next cursor path ${pagination.nextCursorPath.join(".")} traverses ${unsafeNextCursor.modifier} intermediate field ${JSON.stringify(unsafeNextCursor.name)}`,
+    );
+  }
+  const unsafeItems = unsafeIntermediateField(
+    pagination.pageSchema,
+    pagination.itemsPath,
+    schemas,
+  );
+  if (unsafeItems !== undefined) {
+    add(
+      violations,
+      "pagination.items-path",
+      paginationConstruct,
+      `items path ${pagination.itemsPath.join(".")} traverses ${unsafeItems.modifier} intermediate field ${JSON.stringify(unsafeItems.name)}`,
     );
   }
   const nextCursorNode = resolvePath(

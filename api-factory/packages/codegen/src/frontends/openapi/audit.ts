@@ -8,6 +8,7 @@ import {
   formatPointer,
   getAtPointer,
   isJsonObject,
+  ownValue,
   type JsonValue,
 } from "./json.ts";
 import {
@@ -24,6 +25,7 @@ import {
 } from "./vendor-dir.ts";
 import { parsePointer } from "./json.ts";
 import { CodegenError, type CodegenViolation } from "../../errors.ts";
+import { deriveOperationNames } from "./naming.ts";
 
 /**
  * The patch-locality audit (#29, #27 gate 3): every entry's declared blast
@@ -480,6 +482,101 @@ const pointerHasPrefix = (pointer: string, prefix: string): boolean => {
 const leadingConstructPointer = (construct: string): string | undefined =>
   construct.startsWith("/") ? construct.split(/\s/, 1)[0] : undefined;
 
+const operationConstructName = (construct: string): string | undefined =>
+  /^operation ([^\s]+)(?:\s|$)/u.exec(construct)?.[1];
+
+const operationPointerFromDocument = (
+  document: JsonValue,
+  config: VendorConfig,
+  qualified: string,
+): string | undefined => {
+  if (!isJsonObject(document) || !isJsonObject(document["paths"])) {
+    return undefined;
+  }
+  const naming = config.naming ?? {};
+  for (const [path, item] of Object.entries(document["paths"])) {
+    if (!path.startsWith("/") || !isJsonObject(item)) continue;
+    for (const method of [
+      "get",
+      "post",
+      "put",
+      "patch",
+      "delete",
+      "head",
+    ] as const) {
+      const operation = item[method];
+      if (!isJsonObject(operation)) continue;
+      const operationId = operation["operationId"];
+      if (typeof operationId !== "string" || operationId.length === 0) continue;
+      const tagsRaw = operation["tags"];
+      const tags = Array.isArray(tagsRaw)
+        ? tagsRaw.filter((tag): tag is string => typeof tag === "string")
+        : [];
+      const pathSegments = path
+        .split("/")
+        .filter((segment) => segment.length > 0 && !segment.startsWith("{"));
+      const violations: CodegenViolation[] = [];
+      const names = deriveOperationNames(
+        {
+          operationId,
+          pointer: formatPointer(["paths", path, method]),
+          tags,
+          pathSegments,
+          resourceRenames: naming.resources ?? {},
+          override: ownValue(naming.operations, operationId),
+        },
+        violations,
+      );
+      if (
+        names !== undefined &&
+        violations.length === 0 &&
+        `${names.resource}.${names.method}` === qualified
+      ) {
+        return formatPointer(["paths", path, method]);
+      }
+    }
+  }
+  return undefined;
+};
+
+const repairConstructPointer = (
+  construct: string,
+  irs: ReadonlyArray<ClientIr>,
+  documents: ReadonlyArray<JsonValue>,
+  config: VendorConfig,
+): string | undefined => {
+  const pointer = leadingConstructPointer(construct);
+  if (pointer !== undefined) {
+    try {
+      parsePointer(pointer);
+      return pointer;
+    } catch {
+      return undefined;
+    }
+  }
+  const qualified = operationConstructName(construct);
+  if (qualified === undefined) return undefined;
+  for (const ir of irs) {
+    const operation = operationsByName(ir).get(qualified);
+    if (operation !== undefined) {
+      return formatPointer([
+        "paths",
+        operation.pathTemplate,
+        operation.httpMethod.toLowerCase(),
+      ]);
+    }
+  }
+  for (const document of documents) {
+    const operationPointer = operationPointerFromDocument(
+      document,
+      config,
+      qualified,
+    );
+    if (operationPointer !== undefined) return operationPointer;
+  }
+  return undefined;
+};
+
 const collectLocalRefs = (value: JsonValue, refs: Set<string>): void => {
   if (Array.isArray(value)) {
     for (const item of value) collectLocalRefs(item, refs);
@@ -597,29 +694,43 @@ const repairTargetScopeViolations = (
   clears: ReadonlyArray<PatchViolationIdentity>,
   irs: ReadonlyArray<ClientIr>,
   documents: ReadonlyArray<JsonValue>,
-): ReadonlyArray<string> =>
-  entryTargetPointers(entry)
-    .filter(
-      (pointer) =>
-        !clears.some((clear) => {
-          const constructPointer = leadingConstructPointer(clear.construct);
-          return (
-            constructPointer === undefined ||
-            pointerHasPrefix(pointer, constructPointer) ||
-            pointerHasPrefix(constructPointer, pointer) ||
-            componentTargetScopesOperation(
-              pointer,
-              constructPointer,
-              irs,
-              documents,
-            )
-          );
-        }),
-    )
+  config: VendorConfig,
+): ReadonlyArray<string> => {
+  const scopes = clears.map((clear) => ({
+    clear,
+    pointer: repairConstructPointer(clear.construct, irs, documents, config),
+  }));
+  const violations = scopes
+    .filter(({ pointer }) => pointer === undefined)
     .map(
-      (pointer) =>
-        `edit target ${JSON.stringify(pointer)} is outside every construct declared in clears`,
+      ({ clear }) =>
+        `declared construct ${JSON.stringify(clear.construct)} names neither a JSON pointer nor a resolvable operation`,
     );
+  violations.push(
+    ...entryTargetPointers(entry)
+      .filter(
+        (pointer) =>
+          !scopes.some(({ pointer: constructPointer }) => {
+            return (
+              constructPointer !== undefined &&
+              (pointerHasPrefix(pointer, constructPointer) ||
+                pointerHasPrefix(constructPointer, pointer) ||
+                componentTargetScopesOperation(
+                  pointer,
+                  constructPointer,
+                  irs,
+                  documents,
+                ))
+            );
+          }),
+      )
+      .map(
+        (pointer) =>
+          `edit target ${JSON.stringify(pointer)} is outside every construct declared in clears`,
+      ),
+  );
+  return violations;
+};
 
 /** Run the locality audit for an already-loaded vendor tree. */
 export const auditPatchLocalityFrom = (
@@ -761,6 +872,7 @@ export const auditPatchLocalityFrom = (
             (ir): ir is ClientIr => ir !== undefined,
           ),
           [document, nextDocument],
+          vendor.config,
         );
       } else {
         unexpectedClears = actualClears;
@@ -804,10 +916,11 @@ export const auditPatchLocalityFrom = (
     document = nextDocument;
   }
 
+  const finalNormalization = normalizePrefix(vendor.patches.length, document);
   return {
     vendorDir: vendor.dir,
     entries,
-    ok: entries.every((entry) => entry.ok),
+    ok: finalNormalization.normalizable && entries.every((entry) => entry.ok),
   };
 };
 

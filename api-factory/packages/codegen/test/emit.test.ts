@@ -18,6 +18,7 @@ import { arraySuccessFixture } from "./fixtures/array-success.ts";
 import { fixtures } from "./fixtures/index.ts";
 import { minimalFixture } from "./fixtures/minimal.ts";
 import { paginationFixture } from "./fixtures/pagination.ts";
+import { unionSuccessFixture } from "./fixtures/union-success.ts";
 import { bastionConfig, bastionSpec } from "./fixtures/openapi.ts";
 import {
   emitToTemp,
@@ -122,6 +123,13 @@ describe("reviewed exemplar conventions", () => {
     expect(resource).toContain("Schema.$Array<typeof Identity>");
     expect(resource).toContain("output: Schema.Array(Identity),");
     expect(resource).toContain("Effect.Effect<ReadonlyArray<Identity>,");
+  });
+
+  it("emits an ordered union output schema and result type", () => {
+    const resource = emitResources(unionSuccessFixture)[0]!.contents;
+
+    expect(resource).toContain("Schema.Union([PendingJob, CompletedJob])");
+    expect(resource).toContain("Effect.Effect<PendingJob | CompletedJob,");
   });
 
   it("names the resolved vendor coverage location", () => {
