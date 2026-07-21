@@ -1,7 +1,7 @@
 import type { ClientIr, OperationIr, ResourceIr } from "../ir/model.ts";
 import type { SchemaNode } from "../ir/nodes.ts";
 import { ImportCollector } from "./imports.ts";
-import { emitField, hasSecret } from "./schemas.ts";
+import { emitField, emitSchemaNode, hasSecret } from "./schemas.ts";
 import {
   banner,
   CORE_PACKAGE,
@@ -49,10 +49,19 @@ const qualified = (operation: OperationIr): string =>
   `${operation.publicName.resource}.${operation.publicName.method}`;
 
 const outputName = (operation: OperationIr): string =>
-  operation.output.kind === "void" ? "Schema.Void" : operation.output.name;
+  emitSchemaNode(operation.output);
+
+const outputSchemaType = (operation: OperationIr): string =>
+  operation.output.kind === "array"
+    ? `Schema.$Array<typeof ${operation.output.item.name}>`
+    : `typeof ${outputName(operation)}`;
 
 const outputType = (operation: OperationIr): string =>
-  operation.output.kind === "void" ? "void" : operation.output.name;
+  operation.output.kind === "void"
+    ? "void"
+    : operation.output.kind === "array"
+      ? `ReadonlyArray<${operation.output.item.name}>`
+      : operation.output.name;
 
 const allOptional = (operation: OperationIr): boolean =>
   operation.input.fields.every((field) => field.optional);
@@ -103,7 +112,7 @@ const emitOperation = (
   writer.writeLine(`const ${operation.descriptorName}: Operation<`);
   writer.indent(() => {
     writer.writeLine(`typeof ${operation.inputName},`);
-    writer.writeLine(`typeof ${outputName(operation)},`);
+    writer.writeLine(`${outputSchemaType(operation)},`);
     writer.writeLine(`typeof ${operation.errorsName}`);
   });
   writer.writeLine("> = {");

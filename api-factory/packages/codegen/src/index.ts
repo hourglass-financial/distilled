@@ -149,6 +149,8 @@ export {
   type LiteralValue,
   type NamedRefNode,
   type NumberNode,
+  type OutputArrayNode,
+  OutputArraySchema,
   type RecordNode,
   type SchemaNode,
   SchemaNodeSchema,

@@ -642,7 +642,14 @@ const checkOperation = (
       );
     }
   }
-  if (operation.output.kind === "void") {
+  if (operation.output.kind === "array") {
+    add(
+      violations,
+      "pagination.output",
+      paginationConstruct,
+      "array output cannot be paginated; cursor pagination requires a struct envelope",
+    );
+  } else if (operation.output.kind === "void") {
     add(
       violations,
       "pagination.output",

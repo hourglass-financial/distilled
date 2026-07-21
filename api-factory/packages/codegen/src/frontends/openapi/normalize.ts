@@ -1166,18 +1166,22 @@ class Normalizer {
 
       if (statusNumber >= 200 && statusNumber < 300) {
         sawSuccess = true;
-        const ref = this.successRef(response, statusPointer);
-        if (ref === undefined) continue;
-        if (outputSource !== undefined && outputSource !== ref) {
+        const successOutput = this.successOutput(response, statusPointer);
+        if (successOutput === undefined) continue;
+        const source =
+          successOutput.kind === "array"
+            ? `${successOutput.item.name}[]`
+            : successOutput.name;
+        if (outputSource !== undefined && outputSource !== source) {
           this.add(
             "openapi.response.success",
             statusPointer,
-            `multiple success responses declare different schemas (${JSON.stringify(outputSource)} vs ${JSON.stringify(ref)})`,
+            `multiple success responses declare different schemas (${JSON.stringify(outputSource)} vs ${JSON.stringify(source)})`,
           );
           continue;
         }
-        outputSource = ref;
-        output = { kind: "named-ref", name: ref };
+        outputSource = source;
+        output = successOutput;
         continue;
       }
       if (statusNumber >= 400 && statusNumber < 600) {
@@ -1220,10 +1224,10 @@ class Normalizer {
     return { output, errors, errorsFromCodes };
   }
 
-  private successRef(
+  private successOutput(
     response: JsonObject,
     pointer: string,
-  ): string | undefined {
+  ): Exclude<OperationIr["output"], { readonly kind: "void" }> | undefined {
     const content = response["content"];
     if (content === undefined) return undefined;
     if (!isJsonObject(content)) {
@@ -1256,11 +1260,46 @@ class Normalizer {
       this.add("openapi.response.success", pointer, "schema is not an object");
       return undefined;
     }
+    const schemaPointer = `${pointer}/content/application~1json/schema`;
+    if (schema["type"] === "array") {
+      if (schema["nullable"] === true) {
+        this.add(
+          "openapi.nullable.position",
+          schemaPointer,
+          "an array operation output cannot be nullable",
+        );
+        return undefined;
+      }
+      const itemsPointer = `${schemaPointer}/items`;
+      const items = schema["items"];
+      const target = isJsonObject(items) ? this.refTarget(items) : undefined;
+      if (target === undefined || !this.structComponents.has(target)) {
+        this.add(
+          "openapi.response.success",
+          itemsPointer,
+          "array success items must be a $ref to an object-shaped component schema; extract the item shape into components.schemas via a patch",
+        );
+        return undefined;
+      }
+      const component = this.componentSchemas.get(target);
+      if (isJsonObject(component) && component["nullable"] === true) {
+        this.add(
+          "openapi.nullable.position",
+          itemsPointer,
+          `array success item schema ${JSON.stringify(target)} declares nullable: true, which is not representable as an operation output`,
+        );
+        return undefined;
+      }
+      return {
+        kind: "array",
+        item: { kind: "named-ref", name: target },
+      };
+    }
     const target = this.refTarget(schema);
     if (target === undefined || !this.structComponents.has(target)) {
       this.add(
         "openapi.response.success",
-        `${pointer}/content/application~1json/schema`,
+        schemaPointer,
         "success schemas must be a $ref to an object-shaped component schema; name the shape in components.schemas (via a patch when the spec inlines it)",
       );
       return undefined;
@@ -1269,12 +1308,12 @@ class Normalizer {
     if (isJsonObject(component) && component["nullable"] === true) {
       this.add(
         "openapi.nullable.position",
-        `${pointer}/content/application~1json/schema`,
+        schemaPointer,
         `success schema ${JSON.stringify(target)} declares nullable: true, which is not representable as an operation output`,
       );
       return undefined;
     }
-    return target;
+    return { kind: "named-ref", name: target };
   }
 
   /**
@@ -1439,6 +1478,14 @@ class Normalizer {
     if (pagination.mode !== "cursor") return undefined;
     if (!queryParams.includes(pagination.cursorParam)) return undefined;
     const construct = `operation ${qualified} pagination`;
+    if (output.kind === "array") {
+      this.add(
+        "pagination.detect",
+        construct,
+        "array output cannot use cursor pagination; cursor pagination requires a struct envelope",
+      );
+      return undefined;
+    }
     if (output.kind !== "named-ref") {
       this.add(
         "pagination.detect",

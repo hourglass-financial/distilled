@@ -59,6 +59,31 @@ const patchSpec = (
   return draft;
 };
 
+interface NorthstarGet {
+  readonly parameters: Array<JsonObject>;
+  readonly responses: Record<string, JsonObject>;
+}
+
+const northstarGet = (draft: JsonObject): NorthstarGet =>
+  (
+    (draft["paths"] as JsonObject)["/widgets/{id}"] as unknown as {
+      get: NorthstarGet;
+    }
+  ).get;
+
+const setNorthstarSuccessSchema = (
+  draft: JsonObject,
+  schema: JsonValue,
+): NorthstarGet => {
+  const get = northstarGet(draft);
+  (
+    (get.responses["200"]!["content"] as JsonObject)["application/json"] as {
+      schema: JsonValue;
+    }
+  ).schema = schema;
+  return get;
+};
+
 interface ErrorTableMember {
   description?: string;
   properties: { code: { const: string } };
@@ -316,6 +341,109 @@ describe("OpenAPI frontend normalization", () => {
       () => normalize(spec, northstarConfig),
       "openapi.response.success",
       "~1widgets~1{id}/get/responses/200",
+    );
+  });
+
+  it("normalizes an inline array of a named struct success schema", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      setNorthstarSuccessSchema(draft, {
+        type: "array",
+        items: { $ref: "#/components/schemas/Widget" },
+      });
+    });
+
+    const operation = normalize(spec, northstarConfig).resources[0]!
+      .operations[0]!;
+    expect(operation.output).toEqual({
+      kind: "array",
+      item: { kind: "named-ref", name: "Widget" },
+    });
+  });
+
+  it.each([
+    [
+      "inline",
+      {
+        type: "object",
+        properties: { id: { type: "string" } },
+      },
+    ],
+    [
+      "nested array",
+      {
+        type: "array",
+        items: { $ref: "#/components/schemas/Widget" },
+      },
+    ],
+  ])(
+    "hard-errors on %s array success items, naming the items pointer",
+    (_name, items) => {
+      const spec = patchSpec(northstarSpec, (draft) => {
+        setNorthstarSuccessSchema(draft, {
+          type: "array",
+          items,
+        });
+      });
+
+      expectViolation(
+        () => normalize(spec, northstarConfig),
+        "openapi.response.success",
+        "~1widgets~1{id}/get/responses/200/content/application~1json/schema/items",
+      );
+    },
+  );
+
+  it("keeps array-shaped component success refs unsupported", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      const components = draft["components"] as {
+        schemas: Record<string, JsonObject>;
+      };
+      components.schemas["WidgetList"] = {
+        type: "array",
+        description: "A list of widgets.",
+        items: { $ref: "#/components/schemas/Widget" },
+      };
+      setNorthstarSuccessSchema(draft, {
+        $ref: "#/components/schemas/WidgetList",
+      });
+    });
+
+    expectViolation(
+      () => normalize(spec, northstarConfig),
+      "openapi.response.success",
+      "~1widgets~1{id}/get/responses/200/content/application~1json/schema",
+    );
+  });
+
+  it("rejects cursor pagination on an array success output", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      const get = setNorthstarSuccessSchema(draft, {
+        type: "array",
+        items: { $ref: "#/components/schemas/Widget" },
+      });
+      get.parameters.push({
+        name: "after",
+        in: "query",
+        required: false,
+        schema: { type: "string" },
+      });
+    });
+    const config = {
+      ...(northstarConfig as JsonObject),
+      pagination: {
+        mode: "cursor",
+        cursorParam: "after",
+        clearParams: [],
+        nextCursorPath: ["meta", "after"],
+        itemsPath: ["data"],
+      },
+    };
+
+    expectViolation(
+      () => normalize(spec, config),
+      "pagination.detect",
+      "operation widgets.get pagination",
+      "array output cannot use cursor pagination; cursor pagination requires a struct envelope",
     );
   });
 

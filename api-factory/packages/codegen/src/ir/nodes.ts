@@ -74,6 +74,11 @@ export interface NamedRefNode {
   readonly name: string;
 }
 
+/** A closed operation output for a top-level array of named structs. */
+export interface OutputArrayNode extends ArrayNode {
+  readonly item: NamedRefNode;
+}
+
 export type SchemaNode =
   | StringNode
   | BooleanNode
@@ -109,6 +114,11 @@ export const FieldIrSchema: Schema.Codec<FieldIr> = Schema.suspend(
 export const NamedRefNodeSchema: Schema.Codec<NamedRefNode> = Schema.Struct({
   kind: Schema.Literal("named-ref"),
   name: Schema.String,
+});
+
+export const OutputArraySchema: Schema.Codec<OutputArrayNode> = Schema.Struct({
+  kind: Schema.Literal("array"),
+  item: NamedRefNodeSchema,
 });
 
 export const VoidNodeSchema: Schema.Codec<VoidNode> = Schema.Struct({

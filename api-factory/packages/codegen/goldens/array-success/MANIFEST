@@ -1,0 +1,19 @@
+{
+  "generator": "@hourglass-financial/api-factory-codegen",
+  "provenance": {
+    "engineVersion": "0.0.0"
+  },
+  "files": {
+    "package.json": "sha256-735424ef42da12b809aac1a6e2001e7d043a4ad4bb87b258ab9f9ac0fef2c8d3",
+    "src/client.ts": "sha256-9026ec0afa7c5d0d176f9baa56468dae2e8910e27a8c4734dbd2ffd857a140c1",
+    "src/config.ts": "sha256-ce6772438335a3916c9b70219db6ea8a74ef8ba577ded8014092d027d68ac2b5",
+    "src/errors.ts": "sha256-1d19917e9953af2d2c4a92d9d448ed6f31d7214dbdf174d221d0f569b284cbdd",
+    "src/index.ts": "sha256-d9d71ed2d7518eba08721cc465e7a5fbfeda29ea139a5dd29ff0302376b9a6c7",
+    "src/registry.ts": "sha256-854cd74d6ba217d58c70a867e90c1daec208c877d7a32b6e4123add9f0fb51d5",
+    "src/resources/identities.ts": "sha256-56196ca81e6febf79b5775d18c25f7a77e877dd1128b18a4596095d8f76164bd",
+    "src/schemas.ts": "sha256-30d4ee5a1347430d069e8f921a1641cc42e0f5a1c295d9d62eb2a2daedace76f",
+    "test/errors.test.ts": "sha256-4a0e7ac4d4201e625edeb39a13381a5a1d228be6c943968db61f3a253c402fa3",
+    "tsconfig.json": "sha256-0662e0b731f66baa20e6b3f3ae3b4cefee95893041c4f930b694f81cc52fc881",
+    "tsconfig.test.json": "sha256-cb07f6be7bf6fcc56b0cc5ed500b58736e8605937e8666a78b7d20a4a626cadc"
+  }
+}

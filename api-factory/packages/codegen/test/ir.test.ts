@@ -383,6 +383,36 @@ describe("checkInvariants", () => {
     );
   });
 
+  it("rejects pagination on an array output", () => {
+    const ir = paginatedIr();
+    const arrayOutput: OperationIr["output"] = {
+      kind: "array",
+      item: { kind: "named-ref", name: "Widget" },
+    };
+    const error = invariantError({
+      ...ir,
+      resources: [
+        {
+          ...ir.resources[0]!,
+          operations: [
+            operation({
+              ...ir.resources[0]!.operations[0]!,
+              output: arrayOutput,
+            }),
+          ],
+        },
+      ],
+    });
+
+    expect(error.violations).toContainEqual(
+      expect.objectContaining({
+        rule: "pagination.output",
+        message:
+          "array output cannot be paginated; cursor pagination requires a struct envelope",
+      }),
+    );
+  });
+
   it("rejects an invalid identifier", () => {
     const ir = baseIr();
     expectConstruct(
@@ -936,6 +966,37 @@ describe("canonicalize", () => {
 });
 
 describe("IR JSON", () => {
+  it("round-trips an array output whose item is a named reference", () => {
+    const value = structuredClone(baseIr()) as unknown as {
+      resources: Array<{
+        operations: Array<{ output: unknown }>;
+      }>;
+    };
+    value.resources[0]!.operations[0]!.output = {
+      kind: "array",
+      item: { kind: "named-ref", name: "Widget" },
+    };
+
+    expect(decodeIr(JSON.parse(dumpIr(decodeIr(value))))).toEqual(value);
+  });
+
+  it.each([
+    ["primitive", { kind: "string" }],
+    [
+      "nested array",
+      { kind: "array", item: { kind: "named-ref", name: "Widget" } },
+    ],
+  ])("rejects an array output with a %s item", (_name, item) => {
+    const value = structuredClone(baseIr()) as unknown as {
+      resources: Array<{
+        operations: Array<{ output: unknown }>;
+      }>;
+    };
+    value.resources[0]!.operations[0]!.output = { kind: "array", item };
+
+    expect(() => decodeIr(value)).toThrow(CodegenError);
+  });
+
   it.each([
     ["property leaf", { kind: "json" }],
     ["array item", { kind: "array", item: { kind: "json" } }],

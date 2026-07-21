@@ -1,3 +1,4 @@
+import { arraySuccessFixture } from "./array-success.ts";
 import { errorsRichFixture } from "./errors-rich.ts";
 import { envelopeVariantsFixture } from "./envelope-variants.ts";
 import { minimalFixture } from "./minimal.ts";
@@ -9,6 +10,7 @@ import { schemaKindsFixture } from "./schema-kinds.ts";
 import { workosFixture } from "./workos.ts";
 
 export const fixtures = {
+  "array-success": arraySuccessFixture,
   minimal: minimalFixture,
   "schema-kinds": schemaKindsFixture,
   pagination: paginationFixture,

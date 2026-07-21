@@ -7,6 +7,7 @@ import { emitResources } from "../src/emit/resources.ts";
 import { emitField } from "../src/emit/schemas.ts";
 import { generate, type Formatter } from "../src/index.ts";
 import { errorsRichFixture } from "./fixtures/errors-rich.ts";
+import { arraySuccessFixture } from "./fixtures/array-success.ts";
 import { fixtures } from "./fixtures/index.ts";
 import { minimalFixture } from "./fixtures/minimal.ts";
 import { paginationFixture } from "./fixtures/pagination.ts";
@@ -105,6 +106,14 @@ describe("reviewed exemplar conventions", () => {
     expect(resource).toContain(
       "/** Stream every satellite across every page. */",
     );
+  });
+
+  it("emits an array output schema and readonly array result type", () => {
+    const resource = emitResources(arraySuccessFixture)[0]!.contents;
+
+    expect(resource).toContain("Schema.$Array<typeof Identity>");
+    expect(resource).toContain("output: Schema.Array(Identity),");
+    expect(resource).toContain("Effect.Effect<ReadonlyArray<Identity>,");
   });
 
   it("names the resolved vendor coverage location", () => {
