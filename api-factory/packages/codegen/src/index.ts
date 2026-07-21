@@ -13,10 +13,103 @@ export {
   ignoredVerifyTopLevel,
   type Formatter,
   type GenerateOptions,
+  type GenerateProvenance,
   type VerifyResult,
   verifyAgainstDir,
 } from "./pipeline.ts";
 export type { EmittedFile } from "./emit/shared.ts";
+export type { ManifestProvenance } from "./emit/manifest.ts";
+export {
+  type OperationNamingOverride,
+  type VendorConfig,
+  type VendorConfigMetaName,
+  VendorConfigSchema,
+} from "./ir/vendor-config.ts";
+export {
+  buildVendorIr,
+  buildVendorIrFrom,
+  type FrontendProvenance,
+  type PatchMode,
+  type VendorBuild,
+} from "./frontends/openapi/frontend.ts";
+export { normalizeOpenApi } from "./frontends/openapi/normalize.ts";
+export {
+  applyPatchesReconciling,
+  applyPatchesStrict,
+  decodePatchEntry,
+  entryTargetPointers,
+  evaluateEntry,
+  type PatchBlastRadius,
+  type PatchClassification,
+  type PatchEntry,
+  PatchEntrySchema,
+  type PatchEvaluation,
+  type PatchKind,
+  type PatchPrecondition,
+  type PatchProvenance,
+  type PatchReconciliation,
+  type PatchReportEntry,
+  type PatchTargetRole,
+  type RawPatchOp,
+} from "./frontends/openapi/patches.ts";
+export {
+  auditAttestation,
+  type AttestationResult,
+  CONFIG_FILE,
+  decodeProvenance,
+  decodeVendorConfig,
+  loadVendorDir,
+  PATCHES_DIR,
+  PROVENANCE_FILE,
+  type ProvenanceRecord,
+  ProvenanceSchema,
+  sha256,
+  SPEC_FILE,
+  type VendorDir,
+} from "./frontends/openapi/vendor-dir.ts";
+export {
+  acquire,
+  type AcquireOptions,
+  type AcquisitionResult,
+} from "./frontends/openapi/acquisition.ts";
+export {
+  auditPatchLocality,
+  auditPatchLocalityFrom,
+  type PatchLocalityEntryResult,
+  type PatchLocalityOptions,
+  type PatchLocalityResult,
+} from "./frontends/openapi/audit.ts";
+export {
+  diffSpecs,
+  type SpecDiff,
+  type SpecDiffChange,
+  type SpecDiffClassification,
+  type SpecDiffEntry,
+} from "./frontends/openapi/spec-diff.ts";
+export {
+  applyEdit,
+  deepEqual,
+  escapeSegment,
+  formatPointer,
+  getAtPointer,
+  type JsonEdit,
+  JsonEditError,
+  type JsonObject,
+  type JsonValue,
+  parsePointer,
+  printJson,
+} from "./frontends/openapi/json.ts";
+export {
+  deriveOperationNames,
+  deriveRawResource,
+  type DerivedOperationNames,
+  humanizeWords,
+  kebabWords,
+  type NamingContext,
+  pascalWords,
+  singularizeWord,
+  splitWords,
+} from "./frontends/openapi/naming.ts";
 export {
   type ClientIr,
   ClientIrSchema,

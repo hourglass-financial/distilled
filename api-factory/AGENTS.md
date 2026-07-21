@@ -213,10 +213,14 @@ then `bun run typecheck | build | lint | fmt | check | test`. No
 `--passWithNoTests` — a zero-test package fails. See `README.md` for the
 table.
 
-Decided but landing with their implementing tickets: the codegen CLI
-(`generate`, `--emit-ir`, `verify` = hermetic regen + empty byte-diff), the
-attestation / patch-locality / coverage audit commands, and per-vendor
-acquisition commands.
+The codegen CLI (`packages/codegen/src/cli.ts`, run with bun) carries the
+machine commands: `generate | --emit-ir | verify` (each takes `--ir
+<file.json>` or `--vendor <dir>`; `verify` = hermetic regen + empty
+byte-diff), `acquire` (writes the machine-locked snapshot + provenance),
+`audit-attestation`, `audit-patches` (blast-radius symmetry), and
+`spec-diff` — audits are deterministic JSON-out with exit 2 on failure.
+`generate --vendor … --reconcile <report.json>` is the spec-sync workflow's
+reconciliation mode. The coverage audit lands with its implementing ticket.
 
 ## Decision records and vocabulary
 

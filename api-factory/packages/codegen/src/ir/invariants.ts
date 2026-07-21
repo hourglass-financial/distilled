@@ -14,7 +14,7 @@ const identifierPattern =
 const fileNamePattern =
   /^[$_\p{ID_Start}](?:[$_\p{ID_Continue}]|\u{200c}|\u{200d})*(?:-[$_\p{ID_Start}](?:[$_\p{ID_Continue}]|\u{200c}|\u{200d})*)*\.ts$/u;
 
-const reservedWords = new Set([
+export const reservedWords: ReadonlySet<string> = new Set([
   "await",
   "arguments",
   "break",
@@ -190,6 +190,36 @@ const isStringRecordKey = (node: SchemaNode): boolean => {
 };
 
 const nodeKey = (node: SchemaNode): string => JSON.stringify(node);
+
+/** Direct named-ref names within one node tree (not through other schemas). */
+const collectNodeRefs = (node: SchemaNode, refs: Set<string>): void => {
+  switch (node.kind) {
+    case "array":
+      collectNodeRefs(node.item, refs);
+      return;
+    case "struct":
+      for (const field of node.fields) collectNodeRefs(field.schema, refs);
+      return;
+    case "record":
+      collectNodeRefs(node.key, refs);
+      collectNodeRefs(node.value, refs);
+      return;
+    case "union":
+      for (const member of node.members) collectNodeRefs(member, refs);
+      return;
+    case "named-ref":
+      refs.add(node.name);
+      return;
+    case "string":
+    case "boolean":
+    case "number":
+    case "literal":
+    case "literals":
+    case "secret":
+    case "void":
+      return;
+  }
+};
 
 const visitNode = (
   node: SchemaNode,
@@ -880,6 +910,38 @@ export const checkInvariants = (ir: ClientIr): void => {
         }
       }
       checkOperation(operation, resource.name, schemas, errorNames, violations);
+    }
+    // The resource module imports every referenced schema (from schemas.ts)
+    // and every referenced error class (errors.ts / core). An import whose
+    // symbol equals a declared binding emits a non-compiling module, so the
+    // collision is a hard error demanding a naming override.
+    const importedSymbols = new Map<string, string>();
+    for (const operation of resource.operations) {
+      const refs = new Set<string>();
+      collectNodeRefs(operation.input, refs);
+      collectNodeRefs(operation.output, refs);
+      if (operation.pagination !== undefined) {
+        refs.add(operation.pagination.pageSchema.name);
+        refs.add(operation.pagination.itemSchema.name);
+      }
+      for (const ref of refs) {
+        if (!importedSymbols.has(ref)) importedSymbols.set(ref, "schema");
+      }
+      for (const error of operation.errors) {
+        if (!importedSymbols.has(error))
+          importedSymbols.set(error, "error class");
+      }
+    }
+    for (const [symbol, kind] of importedSymbols) {
+      const declaration = declarations.get(symbol);
+      if (declaration !== undefined) {
+        add(
+          violations,
+          "identifier.import-collision",
+          declaration,
+          `${JSON.stringify(symbol)} collides with the imported ${kind} of the same name`,
+        );
+      }
     }
   }
 
