@@ -31,6 +31,20 @@ const audit = (
     ...options,
   });
 
+const normalizeWithConstruct = (rule: string, construct: string) =>
+  ((document, config) => {
+    try {
+      return normalizeOpenApi(document, config);
+    } catch (cause) {
+      if (!(cause instanceof CodegenError)) throw cause;
+      throw new CodegenError(
+        cause.violations.map((violation) =>
+          violation.rule === rule ? { ...violation, construct } : violation,
+        ),
+      );
+    }
+  }) satisfies NonNullable<PatchLocalityOptions["normalize"]>;
+
 const blockedSpec = (): JsonObject => {
   const spec = JSON.parse(JSON.stringify(northstarSpec)) as JsonObject;
   const schemas = (spec["components"] as JsonObject)["schemas"] as Record<
@@ -135,6 +149,48 @@ const repairPatches = (
   ),
 });
 
+const repairPatchesWithConstruct = (
+  spec: JsonObject,
+  construct: string,
+): Record<string, JsonValue> => {
+  const patches = repairPatches(spec);
+  patches["010-flatten-widget.patch.json"] = patchEntry(
+    "010-flatten-widget",
+    {
+      kind: "allof-flatten",
+      target: "/components/schemas/Widget/properties/labels",
+      precondition: {
+        pointer: "/components/schemas/Widget/properties/labels",
+        test: allOfBefore(spec),
+      },
+    },
+    {
+      blastRadius: {
+        role: "response",
+        clears: [{ rule: "openapi.schema.allof", construct }],
+      },
+    },
+  );
+  return patches;
+};
+
+const auditRepairWithConstruct = (construct: string) => {
+  const dir = temp();
+  try {
+    const spec = blockedSpec();
+    writeVendorDir(dir, {
+      spec,
+      config: northstarConfig,
+      patches: repairPatchesWithConstruct(spec, construct),
+    });
+    return audit(dir, {
+      normalize: normalizeWithConstruct("openapi.schema.allof", construct),
+    }).entries[0]!;
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+};
+
 describe("patch-locality repair mode", () => {
   it("audits a mixed repair-to-diff sequence, reports exposed violations, and memoizes prefixes", () => {
     const dir = temp();
@@ -216,6 +272,7 @@ describe("patch-locality repair mode", () => {
       );
       writeVendorDir(dir, { spec, config: northstarConfig, patches });
       const result = audit(dir);
+      expect(result.ok).toBe(false);
       expect(result.entries[0]!.missingClears).toEqual([duplicate]);
       expect(result.entries[0]!.unexpectedClears).toEqual([]);
 
@@ -243,10 +300,93 @@ describe("patch-locality repair mode", () => {
       );
       writeVendorDir(dir, { spec, config: northstarConfig, patches });
       const undeclared = audit(dir);
+      expect(undeclared.ok).toBe(false);
       expect(undeclared.entries[0]!.missingClears).toHaveLength(1);
       expect(undeclared.entries[0]!.unexpectedClears).toEqual([
         expect.objectContaining(duplicate),
       ]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("scopes an annotated violation by its leading JSON pointer", () => {
+    const entry = auditRepairWithConstruct(
+      "/components/schemas/Widget/properties/labels (response labels)",
+    );
+
+    expect(entry.ok).toBe(true);
+    expect(entry.targetScopeViolations).toEqual([]);
+  });
+
+  it.each([
+    ["above", "/components/schemas/Widget/properties"],
+    ["below", "/components/schemas/Widget/properties/labels/allOf/0"],
+  ])(
+    "accepts a construct pointer %s the repair edit target",
+    (_, construct) => {
+      const entry = auditRepairWithConstruct(construct);
+
+      expect(entry.ok).toBe(true);
+      expect(entry.targetScopeViolations).toEqual([]);
+    },
+  );
+
+  it("exempts non-pointer violation constructs from target scoping", () => {
+    const entry = auditRepairWithConstruct(
+      "operation widgets.get constantBody.grant_type",
+    );
+
+    expect(entry.ok).toBe(true);
+    expect(entry.targetScopeViolations).toEqual([]);
+  });
+
+  it("ignores config-rule flaps while auditing repair clears", () => {
+    const dir = temp();
+    try {
+      const spec = blockedSpec();
+      writeVendorDir(dir, {
+        spec,
+        config: northstarConfig,
+        patches: repairPatches(spec),
+      });
+
+      const result = audit(dir, {
+        normalize: (document, config) => {
+          try {
+            return normalizeOpenApi(document, config);
+          } catch (cause) {
+            if (!(cause instanceof CodegenError)) throw cause;
+            const hasAllOfViolation = cause.violations.some(
+              ({ rule }) => rule === "openapi.schema.allof",
+            );
+            throw new CodegenError([
+              ...cause.violations,
+              ...(hasAllOfViolation
+                ? [
+                    {
+                      rule: "config.schema-override.unknown",
+                      construct: "schemas.ExtractedLabels",
+                      message: "no emitted named schema has this name yet",
+                    },
+                  ]
+                : []),
+            ]);
+          }
+        },
+      });
+
+      expect(result.entries[0]!.ok).toBe(true);
+      expect(result.entries[0]!.declaredClears).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ rule: expect.stringMatching(/^config\./) }),
+        ]),
+      );
+      expect(result.entries[0]!.actualClears).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ rule: expect.stringMatching(/^config\./) }),
+        ]),
+      );
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

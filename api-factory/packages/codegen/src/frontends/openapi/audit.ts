@@ -432,6 +432,10 @@ type PrefixNormalization =
 const violationKey = (violation: PatchViolationIdentity): string =>
   JSON.stringify([violation.rule, violation.construct]);
 
+const isRepairAccountingViolation = (
+  violation: PatchViolationIdentity,
+): boolean => !violation.rule.startsWith("config.");
+
 const multisetDifference = <T extends PatchViolationIdentity>(
   left: ReadonlyArray<T>,
   right: ReadonlyArray<PatchViolationIdentity>,
@@ -466,6 +470,9 @@ const pointerHasPrefix = (pointer: string, prefix: string): boolean => {
   }
 };
 
+const leadingConstructPointer = (construct: string): string | undefined =>
+  construct.startsWith("/") ? construct.split(/\s/, 1)[0] : undefined;
+
 const repairTargetScopeViolations = (
   entry: PatchEntry,
   clears: ReadonlyArray<PatchViolationIdentity>,
@@ -473,7 +480,14 @@ const repairTargetScopeViolations = (
   entryTargetPointers(entry)
     .filter(
       (pointer) =>
-        !clears.some((clear) => pointerHasPrefix(pointer, clear.construct)),
+        !clears.some((clear) => {
+          const constructPointer = leadingConstructPointer(clear.construct);
+          return (
+            constructPointer === undefined ||
+            pointerHasPrefix(pointer, constructPointer) ||
+            pointerHasPrefix(constructPointer, pointer)
+          );
+        }),
     )
     .map(
       (pointer) =>
@@ -597,11 +611,18 @@ export const auditPatchLocalityFrom = (
           "expectedFiles/operations are diff-mode-only, but the baseline prefix does not normalize",
         );
       }
-      const afterViolations = after.normalizable ? [] : after.violations;
-      actualClears = multisetDifference(before.violations, afterViolations);
-      exposed = multisetDifference(afterViolations, before.violations);
+      const beforeViolations = before.violations.filter(
+        isRepairAccountingViolation,
+      );
+      const afterViolations = (
+        after.normalizable ? [] : after.violations
+      ).filter(isRepairAccountingViolation);
+      actualClears = multisetDifference(beforeViolations, afterViolations);
+      exposed = multisetDifference(afterViolations, beforeViolations);
       if (repairDeclaration) {
-        declaredClears = entry.blastRadius.clears;
+        declaredClears = entry.blastRadius.clears.filter(
+          isRepairAccountingViolation,
+        );
         missingClears = multisetDifference(declaredClears, actualClears);
         unexpectedClears = multisetDifference(actualClears, declaredClears);
         targetScopeViolations = repairTargetScopeViolations(
