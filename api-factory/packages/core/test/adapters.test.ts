@@ -54,11 +54,21 @@ class DecodeTestError extends Schema.TaggedErrorClass<DecodeTestError>()(
   readonly [MetaKey] = Meta.parse;
 }
 
+// Canonical retryable classification (WorkOS `slow_down` shape) — legal.
 class RetryableCodeError extends Schema.TaggedErrorClass<RetryableCodeError>()(
   "RetryableCodeError",
   { message: Schema.String, code: Schema.Literal("retryable_code") },
 ) {
-  readonly [MetaKey] = Meta.server;
+  readonly [MetaKey] = Meta.throttling;
+}
+
+// Structurally identical to Meta.server but NOT the singleton — the closed
+// vocabulary is identity-checked, so a hand-rolled pairing is counterfeit.
+class CounterfeitMetaError extends Schema.TaggedErrorClass<CounterfeitMetaError>()(
+  "CounterfeitMetaError",
+  { message: Schema.String, code: Schema.Literal("counterfeit_code") },
+) {
+  readonly [MetaKey] = { category: "server", retry: "transient" } as const;
 }
 
 const errorClasses = {
@@ -310,7 +320,7 @@ describe("checkMatcherConsistency", () => {
     ).toContain("universal error Unauthorized is not present in statusErrors");
   });
 
-  it("reports retryable code errors and unclassified status errors", () => {
+  it("accepts canonical retryable code classifications and rejects counterfeit metas", () => {
     class UnclassifiedError extends Error {
       readonly _tag = "UnclassifiedError";
     }
@@ -318,7 +328,10 @@ describe("checkMatcherConsistency", () => {
       statusErrors: {
         400: UnclassifiedError as unknown as ClassifiedErrorClass,
       },
-      codeErrors: { retryable_code: RetryableCodeError },
+      codeErrors: {
+        retryable_code: RetryableCodeError,
+        counterfeit_code: CounterfeitMetaError,
+      },
       universalErrors: [],
       ...errorClasses,
     });
@@ -326,7 +339,10 @@ describe("checkMatcherConsistency", () => {
       "status 400 maps to UnclassifiedError, which does not produce a classified instance",
     );
     expect(violations).toContain(
-      'code "retryable_code" maps to RetryableCodeError with retry "transient"; expected "none"',
+      'code "counterfeit_code" maps to CounterfeitMetaError whose classification is not a canonical Meta value',
+    );
+    expect(violations).not.toContainEqual(
+      expect.stringContaining("retryable_code"),
     );
   });
 });

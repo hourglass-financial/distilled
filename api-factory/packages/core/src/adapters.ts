@@ -5,7 +5,7 @@
 import * as Redacted from "effect/Redacted";
 import type { SchemaError } from "effect/SchemaError";
 import type * as HttpClientError from "effect/unstable/http/HttpClientError";
-import { isTransportError, metaOf, type ErrorMeta } from "./category.ts";
+import { isTransportError, Meta, metaOf, type ErrorMeta } from "./category.ts";
 import type { ErrorEnvelope, MatchErrorConfig, RunnerDeps } from "./client.ts";
 import type { ClassifiedErrorClass } from "./errors.ts";
 import {
@@ -184,10 +184,15 @@ export const checkMatcherConsistency = (
         `code ${JSON.stringify(code)} maps to ${className(Cls)}, which did not preserve the message`,
       );
     }
-    const retry = metaOf(instance)?.retry;
-    if (retry !== "none") {
+    // A code class's classification must be one of the canonical `Meta.*`
+    // singletons — identity, not shape, so the closed category↔retry pairing
+    // (ADR-0005; the exotic-pairing hatch is shut) cannot be counterfeited by
+    // a hand-rolled `{ category, retry }` object.
+    const meta = metaOf(instance);
+    const canonical: ReadonlyArray<ErrorMeta> = Object.values(Meta);
+    if (meta === undefined || !canonical.includes(meta)) {
       violations.push(
-        `code ${JSON.stringify(code)} maps to ${className(Cls)} with retry ${JSON.stringify(retry)}; expected "none"`,
+        `code ${JSON.stringify(code)} maps to ${className(Cls)} whose classification is not a canonical Meta value`,
       );
     }
   }
