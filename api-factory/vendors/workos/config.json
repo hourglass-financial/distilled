@@ -1742,7 +1742,7 @@
       "docs": "Fetch a single page of organizations."
     },
     "userManagement.authenticateWithPassword": {
-      "docs": "Authenticate a user with an email and password (the `password` grant).\n\n`client_secret` and `password` are `Redacted<string>` — wrap plaintext with\n`Redacted.make(...)`. On success, `access_token`/`refresh_token` are likewise\n`Redacted<string>`. Failures discriminate: `InvalidCredentials`,\n`MfaEnrollment`, `EmailVerificationRequired`, `OrganizationSelectionRequired`,\n`InvalidGrant`, and so on — never a single opaque `BadRequest`."
+      "docs": "Authenticate a user with an email and password (the `password` grant).\n\n`client_secret` and `password` are `Redacted<string>` — wrap plaintext with\n`Redacted.make(...)`. On success, `access_token`/`refresh_token` are likewise\n`Redacted<string>`. Failures discriminate: `InvalidCredentials`,\n`MfaEnrollment`, `EmailVerificationRequired`, `OrganizationSelectionRequired`,\nand so on — never a single opaque `BadRequest`."
     }
   }
 }

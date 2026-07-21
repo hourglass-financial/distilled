@@ -1,0 +1,85 @@
+{
+  "kind": "raw",
+  "ops": [
+    {
+      "op": "add",
+      "path": "/components/schemas/OAuthTokens",
+      "value": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "description": "The OAuth provider used for authentication.",
+            "example": "GoogleOAuth"
+          },
+          "refresh_token": {
+            "type": "string",
+            "description": "The refresh token from the OAuth provider.",
+            "example": "1//04g..."
+          },
+          "access_token": {
+            "type": "string",
+            "description": "The access token from the OAuth provider.",
+            "example": "ya29.a0ARrdaM..."
+          },
+          "expires_at": {
+            "type": "integer",
+            "description": "The timestamp at which the access token expires.",
+            "example": 1735141800
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "A list of OAuth scopes for which the access token is authorized.",
+            "example": [
+              "profile",
+              "email",
+              "openid"
+            ]
+          }
+        },
+        "required": [
+          "provider",
+          "refresh_token",
+          "access_token",
+          "expires_at",
+          "scopes"
+        ],
+        "description": "The OAuth tokens from the identity provider, if applicable."
+      }
+    },
+    {
+      "op": "replace",
+      "path": "/components/schemas/UserlandAuthenticateResponse/properties/oauth_tokens",
+      "value": {
+        "$ref": "#/components/schemas/OAuthTokens"
+      }
+    }
+  ],
+  "rationale": "The identity-provider OAuth token payload on the authenticate response is a coherent named concept the spec leaves inline; naming it OAuthTokens matches the design-approved exemplar and gives the token fields a single home for sensitive marking.",
+  "precondition": {
+    "pointer": "/components/schemas/OAuthTokens",
+    "absent": true
+  },
+  "blastRadius": {
+    "role": "response",
+    "operations": [
+      "userManagement.authenticateWithPassword"
+    ],
+    "expectedFiles": [
+      "src/schemas.ts"
+    ]
+  },
+  "provenance": {
+    "evidenceType": "vendor-docs-citation",
+    "url": "https://workos.com/docs/reference/user-management/authentication",
+    "fetchedAt": "2026-07-21",
+    "observed": "The authenticate response's oauth_tokens object is the provider OAuth token payload.",
+    "specd": "The payload is a named OAuthTokens component referenced from the response schema.",
+    "authoredAgainstSpecHash": "sha256-e2d7b0f947f5e7c4c212dbd460957264df4d7a3018d30bde5c03d79997614664",
+    "reporter": "ticket-50-onboarding"
+  },
+  "id": "820-extract-oauth-tokens"
+}
