@@ -6,7 +6,7 @@
  *   - auth scheme / error envelope shape → the generator's vendor profile
  *   - request execution, retry, error gating, envelope decode, failure wrapping → @hourglass-financial/api-factory-core
  *
- * Every operation flows through the single `WorkosClient.run`, assembled here
+ * Every operation flows through the single `EnvelopeVariantsClient.run`, assembled here
  * from one core `makeRunner` + `makeMatchError` pair. The service is the only
  * thing a consumer wires; everything else is a tree-shakeable operation import.
  */
@@ -32,33 +32,33 @@ import { Credentials, credentialsFromEnv } from "./config.ts";
 import {
   CODE_ERRORS,
   DEFAULT_ERRORS,
+  EnvelopeVariantsDecodeError,
+  type EnvelopeVariantsExtraError,
+  EnvelopeVariantsTransportError,
   STATUS_ERRORS,
-  UnknownWorkosError,
-  WorkosDecodeError,
-  type WorkosExtraError,
-  WorkosTransportError,
+  UnknownEnvelopeVariantsError,
 } from "./errors.ts";
 
 // ---------------------------------------------------------------------------
 // Error envelope + matcher
 // ---------------------------------------------------------------------------
 
-const adapters = makeVendorAdapters<WorkosExtraError>({
-  UnknownError: UnknownWorkosError,
-  TransportError: WorkosTransportError,
-  DecodeError: WorkosDecodeError,
+const adapters = makeVendorAdapters<EnvelopeVariantsExtraError>({
+  UnknownError: UnknownEnvelopeVariantsError,
+  TransportError: EnvelopeVariantsTransportError,
+  DecodeError: EnvelopeVariantsDecodeError,
 });
 
-const matchError = makeMatchError<WorkosExtraError>({
+const matchError = makeMatchError<EnvelopeVariantsExtraError>({
   /**
-   * Normalize WorkOS's two error envelopes into one shape. `code` and the
+   * Normalize Envelope Variants's two error envelopes into one shape. `code` and the
    * OAuth-style `error` collapse to a single discriminator; `message` prefers the
    * human field of whichever envelope is present.
    */
   decodeEnvelope: makeEnvelopeDecoder({
     messageFields: ["message", "error_description", "error"],
-    discriminatorFields: ["code", "error"],
-    stringBodyIsMessage: true,
+    discriminatorFields: ["error-code"],
+    stringBodyIsMessage: false,
   }),
   statusErrors: STATUS_ERRORS,
   codeErrors: CODE_ERRORS,
@@ -72,27 +72,29 @@ const matchError = makeMatchError<WorkosExtraError>({
 // ---------------------------------------------------------------------------
 
 /**
- * The full, honest error channel of a WorkOS operation: its own declared typed
+ * The full, honest error channel of a Envelope Variants operation: its own declared typed
  * errors plus the universal defaults, `Unknown*` fallback, and transport/decode
  * wrappers. Every generated operation annotates its result with this.
  */
-export type WorkosError<EC extends readonly ClassifiedErrorClass[]> =
+export type EnvelopeVariantsError<EC extends readonly ClassifiedErrorClass[]> =
   | InstanceType<EC[number]>
-  | WorkosExtraError;
+  | EnvelopeVariantsExtraError;
 
-/** The single request runner every WorkOS operation is dispatched through. */
-export interface WorkosClientShape {
-  readonly run: Runner<WorkosExtraError>;
+/** The single request runner every Envelope Variants operation is dispatched through. */
+export interface EnvelopeVariantsClientShape {
+  readonly run: Runner<EnvelopeVariantsExtraError>;
 }
 
-/** Context service exposing the WorkOS request runner. */
-export class WorkosClient extends Context.Service<
-  WorkosClient,
-  WorkosClientShape
->()("@hourglass-financial/api-factory-workos/WorkosClient") {}
+/** Context service exposing the Envelope Variants request runner. */
+export class EnvelopeVariantsClient extends Context.Service<
+  EnvelopeVariantsClient,
+  EnvelopeVariantsClientShape
+>()(
+  "@hourglass-financial/api-factory-envelope-variants/EnvelopeVariantsClient",
+) {}
 
 /** Options for building the client layer. */
-export interface WorkosClientOptions {
+export interface EnvelopeVariantsClientOptions {
   /** Retry policy applied to every call. Defaults to core's transient policy. */
   readonly retry?: Retry.RetryPolicy;
 }
@@ -103,14 +105,14 @@ export interface WorkosClientOptions {
  * retry policy.
  */
 export const layerWith = (
-  options: WorkosClientOptions = {},
-): Layer.Layer<WorkosClient, never, HttpClient | Credentials> =>
+  options: EnvelopeVariantsClientOptions = {},
+): Layer.Layer<EnvelopeVariantsClient, never, HttpClient | Credentials> =>
   Layer.effect(
-    WorkosClient,
+    EnvelopeVariantsClient,
     Effect.gen(function* () {
       const http = yield* HttpClient;
       const { apiKey, baseUrl } = yield* Credentials;
-      const run = makeRunner<WorkosExtraError>({
+      const run = makeRunner<EnvelopeVariantsExtraError>({
         http,
         apiKey,
         baseUrl,
@@ -119,13 +121,16 @@ export const layerWith = (
         toTransport: adapters.toTransport,
         toDecode: adapters.toDecode,
       });
-      return WorkosClient.of({ run });
+      return EnvelopeVariantsClient.of({ run });
     }),
   );
 
 /** Client layer with the default retry policy, over injected deps. */
-export const layer: Layer.Layer<WorkosClient, never, HttpClient | Credentials> =
-  layerWith();
+export const layer: Layer.Layer<
+  EnvelopeVariantsClient,
+  never,
+  HttpClient | Credentials
+> = layerWith();
 
 /**
  * Batteries-included layer: the default retry policy, `fetch` transport, and
@@ -148,5 +153,8 @@ export const run = <
 >(
   op: Operation<IS, OS, EC>,
   input: IS["Type"],
-): Effect.Effect<OS["Type"], WorkosError<EC>, WorkosClient> =>
-  Effect.flatMap(WorkosClient, (client) => client.run(op, input));
+): Effect.Effect<
+  OS["Type"],
+  EnvelopeVariantsError<EC>,
+  EnvelopeVariantsClient
+> => Effect.flatMap(EnvelopeVariantsClient, (client) => client.run(op, input));

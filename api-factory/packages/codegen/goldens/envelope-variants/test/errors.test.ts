@@ -3,22 +3,22 @@
  *
  * This file is machine-owned; hand edits are overwritten on regeneration.
  * Change the source of truth instead:
- *   - error codes / tables → the Northstar OpenAPI spec + generator mapping
+ *   - error codes / tables → the Envelope Variants OpenAPI spec + generator mapping
  *
  * Table-driven consistency checks emitted alongside the client, so the
  * machine-owned package always carries a real test suite: every matcher-table
  * entry must be a classified error class, and every code-mapped class must
- * accept its own wire code. Behavioral coverage lives in `vendors/northstar`.
+ * accept its own wire code. Behavioral coverage lives in `vendors/envelope-variants`.
  */
 import { checkMatcherConsistency } from "@hourglass-financial/api-factory-core";
 import { describe, expect, it } from "vitest";
 import {
   CODE_ERRORS,
   DEFAULT_ERRORS,
-  NorthstarDecodeError,
-  NorthstarTransportError,
+  EnvelopeVariantsDecodeError,
+  EnvelopeVariantsTransportError,
   STATUS_ERRORS,
-  UnknownNorthstarError,
+  UnknownEnvelopeVariantsError,
 } from "../src/errors.ts";
 
 describe("matcher tables", () => {
@@ -28,9 +28,9 @@ describe("matcher tables", () => {
         statusErrors: STATUS_ERRORS,
         codeErrors: CODE_ERRORS,
         universalErrors: DEFAULT_ERRORS,
-        UnknownError: UnknownNorthstarError,
-        TransportError: NorthstarTransportError,
-        DecodeError: NorthstarDecodeError,
+        UnknownError: UnknownEnvelopeVariantsError,
+        TransportError: EnvelopeVariantsTransportError,
+        DecodeError: EnvelopeVariantsDecodeError,
       }),
     ).toEqual([]);
   });

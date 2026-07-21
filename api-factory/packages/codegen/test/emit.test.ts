@@ -68,7 +68,7 @@ describe("reviewed exemplar conventions", () => {
     }
   });
 
-  it("emits envelope access and documentation from resolved IR data", () => {
+  it("emits envelope factory data and documentation from resolved IR data", () => {
     const client = emitClient({
       ...minimalFixture,
       envelope: {
@@ -80,10 +80,10 @@ describe("reviewed exemplar conventions", () => {
     expect(client).toContain(
       "/** Resolved envelope documentation from the IR. */",
     );
-    expect(client).toContain(
-      'const discriminator = asString(record.code) ?? asString(record["error-code"]);',
-    );
-    expect(client).not.toContain("?? undefined;");
+    expect(client).toContain('discriminatorFields: ["code", "error-code"],');
+    expect(client).toContain("decodeEnvelope: makeEnvelopeDecoder({");
+    expect(client).not.toContain("const asString");
+    expect(client).not.toContain("const decodeEnvelope");
   });
 
   it("emits the code-error title and prose inside one section rule", () => {

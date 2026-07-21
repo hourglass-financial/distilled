@@ -5,15 +5,15 @@
   },
   "files": {
     "package.json": "sha256-2eb42a03860873bac06e3d0ffce51bc618a1d30ab0569e7a670be9419439467f",
-    "src/client.ts": "sha256-c6a9a82df1e1286cab4938966f8d972d022529fb1b99f13ce1fb5de14dd62c54",
-    "src/config.ts": "sha256-add51854a30eb7ce4e0fb1488ed8790af2dc780206fbbe651ef17962e69db532",
+    "src/client.ts": "sha256-f895978dd8d85501637b4bf926fdce2f2b0d911eb94d778a8d8e74cb04fbbd6d",
+    "src/config.ts": "sha256-4ba2d368100a51620efd6f46a0afc59ace6e2d12a2b720c892bd7725c0feb3ce",
     "src/errors.ts": "sha256-2013a158210099c948f0ddbed81eaf656111285f45a44ec2b19b18563c5851bd",
     "src/index.ts": "sha256-5cd3a7e91c9c8fc49212577d502fb5950ef61ee4af21b2efaa61a945544dfa24",
     "src/registry.ts": "sha256-a7a762f4f3da46ada72cd0d01517a31a9696f20dd631b10f4e4e4c5a16ca926d",
     "src/resources/accounts.ts": "sha256-2274fe71e8f73be1207f77d2cea2ad880d6a8ce1b4f01399ae10b7952d4d73c9",
     "src/resources/zones.ts": "sha256-39f9db65ac6dbe3737f599b21eef68bfafb2cf4679c1849dff8510db53b9feef",
     "src/schemas.ts": "sha256-f22ad1f9833802e07597dab1694733268ea21c84411fc56a08b2a6863a71ae3b",
-    "test/errors.test.ts": "sha256-17326f33e69164d335f006ae3a86f6c9d546efbda5ab546aec85cba602033727",
+    "test/errors.test.ts": "sha256-78ae7e92cab547f454a174cb7990d3f3a3a168a6f2f38d4c3761eecead05f31c",
     "tsconfig.json": "sha256-0662e0b731f66baa20e6b3f3ae3b4cefee95893041c4f930b694f81cc52fc881",
     "tsconfig.test.json": "sha256-cb07f6be7bf6fcc56b0cc5ed500b58736e8605937e8666a78b7d20a4a626cadc"
   }

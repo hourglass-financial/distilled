@@ -17,30 +17,31 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import type * as Redacted from "effect/Redacted";
 
-/** WorkOS production API base URL. Override with `WORKOS_API_URL`. */
-export const DEFAULT_BASE_URL = "https://api.workos.com";
+/** Envelope Variants production API base URL. Override with `ENVELOPE_VARIANTS_API_URL`. */
+export const DEFAULT_BASE_URL = "https://api.envelope-variants.example";
 
-/** Resolved WorkOS credentials. The API key stays `Redacted` end to end. */
-export interface WorkosConfig {
+/** Resolved Envelope Variants credentials. The API key stays `Redacted` end to end. */
+export interface EnvelopeVariantsConfig {
   readonly apiKey: Redacted.Redacted<string>;
   readonly baseUrl: string;
 }
 
-/** Context service carrying the resolved WorkOS credentials. */
-export class Credentials extends Context.Service<Credentials, WorkosConfig>()(
-  "@hourglass-financial/api-factory-workos/Credentials",
-) {}
+/** Context service carrying the resolved Envelope Variants credentials. */
+export class Credentials extends Context.Service<
+  Credentials,
+  EnvelopeVariantsConfig
+>()("@hourglass-financial/api-factory-envelope-variants/Credentials") {}
 
-/** Reads `WORKOS_API_KEY` (redacted) and optional `WORKOS_API_URL` from env. */
-export const config: Config.Config<WorkosConfig> = credentialsConfig({
-  apiKeyVar: "WORKOS_API_KEY",
-  baseUrlVar: "WORKOS_API_URL",
+/** Reads `ENVELOPE_VARIANTS_API_KEY` (redacted) and optional `ENVELOPE_VARIANTS_API_URL` from env. */
+export const config: Config.Config<EnvelopeVariantsConfig> = credentialsConfig({
+  apiKeyVar: "ENVELOPE_VARIANTS_API_KEY",
+  baseUrlVar: "ENVELOPE_VARIANTS_API_URL",
   defaultBaseUrl: DEFAULT_BASE_URL,
 });
 
 /**
  * Credentials from the environment. Fails with a typed {@link ConfigError} when
- * `WORKOS_API_KEY` is absent — the caller learns exactly what is missing rather
+ * `ENVELOPE_VARIANTS_API_KEY` is absent — the caller learns exactly what is missing rather
  * than getting an opaque defect.
  */
 export const credentialsFromEnv: Layer.Layer<Credentials, ConfigError> =
@@ -48,14 +49,16 @@ export const credentialsFromEnv: Layer.Layer<Credentials, ConfigError> =
     Credentials,
     credentialsFromEnvEffect(
       {
-        apiKeyVar: "WORKOS_API_KEY",
-        baseUrlVar: "WORKOS_API_URL",
+        apiKeyVar: "ENVELOPE_VARIANTS_API_KEY",
+        baseUrlVar: "ENVELOPE_VARIANTS_API_URL",
         defaultBaseUrl: DEFAULT_BASE_URL,
       },
-      "WorkOS credentials are not configured (set WORKOS_API_KEY).",
+      "Envelope Variants credentials are not configured.",
     ).pipe(Effect.map(Credentials.of)),
   );
 
 /** Credentials from explicit values — useful for tests and multi-tenant hosts. */
-export const credentialsOf = (values: WorkosConfig): Layer.Layer<Credentials> =>
+export const credentialsOf = (
+  values: EnvelopeVariantsConfig,
+): Layer.Layer<Credentials> =>
   Layer.succeed(Credentials, Credentials.of(values));

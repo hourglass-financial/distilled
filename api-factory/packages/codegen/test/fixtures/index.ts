@@ -1,4 +1,5 @@
 import { errorsRichFixture } from "./errors-rich.ts";
+import { envelopeVariantsFixture } from "./envelope-variants.ts";
 import { minimalFixture } from "./minimal.ts";
 import { multiResourceFixture } from "./multi-resource.ts";
 import { paginationFixture } from "./pagination.ts";
@@ -12,4 +13,5 @@ export const fixtures = {
   "errors-rich": errorsRichFixture,
   "rename-export": renameExportFixture,
   "multi-resource": multiResourceFixture,
+  "envelope-variants": envelopeVariantsFixture,
 } as const;

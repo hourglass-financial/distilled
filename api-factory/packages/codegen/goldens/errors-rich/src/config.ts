@@ -4,10 +4,14 @@
  * This file is machine-owned; hand edits are overwritten on regeneration.
  * Change the source of truth instead:
  *   - auth scheme / base URL / env var names → the generator's vendor profile
- *   - config primitives → effect's `Config` / `ConfigProvider`
+ *   - credentials assembly → @hourglass-financial/api-factory-core
  */
-import { ConfigError } from "@hourglass-financial/api-factory-core";
-import * as Config from "effect/Config";
+import {
+  ConfigError,
+  credentialsConfig,
+  credentialsFromEnvEffect,
+} from "@hourglass-financial/api-factory-core";
+import type * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -28,11 +32,10 @@ export class Credentials extends Context.Service<Credentials, BastionConfig>()(
 ) {}
 
 /** Reads `BASTION_API_KEY` (redacted) and optional `BASTION_API_URL` from env. */
-export const config: Config.Config<BastionConfig> = Config.all({
-  apiKey: Config.redacted("BASTION_API_KEY"),
-  baseUrl: Config.string("BASTION_API_URL").pipe(
-    Config.withDefault(DEFAULT_BASE_URL),
-  ),
+export const config: Config.Config<BastionConfig> = credentialsConfig({
+  apiKeyVar: "BASTION_API_KEY",
+  baseUrlVar: "BASTION_API_URL",
+  defaultBaseUrl: DEFAULT_BASE_URL,
 });
 
 /**
@@ -43,15 +46,14 @@ export const config: Config.Config<BastionConfig> = Config.all({
 export const credentialsFromEnv: Layer.Layer<Credentials, ConfigError> =
   Layer.effect(
     Credentials,
-    config.pipe(
-      Effect.mapError(
-        () =>
-          new ConfigError({
-            message: "Bastion credentials are not configured.",
-          }),
-      ),
-      Effect.map(Credentials.of),
-    ),
+    credentialsFromEnvEffect(
+      {
+        apiKeyVar: "BASTION_API_KEY",
+        baseUrlVar: "BASTION_API_URL",
+        defaultBaseUrl: DEFAULT_BASE_URL,
+      },
+      "Bastion credentials are not configured.",
+    ).pipe(Effect.map(Credentials.of)),
   );
 
 /** Credentials from explicit values — useful for tests and multi-tenant hosts. */
