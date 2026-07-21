@@ -59,6 +59,7 @@ const checkBlastRadiusDeclarations = (
   );
   const violations: CodegenViolation[] = [];
   for (const entry of entries) {
+    if (!("expectedFiles" in entry.blastRadius)) continue;
     const construct = `patch ${entry.id}`;
     if (
       isComponentTargeted(entry) &&

@@ -51,6 +51,7 @@ export {
   type PatchReconciliation,
   type PatchReportEntry,
   type PatchTargetRole,
+  type PatchViolationIdentity,
   type RawPatchOp,
 } from "./frontends/openapi/patches.ts";
 export {

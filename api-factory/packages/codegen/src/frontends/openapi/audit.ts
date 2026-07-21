@@ -1,6 +1,7 @@
 import type { EmittedFile } from "../../emit/shared.ts";
 import type { ClientIr, NamedSchemaIr, OperationIr } from "../../ir/model.ts";
 import type { SchemaNode } from "../../ir/nodes.ts";
+import type { VendorConfig } from "../../ir/vendor-config.ts";
 import { generate, type GenerateOptions } from "../../pipeline.ts";
 import { normalizeOpenApi } from "./normalize.ts";
 import type { JsonValue } from "./json.ts";
@@ -9,6 +10,7 @@ import {
   entryTargetPointers,
   type PatchEntry,
   type PatchTargetRole,
+  type PatchViolationIdentity,
 } from "./patches.ts";
 import {
   auditAttestation,
@@ -16,7 +18,7 @@ import {
   type VendorDir,
 } from "./vendor-dir.ts";
 import { parsePointer } from "./json.ts";
-import { CodegenError } from "../../errors.ts";
+import { CodegenError, type CodegenViolation } from "../../errors.ts";
 
 /**
  * The patch-locality audit (#29, #27 gate 3): every entry's declared blast
@@ -31,16 +33,15 @@ import { CodegenError } from "../../errors.ts";
  * The MANIFEST is excluded from the comparison: it changes with any byte by
  * construction and carries no locality signal.
  *
- * Known constraint: the incremental diff requires every patch prefix
- * (including the raw snapshot) to normalize. An entry that exists to repair
- * a normalization-blocking construct has no diffable baseline — the audit
- * then fails with the normalizer's own violations naming the construct. If
- * a real vendor needs blocker-repairing patches audited, the gate grows a
- * reviewed capability for it; it does not silently skip the entry.
+ * Prefixes that do not normalize select repair mode: the entry must declare
+ * the exact multiset of `{ rule, construct }` violations it clears, and every
+ * edit target must be scoped under one of those constructs. Newly exposed
+ * violations are reported for the next entry without failing the current one.
  */
 
 export interface PatchLocalityEntryResult {
   readonly id: string;
+  readonly mode: "diff" | "repair";
   readonly role: PatchTargetRole;
   readonly declaredFiles: ReadonlyArray<string>;
   readonly actualFiles: ReadonlyArray<string>;
@@ -53,6 +54,13 @@ export interface PatchLocalityEntryResult {
   readonly missingOperations: ReadonlyArray<string>;
   readonly unexpectedOperations: ReadonlyArray<string>;
   readonly roleViolations: ReadonlyArray<string>;
+  readonly declarationViolations: ReadonlyArray<string>;
+  readonly declaredClears: ReadonlyArray<PatchViolationIdentity>;
+  readonly actualClears: ReadonlyArray<CodegenViolation>;
+  readonly missingClears: ReadonlyArray<PatchViolationIdentity>;
+  readonly unexpectedClears: ReadonlyArray<CodegenViolation>;
+  readonly exposed: ReadonlyArray<CodegenViolation>;
+  readonly targetScopeViolations: ReadonlyArray<string>;
   /** The entry was authored against a different snapshot than the current one. */
   readonly staleAuthorship: boolean;
   readonly ok: boolean;
@@ -405,7 +413,71 @@ const setDifference = (
 
 export interface PatchLocalityOptions {
   readonly generateOptions?: GenerateOptions;
+  /** Test seam for proving each prefix is normalized at most once. */
+  readonly normalize?: (document: JsonValue, config: VendorConfig) => ClientIr;
 }
+
+type PrefixNormalization =
+  | {
+      readonly normalizable: true;
+      readonly ir: ClientIr;
+      readonly files: ReadonlyArray<EmittedFile>;
+    }
+  | {
+      readonly normalizable: false;
+      readonly violations: ReadonlyArray<CodegenViolation>;
+    };
+
+const violationKey = (violation: PatchViolationIdentity): string =>
+  JSON.stringify([violation.rule, violation.construct]);
+
+const multisetDifference = <T extends PatchViolationIdentity>(
+  left: ReadonlyArray<T>,
+  right: ReadonlyArray<PatchViolationIdentity>,
+): ReadonlyArray<T> => {
+  const remaining = new Map<string, number>();
+  for (const violation of right) {
+    const key = violationKey(violation);
+    remaining.set(key, (remaining.get(key) ?? 0) + 1);
+  }
+  const difference: T[] = [];
+  for (const violation of left) {
+    const key = violationKey(violation);
+    const count = remaining.get(key) ?? 0;
+    if (count === 0) difference.push(violation);
+    else remaining.set(key, count - 1);
+  }
+  return difference;
+};
+
+const pointerHasPrefix = (pointer: string, prefix: string): boolean => {
+  try {
+    const pointerSegments = parsePointer(pointer);
+    const prefixSegments = parsePointer(prefix);
+    return (
+      prefixSegments.length <= pointerSegments.length &&
+      prefixSegments.every(
+        (segment, index) => segment === pointerSegments[index],
+      )
+    );
+  } catch {
+    return false;
+  }
+};
+
+const repairTargetScopeViolations = (
+  entry: PatchEntry,
+  clears: ReadonlyArray<PatchViolationIdentity>,
+): ReadonlyArray<string> =>
+  entryTargetPointers(entry)
+    .filter(
+      (pointer) =>
+        !clears.some((clear) => pointerHasPrefix(pointer, clear.construct)),
+    )
+    .map(
+      (pointer) =>
+        `edit target ${JSON.stringify(pointer)} is outside every construct declared in clears`,
+    );
 
 /** Run the locality audit for an already-loaded vendor tree. */
 export const auditPatchLocalityFrom = (
@@ -413,65 +485,153 @@ export const auditPatchLocalityFrom = (
   options: PatchLocalityOptions = {},
 ): PatchLocalityResult => {
   const generateOptions = options.generateOptions ?? {};
+  const normalize = options.normalize ?? normalizeOpenApi;
+  const prefixNormalizations = new Map<number, PrefixNormalization>();
+  const normalizePrefix = (
+    index: number,
+    document: JsonValue,
+  ): PrefixNormalization => {
+    const cached = prefixNormalizations.get(index);
+    if (cached !== undefined) return cached;
+    let ir: ClientIr;
+    try {
+      ir = normalize(document, vendor.config);
+    } catch (cause) {
+      if (!(cause instanceof CodegenError)) throw cause;
+      const outcome: PrefixNormalization = {
+        normalizable: false,
+        violations: cause.violations,
+      };
+      prefixNormalizations.set(index, outcome);
+      return outcome;
+    }
+    const outcome: PrefixNormalization = {
+      normalizable: true,
+      ir,
+      files: generate(ir as unknown, generateOptions),
+    };
+    prefixNormalizations.set(index, outcome);
+    return outcome;
+  };
+
   let document: JsonValue = vendor.spec;
-  let ir = normalizeOpenApi(document, vendor.config);
-  let files = generate(ir as unknown, generateOptions);
 
   const entries: PatchLocalityEntryResult[] = [];
-  for (const entry of vendor.patches) {
+  for (const [index, entry] of vendor.patches.entries()) {
+    const before = normalizePrefix(index, document);
     const nextDocument = applyPatchesStrict(document, [entry]);
-    const nextIr = normalizeOpenApi(nextDocument, vendor.config);
-    const nextFiles = generate(nextIr as unknown, generateOptions);
+    const after = normalizePrefix(index + 1, nextDocument);
+    const mode = before.normalizable ? "diff" : "repair";
+    const declarationViolations: string[] = [];
+    const repairDeclaration = "clears" in entry.blastRadius;
 
-    const actualFiles = changedFiles(files, nextFiles);
-    const declaredFiles = [...entry.blastRadius.expectedFiles]
-      .filter((path) => path !== "MANIFEST")
-      .sort(compare);
-    const diff = diffIr(ir, nextIr);
+    let declaredFiles: ReadonlyArray<string> = [];
+    let actualFiles: ReadonlyArray<string> = [];
+    let missingFiles: ReadonlyArray<string> = [];
+    let unexpectedFiles: ReadonlyArray<string> = [];
+    let declaredOperations: ReadonlyArray<string> = [];
+    let actualOperations: ReadonlyArray<string> = [];
+    let missingOperations: ReadonlyArray<string> = [];
+    let unexpectedOperations: ReadonlyArray<string> = [];
+    const roleViolations: string[] = [];
+    let declaredClears: ReadonlyArray<PatchViolationIdentity> = [];
+    let actualClears: ReadonlyArray<CodegenViolation> = [];
+    let missingClears: ReadonlyArray<PatchViolationIdentity> = [];
+    let unexpectedClears: ReadonlyArray<CodegenViolation> = [];
+    let exposed: ReadonlyArray<CodegenViolation> = [];
+    let targetScopeViolations: ReadonlyArray<string> = [];
 
-    const derived = deriveOperations(entry, ir, nextIr);
-    const declaredOperations =
-      entry.blastRadius.operations !== undefined
-        ? [...entry.blastRadius.operations].sort(compare)
-        : (derived ?? []);
-
-    const roleViolations: string[] = [...diff.notes];
-    for (const facet of diff.facets) {
-      if (facet !== entry.blastRadius.role) {
-        roleViolations.push(
-          `regeneration changed the ${facet} facet, but the declared role is ${JSON.stringify(entry.blastRadius.role)}`,
+    if (before.normalizable) {
+      if (repairDeclaration) {
+        declarationViolations.push(
+          "clears is repair-mode-only, but the baseline prefix normalizes",
         );
       }
+      if (!after.normalizable) {
+        declarationViolations.push(
+          "a diff-mode entry made the next prefix non-normalizable",
+        );
+        exposed = after.violations;
+      } else {
+        const diff = diffIr(before.ir, after.ir);
+        actualFiles = changedFiles(before.files, after.files);
+        actualOperations = diff.operations;
+        roleViolations.push(...diff.notes);
+        for (const facet of diff.facets) {
+          if (facet !== entry.blastRadius.role) {
+            roleViolations.push(
+              `regeneration changed the ${facet} facet, but the declared role is ${JSON.stringify(entry.blastRadius.role)}`,
+            );
+          }
+        }
+        if (actualFiles.length === 0) {
+          roleViolations.push(
+            "the entry has no regeneration effect; remove it or fix its target",
+          );
+        }
+        if (!repairDeclaration) {
+          declaredFiles = [...entry.blastRadius.expectedFiles]
+            .filter((path) => path !== "MANIFEST")
+            .sort(compare);
+          const derived = deriveOperations(entry, before.ir, after.ir);
+          declaredOperations =
+            entry.blastRadius.operations !== undefined
+              ? [...entry.blastRadius.operations].sort(compare)
+              : (derived ?? []);
+          missingFiles = setDifference(declaredFiles, actualFiles);
+          unexpectedFiles = setDifference(actualFiles, declaredFiles);
+          missingOperations = setDifference(
+            declaredOperations,
+            actualOperations,
+          );
+          unexpectedOperations = setDifference(
+            actualOperations,
+            declaredOperations,
+          );
+        }
+      }
+    } else {
+      if (!repairDeclaration) {
+        declarationViolations.push(
+          "expectedFiles/operations are diff-mode-only, but the baseline prefix does not normalize",
+        );
+      }
+      const afterViolations = after.normalizable ? [] : after.violations;
+      actualClears = multisetDifference(before.violations, afterViolations);
+      exposed = multisetDifference(afterViolations, before.violations);
+      if (repairDeclaration) {
+        declaredClears = entry.blastRadius.clears;
+        missingClears = multisetDifference(declaredClears, actualClears);
+        unexpectedClears = multisetDifference(actualClears, declaredClears);
+        targetScopeViolations = repairTargetScopeViolations(
+          entry,
+          declaredClears,
+        );
+      } else {
+        unexpectedClears = actualClears;
+      }
     }
-    if (actualFiles.length === 0) {
-      roleViolations.push(
-        "the entry has no regeneration effect; remove it or fix its target",
-      );
-    }
-
-    const missingFiles = setDifference(declaredFiles, actualFiles);
-    const unexpectedFiles = setDifference(actualFiles, declaredFiles);
-    const missingOperations = setDifference(
-      declaredOperations,
-      diff.operations,
-    );
-    const unexpectedOperations = setDifference(
-      diff.operations,
-      declaredOperations,
-    );
 
     entries.push({
       id: entry.id,
+      mode,
       role: entry.blastRadius.role,
       declaredFiles,
       actualFiles,
       missingFiles,
       unexpectedFiles,
       declaredOperations,
-      actualOperations: diff.operations,
+      actualOperations,
       missingOperations,
       unexpectedOperations,
       roleViolations,
+      declarationViolations,
+      declaredClears,
+      actualClears,
+      missingClears,
+      unexpectedClears,
+      exposed,
+      targetScopeViolations,
       staleAuthorship:
         entry.provenance.authoredAgainstSpecHash !== vendor.specHash,
       ok:
@@ -479,12 +639,14 @@ export const auditPatchLocalityFrom = (
         unexpectedFiles.length === 0 &&
         missingOperations.length === 0 &&
         unexpectedOperations.length === 0 &&
-        roleViolations.length === 0,
+        roleViolations.length === 0 &&
+        declarationViolations.length === 0 &&
+        missingClears.length === 0 &&
+        unexpectedClears.length === 0 &&
+        targetScopeViolations.length === 0,
     });
 
     document = nextDocument;
-    ir = nextIr;
-    files = nextFiles;
   }
 
   return {

@@ -46,6 +46,7 @@ const document: JsonValue = {
 };
 
 const decode = (raw: JsonValue) => decodePatchEntry(raw, "test");
+type MutableJsonObject = Record<string, JsonValue>;
 
 describe("patch kinds — single-semantics evaluation", () => {
   it("injects an error response and refuses double-application", () => {
@@ -347,5 +348,410 @@ describe("patch application modes", () => {
     expect(
       getAtPointer(report.document, "/paths/~1things/post/responses/409"),
     ).toEqual({ description: "Conflict." });
+  });
+});
+
+const structuralDocument: JsonValue = {
+  ...document,
+  paths: {
+    "/things": {
+      post: {
+        operationId: "createThing",
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: { name: { type: "string" } },
+                required: ["name"],
+              },
+            },
+          },
+        },
+        responses: { "200": { description: "ok" } },
+      },
+    },
+  },
+  components: {
+    schemas: {
+      Free: { type: "object", description: "Labels by name." },
+      Patterned: {
+        type: "object",
+        patternProperties: { "^x-": { type: "string" } },
+      },
+      Choice: {
+        description: "The upstream alternatives.",
+        oneOf: [
+          {
+            type: "object",
+            properties: { id: { type: "string" } },
+            required: ["id"],
+          },
+          {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              audience: { type: "string" },
+            },
+            required: ["id"],
+          },
+        ],
+      },
+      Composite: {
+        description: "The flattened object.",
+        allOf: [
+          {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              shared: { type: "boolean" },
+            },
+            required: ["id", "shared"],
+          },
+          {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              shared: { type: "boolean" },
+            },
+            required: ["shared", "name"],
+          },
+        ],
+      },
+    },
+  },
+};
+
+const structuralEntry = (
+  id: string,
+  fields: JsonObject,
+  target: string,
+  before: JsonValue,
+) =>
+  decode(
+    patchEntry(id, {
+      ...fields,
+      precondition: { pointer: target, test: before },
+    }),
+  );
+
+describe("inline-extract", () => {
+  const target =
+    "/paths/~1things/post/requestBody/content/application~1json/schema";
+  const before = getAtPointer(structuralDocument, target)!;
+  const entry = () =>
+    structuralEntry(
+      "020-inline",
+      { kind: "inline-extract", target, componentName: "CreateThingInput" },
+      target,
+      before,
+    );
+
+  it("extracts an allowed inline schema verbatim and reconstructs its redundant post-state", () => {
+    const applied = evaluateEntry(structuralDocument, entry());
+    expect(applied.classification).toBe("still_needed");
+    expect(getAtPointer(applied.result!, target)).toEqual({
+      $ref: "#/components/schemas/CreateThingInput",
+    });
+    expect(
+      getAtPointer(applied.result!, "/components/schemas/CreateThingInput"),
+    ).toEqual(before);
+    expect(evaluateEntry(applied.result!, entry()).classification).toBe(
+      "redundant",
+    );
+  });
+
+  it("classifies an absent target as stale", () => {
+    expect(
+      evaluateEntry(
+        structuralDocument,
+        structuralEntry(
+          "021-inline-stale",
+          {
+            kind: "inline-extract",
+            target:
+              "/paths/~1missing/post/requestBody/content/application~1json/schema",
+            componentName: "MissingInput",
+          },
+          "/paths/~1missing/post/requestBody/content/application~1json/schema",
+          before,
+        ),
+      ).classification,
+    ).toBe("stale");
+  });
+
+  it("rejects a conflicting component name", () => {
+    const conflicted = JSON.parse(
+      JSON.stringify(structuralDocument),
+    ) as JsonObject;
+    ((conflicted["components"] as JsonObject)["schemas"] as MutableJsonObject)[
+      "CreateThingInput"
+    ] = { type: "string" };
+    expect(evaluateEntry(conflicted, entry()).classification).toBe("conflict");
+  });
+
+  it("rejects a $ref carrying sibling keys", () => {
+    const conflicted = JSON.parse(
+      JSON.stringify(structuralDocument),
+    ) as JsonObject;
+    (
+      ((conflicted["paths"] as JsonObject)["/things"] as JsonObject)[
+        "post"
+      ] as MutableJsonObject
+    )["requestBody"] = {
+      content: {
+        "application/json": {
+          schema: {
+            $ref: "#/components/schemas/Thing",
+            description: "A forbidden sibling.",
+          },
+        },
+      },
+    };
+    expect(evaluateEntry(conflicted, entry()).classification).toBe(
+      "unsupported",
+    );
+  });
+
+  it("uses the mandatory precondition to reject changed inline input", () => {
+    const changed = JSON.parse(
+      JSON.stringify(structuralDocument),
+    ) as JsonObject;
+    const schema = getAtPointer(changed, target) as MutableJsonObject;
+    schema["required"] = [];
+    expect(evaluateEntry(changed, entry()).classification).toBe("conflict");
+  });
+});
+
+describe("union-collapse", () => {
+  const target = "/components/schemas/Choice";
+  const before = getAtPointer(structuralDocument, target)!;
+  const entry = (keep = 1) =>
+    structuralEntry(
+      "030-union",
+      { kind: "union-collapse", target, keep },
+      target,
+      before,
+    );
+
+  it("keeps one union member verbatim and discards host prose", () => {
+    const applied = evaluateEntry(structuralDocument, entry());
+    expect(applied.classification).toBe("still_needed");
+    expect(getAtPointer(applied.result!, target)).toEqual(
+      ((before as JsonObject)["oneOf"] as ReadonlyArray<JsonValue>)[1],
+    );
+    expect(evaluateEntry(applied.result!, entry()).classification).toBe(
+      "redundant",
+    );
+  });
+
+  it("classifies an absent target as stale", () => {
+    const stale = structuralEntry(
+      "031-union-stale",
+      {
+        kind: "union-collapse",
+        target: "/components/schemas/Missing",
+        keep: 0,
+      },
+      "/components/schemas/Missing",
+      before,
+    );
+    expect(evaluateEntry(structuralDocument, stale).classification).toBe(
+      "stale",
+    );
+  });
+
+  it("rejects an out-of-range kept-member index", () => {
+    expect(evaluateEntry(structuralDocument, entry(2)).classification).toBe(
+      "unsupported",
+    );
+  });
+
+  it("rejects union hosts with sibling shape keywords", () => {
+    const changed = JSON.parse(
+      JSON.stringify(structuralDocument),
+    ) as JsonObject;
+    (getAtPointer(changed, target) as MutableJsonObject)["type"] = "object";
+    expect(evaluateEntry(changed, entry()).classification).toBe("unsupported");
+  });
+
+  it("uses the mandatory precondition to detect changed union members", () => {
+    const changed = JSON.parse(
+      JSON.stringify(structuralDocument),
+    ) as JsonObject;
+    const union = (getAtPointer(changed, target) as JsonObject)[
+      "oneOf"
+    ] as MutableJsonObject[];
+    union[1]!["required"] = ["id", "audience"];
+    expect(evaluateEntry(changed, entry()).classification).toBe("conflict");
+  });
+});
+
+describe("allof-flatten", () => {
+  const target = "/components/schemas/Composite";
+  const before = getAtPointer(structuralDocument, target)!;
+  const entry = () =>
+    structuralEntry(
+      "040-allof",
+      { kind: "allof-flatten", target },
+      target,
+      before,
+    );
+
+  it("merges inline object members left-to-right", () => {
+    const applied = evaluateEntry(structuralDocument, entry());
+    expect(applied.classification).toBe("still_needed");
+    expect(getAtPointer(applied.result!, target)).toEqual({
+      type: "object",
+      description: "The flattened object.",
+      properties: {
+        id: { type: "string" },
+        shared: { type: "boolean" },
+        name: { type: "string" },
+      },
+      required: ["id", "shared", "name"],
+    });
+    expect(evaluateEntry(applied.result!, entry()).classification).toBe(
+      "redundant",
+    );
+  });
+
+  it("classifies an absent target as stale", () => {
+    const stale = structuralEntry(
+      "041-allof-stale",
+      { kind: "allof-flatten", target: "/components/schemas/Missing" },
+      "/components/schemas/Missing",
+      before,
+    );
+    expect(evaluateEntry(structuralDocument, stale).classification).toBe(
+      "stale",
+    );
+  });
+
+  it("rejects allOf hosts with sibling shape keywords", () => {
+    const changed = JSON.parse(
+      JSON.stringify(structuralDocument),
+    ) as JsonObject;
+    (getAtPointer(changed, target) as MutableJsonObject)["type"] = "object";
+    expect(evaluateEntry(changed, entry()).classification).toBe("unsupported");
+  });
+
+  it("rejects non-identical property collisions", () => {
+    const changed = JSON.parse(
+      JSON.stringify(structuralDocument),
+    ) as JsonObject;
+    const members = (getAtPointer(changed, target) as JsonObject)[
+      "allOf"
+    ] as MutableJsonObject[];
+    ((members[1]!["properties"] as JsonObject)["shared"] as MutableJsonObject)[
+      "type"
+    ] = "string";
+    const changedEntry = structuralEntry(
+      "042-allof-collision",
+      { kind: "allof-flatten", target },
+      target,
+      getAtPointer(changed, target)!,
+    );
+    expect(evaluateEntry(changed, changedEntry).classification).toBe(
+      "conflict",
+    );
+  });
+
+  it("rejects $ref members", () => {
+    const changed = JSON.parse(
+      JSON.stringify(structuralDocument),
+    ) as JsonObject;
+    (getAtPointer(changed, target) as MutableJsonObject)["allOf"] = [
+      { $ref: "#/components/schemas/Thing" },
+    ];
+    const changedEntry = structuralEntry(
+      "043-allof-ref",
+      { kind: "allof-flatten", target },
+      target,
+      getAtPointer(changed, target)!,
+    );
+    expect(evaluateEntry(changed, changedEntry).classification).toBe(
+      "unsupported",
+    );
+  });
+});
+
+describe("record-shape", () => {
+  const target = "/components/schemas/Free";
+  const before = getAtPointer(structuralDocument, target)!;
+  const entry = () =>
+    structuralEntry(
+      "050-record",
+      { kind: "record-shape", target, valueSchema: { type: "string" } },
+      target,
+      before,
+    );
+
+  it("converts a free-form object to a typed record", () => {
+    const applied = evaluateEntry(structuralDocument, entry());
+    expect(applied.classification).toBe("still_needed");
+    expect(getAtPointer(applied.result!, target)).toEqual({
+      type: "object",
+      description: "Labels by name.",
+      additionalProperties: { type: "string" },
+    });
+    expect(evaluateEntry(applied.result!, entry()).classification).toBe(
+      "redundant",
+    );
+  });
+
+  it("converts patternProperties and removes the pattern map", () => {
+    const patternTarget = "/components/schemas/Patterned";
+    const applied = evaluateEntry(
+      structuralDocument,
+      structuralEntry(
+        "051-record-pattern",
+        {
+          kind: "record-shape",
+          target: patternTarget,
+          valueSchema: { type: "string" },
+        },
+        patternTarget,
+        getAtPointer(structuralDocument, patternTarget)!,
+      ),
+    );
+    expect(applied.classification).toBe("still_needed");
+    expect(getAtPointer(applied.result!, patternTarget)).toEqual({
+      type: "object",
+      additionalProperties: { type: "string" },
+    });
+  });
+
+  it("classifies an absent target as stale", () => {
+    const stale = structuralEntry(
+      "052-record-stale",
+      {
+        kind: "record-shape",
+        target: "/components/schemas/Missing",
+        valueSchema: { type: "string" },
+      },
+      "/components/schemas/Missing",
+      before,
+    );
+    expect(evaluateEntry(structuralDocument, stale).classification).toBe(
+      "stale",
+    );
+  });
+
+  it("rejects record hosts carrying properties siblings", () => {
+    const changed = JSON.parse(
+      JSON.stringify(structuralDocument),
+    ) as JsonObject;
+    (getAtPointer(changed, target) as MutableJsonObject)["properties"] = {};
+    expect(evaluateEntry(changed, entry()).classification).toBe("unsupported");
+  });
+
+  it("uses the mandatory precondition to detect a changed free-form host", () => {
+    const changed = JSON.parse(
+      JSON.stringify(structuralDocument),
+    ) as JsonObject;
+    (getAtPointer(changed, target) as MutableJsonObject)["description"] =
+      "Changed upstream.";
+    expect(evaluateEntry(changed, entry()).classification).toBe("conflict");
   });
 });
