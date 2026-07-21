@@ -12,6 +12,7 @@
 import {
   NotFound,
   type Operation,
+  Secret,
   Unauthorized,
   UnprocessableEntity,
 } from "@hourglass-financial/api-factory-core";
@@ -194,7 +195,7 @@ export const getProfile = (
 
 export const GetProfileAndTokenInput = Schema.Struct({
   client_id: Schema.String,
-  client_secret: Schema.String,
+  client_secret: Secret,
   code: Schema.String,
 });
 export interface GetProfileAndTokenInput extends Schema.Schema.Type<

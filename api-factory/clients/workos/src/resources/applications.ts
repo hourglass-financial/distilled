@@ -63,7 +63,12 @@ const createOp: Operation<
   constantBody: { application_type: "oauth" },
 };
 
-/** Create a new Connect Application. Supports both OAuth and Machine-to-Machine (M2M) application types. */
+/**
+ * Create an OAuth application. The endpoint also accepts Machine-to-Machine
+ * (M2M) applications, but this client currently models the OAuth variant only
+ * (`application_type` is fixed to `"oauth"`); M2M creation is not yet
+ * supported here.
+ */
 export const create = (
   input: CreateApplicationInput,
 ): Effect.Effect<

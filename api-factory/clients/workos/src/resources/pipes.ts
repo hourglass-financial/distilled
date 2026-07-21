@@ -16,6 +16,7 @@ import {
   NotFound,
   type Operation,
   Pagination,
+  Secret,
   Unauthorized,
   UnprocessableEntity,
 } from "@hourglass-financial/api-factory-core";
@@ -28,13 +29,16 @@ import {
   ConnectedAccount,
   CustomProviderDefinitionDto,
   DataIntegration,
-  DataIntegrationAccessTokenResponse,
+  DataIntegrationAccessTokenActiveResponse,
+  DataIntegrationAccessTokenUnavailableResponse,
+  DataIntegrationApiKeyCredentialResponse,
   DataIntegrationAuthorizeUrlResponse,
   DataIntegrationConfigurationListResponse,
   DataIntegrationConfigurationResponse,
   DataIntegrationCredentialsDto,
-  DataIntegrationCredentialsResponse,
+  DataIntegrationCredentialUnavailableResponse,
   DataIntegrationList,
+  DataIntegrationOAuthCredentialResponse,
   UpdateCustomProviderDefinitionDto,
 } from "../schemas.ts";
 
@@ -240,7 +244,12 @@ const getAccessTokenErrors = [
 
 const getAccessTokenOp: Operation<
   typeof GetAccessTokenInput,
-  typeof DataIntegrationAccessTokenResponse,
+  Schema.Union<
+    readonly [
+      typeof DataIntegrationAccessTokenActiveResponse,
+      typeof DataIntegrationAccessTokenUnavailableResponse,
+    ]
+  >,
   typeof getAccessTokenErrors
 > = {
   id: "pipes.getAccessToken",
@@ -250,7 +259,10 @@ const getAccessTokenOp: Operation<
   pathParams: ["slug"],
   queryParams: [],
   input: GetAccessTokenInput,
-  output: DataIntegrationAccessTokenResponse,
+  output: Schema.Union([
+    DataIntegrationAccessTokenActiveResponse,
+    DataIntegrationAccessTokenUnavailableResponse,
+  ]),
   errors: getAccessTokenErrors,
 };
 
@@ -258,7 +270,8 @@ const getAccessTokenOp: Operation<
 export const getAccessToken = (
   input: GetAccessTokenInput,
 ): Effect.Effect<
-  DataIntegrationAccessTokenResponse,
+  | DataIntegrationAccessTokenActiveResponse
+  | DataIntegrationAccessTokenUnavailableResponse,
   WorkosError<typeof getAccessTokenErrors>,
   WorkosClient
 > => run(getAccessTokenOp, input);
@@ -476,7 +489,7 @@ export const UpsertConnectedAccountApiKeyInput = Schema.Struct({
   slug: Schema.String,
   user_id: Schema.String,
   organization_id: Schema.optional(Schema.String),
-  secret: Schema.String,
+  secret: Secret,
 });
 export interface UpsertConnectedAccountApiKeyInput extends Schema.Schema.Type<
   typeof UpsertConnectedAccountApiKeyInput
@@ -532,7 +545,13 @@ const vendCredentialsErrors = [BadRequest, NotFound, Unauthorized] as const;
 
 const vendCredentialsOp: Operation<
   typeof VendCredentialsInput,
-  typeof DataIntegrationCredentialsResponse,
+  Schema.Union<
+    readonly [
+      typeof DataIntegrationOAuthCredentialResponse,
+      typeof DataIntegrationApiKeyCredentialResponse,
+      typeof DataIntegrationCredentialUnavailableResponse,
+    ]
+  >,
   typeof vendCredentialsErrors
 > = {
   id: "pipes.vendCredentials",
@@ -542,7 +561,11 @@ const vendCredentialsOp: Operation<
   pathParams: ["slug"],
   queryParams: [],
   input: VendCredentialsInput,
-  output: DataIntegrationCredentialsResponse,
+  output: Schema.Union([
+    DataIntegrationOAuthCredentialResponse,
+    DataIntegrationApiKeyCredentialResponse,
+    DataIntegrationCredentialUnavailableResponse,
+  ]),
   errors: vendCredentialsErrors,
 };
 
@@ -550,7 +573,9 @@ const vendCredentialsOp: Operation<
 export const vendCredentials = (
   input: VendCredentialsInput,
 ): Effect.Effect<
-  DataIntegrationCredentialsResponse,
+  | DataIntegrationOAuthCredentialResponse
+  | DataIntegrationApiKeyCredentialResponse
+  | DataIntegrationCredentialUnavailableResponse,
   WorkosError<typeof vendCredentialsErrors>,
   WorkosClient
 > => run(vendCredentialsOp, input);

@@ -16,6 +16,7 @@ import {
   NotFound,
   type Operation,
   Pagination,
+  Secret,
   UnprocessableEntity,
 } from "@hourglass-financial/api-factory-core";
 import type * as Effect from "effect/Effect";
@@ -79,7 +80,7 @@ export const createDataKey = (
 export const CreateObjectInput = Schema.Struct({
   key_context: Schema.Record(Schema.String, Schema.String),
   name: Schema.String,
-  value: Schema.String,
+  value: Secret,
 });
 export interface CreateObjectInput extends Schema.Schema.Type<
   typeof CreateObjectInput
@@ -458,7 +459,7 @@ export const rekeyDataKey = (
 
 export const UpdateObjectInput = Schema.Struct({
   id: Schema.String,
-  value: Schema.String,
+  value: Secret,
   version_check: Schema.optional(Schema.NullOr(Schema.String)),
 });
 export interface UpdateObjectInput extends Schema.Schema.Type<

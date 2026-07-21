@@ -160,7 +160,11 @@ const validateCredentialOp: Operation<
   constantBody: { type: "access_token" },
 };
 
-/** Validate an agent credential — an API key or access token — against the environment of the API key used to authenticate the request. This is a read-only check: it never consumes or mutates the credential. */
+/**
+ * Validate an agent credential. This client models access-token credential
+ * validation only; the endpoint's API-key credential variant is not yet
+ * supported.
+ */
 export const validateCredential = (
   input: ValidateCredentialInput,
 ): Effect.Effect<

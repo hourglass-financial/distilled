@@ -60,8 +60,52 @@
   ],
   "rationale": "The identity-provider OAuth token payload on the authenticate response is a coherent named concept the spec leaves inline; naming it OAuthTokens matches the design-approved exemplar and gives the token fields a single home for sensitive marking.",
   "precondition": {
-    "pointer": "/components/schemas/OAuthTokens",
-    "absent": true
+    "pointer": "/components/schemas/UserlandAuthenticateResponse/properties/oauth_tokens",
+    "test": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "description": "The OAuth provider used for authentication.",
+          "example": "GoogleOAuth"
+        },
+        "refresh_token": {
+          "type": "string",
+          "description": "The refresh token from the OAuth provider.",
+          "example": "1//04g..."
+        },
+        "access_token": {
+          "type": "string",
+          "description": "The access token from the OAuth provider.",
+          "example": "ya29.a0ARrdaM..."
+        },
+        "expires_at": {
+          "type": "integer",
+          "description": "The timestamp at which the access token expires.",
+          "example": 1735141800
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "A list of OAuth scopes for which the access token is authorized.",
+          "example": [
+            "profile",
+            "email",
+            "openid"
+          ]
+        }
+      },
+      "required": [
+        "provider",
+        "refresh_token",
+        "access_token",
+        "expires_at",
+        "scopes"
+      ],
+      "description": "The OAuth tokens from the identity provider, if applicable."
+    }
   },
   "blastRadius": {
     "role": "response",

@@ -4,18 +4,38 @@
     {
       "op": "add",
       "path": "/components/schemas/ListMetadata/required",
-      "value": ["after", "before"]
+      "value": [
+        "after",
+        "before"
+      ]
     }
   ],
   "rationale": "The shared ListMetadata cursor envelope declares before/after as optional, but every WorkOS list response carries both cursor pointers on the wire (null at the list boundaries, never absent) - the design-approved exemplar models them as required nullable strings, and cursor pagination demands a required next-cursor leaf. Atomic component fact; affects every operation whose envelope references ListMetadata.",
-  "precondition": { "pointer": "/components/schemas/ListMetadata/required", "absent": true },
+  "precondition": {
+    "pointer": "/components/schemas/ListMetadata/required",
+    "absent": true
+  },
   "blastRadius": {
     "role": "response",
     "clears": [
-      { "rule": "pagination.detect", "construct": "operation userManagement.listUserSessions pagination" },
-      { "rule": "pagination.detect", "construct": "operation vault.listObjects pagination" }
+      {
+        "rule": "pagination.detect",
+        "construct": "operation userManagement.listUserSessions pagination"
+      },
+      {
+        "rule": "pagination.detect",
+        "construct": "operation vault.listObjects pagination"
+      }
     ]
   },
-  "provenance": { "evidenceType": "vendor-docs-citation", "url": "https://workos.com/docs/reference/user-management/session/list", "fetchedAt": "2026-07-21", "observed": "List responses always include list_metadata.before and list_metadata.after, null when there is no page in that direction.", "specd": "The shared ListMetadata component marks both cursor pointers required (still nullable), matching the wire.", "authoredAgainstSpecHash": "sha256-e2d7b0f947f5e7c4c212dbd460957264df4d7a3018d30bde5c03d79997614664", "reporter": "ticket-50-onboarding" },
+  "provenance": {
+    "evidenceType": "vendor-docs-citation",
+    "url": "https://workos.com/docs/reference/pagination",
+    "fetchedAt": "2026-07-21",
+    "observed": "Every WorkOS list response carries list_metadata.before and list_metadata.after cursor pointers, null when there is no page in that direction - the uniform pagination contract across list endpoints.",
+    "specd": "The shared ListMetadata component marks both cursor pointers required (still nullable), matching the wire.",
+    "authoredAgainstSpecHash": "sha256-e2d7b0f947f5e7c4c212dbd460957264df4d7a3018d30bde5c03d79997614664",
+    "reporter": "ticket-50-onboarding"
+  },
   "id": "595-require-list-metadata-cursor-fields"
 }

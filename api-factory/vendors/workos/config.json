@@ -1380,8 +1380,14 @@
     "DataIntegration": {
       "docs": "A configured data provider integration for Pipes/Connect."
     },
-    "DataIntegrationAccessTokenResponse": {
-      "docs": "An active data integration access token response."
+    "DataIntegrationAccessTokenActiveResponse": {
+      "docs": "An active OAuth access token for a connected data integration."
+    },
+    "DataIntegrationAccessTokenUnavailableResponse": {
+      "docs": "An inactive response explaining why a data integration access token is unavailable."
+    },
+    "DataIntegrationApiKeyCredentialResponse": {
+      "docs": "An active API-key credential vended for a connected data integration."
     },
     "DataIntegrationAuthorizeUrlResponse": {
       "docs": "The OAuth authorization URL to redirect a user to when connecting a data provider account (Pipes/Connect)."
@@ -1392,17 +1398,20 @@
     "DataIntegrationConfigurationResponse": {
       "docs": "A data provider's configuration as it applies to a single organization (Pipes/Connect)."
     },
+    "DataIntegrationCredentialUnavailableResponse": {
+      "docs": "An inactive response explaining why data integration credentials are unavailable."
+    },
     "DataIntegrationCredentials": {
       "docs": "Organization-supplied OAuth credentials for a data provider integration (Pipes/Connect)."
     },
     "DataIntegrationCredentialsDto": {
       "docs": "Request body specifying the OAuth credentials for a data provider integration (Pipes/Connect)."
     },
-    "DataIntegrationCredentialsResponse": {
-      "docs": "An active data integration credential response."
-    },
     "DataIntegrationList": {
       "docs": "A page of Pipes data providers."
+    },
+    "DataIntegrationOAuthCredentialResponse": {
+      "docs": "An active OAuth credential vended for a connected data integration."
     },
     "DataIntegrationsListResponse": {
       "docs": "A list of Pipes data providers, each including the current user's connected-account status."
@@ -1742,7 +1751,19 @@
       "docs": "Fetch a single page of organizations."
     },
     "userManagement.authenticateWithPassword": {
-      "docs": "Authenticate a user with an email and password (the `password` grant).\n\n`client_secret` and `password` are `Redacted<string>` — wrap plaintext with\n`Redacted.make(...)`. On success, `access_token`/`refresh_token` are likewise\n`Redacted<string>`. Failures discriminate: `InvalidCredentials`,\n`MfaEnrollment`, `EmailVerificationRequired`, `OrganizationSelectionRequired`,\nand so on — never a single opaque `BadRequest`."
+      "docs": "Authenticate a user with an email and password (the `password` grant).\n\n`client_secret` and `password` are `Redacted<string>` — wrap plaintext with\n`Redacted.make(...)`. On success, `access_token`/`refresh_token` are likewise\n`Redacted<string>`. Failures discriminate: `InvalidCredentials`,\n`MfaEnrollment`, `EmailVerificationRequired`, `OrganizationSelectionRequired`,\nand so on — never a single opaque `BadRequest`.\n\nOther grant types (authorization-code exchange, refresh, magic auth, OTP,\ndevice code) are not yet modeled — the endpoint's grant union is narrowed to\nthe password grant for now."
+    },
+    "applications.create": {
+      "docs": "Create an OAuth application. The endpoint also accepts Machine-to-Machine\n(M2M) applications, but this client currently models the OAuth variant only\n(`application_type` is fixed to `\"oauth\"`); M2M creation is not yet\nsupported here."
+    },
+    "userManagement.updateOrganizationMembership": {
+      "docs": "Update the details of an existing organization membership. This client\nmodels the single-role update (`role_slug`) only; the endpoint's bulk\n`role_slugs` variant is not yet supported (see `MultipleRolesNotEnabled`)."
+    },
+    "auditLogs.createEvent": {
+      "docs": "Emit an Audit Logs event for an organization. The endpoint's\n`idempotency-key` header is not yet modeled by this client (header\nparameters are unsupported); retried calls are not deduplicated."
+    },
+    "agents.validateCredential": {
+      "docs": "Validate an agent credential. This client models access-token credential\nvalidation only; the endpoint's API-key credential variant is not yet\nsupported."
     }
   }
 }

@@ -1,0 +1,103 @@
+{
+  "kind": "raw",
+  "ops": [
+    {
+      "op": "add",
+      "path": "/components/schemas/DataIntegrationAccessTokenActiveResponse",
+      "value": {
+        "type": "object",
+        "properties": {
+          "active": { "type": "boolean", "description": "Indicates whether the access token is valid and ready for use, or if reauthorization is required.", "const": true },
+          "access_token": {
+            "type": "object",
+            "properties": {
+              "object": { "type": "string", "description": "Distinguishes the access token object.", "const": "access_token" },
+              "access_token": { "type": "string", "description": "The OAuth access token for the connected integration.", "example": "gho_16C7e42F292c6912E7710c838347Ae178B4a" },
+              "expires_at": { "type": ["string", "null"], "description": "The ISO-8601 formatted timestamp indicating when the access token expires.", "example": "2025-12-31T23:59:59.000Z" },
+              "scopes": { "type": "array", "items": { "type": "string" }, "description": "The scopes granted to the access token.", "example": ["repo", "user:email"] },
+              "missing_scopes": { "type": "array", "items": { "type": "string" }, "description": "If the integration has requested scopes that aren't present on the access token, they're listed here.", "example": [] }
+            },
+            "required": ["object", "access_token", "expires_at", "scopes", "missing_scopes"],
+            "description": "The [access token](/reference/pipes/access-token) object, present when `active` is `true`."
+          }
+        },
+        "required": ["active", "access_token"]
+      }
+    },
+    {
+      "op": "add",
+      "path": "/components/schemas/DataIntegrationAccessTokenUnavailableResponse",
+      "value": {
+        "type": "object",
+        "properties": {
+          "active": { "type": "boolean", "description": "Indicates whether the access token is valid and ready for use, or if reauthorization is required.", "const": false },
+          "error": { "type": "string", "enum": ["needs_reauthorization", "not_installed"], "description": "- `\"not_installed\"`: The user does not have the integration installed.\n- `\"needs_reauthorization\"`: The user needs to reauthorize the integration.", "example": "not_installed" }
+        },
+        "required": ["active", "error"]
+      }
+    },
+    { "op": "replace", "path": "/components/schemas/DataIntegrationAccessTokenResponse/oneOf/0", "value": { "$ref": "#/components/schemas/DataIntegrationAccessTokenActiveResponse" } },
+    { "op": "replace", "path": "/components/schemas/DataIntegrationAccessTokenResponse/oneOf/1", "value": { "$ref": "#/components/schemas/DataIntegrationAccessTokenUnavailableResponse" } },
+    {
+      "op": "replace",
+      "path": "/paths/~1data-integrations~1{slug}~1token/post/responses/200/content/application~1json/schema",
+      "value": {
+        "oneOf": [
+          { "$ref": "#/components/schemas/DataIntegrationAccessTokenActiveResponse" },
+          { "$ref": "#/components/schemas/DataIntegrationAccessTokenUnavailableResponse" }
+        ]
+      }
+    }
+  ],
+  "rationale": "The access-token success union is preserved by extracting its active and unavailable members as named components and referencing those components from an inline operation-level oneOf.",
+  "precondition": {
+    "pointer": "/components/schemas/DataIntegrationAccessTokenResponse",
+    "test": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "active": { "type": "boolean", "description": "Indicates whether the access token is valid and ready for use, or if reauthorization is required.", "const": true },
+            "access_token": {
+              "type": "object",
+              "properties": {
+                "object": { "type": "string", "description": "Distinguishes the access token object.", "const": "access_token" },
+                "access_token": { "type": "string", "description": "The OAuth access token for the connected integration.", "example": "gho_16C7e42F292c6912E7710c838347Ae178B4a" },
+                "expires_at": { "type": ["string", "null"], "description": "The ISO-8601 formatted timestamp indicating when the access token expires.", "example": "2025-12-31T23:59:59.000Z" },
+                "scopes": { "type": "array", "items": { "type": "string" }, "description": "The scopes granted to the access token.", "example": ["repo", "user:email"] },
+                "missing_scopes": { "type": "array", "items": { "type": "string" }, "description": "If the integration has requested scopes that aren't present on the access token, they're listed here.", "example": [] }
+              },
+              "required": ["object", "access_token", "expires_at", "scopes", "missing_scopes"],
+              "description": "The [access token](/reference/pipes/access-token) object, present when `active` is `true`."
+            }
+          },
+          "required": ["active", "access_token"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "active": { "type": "boolean", "description": "Indicates whether the access token is valid and ready for use, or if reauthorization is required.", "const": false },
+            "error": { "type": "string", "enum": ["needs_reauthorization", "not_installed"], "description": "- `\"not_installed\"`: The user does not have the integration installed.\n- `\"needs_reauthorization\"`: The user needs to reauthorize the integration.", "example": "not_installed" }
+          },
+          "required": ["active", "error"]
+        }
+      ]
+    }
+  },
+  "blastRadius": {
+    "role": "response",
+    "clears": [
+      { "rule": "openapi.response.success", "construct": "/paths/~1data-integrations~1{slug}~1token/post/responses/200/content/application~1json/schema" }
+    ]
+  },
+  "provenance": {
+    "evidenceType": "vendor-docs-citation",
+    "url": "https://workos.com/docs/reference/pipes/access-token",
+    "fetchedAt": "2026-07-21",
+    "observed": "Get access token returns either an active access-token payload or an inactive response explaining why no token is available.",
+    "specd": "The operation success remains an inline union of named references so both documented response variants decode without collapsing the contract.",
+    "authoredAgainstSpecHash": "sha256-e2d7b0f947f5e7c4c212dbd460957264df4d7a3018d30bde5c03d79997614664",
+    "reporter": "ticket-50-onboarding"
+  },
+  "id": "740-extract-data-integration-access-token-variants"
+}

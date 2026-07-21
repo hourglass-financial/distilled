@@ -159,7 +159,7 @@ export const OrganizationApiKeyWithValue = Schema.Struct({
   permissions: Schema.Array(Schema.String),
   created_at: Schema.String,
   updated_at: Schema.String,
-  value: Schema.String,
+  value: Secret,
 });
 export interface OrganizationApiKeyWithValue extends Schema.Schema.Type<
   typeof OrganizationApiKeyWithValue
@@ -213,7 +213,7 @@ export const UserApiKeyWithValue = Schema.Struct({
   permissions: Schema.Array(Schema.String),
   created_at: Schema.String,
   updated_at: Schema.String,
-  value: Schema.String,
+  value: Secret,
 });
 export interface UserApiKeyWithValue extends Schema.Schema.Type<
   typeof UserApiKeyWithValue
@@ -282,7 +282,7 @@ export const NewConnectApplicationSecret = Schema.Struct({
   last_used_at: Schema.NullOr(Schema.String),
   created_at: Schema.String,
   updated_at: Schema.String,
-  secret: Schema.String,
+  secret: Secret,
 });
 export interface NewConnectApplicationSecret extends Schema.Schema.Type<
   typeof NewConnectApplicationSecret
@@ -891,7 +891,7 @@ export interface UserRoleAssignmentList extends Schema.Schema.Type<
 // ---------------------------------------------------------------------------
 
 /** The Client API token issued for an organization and user. */
-export const ClientApiTokenResponse = Schema.Struct({ token: Schema.String });
+export const ClientApiTokenResponse = Schema.Struct({ token: Secret });
 export interface ClientApiTokenResponse extends Schema.Schema.Type<
   typeof ClientApiTokenResponse
 > {}
@@ -1356,7 +1356,7 @@ export const AuthenticationFactorEnrolled = Schema.Struct({
     Schema.Struct({
       issuer: Schema.String,
       user: Schema.String,
-      secret: Schema.String,
+      secret: Secret,
       qr_code: Schema.String,
       uri: Schema.String,
     }),
@@ -1563,7 +1563,7 @@ export interface AuthorizationPermissionCreateResponse extends Schema.Schema
 
 /** Request to store a third-party API key secret for a Connect installation, scoped to a user and optionally an organization. */
 export const ApiKeyInstallationDto = Schema.Struct({
-  secret: Schema.String,
+  secret: Secret,
   user_id: Schema.String,
   organization_id: Schema.optional(Schema.String),
 });
@@ -1664,20 +1664,39 @@ export interface DataIntegration extends Schema.Schema.Type<
   typeof DataIntegration
 > {}
 
-/** An active data integration access token response. */
-export const DataIntegrationAccessTokenResponse = Schema.Struct({
+/** An active OAuth access token for a connected data integration. */
+export const DataIntegrationAccessTokenActiveResponse = Schema.Struct({
   active: Schema.Literal(true),
   access_token: Schema.Struct({
     object: Schema.Literal("access_token"),
-    access_token: Schema.String,
+    access_token: Secret,
     expires_at: Schema.NullOr(Schema.String),
     scopes: Schema.Array(Schema.String),
     missing_scopes: Schema.Array(Schema.String),
   }),
 });
-export interface DataIntegrationAccessTokenResponse extends Schema.Schema.Type<
-  typeof DataIntegrationAccessTokenResponse
-> {}
+export interface DataIntegrationAccessTokenActiveResponse extends Schema.Schema
+  .Type<typeof DataIntegrationAccessTokenActiveResponse> {}
+
+/** An inactive response explaining why a data integration access token is unavailable. */
+export const DataIntegrationAccessTokenUnavailableResponse = Schema.Struct({
+  active: Schema.Literal(false),
+  error: Schema.Literals(["needs_reauthorization", "not_installed"]),
+});
+export interface DataIntegrationAccessTokenUnavailableResponse extends Schema
+  .Schema.Type<typeof DataIntegrationAccessTokenUnavailableResponse> {}
+
+/** An active API-key credential vended for a connected data integration. */
+export const DataIntegrationApiKeyCredentialResponse = Schema.Struct({
+  active: Schema.Literal(true),
+  credential: Schema.Struct({
+    object: Schema.Literal("credential"),
+    auth_method: Schema.Literal("api_key"),
+    value: Secret,
+  }),
+});
+export interface DataIntegrationApiKeyCredentialResponse extends Schema.Schema
+  .Type<typeof DataIntegrationApiKeyCredentialResponse> {}
 
 /** The OAuth authorization URL to redirect a user to when connecting a data provider account (Pipes/Connect). */
 export const DataIntegrationAuthorizeUrlResponse = Schema.Struct({
@@ -1686,6 +1705,14 @@ export const DataIntegrationAuthorizeUrlResponse = Schema.Struct({
 export interface DataIntegrationAuthorizeUrlResponse extends Schema.Schema.Type<
   typeof DataIntegrationAuthorizeUrlResponse
 > {}
+
+/** An inactive response explaining why data integration credentials are unavailable. */
+export const DataIntegrationCredentialUnavailableResponse = Schema.Struct({
+  active: Schema.Literal(false),
+  error: Schema.Literals(["not_installed", "needs_reauthorization"]),
+});
+export interface DataIntegrationCredentialUnavailableResponse extends Schema
+  .Schema.Type<typeof DataIntegrationCredentialUnavailableResponse> {}
 
 /** Organization-supplied OAuth credentials for a data provider integration (Pipes/Connect). */
 export const DataIntegrationCredentials = Schema.Struct({
@@ -1733,22 +1760,6 @@ export interface DataIntegrationCredentialsDto extends Schema.Schema.Type<
   typeof DataIntegrationCredentialsDto
 > {}
 
-/** An active data integration credential response. */
-export const DataIntegrationCredentialsResponse = Schema.Struct({
-  active: Schema.Literal(true),
-  credential: Schema.Struct({
-    object: Schema.Literal("credential"),
-    auth_method: Schema.Literal("oauth"),
-    value: Schema.String,
-    expires_at: Schema.NullOr(Schema.String),
-    scopes: Schema.Array(Schema.String),
-    missing_scopes: Schema.Array(Schema.String),
-  }),
-});
-export interface DataIntegrationCredentialsResponse extends Schema.Schema.Type<
-  typeof DataIntegrationCredentialsResponse
-> {}
-
 /** A page of Pipes data providers. */
 export const DataIntegrationList = Schema.Struct({
   object: Schema.Literal("list"),
@@ -1761,6 +1772,21 @@ export const DataIntegrationList = Schema.Struct({
 export interface DataIntegrationList extends Schema.Schema.Type<
   typeof DataIntegrationList
 > {}
+
+/** An active OAuth credential vended for a connected data integration. */
+export const DataIntegrationOAuthCredentialResponse = Schema.Struct({
+  active: Schema.Literal(true),
+  credential: Schema.Struct({
+    object: Schema.Literal("credential"),
+    auth_method: Schema.Literal("oauth"),
+    value: Secret,
+    expires_at: Schema.NullOr(Schema.String),
+    scopes: Schema.Array(Schema.String),
+    missing_scopes: Schema.Array(Schema.String),
+  }),
+});
+export interface DataIntegrationOAuthCredentialResponse extends Schema.Schema
+  .Type<typeof DataIntegrationOAuthCredentialResponse> {}
 
 /** Request body updating a custom OAuth provider definition used by a Pipes/Connect data provider integration. */
 export const UpdateCustomProviderDefinitionDto = Schema.Struct({
@@ -1922,7 +1948,7 @@ export interface SsoAuthorizeUrlResponse extends Schema.Schema.Type<
 /** Returns the SSO logout redirect URL and token used to sign a user out at their identity provider. */
 export const SsoLogoutAuthorizeResponse = Schema.Struct({
   logout_url: Schema.String,
-  logout_token: Schema.String,
+  logout_token: Secret,
 });
 export interface SsoLogoutAuthorizeResponse extends Schema.Schema.Type<
   typeof SsoLogoutAuthorizeResponse
@@ -2265,7 +2291,7 @@ export const MagicAuth = Schema.Struct({
   expires_at: Schema.String,
   created_at: Schema.String,
   updated_at: Schema.String,
-  code: Schema.String,
+  code: Secret,
 });
 export interface MagicAuth extends Schema.Schema.Type<typeof MagicAuth> {}
 
@@ -2278,7 +2304,7 @@ export const MagicAuthCreateResponse = Schema.Struct({
   expires_at: Schema.String,
   created_at: Schema.String,
   updated_at: Schema.String,
-  code: Schema.String,
+  code: Secret,
   radar_auth_attempt_id: Schema.optional(Schema.String),
 });
 export interface MagicAuthCreateResponse extends Schema.Schema.Type<
@@ -2422,7 +2448,7 @@ export const PasswordReset = Schema.Struct({
   email: Schema.String,
   expires_at: Schema.String,
   created_at: Schema.String,
-  password_reset_token: Schema.String,
+  password_reset_token: Secret,
   password_reset_url: Schema.String,
 });
 export interface PasswordReset extends Schema.Schema.Type<
@@ -2632,7 +2658,7 @@ export interface Actor extends Schema.Schema.Type<typeof Actor> {}
 /** A newly generated Vault data encryption key, returned with its encrypted key blob and encryption context. */
 export const CreateDataKeyResponse = Schema.Struct({
   context: Schema.Record(Schema.String, Schema.String),
-  data_key: Schema.String,
+  data_key: Secret,
   encrypted_keys: Schema.String,
   id: Schema.String,
 });
@@ -2642,7 +2668,7 @@ export interface CreateDataKeyResponse extends Schema.Schema.Type<
 
 /** A decrypted Vault data key. */
 export const DecryptResponse = Schema.Struct({
-  data_key: Schema.String,
+  data_key: Secret,
   id: Schema.String,
 });
 export interface DecryptResponse extends Schema.Schema.Type<
@@ -2718,7 +2744,7 @@ export const VaultObject = Schema.Struct({
   id: Schema.String,
   metadata: ObjectMetadata,
   name: Schema.String,
-  value: Schema.String,
+  value: Secret,
 });
 export interface VaultObject extends Schema.Schema.Type<typeof VaultObject> {}
 
@@ -2740,7 +2766,7 @@ export const WebhookEndpointJson = Schema.Struct({
   object: Schema.Literal("webhook_endpoint"),
   id: Schema.String,
   endpoint_url: Schema.String,
-  secret: Schema.String,
+  secret: Secret,
   status: Schema.Literals(["enabled", "disabled"]),
   events: Schema.Array(Schema.String),
   created_at: Schema.String,
@@ -2768,9 +2794,7 @@ export interface WebhookEndpointList extends Schema.Schema.Type<
 // ---------------------------------------------------------------------------
 
 /** The session token used to authenticate an embedded WorkOS Widget. */
-export const WidgetSessionTokenResponse = Schema.Struct({
-  token: Schema.String,
-});
+export const WidgetSessionTokenResponse = Schema.Struct({ token: Secret });
 export interface WidgetSessionTokenResponse extends Schema.Schema.Type<
   typeof WidgetSessionTokenResponse
 > {}

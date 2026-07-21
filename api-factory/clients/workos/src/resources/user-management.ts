@@ -274,6 +274,10 @@ const authenticateOp: Operation<
  * `Redacted<string>`. Failures discriminate: `InvalidCredentials`,
  * `MfaEnrollment`, `EmailVerificationRequired`, `OrganizationSelectionRequired`,
  * and so on — never a single opaque `BadRequest`.
+ *
+ * Other grant types (authorization-code exchange, refresh, magic auth, OTP,
+ * device code) are not yet modeled — the endpoint's grant union is narrowed to
+ * the password grant for now.
  */
 export const authenticateWithPassword = (
   input: AuthenticateWithPasswordInput,
@@ -3178,7 +3182,11 @@ const updateOrganizationMembershipOp: Operation<
   errors: updateOrganizationMembershipErrors,
 };
 
-/** Update the details of an existing organization membership. */
+/**
+ * Update the details of an existing organization membership. This client
+ * models the single-role update (`role_slug`) only; the endpoint's bulk
+ * `role_slugs` variant is not yet supported (see `MultipleRolesNotEnabled`).
+ */
 export const updateOrganizationMembership = (
   input: UpdateOrganizationMembershipInput,
 ): Effect.Effect<
