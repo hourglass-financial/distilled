@@ -107,6 +107,54 @@ const push = (
   });
 };
 
+const isScalar = (value: JsonValue): boolean =>
+  value === null || typeof value !== "object";
+
+/**
+ * LCS-aligned diff for all-scalar arrays (`required`, `enum`, tag lists):
+ * a front insertion or removal names the one moved entry instead of
+ * cascading a spurious "changed" delta across every following index.
+ * Removed entries carry before-indices; added entries carry after-indices.
+ */
+const diffScalarArrays = (
+  before: ReadonlyArray<JsonValue>,
+  after: ReadonlyArray<JsonValue>,
+  segments: ReadonlyArray<string>,
+  entries: SpecDiffEntry[],
+): void => {
+  const lengths: number[][] = Array.from({ length: before.length + 1 }, () =>
+    new Array<number>(after.length + 1).fill(0),
+  );
+  for (let i = before.length - 1; i >= 0; i -= 1) {
+    for (let j = after.length - 1; j >= 0; j -= 1) {
+      lengths[i]![j] =
+        before[i] === after[j]
+          ? lengths[i + 1]![j + 1]! + 1
+          : Math.max(lengths[i + 1]![j]!, lengths[i]![j + 1]!);
+    }
+  }
+  let i = 0;
+  let j = 0;
+  while (i < before.length && j < after.length) {
+    if (before[i] === after[j]) {
+      i += 1;
+      j += 1;
+    } else if (lengths[i + 1]![j]! >= lengths[i]![j + 1]!) {
+      push(entries, [...segments, String(i)], "removed", before[i]!, undefined);
+      i += 1;
+    } else {
+      push(entries, [...segments, String(j)], "added", undefined, after[j]!);
+      j += 1;
+    }
+  }
+  for (; i < before.length; i += 1) {
+    push(entries, [...segments, String(i)], "removed", before[i]!, undefined);
+  }
+  for (; j < after.length; j += 1) {
+    push(entries, [...segments, String(j)], "added", undefined, after[j]!);
+  }
+};
+
 const walk = (
   before: JsonValue,
   after: JsonValue,
@@ -133,6 +181,10 @@ const walk = (
     return;
   }
   if (isJsonArray(before) && isJsonArray(after)) {
+    if (before.every(isScalar) && after.every(isScalar)) {
+      diffScalarArrays(before, after, segments, entries);
+      return;
+    }
     const shared = Math.min(before.length, after.length);
     for (let index = 0; index < shared; index += 1) {
       walk(

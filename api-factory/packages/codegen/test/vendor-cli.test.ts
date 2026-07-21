@@ -80,6 +80,11 @@ describe("acquisition and attestation", () => {
     expect(result.provenance.upstreamRef).toBe("v9.9.9");
     expect(result.provenance.fetchedAt).toBe("2026-07-20T12:00:00.000Z");
     expect(auditAttestation(vendorDir).ok).toBe(true);
+    // The machine-locked snapshot is byte-verbatim for JSON sources — a
+    // parse -> re-print round trip would silently corrupt the artifact.
+    expect(readFileSync(join(vendorDir, "spec.json"), "utf8")).toBe(
+      readFileSync(source, "utf8"),
+    );
 
     const specPath = join(vendorDir, "spec.json");
     writeFileSync(
@@ -496,6 +501,19 @@ describe("pointer-level spec diff", () => {
       "/components/schemas/Widget/required/1",
     ]);
     expect(diffSpecs(before, before).identical).toBe(true);
+
+    const frontRemoval = diffSpecs(
+      { required: ["id", "name"] },
+      { required: ["name"] },
+    );
+    expect(frontRemoval.entries).toEqual([
+      {
+        pointer: "/required/0",
+        change: "removed",
+        classification: "required-entry-removed",
+        before: "id",
+      },
+    ]);
 
     const dir = temp();
     const beforePath = join(dir, "before.json");

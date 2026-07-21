@@ -107,10 +107,17 @@ export const acquire = async (
       : fail("acquire.source", source, "source file does not exist");
   const sourceFormat = options.sourceFormat ?? detectFormat(source);
 
-  const specContents =
-    sourceFormat === "yaml"
-      ? printJson(parseYaml(raw, source))
-      : printJson(parseJsonSource(raw, source));
+  let specContents: string;
+  if (sourceFormat === "yaml") {
+    specContents = printJson(parseYaml(raw, source));
+  } else {
+    // Validate well-formedness only; the machine-locked snapshot keeps the
+    // source bytes verbatim. A parse -> re-print round trip is lossy (large
+    // integers lose precision, duplicate keys dedupe) and would silently
+    // corrupt the attested artifact.
+    parseJsonSource(raw, source);
+    specContents = raw;
+  }
 
   const fetchedAt = (options.now?.() ?? new Date()).toISOString();
   const provenance: ProvenanceRecord = {

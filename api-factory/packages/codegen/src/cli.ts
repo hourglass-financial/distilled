@@ -144,7 +144,10 @@ export const runCli = async (args: ReadonlyArray<string>): Promise<number> => {
   try {
     if (args[0] === "--emit-ir") {
       const input = resolveInput(args);
-      const ir = canonicalize(input.ir);
+      // Route the vendor-built IR through the same fail-closed decode the
+      // generate/verify paths get, so the review artifact is validated
+      // exactly as strictly as what ships.
+      const ir = canonicalize(decodeIr(input.ir));
       checkInvariants(ir);
       process.stdout.write(dumpIr(ir));
       return 0;
