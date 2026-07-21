@@ -1,0 +1,9 @@
+{
+  "kind": "spec-pruning",
+  "target": "/paths/~1audit_logs~1events/post/parameters/0",
+  "rationale": "The header cannot be represented by this request IR; pruning it is local to event creation, while idempotency support remains named follow-on engine work.",
+  "precondition": { "pointer": "/paths/~1audit_logs~1events/post/parameters/0", "test": { "name": "idempotency-key", "in": "header", "description": "A unique string to prevent duplicate requests. Each subsequent request matching this unique string will return the same response. We suggest using v4 UUIDs. Keys expire after 24 hours.", "required": false, "schema": { "type": "string", "example": "884793cd-bef4-46cf-8790-e3d4957a09ce" } } },
+  "blastRadius": { "role": "request", "clears": [{ "rule": "openapi.parameter.in", "construct": "/paths/~1audit_logs~1events/post/parameters (header idempotency-key)" }] },
+  "provenance": { "evidenceType": "vendor-docs-citation", "url": "https://workos.com/docs/reference/audit-logs/create-event", "fetchedAt": "2026-07-21", "observed": "The OpenAPI operation declares an idempotency-key header parameter.", "specd": "The current SDK request contract omits this header until first-class idempotency support is added to the engine.", "authoredAgainstSpecHash": "sha256-e2d7b0f947f5e7c4c212dbd460957264df4d7a3018d30bde5c03d79997614664", "reporter": "ticket-50-onboarding" },
+  "id": "050-prune-audit-event-idempotency-header"
+}

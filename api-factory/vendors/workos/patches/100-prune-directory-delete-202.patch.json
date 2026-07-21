@@ -1,0 +1,9 @@
+{
+  "kind": "spec-pruning",
+  "target": "/paths/~1directories~1{id}/delete/responses/202",
+  "rationale": "The 202 response duplicates the operation’s representable 200 success contract and is pruned to avoid a second body-bearing success shape.",
+  "precondition": { "pointer": "/paths/~1directories~1{id}/delete/responses/202", "test": { "description": "", "content": { "application/json": { "schema": {} } } } },
+  "blastRadius": { "role": "response", "clears": [{ "rule": "openapi.response.success", "construct": "/paths/~1directories~1{id}/delete/responses/202/content/application~1json/schema" }] },
+  "provenance": { "evidenceType": "vendor-docs-citation", "url": "https://workos.com/docs/reference/directory-sync/delete-directory", "fetchedAt": "2026-07-21", "observed": "The OpenAPI delete operation declares both 200 and body-bearing 202 success responses.", "specd": "The SDK models the operation’s 200 success response as its single success contract.", "authoredAgainstSpecHash": "sha256-e2d7b0f947f5e7c4c212dbd460957264df4d7a3018d30bde5c03d79997614664", "reporter": "ticket-50-onboarding" },
+  "id": "100-prune-directory-delete-202"
+}
