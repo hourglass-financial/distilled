@@ -729,11 +729,72 @@ const unwrapRedactedDeep = (value: unknown): unknown => {
   return value;
 };
 
+// HOURGLASS PATCH: Preserve wire-binary field values across schema encoding.
+/**
+ * Recognize a value that must travel over the wire as raw bytes.
+ *
+ * Generated schemas model an OpenAPI multipart binary field (`type: string,
+ * format: binary`) as `Schema.String`, but a caller correctly hands us a
+ * `Blob`/`File`/typed-array for that field. The encode below is used *only*
+ * to derive wire-format keys, yet `Schema.encodeSync` would reject the binary
+ * value against the String codec before any HTTP call happens. Detect these
+ * values so they can be swapped out across encoding and restored afterward.
+ */
+const isWireBinary = (value: unknown): boolean =>
+  (typeof Blob !== "undefined" && value instanceof Blob) ||
+  (typeof File !== "undefined" && value instanceof File) ||
+  value instanceof Uint8Array ||
+  value instanceof ArrayBuffer;
+
+/**
+ * Encode `input` through `inputSchema` to obtain wire-format keys while
+ * preserving binary field values byte-for-byte.
+ *
+ * Binary values are replaced with unique sentinel strings before
+ * `Schema.encodeSync` (so a `Schema.String` codec accepts them) and restored
+ * in the encoded output afterward. A plain-string codec never rewrites its
+ * value, so each sentinel reappears verbatim under its (possibly renamed)
+ * wire key, where it is swapped back for the real binary. Inputs with no
+ * binary fields take an identical path to a bare `Schema.encodeSync`.
+ */
+const encodeInputPreservingBinary = (
+  // biome-ignore lint: using any for generic schema parameter
+  inputSchema: any,
+  input: Record<string, unknown>,
+): Record<string, unknown> => {
+  const sentinels = new Map<string, unknown>();
+  let sanitized: Record<string, unknown> = input;
+  let index = 0;
+  for (const [key, value] of Object.entries(input)) {
+    if (isWireBinary(value)) {
+      // Copy lazily so the caller's input object is never mutated.
+      if (sanitized === input) sanitized = { ...input };
+      const sentinel = `__distilled_binary_${index}_${key}__`;
+      index += 1;
+      sentinels.set(sentinel, value);
+      sanitized[key] = sentinel;
+    }
+  }
+  const encoded = Schema.encodeSync(inputSchema)(sanitized) as Record<
+    string,
+    unknown
+  >;
+  if (sentinels.size === 0) return encoded;
+  // Restore each real binary value wherever its sentinel landed — the wire
+  // key can differ from the TS property name after key encoding.
+  for (const [key, value] of Object.entries(encoded)) {
+    if (typeof value === "string" && sentinels.has(value)) {
+      encoded[key] = sentinels.get(value);
+    }
+  }
+  return encoded;
+};
+
 /**
  * RFC 6570 §3.2.3 reserved-expansion: encode everything outside the RFC 3986
  * unreserved (`A-Za-z0-9-._~`) and reserved (`:/?#[]@!$&'()*+,;=`) sets.
  */
-const RFC3986_NEEDS_ENCODING = /[^A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;=]/g;
+const RFC3986_NEEDS_ENCODING = /[^A-Za-z0-9\-._~:/?#[\]@!$&'()*+,;=]/g;
 const encodeReserved = (v: string): string =>
   v.replace(RFC3986_NEEDS_ENCODING, encodeURIComponent);
 
@@ -891,7 +952,7 @@ export const buildRequestParts = (
     // For HttpBody fields, encode through the schema to get wire-format keys
     // (e.g., camelCase → snake_case via encodeKeys on nested schemas)
     if (inputSchema) {
-      const encoded = Schema.encodeSync(inputSchema)(input);
+      const encoded = encodeInputPreservingBinary(inputSchema, input);
       const encodedRecord = encoded as Record<string, unknown>;
       // Find the body field name in the encoded output
       for (const prop of props) {
@@ -913,7 +974,7 @@ export const buildRequestParts = (
     // Encode the input through the schema to get wire-format keys
     // This handles encodeKeys (camelCase → snake_case) and any other encoding transforms
     if (inputSchema) {
-      const encoded = Schema.encodeSync(inputSchema)(input);
+      const encoded = encodeInputPreservingBinary(inputSchema, input);
       const encodedRecord = encoded as Record<string, unknown>;
 
       // Build a mapping from tsName → encoded key name
