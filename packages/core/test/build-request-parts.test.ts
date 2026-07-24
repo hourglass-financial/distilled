@@ -244,3 +244,76 @@ describe("buildRequestParts — structured query params", () => {
     });
   });
 });
+
+// Multipart file fields are modeled from OpenAPI `type: string, format: binary`
+// as `Schema.String`, yet a caller correctly supplies a Blob/File/typed-array.
+// `buildRequestParts` encodes the input only to derive wire-format keys, so the
+// binary value must survive that encode byte-for-byte rather than being rejected
+// by the String codec (which previously threw before the HTTP request was built).
+
+describe("buildRequestParts — multipart binary body fields", () => {
+  // Mirrors Erebor's createDocument input: a `file` binary field alongside
+  // ordinary string/enum fields (already in wire form), all sent as
+  // multipart/form-data.
+  const Input = Schema.Struct({
+    file: Schema.String,
+    document_type: Schema.Literals(["FORMATION_DOCUMENT", "OTHER"]),
+    name: Schema.String,
+  }).pipe(
+    T.Http({ method: "POST", path: "/documents", contentType: "multipart" }),
+  );
+
+  const build = (input: Record<string, unknown>) =>
+    T.buildRequestParts(Input.ast, T.getHttpTrait(Input.ast)!, input, Input);
+
+  it("preserves a Blob file value byte-for-byte through key encoding", () => {
+    const blob = new Blob([new TextEncoder().encode("pdf-bytes")], {
+      type: "application/pdf",
+    });
+    const parts = build({
+      file: blob,
+      document_type: "FORMATION_DOCUMENT",
+      name: "Acme Formation.pdf",
+    });
+
+    const body = parts.body as Record<string, unknown>;
+    // The exact Blob instance survives — not a `{}` stand-in from a failed encode.
+    expect(body.file).toBe(blob);
+    expect(body.document_type).toBe("FORMATION_DOCUMENT");
+    expect(body.name).toBe("Acme Formation.pdf");
+  });
+
+  it("preserves a Uint8Array file value", () => {
+    const bytes = new Uint8Array([1, 2, 3, 4]);
+    const parts = build({
+      file: bytes,
+      document_type: "OTHER",
+      name: "raw.bin",
+    });
+
+    const body = parts.body as Record<string, unknown>;
+    expect(body.file).toBe(bytes);
+    expect(body.document_type).toBe("OTHER");
+  });
+
+  it("does not mutate the caller's input object", () => {
+    const blob = new Blob([new Uint8Array([9])]);
+    const input = { file: blob, document_type: "OTHER", name: "x" };
+    build(input);
+
+    // The lazy copy inside the encoder must leave the original Blob in place.
+    expect(input.file).toBe(blob);
+  });
+
+  it("still encodes a plain string file value unchanged (regression)", () => {
+    const parts = build({
+      file: "already-a-string",
+      document_type: "OTHER",
+      name: "n",
+    });
+
+    const body = parts.body as Record<string, unknown>;
+    expect(body.file).toBe("already-a-string");
+    expect(body.document_type).toBe("OTHER");
+  });
+});
