@@ -1,7 +1,7 @@
-/** @jsxImportSource smithers-orchestrator */
+/** @jsxImportSource smthrs */
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { Sequence, createSmithers } from "smithers-orchestrator";
+import { Sequence, createSmithers } from "smthrs";
 import { z } from "zod";
 import {
   artifactRoot,

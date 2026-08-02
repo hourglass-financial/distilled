@@ -1,6 +1,6 @@
-/** @jsxImportSource smithers-orchestrator */
+/** @jsxImportSource smthrs */
 import * as path from "node:path";
-import { CodexAgent, Sequence, createSmithers } from "smithers-orchestrator";
+import { CodexAgent, Sequence, createSmithers } from "smthrs";
 import { z } from "zod";
 import {
   agentResult,
