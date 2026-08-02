@@ -74,7 +74,7 @@ sandbox. All commands below run from `packages/erebor/` unless noted.
 For agent-run updates, prefer the repo-local Smithers workflow:
 
 ```bash
-bunx smithers-orchestrator workflow run erebor-sdk-update --input '{"updateSpecs":true,"runLiveTests":true}'
+bunx smthrs workflow run erebor-sdk-update --input '{"updateSpecs":true,"runLiveTests":true}'
 ```
 
 The workflow keeps the runbook deterministic by persisting each artifact and

@@ -19,7 +19,7 @@ export const runSmithersWorkflow = (
     const cp = spawn(
       "bunx",
       [
-        "smithers-orchestrator",
+        "smthrs",
         "workflow",
         "run",
         workflow,
