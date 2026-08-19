@@ -19,6 +19,11 @@ describe("core barrel", () => {
   it("exposes the machinery a generated client imports", () => {
     expect(typeof Core.makeRunner).toBe("function");
     expect(typeof Core.makeMatchError).toBe("function");
+    expect(typeof Core.makeEnvelopeDecoder).toBe("function");
+    expect(typeof Core.makeVendorAdapters).toBe("function");
+    expect(typeof Core.checkMatcherConsistency).toBe("function");
+    expect(typeof Core.credentialsConfig).toBe("function");
+    expect(typeof Core.credentialsFromEnvEffect).toBe("function");
     expect(typeof Core.planRequest).toBe("function");
     expect(typeof Core.isVoidOutput).toBe("function");
     expect(Core.Secret).toBeDefined();

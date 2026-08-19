@@ -1,0 +1,1769 @@
+{
+  "vendor": {
+    "slug": "workos",
+    "display": "WorkOS",
+    "prefix": "Workos"
+  },
+  "baseUrl": "https://api.workos.com",
+  "auth": {
+    "scheme": "bearer"
+  },
+  "retry": {
+    "GET": "transient",
+    "POST": "throttling",
+    "PUT": "throttling",
+    "PATCH": "throttling",
+    "DELETE": "throttling",
+    "HEAD": "transient"
+  },
+  "envelope": {
+    "messageFields": [
+      "message",
+      "error_description",
+      "error"
+    ],
+    "discriminatorFields": [
+      "code",
+      "error"
+    ],
+    "stringBodyIsMessage": true,
+    "decodeDocs": "Normalize WorkOS's two error envelopes into one shape. `code` and the\nOAuth-style `error` collapse to a single discriminator; `message` prefers the\nhuman field of whichever envelope is present."
+  },
+  "pagination": {
+    "mode": "cursor",
+    "cursorParam": "after",
+    "clearParams": [
+      "before"
+    ],
+    "nextCursorPath": [
+      "list_metadata",
+      "after"
+    ],
+    "itemsPath": [
+      "data"
+    ]
+  },
+  "errors": {
+    "coreReexports": "all",
+    "docs": "WorkOS surfaces two error envelopes: `{ code, message }` and the OAuth-style\n`{ error, error_description }`. Both are normalized to a single discriminator\nby the matcher; the classes below are the ones the generator lifted from the\nspec's discriminated `oneOf` error tables.",
+    "codeDocs": "The spec's discriminated `oneOf` error tables enumerate 95 distinct codes\nacross the API; one class per documented code, in this exact per-class shape,\nordered alphabetically by discriminator code — the same order as CODE_ERRORS\nand every declared-errors tuple.",
+    "codeMeta": {
+      "access_denied": "auth",
+      "already_claimed": "conflict",
+      "application_consent_required": "challenge",
+      "auth_method_disabled": "auth",
+      "authentication_method_not_allowed": "auth",
+      "authorization_pending": "challenge",
+      "authorization_resource_external_id_conflict": "conflict",
+      "bad_request": "badRequest",
+      "claim_denied": "auth",
+      "claim_expired": "badRequest",
+      "code_challenge_not_found": "badRequest",
+      "connection_invalid": "config",
+      "email_already_in_use": "conflict",
+      "email_already_invited": "badRequest",
+      "email_already_invited_to_organization": "badRequest",
+      "email_already_verified": "badRequest",
+      "email_change_code_expired": "badRequest",
+      "email_change_code_incorrect": "badRequest",
+      "email_change_code_previously_used": "conflict",
+      "email_change_not_allowed": "conflict",
+      "email_change_not_needed": "conflict",
+      "email_mismatch": "badRequest",
+      "email_not_available": "conflict",
+      "email_password_auth_disabled": "auth",
+      "email_previously_verified": "badRequest",
+      "email_verification_code_expired": "badRequest",
+      "email_verification_code_incorrect": "badRequest",
+      "email_verification_code_previously_used": "badRequest",
+      "email_verification_required": "challenge",
+      "expired_token": "auth",
+      "expires_in_days_too_long": "badRequest",
+      "expires_in_days_too_short": "badRequest",
+      "external_auth_session_already_completed": "auth",
+      "external_id_already_used": "badRequest",
+      "extra_attributes_required": "challenge",
+      "invalid_claim": "badRequest",
+      "invalid_client": "auth",
+      "invalid_connection": "config",
+      "invalid_credentials": "auth",
+      "invalid_email": "unprocessable",
+      "invalid_grant": "auth",
+      "invalid_link_authorization_code": "auth",
+      "invalid_locale": "badRequest",
+      "invalid_metadata": "badRequest",
+      "invalid_one_time_code": "auth",
+      "invalid_organization": "badRequest",
+      "invalid_organization_id": "badRequest",
+      "invalid_password_hash": "badRequest",
+      "invalid_pending_authentication_token": "auth",
+      "invalid_profile": "badRequest",
+      "invalid_request": "badRequest",
+      "invalid_request_parameters": "unprocessable",
+      "invalid_role": "unprocessable",
+      "invalid_url": "unprocessable",
+      "invitation_cannot_be_used_for_email": "badRequest",
+      "invitation_invalid": "badRequest",
+      "invite_accepted": "badRequest",
+      "invite_expired": "badRequest",
+      "invite_revoked": "badRequest",
+      "lock_timeout": "locked",
+      "mfa_challenge": "challenge",
+      "mfa_enrollment": "challenge",
+      "missing_user_id_or_organization_id": "badRequest",
+      "multiple_roles_not_enabled": "unprocessable",
+      "no_pending_email_change": "conflict",
+      "one_time_code_expired": "auth",
+      "one_time_code_previously_used": "auth",
+      "one_time_code_too_many_attempts": "auth",
+      "organization_authentication_methods_required": "config",
+      "organization_selection_required": "challenge",
+      "passkey_progressive_enrollment": "challenge",
+      "password_and_password_hash_provided": "badRequest",
+      "password_and_password_hash_type_provided": "badRequest",
+      "password_reset_not_allowed": "auth",
+      "password_strength_error": "badRequest",
+      "pkce_not_supported": "badRequest",
+      "radar_challenge": "challenge",
+      "radar_sign_up_challenge": "challenge",
+      "resource_has_dependents": "conflict",
+      "resource_type_update_in_progress": "conflict",
+      "role_has_assignments": "conflict",
+      "role_has_group_role_mappings": "conflict",
+      "sign_up_not_allowed": "badRequest",
+      "slow_down": "throttling",
+      "stripe_customer_id_already_used": "conflict",
+      "sub_resource_scoped_role_not_allowed": "unprocessable",
+      "unauthorized_client": "auth",
+      "unsupported_grant_type": "badRequest",
+      "user_already_exists": "badRequest",
+      "user_already_organization_member": "badRequest",
+      "user_code_expired": "badRequest",
+      "user_consent_options_not_supported": "badRequest",
+      "user_creation_error": "badRequest",
+      "user_mismatch": "auth",
+      "wrong_account": "auth"
+    },
+    "codeProse": {
+      "access_denied": "the authorization request was denied.",
+      "already_claimed": "the agent claim has already been claimed.",
+      "application_consent_required": "the user must grant consent to the application.",
+      "auth_method_disabled": "the requested authentication method is disabled for this environment.",
+      "authentication_method_not_allowed": "the authentication method is not permitted for this user or organization.",
+      "authorization_pending": "the device authorization is still pending.",
+      "authorization_resource_external_id_conflict": "a resource with that `external_id` already exists.",
+      "bad_request": "the request was malformed.",
+      "claim_denied": "the agent claim attempt was denied.",
+      "claim_expired": "the agent claim has expired.",
+      "code_challenge_not_found": "no PKCE code challenge was found for this session.",
+      "connection_invalid": "the connection does not support this operation.",
+      "email_already_in_use": "the email address is already in use.",
+      "email_already_invited": "the email address already has a pending invitation.",
+      "email_already_invited_to_organization": "the email already has a pending invitation to this organization.",
+      "email_already_verified": "the email address is already verified.",
+      "email_change_code_expired": "the email-change code has expired.",
+      "email_change_code_incorrect": "the email-change code is incorrect.",
+      "email_change_code_previously_used": "the email-change code was already used.",
+      "email_change_not_allowed": "changing the email address is not permitted.",
+      "email_change_not_needed": "the email address already matches, so no change is needed.",
+      "email_mismatch": "the supplied email address does not match.",
+      "email_not_available": "the requested email address is not available.",
+      "email_password_auth_disabled": "password auth is off for this environment.",
+      "email_previously_verified": "the email address was already verified.",
+      "email_verification_code_expired": "the email verification code has expired.",
+      "email_verification_code_incorrect": "the email verification code is incorrect.",
+      "email_verification_code_previously_used": "the email verification code was already used.",
+      "email_verification_required": "the user must verify their email first.",
+      "expired_token": "the supplied token has expired.",
+      "expires_in_days_too_long": "the `expires_in_days` value exceeds the maximum.",
+      "expires_in_days_too_short": "the `expires_in_days` value is below the minimum.",
+      "external_auth_session_already_completed": "the external authentication session was already completed.",
+      "external_id_already_used": "the `external_id` is already assigned to another record.",
+      "extra_attributes_required": "additional profile attributes are required before continuing.",
+      "invalid_claim": "the agent claim is invalid.",
+      "invalid_client": "the `client_id` is unknown or malformed.",
+      "invalid_connection": "the connection is invalid or not configured.",
+      "invalid_credentials": "the email/password pair was rejected.",
+      "invalid_email": "the email address is malformed.",
+      "invalid_grant": "the grant (e.g. credentials or token) is invalid.",
+      "invalid_link_authorization_code": "the account-linking authorization code is invalid.",
+      "invalid_locale": "the supplied locale is not recognized.",
+      "invalid_metadata": "the metadata object is invalid.",
+      "invalid_one_time_code": "the one-time code is incorrect.",
+      "invalid_organization": "the organization is invalid.",
+      "invalid_organization_id": "the `organization_id` is malformed or unknown.",
+      "invalid_password_hash": "the supplied password hash is invalid.",
+      "invalid_pending_authentication_token": "the `pending_authentication_token` is invalid.",
+      "invalid_profile": "the SSO profile could not be processed.",
+      "invalid_request": "the request is invalid.",
+      "invalid_request_parameters": "one or more request parameters failed validation.",
+      "invalid_role": "the specified role slug is not valid.",
+      "invalid_url": "the supplied URL is malformed.",
+      "invitation_cannot_be_used_for_email": "the invitation cannot be used for this email address.",
+      "invitation_invalid": "the invitation is invalid.",
+      "invite_accepted": "the invitation has already been accepted.",
+      "invite_expired": "the invitation has expired.",
+      "invite_revoked": "the invitation has been revoked.",
+      "lock_timeout": "acquiring a lock on the resource timed out.",
+      "mfa_challenge": "the user must complete an MFA challenge to continue.",
+      "mfa_enrollment": "the user must enroll in MFA before continuing.",
+      "missing_user_id_or_organization_id": "either `user_id` or `organization_id` must be supplied.",
+      "multiple_roles_not_enabled": "multiple roles are not enabled for this environment.",
+      "no_pending_email_change": "there is no pending email change to confirm.",
+      "one_time_code_expired": "the one-time code has expired.",
+      "one_time_code_previously_used": "the one-time code was already used.",
+      "one_time_code_too_many_attempts": "too many incorrect one-time code attempts were made.",
+      "organization_authentication_methods_required": "the organization has no enabled authentication methods.",
+      "organization_selection_required": "the user must pick an organization.",
+      "passkey_progressive_enrollment": "the user is prompted to enroll a passkey.",
+      "password_and_password_hash_provided": "`password` and `password_hash` cannot both be supplied.",
+      "password_and_password_hash_type_provided": "`password` and `password_hash_type` cannot both be supplied.",
+      "password_reset_not_allowed": "password reset is not permitted for this user.",
+      "password_strength_error": "the password does not meet strength requirements.",
+      "pkce_not_supported": "PKCE is not supported for this client.",
+      "radar_challenge": "WorkOS Radar requires a bot-detection challenge.",
+      "radar_sign_up_challenge": "WorkOS Radar requires a sign-up bot-detection challenge.",
+      "resource_has_dependents": "the resource still has dependents and cannot be deleted.",
+      "resource_type_update_in_progress": "the resource type is being updated; retry later.",
+      "role_has_assignments": "the role still has active assignments.",
+      "role_has_group_role_mappings": "the role still has group role mappings.",
+      "sign_up_not_allowed": "sign-up is not permitted for this request.",
+      "slow_down": "the client is polling too quickly and must slow down.",
+      "stripe_customer_id_already_used": "the Stripe customer ID is already linked to another organization.",
+      "sub_resource_scoped_role_not_allowed": "sub-resource-scoped roles are not allowed for this operation.",
+      "unauthorized_client": "the client is not authorized to use this grant type.",
+      "unsupported_grant_type": "the `grant_type` is not supported.",
+      "user_already_exists": "a user with that email address already exists.",
+      "user_already_organization_member": "the user is already a member of the organization.",
+      "user_code_expired": "the user code has expired.",
+      "user_consent_options_not_supported": "the requested user-consent options are not supported.",
+      "user_creation_error": "the user could not be created.",
+      "user_mismatch": "the token does not match the expected user.",
+      "wrong_account": "the request came from the wrong account."
+    },
+    "codeClassNames": {
+      "bad_request": "BadRequestCode"
+    }
+  },
+  "naming": {
+    "resources": {
+      "adminPortal": "portal",
+      "applicationClientSecrets": "applications",
+      "client": "clientTokens",
+      "directories": "directorySync",
+      "directoryGroups": "directorySync",
+      "directoryUsers": "directorySync",
+      "featureFlagsTargets": "featureFlags",
+      "multiFactorAuthChallenges": "multiFactorAuth",
+      "organizationsApiKeys": "apiKeys",
+      "organizationsAuthorizedApplications": "organizations",
+      "organizationsFeatureFlags": "featureFlags",
+      "pipesProvider": "pipes",
+      "userManagementAuthentication": "userManagement",
+      "userManagementCorsOrigins": "userManagement",
+      "userManagementDataProviders": "userManagement",
+      "userManagementInvitations": "userManagement",
+      "userManagementJwtTemplate": "userManagement",
+      "userManagementMagicAuth": "userManagement",
+      "userManagementMultiFactorAuthentication": "userManagement",
+      "userManagementOrganizationMembership": "userManagement",
+      "userManagementOrganizationMembershipGroups": "userManagement",
+      "userManagementRedirectUris": "userManagement",
+      "userManagementSessionTokens": "userManagement",
+      "userManagementUsers": "userManagement",
+      "userManagementUsersAuthorizedApplications": "userManagement",
+      "userManagementUsersFeatureFlags": "userManagement",
+      "workosConnect": "userManagement"
+    },
+    "operations": {
+      "AgentAdminController_getRegistration": {
+        "method": "getRegistration",
+        "inputName": "GetRegistrationInput"
+      },
+      "AgentAdminController_linkClaimAttemptToExternalUser": {
+        "method": "linkClaimAttempt",
+        "inputName": "LinkClaimAttemptInput"
+      },
+      "AgentAdminController_validateCredential": {
+        "method": "validateCredential",
+        "inputName": "ValidateCredentialInput"
+      },
+      "ApiKeysController_delete": {
+        "method": "delete",
+        "inputName": "DeleteApiKeyInput",
+        "bindingName": "deleteApiKey"
+      },
+      "ApiKeysController_expire": {
+        "method": "expire",
+        "inputName": "ExpireApiKeyInput"
+      },
+      "ApiKeysController_validateApiKey": {
+        "method": "validate",
+        "inputName": "ValidateApiKeyInput"
+      },
+      "ApplicationCredentialsController_create": {
+        "method": "createClientSecret",
+        "inputName": "CreateClientSecretInput",
+        "resource": "applications"
+      },
+      "ApplicationCredentialsController_delete": {
+        "method": "deleteClientSecret",
+        "inputName": "DeleteClientSecretInput",
+        "resource": "applications"
+      },
+      "ApplicationCredentialsController_list": {
+        "method": "listClientSecrets",
+        "inputName": "ListClientSecretsInput",
+        "resource": "applications"
+      },
+      "ApplicationsController_create": {
+        "method": "create",
+        "inputName": "CreateApplicationInput"
+      },
+      "ApplicationsController_delete": {
+        "method": "delete",
+        "inputName": "DeleteApplicationInput",
+        "bindingName": "deleteApplication"
+      },
+      "ApplicationsController_find": {
+        "method": "get",
+        "inputName": "GetApplicationInput"
+      },
+      "ApplicationsController_list": {
+        "method": "list",
+        "inputName": "ListApplicationsInput"
+      },
+      "ApplicationsController_update": {
+        "method": "update",
+        "inputName": "UpdateApplicationInput"
+      },
+      "AuditLogEventsController_create": {
+        "method": "createEvent",
+        "inputName": "CreateEventInput"
+      },
+      "AuditLogExportsController_export": {
+        "method": "getExport",
+        "inputName": "GetExportInput"
+      },
+      "AuditLogExportsController_exports": {
+        "method": "createExport",
+        "inputName": "CreateExportInput"
+      },
+      "AuditLogValidatorVersionsController_create": {
+        "method": "createSchema",
+        "inputName": "CreateSchemaInput"
+      },
+      "AuditLogValidatorVersionsController_schemas": {
+        "method": "listSchemas",
+        "inputName": "ListSchemasInput"
+      },
+      "AuditLogValidatorsController_list": {
+        "method": "listActions",
+        "inputName": "ListActionsInput"
+      },
+      "AuditLogsRetentionController_auditLogsRetention": {
+        "method": "getRetention",
+        "inputName": "GetRetentionInput"
+      },
+      "AuditLogsRetentionController_updateAuditLogsRetention": {
+        "method": "setRetention",
+        "inputName": "SetRetentionInput"
+      },
+      "AuthenticationChallengesController_verify": {
+        "method": "verifyChallenge",
+        "inputName": "VerifyChallengeInput",
+        "resource": "multiFactorAuth"
+      },
+      "AuthenticationFactorsController_challenge": {
+        "method": "challengeFactor",
+        "inputName": "ChallengeFactorInput"
+      },
+      "AuthenticationFactorsController_create": {
+        "method": "enrollFactor",
+        "inputName": "EnrollFactorInput"
+      },
+      "AuthenticationFactorsController_delete": {
+        "method": "deleteFactor",
+        "inputName": "DeleteFactorInput"
+      },
+      "AuthenticationFactorsController_get": {
+        "method": "getFactor",
+        "inputName": "GetFactorInput"
+      },
+      "AuthorizationController_check": {
+        "method": "check",
+        "inputName": "CheckAuthorizationInput"
+      },
+      "AuthorizationController_listEffectivePermissions": {
+        "method": "listEffectivePermissions",
+        "inputName": "ListEffectivePermissionsInput"
+      },
+      "AuthorizationController_listEffectivePermissionsByExternalId": {
+        "method": "listEffectivePermissionsByExternalId",
+        "inputName": "ListEffectivePermissionsByExternalIdInput"
+      },
+      "AuthorizationController_listResourcesForMembership": {
+        "method": "listResourcesForMembership",
+        "inputName": "ListResourcesForMembershipInput"
+      },
+      "AuthorizationGroupRoleAssignmentsController_create": {
+        "method": "createGroupRoleAssignment",
+        "inputName": "CreateGroupRoleAssignmentInput"
+      },
+      "AuthorizationGroupRoleAssignmentsController_get": {
+        "method": "getGroupRoleAssignment",
+        "inputName": "GetGroupRoleAssignmentInput"
+      },
+      "AuthorizationGroupRoleAssignmentsController_list": {
+        "method": "listGroupRoleAssignments",
+        "inputName": "ListGroupRoleAssignmentsInput"
+      },
+      "AuthorizationGroupRoleAssignmentsController_removeGroupRoleAssignment": {
+        "method": "removeGroupRoleAssignment",
+        "inputName": "RemoveGroupRoleAssignmentInput"
+      },
+      "AuthorizationGroupRoleAssignmentsController_removeGroupRoleAssignments": {
+        "method": "removeGroupRoleAssignmentsByCriteria",
+        "inputName": "RemoveGroupRoleAssignmentsByCriteriaInput"
+      },
+      "AuthorizationGroupRoleAssignmentsController_replaceGroupRoleAssignments": {
+        "method": "replaceGroupRoleAssignments",
+        "inputName": "ReplaceGroupRoleAssignmentsInput"
+      },
+      "AuthorizationOrganizationRolePermissionsController_addPermission": {
+        "method": "addOrganizationRolePermission",
+        "inputName": "AddOrganizationRolePermissionInput"
+      },
+      "AuthorizationOrganizationRolePermissionsController_removePermission": {
+        "method": "removeOrganizationRolePermission",
+        "inputName": "RemoveOrganizationRolePermissionInput"
+      },
+      "AuthorizationOrganizationRolePermissionsController_setPermissions": {
+        "method": "setOrganizationRolePermissions",
+        "inputName": "SetOrganizationRolePermissionsInput"
+      },
+      "AuthorizationOrganizationRolesController_create": {
+        "method": "createOrganizationRole",
+        "inputName": "CreateOrganizationRoleInput"
+      },
+      "AuthorizationOrganizationRolesController_delete": {
+        "method": "deleteOrganizationRole",
+        "inputName": "DeleteOrganizationRoleInput"
+      },
+      "AuthorizationOrganizationRolesController_get": {
+        "method": "getOrganizationRole",
+        "inputName": "GetOrganizationRoleInput"
+      },
+      "AuthorizationOrganizationRolesController_list": {
+        "method": "listOrganizationRoles",
+        "inputName": "ListOrganizationRolesInput"
+      },
+      "AuthorizationOrganizationRolesController_update": {
+        "method": "updateOrganizationRole",
+        "inputName": "UpdateOrganizationRoleInput"
+      },
+      "AuthorizationPermissionsController_create": {
+        "method": "create",
+        "inputName": "CreatePermissionInput"
+      },
+      "AuthorizationPermissionsController_delete": {
+        "method": "delete",
+        "inputName": "DeletePermissionInput",
+        "bindingName": "deletePermission"
+      },
+      "AuthorizationPermissionsController_find": {
+        "method": "get",
+        "inputName": "GetPermissionInput"
+      },
+      "AuthorizationPermissionsController_list": {
+        "method": "list",
+        "inputName": "ListPermissionsInput"
+      },
+      "AuthorizationPermissionsController_update": {
+        "method": "update",
+        "inputName": "UpdatePermissionInput"
+      },
+      "AuthorizationResourcesByExternalIdController_deleteByExternalId": {
+        "method": "deleteResourceByExternalId",
+        "inputName": "DeleteResourceByExternalIdInput"
+      },
+      "AuthorizationResourcesByExternalIdController_getByExternalId": {
+        "method": "getResourceByExternalId",
+        "inputName": "GetResourceByExternalIdInput"
+      },
+      "AuthorizationResourcesByExternalIdController_listOrganizationMembershipsForResourceByExternalId": {
+        "method": "listResourceMembershipsByExternalId",
+        "inputName": "ListResourceMembershipsByExternalIdInput"
+      },
+      "AuthorizationResourcesByExternalIdController_updateByExternalId": {
+        "method": "updateResourceByExternalId",
+        "inputName": "UpdateResourceByExternalIdInput"
+      },
+      "AuthorizationResourcesController_create": {
+        "method": "createResource",
+        "inputName": "CreateResourceInput"
+      },
+      "AuthorizationResourcesController_delete": {
+        "method": "deleteResource",
+        "inputName": "DeleteResourceInput"
+      },
+      "AuthorizationResourcesController_findById": {
+        "method": "getResource",
+        "inputName": "GetResourceInput"
+      },
+      "AuthorizationResourcesController_list": {
+        "method": "listResources",
+        "inputName": "ListResourcesInput"
+      },
+      "AuthorizationResourcesController_listOrganizationMembershipsForResource": {
+        "method": "listResourceMemberships",
+        "inputName": "ListResourceMembershipsInput"
+      },
+      "AuthorizationResourcesController_update": {
+        "method": "updateResource",
+        "inputName": "UpdateResourceInput"
+      },
+      "AuthorizationRoleAssignmentsController_assignRole": {
+        "method": "assignRole",
+        "inputName": "AssignRoleInput"
+      },
+      "AuthorizationRoleAssignmentsController_listRoleAssignments": {
+        "method": "listRoleAssignments",
+        "inputName": "ListRoleAssignmentsInput"
+      },
+      "AuthorizationRoleAssignmentsController_listRoleAssignmentsForResource": {
+        "method": "listRoleAssignmentsForResource",
+        "inputName": "ListRoleAssignmentsForResourceInput"
+      },
+      "AuthorizationRoleAssignmentsController_listRoleAssignmentsForResourceByExternalId": {
+        "method": "listRoleAssignmentsForResourceByExternalId",
+        "inputName": "ListRoleAssignmentsForResourceByExternalIdInput"
+      },
+      "AuthorizationRoleAssignmentsController_removeRoleByCriteria": {
+        "method": "removeRoleByCriteria",
+        "inputName": "RemoveRoleByCriteriaInput"
+      },
+      "AuthorizationRoleAssignmentsController_removeRoleById": {
+        "method": "removeRoleById",
+        "inputName": "RemoveRoleByIdInput"
+      },
+      "AuthorizationRolePermissionsController_addPermission": {
+        "method": "addRolePermission",
+        "inputName": "AddRolePermissionInput"
+      },
+      "AuthorizationRolePermissionsController_setPermissions": {
+        "method": "setRolePermissions",
+        "inputName": "SetRolePermissionsInput"
+      },
+      "AuthorizationRolesController_create": {
+        "method": "createRole",
+        "inputName": "CreateRoleInput"
+      },
+      "AuthorizationRolesController_get": {
+        "method": "getRole",
+        "inputName": "GetRoleInput"
+      },
+      "AuthorizationRolesController_list": {
+        "method": "listRoles",
+        "inputName": "ListRolesInput"
+      },
+      "AuthorizationRolesController_update": {
+        "method": "updateRole",
+        "inputName": "UpdateRoleInput"
+      },
+      "AuthorizedApplicationsController_delete": {
+        "method": "deleteAuthorizedApplication",
+        "inputName": "DeleteUserAuthorizedApplicationInput",
+        "resource": "userManagement"
+      },
+      "AuthorizedApplicationsController_list": {
+        "method": "listAuthorizedApplications",
+        "inputName": "ListUserAuthorizedApplicationsInput",
+        "resource": "userManagement"
+      },
+      "ClientApiTokenController_issueClientApiToken": {
+        "method": "generate",
+        "inputName": "GenerateClientTokenInput",
+        "resource": "clientTokens"
+      },
+      "ConnectionsController_delete": {
+        "method": "delete",
+        "inputName": "DeleteConnectionInput",
+        "bindingName": "deleteConnection"
+      },
+      "ConnectionsController_find": {
+        "method": "get",
+        "inputName": "GetConnectionInput"
+      },
+      "ConnectionsController_list": {
+        "method": "list",
+        "inputName": "ListConnectionsInput"
+      },
+      "CorsOriginsController_createCorsOrigin": {
+        "method": "createCorsOrigin",
+        "inputName": "CreateCorsOriginInput",
+        "resource": "userManagement"
+      },
+      "CorsOriginsController_list": {
+        "method": "listCorsOrigins",
+        "inputName": "ListCorsOriginsInput",
+        "resource": "userManagement"
+      },
+      "DataIntegrationsController_getDataIntegrationAuthorizeUrl": {
+        "method": "getAuthorizeUrl",
+        "inputName": "GetAuthorizeUrlInput"
+      },
+      "DataIntegrationsController_getUserlandUserToken": {
+        "method": "getAccessToken",
+        "inputName": "GetAccessTokenInput"
+      },
+      "DataIntegrationsController_upsertApiKey": {
+        "method": "upsertApiKey",
+        "inputName": "UpsertConnectedAccountApiKeyInput"
+      },
+      "DataIntegrationsController_vendCredentials": {
+        "method": "vendCredentials",
+        "inputName": "VendCredentialsInput"
+      },
+      "DataIntegrationsManagementController_createDataIntegration": {
+        "method": "create",
+        "inputName": "CreateDataIntegrationInput"
+      },
+      "DataIntegrationsManagementController_deleteDataIntegration": {
+        "method": "delete",
+        "inputName": "DeleteDataIntegrationInput",
+        "bindingName": "deleteDataIntegration"
+      },
+      "DataIntegrationsManagementController_getDataIntegration": {
+        "method": "get",
+        "inputName": "GetDataIntegrationInput"
+      },
+      "DataIntegrationsManagementController_listDataIntegrations": {
+        "method": "list",
+        "inputName": "ListDataIntegrationsInput"
+      },
+      "DataIntegrationsManagementController_updateDataIntegration": {
+        "method": "update",
+        "inputName": "UpdateDataIntegrationInput"
+      },
+      "DataIntegrationsUserManagementController_createUserDataInstallation": {
+        "method": "importConnectedAccount",
+        "inputName": "ImportConnectedAccountInput",
+        "resource": "userManagement"
+      },
+      "DataIntegrationsUserManagementController_deleteUserDataInstallation": {
+        "method": "deleteConnectedAccount",
+        "inputName": "DeleteConnectedAccountInput",
+        "resource": "userManagement"
+      },
+      "DataIntegrationsUserManagementController_getUserDataInstallation": {
+        "method": "getConnectedAccount",
+        "inputName": "GetConnectedAccountInput",
+        "resource": "userManagement"
+      },
+      "DataIntegrationsUserManagementController_getUserDataIntegrations": {
+        "method": "listUserDataProviders",
+        "inputName": "ListUserDataProvidersInput",
+        "resource": "userManagement"
+      },
+      "DataIntegrationsUserManagementController_updateUserDataInstallation": {
+        "method": "updateConnectedAccount",
+        "inputName": "UpdateConnectedAccountInput",
+        "resource": "userManagement"
+      },
+      "DirectoriesController_deleteDirectory": {
+        "method": "deleteDirectory",
+        "inputName": "DeleteDirectoryInput",
+        "resource": "directorySync"
+      },
+      "DirectoriesController_find": {
+        "method": "getDirectory",
+        "inputName": "GetDirectoryInput",
+        "resource": "directorySync"
+      },
+      "DirectoriesController_list": {
+        "method": "listDirectories",
+        "inputName": "ListDirectoriesInput",
+        "resource": "directorySync"
+      },
+      "DirectoryGroupsController_find": {
+        "method": "getGroup",
+        "inputName": "GetDirectoryGroupInput",
+        "resource": "directorySync"
+      },
+      "DirectoryGroupsController_list": {
+        "method": "listGroups",
+        "inputName": "ListDirectoryGroupsInput",
+        "resource": "directorySync"
+      },
+      "DirectoryUsersController_find": {
+        "method": "getUser",
+        "inputName": "GetDirectoryUserInput",
+        "resource": "directorySync"
+      },
+      "DirectoryUsersController_list": {
+        "method": "listUsers",
+        "inputName": "ListDirectoryUsersInput",
+        "resource": "directorySync"
+      },
+      "EventsController_list": {
+        "method": "list",
+        "inputName": "ListEventsInput"
+      },
+      "ExternalAuthController_completeLogin": {
+        "method": "completeExternalAuth",
+        "inputName": "CompleteExternalAuthInput",
+        "resource": "userManagement"
+      },
+      "FeatureFlagsController_disableFlag": {
+        "method": "disable",
+        "inputName": "DisableFeatureFlagInput"
+      },
+      "FeatureFlagsController_enableFlag": {
+        "method": "enable",
+        "inputName": "EnableFeatureFlagInput"
+      },
+      "FeatureFlagsController_findBySlug": {
+        "method": "get",
+        "inputName": "GetFeatureFlagInput"
+      },
+      "FeatureFlagsController_list": {
+        "method": "list",
+        "inputName": "ListFeatureFlagsInput"
+      },
+      "FlagTargetsController_createTarget": {
+        "method": "createTarget",
+        "inputName": "CreateFlagTargetInput",
+        "resource": "featureFlags"
+      },
+      "FlagTargetsController_deleteTarget": {
+        "method": "deleteTarget",
+        "inputName": "DeleteFlagTargetInput",
+        "resource": "featureFlags"
+      },
+      "GroupMembershipsController_addMember": {
+        "method": "addMember",
+        "inputName": "AddGroupMemberInput"
+      },
+      "GroupMembershipsController_listMembers": {
+        "method": "listMembers",
+        "inputName": "ListGroupMembersInput"
+      },
+      "GroupMembershipsController_removeMember": {
+        "method": "removeMember",
+        "inputName": "RemoveGroupMemberInput"
+      },
+      "GroupsController_create": {
+        "method": "create",
+        "inputName": "CreateGroupInput"
+      },
+      "GroupsController_delete": {
+        "method": "delete",
+        "inputName": "DeleteGroupInput",
+        "bindingName": "deleteGroup"
+      },
+      "GroupsController_get": {
+        "method": "get",
+        "inputName": "GetGroupInput"
+      },
+      "GroupsController_list": {
+        "method": "list",
+        "inputName": "ListGroupsInput"
+      },
+      "GroupsController_update": {
+        "method": "update",
+        "inputName": "UpdateGroupInput"
+      },
+      "JumpWireWeb.DataVaultController.create": {
+        "method": "createObject",
+        "inputName": "CreateObjectInput"
+      },
+      "JumpWireWeb.DataVaultController.delete": {
+        "method": "deleteObject",
+        "inputName": "DeleteObjectInput"
+      },
+      "JumpWireWeb.DataVaultController.describe": {
+        "method": "describeObject",
+        "inputName": "DescribeObjectInput"
+      },
+      "JumpWireWeb.DataVaultController.index": {
+        "method": "listObjects",
+        "inputName": "ListObjectsInput"
+      },
+      "JumpWireWeb.DataVaultController.show_by_id": {
+        "method": "getObject",
+        "inputName": "GetObjectInput"
+      },
+      "JumpWireWeb.DataVaultController.show_by_name": {
+        "method": "getObjectByName",
+        "inputName": "GetObjectByNameInput"
+      },
+      "JumpWireWeb.DataVaultController.update": {
+        "method": "updateObject",
+        "inputName": "UpdateObjectInput"
+      },
+      "JumpWireWeb.DataVaultController.versions": {
+        "method": "listObjectVersions",
+        "inputName": "ListObjectVersionsInput"
+      },
+      "JumpWireWeb.KeyController.create_data_key": {
+        "method": "createDataKey",
+        "inputName": "CreateDataKeyInput"
+      },
+      "JumpWireWeb.KeyController.decrypt": {
+        "method": "decryptDataKey",
+        "inputName": "DecryptDataKeyInput"
+      },
+      "JumpWireWeb.KeyController.rekey": {
+        "method": "rekeyDataKey",
+        "inputName": "RekeyDataKeyInput"
+      },
+      "JwtTemplatesController_getJwtTemplate": {
+        "method": "getJwtTemplate",
+        "inputName": "GetJwtTemplateInput",
+        "resource": "userManagement"
+      },
+      "JwtTemplatesController_updateJwtTemplate": {
+        "method": "updateJwtTemplate",
+        "inputName": "UpdateJwtTemplateInput",
+        "resource": "userManagement"
+      },
+      "OrganizationApiKeysController_create": {
+        "method": "createForOrganization",
+        "inputName": "CreateOrganizationApiKeyInput",
+        "resource": "apiKeys"
+      },
+      "OrganizationApiKeysController_list": {
+        "method": "listForOrganization",
+        "inputName": "ListOrganizationApiKeysInput",
+        "resource": "apiKeys"
+      },
+      "OrganizationAuthorizedApplicationsController_list": {
+        "method": "listAuthorizedApplications",
+        "inputName": "ListOrganizationAuthorizedApplicationsInput",
+        "resource": "organizations"
+      },
+      "OrganizationDomainsController_create": {
+        "method": "create",
+        "inputName": "CreateOrganizationDomainInput"
+      },
+      "OrganizationDomainsController_delete": {
+        "method": "delete",
+        "inputName": "DeleteOrganizationDomainInput",
+        "bindingName": "deleteOrganizationDomain"
+      },
+      "OrganizationDomainsController_get": {
+        "method": "get",
+        "inputName": "GetOrganizationDomainInput"
+      },
+      "OrganizationDomainsController_verify": {
+        "method": "verify",
+        "inputName": "VerifyOrganizationDomainInput"
+      },
+      "OrganizationFeatureFlagsController_list": {
+        "method": "listForOrganization",
+        "inputName": "ListOrganizationFeatureFlagsInput",
+        "resource": "featureFlags"
+      },
+      "OrganizationMembershipGroupsController_listGroups": {
+        "method": "listOrganizationMembershipGroups",
+        "inputName": "ListOrganizationMembershipGroupsInput",
+        "resource": "userManagement"
+      },
+      "OrganizationsController_create": {
+        "method": "create",
+        "inputName": "CreateOrganizationInput"
+      },
+      "OrganizationsController_deleteOrganization": {
+        "method": "delete",
+        "inputName": "DeleteOrganizationInput",
+        "bindingName": "deleteOrganization"
+      },
+      "OrganizationsController_find": {
+        "method": "get",
+        "inputName": "GetOrganizationInput"
+      },
+      "OrganizationsController_getAuditLogConfiguration": {
+        "method": "getAuditLogConfiguration",
+        "inputName": "GetAuditLogConfigurationInput"
+      },
+      "OrganizationsController_getByExternalId": {
+        "method": "getByExternalId",
+        "inputName": "GetOrganizationByExternalIdInput"
+      },
+      "OrganizationsController_list": {
+        "method": "list",
+        "inputName": "ListOrganizationsInput"
+      },
+      "OrganizationsController_updateOrganization": {
+        "method": "update",
+        "inputName": "UpdateOrganizationInput"
+      },
+      "PortalSessionsController_create": {
+        "method": "generateLink",
+        "inputName": "GenerateLinkInput",
+        "resource": "portal"
+      },
+      "ProviderController_configure": {
+        "method": "configure",
+        "inputName": "ConfigureProviderInput",
+        "resource": "pipes"
+      },
+      "ProviderController_listForOrganization": {
+        "method": "listConfigurations",
+        "inputName": "ListProviderConfigurationsInput",
+        "resource": "pipes"
+      },
+      "PublicRadarChallengesController_get": {
+        "method": "getRadarChallenge",
+        "inputName": "GetRadarChallengeInput",
+        "resource": "userManagement"
+      },
+      "PublicRadarChallengesController_sendRadarSmsChallenge": {
+        "method": "sendRadarSmsChallenge",
+        "inputName": "SendRadarSmsChallengeInput",
+        "resource": "userManagement"
+      },
+      "RadarStandaloneController_assess": {
+        "method": "createAttempt",
+        "inputName": "CreateAttemptInput"
+      },
+      "RadarStandaloneController_deleteRadarListEntry": {
+        "method": "removeListEntry",
+        "inputName": "RemoveListEntryInput"
+      },
+      "RadarStandaloneController_updateRadarAttempt": {
+        "method": "updateAttempt",
+        "inputName": "UpdateAttemptInput"
+      },
+      "RadarStandaloneController_updateRadarList": {
+        "method": "addListEntry",
+        "inputName": "AddListEntryInput"
+      },
+      "RedirectUrisController_create": {
+        "method": "createRedirectUri",
+        "inputName": "CreateRedirectUriInput",
+        "resource": "userManagement"
+      },
+      "RedirectUrisController_delete": {
+        "method": "deleteRedirectUri",
+        "inputName": "DeleteRedirectUriInput",
+        "resource": "userManagement"
+      },
+      "RedirectUrisController_list": {
+        "method": "listRedirectUris",
+        "inputName": "ListRedirectUrisInput",
+        "resource": "userManagement"
+      },
+      "SsoController_authorize": {
+        "method": "getAuthorizationUrl",
+        "inputName": "GetSsoAuthorizationUrlInput"
+      },
+      "SsoController_getProfile": {
+        "method": "getProfile",
+        "inputName": "GetProfileInput"
+      },
+      "SsoController_jsonWebKeySet": {
+        "method": "getJwks",
+        "inputName": "GetJwksInput",
+        "resource": "userManagement"
+      },
+      "SsoController_logout": {
+        "method": "getLogoutUrl",
+        "inputName": "GetSsoLogoutUrlInput"
+      },
+      "SsoController_logoutAuthorize": {
+        "method": "logoutAuthorize",
+        "inputName": "SsoLogoutAuthorizeInput"
+      },
+      "SsoController_token": {
+        "method": "getProfileAndToken",
+        "inputName": "GetProfileAndTokenInput"
+      },
+      "UserApiKeysController_create": {
+        "method": "createForUser",
+        "inputName": "CreateUserApiKeyInput"
+      },
+      "UserApiKeysController_list": {
+        "method": "listForUser",
+        "inputName": "ListUserApiKeysInput"
+      },
+      "UserlandMagicAuthController_get": {
+        "method": "getMagicAuth",
+        "inputName": "GetMagicAuthInput",
+        "resource": "userManagement"
+      },
+      "UserlandMagicAuthController_sendMagicAuthCodeAndReturn": {
+        "method": "createMagicAuth",
+        "inputName": "CreateMagicAuthInput",
+        "resource": "userManagement"
+      },
+      "UserlandSessionsController_authenticate[0]": {
+        "method": "authenticateWithPassword",
+        "inputName": "AuthenticateWithPasswordInput",
+        "resource": "userManagement",
+        "errorsName": "authenticateErrors",
+        "descriptorName": "authenticateOp"
+      },
+      "UserlandSessionsController_logout": {
+        "method": "logout",
+        "inputName": "LogoutInput",
+        "resource": "userManagement"
+      },
+      "UserlandSessionsController_revokeSession": {
+        "method": "revokeSession",
+        "inputName": "RevokeSessionInput",
+        "resource": "userManagement"
+      },
+      "UserlandSsoController_authorize": {
+        "method": "getAuthorizationUrl",
+        "inputName": "GetAuthorizationUrlInput",
+        "resource": "userManagement"
+      },
+      "UserlandSsoController_deviceAuthorization": {
+        "method": "authorizeDevice",
+        "inputName": "AuthorizeDeviceInput",
+        "resource": "userManagement"
+      },
+      "UserlandUserAuthenticationFactorsController_create[0]": {
+        "method": "enrollAuthFactor",
+        "inputName": "EnrollAuthFactorInput",
+        "resource": "userManagement"
+      },
+      "UserlandUserAuthenticationFactorsController_list[0]": {
+        "method": "listAuthFactors",
+        "inputName": "ListAuthFactorsInput",
+        "resource": "userManagement"
+      },
+      "UserlandUserFeatureFlagsController_list": {
+        "method": "listUserFeatureFlags",
+        "inputName": "ListUserFeatureFlagsInput",
+        "resource": "userManagement"
+      },
+      "UserlandUserIdentitiesController_get": {
+        "method": "listIdentities",
+        "inputName": "ListIdentitiesInput",
+        "resource": "userManagement"
+      },
+      "UserlandUserInvitesController_accept": {
+        "method": "acceptInvitation",
+        "inputName": "AcceptInvitationInput",
+        "resource": "userManagement"
+      },
+      "UserlandUserInvitesController_create": {
+        "method": "sendInvitation",
+        "inputName": "SendInvitationInput",
+        "resource": "userManagement"
+      },
+      "UserlandUserInvitesController_get": {
+        "method": "getInvitation",
+        "inputName": "GetInvitationInput",
+        "resource": "userManagement"
+      },
+      "UserlandUserInvitesController_getByToken": {
+        "method": "findInvitationByToken",
+        "inputName": "FindInvitationByTokenInput",
+        "resource": "userManagement"
+      },
+      "UserlandUserInvitesController_list": {
+        "method": "listInvitations",
+        "inputName": "ListInvitationsInput",
+        "resource": "userManagement"
+      },
+      "UserlandUserInvitesController_resend": {
+        "method": "resendInvitation",
+        "inputName": "ResendInvitationInput",
+        "resource": "userManagement"
+      },
+      "UserlandUserInvitesController_revoke": {
+        "method": "revokeInvitation",
+        "inputName": "RevokeInvitationInput",
+        "resource": "userManagement"
+      },
+      "UserlandUserOrganizationMembershipsController_create": {
+        "method": "createOrganizationMembership",
+        "inputName": "CreateOrganizationMembershipInput",
+        "resource": "userManagement"
+      },
+      "UserlandUserOrganizationMembershipsController_deactivate": {
+        "method": "deactivateOrganizationMembership",
+        "inputName": "DeactivateOrganizationMembershipInput",
+        "resource": "userManagement"
+      },
+      "UserlandUserOrganizationMembershipsController_delete": {
+        "method": "deleteOrganizationMembership",
+        "inputName": "DeleteOrganizationMembershipInput",
+        "resource": "userManagement"
+      },
+      "UserlandUserOrganizationMembershipsController_get": {
+        "method": "getOrganizationMembership",
+        "inputName": "GetOrganizationMembershipInput",
+        "resource": "userManagement"
+      },
+      "UserlandUserOrganizationMembershipsController_list": {
+        "method": "listOrganizationMemberships",
+        "inputName": "ListOrganizationMembershipsInput",
+        "resource": "userManagement"
+      },
+      "UserlandUserOrganizationMembershipsController_reactivate": {
+        "method": "reactivateOrganizationMembership",
+        "inputName": "ReactivateOrganizationMembershipInput",
+        "resource": "userManagement"
+      },
+      "UserlandUserOrganizationMembershipsController_update": {
+        "method": "updateOrganizationMembership",
+        "inputName": "UpdateOrganizationMembershipInput",
+        "resource": "userManagement"
+      },
+      "UserlandUserSessionsController_list": {
+        "method": "listUserSessions",
+        "inputName": "ListUserSessionsInput",
+        "resource": "userManagement"
+      },
+      "UserlandUsersController_confirmEmailChange": {
+        "method": "confirmEmailChange",
+        "inputName": "ConfirmEmailChangeInput",
+        "resource": "userManagement"
+      },
+      "UserlandUsersController_createPasswordResetToken": {
+        "method": "createPasswordReset",
+        "inputName": "CreatePasswordResetInput",
+        "resource": "userManagement"
+      },
+      "UserlandUsersController_create[0]": {
+        "method": "createUser",
+        "inputName": "CreateUserInput",
+        "resource": "userManagement"
+      },
+      "UserlandUsersController_delete[0]": {
+        "method": "deleteUser",
+        "inputName": "DeleteUserInput",
+        "resource": "userManagement"
+      },
+      "UserlandUsersController_emailVerification[0]": {
+        "method": "verifyEmail",
+        "inputName": "VerifyEmailInput",
+        "resource": "userManagement"
+      },
+      "UserlandUsersController_getByExternalId": {
+        "method": "getUserByExternalId",
+        "inputName": "GetUserByExternalIdInput",
+        "resource": "userManagement"
+      },
+      "UserlandUsersController_getEmailVerification": {
+        "method": "getEmailVerification",
+        "inputName": "GetEmailVerificationInput",
+        "resource": "userManagement"
+      },
+      "UserlandUsersController_getPasswordReset": {
+        "method": "getPasswordReset",
+        "inputName": "GetPasswordResetInput",
+        "resource": "userManagement"
+      },
+      "UserlandUsersController_get[0]": {
+        "method": "getUser",
+        "inputName": "GetUserInput",
+        "resource": "userManagement"
+      },
+      "UserlandUsersController_list[0]": {
+        "method": "listUsers",
+        "inputName": "ListUsersInput",
+        "resource": "userManagement"
+      },
+      "UserlandUsersController_resetPassword[0]": {
+        "method": "resetPassword",
+        "inputName": "ResetPasswordInput",
+        "resource": "userManagement"
+      },
+      "UserlandUsersController_sendEmailChange": {
+        "method": "sendEmailChange",
+        "inputName": "SendEmailChangeInput",
+        "resource": "userManagement"
+      },
+      "UserlandUsersController_sendVerificationEmail[0]": {
+        "method": "sendVerificationEmail",
+        "inputName": "SendVerificationEmailInput",
+        "resource": "userManagement"
+      },
+      "UserlandUsersController_update[0]": {
+        "method": "updateUser",
+        "inputName": "UpdateUserInput",
+        "resource": "userManagement"
+      },
+      "WebhookEndpointsController_create": {
+        "method": "create",
+        "inputName": "CreateWebhookEndpointInput"
+      },
+      "WebhookEndpointsController_delete": {
+        "method": "delete",
+        "inputName": "DeleteWebhookEndpointInput",
+        "bindingName": "deleteWebhookEndpoint"
+      },
+      "WebhookEndpointsController_list": {
+        "method": "list",
+        "inputName": "ListWebhookEndpointsInput"
+      },
+      "WebhookEndpointsController_update": {
+        "method": "update",
+        "inputName": "UpdateWebhookEndpointInput"
+      },
+      "WidgetsPublicController_issueWidgetSessionToken": {
+        "method": "getToken",
+        "inputName": "GetWidgetTokenInput"
+      }
+    },
+    "schemas": {
+      "Object": "VaultObject",
+      "RadarChallenge": "RadarChallengeDetails",
+      "UserlandAuthenticateResponse": "AuthenticationResponse",
+      "UserlandUser": "User",
+      "UserlandUserAuthenticationFactorEnrollResponse": "AuthenticationFactorEnrollResponse",
+      "UserlandUserAuthenticationFactorList": "AuthenticationFactorList",
+      "UserlandUserInvite": "Invitation",
+      "UserlandUserInviteList": "InvitationList",
+      "UserlandUserList": "UserList",
+      "UserlandUserOrganizationMembership": "OrganizationMembership",
+      "UserlandUserOrganizationMembershipBaseList": "OrganizationMembershipBaseList",
+      "UserlandUserOrganizationMembershipBaseWithUser": "OrganizationMembershipWithUser",
+      "UserlandUserOrganizationMembershipBaseWithUserList": "OrganizationMembershipWithUserList",
+      "UserlandUserOrganizationMembershipList": "OrganizationMembershipList"
+    }
+  },
+  "schemas": {
+    "Actor": {
+      "docs": "The user or API key that performed an action."
+    },
+    "AgentCredentialValidation": {
+      "docs": "Result of validating an agent credential, reporting whether it is valid and, if so, its registration and expiry."
+    },
+    "AgentRegistration": {
+      "docs": "An agent registered to an organization, with its identity, verification status, kind, and optional claim."
+    },
+    "ApiKey": {
+      "docs": "A WorkOS API Key issued to an organization or user, with its permissions and obfuscated value."
+    },
+    "ApiKeyInstallationDto": {
+      "docs": "Request to store a third-party API key secret for a Connect installation, scoped to a user and optionally an organization."
+    },
+    "ApiKeyValidationResponse": {
+      "docs": "Result of validating an API Key, returning the resolved key and the agent registration it was issued for, if any."
+    },
+    "AuditLogActionJson": {
+      "docs": "A defined Audit Logs action along with its associated schema."
+    },
+    "AuditLogActionList": {
+      "docs": "A page of audit log actions."
+    },
+    "AuditLogConfiguration": {
+      "docs": "An organization's Audit Logs settings, including retention period, state, and configured log stream."
+    },
+    "AuditLogEventActorDto": {
+      "docs": "The actor that performed an Audit Logs event."
+    },
+    "AuditLogEventContextDto": {
+      "docs": "Location and user-agent context describing where and how an Audit Logs event occurred."
+    },
+    "AuditLogEventCreateResponse": {
+      "docs": "Confirmation that an Audit Logs event was created."
+    },
+    "AuditLogEventDto": {
+      "docs": "An Audit Logs event describing an action, its actor, affected targets, and context."
+    },
+    "AuditLogEventTargetDto": {
+      "docs": "A resource affected by an Audit Logs event."
+    },
+    "AuditLogExportJson": {
+      "docs": "An Audit Logs export job and, once ready, a URL to its CSV file."
+    },
+    "AuditLogSchemaActorDto": {
+      "docs": "The JSON Schema for an Audit Logs action's actor metadata."
+    },
+    "AuditLogSchemaJson": {
+      "docs": "A versioned schema describing the actor, targets, and metadata shape of an Audit Logs action."
+    },
+    "AuditLogSchemaList": {
+      "docs": "A page of audit log action schemas."
+    },
+    "AuditLogSchemaTargetDto": {
+      "docs": "A target type and its metadata JSON Schema within an Audit Logs action schema."
+    },
+    "AuditLogsRetentionJson": {
+      "docs": "The number of days Audit Logs events are retained before deletion."
+    },
+    "AuthenticationChallenge": {
+      "docs": "An MFA authentication challenge issued for an authentication factor."
+    },
+    "AuthenticationChallengeVerifyResponse": {
+      "docs": "Result of verifying an MFA authentication challenge code."
+    },
+    "AuthenticationFactor": {
+      "docs": "A multi-factor authentication factor (SMS, TOTP, or WebAuthn) enrolled for an AuthKit user."
+    },
+    "AuthenticationFactorEnrollResponse": {
+      "docs": "The response from enrolling an AuthKit MFA authentication factor, containing the factor and its initial challenge."
+    },
+    "AuthenticationFactorEnrolled": {
+      "docs": "A newly enrolled AuthKit multi-factor authentication factor, including the TOTP secret, QR code, and URI returned only at enrollment time."
+    },
+    "AuthenticationFactorList": {
+      "docs": "A page of authentication factors enrolled by an AuthKit user."
+    },
+    "AuthenticationResponse": {
+      "docs": "The response from a successful authentication. `access_token` and\n`refresh_token` decode to `Redacted<string>` — they never print."
+    },
+    "AuthorizationCheck": {
+      "docs": "The result of a fine-grained authorization (FGA) permission check on a resource."
+    },
+    "AuthorizationPermission": {
+      "docs": "A permission that can be granted on a resource type in WorkOS fine-grained authorization (FGA)."
+    },
+    "AuthorizationPermissionCreateResponse": {
+      "docs": "A newly created authorization permission."
+    },
+    "AuthorizationPermissionList": {
+      "docs": "A page of fine-grained authorization (FGA) permissions."
+    },
+    "AuthorizationResource": {
+      "docs": "A resource instance governed by WorkOS fine-grained authorization (FGA)."
+    },
+    "AuthorizationResourceCreateResponse": {
+      "docs": "A newly created authorization resource."
+    },
+    "AuthorizationResourceExternalUpdateResponse": {
+      "docs": "An authorization resource updated by external identifier."
+    },
+    "AuthorizationResourceList": {
+      "docs": "A page of fine-grained authorization (FGA) resources."
+    },
+    "AuthorizationResourceUpdateResponse": {
+      "docs": "An updated authorization resource."
+    },
+    "AuthorizedApplication": {
+      "docs": "A Connect application authorized by a user."
+    },
+    "AuthorizedConnectApplicationList": {
+      "docs": "A page of Connect applications a user has authorized, each with the scopes granted to it."
+    },
+    "ClaimViewResponse": {
+      "docs": "The state of an agent registration claim, including the user code the agent presents and the organizations offered as placement choices."
+    },
+    "ClientApiTokenResponse": {
+      "docs": "The Client API token issued for an organization and user."
+    },
+    "ConnectApplicationClientSecret": {
+      "docs": "A client secret issued for a Connect application."
+    },
+    "ConnectApplicationList": {
+      "docs": "A page of Connect applications."
+    },
+    "ConnectedAccount": {
+      "docs": "A third-party account connected to a user or organization via OAuth or API key in WorkOS Connect."
+    },
+    "Connection": {
+      "docs": "An SSO connection between an organization and its identity provider."
+    },
+    "ConnectionList": {
+      "docs": "A page of SSO connections."
+    },
+    "CorsOriginList": {
+      "docs": "A page of allowed CORS origins."
+    },
+    "CorsOriginResponse": {
+      "docs": "A CORS origin allowed to make cross-origin requests."
+    },
+    "CreateDataKeyResponse": {
+      "docs": "A newly generated Vault data encryption key, returned with its encrypted key blob and encryption context."
+    },
+    "CustomProviderDefinitionDto": {
+      "docs": "OAuth configuration defining a custom data provider for Pipes/Connect."
+    },
+    "DataIntegration": {
+      "docs": "A configured data provider integration for Pipes/Connect."
+    },
+    "DataIntegrationAccessTokenActiveResponse": {
+      "docs": "An active OAuth access token for a connected data integration."
+    },
+    "DataIntegrationAccessTokenUnavailableResponse": {
+      "docs": "An inactive response explaining why a data integration access token is unavailable."
+    },
+    "DataIntegrationApiKeyCredentialResponse": {
+      "docs": "An active API-key credential vended for a connected data integration."
+    },
+    "DataIntegrationAuthorizeUrlResponse": {
+      "docs": "The OAuth authorization URL to redirect a user to when connecting a data provider account (Pipes/Connect)."
+    },
+    "DataIntegrationConfigurationListResponse": {
+      "docs": "A list of per-organization data provider configurations (Pipes/Connect)."
+    },
+    "DataIntegrationConfigurationResponse": {
+      "docs": "A data provider's configuration as it applies to a single organization (Pipes/Connect)."
+    },
+    "DataIntegrationCredentialUnavailableResponse": {
+      "docs": "An inactive response explaining why data integration credentials are unavailable."
+    },
+    "DataIntegrationCredentials": {
+      "docs": "Organization-supplied OAuth credentials for a data provider integration (Pipes/Connect)."
+    },
+    "DataIntegrationCredentialsDto": {
+      "docs": "Request body specifying the OAuth credentials for a data provider integration (Pipes/Connect)."
+    },
+    "DataIntegrationList": {
+      "docs": "A page of Pipes data providers."
+    },
+    "DataIntegrationOAuthCredentialResponse": {
+      "docs": "An active OAuth credential vended for a connected data integration."
+    },
+    "DataIntegrationsListResponse": {
+      "docs": "A list of Pipes data providers, each including the current user's connected-account status."
+    },
+    "DecryptResponse": {
+      "docs": "A decrypted Vault data key."
+    },
+    "DeleteObjectResponse": {
+      "docs": "Result of deleting a Vault object."
+    },
+    "DeviceAuthorizationResponse": {
+      "docs": "Codes and verification URIs returned to begin the OAuth 2.0 device authorization flow."
+    },
+    "Directory": {
+      "docs": "A Directory Sync directory connected to an external identity provider."
+    },
+    "DirectoryGroup": {
+      "docs": "A group synced from a Directory Sync directory."
+    },
+    "DirectoryGroupList": {
+      "docs": "A page of Directory Sync groups."
+    },
+    "DirectoryList": {
+      "docs": "A page of Directory Sync directories."
+    },
+    "DirectoryUserList": {
+      "docs": "A page of Directory Sync users."
+    },
+    "DirectoryUserWithGroups": {
+      "docs": "A Directory Sync user together with the groups they belong to."
+    },
+    "EmailChange": {
+      "docs": "A pending email-change challenge for an AuthKit user."
+    },
+    "EmailChangeConfirmation": {
+      "docs": "A confirmed user email change."
+    },
+    "EmailVerification": {
+      "docs": "An email verification code issued to an AuthKit user."
+    },
+    "EnvironmentRoleAddPermissionResponse": {
+      "docs": "An environment role after adding a permission."
+    },
+    "EnvironmentRoleCreateResponse": {
+      "docs": "A newly created environment role."
+    },
+    "EnvironmentRoleSetPermissionsResponse": {
+      "docs": "An environment role after replacing its permissions."
+    },
+    "EnvironmentRoleUpdateResponse": {
+      "docs": "An updated environment role."
+    },
+    "EventList": {
+      "docs": "A page of WorkOS events."
+    },
+    "ExternalAuthCompleteResponse": {
+      "docs": "Redirect URI returned to resume the AuthKit OAuth flow after external authentication."
+    },
+    "FeatureFlagDisableResponse": {
+      "docs": "A feature flag after being disabled."
+    },
+    "FeatureFlagEnableResponse": {
+      "docs": "A feature flag after being enabled."
+    },
+    "Flag": {
+      "docs": "A WorkOS Feature Flag."
+    },
+    "FlagList": {
+      "docs": "A page of Feature Flags."
+    },
+    "Group": {
+      "docs": "A named group of users within a WorkOS organization."
+    },
+    "GroupList": {
+      "docs": "A page of groups."
+    },
+    "GroupRoleAssignment": {
+      "docs": "An RBAC/FGA assignment granting a group a role on a specific resource."
+    },
+    "GroupRoleAssignmentList": {
+      "docs": "A page of group role assignments."
+    },
+    "Invitation": {
+      "docs": "An AuthKit invitation for a recipient to join an organization."
+    },
+    "InvitationAcceptResponse": {
+      "docs": "An accepted user invitation."
+    },
+    "InvitationList": {
+      "docs": "A page of AuthKit invitations."
+    },
+    "InvitationRevokeResponse": {
+      "docs": "A revoked user invitation."
+    },
+    "JwksResponse": {
+      "docs": "A JWKS document of RSA public keys used to verify AuthKit-issued access tokens."
+    },
+    "JwtTemplate": {
+      "docs": "A Liquid template that customizes the claims embedded in AuthKit-issued JWT access tokens."
+    },
+    "ListMetadata": {
+      "docs": "Cursor pointers returned with every WorkOS list response."
+    },
+    "MagicAuth": {
+      "docs": "An AuthKit Magic Auth one-time code issued to a user's email address."
+    },
+    "MagicAuthCreateResponse": {
+      "docs": "A newly created Magic Auth challenge."
+    },
+    "NewConnectApplicationSecret": {
+      "docs": "A newly created client secret for a Connect application; the plaintext `secret` is returned only at creation time."
+    },
+    "ObjectListResponse": {
+      "docs": "A page of Vault object summaries."
+    },
+    "ObjectMetadata": {
+      "docs": "Metadata for a stored Vault object, including its encryption key, key-derivation context, and current version."
+    },
+    "ObjectSummary": {
+      "docs": "A condensed Vault object entry returned in list responses."
+    },
+    "ObjectVersion": {
+      "docs": "A single stored version (immutable snapshot) of a Vault object."
+    },
+    "ObjectWithoutValue": {
+      "docs": "A Vault object and its metadata with the decrypted value omitted."
+    },
+    "Organization": {
+      "docs": "A WorkOS organization."
+    },
+    "OrganizationApiKey": {
+      "docs": "An API key scoped to a WorkOS organization."
+    },
+    "OrganizationApiKeyList": {
+      "docs": "A page of organization API keys."
+    },
+    "OrganizationApiKeyWithValue": {
+      "docs": "An organization API key including its full plaintext value, returned only once at creation time."
+    },
+    "OrganizationAuthorizedApplication": {
+      "docs": "A Connect application authorized for an organization user."
+    },
+    "OrganizationAuthorizedConnectApplicationList": {
+      "docs": "A page of Connect applications a user has authorized to access an organization."
+    },
+    "OrganizationDomainCreateResponse": {
+      "docs": "A newly created organization domain."
+    },
+    "OrganizationDomainDataDto": {
+      "docs": "A domain and its verification state supplied when creating or updating an organization."
+    },
+    "OrganizationDomainStandAlone": {
+      "docs": "A verified or pending domain attached to an organization, including its DNS verification token and strategy."
+    },
+    "OrganizationList": {
+      "docs": "A page of organizations."
+    },
+    "OrganizationMembership": {
+      "docs": "An AuthKit user's membership in an organization, including its assigned roles and the embedded user."
+    },
+    "OrganizationMembershipBaseList": {
+      "docs": "A page of AuthKit organization memberships, without embedded user or role details."
+    },
+    "OrganizationMembershipBaseListItem": {
+      "docs": "An organization membership summary in a group member list."
+    },
+    "OrganizationMembershipCreateResponse": {
+      "docs": "A newly created organization membership."
+    },
+    "OrganizationMembershipDeactivateResponse": {
+      "docs": "A deactivated organization membership."
+    },
+    "OrganizationMembershipList": {
+      "docs": "A page of AuthKit organization memberships."
+    },
+    "OrganizationMembershipWithUser": {
+      "docs": "An AuthKit organization membership with its user embedded."
+    },
+    "OrganizationMembershipWithUserList": {
+      "docs": "A page of AuthKit organization memberships, each with its user embedded."
+    },
+    "OrganizationRoleAddPermissionResponse": {
+      "docs": "An organization role after adding a permission."
+    },
+    "OrganizationRoleCreateResponse": {
+      "docs": "A newly created organization role."
+    },
+    "OrganizationRoleGetResponse": {
+      "docs": "An organization role returned by slug."
+    },
+    "OrganizationRoleSetPermissionsResponse": {
+      "docs": "An organization role after replacing its permissions."
+    },
+    "OrganizationRoleUpdateResponse": {
+      "docs": "An updated organization role."
+    },
+    "PasswordReset": {
+      "docs": "An AuthKit password reset token, with the reset URL and expiry, created when a user requests to reset their password."
+    },
+    "PortalLinkResponse": {
+      "docs": "An ephemeral link used to launch a WorkOS Admin Portal session."
+    },
+    "Profile": {
+      "docs": "An SSO user profile returned by an identity provider, including its attributes, groups, and assigned roles."
+    },
+    "RadarChallengeDetails": {
+      "docs": "A Radar email verification challenge issued during authentication, carrying the code and its expiry."
+    },
+    "RadarListEntryAlreadyPresentResponse": {
+      "docs": "Returned when a Radar blocklist or allowlist entry being added already exists."
+    },
+    "RadarStandaloneResponse": {
+      "docs": "The verdict of a standalone Radar risk assessment, indicating whether an authentication attempt should be allowed, blocked, or challenged and why."
+    },
+    "RedirectUri": {
+      "docs": "A redirect URI registered for a WorkOS environment, used as an allowed callback destination for SSO and AuthKit."
+    },
+    "RedirectUriDto": {
+      "docs": "Request body specifying a redirect URI to register, and whether it is the default."
+    },
+    "RedirectUriList": {
+      "docs": "A page of allowed redirect URIs."
+    },
+    "ReplaceGroupRoleAssignmentEntryDto": {
+      "docs": "A single RBAC role assignment granting a group a role on a resource or the organization itself."
+    },
+    "ResetPasswordResponse": {
+      "docs": "Returns the AuthKit user whose password was reset."
+    },
+    "Role": {
+      "docs": "An RBAC role defined at the environment or organization level, carrying its assigned permissions."
+    },
+    "RoleList": {
+      "docs": "A list of RBAC roles."
+    },
+    "SendRadarSmsChallengeResponse": {
+      "docs": "Returns the verification ID and phone number for a dispatched Radar SMS challenge."
+    },
+    "SendVerificationEmailResponse": {
+      "docs": "Returns the AuthKit user to whom an email verification message was sent."
+    },
+    "Session": {
+      "docs": "A user authentication session."
+    },
+    "SessionList": {
+      "docs": "A page of user sessions."
+    },
+    "SlimRole": {
+      "docs": "A minimal reference to an RBAC role, identified by its slug."
+    },
+    "SsoAuthorizeUrlResponse": {
+      "docs": "Returns the OAuth 2.0 authorization URL to redirect a user to in order to begin SSO."
+    },
+    "SsoLogoutAuthorizeResponse": {
+      "docs": "Returns the SSO logout redirect URL and token used to sign a user out at their identity provider."
+    },
+    "SsoTokenResponse": {
+      "docs": "The result of exchanging an SSO authorization code, including the access token, user profile, and any identity provider OAuth tokens."
+    },
+    "UpdateCustomProviderDefinitionDto": {
+      "docs": "Request body updating a custom OAuth provider definition used by a Pipes/Connect data provider integration."
+    },
+    "User": {
+      "docs": "A WorkOS AuthKit user."
+    },
+    "UserApiKey": {
+      "docs": "A WorkOS API key owned by a user and scoped to an organization, without its secret value."
+    },
+    "UserApiKeyList": {
+      "docs": "A page of API keys."
+    },
+    "UserApiKeyWithValue": {
+      "docs": "A WorkOS API key including its full plaintext value, returned only once at creation."
+    },
+    "UserConsentOption": {
+      "docs": "A consent option collected from a user during authentication."
+    },
+    "UserCreateResponse": {
+      "docs": "A newly created user."
+    },
+    "UserIdentity": {
+      "docs": "An external OAuth identity linked to a user."
+    },
+    "UserList": {
+      "docs": "A page of AuthKit users."
+    },
+    "UserObject": {
+      "docs": "User details to create or update in AuthKit, keyed by your application's own user identifier."
+    },
+    "UserRoleAssignment": {
+      "docs": "A WorkOS RBAC role assignment linking a role to an organization membership on a resource."
+    },
+    "UserRoleAssignmentList": {
+      "docs": "A page of user role assignments."
+    },
+    "VaultObject": {
+      "docs": "A WorkOS Vault object with its decrypted value and metadata."
+    },
+    "VerifyEmailResponse": {
+      "docs": "The AuthKit user returned after successful email verification."
+    },
+    "VersionListResponse": {
+      "docs": "A page of stored versions for a Vault object."
+    },
+    "WebhookEndpointJson": {
+      "docs": "A configured endpoint that receives WorkOS webhook event notifications."
+    },
+    "WebhookEndpointList": {
+      "docs": "A page of webhook endpoints."
+    },
+    "WidgetSessionTokenResponse": {
+      "docs": "The session token used to authenticate an embedded WorkOS Widget."
+    }
+  },
+  "resources": {
+    "organizations": {
+      "docs": "Uniform per-operation blocks: input schema + type, a declarative descriptor,\nand a thin exported function that dispatches through `run`.",
+      "runtimeBannerConcern": "request execution, retry, pagination"
+    },
+    "userManagement": {
+      "docs": "The authenticate operation is the error-rich showcase: WorkOS returns\ndistinct 400/403 discriminator codes that map to distinct tagged errors, and\nboth the request secrets (`client_secret`, `password`) and the response\ntokens (`access_token`, `refresh_token`) are redacted.",
+      "runtimeBannerConcern": "redaction, error gating, request execution"
+    }
+  },
+  "operations": {
+    "organizations.create": {
+      "docs": "Create an organization in the current environment."
+    },
+    "organizations.get": {
+      "docs": "Fetch a single organization by id."
+    },
+    "organizations.delete": {
+      "docs": "Permanently delete an organization. Cannot be undone.",
+      "errorsDocs": "The spec documents only 200/202/403 for delete — a missing organization\nreturns 403, not 404 — so `Forbidden` is the only declared error. (v1 also\nlisted `NotFound`, which delete cannot actually produce.)"
+    },
+    "organizations.list": {
+      "docs": "Fetch a single page of organizations."
+    },
+    "userManagement.authenticateWithPassword": {
+      "docs": "Authenticate a user with an email and password (the `password` grant).\n\n`client_secret` and `password` are `Redacted<string>` — wrap plaintext with\n`Redacted.make(...)`. On success, `access_token`/`refresh_token` are likewise\n`Redacted<string>`. Failures discriminate: `InvalidCredentials`,\n`MfaEnrollment`, `EmailVerificationRequired`, `OrganizationSelectionRequired`,\nand so on — never a single opaque `BadRequest`.\n\nOther grant types (authorization-code exchange, refresh, magic auth, OTP,\ndevice code) are not yet modeled — the endpoint's grant union is narrowed to\nthe password grant for now."
+    },
+    "applications.create": {
+      "docs": "Create an OAuth application. The endpoint also accepts Machine-to-Machine\n(M2M) applications, but this client currently models the OAuth variant only\n(`application_type` is fixed to `\"oauth\"`); M2M creation is not yet\nsupported here."
+    },
+    "userManagement.updateOrganizationMembership": {
+      "docs": "Update the details of an existing organization membership. This client\nmodels the single-role update (`role_slug`) only; the endpoint's bulk\n`role_slugs` variant is not yet supported (see `MultipleRolesNotEnabled`)."
+    },
+    "auditLogs.createEvent": {
+      "docs": "Emit an Audit Logs event for an organization. The endpoint's\n`idempotency-key` header is not yet modeled by this client (header\nparameters are unsupported); retried calls are not deduplicated."
+    },
+    "agents.validateCredential": {
+      "docs": "Validate an agent credential. This client models access-token credential\nvalidation only; the endpoint's API-key credential variant is not yet\nsupported."
+    }
+  }
+}

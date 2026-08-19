@@ -12,26 +12,182 @@
  * tokens (`access_token`, `refresh_token`) are redacted.
  */
 import {
+  BadRequest,
+  Conflict,
+  Forbidden,
   NotFound,
   type Operation,
+  Pagination,
   Secret,
+  TooManyRequests,
+  Unauthorized,
   UnprocessableEntity,
 } from "@hourglass-financial/api-factory-core";
 import type * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
+import type * as Stream from "effect/Stream";
 import { run, type WorkosClient, type WorkosError } from "../client.ts";
 import {
+  AccessDenied,
+  ApplicationConsentRequired,
+  AuthenticationMethodNotAllowed,
+  AuthorizationPending,
+  CodeChallengeNotFound,
+  EmailAlreadyInvited,
+  EmailAlreadyInvitedToOrganization,
+  EmailAlreadyVerified,
+  EmailChangeCodeExpired,
+  EmailChangeCodeIncorrect,
+  EmailChangeCodePreviouslyUsed,
+  EmailChangeNotAllowed,
+  EmailChangeNotNeeded,
+  EmailNotAvailable,
   EmailPasswordAuthDisabled,
+  EmailPreviouslyVerified,
+  EmailVerificationCodeExpired,
+  EmailVerificationCodeIncorrect,
+  EmailVerificationCodePreviouslyUsed,
   EmailVerificationRequired,
+  ExpiredToken,
+  ExpiresInDaysTooLong,
+  ExpiresInDaysTooShort,
+  ExternalAuthSessionAlreadyCompleted,
+  ExternalIdAlreadyUsed,
+  ExtraAttributesRequired,
   InvalidClient,
+  InvalidConnection,
   InvalidCredentials,
-  InvalidGrant,
+  InvalidEmail,
+  InvalidLinkAuthorizationCode,
+  InvalidLocale,
+  InvalidMetadata,
+  InvalidOneTimeCode,
+  InvalidOrganizationId,
+  InvalidPasswordHash,
+  InvalidPendingAuthenticationToken,
+  InvalidProfile,
+  InvalidRequestParameters,
+  InvalidRole,
+  InvitationCannotBeUsedForEmail,
+  InvitationInvalid,
+  InviteAccepted,
+  InviteExpired,
+  InviteRevoked,
   MfaChallenge,
   MfaEnrollment,
+  MissingUserIdOrOrganizationId,
+  MultipleRolesNotEnabled,
+  NoPendingEmailChange,
+  OneTimeCodeExpired,
+  OneTimeCodePreviouslyUsed,
+  OneTimeCodeTooManyAttempts,
+  OrganizationAuthenticationMethodsRequired,
   OrganizationSelectionRequired,
+  PasskeyProgressiveEnrollment,
+  PasswordAndPasswordHashProvided,
+  PasswordAndPasswordHashTypeProvided,
+  PasswordResetNotAllowed,
+  PasswordStrengthError,
+  PkceNotSupported,
   RadarChallenge,
+  RadarSignUpChallenge,
+  SignUpNotAllowed,
+  SlowDown,
+  SubResourceScopedRoleNotAllowed,
+  UnauthorizedClient,
+  UserAlreadyExists,
+  UserAlreadyOrganizationMember,
+  UserConsentOptionsNotSupported,
+  UserCreationError,
+  UserMismatch,
 } from "../errors.ts";
-import { AuthenticationResponse } from "../schemas.ts";
+import {
+  AuthenticationFactor,
+  AuthenticationFactorEnrollResponse,
+  AuthenticationFactorList,
+  AuthenticationResponse,
+  AuthorizedApplication,
+  AuthorizedConnectApplicationList,
+  ConnectedAccount,
+  CorsOriginList,
+  CorsOriginResponse,
+  DataIntegrationsListResponse,
+  DeviceAuthorizationResponse,
+  EmailChange,
+  EmailChangeConfirmation,
+  EmailVerification,
+  ExternalAuthCompleteResponse,
+  Flag,
+  FlagList,
+  Group,
+  GroupList,
+  Invitation,
+  InvitationAcceptResponse,
+  InvitationList,
+  InvitationRevokeResponse,
+  JwksResponse,
+  JwtTemplate,
+  MagicAuth,
+  MagicAuthCreateResponse,
+  OrganizationMembership,
+  OrganizationMembershipCreateResponse,
+  OrganizationMembershipDeactivateResponse,
+  OrganizationMembershipList,
+  PasswordReset,
+  RadarChallengeDetails,
+  RedirectUri,
+  RedirectUriList,
+  ResetPasswordResponse,
+  SendRadarSmsChallengeResponse,
+  SendVerificationEmailResponse,
+  Session,
+  SessionList,
+  User,
+  UserConsentOption,
+  UserCreateResponse,
+  UserIdentity,
+  UserList,
+  UserObject,
+  VerifyEmailResponse,
+} from "../schemas.ts";
+
+// ===========================================================================
+// userManagement.acceptInvitation — POST /user_management/invitations/{id}/accept
+// ===========================================================================
+
+export const AcceptInvitationInput = Schema.Struct({
+  id: Schema.String,
+});
+export interface AcceptInvitationInput extends Schema.Schema.Type<
+  typeof AcceptInvitationInput
+> {}
+
+const acceptInvitationErrors = [BadRequest, NotFound] as const;
+
+const acceptInvitationOp: Operation<
+  typeof AcceptInvitationInput,
+  typeof InvitationAcceptResponse,
+  typeof acceptInvitationErrors
+> = {
+  id: "userManagement.acceptInvitation",
+  method: "POST",
+  retry: "throttling",
+  pathTemplate: "/user_management/invitations/{id}/accept",
+  pathParams: ["id"],
+  queryParams: [],
+  input: AcceptInvitationInput,
+  output: InvitationAcceptResponse,
+  errors: acceptInvitationErrors,
+};
+
+/** Accepts an invitation and, if linked to an organization, activates the user's membership in that organization. */
+export const acceptInvitation = (
+  input: AcceptInvitationInput,
+): Effect.Effect<
+  InvitationAcceptResponse,
+  WorkosError<typeof acceptInvitationErrors>,
+  WorkosClient
+> => run(acceptInvitationOp, input);
 
 // ===========================================================================
 // userManagement.authenticateWithPassword — POST /user_management/authenticate
@@ -46,23 +202,51 @@ export const AuthenticateWithPasswordInput = Schema.Struct({
   ip_address: Schema.optional(Schema.String),
   device_id: Schema.optional(Schema.String),
   user_agent: Schema.optional(Schema.String),
+  signals_id: Schema.optional(Schema.String),
+  radar_auth_attempt_id: Schema.optional(Schema.String),
 });
 export interface AuthenticateWithPasswordInput extends Schema.Schema.Type<
   typeof AuthenticateWithPasswordInput
 > {}
 
 const authenticateErrors = [
+  AccessDenied,
+  ApplicationConsentRequired,
+  AuthenticationMethodNotAllowed,
+  AuthorizationPending,
+  CodeChallengeNotFound,
   EmailPasswordAuthDisabled,
   EmailVerificationRequired,
+  ExpiredToken,
+  ExtraAttributesRequired,
   InvalidClient,
+  InvalidConnection,
   InvalidCredentials,
-  InvalidGrant,
+  InvalidLinkAuthorizationCode,
+  InvalidOneTimeCode,
+  InvalidOrganizationId,
+  InvalidPendingAuthenticationToken,
+  InvalidProfile,
+  InvitationCannotBeUsedForEmail,
+  InvitationInvalid,
   MfaChallenge,
   MfaEnrollment,
   NotFound,
+  OneTimeCodeExpired,
+  OneTimeCodePreviouslyUsed,
+  OneTimeCodeTooManyAttempts,
+  OrganizationAuthenticationMethodsRequired,
   OrganizationSelectionRequired,
+  PasskeyProgressiveEnrollment,
+  PkceNotSupported,
   RadarChallenge,
+  RadarSignUpChallenge,
+  SignUpNotAllowed,
+  SlowDown,
+  TooManyRequests,
+  UnauthorizedClient,
   UnprocessableEntity,
+  UserMismatch,
 ] as const;
 
 const authenticateOp: Operation<
@@ -89,7 +273,11 @@ const authenticateOp: Operation<
  * `Redacted.make(...)`. On success, `access_token`/`refresh_token` are likewise
  * `Redacted<string>`. Failures discriminate: `InvalidCredentials`,
  * `MfaEnrollment`, `EmailVerificationRequired`, `OrganizationSelectionRequired`,
- * `InvalidGrant`, and so on — never a single opaque `BadRequest`.
+ * and so on — never a single opaque `BadRequest`.
+ *
+ * Other grant types (authorization-code exchange, refresh, magic auth, OTP,
+ * device code) are not yet modeled — the endpoint's grant union is narrowed to
+ * the password grant for now.
  */
 export const authenticateWithPassword = (
   input: AuthenticateWithPasswordInput,
@@ -98,3 +286,3028 @@ export const authenticateWithPassword = (
   WorkosError<typeof authenticateErrors>,
   WorkosClient
 > => run(authenticateOp, input);
+
+// ===========================================================================
+// userManagement.authorizeDevice — POST /user_management/authorize/device
+// ===========================================================================
+
+export const AuthorizeDeviceInput = Schema.Struct({
+  client_id: Schema.String,
+});
+export interface AuthorizeDeviceInput extends Schema.Schema.Type<
+  typeof AuthorizeDeviceInput
+> {}
+
+const authorizeDeviceErrors = [BadRequest, Forbidden] as const;
+
+const authorizeDeviceOp: Operation<
+  typeof AuthorizeDeviceInput,
+  typeof DeviceAuthorizationResponse,
+  typeof authorizeDeviceErrors
+> = {
+  id: "userManagement.authorizeDevice",
+  method: "POST",
+  retry: "throttling",
+  pathTemplate: "/user_management/authorize/device",
+  pathParams: [],
+  queryParams: [],
+  input: AuthorizeDeviceInput,
+  output: DeviceAuthorizationResponse,
+  errors: authorizeDeviceErrors,
+};
+
+/** Initiates the CLI Auth flow by requesting a device code and verification URLs. This endpoint implements the OAuth 2.0 Device Authorization Flow ([RFC 8628](https://datatracker.ietf.org/doc/html/rfc8628)) and is designed for command-line applications or other devices with limited input capabilities. */
+export const authorizeDevice = (
+  input: AuthorizeDeviceInput,
+): Effect.Effect<
+  DeviceAuthorizationResponse,
+  WorkosError<typeof authorizeDeviceErrors>,
+  WorkosClient
+> => run(authorizeDeviceOp, input);
+
+// ===========================================================================
+// userManagement.completeExternalAuth — POST /authkit/oauth2/complete
+// ===========================================================================
+
+export const CompleteExternalAuthInput = Schema.Struct({
+  external_auth_id: Schema.String,
+  user: UserObject,
+  user_consent_options: Schema.optional(Schema.Array(UserConsentOption)),
+});
+export interface CompleteExternalAuthInput extends Schema.Schema.Type<
+  typeof CompleteExternalAuthInput
+> {}
+
+const completeExternalAuthErrors = [
+  EmailChangeNotAllowed,
+  EmailNotAvailable,
+  ExternalAuthSessionAlreadyCompleted,
+  InvalidEmail,
+  NotFound,
+  UnprocessableEntity,
+  UserConsentOptionsNotSupported,
+] as const;
+
+const completeExternalAuthOp: Operation<
+  typeof CompleteExternalAuthInput,
+  typeof ExternalAuthCompleteResponse,
+  typeof completeExternalAuthErrors
+> = {
+  id: "userManagement.completeExternalAuth",
+  method: "POST",
+  retry: "throttling",
+  pathTemplate: "/authkit/oauth2/complete",
+  pathParams: [],
+  queryParams: [],
+  input: CompleteExternalAuthInput,
+  output: ExternalAuthCompleteResponse,
+  errors: completeExternalAuthErrors,
+};
+
+/**
+ * Completes an external authentication flow and returns control to AuthKit. This endpoint is used with [Standalone Connect](/authkit/connect/standalone) to bridge your existing authentication system with the Connect OAuth API infrastructure.
+ *
+ * After successfully authenticating a user in your application, calling this endpoint will:
+ *
+ * - Create or update the user in AuthKit, using the given `id` as its `external_id`.
+ * - Return a `redirect_uri` your application should redirect to in order for AuthKit to complete the flow
+ *
+ * Users are automatically created or updated based on the `id` and `email` provided. If a user with the same `id` exists, their information is updated. Otherwise, a new user is created.
+ *
+ * If you provide a new `id` with an `email` that already belongs to an existing user, the request will fail with an error as email addresses are unique to a user.
+ */
+export const completeExternalAuth = (
+  input: CompleteExternalAuthInput,
+): Effect.Effect<
+  ExternalAuthCompleteResponse,
+  WorkosError<typeof completeExternalAuthErrors>,
+  WorkosClient
+> => run(completeExternalAuthOp, input);
+
+// ===========================================================================
+// userManagement.confirmEmailChange — POST /user_management/users/{id}/email_change/confirm
+// ===========================================================================
+
+export const ConfirmEmailChangeInput = Schema.Struct({
+  id: Schema.String,
+  code: Schema.String,
+});
+export interface ConfirmEmailChangeInput extends Schema.Schema.Type<
+  typeof ConfirmEmailChangeInput
+> {}
+
+const confirmEmailChangeErrors = [
+  EmailChangeCodeExpired,
+  EmailChangeCodeIncorrect,
+  EmailChangeCodePreviouslyUsed,
+  EmailChangeNotAllowed,
+  EmailNotAvailable,
+  InvalidEmail,
+  InvalidRequestParameters,
+  NoPendingEmailChange,
+  NotFound,
+  TooManyRequests,
+] as const;
+
+const confirmEmailChangeOp: Operation<
+  typeof ConfirmEmailChangeInput,
+  typeof EmailChangeConfirmation,
+  typeof confirmEmailChangeErrors
+> = {
+  id: "userManagement.confirmEmailChange",
+  method: "POST",
+  retry: "throttling",
+  pathTemplate: "/user_management/users/{id}/email_change/confirm",
+  pathParams: ["id"],
+  queryParams: [],
+  input: ConfirmEmailChangeInput,
+  output: EmailChangeConfirmation,
+  errors: confirmEmailChangeErrors,
+};
+
+/** Confirms an email change using the one-time code received by the user. */
+export const confirmEmailChange = (
+  input: ConfirmEmailChangeInput,
+): Effect.Effect<
+  EmailChangeConfirmation,
+  WorkosError<typeof confirmEmailChangeErrors>,
+  WorkosClient
+> => run(confirmEmailChangeOp, input);
+
+// ===========================================================================
+// userManagement.createCorsOrigin — POST /user_management/cors_origins
+// ===========================================================================
+
+export const CreateCorsOriginInput = Schema.Struct({
+  origin: Schema.String,
+});
+export interface CreateCorsOriginInput extends Schema.Schema.Type<
+  typeof CreateCorsOriginInput
+> {}
+
+const createCorsOriginErrors = [Conflict, UnprocessableEntity] as const;
+
+const createCorsOriginOp: Operation<
+  typeof CreateCorsOriginInput,
+  typeof CorsOriginResponse,
+  typeof createCorsOriginErrors
+> = {
+  id: "userManagement.createCorsOrigin",
+  method: "POST",
+  retry: "throttling",
+  pathTemplate: "/user_management/cors_origins",
+  pathParams: [],
+  queryParams: [],
+  input: CreateCorsOriginInput,
+  output: CorsOriginResponse,
+  errors: createCorsOriginErrors,
+};
+
+/** Creates a new CORS origin for the API key's application. CORS origins allow browser-based applications to make requests to the WorkOS API. */
+export const createCorsOrigin = (
+  input: CreateCorsOriginInput,
+): Effect.Effect<
+  CorsOriginResponse,
+  WorkosError<typeof createCorsOriginErrors>,
+  WorkosClient
+> => run(createCorsOriginOp, input);
+
+// ===========================================================================
+// userManagement.createMagicAuth — POST /user_management/magic_auth
+// ===========================================================================
+
+export const CreateMagicAuthInput = Schema.Struct({
+  email: Schema.String,
+  invitation_token: Schema.optional(Schema.String),
+  ip_address: Schema.optional(Schema.String),
+  user_agent: Schema.optional(Schema.String),
+  radar_auth_attempt_id: Schema.optional(Schema.String),
+  signals_id: Schema.optional(Schema.String),
+});
+export interface CreateMagicAuthInput extends Schema.Schema.Type<
+  typeof CreateMagicAuthInput
+> {}
+
+const createMagicAuthErrors = [
+  AuthenticationMethodNotAllowed,
+  InvitationInvalid,
+  SignUpNotAllowed,
+  TooManyRequests,
+  UnprocessableEntity,
+] as const;
+
+const createMagicAuthOp: Operation<
+  typeof CreateMagicAuthInput,
+  typeof MagicAuthCreateResponse,
+  typeof createMagicAuthErrors
+> = {
+  id: "userManagement.createMagicAuth",
+  method: "POST",
+  retry: "throttling",
+  pathTemplate: "/user_management/magic_auth",
+  pathParams: [],
+  queryParams: [],
+  input: CreateMagicAuthInput,
+  output: MagicAuthCreateResponse,
+  errors: createMagicAuthErrors,
+};
+
+/** Creates a one-time authentication code that can be sent to the user's email address. The code expires in 10 minutes. To verify the code, [authenticate the user with Magic Auth](/reference/authkit/authentication/magic-auth). */
+export const createMagicAuth = (
+  input: CreateMagicAuthInput,
+): Effect.Effect<
+  MagicAuthCreateResponse,
+  WorkosError<typeof createMagicAuthErrors>,
+  WorkosClient
+> => run(createMagicAuthOp, input);
+
+// ===========================================================================
+// userManagement.createOrganizationMembership — POST /user_management/organization_memberships
+// ===========================================================================
+
+export const CreateOrganizationMembershipInput = Schema.Struct({
+  user_id: Schema.String,
+  organization_id: Schema.String,
+  role_slug: Schema.optional(Schema.String),
+  role_slugs: Schema.optional(Schema.Array(Schema.String)),
+});
+export interface CreateOrganizationMembershipInput extends Schema.Schema.Type<
+  typeof CreateOrganizationMembershipInput
+> {}
+
+const createOrganizationMembershipErrors = [
+  BadRequest,
+  InvalidRequestParameters,
+  InvalidRole,
+  MultipleRolesNotEnabled,
+  NotFound,
+  SubResourceScopedRoleNotAllowed,
+] as const;
+
+const createOrganizationMembershipOp: Operation<
+  typeof CreateOrganizationMembershipInput,
+  typeof OrganizationMembershipCreateResponse,
+  typeof createOrganizationMembershipErrors
+> = {
+  id: "userManagement.createOrganizationMembership",
+  method: "POST",
+  retry: "throttling",
+  pathTemplate: "/user_management/organization_memberships",
+  pathParams: [],
+  queryParams: [],
+  input: CreateOrganizationMembershipInput,
+  output: OrganizationMembershipCreateResponse,
+  errors: createOrganizationMembershipErrors,
+};
+
+/**
+ * Creates a new `active` organization membership for the given organization and user.
+ *
+ * Calling this API with an organization and user that match an `inactive` organization membership will activate the membership with the specified role(s).
+ */
+export const createOrganizationMembership = (
+  input: CreateOrganizationMembershipInput,
+): Effect.Effect<
+  OrganizationMembershipCreateResponse,
+  WorkosError<typeof createOrganizationMembershipErrors>,
+  WorkosClient
+> => run(createOrganizationMembershipOp, input);
+
+// ===========================================================================
+// userManagement.createPasswordReset — POST /user_management/password_reset
+// ===========================================================================
+
+export const CreatePasswordResetInput = Schema.Struct({
+  email: Schema.String,
+});
+export interface CreatePasswordResetInput extends Schema.Schema.Type<
+  typeof CreatePasswordResetInput
+> {}
+
+const createPasswordResetErrors = [
+  EmailPasswordAuthDisabled,
+  NotFound,
+  PasswordResetNotAllowed,
+  TooManyRequests,
+  UnprocessableEntity,
+] as const;
+
+const createPasswordResetOp: Operation<
+  typeof CreatePasswordResetInput,
+  typeof PasswordReset,
+  typeof createPasswordResetErrors
+> = {
+  id: "userManagement.createPasswordReset",
+  method: "POST",
+  retry: "throttling",
+  pathTemplate: "/user_management/password_reset",
+  pathParams: [],
+  queryParams: [],
+  input: CreatePasswordResetInput,
+  output: PasswordReset,
+  errors: createPasswordResetErrors,
+};
+
+/** Creates a one-time token that can be used to reset a user's password. */
+export const createPasswordReset = (
+  input: CreatePasswordResetInput,
+): Effect.Effect<
+  PasswordReset,
+  WorkosError<typeof createPasswordResetErrors>,
+  WorkosClient
+> => run(createPasswordResetOp, input);
+
+// ===========================================================================
+// userManagement.createRedirectUri — POST /user_management/redirect_uris
+// ===========================================================================
+
+export const CreateRedirectUriInput = Schema.Struct({
+  uri: Schema.String,
+});
+export interface CreateRedirectUriInput extends Schema.Schema.Type<
+  typeof CreateRedirectUriInput
+> {}
+
+const createRedirectUriErrors = [
+  BadRequest,
+  Unauthorized,
+  UnprocessableEntity,
+] as const;
+
+const createRedirectUriOp: Operation<
+  typeof CreateRedirectUriInput,
+  typeof RedirectUri,
+  typeof createRedirectUriErrors
+> = {
+  id: "userManagement.createRedirectUri",
+  method: "POST",
+  retry: "throttling",
+  pathTemplate: "/user_management/redirect_uris",
+  pathParams: [],
+  queryParams: [],
+  input: CreateRedirectUriInput,
+  output: RedirectUri,
+  errors: createRedirectUriErrors,
+};
+
+/** Creates a new redirect URI for an application. */
+export const createRedirectUri = (
+  input: CreateRedirectUriInput,
+): Effect.Effect<
+  RedirectUri,
+  WorkosError<typeof createRedirectUriErrors>,
+  WorkosClient
+> => run(createRedirectUriOp, input);
+
+// ===========================================================================
+// userManagement.createUser — POST /user_management/users
+// ===========================================================================
+
+export const CreateUserInput = Schema.Struct({
+  email: Schema.String,
+  first_name: Schema.optional(Schema.NullOr(Schema.String)),
+  last_name: Schema.optional(Schema.NullOr(Schema.String)),
+  name: Schema.optional(Schema.NullOr(Schema.String)),
+  email_verified: Schema.optional(Schema.NullOr(Schema.Boolean)),
+  metadata: Schema.optional(
+    Schema.NullOr(Schema.Record(Schema.String, Schema.String)),
+  ),
+  external_id: Schema.optional(Schema.NullOr(Schema.String)),
+  ip_address: Schema.optional(Schema.NullOr(Schema.String)),
+  user_agent: Schema.optional(Schema.NullOr(Schema.String)),
+  signals_id: Schema.optional(Schema.String),
+  password: Schema.optional(Schema.NullOr(Schema.String)),
+  password_hash: Schema.optional(Schema.String),
+  password_hash_type: Schema.optional(
+    Schema.Literals([
+      "bcrypt",
+      "firebase-scrypt",
+      "ssha",
+      "ssha256",
+      "scrypt",
+      "pbkdf2",
+      "argon2",
+    ]),
+  ),
+});
+export interface CreateUserInput extends Schema.Schema.Type<
+  typeof CreateUserInput
+> {}
+
+const createUserErrors = [
+  InvalidMetadata,
+  InvalidPasswordHash,
+  NotFound,
+  PasswordAndPasswordHashProvided,
+  PasswordAndPasswordHashTypeProvided,
+  PasswordStrengthError,
+  UnprocessableEntity,
+  UserCreationError,
+] as const;
+
+const createUserOp: Operation<
+  typeof CreateUserInput,
+  typeof UserCreateResponse,
+  typeof createUserErrors
+> = {
+  id: "userManagement.createUser",
+  method: "POST",
+  retry: "throttling",
+  pathTemplate: "/user_management/users",
+  pathParams: [],
+  queryParams: [],
+  input: CreateUserInput,
+  output: UserCreateResponse,
+  errors: createUserErrors,
+};
+
+/** Create a new user in the current environment. */
+export const createUser = (
+  input: CreateUserInput,
+): Effect.Effect<
+  UserCreateResponse,
+  WorkosError<typeof createUserErrors>,
+  WorkosClient
+> => run(createUserOp, input);
+
+// ===========================================================================
+// userManagement.deactivateOrganizationMembership — PUT /user_management/organization_memberships/{id}/deactivate
+// ===========================================================================
+
+export const DeactivateOrganizationMembershipInput = Schema.Struct({
+  id: Schema.String,
+});
+export interface DeactivateOrganizationMembershipInput extends Schema.Schema
+  .Type<typeof DeactivateOrganizationMembershipInput> {}
+
+const deactivateOrganizationMembershipErrors = [
+  BadRequest,
+  NotFound,
+  UnprocessableEntity,
+] as const;
+
+const deactivateOrganizationMembershipOp: Operation<
+  typeof DeactivateOrganizationMembershipInput,
+  typeof OrganizationMembershipDeactivateResponse,
+  typeof deactivateOrganizationMembershipErrors
+> = {
+  id: "userManagement.deactivateOrganizationMembership",
+  method: "PUT",
+  retry: "throttling",
+  pathTemplate: "/user_management/organization_memberships/{id}/deactivate",
+  pathParams: ["id"],
+  queryParams: [],
+  input: DeactivateOrganizationMembershipInput,
+  output: OrganizationMembershipDeactivateResponse,
+  errors: deactivateOrganizationMembershipErrors,
+};
+
+/**
+ * Deactivates an `active` organization membership. Emits an [organization_membership.updated](/events/organization-membership) event upon successful deactivation.
+ *
+ * - Deactivating an `inactive` membership is a no-op and does not emit an event.
+ * - Deactivating a `pending` membership returns an error. This membership should be [deleted](/reference/authkit/organization-membership/delete) instead.
+ *
+ * See the [membership management documentation](/authkit/users-organizations/organizations/membership-management) for additional details.
+ */
+export const deactivateOrganizationMembership = (
+  input: DeactivateOrganizationMembershipInput,
+): Effect.Effect<
+  OrganizationMembershipDeactivateResponse,
+  WorkosError<typeof deactivateOrganizationMembershipErrors>,
+  WorkosClient
+> => run(deactivateOrganizationMembershipOp, input);
+
+// ===========================================================================
+// userManagement.deleteAuthorizedApplication — DELETE /user_management/users/{user_id}/authorized_applications/{application_id}
+// ===========================================================================
+
+export const DeleteUserAuthorizedApplicationInput = Schema.Struct({
+  application_id: Schema.String,
+  user_id: Schema.String,
+});
+export interface DeleteUserAuthorizedApplicationInput extends Schema.Schema
+  .Type<typeof DeleteUserAuthorizedApplicationInput> {}
+
+const deleteAuthorizedApplicationErrors = [NotFound] as const;
+
+const deleteAuthorizedApplicationOp: Operation<
+  typeof DeleteUserAuthorizedApplicationInput,
+  typeof Schema.Void,
+  typeof deleteAuthorizedApplicationErrors
+> = {
+  id: "userManagement.deleteAuthorizedApplication",
+  method: "DELETE",
+  retry: "throttling",
+  pathTemplate:
+    "/user_management/users/{user_id}/authorized_applications/{application_id}",
+  pathParams: ["application_id", "user_id"],
+  queryParams: [],
+  input: DeleteUserAuthorizedApplicationInput,
+  output: Schema.Void,
+  errors: deleteAuthorizedApplicationErrors,
+};
+
+/** Delete an existing Authorized Connect Application. */
+export const deleteAuthorizedApplication = (
+  input: DeleteUserAuthorizedApplicationInput,
+): Effect.Effect<
+  void,
+  WorkosError<typeof deleteAuthorizedApplicationErrors>,
+  WorkosClient
+> => run(deleteAuthorizedApplicationOp, input);
+
+// ===========================================================================
+// userManagement.deleteConnectedAccount — DELETE /user_management/users/{user_id}/connected_accounts/{slug}
+// ===========================================================================
+
+export const DeleteConnectedAccountInput = Schema.Struct({
+  user_id: Schema.String,
+  slug: Schema.String,
+  organization_id: Schema.optional(Schema.String),
+});
+export interface DeleteConnectedAccountInput extends Schema.Schema.Type<
+  typeof DeleteConnectedAccountInput
+> {}
+
+const deleteConnectedAccountErrors = [NotFound, Unauthorized] as const;
+
+const deleteConnectedAccountOp: Operation<
+  typeof DeleteConnectedAccountInput,
+  typeof Schema.Void,
+  typeof deleteConnectedAccountErrors
+> = {
+  id: "userManagement.deleteConnectedAccount",
+  method: "DELETE",
+  retry: "throttling",
+  pathTemplate: "/user_management/users/{user_id}/connected_accounts/{slug}",
+  pathParams: ["user_id", "slug"],
+  queryParams: ["organization_id"],
+  input: DeleteConnectedAccountInput,
+  output: Schema.Void,
+  errors: deleteConnectedAccountErrors,
+};
+
+/** Disconnects WorkOS's account for the user, including removing any stored access and refresh tokens. The user will need to reauthorize if they want to reconnect. This does not revoke access on the provider side. */
+export const deleteConnectedAccount = (
+  input: DeleteConnectedAccountInput,
+): Effect.Effect<
+  void,
+  WorkosError<typeof deleteConnectedAccountErrors>,
+  WorkosClient
+> => run(deleteConnectedAccountOp, input);
+
+// ===========================================================================
+// userManagement.deleteOrganizationMembership — DELETE /user_management/organization_memberships/{id}
+// ===========================================================================
+
+export const DeleteOrganizationMembershipInput = Schema.Struct({
+  id: Schema.String,
+});
+export interface DeleteOrganizationMembershipInput extends Schema.Schema.Type<
+  typeof DeleteOrganizationMembershipInput
+> {}
+
+const deleteOrganizationMembershipErrors = [NotFound] as const;
+
+const deleteOrganizationMembershipOp: Operation<
+  typeof DeleteOrganizationMembershipInput,
+  typeof Schema.Void,
+  typeof deleteOrganizationMembershipErrors
+> = {
+  id: "userManagement.deleteOrganizationMembership",
+  method: "DELETE",
+  retry: "throttling",
+  pathTemplate: "/user_management/organization_memberships/{id}",
+  pathParams: ["id"],
+  queryParams: [],
+  input: DeleteOrganizationMembershipInput,
+  output: Schema.Void,
+  errors: deleteOrganizationMembershipErrors,
+};
+
+/** Permanently deletes an existing organization membership. It cannot be undone. */
+export const deleteOrganizationMembership = (
+  input: DeleteOrganizationMembershipInput,
+): Effect.Effect<
+  void,
+  WorkosError<typeof deleteOrganizationMembershipErrors>,
+  WorkosClient
+> => run(deleteOrganizationMembershipOp, input);
+
+// ===========================================================================
+// userManagement.deleteRedirectUri — DELETE /user_management/redirect_uris/{id}
+// ===========================================================================
+
+export const DeleteRedirectUriInput = Schema.Struct({
+  id: Schema.String,
+});
+export interface DeleteRedirectUriInput extends Schema.Schema.Type<
+  typeof DeleteRedirectUriInput
+> {}
+
+const deleteRedirectUriErrors = [Conflict, NotFound, Unauthorized] as const;
+
+const deleteRedirectUriOp: Operation<
+  typeof DeleteRedirectUriInput,
+  typeof Schema.Void,
+  typeof deleteRedirectUriErrors
+> = {
+  id: "userManagement.deleteRedirectUri",
+  method: "DELETE",
+  retry: "throttling",
+  pathTemplate: "/user_management/redirect_uris/{id}",
+  pathParams: ["id"],
+  queryParams: [],
+  input: DeleteRedirectUriInput,
+  output: Schema.Void,
+  errors: deleteRedirectUriErrors,
+};
+
+/** Deletes a redirect URI from an application. */
+export const deleteRedirectUri = (
+  input: DeleteRedirectUriInput,
+): Effect.Effect<
+  void,
+  WorkosError<typeof deleteRedirectUriErrors>,
+  WorkosClient
+> => run(deleteRedirectUriOp, input);
+
+// ===========================================================================
+// userManagement.deleteUser — DELETE /user_management/users/{id}
+// ===========================================================================
+
+export const DeleteUserInput = Schema.Struct({
+  id: Schema.String,
+});
+export interface DeleteUserInput extends Schema.Schema.Type<
+  typeof DeleteUserInput
+> {}
+
+const deleteUserErrors = [NotFound] as const;
+
+const deleteUserOp: Operation<
+  typeof DeleteUserInput,
+  typeof Schema.Void,
+  typeof deleteUserErrors
+> = {
+  id: "userManagement.deleteUser",
+  method: "DELETE",
+  retry: "throttling",
+  pathTemplate: "/user_management/users/{id}",
+  pathParams: ["id"],
+  queryParams: [],
+  input: DeleteUserInput,
+  output: Schema.Void,
+  errors: deleteUserErrors,
+};
+
+/** Permanently deletes a user in the current environment. It cannot be undone. */
+export const deleteUser = (
+  input: DeleteUserInput,
+): Effect.Effect<void, WorkosError<typeof deleteUserErrors>, WorkosClient> =>
+  run(deleteUserOp, input);
+
+// ===========================================================================
+// userManagement.enrollAuthFactor — POST /user_management/users/{userlandUserId}/auth_factors
+// ===========================================================================
+
+export const EnrollAuthFactorInput = Schema.Struct({
+  userlandUserId: Schema.String,
+  totp_issuer: Schema.optional(Schema.String),
+  totp_user: Schema.optional(Schema.String),
+  totp_secret: Schema.optional(Schema.String),
+});
+export interface EnrollAuthFactorInput extends Schema.Schema.Type<
+  typeof EnrollAuthFactorInput
+> {}
+
+const enrollAuthFactorErrors = [UnprocessableEntity] as const;
+
+const enrollAuthFactorOp: Operation<
+  typeof EnrollAuthFactorInput,
+  typeof AuthenticationFactorEnrollResponse,
+  typeof enrollAuthFactorErrors
+> = {
+  id: "userManagement.enrollAuthFactor",
+  method: "POST",
+  retry: "throttling",
+  pathTemplate: "/user_management/users/{userlandUserId}/auth_factors",
+  pathParams: ["userlandUserId"],
+  queryParams: [],
+  input: EnrollAuthFactorInput,
+  output: AuthenticationFactorEnrollResponse,
+  errors: enrollAuthFactorErrors,
+  constantBody: { type: "totp" },
+};
+
+/** Enrolls a user in a new [authentication factor](/reference/authkit/mfa/authentication-factor). */
+export const enrollAuthFactor = (
+  input: EnrollAuthFactorInput,
+): Effect.Effect<
+  AuthenticationFactorEnrollResponse,
+  WorkosError<typeof enrollAuthFactorErrors>,
+  WorkosClient
+> => run(enrollAuthFactorOp, input);
+
+// ===========================================================================
+// userManagement.findInvitationByToken — GET /user_management/invitations/by_token/{token}
+// ===========================================================================
+
+export const FindInvitationByTokenInput = Schema.Struct({
+  token: Schema.String,
+});
+export interface FindInvitationByTokenInput extends Schema.Schema.Type<
+  typeof FindInvitationByTokenInput
+> {}
+
+const findInvitationByTokenErrors = [NotFound] as const;
+
+const findInvitationByTokenOp: Operation<
+  typeof FindInvitationByTokenInput,
+  typeof Invitation,
+  typeof findInvitationByTokenErrors
+> = {
+  id: "userManagement.findInvitationByToken",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/invitations/by_token/{token}",
+  pathParams: ["token"],
+  queryParams: [],
+  input: FindInvitationByTokenInput,
+  output: Invitation,
+  errors: findInvitationByTokenErrors,
+};
+
+/** Retrieve an existing invitation using the token. */
+export const findInvitationByToken = (
+  input: FindInvitationByTokenInput,
+): Effect.Effect<
+  Invitation,
+  WorkosError<typeof findInvitationByTokenErrors>,
+  WorkosClient
+> => run(findInvitationByTokenOp, input);
+
+// ===========================================================================
+// userManagement.getAuthorizationUrl — GET /user_management/authorize
+// ===========================================================================
+
+export const GetAuthorizationUrlInput = Schema.Struct({
+  code_challenge_method: Schema.optional(Schema.Literal("S256")),
+  code_challenge: Schema.optional(Schema.String),
+  domain_hint: Schema.optional(Schema.String),
+  connection_id: Schema.optional(Schema.String),
+  provider_query_params: Schema.optional(
+    Schema.Record(Schema.String, Schema.String),
+  ),
+  provider_scopes: Schema.optional(Schema.Array(Schema.String)),
+  invitation_token: Schema.optional(Schema.String),
+  max_age: Schema.optional(Schema.Number),
+  screen_hint: Schema.optional(Schema.Literals(["sign-up", "sign-in"])),
+  login_hint: Schema.optional(Schema.String),
+  provider: Schema.optional(
+    Schema.Literals([
+      "authkit",
+      "AppleOAuth",
+      "BitbucketOAuth",
+      "GitHubOAuth",
+      "GitLabOAuth",
+      "GoogleOAuth",
+      "IntuitOAuth",
+      "LinkedInOAuth",
+      "MicrosoftOAuth",
+      "SalesforceOAuth",
+      "SlackOAuth",
+      "VercelMarketplaceOAuth",
+      "VercelOAuth",
+      "XeroOAuth",
+    ]),
+  ),
+  prompt: Schema.optional(Schema.String),
+  state: Schema.optional(Schema.String),
+  organization_id: Schema.optional(Schema.String),
+  response_type: Schema.Literal("code"),
+  redirect_uri: Schema.String,
+  client_id: Schema.String,
+});
+export interface GetAuthorizationUrlInput extends Schema.Schema.Type<
+  typeof GetAuthorizationUrlInput
+> {}
+
+const getAuthorizationUrlErrors = [] as const;
+
+const getAuthorizationUrlOp: Operation<
+  typeof GetAuthorizationUrlInput,
+  typeof Schema.Void,
+  typeof getAuthorizationUrlErrors
+> = {
+  id: "userManagement.getAuthorizationUrl",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/authorize",
+  pathParams: [],
+  queryParams: [
+    "code_challenge_method",
+    "code_challenge",
+    "domain_hint",
+    "connection_id",
+    "provider_query_params",
+    "provider_scopes",
+    "invitation_token",
+    "max_age",
+    "screen_hint",
+    "login_hint",
+    "provider",
+    "prompt",
+    "state",
+    "organization_id",
+    "response_type",
+    "redirect_uri",
+    "client_id",
+  ],
+  input: GetAuthorizationUrlInput,
+  output: Schema.Void,
+  errors: getAuthorizationUrlErrors,
+};
+
+/** Generates an OAuth 2.0 authorization URL to authenticate a user with AuthKit or SSO. */
+export const getAuthorizationUrl = (
+  input: GetAuthorizationUrlInput,
+): Effect.Effect<
+  void,
+  WorkosError<typeof getAuthorizationUrlErrors>,
+  WorkosClient
+> => run(getAuthorizationUrlOp, input);
+
+// ===========================================================================
+// userManagement.getConnectedAccount — GET /user_management/users/{user_id}/connected_accounts/{slug}
+// ===========================================================================
+
+export const GetConnectedAccountInput = Schema.Struct({
+  user_id: Schema.String,
+  slug: Schema.String,
+  organization_id: Schema.optional(Schema.String),
+});
+export interface GetConnectedAccountInput extends Schema.Schema.Type<
+  typeof GetConnectedAccountInput
+> {}
+
+const getConnectedAccountErrors = [NotFound, Unauthorized] as const;
+
+const getConnectedAccountOp: Operation<
+  typeof GetConnectedAccountInput,
+  typeof ConnectedAccount,
+  typeof getConnectedAccountErrors
+> = {
+  id: "userManagement.getConnectedAccount",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/users/{user_id}/connected_accounts/{slug}",
+  pathParams: ["user_id", "slug"],
+  queryParams: ["organization_id"],
+  input: GetConnectedAccountInput,
+  output: ConnectedAccount,
+  errors: getConnectedAccountErrors,
+};
+
+/** Retrieves a user's [connected account](/reference/pipes/connected-account) for a specific provider. */
+export const getConnectedAccount = (
+  input: GetConnectedAccountInput,
+): Effect.Effect<
+  ConnectedAccount,
+  WorkosError<typeof getConnectedAccountErrors>,
+  WorkosClient
+> => run(getConnectedAccountOp, input);
+
+// ===========================================================================
+// userManagement.getEmailVerification — GET /user_management/email_verification/{id}
+// ===========================================================================
+
+export const GetEmailVerificationInput = Schema.Struct({
+  id: Schema.String,
+});
+export interface GetEmailVerificationInput extends Schema.Schema.Type<
+  typeof GetEmailVerificationInput
+> {}
+
+const getEmailVerificationErrors = [NotFound] as const;
+
+const getEmailVerificationOp: Operation<
+  typeof GetEmailVerificationInput,
+  typeof EmailVerification,
+  typeof getEmailVerificationErrors
+> = {
+  id: "userManagement.getEmailVerification",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/email_verification/{id}",
+  pathParams: ["id"],
+  queryParams: [],
+  input: GetEmailVerificationInput,
+  output: EmailVerification,
+  errors: getEmailVerificationErrors,
+};
+
+/** Get the details of an existing email verification code that can be used to send an email to a user for verification. */
+export const getEmailVerification = (
+  input: GetEmailVerificationInput,
+): Effect.Effect<
+  EmailVerification,
+  WorkosError<typeof getEmailVerificationErrors>,
+  WorkosClient
+> => run(getEmailVerificationOp, input);
+
+// ===========================================================================
+// userManagement.getInvitation — GET /user_management/invitations/{id}
+// ===========================================================================
+
+export const GetInvitationInput = Schema.Struct({
+  id: Schema.String,
+});
+export interface GetInvitationInput extends Schema.Schema.Type<
+  typeof GetInvitationInput
+> {}
+
+const getInvitationErrors = [NotFound] as const;
+
+const getInvitationOp: Operation<
+  typeof GetInvitationInput,
+  typeof Invitation,
+  typeof getInvitationErrors
+> = {
+  id: "userManagement.getInvitation",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/invitations/{id}",
+  pathParams: ["id"],
+  queryParams: [],
+  input: GetInvitationInput,
+  output: Invitation,
+  errors: getInvitationErrors,
+};
+
+/** Get the details of an existing invitation. */
+export const getInvitation = (
+  input: GetInvitationInput,
+): Effect.Effect<
+  Invitation,
+  WorkosError<typeof getInvitationErrors>,
+  WorkosClient
+> => run(getInvitationOp, input);
+
+// ===========================================================================
+// userManagement.getJwks — GET /sso/jwks/{clientId}
+// ===========================================================================
+
+export const GetJwksInput = Schema.Struct({
+  clientId: Schema.String,
+});
+export interface GetJwksInput extends Schema.Schema.Type<typeof GetJwksInput> {}
+
+const getJwksErrors = [NotFound] as const;
+
+const getJwksOp: Operation<
+  typeof GetJwksInput,
+  typeof JwksResponse,
+  typeof getJwksErrors
+> = {
+  id: "userManagement.getJwks",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/sso/jwks/{clientId}",
+  pathParams: ["clientId"],
+  queryParams: [],
+  input: GetJwksInput,
+  output: JwksResponse,
+  errors: getJwksErrors,
+};
+
+/** Returns the JSON Web Key Set (JWKS) containing the public keys used for verifying access tokens. */
+export const getJwks = (
+  input: GetJwksInput,
+): Effect.Effect<
+  JwksResponse,
+  WorkosError<typeof getJwksErrors>,
+  WorkosClient
+> => run(getJwksOp, input);
+
+// ===========================================================================
+// userManagement.getJwtTemplate — GET /user_management/jwt_template
+// ===========================================================================
+
+export const GetJwtTemplateInput = Schema.Struct({});
+export interface GetJwtTemplateInput extends Schema.Schema.Type<
+  typeof GetJwtTemplateInput
+> {}
+
+const getJwtTemplateErrors = [NotFound] as const;
+
+const getJwtTemplateOp: Operation<
+  typeof GetJwtTemplateInput,
+  typeof JwtTemplate,
+  typeof getJwtTemplateErrors
+> = {
+  id: "userManagement.getJwtTemplate",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/jwt_template",
+  pathParams: [],
+  queryParams: [],
+  input: GetJwtTemplateInput,
+  output: JwtTemplate,
+  errors: getJwtTemplateErrors,
+};
+
+/** Get the JWT template for the current environment. */
+export const getJwtTemplate = (
+  input: GetJwtTemplateInput = {},
+): Effect.Effect<
+  JwtTemplate,
+  WorkosError<typeof getJwtTemplateErrors>,
+  WorkosClient
+> => run(getJwtTemplateOp, input);
+
+// ===========================================================================
+// userManagement.getMagicAuth — GET /user_management/magic_auth/{id}
+// ===========================================================================
+
+export const GetMagicAuthInput = Schema.Struct({
+  id: Schema.String,
+});
+export interface GetMagicAuthInput extends Schema.Schema.Type<
+  typeof GetMagicAuthInput
+> {}
+
+const getMagicAuthErrors = [NotFound] as const;
+
+const getMagicAuthOp: Operation<
+  typeof GetMagicAuthInput,
+  typeof MagicAuth,
+  typeof getMagicAuthErrors
+> = {
+  id: "userManagement.getMagicAuth",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/magic_auth/{id}",
+  pathParams: ["id"],
+  queryParams: [],
+  input: GetMagicAuthInput,
+  output: MagicAuth,
+  errors: getMagicAuthErrors,
+};
+
+/** Get the details of an existing [Magic Auth](/reference/authkit/magic-auth) code that can be used to send an email to a user for authentication. */
+export const getMagicAuth = (
+  input: GetMagicAuthInput,
+): Effect.Effect<
+  MagicAuth,
+  WorkosError<typeof getMagicAuthErrors>,
+  WorkosClient
+> => run(getMagicAuthOp, input);
+
+// ===========================================================================
+// userManagement.getOrganizationMembership — GET /user_management/organization_memberships/{id}
+// ===========================================================================
+
+export const GetOrganizationMembershipInput = Schema.Struct({
+  id: Schema.String,
+});
+export interface GetOrganizationMembershipInput extends Schema.Schema.Type<
+  typeof GetOrganizationMembershipInput
+> {}
+
+const getOrganizationMembershipErrors = [NotFound] as const;
+
+const getOrganizationMembershipOp: Operation<
+  typeof GetOrganizationMembershipInput,
+  typeof OrganizationMembership,
+  typeof getOrganizationMembershipErrors
+> = {
+  id: "userManagement.getOrganizationMembership",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/organization_memberships/{id}",
+  pathParams: ["id"],
+  queryParams: [],
+  input: GetOrganizationMembershipInput,
+  output: OrganizationMembership,
+  errors: getOrganizationMembershipErrors,
+};
+
+/** Get the details of an existing organization membership. */
+export const getOrganizationMembership = (
+  input: GetOrganizationMembershipInput,
+): Effect.Effect<
+  OrganizationMembership,
+  WorkosError<typeof getOrganizationMembershipErrors>,
+  WorkosClient
+> => run(getOrganizationMembershipOp, input);
+
+// ===========================================================================
+// userManagement.getPasswordReset — GET /user_management/password_reset/{id}
+// ===========================================================================
+
+export const GetPasswordResetInput = Schema.Struct({
+  id: Schema.String,
+});
+export interface GetPasswordResetInput extends Schema.Schema.Type<
+  typeof GetPasswordResetInput
+> {}
+
+const getPasswordResetErrors = [NotFound] as const;
+
+const getPasswordResetOp: Operation<
+  typeof GetPasswordResetInput,
+  typeof PasswordReset,
+  typeof getPasswordResetErrors
+> = {
+  id: "userManagement.getPasswordReset",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/password_reset/{id}",
+  pathParams: ["id"],
+  queryParams: [],
+  input: GetPasswordResetInput,
+  output: PasswordReset,
+  errors: getPasswordResetErrors,
+};
+
+/** Get the details of an existing password reset token that can be used to reset a user's password. */
+export const getPasswordReset = (
+  input: GetPasswordResetInput,
+): Effect.Effect<
+  PasswordReset,
+  WorkosError<typeof getPasswordResetErrors>,
+  WorkosClient
+> => run(getPasswordResetOp, input);
+
+// ===========================================================================
+// userManagement.getRadarChallenge — GET /user_management/radar_challenges/{id}
+// ===========================================================================
+
+export const GetRadarChallengeInput = Schema.Struct({
+  id: Schema.String,
+});
+export interface GetRadarChallengeInput extends Schema.Schema.Type<
+  typeof GetRadarChallengeInput
+> {}
+
+const getRadarChallengeErrors = [NotFound] as const;
+
+const getRadarChallengeOp: Operation<
+  typeof GetRadarChallengeInput,
+  typeof RadarChallengeDetails,
+  typeof getRadarChallengeErrors
+> = {
+  id: "userManagement.getRadarChallenge",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/radar_challenges/{id}",
+  pathParams: ["id"],
+  queryParams: [],
+  input: GetRadarChallengeInput,
+  output: RadarChallengeDetails,
+  errors: getRadarChallengeErrors,
+};
+
+/** Get the details of an existing Radar Challenge, including the OTP code. */
+export const getRadarChallenge = (
+  input: GetRadarChallengeInput,
+): Effect.Effect<
+  RadarChallengeDetails,
+  WorkosError<typeof getRadarChallengeErrors>,
+  WorkosClient
+> => run(getRadarChallengeOp, input);
+
+// ===========================================================================
+// userManagement.getUser — GET /user_management/users/{id}
+// ===========================================================================
+
+export const GetUserInput = Schema.Struct({
+  id: Schema.String,
+});
+export interface GetUserInput extends Schema.Schema.Type<typeof GetUserInput> {}
+
+const getUserErrors = [NotFound] as const;
+
+const getUserOp: Operation<
+  typeof GetUserInput,
+  typeof User,
+  typeof getUserErrors
+> = {
+  id: "userManagement.getUser",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/users/{id}",
+  pathParams: ["id"],
+  queryParams: [],
+  input: GetUserInput,
+  output: User,
+  errors: getUserErrors,
+};
+
+/** Get the details of an existing user. */
+export const getUser = (
+  input: GetUserInput,
+): Effect.Effect<User, WorkosError<typeof getUserErrors>, WorkosClient> =>
+  run(getUserOp, input);
+
+// ===========================================================================
+// userManagement.getUserByExternalId — GET /user_management/users/external_id/{external_id}
+// ===========================================================================
+
+export const GetUserByExternalIdInput = Schema.Struct({
+  external_id: Schema.String,
+});
+export interface GetUserByExternalIdInput extends Schema.Schema.Type<
+  typeof GetUserByExternalIdInput
+> {}
+
+const getUserByExternalIdErrors = [NotFound] as const;
+
+const getUserByExternalIdOp: Operation<
+  typeof GetUserByExternalIdInput,
+  typeof User,
+  typeof getUserByExternalIdErrors
+> = {
+  id: "userManagement.getUserByExternalId",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/users/external_id/{external_id}",
+  pathParams: ["external_id"],
+  queryParams: [],
+  input: GetUserByExternalIdInput,
+  output: User,
+  errors: getUserByExternalIdErrors,
+};
+
+/** Get the details of an existing user by an [external identifier](/authkit/metadata/external-identifiers). */
+export const getUserByExternalId = (
+  input: GetUserByExternalIdInput,
+): Effect.Effect<
+  User,
+  WorkosError<typeof getUserByExternalIdErrors>,
+  WorkosClient
+> => run(getUserByExternalIdOp, input);
+
+// ===========================================================================
+// userManagement.importConnectedAccount — POST /user_management/users/{user_id}/connected_accounts/{slug}
+// ===========================================================================
+
+export const ImportConnectedAccountInput = Schema.Struct({
+  user_id: Schema.String,
+  slug: Schema.String,
+  organization_id: Schema.optional(Schema.String),
+  access_token: Schema.optional(Schema.String),
+  refresh_token: Schema.optional(Schema.String),
+  expires_at: Schema.optional(Schema.String),
+  scopes: Schema.optional(Schema.Array(Schema.String)),
+  state: Schema.optional(
+    Schema.Literals(["connected", "needs_reauthorization"]),
+  ),
+});
+export interface ImportConnectedAccountInput extends Schema.Schema.Type<
+  typeof ImportConnectedAccountInput
+> {}
+
+const importConnectedAccountErrors = [
+  Conflict,
+  NotFound,
+  Unauthorized,
+  UnprocessableEntity,
+] as const;
+
+const importConnectedAccountOp: Operation<
+  typeof ImportConnectedAccountInput,
+  typeof ConnectedAccount,
+  typeof importConnectedAccountErrors
+> = {
+  id: "userManagement.importConnectedAccount",
+  method: "POST",
+  retry: "throttling",
+  pathTemplate: "/user_management/users/{user_id}/connected_accounts/{slug}",
+  pathParams: ["user_id", "slug"],
+  queryParams: ["organization_id"],
+  input: ImportConnectedAccountInput,
+  output: ConnectedAccount,
+  errors: importConnectedAccountErrors,
+};
+
+/** Imports a [connected account](/reference/pipes/connected-account) for a user by providing OAuth tokens directly. Use this to migrate existing connections or set up connections without going through the OAuth flow. */
+export const importConnectedAccount = (
+  input: ImportConnectedAccountInput,
+): Effect.Effect<
+  ConnectedAccount,
+  WorkosError<typeof importConnectedAccountErrors>,
+  WorkosClient
+> => run(importConnectedAccountOp, input);
+
+// ===========================================================================
+// userManagement.listAuthFactors — GET /user_management/users/{userlandUserId}/auth_factors (cursor paginated)
+// ===========================================================================
+
+export const ListAuthFactorsInput = Schema.Struct({
+  userlandUserId: Schema.String,
+  before: Schema.optional(Schema.String),
+  after: Schema.optional(Schema.String),
+  limit: Schema.optional(Schema.Number),
+  order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])),
+});
+export interface ListAuthFactorsInput extends Schema.Schema.Type<
+  typeof ListAuthFactorsInput
+> {}
+
+const listAuthFactorsErrors = [UnprocessableEntity] as const;
+
+const listAuthFactorsOp: Operation<
+  typeof ListAuthFactorsInput,
+  typeof AuthenticationFactorList,
+  typeof listAuthFactorsErrors
+> = {
+  id: "userManagement.listAuthFactors",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/users/{userlandUserId}/auth_factors",
+  pathParams: ["userlandUserId"],
+  queryParams: ["before", "after", "limit", "order"],
+  input: ListAuthFactorsInput,
+  output: AuthenticationFactorList,
+  errors: listAuthFactorsErrors,
+};
+
+/** Lists the [authentication factors](/reference/authkit/mfa/authentication-factor) for a user. */
+export const listAuthFactors = (
+  input: ListAuthFactorsInput,
+): Effect.Effect<
+  AuthenticationFactorList,
+  WorkosError<typeof listAuthFactorsErrors>,
+  WorkosClient
+> => run(listAuthFactorsOp, input);
+
+const listAuthFactorsPagination: Pagination.CursorPagination<
+  ListAuthFactorsInput,
+  AuthenticationFactorList,
+  AuthenticationFactor
+> = {
+  cursorParam: "after",
+  clear: ["before"],
+  nextCursor: (page) => page.list_metadata.after,
+  items: (page) => page.data,
+};
+
+/** Stream every page of user management, following the `after` cursor. */
+export const listAuthFactorsPages = (
+  input: ListAuthFactorsInput,
+): Stream.Stream<
+  AuthenticationFactorList,
+  WorkosError<typeof listAuthFactorsErrors>,
+  WorkosClient
+> => Pagination.pages(listAuthFactors, input, listAuthFactorsPagination);
+
+/** Stream every authentication factor across every page. */
+export const listAuthFactorsItems = (
+  input: ListAuthFactorsInput,
+): Stream.Stream<
+  AuthenticationFactor,
+  WorkosError<typeof listAuthFactorsErrors>,
+  WorkosClient
+> => Pagination.items(listAuthFactors, input, listAuthFactorsPagination);
+
+// ===========================================================================
+// userManagement.listAuthorizedApplications — GET /user_management/users/{user_id}/authorized_applications (cursor paginated)
+// ===========================================================================
+
+export const ListUserAuthorizedApplicationsInput = Schema.Struct({
+  user_id: Schema.String,
+  before: Schema.optional(Schema.String),
+  after: Schema.optional(Schema.String),
+  limit: Schema.optional(Schema.Number),
+  order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])),
+});
+export interface ListUserAuthorizedApplicationsInput extends Schema.Schema.Type<
+  typeof ListUserAuthorizedApplicationsInput
+> {}
+
+const listAuthorizedApplicationsErrors = [
+  NotFound,
+  UnprocessableEntity,
+] as const;
+
+const listAuthorizedApplicationsOp: Operation<
+  typeof ListUserAuthorizedApplicationsInput,
+  typeof AuthorizedConnectApplicationList,
+  typeof listAuthorizedApplicationsErrors
+> = {
+  id: "userManagement.listAuthorizedApplications",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/users/{user_id}/authorized_applications",
+  pathParams: ["user_id"],
+  queryParams: ["before", "after", "limit", "order"],
+  input: ListUserAuthorizedApplicationsInput,
+  output: AuthorizedConnectApplicationList,
+  errors: listAuthorizedApplicationsErrors,
+};
+
+/** Get a list of all Connect applications that the user has authorized. */
+export const listAuthorizedApplications = (
+  input: ListUserAuthorizedApplicationsInput,
+): Effect.Effect<
+  AuthorizedConnectApplicationList,
+  WorkosError<typeof listAuthorizedApplicationsErrors>,
+  WorkosClient
+> => run(listAuthorizedApplicationsOp, input);
+
+const listAuthorizedApplicationsPagination: Pagination.CursorPagination<
+  ListUserAuthorizedApplicationsInput,
+  AuthorizedConnectApplicationList,
+  AuthorizedApplication
+> = {
+  cursorParam: "after",
+  clear: ["before"],
+  nextCursor: (page) => page.list_metadata.after,
+  items: (page) => page.data,
+};
+
+/** Stream every page of user management, following the `after` cursor. */
+export const listAuthorizedApplicationsPages = (
+  input: ListUserAuthorizedApplicationsInput,
+): Stream.Stream<
+  AuthorizedConnectApplicationList,
+  WorkosError<typeof listAuthorizedApplicationsErrors>,
+  WorkosClient
+> =>
+  Pagination.pages(
+    listAuthorizedApplications,
+    input,
+    listAuthorizedApplicationsPagination,
+  );
+
+/** Stream every authorized application across every page. */
+export const listAuthorizedApplicationsItems = (
+  input: ListUserAuthorizedApplicationsInput,
+): Stream.Stream<
+  AuthorizedApplication,
+  WorkosError<typeof listAuthorizedApplicationsErrors>,
+  WorkosClient
+> =>
+  Pagination.items(
+    listAuthorizedApplications,
+    input,
+    listAuthorizedApplicationsPagination,
+  );
+
+// ===========================================================================
+// userManagement.listCorsOrigins — GET /user_management/cors_origins (cursor paginated)
+// ===========================================================================
+
+export const ListCorsOriginsInput = Schema.Struct({
+  before: Schema.optional(Schema.String),
+  after: Schema.optional(Schema.String),
+  limit: Schema.optional(Schema.Number),
+  order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])),
+});
+export interface ListCorsOriginsInput extends Schema.Schema.Type<
+  typeof ListCorsOriginsInput
+> {}
+
+const listCorsOriginsErrors = [Unauthorized] as const;
+
+const listCorsOriginsOp: Operation<
+  typeof ListCorsOriginsInput,
+  typeof CorsOriginList,
+  typeof listCorsOriginsErrors
+> = {
+  id: "userManagement.listCorsOrigins",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/cors_origins",
+  pathParams: [],
+  queryParams: ["before", "after", "limit", "order"],
+  input: ListCorsOriginsInput,
+  output: CorsOriginList,
+  errors: listCorsOriginsErrors,
+};
+
+/** Lists the CORS origins for the current environment. */
+export const listCorsOrigins = (
+  input: ListCorsOriginsInput = {},
+): Effect.Effect<
+  CorsOriginList,
+  WorkosError<typeof listCorsOriginsErrors>,
+  WorkosClient
+> => run(listCorsOriginsOp, input);
+
+const listCorsOriginsPagination: Pagination.CursorPagination<
+  ListCorsOriginsInput,
+  CorsOriginList,
+  CorsOriginResponse
+> = {
+  cursorParam: "after",
+  clear: ["before"],
+  nextCursor: (page) => page.list_metadata.after,
+  items: (page) => page.data,
+};
+
+/** Stream every page of user management, following the `after` cursor. */
+export const listCorsOriginsPages = (
+  input: ListCorsOriginsInput = {},
+): Stream.Stream<
+  CorsOriginList,
+  WorkosError<typeof listCorsOriginsErrors>,
+  WorkosClient
+> => Pagination.pages(listCorsOrigins, input, listCorsOriginsPagination);
+
+/** Stream every cors origin response across every page. */
+export const listCorsOriginsItems = (
+  input: ListCorsOriginsInput = {},
+): Stream.Stream<
+  CorsOriginResponse,
+  WorkosError<typeof listCorsOriginsErrors>,
+  WorkosClient
+> => Pagination.items(listCorsOrigins, input, listCorsOriginsPagination);
+
+// ===========================================================================
+// userManagement.listIdentities — GET /user_management/users/{id}/identities
+// ===========================================================================
+
+export const ListIdentitiesInput = Schema.Struct({
+  id: Schema.String,
+});
+export interface ListIdentitiesInput extends Schema.Schema.Type<
+  typeof ListIdentitiesInput
+> {}
+
+const listIdentitiesErrors = [NotFound] as const;
+
+const listIdentitiesOp: Operation<
+  typeof ListIdentitiesInput,
+  Schema.$Array<typeof UserIdentity>,
+  typeof listIdentitiesErrors
+> = {
+  id: "userManagement.listIdentities",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/users/{id}/identities",
+  pathParams: ["id"],
+  queryParams: [],
+  input: ListIdentitiesInput,
+  output: Schema.Array(UserIdentity),
+  errors: listIdentitiesErrors,
+};
+
+/** Get a list of identities associated with the user. A user can have multiple associated identities after going through [identity linking](/authkit/identity-linking). Currently only OAuth identities are supported. More provider types may be added in the future. */
+export const listIdentities = (
+  input: ListIdentitiesInput,
+): Effect.Effect<
+  ReadonlyArray<UserIdentity>,
+  WorkosError<typeof listIdentitiesErrors>,
+  WorkosClient
+> => run(listIdentitiesOp, input);
+
+// ===========================================================================
+// userManagement.listInvitations — GET /user_management/invitations (cursor paginated)
+// ===========================================================================
+
+export const ListInvitationsInput = Schema.Struct({
+  before: Schema.optional(Schema.String),
+  after: Schema.optional(Schema.String),
+  limit: Schema.optional(Schema.Number),
+  order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])),
+  organization_id: Schema.optional(Schema.String),
+  email: Schema.optional(Schema.String),
+});
+export interface ListInvitationsInput extends Schema.Schema.Type<
+  typeof ListInvitationsInput
+> {}
+
+const listInvitationsErrors = [UnprocessableEntity] as const;
+
+const listInvitationsOp: Operation<
+  typeof ListInvitationsInput,
+  typeof InvitationList,
+  typeof listInvitationsErrors
+> = {
+  id: "userManagement.listInvitations",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/invitations",
+  pathParams: [],
+  queryParams: [
+    "before",
+    "after",
+    "limit",
+    "order",
+    "organization_id",
+    "email",
+  ],
+  input: ListInvitationsInput,
+  output: InvitationList,
+  errors: listInvitationsErrors,
+};
+
+/** Get a list of all of invitations matching the criteria specified. */
+export const listInvitations = (
+  input: ListInvitationsInput = {},
+): Effect.Effect<
+  InvitationList,
+  WorkosError<typeof listInvitationsErrors>,
+  WorkosClient
+> => run(listInvitationsOp, input);
+
+const listInvitationsPagination: Pagination.CursorPagination<
+  ListInvitationsInput,
+  InvitationList,
+  Invitation
+> = {
+  cursorParam: "after",
+  clear: ["before"],
+  nextCursor: (page) => page.list_metadata.after,
+  items: (page) => page.data,
+};
+
+/** Stream every page of user management, following the `after` cursor. */
+export const listInvitationsPages = (
+  input: ListInvitationsInput = {},
+): Stream.Stream<
+  InvitationList,
+  WorkosError<typeof listInvitationsErrors>,
+  WorkosClient
+> => Pagination.pages(listInvitations, input, listInvitationsPagination);
+
+/** Stream every invitation across every page. */
+export const listInvitationsItems = (
+  input: ListInvitationsInput = {},
+): Stream.Stream<
+  Invitation,
+  WorkosError<typeof listInvitationsErrors>,
+  WorkosClient
+> => Pagination.items(listInvitations, input, listInvitationsPagination);
+
+// ===========================================================================
+// userManagement.listOrganizationMembershipGroups — GET /user_management/organization_memberships/{omId}/groups (cursor paginated)
+// ===========================================================================
+
+export const ListOrganizationMembershipGroupsInput = Schema.Struct({
+  omId: Schema.String,
+  before: Schema.optional(Schema.String),
+  after: Schema.optional(Schema.String),
+  limit: Schema.optional(Schema.Number),
+  order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])),
+});
+export interface ListOrganizationMembershipGroupsInput extends Schema.Schema
+  .Type<typeof ListOrganizationMembershipGroupsInput> {}
+
+const listOrganizationMembershipGroupsErrors = [NotFound] as const;
+
+const listOrganizationMembershipGroupsOp: Operation<
+  typeof ListOrganizationMembershipGroupsInput,
+  typeof GroupList,
+  typeof listOrganizationMembershipGroupsErrors
+> = {
+  id: "userManagement.listOrganizationMembershipGroups",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/organization_memberships/{omId}/groups",
+  pathParams: ["omId"],
+  queryParams: ["before", "after", "limit", "order"],
+  input: ListOrganizationMembershipGroupsInput,
+  output: GroupList,
+  errors: listOrganizationMembershipGroupsErrors,
+};
+
+/** Get a list of groups that an organization membership belongs to. */
+export const listOrganizationMembershipGroups = (
+  input: ListOrganizationMembershipGroupsInput,
+): Effect.Effect<
+  GroupList,
+  WorkosError<typeof listOrganizationMembershipGroupsErrors>,
+  WorkosClient
+> => run(listOrganizationMembershipGroupsOp, input);
+
+const listOrganizationMembershipGroupsPagination: Pagination.CursorPagination<
+  ListOrganizationMembershipGroupsInput,
+  GroupList,
+  Group
+> = {
+  cursorParam: "after",
+  clear: ["before"],
+  nextCursor: (page) => page.list_metadata.after,
+  items: (page) => page.data,
+};
+
+/** Stream every page of user management, following the `after` cursor. */
+export const listOrganizationMembershipGroupsPages = (
+  input: ListOrganizationMembershipGroupsInput,
+): Stream.Stream<
+  GroupList,
+  WorkosError<typeof listOrganizationMembershipGroupsErrors>,
+  WorkosClient
+> =>
+  Pagination.pages(
+    listOrganizationMembershipGroups,
+    input,
+    listOrganizationMembershipGroupsPagination,
+  );
+
+/** Stream every group across every page. */
+export const listOrganizationMembershipGroupsItems = (
+  input: ListOrganizationMembershipGroupsInput,
+): Stream.Stream<
+  Group,
+  WorkosError<typeof listOrganizationMembershipGroupsErrors>,
+  WorkosClient
+> =>
+  Pagination.items(
+    listOrganizationMembershipGroups,
+    input,
+    listOrganizationMembershipGroupsPagination,
+  );
+
+// ===========================================================================
+// userManagement.listOrganizationMemberships — GET /user_management/organization_memberships (cursor paginated)
+// ===========================================================================
+
+export const ListOrganizationMembershipsInput = Schema.Struct({
+  before: Schema.optional(Schema.String),
+  after: Schema.optional(Schema.String),
+  limit: Schema.optional(Schema.Number),
+  order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])),
+  organization_id: Schema.optional(Schema.String),
+  statuses: Schema.optional(
+    Schema.Array(Schema.Literals(["active", "inactive", "pending"])),
+  ),
+  user_id: Schema.optional(Schema.String),
+});
+export interface ListOrganizationMembershipsInput extends Schema.Schema.Type<
+  typeof ListOrganizationMembershipsInput
+> {}
+
+const listOrganizationMembershipsErrors = [
+  InvalidRequestParameters,
+  MissingUserIdOrOrganizationId,
+  NotFound,
+  UnprocessableEntity,
+] as const;
+
+const listOrganizationMembershipsOp: Operation<
+  typeof ListOrganizationMembershipsInput,
+  typeof OrganizationMembershipList,
+  typeof listOrganizationMembershipsErrors
+> = {
+  id: "userManagement.listOrganizationMemberships",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/organization_memberships",
+  pathParams: [],
+  queryParams: [
+    "before",
+    "after",
+    "limit",
+    "order",
+    "organization_id",
+    "statuses",
+    "user_id",
+  ],
+  input: ListOrganizationMembershipsInput,
+  output: OrganizationMembershipList,
+  errors: listOrganizationMembershipsErrors,
+};
+
+/** Get a list of all organization memberships matching the criteria specified. At least one of `user_id` or `organization_id` must be provided. By default only active memberships are returned. Use the `statuses` parameter to filter by other statuses. */
+export const listOrganizationMemberships = (
+  input: ListOrganizationMembershipsInput = {},
+): Effect.Effect<
+  OrganizationMembershipList,
+  WorkosError<typeof listOrganizationMembershipsErrors>,
+  WorkosClient
+> => run(listOrganizationMembershipsOp, input);
+
+const listOrganizationMembershipsPagination: Pagination.CursorPagination<
+  ListOrganizationMembershipsInput,
+  OrganizationMembershipList,
+  OrganizationMembership
+> = {
+  cursorParam: "after",
+  clear: ["before"],
+  nextCursor: (page) => page.list_metadata.after,
+  items: (page) => page.data,
+};
+
+/** Stream every page of user management, following the `after` cursor. */
+export const listOrganizationMembershipsPages = (
+  input: ListOrganizationMembershipsInput = {},
+): Stream.Stream<
+  OrganizationMembershipList,
+  WorkosError<typeof listOrganizationMembershipsErrors>,
+  WorkosClient
+> =>
+  Pagination.pages(
+    listOrganizationMemberships,
+    input,
+    listOrganizationMembershipsPagination,
+  );
+
+/** Stream every organization membership across every page. */
+export const listOrganizationMembershipsItems = (
+  input: ListOrganizationMembershipsInput = {},
+): Stream.Stream<
+  OrganizationMembership,
+  WorkosError<typeof listOrganizationMembershipsErrors>,
+  WorkosClient
+> =>
+  Pagination.items(
+    listOrganizationMemberships,
+    input,
+    listOrganizationMembershipsPagination,
+  );
+
+// ===========================================================================
+// userManagement.listRedirectUris — GET /user_management/redirect_uris (cursor paginated)
+// ===========================================================================
+
+export const ListRedirectUrisInput = Schema.Struct({
+  before: Schema.optional(Schema.String),
+  after: Schema.optional(Schema.String),
+  limit: Schema.optional(Schema.Number),
+  order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])),
+});
+export interface ListRedirectUrisInput extends Schema.Schema.Type<
+  typeof ListRedirectUrisInput
+> {}
+
+const listRedirectUrisErrors = [Unauthorized] as const;
+
+const listRedirectUrisOp: Operation<
+  typeof ListRedirectUrisInput,
+  typeof RedirectUriList,
+  typeof listRedirectUrisErrors
+> = {
+  id: "userManagement.listRedirectUris",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/redirect_uris",
+  pathParams: [],
+  queryParams: ["before", "after", "limit", "order"],
+  input: ListRedirectUrisInput,
+  output: RedirectUriList,
+  errors: listRedirectUrisErrors,
+};
+
+/** Lists the redirect URIs for an environment. */
+export const listRedirectUris = (
+  input: ListRedirectUrisInput = {},
+): Effect.Effect<
+  RedirectUriList,
+  WorkosError<typeof listRedirectUrisErrors>,
+  WorkosClient
+> => run(listRedirectUrisOp, input);
+
+const listRedirectUrisPagination: Pagination.CursorPagination<
+  ListRedirectUrisInput,
+  RedirectUriList,
+  RedirectUri
+> = {
+  cursorParam: "after",
+  clear: ["before"],
+  nextCursor: (page) => page.list_metadata.after,
+  items: (page) => page.data,
+};
+
+/** Stream every page of user management, following the `after` cursor. */
+export const listRedirectUrisPages = (
+  input: ListRedirectUrisInput = {},
+): Stream.Stream<
+  RedirectUriList,
+  WorkosError<typeof listRedirectUrisErrors>,
+  WorkosClient
+> => Pagination.pages(listRedirectUris, input, listRedirectUrisPagination);
+
+/** Stream every redirect uri across every page. */
+export const listRedirectUrisItems = (
+  input: ListRedirectUrisInput = {},
+): Stream.Stream<
+  RedirectUri,
+  WorkosError<typeof listRedirectUrisErrors>,
+  WorkosClient
+> => Pagination.items(listRedirectUris, input, listRedirectUrisPagination);
+
+// ===========================================================================
+// userManagement.listUserDataProviders — GET /user_management/users/{user_id}/data_providers
+// ===========================================================================
+
+export const ListUserDataProvidersInput = Schema.Struct({
+  user_id: Schema.String,
+  organization_id: Schema.optional(Schema.String),
+});
+export interface ListUserDataProvidersInput extends Schema.Schema.Type<
+  typeof ListUserDataProvidersInput
+> {}
+
+const listUserDataProvidersErrors = [NotFound, Unauthorized] as const;
+
+const listUserDataProvidersOp: Operation<
+  typeof ListUserDataProvidersInput,
+  typeof DataIntegrationsListResponse,
+  typeof listUserDataProvidersErrors
+> = {
+  id: "userManagement.listUserDataProviders",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/users/{user_id}/data_providers",
+  pathParams: ["user_id"],
+  queryParams: ["organization_id"],
+  input: ListUserDataProvidersInput,
+  output: DataIntegrationsListResponse,
+  errors: listUserDataProvidersErrors,
+};
+
+/** Retrieves a list of available providers and the user's connection status for each. Returns all providers configured for your environment, along with the user's [connected account](/reference/pipes/connected-account) information where applicable. */
+export const listUserDataProviders = (
+  input: ListUserDataProvidersInput,
+): Effect.Effect<
+  DataIntegrationsListResponse,
+  WorkosError<typeof listUserDataProvidersErrors>,
+  WorkosClient
+> => run(listUserDataProvidersOp, input);
+
+// ===========================================================================
+// userManagement.listUserFeatureFlags — GET /user_management/users/{userId}/feature-flags (cursor paginated)
+// ===========================================================================
+
+export const ListUserFeatureFlagsInput = Schema.Struct({
+  userId: Schema.String,
+  before: Schema.optional(Schema.String),
+  after: Schema.optional(Schema.String),
+  limit: Schema.optional(Schema.Number),
+  order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])),
+});
+export interface ListUserFeatureFlagsInput extends Schema.Schema.Type<
+  typeof ListUserFeatureFlagsInput
+> {}
+
+const listUserFeatureFlagsErrors = [NotFound] as const;
+
+const listUserFeatureFlagsOp: Operation<
+  typeof ListUserFeatureFlagsInput,
+  typeof FlagList,
+  typeof listUserFeatureFlagsErrors
+> = {
+  id: "userManagement.listUserFeatureFlags",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/users/{userId}/feature-flags",
+  pathParams: ["userId"],
+  queryParams: ["before", "after", "limit", "order"],
+  input: ListUserFeatureFlagsInput,
+  output: FlagList,
+  errors: listUserFeatureFlagsErrors,
+};
+
+/** Get a list of all enabled feature flags for the provided user. This includes feature flags enabled specifically for the user as well as any organizations that the user is a member of. */
+export const listUserFeatureFlags = (
+  input: ListUserFeatureFlagsInput,
+): Effect.Effect<
+  FlagList,
+  WorkosError<typeof listUserFeatureFlagsErrors>,
+  WorkosClient
+> => run(listUserFeatureFlagsOp, input);
+
+const listUserFeatureFlagsPagination: Pagination.CursorPagination<
+  ListUserFeatureFlagsInput,
+  FlagList,
+  Flag
+> = {
+  cursorParam: "after",
+  clear: ["before"],
+  nextCursor: (page) => page.list_metadata.after,
+  items: (page) => page.data,
+};
+
+/** Stream every page of user management, following the `after` cursor. */
+export const listUserFeatureFlagsPages = (
+  input: ListUserFeatureFlagsInput,
+): Stream.Stream<
+  FlagList,
+  WorkosError<typeof listUserFeatureFlagsErrors>,
+  WorkosClient
+> =>
+  Pagination.pages(listUserFeatureFlags, input, listUserFeatureFlagsPagination);
+
+/** Stream every flag across every page. */
+export const listUserFeatureFlagsItems = (
+  input: ListUserFeatureFlagsInput,
+): Stream.Stream<
+  Flag,
+  WorkosError<typeof listUserFeatureFlagsErrors>,
+  WorkosClient
+> =>
+  Pagination.items(listUserFeatureFlags, input, listUserFeatureFlagsPagination);
+
+// ===========================================================================
+// userManagement.listUserSessions — GET /user_management/users/{id}/sessions (cursor paginated)
+// ===========================================================================
+
+export const ListUserSessionsInput = Schema.Struct({
+  id: Schema.String,
+  before: Schema.optional(Schema.String),
+  after: Schema.optional(Schema.String),
+  limit: Schema.optional(Schema.Number),
+  order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])),
+});
+export interface ListUserSessionsInput extends Schema.Schema.Type<
+  typeof ListUserSessionsInput
+> {}
+
+const listUserSessionsErrors = [NotFound, UnprocessableEntity] as const;
+
+const listUserSessionsOp: Operation<
+  typeof ListUserSessionsInput,
+  typeof SessionList,
+  typeof listUserSessionsErrors
+> = {
+  id: "userManagement.listUserSessions",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/users/{id}/sessions",
+  pathParams: ["id"],
+  queryParams: ["before", "after", "limit", "order"],
+  input: ListUserSessionsInput,
+  output: SessionList,
+  errors: listUserSessionsErrors,
+};
+
+/** Get a list of all active sessions for a specific user. */
+export const listUserSessions = (
+  input: ListUserSessionsInput,
+): Effect.Effect<
+  SessionList,
+  WorkosError<typeof listUserSessionsErrors>,
+  WorkosClient
+> => run(listUserSessionsOp, input);
+
+const listUserSessionsPagination: Pagination.CursorPagination<
+  ListUserSessionsInput,
+  SessionList,
+  Session
+> = {
+  cursorParam: "after",
+  clear: ["before"],
+  nextCursor: (page) => page.list_metadata.after,
+  items: (page) => page.data,
+};
+
+/** Stream every page of user management, following the `after` cursor. */
+export const listUserSessionsPages = (
+  input: ListUserSessionsInput,
+): Stream.Stream<
+  SessionList,
+  WorkosError<typeof listUserSessionsErrors>,
+  WorkosClient
+> => Pagination.pages(listUserSessions, input, listUserSessionsPagination);
+
+/** Stream every session across every page. */
+export const listUserSessionsItems = (
+  input: ListUserSessionsInput,
+): Stream.Stream<
+  Session,
+  WorkosError<typeof listUserSessionsErrors>,
+  WorkosClient
+> => Pagination.items(listUserSessions, input, listUserSessionsPagination);
+
+// ===========================================================================
+// userManagement.listUsers — GET /user_management/users (cursor paginated)
+// ===========================================================================
+
+export const ListUsersInput = Schema.Struct({
+  before: Schema.optional(Schema.String),
+  after: Schema.optional(Schema.String),
+  limit: Schema.optional(Schema.Number),
+  order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])),
+  organization: Schema.optional(Schema.String),
+  organization_id: Schema.optional(Schema.String),
+  email: Schema.optional(Schema.String),
+});
+export interface ListUsersInput extends Schema.Schema.Type<
+  typeof ListUsersInput
+> {}
+
+const listUsersErrors = [UnprocessableEntity] as const;
+
+const listUsersOp: Operation<
+  typeof ListUsersInput,
+  typeof UserList,
+  typeof listUsersErrors
+> = {
+  id: "userManagement.listUsers",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/users",
+  pathParams: [],
+  queryParams: [
+    "before",
+    "after",
+    "limit",
+    "order",
+    "organization",
+    "organization_id",
+    "email",
+  ],
+  input: ListUsersInput,
+  output: UserList,
+  errors: listUsersErrors,
+};
+
+/** Get a list of all of your existing users matching the criteria specified. */
+export const listUsers = (
+  input: ListUsersInput = {},
+): Effect.Effect<UserList, WorkosError<typeof listUsersErrors>, WorkosClient> =>
+  run(listUsersOp, input);
+
+const listUsersPagination: Pagination.CursorPagination<
+  ListUsersInput,
+  UserList,
+  User
+> = {
+  cursorParam: "after",
+  clear: ["before"],
+  nextCursor: (page) => page.list_metadata.after,
+  items: (page) => page.data,
+};
+
+/** Stream every page of user management, following the `after` cursor. */
+export const listUsersPages = (
+  input: ListUsersInput = {},
+): Stream.Stream<UserList, WorkosError<typeof listUsersErrors>, WorkosClient> =>
+  Pagination.pages(listUsers, input, listUsersPagination);
+
+/** Stream every user across every page. */
+export const listUsersItems = (
+  input: ListUsersInput = {},
+): Stream.Stream<User, WorkosError<typeof listUsersErrors>, WorkosClient> =>
+  Pagination.items(listUsers, input, listUsersPagination);
+
+// ===========================================================================
+// userManagement.logout — GET /user_management/sessions/logout
+// ===========================================================================
+
+export const LogoutInput = Schema.Struct({
+  session_id: Schema.String,
+  return_to: Schema.optional(Schema.String),
+});
+export interface LogoutInput extends Schema.Schema.Type<typeof LogoutInput> {}
+
+const logoutErrors = [UnprocessableEntity] as const;
+
+const logoutOp: Operation<
+  typeof LogoutInput,
+  typeof Schema.Void,
+  typeof logoutErrors
+> = {
+  id: "userManagement.logout",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/user_management/sessions/logout",
+  pathParams: [],
+  queryParams: ["session_id", "return_to"],
+  input: LogoutInput,
+  output: Schema.Void,
+  errors: logoutErrors,
+};
+
+/** Logout a user from the current [session](/reference/authkit/session). */
+export const logout = (
+  input: LogoutInput,
+): Effect.Effect<void, WorkosError<typeof logoutErrors>, WorkosClient> =>
+  run(logoutOp, input);
+
+// ===========================================================================
+// userManagement.reactivateOrganizationMembership — PUT /user_management/organization_memberships/{id}/reactivate
+// ===========================================================================
+
+export const ReactivateOrganizationMembershipInput = Schema.Struct({
+  id: Schema.String,
+});
+export interface ReactivateOrganizationMembershipInput extends Schema.Schema
+  .Type<typeof ReactivateOrganizationMembershipInput> {}
+
+const reactivateOrganizationMembershipErrors = [
+  BadRequest,
+  NotFound,
+  UnprocessableEntity,
+] as const;
+
+const reactivateOrganizationMembershipOp: Operation<
+  typeof ReactivateOrganizationMembershipInput,
+  typeof OrganizationMembership,
+  typeof reactivateOrganizationMembershipErrors
+> = {
+  id: "userManagement.reactivateOrganizationMembership",
+  method: "PUT",
+  retry: "throttling",
+  pathTemplate: "/user_management/organization_memberships/{id}/reactivate",
+  pathParams: ["id"],
+  queryParams: [],
+  input: ReactivateOrganizationMembershipInput,
+  output: OrganizationMembership,
+  errors: reactivateOrganizationMembershipErrors,
+};
+
+/**
+ * Reactivates an `inactive` organization membership, retaining the pre-existing role(s). Emits an [organization_membership.updated](/events/organization-membership) event upon successful reactivation.
+ *
+ * - Reactivating an `active` membership is a no-op and does not emit an event.
+ * - Reactivating a `pending` membership returns an error. The user needs to [accept the invitation](/authkit/invitations) instead.
+ *
+ * See the [membership management documentation](/authkit/users-organizations/organizations/membership-management) for additional details.
+ */
+export const reactivateOrganizationMembership = (
+  input: ReactivateOrganizationMembershipInput,
+): Effect.Effect<
+  OrganizationMembership,
+  WorkosError<typeof reactivateOrganizationMembershipErrors>,
+  WorkosClient
+> => run(reactivateOrganizationMembershipOp, input);
+
+// ===========================================================================
+// userManagement.resendInvitation — POST /user_management/invitations/{id}/resend
+// ===========================================================================
+
+export const ResendInvitationInput = Schema.Struct({
+  id: Schema.String,
+  locale: Schema.optional(
+    Schema.Literals([
+      "af",
+      "am",
+      "ar",
+      "bg",
+      "bn",
+      "bs",
+      "ca",
+      "cs",
+      "da",
+      "de",
+      "de-DE",
+      "el",
+      "en",
+      "en-AU",
+      "en-CA",
+      "en-GB",
+      "en-US",
+      "es",
+      "es-419",
+      "es-ES",
+      "es-US",
+      "et",
+      "fa",
+      "fi",
+      "fil",
+      "fr",
+      "fr-BE",
+      "fr-CA",
+      "fr-FR",
+      "fy",
+      "gl",
+      "gu",
+      "ha",
+      "he",
+      "hi",
+      "hr",
+      "hu",
+      "hy",
+      "id",
+      "is",
+      "it",
+      "it-IT",
+      "ja",
+      "jv",
+      "ka",
+      "kk",
+      "km",
+      "kn",
+      "ko",
+      "lt",
+      "lv",
+      "mk",
+      "ml",
+      "mn",
+      "mr",
+      "ms",
+      "my",
+      "nb",
+      "ne",
+      "nl",
+      "nl-BE",
+      "nl-NL",
+      "nn",
+      "no",
+      "pa",
+      "pl",
+      "pt",
+      "pt-BR",
+      "pt-PT",
+      "ro",
+      "ru",
+      "sk",
+      "sl",
+      "sq",
+      "sr",
+      "sv",
+      "sw",
+      "ta",
+      "te",
+      "th",
+      "tr",
+      "uk",
+      "ur",
+      "uz",
+      "vi",
+      "zh",
+      "zh-CN",
+      "zh-HK",
+      "zh-TW",
+      "zu",
+    ]),
+  ),
+});
+export interface ResendInvitationInput extends Schema.Schema.Type<
+  typeof ResendInvitationInput
+> {}
+
+const resendInvitationErrors = [
+  InviteAccepted,
+  InviteExpired,
+  InviteRevoked,
+  NotFound,
+  UnprocessableEntity,
+] as const;
+
+const resendInvitationOp: Operation<
+  typeof ResendInvitationInput,
+  typeof Invitation,
+  typeof resendInvitationErrors
+> = {
+  id: "userManagement.resendInvitation",
+  method: "POST",
+  retry: "throttling",
+  pathTemplate: "/user_management/invitations/{id}/resend",
+  pathParams: ["id"],
+  queryParams: [],
+  input: ResendInvitationInput,
+  output: Invitation,
+  errors: resendInvitationErrors,
+};
+
+/** Resends an invitation email to the recipient. The invitation must be in a pending state. */
+export const resendInvitation = (
+  input: ResendInvitationInput,
+): Effect.Effect<
+  Invitation,
+  WorkosError<typeof resendInvitationErrors>,
+  WorkosClient
+> => run(resendInvitationOp, input);
+
+// ===========================================================================
+// userManagement.resetPassword — POST /user_management/password_reset/confirm
+// ===========================================================================
+
+export const ResetPasswordInput = Schema.Struct({
+  token: Schema.String,
+  new_password: Schema.String,
+});
+export interface ResetPasswordInput extends Schema.Schema.Type<
+  typeof ResetPasswordInput
+> {}
+
+const resetPasswordErrors = [
+  BadRequest,
+  Forbidden,
+  NotFound,
+  UnprocessableEntity,
+] as const;
+
+const resetPasswordOp: Operation<
+  typeof ResetPasswordInput,
+  typeof ResetPasswordResponse,
+  typeof resetPasswordErrors
+> = {
+  id: "userManagement.resetPassword",
+  method: "POST",
+  retry: "throttling",
+  pathTemplate: "/user_management/password_reset/confirm",
+  pathParams: [],
+  queryParams: [],
+  input: ResetPasswordInput,
+  output: ResetPasswordResponse,
+  errors: resetPasswordErrors,
+};
+
+/** Sets a new password using the `token` query parameter from the link that the user received. Successfully resetting the password will verify a user's email, if it hasn't been verified yet. */
+export const resetPassword = (
+  input: ResetPasswordInput,
+): Effect.Effect<
+  ResetPasswordResponse,
+  WorkosError<typeof resetPasswordErrors>,
+  WorkosClient
+> => run(resetPasswordOp, input);
+
+// ===========================================================================
+// userManagement.revokeInvitation — POST /user_management/invitations/{id}/revoke
+// ===========================================================================
+
+export const RevokeInvitationInput = Schema.Struct({
+  id: Schema.String,
+});
+export interface RevokeInvitationInput extends Schema.Schema.Type<
+  typeof RevokeInvitationInput
+> {}
+
+const revokeInvitationErrors = [BadRequest] as const;
+
+const revokeInvitationOp: Operation<
+  typeof RevokeInvitationInput,
+  typeof InvitationRevokeResponse,
+  typeof revokeInvitationErrors
+> = {
+  id: "userManagement.revokeInvitation",
+  method: "POST",
+  retry: "throttling",
+  pathTemplate: "/user_management/invitations/{id}/revoke",
+  pathParams: ["id"],
+  queryParams: [],
+  input: RevokeInvitationInput,
+  output: InvitationRevokeResponse,
+  errors: revokeInvitationErrors,
+};
+
+/** Revokes an existing invitation. */
+export const revokeInvitation = (
+  input: RevokeInvitationInput,
+): Effect.Effect<
+  InvitationRevokeResponse,
+  WorkosError<typeof revokeInvitationErrors>,
+  WorkosClient
+> => run(revokeInvitationOp, input);
+
+// ===========================================================================
+// userManagement.revokeSession — POST /user_management/sessions/revoke
+// ===========================================================================
+
+export const RevokeSessionInput = Schema.Struct({
+  session_id: Schema.String,
+});
+export interface RevokeSessionInput extends Schema.Schema.Type<
+  typeof RevokeSessionInput
+> {}
+
+const revokeSessionErrors = [BadRequest] as const;
+
+const revokeSessionOp: Operation<
+  typeof RevokeSessionInput,
+  typeof Schema.Void,
+  typeof revokeSessionErrors
+> = {
+  id: "userManagement.revokeSession",
+  method: "POST",
+  retry: "throttling",
+  pathTemplate: "/user_management/sessions/revoke",
+  pathParams: [],
+  queryParams: [],
+  input: RevokeSessionInput,
+  output: Schema.Void,
+  errors: revokeSessionErrors,
+};
+
+/** Revoke a [user session](/reference/authkit/session). */
+export const revokeSession = (
+  input: RevokeSessionInput,
+): Effect.Effect<void, WorkosError<typeof revokeSessionErrors>, WorkosClient> =>
+  run(revokeSessionOp, input);
+
+// ===========================================================================
+// userManagement.sendEmailChange — POST /user_management/users/{id}/email_change/send
+// ===========================================================================
+
+export const SendEmailChangeInput = Schema.Struct({
+  id: Schema.String,
+  new_email: Schema.String,
+});
+export interface SendEmailChangeInput extends Schema.Schema.Type<
+  typeof SendEmailChangeInput
+> {}
+
+const sendEmailChangeErrors = [
+  EmailChangeNotAllowed,
+  EmailChangeNotNeeded,
+  EmailNotAvailable,
+  InvalidEmail,
+  InvalidRequestParameters,
+  NotFound,
+  TooManyRequests,
+] as const;
+
+const sendEmailChangeOp: Operation<
+  typeof SendEmailChangeInput,
+  typeof EmailChange,
+  typeof sendEmailChangeErrors
+> = {
+  id: "userManagement.sendEmailChange",
+  method: "POST",
+  retry: "throttling",
+  pathTemplate: "/user_management/users/{id}/email_change/send",
+  pathParams: ["id"],
+  queryParams: [],
+  input: SendEmailChangeInput,
+  output: EmailChange,
+  errors: sendEmailChangeErrors,
+};
+
+/** Sends an email that contains a one-time code used to change a user's email address. */
+export const sendEmailChange = (
+  input: SendEmailChangeInput,
+): Effect.Effect<
+  EmailChange,
+  WorkosError<typeof sendEmailChangeErrors>,
+  WorkosClient
+> => run(sendEmailChangeOp, input);
+
+// ===========================================================================
+// userManagement.sendInvitation — POST /user_management/invitations
+// ===========================================================================
+
+export const SendInvitationInput = Schema.Struct({
+  email: Schema.String,
+  organization_id: Schema.optional(Schema.String),
+  role_slug: Schema.optional(Schema.String),
+  expires_in_days: Schema.optional(Schema.Number),
+  inviter_user_id: Schema.optional(Schema.String),
+  locale: Schema.optional(
+    Schema.Literals([
+      "af",
+      "am",
+      "ar",
+      "bg",
+      "bn",
+      "bs",
+      "ca",
+      "cs",
+      "da",
+      "de",
+      "de-DE",
+      "el",
+      "en",
+      "en-AU",
+      "en-CA",
+      "en-GB",
+      "en-US",
+      "es",
+      "es-419",
+      "es-ES",
+      "es-US",
+      "et",
+      "fa",
+      "fi",
+      "fil",
+      "fr",
+      "fr-BE",
+      "fr-CA",
+      "fr-FR",
+      "fy",
+      "gl",
+      "gu",
+      "ha",
+      "he",
+      "hi",
+      "hr",
+      "hu",
+      "hy",
+      "id",
+      "is",
+      "it",
+      "it-IT",
+      "ja",
+      "jv",
+      "ka",
+      "kk",
+      "km",
+      "kn",
+      "ko",
+      "lt",
+      "lv",
+      "mk",
+      "ml",
+      "mn",
+      "mr",
+      "ms",
+      "my",
+      "nb",
+      "ne",
+      "nl",
+      "nl-BE",
+      "nl-NL",
+      "nn",
+      "no",
+      "pa",
+      "pl",
+      "pt",
+      "pt-BR",
+      "pt-PT",
+      "ro",
+      "ru",
+      "sk",
+      "sl",
+      "sq",
+      "sr",
+      "sv",
+      "sw",
+      "ta",
+      "te",
+      "th",
+      "tr",
+      "uk",
+      "ur",
+      "uz",
+      "vi",
+      "zh",
+      "zh-CN",
+      "zh-HK",
+      "zh-TW",
+      "zu",
+    ]),
+  ),
+});
+export interface SendInvitationInput extends Schema.Schema.Type<
+  typeof SendInvitationInput
+> {}
+
+const sendInvitationErrors = [
+  EmailAlreadyInvited,
+  EmailAlreadyInvitedToOrganization,
+  ExpiresInDaysTooLong,
+  ExpiresInDaysTooShort,
+  InvalidRole,
+  NotFound,
+  UnprocessableEntity,
+  UserAlreadyExists,
+  UserAlreadyOrganizationMember,
+] as const;
+
+const sendInvitationOp: Operation<
+  typeof SendInvitationInput,
+  typeof Invitation,
+  typeof sendInvitationErrors
+> = {
+  id: "userManagement.sendInvitation",
+  method: "POST",
+  retry: "throttling",
+  pathTemplate: "/user_management/invitations",
+  pathParams: [],
+  queryParams: [],
+  input: SendInvitationInput,
+  output: Invitation,
+  errors: sendInvitationErrors,
+};
+
+/** Sends an invitation email to the recipient. */
+export const sendInvitation = (
+  input: SendInvitationInput,
+): Effect.Effect<
+  Invitation,
+  WorkosError<typeof sendInvitationErrors>,
+  WorkosClient
+> => run(sendInvitationOp, input);
+
+// ===========================================================================
+// userManagement.sendRadarSmsChallenge — POST /user_management/radar_challenges
+// ===========================================================================
+
+export const SendRadarSmsChallengeInput = Schema.Struct({
+  user_id: Schema.String,
+  pending_authentication_token: Schema.String,
+  phone_number: Schema.String,
+  ip_address: Schema.optional(Schema.String),
+  user_agent: Schema.optional(Schema.String),
+});
+export interface SendRadarSmsChallengeInput extends Schema.Schema.Type<
+  typeof SendRadarSmsChallengeInput
+> {}
+
+const sendRadarSmsChallengeErrors = [] as const;
+
+const sendRadarSmsChallengeOp: Operation<
+  typeof SendRadarSmsChallengeInput,
+  typeof SendRadarSmsChallengeResponse,
+  typeof sendRadarSmsChallengeErrors
+> = {
+  id: "userManagement.sendRadarSmsChallenge",
+  method: "POST",
+  retry: "throttling",
+  pathTemplate: "/user_management/radar_challenges",
+  pathParams: [],
+  queryParams: [],
+  input: SendRadarSmsChallengeInput,
+  output: SendRadarSmsChallengeResponse,
+  errors: sendRadarSmsChallengeErrors,
+};
+
+/** Sends a one-time verification code over SMS to a user as part of a Radar challenge. Use the returned `verification_id` to authenticate the user with the `urn:workos:oauth:grant-type:radar-sms-challenge:code` grant type. */
+export const sendRadarSmsChallenge = (
+  input: SendRadarSmsChallengeInput,
+): Effect.Effect<
+  SendRadarSmsChallengeResponse,
+  WorkosError<typeof sendRadarSmsChallengeErrors>,
+  WorkosClient
+> => run(sendRadarSmsChallengeOp, input);
+
+// ===========================================================================
+// userManagement.sendVerificationEmail — POST /user_management/users/{id}/email_verification/send
+// ===========================================================================
+
+export const SendVerificationEmailInput = Schema.Struct({
+  id: Schema.String,
+});
+export interface SendVerificationEmailInput extends Schema.Schema.Type<
+  typeof SendVerificationEmailInput
+> {}
+
+const sendVerificationEmailErrors = [
+  BadRequest,
+  NotFound,
+  TooManyRequests,
+] as const;
+
+const sendVerificationEmailOp: Operation<
+  typeof SendVerificationEmailInput,
+  typeof SendVerificationEmailResponse,
+  typeof sendVerificationEmailErrors
+> = {
+  id: "userManagement.sendVerificationEmail",
+  method: "POST",
+  retry: "throttling",
+  pathTemplate: "/user_management/users/{id}/email_verification/send",
+  pathParams: ["id"],
+  queryParams: [],
+  input: SendVerificationEmailInput,
+  output: SendVerificationEmailResponse,
+  errors: sendVerificationEmailErrors,
+};
+
+/** Sends an email that contains a one-time code used to verify a user's email address. */
+export const sendVerificationEmail = (
+  input: SendVerificationEmailInput,
+): Effect.Effect<
+  SendVerificationEmailResponse,
+  WorkosError<typeof sendVerificationEmailErrors>,
+  WorkosClient
+> => run(sendVerificationEmailOp, input);
+
+// ===========================================================================
+// userManagement.updateConnectedAccount — PUT /user_management/users/{user_id}/connected_accounts/{slug}
+// ===========================================================================
+
+export const UpdateConnectedAccountInput = Schema.Struct({
+  user_id: Schema.String,
+  slug: Schema.String,
+  organization_id: Schema.optional(Schema.String),
+  access_token: Schema.optional(Schema.String),
+  refresh_token: Schema.optional(Schema.String),
+  expires_at: Schema.optional(Schema.String),
+  scopes: Schema.optional(Schema.Array(Schema.String)),
+  state: Schema.optional(
+    Schema.Literals(["connected", "needs_reauthorization"]),
+  ),
+});
+export interface UpdateConnectedAccountInput extends Schema.Schema.Type<
+  typeof UpdateConnectedAccountInput
+> {}
+
+const updateConnectedAccountErrors = [NotFound, Unauthorized] as const;
+
+const updateConnectedAccountOp: Operation<
+  typeof UpdateConnectedAccountInput,
+  typeof ConnectedAccount,
+  typeof updateConnectedAccountErrors
+> = {
+  id: "userManagement.updateConnectedAccount",
+  method: "PUT",
+  retry: "throttling",
+  pathTemplate: "/user_management/users/{user_id}/connected_accounts/{slug}",
+  pathParams: ["user_id", "slug"],
+  queryParams: ["organization_id"],
+  input: UpdateConnectedAccountInput,
+  output: ConnectedAccount,
+  errors: updateConnectedAccountErrors,
+};
+
+/** Updates a user's [connected account](/reference/pipes/connected-account) tokens, scopes, or state for a specific provider. */
+export const updateConnectedAccount = (
+  input: UpdateConnectedAccountInput,
+): Effect.Effect<
+  ConnectedAccount,
+  WorkosError<typeof updateConnectedAccountErrors>,
+  WorkosClient
+> => run(updateConnectedAccountOp, input);
+
+// ===========================================================================
+// userManagement.updateJwtTemplate — PUT /user_management/jwt_template
+// ===========================================================================
+
+export const UpdateJwtTemplateInput = Schema.Struct({
+  content: Schema.String,
+});
+export interface UpdateJwtTemplateInput extends Schema.Schema.Type<
+  typeof UpdateJwtTemplateInput
+> {}
+
+const updateJwtTemplateErrors = [UnprocessableEntity] as const;
+
+const updateJwtTemplateOp: Operation<
+  typeof UpdateJwtTemplateInput,
+  typeof JwtTemplate,
+  typeof updateJwtTemplateErrors
+> = {
+  id: "userManagement.updateJwtTemplate",
+  method: "PUT",
+  retry: "throttling",
+  pathTemplate: "/user_management/jwt_template",
+  pathParams: [],
+  queryParams: [],
+  input: UpdateJwtTemplateInput,
+  output: JwtTemplate,
+  errors: updateJwtTemplateErrors,
+};
+
+/** Update the JWT template for the current environment. */
+export const updateJwtTemplate = (
+  input: UpdateJwtTemplateInput,
+): Effect.Effect<
+  JwtTemplate,
+  WorkosError<typeof updateJwtTemplateErrors>,
+  WorkosClient
+> => run(updateJwtTemplateOp, input);
+
+// ===========================================================================
+// userManagement.updateOrganizationMembership — PUT /user_management/organization_memberships/{id}
+// ===========================================================================
+
+export const UpdateOrganizationMembershipInput = Schema.Struct({
+  id: Schema.String,
+  role_slug: Schema.String,
+});
+export interface UpdateOrganizationMembershipInput extends Schema.Schema.Type<
+  typeof UpdateOrganizationMembershipInput
+> {}
+
+const updateOrganizationMembershipErrors = [
+  InvalidRequestParameters,
+  InvalidRole,
+  MultipleRolesNotEnabled,
+  NotFound,
+  SubResourceScopedRoleNotAllowed,
+] as const;
+
+const updateOrganizationMembershipOp: Operation<
+  typeof UpdateOrganizationMembershipInput,
+  typeof OrganizationMembership,
+  typeof updateOrganizationMembershipErrors
+> = {
+  id: "userManagement.updateOrganizationMembership",
+  method: "PUT",
+  retry: "throttling",
+  pathTemplate: "/user_management/organization_memberships/{id}",
+  pathParams: ["id"],
+  queryParams: [],
+  input: UpdateOrganizationMembershipInput,
+  output: OrganizationMembership,
+  errors: updateOrganizationMembershipErrors,
+};
+
+/**
+ * Update the details of an existing organization membership. This client
+ * models the single-role update (`role_slug`) only; the endpoint's bulk
+ * `role_slugs` variant is not yet supported (see `MultipleRolesNotEnabled`).
+ */
+export const updateOrganizationMembership = (
+  input: UpdateOrganizationMembershipInput,
+): Effect.Effect<
+  OrganizationMembership,
+  WorkosError<typeof updateOrganizationMembershipErrors>,
+  WorkosClient
+> => run(updateOrganizationMembershipOp, input);
+
+// ===========================================================================
+// userManagement.updateUser — PUT /user_management/users/{id}
+// ===========================================================================
+
+export const UpdateUserInput = Schema.Struct({
+  id: Schema.String,
+  email: Schema.optional(Schema.String),
+  first_name: Schema.optional(Schema.String),
+  last_name: Schema.optional(Schema.String),
+  name: Schema.optional(Schema.String),
+  email_verified: Schema.optional(Schema.Boolean),
+  metadata: Schema.optional(
+    Schema.NullOr(Schema.Record(Schema.String, Schema.String)),
+  ),
+  external_id: Schema.optional(Schema.NullOr(Schema.String)),
+  locale: Schema.optional(Schema.NullOr(Schema.String)),
+  password: Schema.optional(Schema.String),
+  password_hash: Schema.optional(Schema.String),
+  password_hash_type: Schema.optional(
+    Schema.Literals([
+      "bcrypt",
+      "firebase-scrypt",
+      "ssha",
+      "ssha256",
+      "scrypt",
+      "pbkdf2",
+      "argon2",
+    ]),
+  ),
+});
+export interface UpdateUserInput extends Schema.Schema.Type<
+  typeof UpdateUserInput
+> {}
+
+const updateUserErrors = [
+  EmailAlreadyVerified,
+  EmailChangeNotAllowed,
+  EmailNotAvailable,
+  ExternalIdAlreadyUsed,
+  InvalidEmail,
+  InvalidLocale,
+  InvalidMetadata,
+  InvalidPasswordHash,
+  PasswordAndPasswordHashProvided,
+  PasswordAndPasswordHashTypeProvided,
+  PasswordStrengthError,
+  UnprocessableEntity,
+] as const;
+
+const updateUserOp: Operation<
+  typeof UpdateUserInput,
+  typeof User,
+  typeof updateUserErrors
+> = {
+  id: "userManagement.updateUser",
+  method: "PUT",
+  retry: "throttling",
+  pathTemplate: "/user_management/users/{id}",
+  pathParams: ["id"],
+  queryParams: [],
+  input: UpdateUserInput,
+  output: User,
+  errors: updateUserErrors,
+};
+
+/** Updates properties of a user. The omitted properties will be left unchanged. */
+export const updateUser = (
+  input: UpdateUserInput,
+): Effect.Effect<User, WorkosError<typeof updateUserErrors>, WorkosClient> =>
+  run(updateUserOp, input);
+
+// ===========================================================================
+// userManagement.verifyEmail — POST /user_management/users/{id}/email_verification/confirm
+// ===========================================================================
+
+export const VerifyEmailInput = Schema.Struct({
+  id: Schema.String,
+  code: Schema.String,
+});
+export interface VerifyEmailInput extends Schema.Schema.Type<
+  typeof VerifyEmailInput
+> {}
+
+const verifyEmailErrors = [
+  EmailPreviouslyVerified,
+  EmailVerificationCodeExpired,
+  EmailVerificationCodeIncorrect,
+  EmailVerificationCodePreviouslyUsed,
+  NotFound,
+  UnprocessableEntity,
+] as const;
+
+const verifyEmailOp: Operation<
+  typeof VerifyEmailInput,
+  typeof VerifyEmailResponse,
+  typeof verifyEmailErrors
+> = {
+  id: "userManagement.verifyEmail",
+  method: "POST",
+  retry: "throttling",
+  pathTemplate: "/user_management/users/{id}/email_verification/confirm",
+  pathParams: ["id"],
+  queryParams: [],
+  input: VerifyEmailInput,
+  output: VerifyEmailResponse,
+  errors: verifyEmailErrors,
+};
+
+/** Verifies an email address using the one-time code received by the user. */
+export const verifyEmail = (
+  input: VerifyEmailInput,
+): Effect.Effect<
+  VerifyEmailResponse,
+  WorkosError<typeof verifyEmailErrors>,
+  WorkosClient
+> => run(verifyEmailOp, input);

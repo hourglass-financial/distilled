@@ -5,14 +5,14 @@
   },
   "files": {
     "package.json": "sha256-de25c00efeaad51e24d05c4ee539a2d945b0d2d946c8fc6d8693b3bb2e3e4bf6",
-    "src/client.ts": "sha256-b3f18967410bf9b3e0f8dbea19c8628162f3b69c79ba59fb1c914dfe71926cde",
-    "src/config.ts": "sha256-92b400434c19cfe6b7fadf409c528c5f3ea3626bf1f94f5b1bdb4650004e34fd",
+    "src/client.ts": "sha256-366828c892f31e40539e5261d2037efb362ddcb42be0666a1eb319a5444c50b3",
+    "src/config.ts": "sha256-e03c1ae40e5e7b7974473e90c22df42fee61ca326544e0dfc1bbb64bf9d05302",
     "src/errors.ts": "sha256-ce7c49bdc27c1be8c93bde9bf47eba393a76e3d7754d4ed942e35f600fc36c14",
     "src/index.ts": "sha256-7edb8b07e13734096f056f8339abae063c497b904f144ee3aec45f59d69a399d",
     "src/registry.ts": "sha256-f8415970defe2eef7821103c031a7ae487c0634505e35d2c16a0b2c98b8d0bea",
     "src/resources/sessions.ts": "sha256-0d3c12d685ce9e1ecf7dfa60b764fd512ae312662aa9501b4e26ac9beb81801e",
     "src/schemas.ts": "sha256-7d7abf20362896155697326d18d6f75845c6f705439f9a676f4924c2f079f8ac",
-    "test/errors.test.ts": "sha256-e1a1eafcbc9253ae90a47b8abddbaaebc5822f18f894559d794e322dbc9697e1",
+    "test/errors.test.ts": "sha256-5b84199a964535fc4e75c90402b7800e6f720a4298a30c6923eb4c000665ba7f",
     "tsconfig.json": "sha256-0662e0b731f66baa20e6b3f3ae3b4cefee95893041c4f930b694f81cc52fc881",
     "tsconfig.test.json": "sha256-cb07f6be7bf6fcc56b0cc5ed500b58736e8605937e8666a78b7d20a4a626cadc"
   }

@@ -53,6 +53,26 @@ export {
   type RunnerDeps,
 } from "./client.ts";
 
+// Vendor profile adapters: envelope decoding, failure wrapping, and generated
+// matcher-table consistency checks.
+export {
+  checkMatcherConsistency,
+  type EnvelopeSpec,
+  makeEnvelopeDecoder,
+  makeVendorAdapters,
+  type MatcherConsistencyTables,
+  type VendorAdapters,
+  type VendorErrorClasses,
+} from "./adapters.ts";
+
+// Environment-backed credential assembly shared by generated clients.
+export {
+  credentialsConfig,
+  credentialsFromEnvEffect,
+  type CredentialsEnvSpec,
+  type CredentialsShape,
+} from "./credentials.ts";
+
 // Request assembly + response reading — the transport seam shared by the
 // runner and the raw-request primitive.
 export {

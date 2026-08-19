@@ -7,6 +7,8 @@ import * as Schema from "effect/Schema";
 import {
   LiteralValueSchema,
   NamedRefNodeSchema,
+  OutputArraySchema,
+  OutputUnionSchema,
   StructNodeSchema,
   VoidNodeSchema,
 } from "./nodes.ts";
@@ -107,7 +109,12 @@ const OperationIrSchema = Schema.Struct({
   pathParams: Schema.Array(Schema.String),
   queryParams: Schema.Array(Schema.String),
   input: StructNodeSchema,
-  output: Schema.Union([NamedRefNodeSchema, VoidNodeSchema]),
+  output: Schema.Union([
+    NamedRefNodeSchema,
+    OutputArraySchema,
+    OutputUnionSchema,
+    VoidNodeSchema,
+  ]),
   errors: Schema.Array(Schema.String),
   errorsDocs: Schema.optional(Schema.String),
   constantBody: Schema.optional(

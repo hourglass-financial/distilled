@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   canonicalize,
+  buildVendorIrFrom,
   checkInvariants,
   CodegenError,
   decodeVendorConfig,
   normalizeOpenApi,
   type JsonObject,
   type JsonValue,
+  type VendorDir,
 } from "../src/index.ts";
 import { minimalFixture } from "./fixtures/minimal.ts";
 import {
@@ -26,6 +28,7 @@ const expectViolation = (
   fn: () => unknown,
   rule: string,
   constructFragment: string,
+  messageFragment?: string,
 ): void => {
   try {
     fn();
@@ -36,7 +39,9 @@ const expectViolation = (
     const match = violations.find(
       (violation) =>
         violation.rule === rule &&
-        violation.construct.includes(constructFragment),
+        violation.construct.includes(constructFragment) &&
+        (messageFragment === undefined ||
+          violation.message.includes(messageFragment)),
     );
     expect(
       match,
@@ -54,6 +59,88 @@ const patchSpec = (
   return draft;
 };
 
+interface NorthstarGet {
+  readonly parameters: Array<JsonObject>;
+  readonly responses: Record<string, JsonObject>;
+}
+
+const northstarGet = (draft: JsonObject): NorthstarGet =>
+  (
+    (draft["paths"] as JsonObject)["/widgets/{id}"] as unknown as {
+      get: NorthstarGet;
+    }
+  ).get;
+
+const setNorthstarSuccessSchema = (
+  draft: JsonObject,
+  schema: JsonValue,
+): NorthstarGet => {
+  const get = northstarGet(draft);
+  (
+    (get.responses["200"]!["content"] as JsonObject)["application/json"] as {
+      schema: JsonValue;
+    }
+  ).schema = schema;
+  return get;
+};
+
+interface ErrorTableMember {
+  description?: string;
+  properties: { code: { const: string } };
+}
+
+const bastionErrorResponses = (draft: JsonObject): Record<string, JsonObject> =>
+  (
+    ((draft["paths"] as JsonObject)["/sessions/authenticate"] as JsonObject)[
+      "post"
+    ] as JsonObject
+  )["responses"] as Record<string, JsonObject>;
+
+const bastionErrorMembers = (
+  responses: Record<string, JsonObject>,
+  status: string,
+): Array<ErrorTableMember> =>
+  (
+    (
+      (responses[status]!["content"] as JsonObject)[
+        "application/json"
+      ] as JsonObject
+    )["schema"] as JsonObject
+  )["oneOf"] as unknown as Array<ErrorTableMember>;
+
+const duplicateBastionErrorResponse = (
+  draft: JsonObject,
+  sourceStatus: string,
+  targetStatus: string,
+): ErrorTableMember => {
+  const responses = bastionErrorResponses(draft);
+  responses[targetStatus] = JSON.parse(
+    JSON.stringify(responses[sourceStatus]),
+  ) as JsonObject;
+  return bastionErrorMembers(responses, targetStatus)[0]!;
+};
+
+const reconcile = (spec: JsonValue, config: JsonValue) =>
+  buildVendorIrFrom(
+    {
+      dir: "synthetic-vendor",
+      spec,
+      provenance: {
+        sourceUrl: "https://specs.example.test/openapi.json",
+        upstreamRef: "v1",
+        fetchedAt: "2026-07-21T00:00:00.000Z",
+        contentHash: "synthetic",
+        sourceFormat: "json",
+      },
+      config: decodeVendorConfig(config),
+      patches: [],
+      specHash: "synthetic",
+      configHash: "synthetic",
+      patchesHash: "synthetic",
+    } satisfies VendorDir,
+    "reconcile",
+  ).reconciliation!;
+
 describe("OpenAPI frontend normalization", () => {
   it("normalizes the northstar spec to the minimal engine fixture", () => {
     const ir = canonicalize(normalize(northstarSpec, northstarConfig));
@@ -67,7 +154,7 @@ describe("OpenAPI frontend normalization", () => {
     );
   });
 
-  it("normalizes the orbit spec to the pagination engine fixture", () => {
+  it("normalizes a required pagination envelope to the pagination engine fixture", () => {
     const ir = canonicalize(normalize(orbitSpec, orbitConfig));
     checkInvariants(ir);
     expect(ir).toEqual(
@@ -146,21 +233,59 @@ describe("OpenAPI frontend normalization", () => {
     );
   });
 
+  it("maps exact free-form record values to closed json nodes", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      const components = draft["components"] as {
+        schemas: Record<string, { properties: Record<string, unknown> }>;
+      };
+      components.schemas["Widget"]!.properties["raw_attributes"] = {
+        type: "object",
+        additionalProperties: {},
+      };
+      components.schemas["Widget"]!.properties["custom_attributes"] = {
+        type: "object",
+        additionalProperties: true,
+      };
+    });
+
+    const ir = normalize(spec, northstarConfig);
+    const fields = ir.namedSchemas.find((schema) => schema.name === "Widget")!
+      .schema.fields;
+    for (const name of ["raw_attributes", "custom_attributes"]) {
+      expect(fields.find((field) => field.name === name)?.schema).toEqual({
+        kind: "record",
+        key: { kind: "string" },
+        value: { kind: "json" },
+      });
+    }
+  });
+
+  it("keeps a bare empty schema outside record-value position fatal", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      const components = draft["components"] as {
+        schemas: Record<string, { properties: Record<string, unknown> }>;
+      };
+      components.schemas["Widget"]!.properties["blob"] = {};
+    });
+    expectViolation(
+      () => normalize(spec, northstarConfig),
+      "openapi.schema.type",
+      "/components/schemas/Widget/properties/blob",
+    );
+  });
+
   it("hard-errors instead of collapsing an unrepresentable union member", () => {
     const spec = patchSpec(northstarSpec, (draft) => {
       const components = draft["components"] as {
         schemas: Record<string, { properties: Record<string, unknown> }>;
       };
       components.schemas["Widget"]!.properties["blob"] = {
-        oneOf: [
-          { type: "string" },
-          { type: "object", additionalProperties: true },
-        ],
+        oneOf: [{ type: "string" }, {}],
       };
     });
     expectViolation(
       () => normalize(spec, northstarConfig),
-      "openapi.schema.free-form",
+      "openapi.schema.type",
       "/components/schemas/Widget/properties/blob/oneOf/1",
     );
   });
@@ -219,6 +344,213 @@ describe("OpenAPI frontend normalization", () => {
     );
   });
 
+  it.each(["oneOf", "anyOf"] as const)(
+    "normalizes an inline %s of named struct success schemas in spec order",
+    (keyword) => {
+      const spec = patchSpec(northstarSpec, (draft) => {
+        const components = draft["components"] as {
+          schemas: Record<string, JsonObject>;
+        };
+        components.schemas["ArchivedWidget"] = {
+          type: "object",
+          description: "An archived widget.",
+          properties: { id: { type: "string" } },
+          required: ["id"],
+        };
+        setNorthstarSuccessSchema(draft, {
+          [keyword]: [
+            { $ref: "#/components/schemas/Widget" },
+            { $ref: "#/components/schemas/ArchivedWidget" },
+          ],
+        });
+      });
+
+      const operation = normalize(spec, northstarConfig).resources[0]!
+        .operations[0]!;
+      expect(operation.output).toEqual({
+        kind: "union",
+        members: [
+          { kind: "named-ref", name: "Widget" },
+          { kind: "named-ref", name: "ArchivedWidget" },
+        ],
+      });
+    },
+  );
+
+  it("collapses a single-member success union to a named reference", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      setNorthstarSuccessSchema(draft, {
+        oneOf: [{ $ref: "#/components/schemas/Widget" }],
+      });
+    });
+
+    const operation = normalize(spec, northstarConfig).resources[0]!
+      .operations[0]!;
+    expect(operation.output).toEqual({ kind: "named-ref", name: "Widget" });
+  });
+
+  it("hard-errors on a success union with an inline member", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      setNorthstarSuccessSchema(draft, {
+        oneOf: [
+          { $ref: "#/components/schemas/Widget" },
+          { type: "object", properties: { id: { type: "string" } } },
+        ],
+      });
+    });
+
+    expectViolation(
+      () => normalize(spec, northstarConfig),
+      "openapi.response.success",
+      "schema/oneOf/1",
+    );
+  });
+
+  it("normalizes an inline array of a named struct success schema", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      setNorthstarSuccessSchema(draft, {
+        type: "array",
+        items: { $ref: "#/components/schemas/Widget" },
+      });
+    });
+
+    const operation = normalize(spec, northstarConfig).resources[0]!
+      .operations[0]!;
+    expect(operation.output).toEqual({
+      kind: "array",
+      item: { kind: "named-ref", name: "Widget" },
+    });
+  });
+
+  it.each([
+    [
+      "inline",
+      {
+        type: "object",
+        properties: { id: { type: "string" } },
+      },
+    ],
+    [
+      "nested array",
+      {
+        type: "array",
+        items: { $ref: "#/components/schemas/Widget" },
+      },
+    ],
+  ])(
+    "hard-errors on %s array success items, naming the items pointer",
+    (_name, items) => {
+      const spec = patchSpec(northstarSpec, (draft) => {
+        setNorthstarSuccessSchema(draft, {
+          type: "array",
+          items,
+        });
+      });
+
+      expectViolation(
+        () => normalize(spec, northstarConfig),
+        "openapi.response.success",
+        "~1widgets~1{id}/get/responses/200/content/application~1json/schema/items",
+      );
+    },
+  );
+
+  it("keeps array-shaped component success refs unsupported", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      const components = draft["components"] as {
+        schemas: Record<string, JsonObject>;
+      };
+      components.schemas["WidgetList"] = {
+        type: "array",
+        description: "A list of widgets.",
+        items: { $ref: "#/components/schemas/Widget" },
+      };
+      setNorthstarSuccessSchema(draft, {
+        $ref: "#/components/schemas/WidgetList",
+      });
+    });
+
+    expectViolation(
+      () => normalize(spec, northstarConfig),
+      "openapi.response.success",
+      "~1widgets~1{id}/get/responses/200/content/application~1json/schema",
+    );
+  });
+
+  it("rejects cursor pagination on an array success output", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      const get = setNorthstarSuccessSchema(draft, {
+        type: "array",
+        items: { $ref: "#/components/schemas/Widget" },
+      });
+      get.parameters.push({
+        name: "after",
+        in: "query",
+        required: false,
+        schema: { type: "string" },
+      });
+    });
+    const config = {
+      ...(northstarConfig as JsonObject),
+      pagination: {
+        mode: "cursor",
+        cursorParam: "after",
+        clearParams: [],
+        nextCursorPath: ["meta", "after"],
+        itemsPath: ["data"],
+      },
+    };
+
+    expectViolation(
+      () => normalize(spec, config),
+      "pagination.detect",
+      "operation widgets.get pagination",
+      "array output cannot use cursor pagination; cursor pagination requires a struct envelope",
+    );
+  });
+
+  it("rejects cursor pagination on a union success output", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      const components = draft["components"] as {
+        schemas: Record<string, JsonObject>;
+      };
+      components.schemas["ArchivedWidget"] = {
+        type: "object",
+        properties: { id: { type: "string" } },
+        required: ["id"],
+      };
+      const get = setNorthstarSuccessSchema(draft, {
+        oneOf: [
+          { $ref: "#/components/schemas/Widget" },
+          { $ref: "#/components/schemas/ArchivedWidget" },
+        ],
+      });
+      get.parameters.push({
+        name: "after",
+        in: "query",
+        required: false,
+        schema: { type: "string" },
+      });
+    });
+    const config = {
+      ...(northstarConfig as JsonObject),
+      pagination: {
+        mode: "cursor",
+        cursorParam: "after",
+        clearParams: [],
+        nextCursorPath: ["meta", "after"],
+        itemsPath: ["data"],
+      },
+    };
+
+    expectViolation(
+      () => normalize(spec, config),
+      "pagination.detect",
+      "operation widgets.get pagination",
+      "union output cannot use cursor pagination",
+    );
+  });
+
   it("hard-errors when the cursor parameter is present but pagination paths do not resolve", () => {
     const spec = patchSpec(orbitSpec, (draft) => {
       const components = draft["components"] as {
@@ -232,6 +564,54 @@ describe("OpenAPI frontend normalization", () => {
       () => normalize(spec, orbitConfig),
       "pagination.detect",
       "operation satellites.list",
+    );
+  });
+
+  it("hard-errors when a pagination path traverses an optional intermediate field", () => {
+    const spec = patchSpec(orbitSpec, (draft) => {
+      const components = draft["components"] as {
+        schemas: Record<string, { required: string[] }>;
+      };
+      components.schemas["SatellitePage"]!.required = ["data"];
+    });
+
+    expectViolation(
+      () => normalize(spec, orbitConfig),
+      "pagination.detect",
+      "operation satellites.list pagination",
+      'next cursor path meta.after traverses optional field "meta"; use a document patch to mark the envelope field required and non-nullable',
+    );
+  });
+
+  it("hard-errors when a pagination path resolves through an optional leaf field", () => {
+    const spec = patchSpec(orbitSpec, (draft) => {
+      const components = draft["components"] as {
+        schemas: Record<string, { required: string[] }>;
+      };
+      components.schemas["SatellitePage"]!.required = ["meta"];
+    });
+
+    expectViolation(
+      () => normalize(spec, orbitConfig),
+      "pagination.detect",
+      "operation satellites.list pagination",
+      'items path data traverses optional field "data"; use a document patch to mark the envelope field required and non-nullable',
+    );
+  });
+
+  it("hard-errors when a pagination path traverses a nullable intermediate field", () => {
+    const spec = patchSpec(orbitSpec, (draft) => {
+      const components = draft["components"] as {
+        schemas: Record<string, { nullable?: boolean }>;
+      };
+      components.schemas["PageMeta"]!.nullable = true;
+    });
+
+    expectViolation(
+      () => normalize(spec, orbitConfig),
+      "pagination.detect",
+      "operation satellites.list pagination",
+      'next cursor path meta.after traverses nullable field "meta"; use a document patch to mark the envelope field required and non-nullable',
     );
   });
 
@@ -327,6 +707,90 @@ describe("OpenAPI frontend normalization", () => {
     );
   });
 
+  it("applies codeClassNames without changing canonical code order", () => {
+    const ir = canonicalize(
+      normalize(bastionSpec, {
+        ...(bastionConfig as JsonObject),
+        errors: {
+          ...((bastionConfig as JsonObject)["errors"] as JsonObject),
+          codeClassNames: { invalid_token: "AInvalidToken" },
+        },
+      }),
+    );
+    checkInvariants(ir);
+
+    expect(
+      ir.errors.codeErrors.map(({ code, className, tag }) => ({
+        code,
+        className,
+        tag,
+      })),
+    ).toEqual([
+      {
+        code: "alpha_challenge",
+        className: "AlphaChallenge",
+        tag: "AlphaChallenge",
+      },
+      {
+        code: "invalid_token",
+        className: "AInvalidToken",
+        tag: "AInvalidToken",
+      },
+    ]);
+    expect(ir.resources[0]!.operations[0]!.errors).toContain("AInvalidToken");
+  });
+
+  it("hard-errors on an unused codeClassNames assignment", () => {
+    expectViolation(
+      () =>
+        normalize(bastionSpec, {
+          ...(bastionConfig as JsonObject),
+          errors: {
+            ...((bastionConfig as JsonObject)["errors"] as JsonObject),
+            codeClassNames: { never_lifted: "NeverLifted" },
+          },
+        }),
+      "config.error-class-name.unused",
+      "never_lifted",
+    );
+  });
+
+  it("leaves invalid and reserved codeClassNames to existing identifier checks", () => {
+    for (const [className, rule] of [
+      ["not-valid", "identifier"],
+      ["class", "identifier.reserved"],
+    ] as const) {
+      const ir = canonicalize(
+        normalize(bastionSpec, {
+          ...(bastionConfig as JsonObject),
+          errors: {
+            ...((bastionConfig as JsonObject)["errors"] as JsonObject),
+            codeClassNames: { invalid_token: className },
+          },
+        }),
+      );
+      expectViolation(() => checkInvariants(ir), rule, className);
+    }
+  });
+
+  it("leaves colliding codeClassNames to the existing namespace check", () => {
+    const ir = canonicalize(
+      normalize(bastionSpec, {
+        ...(bastionConfig as JsonObject),
+        errors: {
+          ...((bastionConfig as JsonObject)["errors"] as JsonObject),
+          coreReexports: "all",
+          codeClassNames: { invalid_token: "BadRequest" },
+        },
+      }),
+    );
+    expectViolation(
+      () => checkInvariants(ir),
+      "identifier.export-collision",
+      "BadRequest",
+    );
+  });
+
   it("hard-errors on config overrides naming unknown constructs", () => {
     expectViolation(
       () =>
@@ -346,6 +810,392 @@ describe("OpenAPI frontend normalization", () => {
       "config.resource-override.unknown",
       "ghosts",
     );
+  });
+
+  it("applies schema renames at every named-ref site and orders by public name", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      const schemas = (draft["components"] as JsonObject)["schemas"] as Record<
+        string,
+        JsonObject
+      >;
+      schemas["InternalOwner"] = {
+        type: "object",
+        description: "The widget owner.",
+        properties: { id: { type: "string" } },
+        required: ["id"],
+      };
+      (schemas["Widget"]!["properties"] as Record<string, unknown>)["owner"] = {
+        $ref: "#/components/schemas/InternalOwner",
+      };
+    });
+    const ir = canonicalize(
+      normalize(spec, {
+        ...(northstarConfig as JsonObject),
+        naming: {
+          schemas: { Widget: "PublicWidget", InternalOwner: "AccountOwner" },
+        },
+        schemas: {
+          PublicWidget: { docs: "Configured public widget prose." },
+        },
+      }),
+    );
+    expect(ir.resources[0]!.operations[0]!.output).toEqual({
+      kind: "named-ref",
+      name: "PublicWidget",
+    });
+    expect(ir.namedSchemas.map((schema) => schema.name)).toEqual([
+      "AccountOwner",
+      "PublicWidget",
+    ]);
+    expect(
+      ir.namedSchemas
+        .find((schema) => schema.name === "PublicWidget")!
+        .schema.fields.find((field) => field.name === "owner")!.schema,
+    ).toEqual({ kind: "named-ref", name: "AccountOwner" });
+    expect(
+      ir.namedSchemas.find((schema) => schema.name === "PublicWidget")!.docs,
+    ).toBe("Configured public widget prose.");
+  });
+
+  it("hard-errors on colliding schema public names", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      const schemas = (draft["components"] as JsonObject)["schemas"] as Record<
+        string,
+        JsonObject
+      >;
+      schemas["Owner"] = {
+        type: "object",
+        description: "The owner.",
+        properties: { id: { type: "string" } },
+      };
+    });
+    expectViolation(
+      () =>
+        normalize(spec, {
+          ...(northstarConfig as JsonObject),
+          naming: { schemas: { Widget: "Owner" } },
+        }),
+      "config.naming.schema-collision",
+      "Owner",
+    );
+  });
+
+  it("hard-errors on unknown, invalid, and reserved schema renames", () => {
+    expectViolation(
+      () =>
+        normalize(northstarSpec, {
+          ...(northstarConfig as JsonObject),
+          naming: { schemas: { Ghost: "Specter" } },
+        }),
+      "config.naming.unknown-schema",
+      "Ghost",
+    );
+    for (const target of ["not-valid", "class"]) {
+      expectViolation(
+        () =>
+          normalize(northstarSpec, {
+            ...(northstarConfig as JsonObject),
+            naming: { schemas: { Widget: target } },
+          }),
+        "config.naming.invalid-schema",
+        target,
+      );
+    }
+  });
+
+  it("hard-errors when a schema rename collides in the unified export namespace", () => {
+    const ir = canonicalize(
+      normalize(northstarSpec, {
+        ...(northstarConfig as JsonObject),
+        naming: { schemas: { Widget: "BadRequest" } },
+        errors: {
+          coreReexports: "all",
+          codeMeta: {},
+        },
+      }),
+    );
+    expectViolation(
+      () => checkInvariants(ir),
+      "identifier.export-collision",
+      "BadRequest",
+    );
+  });
+
+  it("uses schema docs and code prose from config when the spec omits them", () => {
+    const schemaSpec = patchSpec(northstarSpec, (draft) => {
+      const widget = (
+        (draft["components"] as JsonObject)["schemas"] as Record<
+          string,
+          JsonObject
+        >
+      )["Widget"]!;
+      delete (widget as Record<string, unknown>)["description"];
+    });
+    const schemaIr = normalize(schemaSpec, {
+      ...(northstarConfig as JsonObject),
+      schemas: { Widget: { docs: "A documented public widget." } },
+    });
+    expect(schemaIr.namedSchemas[0]!.docs).toBe("A documented public widget.");
+
+    const errorSpec = patchSpec(bastionSpec, (draft) => {
+      const member = (
+        (draft["paths"] as JsonObject)["/sessions/authenticate"] as {
+          post: {
+            responses: Record<
+              string,
+              {
+                content: {
+                  "application/json": {
+                    schema: { oneOf: Array<Record<string, unknown>> };
+                  };
+                };
+              }
+            >;
+          };
+        }
+      ).post.responses["400"]!.content["application/json"].schema.oneOf[0]!;
+      delete member["description"];
+    });
+    const errorIr = normalize(errorSpec, {
+      ...(bastionConfig as JsonObject),
+      errors: {
+        ...((bastionConfig as JsonObject)["errors"] as JsonObject),
+        codeProse: { invalid_token: "the configured token prose." },
+      },
+    });
+    expect(
+      errorIr.errors.codeErrors.find((error) => error.code === "invalid_token")
+        ?.docsProse,
+    ).toBe("the configured token prose.");
+  });
+
+  it("retains missing-prose hard errors when neither spec nor config supplies prose", () => {
+    const schemaSpec = patchSpec(northstarSpec, (draft) => {
+      const widget = (
+        (draft["components"] as JsonObject)["schemas"] as Record<
+          string,
+          JsonObject
+        >
+      )["Widget"]!;
+      delete (widget as Record<string, unknown>)["description"];
+    });
+    expectViolation(
+      () => normalize(schemaSpec, northstarConfig),
+      "openapi.schema.docs",
+      "/components/schemas/Widget",
+    );
+
+    const errorSpec = patchSpec(bastionSpec, (draft) => {
+      const member = (
+        (draft["paths"] as JsonObject)["/sessions/authenticate"] as {
+          post: {
+            responses: Record<
+              string,
+              {
+                content: {
+                  "application/json": {
+                    schema: { oneOf: Array<Record<string, unknown>> };
+                  };
+                };
+              }
+            >;
+          };
+        }
+      ).post.responses["400"]!.content["application/json"].schema.oneOf[0]!;
+      delete member["description"];
+    });
+    expectViolation(
+      () => normalize(errorSpec, bastionConfig),
+      "openapi.error.member",
+      "/responses/400/",
+    );
+  });
+
+  it("gives config prose precedence over existing spec descriptions", () => {
+    const ir = normalize(bastionSpec, {
+      ...(bastionConfig as JsonObject),
+      schemas: { Session: { docs: "Configured session prose." } },
+      errors: {
+        ...((bastionConfig as JsonObject)["errors"] as JsonObject),
+        codeProse: { invalid_token: "configured invalid-token prose." },
+      },
+    });
+    expect(ir.namedSchemas[0]!.docs).toBe("Configured session prose.");
+    expect(
+      ir.errors.codeErrors.find((error) => error.code === "invalid_token")
+        ?.docsProse,
+    ).toBe("configured invalid-token prose.");
+  });
+
+  it("unifies matching codeProse across 400 and 422 at the lowest docs status", () => {
+    const spec = patchSpec(bastionSpec, (draft) => {
+      duplicateBastionErrorResponse(draft, "400", "422");
+    });
+    const ir = normalize(spec, {
+      ...(bastionConfig as JsonObject),
+      errors: {
+        ...((bastionConfig as JsonObject)["errors"] as JsonObject),
+        codeProse: { invalid_token: "configured invalid-token prose." },
+      },
+    });
+
+    expect(
+      ir.errors.codeErrors.find((error) => error.code === "invalid_token"),
+    ).toMatchObject({
+      docsStatus: 400,
+      docsProse: "configured invalid-token prose.",
+    });
+  });
+
+  it("keeps 403 as docsStatus when the same code also appears at 409", () => {
+    const spec = patchSpec(bastionSpec, (draft) => {
+      duplicateBastionErrorResponse(draft, "403", "409");
+    });
+    const ir = normalize(spec, bastionConfig);
+
+    expect(
+      ir.errors.codeErrors.find((error) => error.code === "alpha_challenge"),
+    ).toMatchObject({ docsStatus: 403 });
+  });
+
+  it("hard-errors when duplicate codes have different effective prose", () => {
+    const spec = patchSpec(bastionSpec, (draft) => {
+      const duplicate = duplicateBastionErrorResponse(draft, "400", "422");
+      duplicate.description = "the token failed validation differently.";
+    });
+
+    expectViolation(
+      () => normalize(spec, bastionConfig),
+      "openapi.error.code-conflict",
+      "/responses/422/",
+      "effective prose",
+    );
+  });
+
+  it("uses codeProse to unify a described and undescribed duplicate", () => {
+    const spec = patchSpec(bastionSpec, (draft) => {
+      const duplicate = duplicateBastionErrorResponse(draft, "400", "422");
+      delete duplicate.description;
+    });
+    const ir = normalize(spec, {
+      ...(bastionConfig as JsonObject),
+      errors: {
+        ...((bastionConfig as JsonObject)["errors"] as JsonObject),
+        codeProse: { invalid_token: "configured invalid-token prose." },
+      },
+    });
+
+    expect(
+      ir.errors.codeErrors.find((error) => error.code === "invalid_token"),
+    ).toMatchObject({
+      docsStatus: 400,
+      docsProse: "configured invalid-token prose.",
+    });
+  });
+
+  it("reports an undescribed duplicate as an error member before code conflict", () => {
+    const spec = patchSpec(bastionSpec, (draft) => {
+      const duplicate = duplicateBastionErrorResponse(draft, "400", "422");
+      delete duplicate.description;
+    });
+
+    try {
+      normalize(spec, bastionConfig);
+      throw new Error("expected missing member prose to fail normalization");
+    } catch (error) {
+      expect(error).toBeInstanceOf(CodegenError);
+      const rules = (error as CodegenError).violations.map(
+        (violation) => violation.rule,
+      );
+      expect(rules).toContain("openapi.error.member");
+      expect(rules).not.toContain("openapi.error.code-conflict");
+    }
+  });
+
+  it("hard-errors on schema config keys that do not resolve to emitted schemas", () => {
+    const spec = patchSpec(northstarSpec, (draft) => {
+      const schemas = (draft["components"] as JsonObject)["schemas"] as Record<
+        string,
+        JsonObject
+      >;
+      schemas["Unreachable"] = {
+        type: "object",
+        properties: { id: { type: "string" } },
+      };
+    });
+    expectViolation(
+      () =>
+        normalize(spec, {
+          ...(northstarConfig as JsonObject),
+          naming: { schemas: { Unreachable: "Hidden" } },
+        }),
+      "config.naming.unused-schema",
+      "Unreachable",
+    );
+    expectViolation(
+      () =>
+        normalize(spec, {
+          ...(northstarConfig as JsonObject),
+          schemas: { Unreachable: { docs: "Never emitted." } },
+        }),
+      "config.schema-override.unknown",
+      "Unreachable",
+    );
+  });
+
+  it("hard-errors on codeProse for a code that was not lifted", () => {
+    expectViolation(
+      () =>
+        normalize(bastionSpec, {
+          ...(bastionConfig as JsonObject),
+          errors: {
+            ...((bastionConfig as JsonObject)["errors"] as JsonObject),
+            codeProse: { never_lifted: "Unknown prose." },
+          },
+        }),
+      "config.error-prose.unused",
+      "never_lifted",
+    );
+  });
+
+  it("reports prose overrides that shadow spec descriptions during reconciliation", () => {
+    const report = reconcile(bastionSpec, {
+      ...(bastionConfig as JsonObject),
+      schemas: { Session: { docs: "Configured session prose." } },
+      errors: {
+        ...((bastionConfig as JsonObject)["errors"] as JsonObject),
+        codeProse: { invalid_token: "Configured error prose." },
+      },
+      operations: {
+        ...((bastionConfig as JsonObject)["operations"] as JsonObject),
+        "sessions.authenticate": {
+          docs: "Configured operation prose.",
+          errorsDocs: "The endpoint returns typed discriminator errors.",
+        },
+      },
+    });
+    expect(report.configShadows).toEqual([
+      {
+        kind: "error.codeProse",
+        configKey: "errors.codeProse.invalid_token",
+        specPointer:
+          "/paths/~1sessions~1authenticate/post/responses/400/content/application~1json/schema/oneOf/0/description",
+      },
+      {
+        kind: "operation.docs",
+        configKey: "operations.sessions.authenticate.docs",
+        specPointer: "/paths/~1sessions~1authenticate/post/description",
+      },
+      {
+        kind: "schema.docs",
+        configKey: "schemas.Session.docs",
+        specPointer: "/components/schemas/Session/description",
+      },
+    ]);
+  });
+
+  it("reports an empty configShadows section when config shadows nothing", () => {
+    expect(reconcile(bastionSpec, bastionConfig).configShadows).toEqual([]);
   });
 
   it("hard-errors on an empty error-response union instead of dropping the status", () => {

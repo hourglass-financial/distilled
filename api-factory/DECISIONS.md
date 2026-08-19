@@ -234,3 +234,16 @@ JSON-serializable), keeping `HttpBodyError` out of the channel.
 - 429's `daily_quota_exceeded` code maps to the retryable `TooManyRequests`
   universally — the honest common-case default; a non-retryable quota subclass
   is a future spec-patch refinement.
+
+## 2026-07 update — the hoist (ticket #50, ADR-0009)
+
+Sections 3 (service/layer) and 4 (error channel) describe `client.ts` as it
+was hand-authored: inline `decodeEnvelope`, inline `toTransport`/`toDecode`
+closures, inline `Config.all` credentials assembly, and a generated test that
+loops over the matcher tables. Those behaviors now live in core
+(`makeEnvelopeDecoder`, `makeVendorAdapters`, `credentialsConfig`/
+`credentialsFromEnvEffect`, `checkMatcherConsistency`) and the generated files
+carry data plus one-call wiring — see ADR-0009 for the bar and the rejected
+alternatives. The design facts recorded in those sections (honest channel,
+gating, redaction, retry conjunction) are unchanged; only their *home* moved.
+This note keeps the historical record intact rather than rewriting it.

@@ -1,0 +1,9 @@
+{
+  "kind": "spec-pruning",
+  "target": "/paths/~1user_management~1authorize/get/responses/302",
+  "rationale": "The 302 response is a browser redirect; pruning it leaves the operation’s representable 200 response as the SDK contract.",
+  "precondition": { "pointer": "/paths/~1user_management~1authorize/get/responses/302", "test": { "headers": { "location": { "schema": { "type": "string", "format": "uri" } } }, "description": "" } },
+  "blastRadius": { "role": "response", "clears": [{ "rule": "openapi.response.status", "construct": "/paths/~1user_management~1authorize/get/responses/302" }] },
+  "provenance": { "evidenceType": "vendor-docs-citation", "url": "https://workos.com/docs/reference", "fetchedAt": "2026-07-21", "observed": "The OpenAPI operation declares both a browser-oriented 302 redirect response and a 200 response.", "specd": "The SDK operation models the documented 200 response; browser redirect handling is outside this typed response contract.", "authoredAgainstSpecHash": "sha256-e2d7b0f947f5e7c4c212dbd460957264df4d7a3018d30bde5c03d79997614664", "reporter": "ticket-50-onboarding" },
+  "id": "010-prune-user-management-authorize-302"
+}

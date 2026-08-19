@@ -69,10 +69,13 @@ const PaginationConfigSchema = Schema.Union([
  * Error-surface axes. `codeMeta` assigns every lifted discriminator code a
  * member of core's closed `Meta` vocabulary (ADR-0005) — an unknown meta name
  * fails the decode, and a lifted code with no assignment fails normalization.
+ * `codeClassNames` overrides the derived public class and tag name for a code.
  */
 const ErrorsConfigSchema = Schema.Struct({
   coreReexports: Schema.Literals(["all", "referenced"]),
   codeMeta: Schema.Record(Schema.String, Schema.Literals(metaNames)),
+  codeClassNames: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+  codeProse: Schema.optional(Schema.Record(Schema.String, Schema.String)),
   sectionTitle: Schema.optional(Schema.String),
   docs: Schema.optional(Schema.String),
   codeDocs: Schema.optional(Schema.String),
@@ -95,6 +98,7 @@ const OperationNamingOverrideSchema = Schema.Struct({
 
 const NamingConfigSchema = Schema.Struct({
   resources: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+  schemas: Schema.optional(Schema.Record(Schema.String, Schema.String)),
   operations: Schema.optional(
     Schema.Record(Schema.String, OperationNamingOverrideSchema),
   ),
@@ -112,6 +116,11 @@ const OperationOverrideSchema = Schema.Struct({
   errorsDocs: Schema.optional(Schema.String),
 });
 
+/** Prose override for one emitted named schema, keyed by its public name. */
+const SchemaOverrideSchema = Schema.Struct({
+  docs: Schema.String,
+});
+
 export const VendorConfigSchema = Schema.Struct({
   vendor: VendorIdentitySchema,
   baseUrl: Schema.String,
@@ -124,6 +133,7 @@ export const VendorConfigSchema = Schema.Struct({
   resources: Schema.optional(
     Schema.Record(Schema.String, ResourceOverrideSchema),
   ),
+  schemas: Schema.optional(Schema.Record(Schema.String, SchemaOverrideSchema)),
   operations: Schema.optional(
     Schema.Record(Schema.String, OperationOverrideSchema),
   ),

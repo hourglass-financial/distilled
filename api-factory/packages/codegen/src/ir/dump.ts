@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { CodegenError } from "../errors.ts";
 import { canonicalize } from "./canonical.ts";
+import { checkJsonRecordValueOnly } from "./invariants.ts";
 import { type ClientIr, ClientIrSchema } from "./model.ts";
 
 const parseOptions = {
@@ -9,8 +10,9 @@ const parseOptions = {
 } as const;
 
 export const decodeIr = (input: unknown): ClientIr => {
+  let decoded: ClientIr;
   try {
-    return Schema.decodeUnknownSync(ClientIrSchema, parseOptions)(input);
+    decoded = Schema.decodeUnknownSync(ClientIrSchema, parseOptions)(input);
   } catch (cause) {
     throw new CodegenError([
       {
@@ -20,6 +22,8 @@ export const decodeIr = (input: unknown): ClientIr => {
       },
     ]);
   }
+  checkJsonRecordValueOnly(decoded);
+  return decoded;
 };
 
 export const dumpIr = (ir: ClientIr): string => {

@@ -14,7 +14,9 @@ import {
 export const emitConfig = (ir: ClientIr): EmittedFile => {
   const imports = new ImportCollector();
   imports.use(CORE_PACKAGE, "ConfigError");
-  imports.use("effect/Config", "Config", { namespace: true });
+  imports.use(CORE_PACKAGE, "credentialsConfig");
+  imports.use(CORE_PACKAGE, "credentialsFromEnvEffect");
+  imports.use("effect/Config", "Config", { namespace: true, typeOnly: true });
   imports.use("effect/Context", "Context", { namespace: true });
   imports.use("effect/Effect", "Effect", { namespace: true });
   imports.use("effect/Layer", "Layer", { namespace: true });
@@ -28,7 +30,7 @@ export const emitConfig = (ir: ClientIr): EmittedFile => {
   writer.writeLine(
     banner([
       "auth scheme / base URL / env var names → the generator's vendor profile",
-      "config primitives → effect's `Config` / `ConfigProvider`",
+      `credentials assembly → ${CORE_PACKAGE}`,
     ]),
   );
   writer.writeLine(imports.render()).blankLine();
@@ -64,19 +66,12 @@ export const emitConfig = (ir: ClientIr): EmittedFile => {
     `Reads \`${ir.envVars.apiKey}\` (redacted) and optional \`${ir.envVars.baseUrl}\` from env.`,
   );
   writer.writeLine(
-    `export const config: Config.Config<${prefix}Config> = Config.all({`,
+    `export const config: Config.Config<${prefix}Config> = credentialsConfig({`,
   );
   writer.indent(() => {
-    writer.writeLine(
-      `apiKey: Config.redacted(${stringLiteral(ir.envVars.apiKey)}),`,
-    );
-    writer.writeLine(
-      `baseUrl: Config.string(${stringLiteral(ir.envVars.baseUrl)}).pipe(`,
-    );
-    writer.indent(() =>
-      writer.writeLine("Config.withDefault(DEFAULT_BASE_URL),"),
-    );
-    writer.writeLine("),");
+    writer.writeLine(`apiKeyVar: ${stringLiteral(ir.envVars.apiKey)},`);
+    writer.writeLine(`baseUrlVar: ${stringLiteral(ir.envVars.baseUrl)},`);
+    writer.writeLine("defaultBaseUrl: DEFAULT_BASE_URL,");
   });
   writer.writeLine("});").blankLine();
   writeDoc(
@@ -90,25 +85,18 @@ export const emitConfig = (ir: ClientIr): EmittedFile => {
     writer.writeLine("Layer.effect(");
     writer.indent(() => {
       writer.writeLine("Credentials,");
-      writer.writeLine("config.pipe(");
+      writer.writeLine("credentialsFromEnvEffect(");
       writer.indent(() => {
-        writer.writeLine("Effect.mapError(");
+        writer.writeLine("{");
         writer.indent(() => {
-          writer.writeLine("() =>");
-          writer.indent(() => {
-            writer.writeLine("new ConfigError({");
-            writer.indent(() =>
-              writer.writeLine(
-                `message: ${stringLiteral(ir.configErrorMessage)},`,
-              ),
-            );
-            writer.writeLine("}),");
-          });
+          writer.writeLine(`apiKeyVar: ${stringLiteral(ir.envVars.apiKey)},`);
+          writer.writeLine(`baseUrlVar: ${stringLiteral(ir.envVars.baseUrl)},`);
+          writer.writeLine("defaultBaseUrl: DEFAULT_BASE_URL,");
         });
-        writer.writeLine("),");
-        writer.writeLine("Effect.map(Credentials.of),");
+        writer.writeLine("},");
+        writer.writeLine(`${stringLiteral(ir.configErrorMessage)},`);
       });
-      writer.writeLine("),");
+      writer.writeLine(").pipe(Effect.map(Credentials.of)),");
     });
     writer.writeLine(");");
   });

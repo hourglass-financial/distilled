@@ -7,7 +7,7 @@ import type {
   OperationIr,
 } from "./model.ts";
 import { coreReexportNames } from "./model.ts";
-import type { SchemaNode } from "./nodes.ts";
+import type { FieldIr, SchemaNode } from "./nodes.ts";
 
 const identifierPattern =
   /^[$_\p{ID_Start}](?:[$_\p{ID_Continue}]|\u{200c}|\u{200d})*$/u;
@@ -64,6 +64,9 @@ export const reservedWords: ReadonlySet<string> = new Set([
   "with",
   "yield",
 ]);
+
+export const isValidIdentifier = (value: string): boolean =>
+  identifierPattern.test(value) && !reservedWords.has(value);
 
 const compare = (left: string, right: string): number =>
   left < right ? -1 : left > right ? 1 : 0;
@@ -185,6 +188,7 @@ const isStringRecordKey = (node: SchemaNode): boolean => {
     case "named-ref":
     case "boolean":
     case "number":
+    case "json":
       return false;
   }
 };
@@ -213,6 +217,7 @@ const collectNodeRefs = (node: SchemaNode, refs: Set<string>): void => {
     case "string":
     case "boolean":
     case "number":
+    case "json":
     case "literal":
     case "literals":
     case "secret":
@@ -300,11 +305,101 @@ const visitNode = (
     case "string":
     case "boolean":
     case "number":
+    case "json":
     case "literal":
     case "literals":
     case "secret":
       return;
   }
+};
+
+const collectJsonPlacementViolations = (
+  node: SchemaNode,
+  construct: string,
+  violations: CodegenViolation[],
+  recordValue = false,
+): void => {
+  switch (node.kind) {
+    case "array":
+      collectJsonPlacementViolations(node.item, `${construct}[]`, violations);
+      return;
+    case "struct":
+      for (const field of node.fields) {
+        collectJsonPlacementViolations(
+          field.schema,
+          `${construct}.${field.name}`,
+          violations,
+        );
+      }
+      return;
+    case "record":
+      collectJsonPlacementViolations(node.key, `${construct} key`, violations);
+      collectJsonPlacementViolations(
+        node.value,
+        `${construct} value`,
+        violations,
+        true,
+      );
+      return;
+    case "union":
+      for (const member of node.members) {
+        collectJsonPlacementViolations(member, construct, violations);
+      }
+      return;
+    case "json":
+      if (!recordValue) {
+        add(
+          violations,
+          "json.record-value-only",
+          construct,
+          "json is only valid as the direct value node of a record",
+        );
+      }
+      return;
+    case "string":
+    case "boolean":
+    case "number":
+    case "literal":
+    case "literals":
+    case "secret":
+    case "void":
+    case "named-ref":
+      return;
+  }
+};
+
+const appendJsonPlacementViolations = (
+  ir: ClientIr,
+  violations: CodegenViolation[],
+): void => {
+  for (const schema of ir.namedSchemas) {
+    collectJsonPlacementViolations(
+      schema.schema,
+      `schema ${schema.name}`,
+      violations,
+    );
+  }
+  for (const resource of ir.resources) {
+    for (const operation of resource.operations) {
+      const construct = `operation ${operation.publicName.resource}.${operation.publicName.method}`;
+      collectJsonPlacementViolations(
+        operation.input,
+        `${construct} input`,
+        violations,
+      );
+      collectJsonPlacementViolations(
+        operation.output,
+        `${construct} output`,
+        violations,
+      );
+    }
+  }
+};
+
+export const checkJsonRecordValueOnly = (ir: ClientIr): void => {
+  const violations: CodegenViolation[] = [];
+  appendJsonPlacementViolations(ir, violations);
+  if (violations.length > 0) throw new CodegenError(violations);
 };
 
 const resolveNode = (
@@ -326,6 +421,30 @@ const resolvePath = (
     if (current === undefined) return undefined;
   }
   return current === undefined ? undefined : resolveNode(current, schemas);
+};
+
+const unsafeIntermediateField = (
+  start: SchemaNode,
+  path: ReadonlyArray<string>,
+  schemas: ReadonlyMap<string, NamedSchemaIr>,
+):
+  | { readonly name: string; readonly modifier: "optional" | "nullable" }
+  | undefined => {
+  let current: SchemaNode | undefined = start;
+  for (const [index, segment] of path.entries()) {
+    current = current === undefined ? undefined : resolveNode(current, schemas);
+    if (current?.kind !== "struct") return undefined;
+    const field: FieldIr | undefined = current.fields.find(
+      (entry) => entry.name === segment,
+    );
+    if (field === undefined) return undefined;
+    if (index < path.length - 1) {
+      if (field.optional) return { name: segment, modifier: "optional" };
+      if (field.nullable) return { name: segment, modifier: "nullable" };
+    }
+    current = field.schema;
+  }
+  return undefined;
 };
 
 const checkOperation = (
@@ -547,7 +666,21 @@ const checkOperation = (
       );
     }
   }
-  if (operation.output.kind === "void") {
+  if (operation.output.kind === "array") {
+    add(
+      violations,
+      "pagination.output",
+      paginationConstruct,
+      "array output cannot be paginated; cursor pagination requires a struct envelope",
+    );
+  } else if (operation.output.kind === "union") {
+    add(
+      violations,
+      "pagination.output",
+      paginationConstruct,
+      "union output cannot be paginated; cursor pagination requires a single struct envelope",
+    );
+  } else if (operation.output.kind === "void") {
     add(
       violations,
       "pagination.output",
@@ -578,6 +711,32 @@ const checkOperation = (
       "pagination.items-path",
       paginationConstruct,
       "items path must name at least one field",
+    );
+  }
+  const unsafeNextCursor = unsafeIntermediateField(
+    pagination.pageSchema,
+    pagination.nextCursorPath,
+    schemas,
+  );
+  if (unsafeNextCursor !== undefined) {
+    add(
+      violations,
+      "pagination.next-cursor-path",
+      paginationConstruct,
+      `next cursor path ${pagination.nextCursorPath.join(".")} traverses ${unsafeNextCursor.modifier} intermediate field ${JSON.stringify(unsafeNextCursor.name)}`,
+    );
+  }
+  const unsafeItems = unsafeIntermediateField(
+    pagination.pageSchema,
+    pagination.itemsPath,
+    schemas,
+  );
+  if (unsafeItems !== undefined) {
+    add(
+      violations,
+      "pagination.items-path",
+      paginationConstruct,
+      `items path ${pagination.itemsPath.join(".")} traverses ${unsafeItems.modifier} intermediate field ${JSON.stringify(unsafeItems.name)}`,
     );
   }
   const nextCursorNode = resolvePath(
@@ -629,17 +788,12 @@ const checkCodeErrorOrder = (
   const byCode = [...codeErrors].sort((left, right) =>
     compare(left.code, right.code),
   );
-  const byClass = [...codeErrors].sort((left, right) =>
-    compare(left.className, right.className),
-  );
-  if (
-    byCode.some((entry, index) => entry.className !== byClass[index]?.className)
-  ) {
+  if (byCode.some((entry, index) => entry.code !== codeErrors[index]?.code)) {
     add(
       violations,
       "error.order-agreement",
       "code-error declarations",
-      "code order and class-name order do not agree",
+      "code-error declarations are not ordered by discriminator code",
     );
   }
 };
@@ -666,8 +820,71 @@ const checkResourceOrderAgreement = (
   }
 };
 
+const checkUnifiedExportNamespace = (
+  ir: ClientIr,
+  violations: CodegenViolation[],
+): void => {
+  const prefix = ir.vendor.prefix;
+  const exports: Array<readonly [string, string]> = [
+    ...ir.resources.map(
+      (resource) =>
+        [resource.name, `resource ${resource.name} binding`] as const,
+    ),
+    ["Credentials", "credentials service"],
+    ["credentialsFromEnv", "credentialsFromEnv binding"],
+    ["credentialsOf", "credentialsOf binding"],
+    ["DEFAULT_BASE_URL", "DEFAULT_BASE_URL binding"],
+    [`${prefix}Config`, `${prefix}Config type`],
+    ["layer", "client layer binding"],
+    ["layerFromEnv", "layerFromEnv binding"],
+    ["layerWith", "layerWith binding"],
+    ["run", "client run binding"],
+    [`${prefix}ClientOptions`, `${prefix}ClientOptions type`],
+    [`${prefix}ClientShape`, `${prefix}ClientShape type`],
+    [`${prefix}Client`, `${prefix}Client class`],
+    [`${prefix}Error`, `${prefix}Error type`],
+    ...ir.errors.coreReexports.map(
+      (name) => [name, `core error ${name} re-export`] as const,
+    ),
+    ...ir.errors.codeErrors.map(
+      (error) =>
+        [error.className, `code error ${error.className} class`] as const,
+    ),
+    [`Unknown${prefix}Error`, `Unknown${prefix}Error wrapper class`],
+    [`${prefix}TransportError`, `${prefix}TransportError wrapper class`],
+    [`${prefix}DecodeError`, `${prefix}DecodeError wrapper class`],
+    ["STATUS_ERRORS", "STATUS_ERRORS binding"],
+    ["CODE_ERRORS", "CODE_ERRORS binding"],
+    ["DEFAULT_ERRORS", "DEFAULT_ERRORS binding"],
+    [`${prefix}UniversalError`, `${prefix}UniversalError type`],
+    [`${prefix}ExtraError`, `${prefix}ExtraError type`],
+    ...ir.namedSchemas.map(
+      (schema) => [schema.name, `schema ${schema.name} export`] as const,
+    ),
+    ["operations", "operation registry binding"],
+    ["OperationName", "OperationName type"],
+    ["Category", "core Category re-export"],
+    ["Secret", "core Secret re-export"],
+  ];
+  const seen = new Map<string, string>();
+  for (const [name, construct] of exports) {
+    const existing = seen.get(name);
+    if (existing !== undefined) {
+      add(
+        violations,
+        "identifier.export-collision",
+        construct,
+        `${JSON.stringify(name)} collides with ${existing} in the package export namespace`,
+      );
+    } else {
+      seen.set(name, construct);
+    }
+  }
+};
+
 export const checkInvariants = (ir: ClientIr): void => {
   const violations: CodegenViolation[] = [];
+  appendJsonPlacementViolations(ir, violations);
   const reservedBindings = reservedEmitterBindings(ir.vendor.prefix);
   checkIdentifier(ir.vendor.prefix, "vendor prefix", violations);
   checkDocs(ir.vendor.display, "vendor display", violations);
@@ -818,6 +1035,7 @@ export const checkInvariants = (ir: ClientIr): void => {
   }
 
   const operations = ir.resources.flatMap((resource) => resource.operations);
+  checkUnifiedExportNamespace(ir, violations);
   checkUnique(
     operations,
     (operation) =>

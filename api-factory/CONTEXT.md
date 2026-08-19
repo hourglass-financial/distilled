@@ -103,6 +103,28 @@ against the (incrementally patched) snapshot: `still_needed`, `redundant`
 The pointer-level, classified delta between two snapshots (parameter added,
 type changed, required entry removed, …) — never an opaque hash pair.
 
+**Repair entry**:
+A patch entry whose baseline prefix does not normalize. Its blast radius
+declares the violation multiset it `clears` ({rule, construct} pairs), and
+the audit verifies the cleared delta equals the declaration both directions,
+with every edit target scoped to a cleared construct (ADR-0010).
+_Avoid_: blocker patch (describes the spec, not the audit mode)
+
+**Prose override**:
+An authored documentation string in vendor config (`schemas.<name>.docs`,
+`errors.codeProse`, `operations.<q>.docs`) that satisfies or overrides a
+spec description. Consumed-key accounting hard-errors on entries no emitted
+construct uses; the reconcile report's `configShadows` names overrides whose
+spec pointer has since gained real prose.
+_Avoid_: docs patch (patches carry spec-fact corrections, not presentation)
+
+**json leaf**:
+The closed IR node imaging exactly `additionalProperties: true | {}` —
+record values whose vendor contract is any JSON. Emitted as `Schema.Json`,
+never legal as a union member or fallback (`json.record-value-only`,
+ADR-0011).
+_Avoid_: passthrough node (the fail-open construct #31 banned; this isn't it)
+
 ### Codegen
 
 **IR**:

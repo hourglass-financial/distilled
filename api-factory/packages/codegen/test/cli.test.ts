@@ -8,7 +8,9 @@ import { minimalFixture } from "./fixtures/minimal.ts";
 import { workosFixture } from "./fixtures/workos.ts";
 import { packageRoot } from "./helpers.ts";
 
-const workosRoot = join(packageRoot, "../../clients/workos");
+// The workos-exemplar golden replaced clients/workos as the fixture's byte
+// target when the vendor-backed regen gate took over the committed tree.
+const workosRoot = join(packageRoot, "goldens/workos-exemplar");
 
 const spawn = (args: ReadonlyArray<string>): SpawnSyncReturns<string> =>
   spawnSync("bun", ["run", "src/cli.ts", ...args], {
@@ -71,7 +73,7 @@ describe("codegen CLI", () => {
     }
   });
 
-  it("verifies the committed WorkOS exemplar through dumped IR", () => {
+  it("verifies the workos-exemplar golden through dumped IR", () => {
     const dir = mkdtempSync(join(tmpdir(), "api-factory-codegen-workos-cli-"));
     try {
       const irPath = join(dir, "workos.json");

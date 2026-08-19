@@ -5,11 +5,21 @@ import { emitErrors } from "../src/emit/errors.ts";
 import { ImportCollector } from "../src/emit/imports.ts";
 import { emitResources } from "../src/emit/resources.ts";
 import { emitField } from "../src/emit/schemas.ts";
-import { generate, type Formatter } from "../src/index.ts";
+import {
+  canonicalize,
+  decodeVendorConfig,
+  generate,
+  normalizeOpenApi,
+  type Formatter,
+  type JsonObject,
+} from "../src/index.ts";
 import { errorsRichFixture } from "./fixtures/errors-rich.ts";
+import { arraySuccessFixture } from "./fixtures/array-success.ts";
 import { fixtures } from "./fixtures/index.ts";
 import { minimalFixture } from "./fixtures/minimal.ts";
 import { paginationFixture } from "./fixtures/pagination.ts";
+import { unionSuccessFixture } from "./fixtures/union-success.ts";
+import { bastionConfig, bastionSpec } from "./fixtures/openapi.ts";
 import {
   emitToTemp,
   expectTreesEqual,
@@ -68,7 +78,7 @@ describe("reviewed exemplar conventions", () => {
     }
   });
 
-  it("emits envelope access and documentation from resolved IR data", () => {
+  it("emits envelope factory data and documentation from resolved IR data", () => {
     const client = emitClient({
       ...minimalFixture,
       envelope: {
@@ -80,10 +90,10 @@ describe("reviewed exemplar conventions", () => {
     expect(client).toContain(
       "/** Resolved envelope documentation from the IR. */",
     );
-    expect(client).toContain(
-      'const discriminator = asString(record.code) ?? asString(record["error-code"]);',
-    );
-    expect(client).not.toContain("?? undefined;");
+    expect(client).toContain('discriminatorFields: ["code", "error-code"],');
+    expect(client).toContain("decodeEnvelope: makeEnvelopeDecoder({");
+    expect(client).not.toContain("const asString");
+    expect(client).not.toContain("const decodeEnvelope");
   });
 
   it("emits the code-error title and prose inside one section rule", () => {
@@ -107,6 +117,21 @@ describe("reviewed exemplar conventions", () => {
     );
   });
 
+  it("emits an array output schema and readonly array result type", () => {
+    const resource = emitResources(arraySuccessFixture)[0]!.contents;
+
+    expect(resource).toContain("Schema.$Array<typeof Identity>");
+    expect(resource).toContain("output: Schema.Array(Identity),");
+    expect(resource).toContain("Effect.Effect<ReadonlyArray<Identity>,");
+  });
+
+  it("emits an ordered union output schema and result type", () => {
+    const resource = emitResources(unionSuccessFixture)[0]!.contents;
+
+    expect(resource).toContain("Schema.Union([PendingJob, CompletedJob])");
+    expect(resource).toContain("Effect.Effect<PendingJob | CompletedJob,");
+  });
+
   it("names the resolved vendor coverage location", () => {
     expect(emitConsistencyTest(minimalFixture).contents).toContain(
       "Behavioral coverage lives in `vendors/northstar`.",
@@ -122,6 +147,33 @@ describe("reviewed exemplar conventions", () => {
         nullable: false,
       }),
     ).toBe('["__proto__"]: Schema.String');
+  });
+
+  it("emits overridden code error names through declarations and references", () => {
+    const config = {
+      ...(bastionConfig as JsonObject),
+      errors: {
+        ...((bastionConfig as JsonObject)["errors"] as JsonObject),
+        codeClassNames: { invalid_token: "AInvalidToken" },
+      },
+    };
+    const ir = canonicalize(
+      normalizeOpenApi(bastionSpec, decodeVendorConfig(config)),
+    );
+    const files = generate(ir, { formatter: identity });
+    const errors = files.find((file) => file.path === "src/errors.ts")!;
+    const sessions = files.find(
+      (file) => file.path === "src/resources/sessions.ts",
+    )!;
+
+    expect(errors.contents).toContain("export class AInvalidToken extends");
+    expect(errors.contents).toContain('  "AInvalidToken",');
+    expect(errors.contents).toContain(
+      "byCode([\n    AlphaChallenge,\n    AInvalidToken,",
+    );
+    expect(sessions.contents).toContain(
+      "const authenticateErrors = [AInvalidToken, AlphaChallenge, NotFound, TooManyRequests] as const;",
+    );
   });
 });
 

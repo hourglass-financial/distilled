@@ -4,29 +4,28 @@
  * This file is machine-owned; hand edits are overwritten on regeneration.
  * Change the source of truth instead:
  *   - auth scheme / error envelope shape → the generator's vendor profile
- *   - request execution, retry, error gating → @hourglass-financial/api-factory-core
+ *   - request execution, retry, error gating, envelope decode, failure wrapping → @hourglass-financial/api-factory-core
  *
  * Every operation flows through the single `QuarryClient.run`, assembled here
  * from one core `makeRunner` + `makeMatchError` pair. The service is the only
  * thing a consumer wires; everything else is a tree-shakeable operation import.
  */
 import {
-  Category,
   type ClassifiedErrorClass,
   type InputSchema,
+  makeEnvelopeDecoder,
   makeMatchError,
   makeRunner,
+  makeVendorAdapters,
   type Operation,
   type OutputSchema,
   parseRetryAfter,
   Retry,
   type Runner,
-  summarizeHttpClientError,
 } from "@hourglass-financial/api-factory-core";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Redacted from "effect/Redacted";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import { HttpClient } from "effect/unstable/http/HttpClient";
 import { Credentials, credentialsFromEnv } from "./config.ts";
@@ -44,44 +43,28 @@ import {
 // Error envelope + matcher
 // ---------------------------------------------------------------------------
 
-const asString = (value: unknown): string | undefined =>
-  typeof value === "string" ? value : undefined;
-
-/**
- * Normalize Quarry's two error envelopes into one shape. `code` and the
- * OAuth-style `error` collapse to a single discriminator; `message` prefers the
- * human field of whichever envelope is present.
- */
-const decodeEnvelope = (body: unknown) => {
-  if (typeof body === "string") {
-    return { message: body, discriminator: undefined, body };
-  }
-  if (typeof body === "object" && body !== null) {
-    const record = body as Record<string, unknown>;
-    const message =
-      asString(record.message) ??
-      asString(record.error_description) ??
-      asString(record.error) ??
-      "";
-    const discriminator = asString(record.code) ?? asString(record.error);
-    return { message, discriminator, body };
-  }
-  return { message: "", discriminator: undefined, body };
-};
+const adapters = makeVendorAdapters<QuarryExtraError>({
+  UnknownError: UnknownQuarryError,
+  TransportError: QuarryTransportError,
+  DecodeError: QuarryDecodeError,
+});
 
 const matchError = makeMatchError<QuarryExtraError>({
-  decodeEnvelope,
+  /**
+   * Normalize Quarry's two error envelopes into one shape. `code` and the
+   * OAuth-style `error` collapse to a single discriminator; `message` prefers the
+   * human field of whichever envelope is present.
+   */
+  decodeEnvelope: makeEnvelopeDecoder({
+    messageFields: ["message", "error_description", "error"],
+    discriminatorFields: ["code", "error"],
+    stringBodyIsMessage: true,
+  }),
   statusErrors: STATUS_ERRORS,
   codeErrors: CODE_ERRORS,
   universalErrors: DEFAULT_ERRORS,
   retryAfter: parseRetryAfter,
-  makeUnknown: ({ status, envelope }) =>
-    new UnknownQuarryError({
-      status,
-      code: envelope.discriminator,
-      message: envelope.message,
-      body: Redacted.make(envelope.body),
-    }),
+  makeUnknown: adapters.makeUnknown,
 });
 
 // ---------------------------------------------------------------------------
@@ -133,35 +116,8 @@ export const layerWith = (
         baseUrl,
         retry: options.retry ?? Retry.defaultPolicy,
         matchError,
-        // Only a genuine wire-level fault is the (retryable) transport error;
-        // every other HttpClientError reason (encode, response read/decode,
-        // invalid URL) is a non-retryable decode-class failure. Both carry a
-        // secret-free summary, never the raw error with its embedded request,
-        // and both messages are built from structured parts — no lower-layer
-        // free text can flow into a logged headline.
-        toTransport: (cause) => {
-          const failure = summarizeHttpClientError(cause);
-          return Category.isTransportError(cause)
-            ? new QuarryTransportError({
-                message: `wire-level transport failure (${failure.method} ${failure.url})`,
-                cause: failure,
-              })
-            : new QuarryDecodeError({
-                message: `the response could not be read from the wire (${failure.reason})`,
-                cause: Redacted.make(failure),
-              });
-        },
-        // The raw value and schema issue stay reachable via Redacted.value;
-        // the message is fixed text so no field value can leak through it.
-        toDecode: (phase, body, cause) =>
-          new QuarryDecodeError({
-            message:
-              phase === "request-encode"
-                ? "request input did not match the operation's input schema"
-                : "response body did not match the operation's output schema",
-            body: Redacted.make(body),
-            cause: Redacted.make(cause),
-          }),
+        toTransport: adapters.toTransport,
+        toDecode: adapters.toDecode,
       });
       return QuarryClient.of({ run });
     }),

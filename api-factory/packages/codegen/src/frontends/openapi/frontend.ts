@@ -7,7 +7,7 @@ import {
   type PatchEntry,
   type PatchReconciliation,
 } from "./patches.ts";
-import { normalizeOpenApi } from "./normalize.ts";
+import { normalizeOpenApiWithConfigShadows } from "./normalize.ts";
 import {
   auditAttestation,
   loadVendorDir,
@@ -59,6 +59,7 @@ const checkBlastRadiusDeclarations = (
   );
   const violations: CodegenViolation[] = [];
   for (const entry of entries) {
+    if (!("expectedFiles" in entry.blastRadius)) continue;
     const construct = `patch ${entry.id}`;
     if (
       isComponentTargeted(entry) &&
@@ -114,7 +115,14 @@ export const buildVendorIrFrom = (
   } else {
     document = applyPatchesStrict(document, vendor.patches);
   }
-  const ir = normalizeOpenApi(document, vendor.config);
+  const normalized = normalizeOpenApiWithConfigShadows(document, vendor.config);
+  const ir = normalized.ir;
+  if (reconciliation !== undefined) {
+    reconciliation = {
+      ...reconciliation,
+      configShadows: normalized.configShadows,
+    };
+  }
   // In reconcile mode the structural checks cover only the entries that
   // applied: a stale entry whose declared operations vanished must reach the
   // report, not abort the run that exists to report it.

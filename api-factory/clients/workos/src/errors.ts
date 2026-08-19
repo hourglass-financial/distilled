@@ -41,14 +41,215 @@ export {
 } from "@hourglass-financial/api-factory-core";
 
 // ---------------------------------------------------------------------------
-// Code-discriminated authentication errors (POST /user_management/authenticate)
+// Code-discriminated errors
 //
-// The spec's 400/403 tables for this endpoint enumerate ~35 discriminator
-// codes across every grant type; this fragment models the password-grant
-// subset. The full generator emits one class per documented code, in this
-// exact per-class shape, ordered alphabetically by discriminator code — the
-// same order as CODE_ERRORS and every declared-errors tuple.
+// The spec's discriminated `oneOf` error tables enumerate 95 distinct codes
+// across the API; one class per documented code, in this exact per-class shape,
+// ordered alphabetically by discriminator code — the same order as CODE_ERRORS
+// and every declared-errors tuple.
 // ---------------------------------------------------------------------------
+
+/** 400 `access_denied` — the authorization request was denied. */
+export class AccessDenied extends Schema.TaggedErrorClass<AccessDenied>()(
+  "AccessDenied",
+  { message: Schema.String, code: Schema.Literal("access_denied") },
+) {
+  readonly [MetaKey] = Meta.auth;
+}
+
+/** 409 `already_claimed` — the agent claim has already been claimed. */
+export class AlreadyClaimed extends Schema.TaggedErrorClass<AlreadyClaimed>()(
+  "AlreadyClaimed",
+  { message: Schema.String, code: Schema.Literal("already_claimed") },
+) {
+  readonly [MetaKey] = Meta.conflict;
+}
+
+/** 403 `application_consent_required` — the user must grant consent to the application. */
+export class ApplicationConsentRequired extends Schema.TaggedErrorClass<ApplicationConsentRequired>()(
+  "ApplicationConsentRequired",
+  {
+    message: Schema.String,
+    code: Schema.Literal("application_consent_required"),
+  },
+) {
+  readonly [MetaKey] = Meta.challenge;
+}
+
+/** 403 `auth_method_disabled` — the requested authentication method is disabled for this environment. */
+export class AuthMethodDisabled extends Schema.TaggedErrorClass<AuthMethodDisabled>()(
+  "AuthMethodDisabled",
+  { message: Schema.String, code: Schema.Literal("auth_method_disabled") },
+) {
+  readonly [MetaKey] = Meta.auth;
+}
+
+/** 400 `authentication_method_not_allowed` — the authentication method is not permitted for this user or organization. */
+export class AuthenticationMethodNotAllowed extends Schema.TaggedErrorClass<AuthenticationMethodNotAllowed>()(
+  "AuthenticationMethodNotAllowed",
+  {
+    message: Schema.String,
+    code: Schema.Literal("authentication_method_not_allowed"),
+  },
+) {
+  readonly [MetaKey] = Meta.auth;
+}
+
+/** 400 `authorization_pending` — the device authorization is still pending. */
+export class AuthorizationPending extends Schema.TaggedErrorClass<AuthorizationPending>()(
+  "AuthorizationPending",
+  { message: Schema.String, code: Schema.Literal("authorization_pending") },
+) {
+  readonly [MetaKey] = Meta.challenge;
+}
+
+/** 409 `authorization_resource_external_id_conflict` — a resource with that `external_id` already exists. */
+export class AuthorizationResourceExternalIdConflict extends Schema.TaggedErrorClass<AuthorizationResourceExternalIdConflict>()(
+  "AuthorizationResourceExternalIdConflict",
+  {
+    message: Schema.String,
+    code: Schema.Literal("authorization_resource_external_id_conflict"),
+  },
+) {
+  readonly [MetaKey] = Meta.conflict;
+}
+
+/** 400 `bad_request` — the request was malformed. */
+export class BadRequestCode extends Schema.TaggedErrorClass<BadRequestCode>()(
+  "BadRequestCode",
+  { message: Schema.String, code: Schema.Literal("bad_request") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 403 `claim_denied` — the agent claim attempt was denied. */
+export class ClaimDenied extends Schema.TaggedErrorClass<ClaimDenied>()(
+  "ClaimDenied",
+  { message: Schema.String, code: Schema.Literal("claim_denied") },
+) {
+  readonly [MetaKey] = Meta.auth;
+}
+
+/** 410 `claim_expired` — the agent claim has expired. */
+export class ClaimExpired extends Schema.TaggedErrorClass<ClaimExpired>()(
+  "ClaimExpired",
+  { message: Schema.String, code: Schema.Literal("claim_expired") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `code_challenge_not_found` — no PKCE code challenge was found for this session. */
+export class CodeChallengeNotFound extends Schema.TaggedErrorClass<CodeChallengeNotFound>()(
+  "CodeChallengeNotFound",
+  { message: Schema.String, code: Schema.Literal("code_challenge_not_found") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `connection_invalid` — the connection does not support this operation. */
+export class ConnectionInvalid extends Schema.TaggedErrorClass<ConnectionInvalid>()(
+  "ConnectionInvalid",
+  { message: Schema.String, code: Schema.Literal("connection_invalid") },
+) {
+  readonly [MetaKey] = Meta.config;
+}
+
+/** 409 `email_already_in_use` — the email address is already in use. */
+export class EmailAlreadyInUse extends Schema.TaggedErrorClass<EmailAlreadyInUse>()(
+  "EmailAlreadyInUse",
+  { message: Schema.String, code: Schema.Literal("email_already_in_use") },
+) {
+  readonly [MetaKey] = Meta.conflict;
+}
+
+/** 400 `email_already_invited` — the email address already has a pending invitation. */
+export class EmailAlreadyInvited extends Schema.TaggedErrorClass<EmailAlreadyInvited>()(
+  "EmailAlreadyInvited",
+  { message: Schema.String, code: Schema.Literal("email_already_invited") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `email_already_invited_to_organization` — the email already has a pending invitation to this organization. */
+export class EmailAlreadyInvitedToOrganization extends Schema.TaggedErrorClass<EmailAlreadyInvitedToOrganization>()(
+  "EmailAlreadyInvitedToOrganization",
+  {
+    message: Schema.String,
+    code: Schema.Literal("email_already_invited_to_organization"),
+  },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `email_already_verified` — the email address is already verified. */
+export class EmailAlreadyVerified extends Schema.TaggedErrorClass<EmailAlreadyVerified>()(
+  "EmailAlreadyVerified",
+  { message: Schema.String, code: Schema.Literal("email_already_verified") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `email_change_code_expired` — the email-change code has expired. */
+export class EmailChangeCodeExpired extends Schema.TaggedErrorClass<EmailChangeCodeExpired>()(
+  "EmailChangeCodeExpired",
+  { message: Schema.String, code: Schema.Literal("email_change_code_expired") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `email_change_code_incorrect` — the email-change code is incorrect. */
+export class EmailChangeCodeIncorrect extends Schema.TaggedErrorClass<EmailChangeCodeIncorrect>()(
+  "EmailChangeCodeIncorrect",
+  {
+    message: Schema.String,
+    code: Schema.Literal("email_change_code_incorrect"),
+  },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 409 `email_change_code_previously_used` — the email-change code was already used. */
+export class EmailChangeCodePreviouslyUsed extends Schema.TaggedErrorClass<EmailChangeCodePreviouslyUsed>()(
+  "EmailChangeCodePreviouslyUsed",
+  {
+    message: Schema.String,
+    code: Schema.Literal("email_change_code_previously_used"),
+  },
+) {
+  readonly [MetaKey] = Meta.conflict;
+}
+
+/** 400 `email_change_not_allowed` — changing the email address is not permitted. */
+export class EmailChangeNotAllowed extends Schema.TaggedErrorClass<EmailChangeNotAllowed>()(
+  "EmailChangeNotAllowed",
+  { message: Schema.String, code: Schema.Literal("email_change_not_allowed") },
+) {
+  readonly [MetaKey] = Meta.conflict;
+}
+
+/** 409 `email_change_not_needed` — the email address already matches, so no change is needed. */
+export class EmailChangeNotNeeded extends Schema.TaggedErrorClass<EmailChangeNotNeeded>()(
+  "EmailChangeNotNeeded",
+  { message: Schema.String, code: Schema.Literal("email_change_not_needed") },
+) {
+  readonly [MetaKey] = Meta.conflict;
+}
+
+/** 400 `email_mismatch` — the supplied email address does not match. */
+export class EmailMismatch extends Schema.TaggedErrorClass<EmailMismatch>()(
+  "EmailMismatch",
+  { message: Schema.String, code: Schema.Literal("email_mismatch") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `email_not_available` — the requested email address is not available. */
+export class EmailNotAvailable extends Schema.TaggedErrorClass<EmailNotAvailable>()(
+  "EmailNotAvailable",
+  { message: Schema.String, code: Schema.Literal("email_not_available") },
+) {
+  readonly [MetaKey] = Meta.conflict;
+}
 
 /** 403 `email_password_auth_disabled` — password auth is off for this environment. */
 export class EmailPasswordAuthDisabled extends Schema.TaggedErrorClass<EmailPasswordAuthDisabled>()(
@@ -59,6 +260,47 @@ export class EmailPasswordAuthDisabled extends Schema.TaggedErrorClass<EmailPass
   },
 ) {
   readonly [MetaKey] = Meta.auth;
+}
+
+/** 400 `email_previously_verified` — the email address was already verified. */
+export class EmailPreviouslyVerified extends Schema.TaggedErrorClass<EmailPreviouslyVerified>()(
+  "EmailPreviouslyVerified",
+  { message: Schema.String, code: Schema.Literal("email_previously_verified") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `email_verification_code_expired` — the email verification code has expired. */
+export class EmailVerificationCodeExpired extends Schema.TaggedErrorClass<EmailVerificationCodeExpired>()(
+  "EmailVerificationCodeExpired",
+  {
+    message: Schema.String,
+    code: Schema.Literal("email_verification_code_expired"),
+  },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `email_verification_code_incorrect` — the email verification code is incorrect. */
+export class EmailVerificationCodeIncorrect extends Schema.TaggedErrorClass<EmailVerificationCodeIncorrect>()(
+  "EmailVerificationCodeIncorrect",
+  {
+    message: Schema.String,
+    code: Schema.Literal("email_verification_code_incorrect"),
+  },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `email_verification_code_previously_used` — the email verification code was already used. */
+export class EmailVerificationCodePreviouslyUsed extends Schema.TaggedErrorClass<EmailVerificationCodePreviouslyUsed>()(
+  "EmailVerificationCodePreviouslyUsed",
+  {
+    message: Schema.String,
+    code: Schema.Literal("email_verification_code_previously_used"),
+  },
+) {
+  readonly [MetaKey] = Meta.badRequest;
 }
 
 /** 403 `email_verification_required` — the user must verify their email first. */
@@ -72,12 +314,79 @@ export class EmailVerificationRequired extends Schema.TaggedErrorClass<EmailVeri
   readonly [MetaKey] = Meta.challenge;
 }
 
+/** 400 `expired_token` — the supplied token has expired. */
+export class ExpiredToken extends Schema.TaggedErrorClass<ExpiredToken>()(
+  "ExpiredToken",
+  { message: Schema.String, code: Schema.Literal("expired_token") },
+) {
+  readonly [MetaKey] = Meta.auth;
+}
+
+/** 400 `expires_in_days_too_long` — the `expires_in_days` value exceeds the maximum. */
+export class ExpiresInDaysTooLong extends Schema.TaggedErrorClass<ExpiresInDaysTooLong>()(
+  "ExpiresInDaysTooLong",
+  { message: Schema.String, code: Schema.Literal("expires_in_days_too_long") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `expires_in_days_too_short` — the `expires_in_days` value is below the minimum. */
+export class ExpiresInDaysTooShort extends Schema.TaggedErrorClass<ExpiresInDaysTooShort>()(
+  "ExpiresInDaysTooShort",
+  { message: Schema.String, code: Schema.Literal("expires_in_days_too_short") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `external_auth_session_already_completed` — the external authentication session was already completed. */
+export class ExternalAuthSessionAlreadyCompleted extends Schema.TaggedErrorClass<ExternalAuthSessionAlreadyCompleted>()(
+  "ExternalAuthSessionAlreadyCompleted",
+  {
+    message: Schema.String,
+    code: Schema.Literal("external_auth_session_already_completed"),
+  },
+) {
+  readonly [MetaKey] = Meta.auth;
+}
+
+/** 400 `external_id_already_used` — the `external_id` is already assigned to another record. */
+export class ExternalIdAlreadyUsed extends Schema.TaggedErrorClass<ExternalIdAlreadyUsed>()(
+  "ExternalIdAlreadyUsed",
+  { message: Schema.String, code: Schema.Literal("external_id_already_used") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `extra_attributes_required` — additional profile attributes are required before continuing. */
+export class ExtraAttributesRequired extends Schema.TaggedErrorClass<ExtraAttributesRequired>()(
+  "ExtraAttributesRequired",
+  { message: Schema.String, code: Schema.Literal("extra_attributes_required") },
+) {
+  readonly [MetaKey] = Meta.challenge;
+}
+
+/** 400 `invalid_claim` — the agent claim is invalid. */
+export class InvalidClaim extends Schema.TaggedErrorClass<InvalidClaim>()(
+  "InvalidClaim",
+  { message: Schema.String, code: Schema.Literal("invalid_claim") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
 /** 400 `invalid_client` — the `client_id` is unknown or malformed. */
 export class InvalidClient extends Schema.TaggedErrorClass<InvalidClient>()(
   "InvalidClient",
   { message: Schema.String, code: Schema.Literal("invalid_client") },
 ) {
   readonly [MetaKey] = Meta.auth;
+}
+
+/** 400 `invalid_connection` — the connection is invalid or not configured. */
+export class InvalidConnection extends Schema.TaggedErrorClass<InvalidConnection>()(
+  "InvalidConnection",
+  { message: Schema.String, code: Schema.Literal("invalid_connection") },
+) {
+  readonly [MetaKey] = Meta.config;
 }
 
 /** 400 `invalid_credentials` — the email/password pair was rejected. */
@@ -88,12 +397,184 @@ export class InvalidCredentials extends Schema.TaggedErrorClass<InvalidCredentia
   readonly [MetaKey] = Meta.auth;
 }
 
+/** 400 `invalid_email` — the email address is malformed. */
+export class InvalidEmail extends Schema.TaggedErrorClass<InvalidEmail>()(
+  "InvalidEmail",
+  { message: Schema.String, code: Schema.Literal("invalid_email") },
+) {
+  readonly [MetaKey] = Meta.unprocessable;
+}
+
 /** 400 `invalid_grant` — the grant (e.g. credentials or token) is invalid. */
 export class InvalidGrant extends Schema.TaggedErrorClass<InvalidGrant>()(
   "InvalidGrant",
   { message: Schema.String, code: Schema.Literal("invalid_grant") },
 ) {
   readonly [MetaKey] = Meta.auth;
+}
+
+/** 400 `invalid_link_authorization_code` — the account-linking authorization code is invalid. */
+export class InvalidLinkAuthorizationCode extends Schema.TaggedErrorClass<InvalidLinkAuthorizationCode>()(
+  "InvalidLinkAuthorizationCode",
+  {
+    message: Schema.String,
+    code: Schema.Literal("invalid_link_authorization_code"),
+  },
+) {
+  readonly [MetaKey] = Meta.auth;
+}
+
+/** 400 `invalid_locale` — the supplied locale is not recognized. */
+export class InvalidLocale extends Schema.TaggedErrorClass<InvalidLocale>()(
+  "InvalidLocale",
+  { message: Schema.String, code: Schema.Literal("invalid_locale") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `invalid_metadata` — the metadata object is invalid. */
+export class InvalidMetadata extends Schema.TaggedErrorClass<InvalidMetadata>()(
+  "InvalidMetadata",
+  { message: Schema.String, code: Schema.Literal("invalid_metadata") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `invalid_one_time_code` — the one-time code is incorrect. */
+export class InvalidOneTimeCode extends Schema.TaggedErrorClass<InvalidOneTimeCode>()(
+  "InvalidOneTimeCode",
+  { message: Schema.String, code: Schema.Literal("invalid_one_time_code") },
+) {
+  readonly [MetaKey] = Meta.auth;
+}
+
+/** 400 `invalid_organization` — the organization is invalid. */
+export class InvalidOrganization extends Schema.TaggedErrorClass<InvalidOrganization>()(
+  "InvalidOrganization",
+  { message: Schema.String, code: Schema.Literal("invalid_organization") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `invalid_organization_id` — the `organization_id` is malformed or unknown. */
+export class InvalidOrganizationId extends Schema.TaggedErrorClass<InvalidOrganizationId>()(
+  "InvalidOrganizationId",
+  { message: Schema.String, code: Schema.Literal("invalid_organization_id") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `invalid_password_hash` — the supplied password hash is invalid. */
+export class InvalidPasswordHash extends Schema.TaggedErrorClass<InvalidPasswordHash>()(
+  "InvalidPasswordHash",
+  { message: Schema.String, code: Schema.Literal("invalid_password_hash") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `invalid_pending_authentication_token` — the `pending_authentication_token` is invalid. */
+export class InvalidPendingAuthenticationToken extends Schema.TaggedErrorClass<InvalidPendingAuthenticationToken>()(
+  "InvalidPendingAuthenticationToken",
+  {
+    message: Schema.String,
+    code: Schema.Literal("invalid_pending_authentication_token"),
+  },
+) {
+  readonly [MetaKey] = Meta.auth;
+}
+
+/** 400 `invalid_profile` — the SSO profile could not be processed. */
+export class InvalidProfile extends Schema.TaggedErrorClass<InvalidProfile>()(
+  "InvalidProfile",
+  { message: Schema.String, code: Schema.Literal("invalid_profile") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `invalid_request` — the request is invalid. */
+export class InvalidRequest extends Schema.TaggedErrorClass<InvalidRequest>()(
+  "InvalidRequest",
+  { message: Schema.String, code: Schema.Literal("invalid_request") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `invalid_request_parameters` — one or more request parameters failed validation. */
+export class InvalidRequestParameters extends Schema.TaggedErrorClass<InvalidRequestParameters>()(
+  "InvalidRequestParameters",
+  {
+    message: Schema.String,
+    code: Schema.Literal("invalid_request_parameters"),
+  },
+) {
+  readonly [MetaKey] = Meta.unprocessable;
+}
+
+/** 400 `invalid_role` — the specified role slug is not valid. */
+export class InvalidRole extends Schema.TaggedErrorClass<InvalidRole>()(
+  "InvalidRole",
+  { message: Schema.String, code: Schema.Literal("invalid_role") },
+) {
+  readonly [MetaKey] = Meta.unprocessable;
+}
+
+/** 422 `invalid_url` — the supplied URL is malformed. */
+export class InvalidUrl extends Schema.TaggedErrorClass<InvalidUrl>()(
+  "InvalidUrl",
+  { message: Schema.String, code: Schema.Literal("invalid_url") },
+) {
+  readonly [MetaKey] = Meta.unprocessable;
+}
+
+/** 400 `invitation_cannot_be_used_for_email` — the invitation cannot be used for this email address. */
+export class InvitationCannotBeUsedForEmail extends Schema.TaggedErrorClass<InvitationCannotBeUsedForEmail>()(
+  "InvitationCannotBeUsedForEmail",
+  {
+    message: Schema.String,
+    code: Schema.Literal("invitation_cannot_be_used_for_email"),
+  },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `invitation_invalid` — the invitation is invalid. */
+export class InvitationInvalid extends Schema.TaggedErrorClass<InvitationInvalid>()(
+  "InvitationInvalid",
+  { message: Schema.String, code: Schema.Literal("invitation_invalid") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `invite_accepted` — the invitation has already been accepted. */
+export class InviteAccepted extends Schema.TaggedErrorClass<InviteAccepted>()(
+  "InviteAccepted",
+  { message: Schema.String, code: Schema.Literal("invite_accepted") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `invite_expired` — the invitation has expired. */
+export class InviteExpired extends Schema.TaggedErrorClass<InviteExpired>()(
+  "InviteExpired",
+  { message: Schema.String, code: Schema.Literal("invite_expired") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `invite_revoked` — the invitation has been revoked. */
+export class InviteRevoked extends Schema.TaggedErrorClass<InviteRevoked>()(
+  "InviteRevoked",
+  { message: Schema.String, code: Schema.Literal("invite_revoked") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `lock_timeout` — acquiring a lock on the resource timed out. */
+export class LockTimeout extends Schema.TaggedErrorClass<LockTimeout>()(
+  "LockTimeout",
+  { message: Schema.String, code: Schema.Literal("lock_timeout") },
+) {
+  readonly [MetaKey] = Meta.locked;
 }
 
 /** 403 `mfa_challenge` — the user must complete an MFA challenge to continue. */
@@ -112,6 +593,77 @@ export class MfaEnrollment extends Schema.TaggedErrorClass<MfaEnrollment>()(
   readonly [MetaKey] = Meta.challenge;
 }
 
+/** 400 `missing_user_id_or_organization_id` — either `user_id` or `organization_id` must be supplied. */
+export class MissingUserIdOrOrganizationId extends Schema.TaggedErrorClass<MissingUserIdOrOrganizationId>()(
+  "MissingUserIdOrOrganizationId",
+  {
+    message: Schema.String,
+    code: Schema.Literal("missing_user_id_or_organization_id"),
+  },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 422 `multiple_roles_not_enabled` — multiple roles are not enabled for this environment. */
+export class MultipleRolesNotEnabled extends Schema.TaggedErrorClass<MultipleRolesNotEnabled>()(
+  "MultipleRolesNotEnabled",
+  {
+    message: Schema.String,
+    code: Schema.Literal("multiple_roles_not_enabled"),
+  },
+) {
+  readonly [MetaKey] = Meta.unprocessable;
+}
+
+/** 409 `no_pending_email_change` — there is no pending email change to confirm. */
+export class NoPendingEmailChange extends Schema.TaggedErrorClass<NoPendingEmailChange>()(
+  "NoPendingEmailChange",
+  { message: Schema.String, code: Schema.Literal("no_pending_email_change") },
+) {
+  readonly [MetaKey] = Meta.conflict;
+}
+
+/** 400 `one_time_code_expired` — the one-time code has expired. */
+export class OneTimeCodeExpired extends Schema.TaggedErrorClass<OneTimeCodeExpired>()(
+  "OneTimeCodeExpired",
+  { message: Schema.String, code: Schema.Literal("one_time_code_expired") },
+) {
+  readonly [MetaKey] = Meta.auth;
+}
+
+/** 400 `one_time_code_previously_used` — the one-time code was already used. */
+export class OneTimeCodePreviouslyUsed extends Schema.TaggedErrorClass<OneTimeCodePreviouslyUsed>()(
+  "OneTimeCodePreviouslyUsed",
+  {
+    message: Schema.String,
+    code: Schema.Literal("one_time_code_previously_used"),
+  },
+) {
+  readonly [MetaKey] = Meta.auth;
+}
+
+/** 400 `one_time_code_too_many_attempts` — too many incorrect one-time code attempts were made. */
+export class OneTimeCodeTooManyAttempts extends Schema.TaggedErrorClass<OneTimeCodeTooManyAttempts>()(
+  "OneTimeCodeTooManyAttempts",
+  {
+    message: Schema.String,
+    code: Schema.Literal("one_time_code_too_many_attempts"),
+  },
+) {
+  readonly [MetaKey] = Meta.auth;
+}
+
+/** 400 `organization_authentication_methods_required` — the organization has no enabled authentication methods. */
+export class OrganizationAuthenticationMethodsRequired extends Schema.TaggedErrorClass<OrganizationAuthenticationMethodsRequired>()(
+  "OrganizationAuthenticationMethodsRequired",
+  {
+    message: Schema.String,
+    code: Schema.Literal("organization_authentication_methods_required"),
+  },
+) {
+  readonly [MetaKey] = Meta.config;
+}
+
 /** 403 `organization_selection_required` — the user must pick an organization. */
 export class OrganizationSelectionRequired extends Schema.TaggedErrorClass<OrganizationSelectionRequired>()(
   "OrganizationSelectionRequired",
@@ -123,12 +675,234 @@ export class OrganizationSelectionRequired extends Schema.TaggedErrorClass<Organ
   readonly [MetaKey] = Meta.challenge;
 }
 
+/** 403 `passkey_progressive_enrollment` — the user is prompted to enroll a passkey. */
+export class PasskeyProgressiveEnrollment extends Schema.TaggedErrorClass<PasskeyProgressiveEnrollment>()(
+  "PasskeyProgressiveEnrollment",
+  {
+    message: Schema.String,
+    code: Schema.Literal("passkey_progressive_enrollment"),
+  },
+) {
+  readonly [MetaKey] = Meta.challenge;
+}
+
+/** 400 `password_and_password_hash_provided` — `password` and `password_hash` cannot both be supplied. */
+export class PasswordAndPasswordHashProvided extends Schema.TaggedErrorClass<PasswordAndPasswordHashProvided>()(
+  "PasswordAndPasswordHashProvided",
+  {
+    message: Schema.String,
+    code: Schema.Literal("password_and_password_hash_provided"),
+  },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `password_and_password_hash_type_provided` — `password` and `password_hash_type` cannot both be supplied. */
+export class PasswordAndPasswordHashTypeProvided extends Schema.TaggedErrorClass<PasswordAndPasswordHashTypeProvided>()(
+  "PasswordAndPasswordHashTypeProvided",
+  {
+    message: Schema.String,
+    code: Schema.Literal("password_and_password_hash_type_provided"),
+  },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 403 `password_reset_not_allowed` — password reset is not permitted for this user. */
+export class PasswordResetNotAllowed extends Schema.TaggedErrorClass<PasswordResetNotAllowed>()(
+  "PasswordResetNotAllowed",
+  {
+    message: Schema.String,
+    code: Schema.Literal("password_reset_not_allowed"),
+  },
+) {
+  readonly [MetaKey] = Meta.auth;
+}
+
+/** 400 `password_strength_error` — the password does not meet strength requirements. */
+export class PasswordStrengthError extends Schema.TaggedErrorClass<PasswordStrengthError>()(
+  "PasswordStrengthError",
+  { message: Schema.String, code: Schema.Literal("password_strength_error") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `pkce_not_supported` — PKCE is not supported for this client. */
+export class PkceNotSupported extends Schema.TaggedErrorClass<PkceNotSupported>()(
+  "PkceNotSupported",
+  { message: Schema.String, code: Schema.Literal("pkce_not_supported") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
 /** 403 `radar_challenge` — WorkOS Radar requires a bot-detection challenge. */
 export class RadarChallenge extends Schema.TaggedErrorClass<RadarChallenge>()(
   "RadarChallenge",
   { message: Schema.String, code: Schema.Literal("radar_challenge") },
 ) {
   readonly [MetaKey] = Meta.challenge;
+}
+
+/** 403 `radar_sign_up_challenge` — WorkOS Radar requires a sign-up bot-detection challenge. */
+export class RadarSignUpChallenge extends Schema.TaggedErrorClass<RadarSignUpChallenge>()(
+  "RadarSignUpChallenge",
+  { message: Schema.String, code: Schema.Literal("radar_sign_up_challenge") },
+) {
+  readonly [MetaKey] = Meta.challenge;
+}
+
+/** 409 `resource_has_dependents` — the resource still has dependents and cannot be deleted. */
+export class ResourceHasDependents extends Schema.TaggedErrorClass<ResourceHasDependents>()(
+  "ResourceHasDependents",
+  { message: Schema.String, code: Schema.Literal("resource_has_dependents") },
+) {
+  readonly [MetaKey] = Meta.conflict;
+}
+
+/** 409 `resource_type_update_in_progress` — the resource type is being updated; retry later. */
+export class ResourceTypeUpdateInProgress extends Schema.TaggedErrorClass<ResourceTypeUpdateInProgress>()(
+  "ResourceTypeUpdateInProgress",
+  {
+    message: Schema.String,
+    code: Schema.Literal("resource_type_update_in_progress"),
+  },
+) {
+  readonly [MetaKey] = Meta.conflict;
+}
+
+/** 409 `role_has_assignments` — the role still has active assignments. */
+export class RoleHasAssignments extends Schema.TaggedErrorClass<RoleHasAssignments>()(
+  "RoleHasAssignments",
+  { message: Schema.String, code: Schema.Literal("role_has_assignments") },
+) {
+  readonly [MetaKey] = Meta.conflict;
+}
+
+/** 409 `role_has_group_role_mappings` — the role still has group role mappings. */
+export class RoleHasGroupRoleMappings extends Schema.TaggedErrorClass<RoleHasGroupRoleMappings>()(
+  "RoleHasGroupRoleMappings",
+  {
+    message: Schema.String,
+    code: Schema.Literal("role_has_group_role_mappings"),
+  },
+) {
+  readonly [MetaKey] = Meta.conflict;
+}
+
+/** 400 `sign_up_not_allowed` — sign-up is not permitted for this request. */
+export class SignUpNotAllowed extends Schema.TaggedErrorClass<SignUpNotAllowed>()(
+  "SignUpNotAllowed",
+  { message: Schema.String, code: Schema.Literal("sign_up_not_allowed") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `slow_down` — the client is polling too quickly and must slow down. */
+export class SlowDown extends Schema.TaggedErrorClass<SlowDown>()("SlowDown", {
+  message: Schema.String,
+  code: Schema.Literal("slow_down"),
+}) {
+  readonly [MetaKey] = Meta.throttling;
+}
+
+/** 400 `stripe_customer_id_already_used` — the Stripe customer ID is already linked to another organization. */
+export class StripeCustomerIdAlreadyUsed extends Schema.TaggedErrorClass<StripeCustomerIdAlreadyUsed>()(
+  "StripeCustomerIdAlreadyUsed",
+  {
+    message: Schema.String,
+    code: Schema.Literal("stripe_customer_id_already_used"),
+  },
+) {
+  readonly [MetaKey] = Meta.conflict;
+}
+
+/** 422 `sub_resource_scoped_role_not_allowed` — sub-resource-scoped roles are not allowed for this operation. */
+export class SubResourceScopedRoleNotAllowed extends Schema.TaggedErrorClass<SubResourceScopedRoleNotAllowed>()(
+  "SubResourceScopedRoleNotAllowed",
+  {
+    message: Schema.String,
+    code: Schema.Literal("sub_resource_scoped_role_not_allowed"),
+  },
+) {
+  readonly [MetaKey] = Meta.unprocessable;
+}
+
+/** 400 `unauthorized_client` — the client is not authorized to use this grant type. */
+export class UnauthorizedClient extends Schema.TaggedErrorClass<UnauthorizedClient>()(
+  "UnauthorizedClient",
+  { message: Schema.String, code: Schema.Literal("unauthorized_client") },
+) {
+  readonly [MetaKey] = Meta.auth;
+}
+
+/** 400 `unsupported_grant_type` — the `grant_type` is not supported. */
+export class UnsupportedGrantType extends Schema.TaggedErrorClass<UnsupportedGrantType>()(
+  "UnsupportedGrantType",
+  { message: Schema.String, code: Schema.Literal("unsupported_grant_type") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `user_already_exists` — a user with that email address already exists. */
+export class UserAlreadyExists extends Schema.TaggedErrorClass<UserAlreadyExists>()(
+  "UserAlreadyExists",
+  { message: Schema.String, code: Schema.Literal("user_already_exists") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `user_already_organization_member` — the user is already a member of the organization. */
+export class UserAlreadyOrganizationMember extends Schema.TaggedErrorClass<UserAlreadyOrganizationMember>()(
+  "UserAlreadyOrganizationMember",
+  {
+    message: Schema.String,
+    code: Schema.Literal("user_already_organization_member"),
+  },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 410 `user_code_expired` — the user code has expired. */
+export class UserCodeExpired extends Schema.TaggedErrorClass<UserCodeExpired>()(
+  "UserCodeExpired",
+  { message: Schema.String, code: Schema.Literal("user_code_expired") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `user_consent_options_not_supported` — the requested user-consent options are not supported. */
+export class UserConsentOptionsNotSupported extends Schema.TaggedErrorClass<UserConsentOptionsNotSupported>()(
+  "UserConsentOptionsNotSupported",
+  {
+    message: Schema.String,
+    code: Schema.Literal("user_consent_options_not_supported"),
+  },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `user_creation_error` — the user could not be created. */
+export class UserCreationError extends Schema.TaggedErrorClass<UserCreationError>()(
+  "UserCreationError",
+  { message: Schema.String, code: Schema.Literal("user_creation_error") },
+) {
+  readonly [MetaKey] = Meta.badRequest;
+}
+
+/** 400 `user_mismatch` — the token does not match the expected user. */
+export class UserMismatch extends Schema.TaggedErrorClass<UserMismatch>()(
+  "UserMismatch",
+  { message: Schema.String, code: Schema.Literal("user_mismatch") },
+) {
+  readonly [MetaKey] = Meta.auth;
+}
+
+/** 400 `wrong_account` — the request came from the wrong account. */
+export class WrongAccount extends Schema.TaggedErrorClass<WrongAccount>()(
+  "WrongAccount",
+  { message: Schema.String, code: Schema.Literal("wrong_account") },
+) {
+  readonly [MetaKey] = Meta.auth;
 }
 
 // ---------------------------------------------------------------------------
@@ -200,15 +974,101 @@ export const STATUS_ERRORS = CORE_STATUS_ERRORS;
  */
 export const CODE_ERRORS: Readonly<Record<string, ClassifiedErrorClass>> =
   byCode([
+    AccessDenied,
+    AlreadyClaimed,
+    ApplicationConsentRequired,
+    AuthMethodDisabled,
+    AuthenticationMethodNotAllowed,
+    AuthorizationPending,
+    AuthorizationResourceExternalIdConflict,
+    BadRequestCode,
+    ClaimDenied,
+    ClaimExpired,
+    CodeChallengeNotFound,
+    ConnectionInvalid,
+    EmailAlreadyInUse,
+    EmailAlreadyInvited,
+    EmailAlreadyInvitedToOrganization,
+    EmailAlreadyVerified,
+    EmailChangeCodeExpired,
+    EmailChangeCodeIncorrect,
+    EmailChangeCodePreviouslyUsed,
+    EmailChangeNotAllowed,
+    EmailChangeNotNeeded,
+    EmailMismatch,
+    EmailNotAvailable,
     EmailPasswordAuthDisabled,
+    EmailPreviouslyVerified,
+    EmailVerificationCodeExpired,
+    EmailVerificationCodeIncorrect,
+    EmailVerificationCodePreviouslyUsed,
     EmailVerificationRequired,
+    ExpiredToken,
+    ExpiresInDaysTooLong,
+    ExpiresInDaysTooShort,
+    ExternalAuthSessionAlreadyCompleted,
+    ExternalIdAlreadyUsed,
+    ExtraAttributesRequired,
+    InvalidClaim,
     InvalidClient,
+    InvalidConnection,
     InvalidCredentials,
+    InvalidEmail,
     InvalidGrant,
+    InvalidLinkAuthorizationCode,
+    InvalidLocale,
+    InvalidMetadata,
+    InvalidOneTimeCode,
+    InvalidOrganization,
+    InvalidOrganizationId,
+    InvalidPasswordHash,
+    InvalidPendingAuthenticationToken,
+    InvalidProfile,
+    InvalidRequest,
+    InvalidRequestParameters,
+    InvalidRole,
+    InvalidUrl,
+    InvitationCannotBeUsedForEmail,
+    InvitationInvalid,
+    InviteAccepted,
+    InviteExpired,
+    InviteRevoked,
+    LockTimeout,
     MfaChallenge,
     MfaEnrollment,
+    MissingUserIdOrOrganizationId,
+    MultipleRolesNotEnabled,
+    NoPendingEmailChange,
+    OneTimeCodeExpired,
+    OneTimeCodePreviouslyUsed,
+    OneTimeCodeTooManyAttempts,
+    OrganizationAuthenticationMethodsRequired,
     OrganizationSelectionRequired,
+    PasskeyProgressiveEnrollment,
+    PasswordAndPasswordHashProvided,
+    PasswordAndPasswordHashTypeProvided,
+    PasswordResetNotAllowed,
+    PasswordStrengthError,
+    PkceNotSupported,
     RadarChallenge,
+    RadarSignUpChallenge,
+    ResourceHasDependents,
+    ResourceTypeUpdateInProgress,
+    RoleHasAssignments,
+    RoleHasGroupRoleMappings,
+    SignUpNotAllowed,
+    SlowDown,
+    StripeCustomerIdAlreadyUsed,
+    SubResourceScopedRoleNotAllowed,
+    UnauthorizedClient,
+    UnsupportedGrantType,
+    UserAlreadyExists,
+    UserAlreadyOrganizationMember,
+    UserCodeExpired,
+    UserConsentOptionsNotSupported,
+    UserCreationError,
+    UserMismatch,
+    WrongAccount,
   ]);
 
 /** Errors that can arise on any WorkOS operation (401/429/5xx). */

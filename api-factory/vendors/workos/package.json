@@ -13,8 +13,11 @@
     "build": "tsc -p tsconfig.test.json",
     "fmt": "oxfmt --write tests probes",
     "lint": "oxlint --fix tests probes",
-    "check": "bun run typecheck && oxlint tests probes && oxfmt --check tests probes",
+    "check": "bun run typecheck && oxlint tests probes && oxfmt --check tests probes && bun run audit:regen && bun run audit:attestation && bun run audit:patches",
     "test": "bunx vitest run tests",
+    "audit:regen": "bun ../../packages/codegen/src/cli.ts verify --vendor . --against ../../clients/workos",
+    "audit:attestation": "bun ../../packages/codegen/src/cli.ts audit-attestation --vendor .",
+    "audit:patches": "bun ../../packages/codegen/src/cli.ts audit-patches --vendor .",
     "audit:coverage": "bun ../../packages/harness/src/coverage/cli.ts --vendor workos --registry ../../clients/workos/src/registry.ts --manifest ./tests/coverage.ts",
     "probe": "bun ../../packages/harness/src/probe-cli.ts --probes ./probes --vendor workos --api-key-var WORKOS_API_KEY --base-url-var WORKOS_API_URL --base-url https://api.workos.com --evidence ./evidence"
   },

@@ -309,24 +309,27 @@ describe("userManagement.authenticateWithPassword", () => {
     expect(error._tag).toBe("MfaEnrollment");
   });
 
-  it("maps an OAuth-style 400 { error } envelope to InvalidGrant", async () => {
+  // The full spec table does not declare invalid_grant on authenticate (it
+  // belongs to the token/refresh flows), so the OAuth-envelope path is proven
+  // with expired_token — a declared code carried by the { error } envelope.
+  it("maps an OAuth-style 400 { error } envelope to ExpiredToken", async () => {
     const { run } = harness(() => ({
       status: 400,
       body: {
-        error: "invalid_grant",
-        error_description: "The request failed due to: invalid_grant.",
+        error: "expired_token",
+        error_description: "The request failed due to: expired_token.",
       },
     }));
     const error = await run(
       userManagement.authenticateWithPassword(authInput).pipe(Effect.flip),
     );
-    expect(error._tag).toBe("InvalidGrant");
+    expect(error._tag).toBe("ExpiredToken");
   });
 
   it("falls back to UnknownWorkosError for an unmodeled code", async () => {
     const { run } = harness(() => ({
       status: 403,
-      body: { code: "passkey_progressive_enrollment", message: "challenge" },
+      body: { code: "definitely_not_a_workos_code", message: "challenge" },
     }));
     const error = await run(
       userManagement.authenticateWithPassword(authInput).pipe(Effect.flip),

@@ -4,10 +4,14 @@
  * This file is machine-owned; hand edits are overwritten on regeneration.
  * Change the source of truth instead:
  *   - auth scheme / base URL / env var names → the generator's vendor profile
- *   - config primitives → effect's `Config` / `ConfigProvider`
+ *   - credentials assembly → @hourglass-financial/api-factory-core
  */
-import { ConfigError } from "@hourglass-financial/api-factory-core";
-import * as Config from "effect/Config";
+import {
+  ConfigError,
+  credentialsConfig,
+  credentialsFromEnvEffect,
+} from "@hourglass-financial/api-factory-core";
+import type * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -29,11 +33,10 @@ export class Credentials extends Context.Service<
 >()("@hourglass-financial/api-factory-northstar/Credentials") {}
 
 /** Reads `NORTHSTAR_API_KEY` (redacted) and optional `NORTHSTAR_API_URL` from env. */
-export const config: Config.Config<NorthstarConfig> = Config.all({
-  apiKey: Config.redacted("NORTHSTAR_API_KEY"),
-  baseUrl: Config.string("NORTHSTAR_API_URL").pipe(
-    Config.withDefault(DEFAULT_BASE_URL),
-  ),
+export const config: Config.Config<NorthstarConfig> = credentialsConfig({
+  apiKeyVar: "NORTHSTAR_API_KEY",
+  baseUrlVar: "NORTHSTAR_API_URL",
+  defaultBaseUrl: DEFAULT_BASE_URL,
 });
 
 /**
@@ -44,15 +47,14 @@ export const config: Config.Config<NorthstarConfig> = Config.all({
 export const credentialsFromEnv: Layer.Layer<Credentials, ConfigError> =
   Layer.effect(
     Credentials,
-    config.pipe(
-      Effect.mapError(
-        () =>
-          new ConfigError({
-            message: "Northstar credentials are not configured.",
-          }),
-      ),
-      Effect.map(Credentials.of),
-    ),
+    credentialsFromEnvEffect(
+      {
+        apiKeyVar: "NORTHSTAR_API_KEY",
+        baseUrlVar: "NORTHSTAR_API_URL",
+        defaultBaseUrl: DEFAULT_BASE_URL,
+      },
+      "Northstar credentials are not configured.",
+    ).pipe(Effect.map(Credentials.of)),
   );
 
 /** Credentials from explicit values — useful for tests and multi-tenant hosts. */

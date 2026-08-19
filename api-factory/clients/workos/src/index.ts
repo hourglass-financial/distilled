@@ -21,8 +21,29 @@
  */
 
 // Resource operation namespaces.
+export * as agents from "./resources/agents.ts";
+export * as apiKeys from "./resources/api-keys.ts";
+export * as applications from "./resources/applications.ts";
+export * as auditLogs from "./resources/audit-logs.ts";
+export * as authorization from "./resources/authorization.ts";
+export * as clientTokens from "./resources/client-tokens.ts";
+export * as connections from "./resources/connections.ts";
+export * as directorySync from "./resources/directory-sync.ts";
+export * as events from "./resources/events.ts";
+export * as featureFlags from "./resources/feature-flags.ts";
+export * as groups from "./resources/groups.ts";
+export * as multiFactorAuth from "./resources/multi-factor-auth.ts";
+export * as organizationDomains from "./resources/organization-domains.ts";
 export * as organizations from "./resources/organizations.ts";
+export * as permissions from "./resources/permissions.ts";
+export * as pipes from "./resources/pipes.ts";
+export * as portal from "./resources/portal.ts";
+export * as radar from "./resources/radar.ts";
+export * as sso from "./resources/sso.ts";
 export * as userManagement from "./resources/user-management.ts";
+export * as vault from "./resources/vault.ts";
+export * as webhooks from "./resources/webhooks.ts";
+export * as widgets from "./resources/widgets.ts";
 
 // Credentials service + credential layers.
 export {

@@ -12,31 +12,15 @@ import {
   writeDoc,
 } from "./shared.ts";
 
-const identifierPattern =
-  /^[$_\p{ID_Start}](?:[$_\p{ID_Continue}]|\u{200c}|\u{200d})*$/u;
-
-const recordAccess = (field: string): string =>
-  identifierPattern.test(field)
-    ? `record.${field}`
-    : `record[${stringLiteral(field)}]`;
-
-const coalesce = (fields: ReadonlyArray<string>, fallback?: string): string => {
-  if (fields.length === 0) return fallback ?? "undefined";
-  const chain = fields
-    .map((field) => `asString(${recordAccess(field)})`)
-    .join(" ?? ");
-  return fallback === undefined ? chain : `${chain} ?? ${fallback}`;
-};
-
 export const emitClient = (ir: ClientIr): EmittedFile => {
   const imports = new ImportCollector();
   for (const symbol of [
-    "Category",
+    "makeEnvelopeDecoder",
     "makeMatchError",
     "makeRunner",
+    "makeVendorAdapters",
     "parseRetryAfter",
     "Retry",
-    "summarizeHttpClientError",
   ]) {
     imports.use(CORE_PACKAGE, symbol);
   }
@@ -49,7 +33,7 @@ export const emitClient = (ir: ClientIr): EmittedFile => {
   ]) {
     imports.use(CORE_PACKAGE, symbol, { typeOnly: true });
   }
-  for (const symbol of ["Context", "Effect", "Layer", "Redacted"]) {
+  for (const symbol of ["Context", "Effect", "Layer"]) {
     imports.use(`effect/${symbol}`, symbol, { namespace: true });
   }
   imports.use("effect/unstable/http/HttpClient", "HttpClient");
@@ -78,63 +62,43 @@ export const emitClient = (ir: ClientIr): EmittedFile => {
     banner(
       [
         "auth scheme / error envelope shape → the generator's vendor profile",
-        `request execution, retry, error gating → ${CORE_PACKAGE}`,
+        `request execution, retry, error gating, envelope decode, failure wrapping → ${CORE_PACKAGE}`,
       ],
       `Every operation flows through the single \`${prefix}Client.run\`, assembled here\nfrom one core \`makeRunner\` + \`makeMatchError\` pair. The service is the only\nthing a consumer wires; everything else is a tree-shakeable operation import.`,
     ),
   );
   writer.writeLine(imports.render()).blankLine();
   writer.writeLine(section("Error envelope + matcher")).blankLine();
-  writer.writeLine("const asString = (value: unknown): string | undefined =>");
-  writer.indent(() =>
-    writer.writeLine('typeof value === "string" ? value : undefined;'),
+  writer.writeLine(
+    `const adapters = makeVendorAdapters<${prefix}ExtraError>({`,
   );
-  writer.blankLine();
-  writeDoc(writer, ir.envelope.decodeDocs);
-  writer.writeLine("const decodeEnvelope = (body: unknown) => {");
   writer.indent(() => {
-    if (ir.envelope.stringBodyIsMessage) {
-      writer.writeLine('if (typeof body === "string") {');
-      writer.indent(() =>
-        writer.writeLine(
-          "return { message: body, discriminator: undefined, body };",
-        ),
-      );
-      writer.writeLine("}");
-    }
-    writer.writeLine('if (typeof body === "object" && body !== null) {');
-    writer.indent(() => {
-      writer.writeLine("const record = body as Record<string, unknown>;");
-      writer.writeLine(
-        `const message = ${coalesce(ir.envelope.messageFields, stringLiteral(""))};`,
-      );
-      writer.writeLine(
-        `const discriminator = ${coalesce(ir.envelope.discriminatorFields)};`,
-      );
-      writer.writeLine("return { message, discriminator, body };");
-    });
-    writer.writeLine("}");
-    writer.writeLine('return { message: "", discriminator: undefined, body };');
+    writer.writeLine(`UnknownError: Unknown${prefix}Error,`);
+    writer.writeLine(`TransportError: ${prefix}TransportError,`);
+    writer.writeLine(`DecodeError: ${prefix}DecodeError,`);
   });
-  writer.writeLine("};").blankLine();
+  writer.writeLine("});").blankLine();
   writer.writeLine(`const matchError = makeMatchError<${prefix}ExtraError>({`);
   writer.indent(() => {
-    writer.writeLine("decodeEnvelope,");
+    writeDoc(writer, ir.envelope.decodeDocs);
+    writer.writeLine("decodeEnvelope: makeEnvelopeDecoder({");
+    writer.indent(() => {
+      writer.writeLine(
+        `messageFields: [${ir.envelope.messageFields.map(stringLiteral).join(", ")}],`,
+      );
+      writer.writeLine(
+        `discriminatorFields: [${ir.envelope.discriminatorFields.map(stringLiteral).join(", ")}],`,
+      );
+      writer.writeLine(
+        `stringBodyIsMessage: ${String(ir.envelope.stringBodyIsMessage)},`,
+      );
+    });
+    writer.writeLine("}),");
     writer.writeLine("statusErrors: STATUS_ERRORS,");
     writer.writeLine("codeErrors: CODE_ERRORS,");
     writer.writeLine("universalErrors: DEFAULT_ERRORS,");
     writer.writeLine("retryAfter: parseRetryAfter,");
-    writer.writeLine("makeUnknown: ({ status, envelope }) =>");
-    writer.indent(() => {
-      writer.writeLine(`new Unknown${prefix}Error({`);
-      writer.indent(() => {
-        writer.writeLine("status,");
-        writer.writeLine("code: envelope.discriminator,");
-        writer.writeLine("message: envelope.message,");
-        writer.writeLine("body: Redacted.make(envelope.body),");
-      });
-      writer.writeLine("}),");
-    });
+    writer.writeLine("makeUnknown: adapters.makeUnknown,");
   });
   writer.writeLine("});").blankLine();
   writer.writeLine(section("Client service + layers")).blankLine();
@@ -205,75 +169,8 @@ export const emitClient = (ir: ClientIr): EmittedFile => {
           writer.writeLine("baseUrl,");
           writer.writeLine("retry: options.retry ?? Retry.defaultPolicy,");
           writer.writeLine("matchError,");
-          writer.writeLine(
-            "// Only a genuine wire-level fault is the (retryable) transport error;",
-          );
-          writer.writeLine(
-            "// every other HttpClientError reason (encode, response read/decode,",
-          );
-          writer.writeLine(
-            "// invalid URL) is a non-retryable decode-class failure. Both carry a",
-          );
-          writer.writeLine(
-            "// secret-free summary, never the raw error with its embedded request,",
-          );
-          writer.writeLine(
-            "// and both messages are built from structured parts — no lower-layer",
-          );
-          writer.writeLine("// free text can flow into a logged headline.");
-          writer.writeLine("toTransport: (cause) => {");
-          writer.indent(() => {
-            writer.writeLine(
-              "const failure = summarizeHttpClientError(cause);",
-            );
-            writer.writeLine("return Category.isTransportError(cause)");
-            writer.indent(() => {
-              writer.writeLine(`? new ${prefix}TransportError({`);
-              writer.indent(() => {
-                writer.writeLine(
-                  "message: `wire-level transport failure (${failure.method} ${failure.url})`,",
-                );
-                writer.writeLine("cause: failure,");
-              });
-              writer.writeLine("})");
-              writer.writeLine(`: new ${prefix}DecodeError({`);
-              writer.indent(() => {
-                writer.writeLine(
-                  "message: `the response could not be read from the wire (${failure.reason})`,",
-                );
-                writer.writeLine("cause: Redacted.make(failure),");
-              });
-              writer.writeLine("});");
-            });
-          });
-          writer.writeLine("},");
-          writer.writeLine(
-            "// The raw value and schema issue stay reachable via Redacted.value;",
-          );
-          writer.writeLine(
-            "// the message is fixed text so no field value can leak through it.",
-          );
-          writer.writeLine("toDecode: (phase, body, cause) =>");
-          writer.indent(() => {
-            writer.writeLine(`new ${prefix}DecodeError({`);
-            writer.indent(() => {
-              writer.writeLine("message:");
-              writer.indent(() => {
-                writer.writeLine('phase === "request-encode"');
-                writer.indent(() => {
-                  writer.writeLine(
-                    '? "request input did not match the operation\'s input schema"',
-                  );
-                  writer.writeLine(
-                    ': "response body did not match the operation\'s output schema",',
-                  );
-                });
-              });
-              writer.writeLine("body: Redacted.make(body),");
-              writer.writeLine("cause: Redacted.make(cause),");
-            });
-            writer.writeLine("}),");
-          });
+          writer.writeLine("toTransport: adapters.toTransport,");
+          writer.writeLine("toDecode: adapters.toDecode,");
         });
         writer.writeLine("});");
         writer.writeLine(`return ${prefix}Client.of({ run });`);

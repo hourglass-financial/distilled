@@ -10,7 +10,6 @@
  * and a thin exported function that dispatches through `run`.
  */
 import {
-  BadRequest,
   Conflict,
   Forbidden,
   NotFound,
@@ -22,7 +21,19 @@ import type * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import type * as Stream from "effect/Stream";
 import { run, type WorkosClient, type WorkosError } from "../client.ts";
-import { Organization, OrganizationList } from "../schemas.ts";
+import {
+  ExternalIdAlreadyUsed,
+  InvalidMetadata,
+  StripeCustomerIdAlreadyUsed,
+} from "../errors.ts";
+import {
+  AuditLogConfiguration,
+  Organization,
+  OrganizationAuthorizedApplication,
+  OrganizationAuthorizedConnectApplicationList,
+  OrganizationDomainDataDto,
+  OrganizationList,
+} from "../schemas.ts";
 
 // ===========================================================================
 // organizations.create — POST /organizations
@@ -30,26 +41,24 @@ import { Organization, OrganizationList } from "../schemas.ts";
 
 export const CreateOrganizationInput = Schema.Struct({
   name: Schema.String,
+  allow_profiles_outside_organization: Schema.optional(Schema.Boolean),
   domains: Schema.optional(Schema.Array(Schema.String)),
-  domain_data: Schema.optional(
-    Schema.Array(
-      Schema.Struct({
-        domain: Schema.String,
-        state: Schema.Literals(["pending", "verified"]),
-      }),
-    ),
-  ),
+  domain_data: Schema.optional(Schema.Array(OrganizationDomainDataDto)),
   metadata: Schema.optional(
     Schema.NullOr(Schema.Record(Schema.String, Schema.String)),
   ),
   external_id: Schema.optional(Schema.NullOr(Schema.String)),
-  allow_profiles_outside_organization: Schema.optional(Schema.Boolean),
 });
 export interface CreateOrganizationInput extends Schema.Schema.Type<
   typeof CreateOrganizationInput
 > {}
 
-const createErrors = [BadRequest, Conflict, UnprocessableEntity] as const;
+const createErrors = [
+  Conflict,
+  ExternalIdAlreadyUsed,
+  InvalidMetadata,
+  UnprocessableEntity,
+] as const;
 
 const createOp: Operation<
   typeof CreateOrganizationInput,
@@ -154,6 +163,82 @@ export const get = (
   run(getOp, input);
 
 // ===========================================================================
+// organizations.getAuditLogConfiguration — GET /organizations/{id}/audit_log_configuration
+// ===========================================================================
+
+export const GetAuditLogConfigurationInput = Schema.Struct({
+  id: Schema.String,
+});
+export interface GetAuditLogConfigurationInput extends Schema.Schema.Type<
+  typeof GetAuditLogConfigurationInput
+> {}
+
+const getAuditLogConfigurationErrors = [NotFound] as const;
+
+const getAuditLogConfigurationOp: Operation<
+  typeof GetAuditLogConfigurationInput,
+  typeof AuditLogConfiguration,
+  typeof getAuditLogConfigurationErrors
+> = {
+  id: "organizations.getAuditLogConfiguration",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/organizations/{id}/audit_log_configuration",
+  pathParams: ["id"],
+  queryParams: [],
+  input: GetAuditLogConfigurationInput,
+  output: AuditLogConfiguration,
+  errors: getAuditLogConfigurationErrors,
+};
+
+/** Get the unified view of audit log trail and stream configuration for an organization. */
+export const getAuditLogConfiguration = (
+  input: GetAuditLogConfigurationInput,
+): Effect.Effect<
+  AuditLogConfiguration,
+  WorkosError<typeof getAuditLogConfigurationErrors>,
+  WorkosClient
+> => run(getAuditLogConfigurationOp, input);
+
+// ===========================================================================
+// organizations.getByExternalId — GET /organizations/external_id/{external_id}
+// ===========================================================================
+
+export const GetOrganizationByExternalIdInput = Schema.Struct({
+  external_id: Schema.String,
+});
+export interface GetOrganizationByExternalIdInput extends Schema.Schema.Type<
+  typeof GetOrganizationByExternalIdInput
+> {}
+
+const getByExternalIdErrors = [NotFound] as const;
+
+const getByExternalIdOp: Operation<
+  typeof GetOrganizationByExternalIdInput,
+  typeof Organization,
+  typeof getByExternalIdErrors
+> = {
+  id: "organizations.getByExternalId",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/organizations/external_id/{external_id}",
+  pathParams: ["external_id"],
+  queryParams: [],
+  input: GetOrganizationByExternalIdInput,
+  output: Organization,
+  errors: getByExternalIdErrors,
+};
+
+/** Get the details of an existing organization by an [external identifier](/authkit/metadata/external-identifiers). */
+export const getByExternalId = (
+  input: GetOrganizationByExternalIdInput,
+): Effect.Effect<
+  Organization,
+  WorkosError<typeof getByExternalIdErrors>,
+  WorkosClient
+> => run(getByExternalIdOp, input);
+
+// ===========================================================================
 // organizations.list — GET /organizations (cursor paginated)
 // ===========================================================================
 
@@ -161,7 +246,7 @@ export const ListOrganizationsInput = Schema.Struct({
   before: Schema.optional(Schema.String),
   after: Schema.optional(Schema.String),
   limit: Schema.optional(Schema.Number),
-  order: Schema.optional(Schema.Literals(["asc", "desc", "normal"])),
+  order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])),
   domains: Schema.optional(Schema.Array(Schema.String)),
   search: Schema.optional(Schema.String),
 });
@@ -221,3 +306,141 @@ export const listItems = (
   input: ListOrganizationsInput = {},
 ): Stream.Stream<Organization, WorkosError<typeof listErrors>, WorkosClient> =>
   Pagination.items(list, input, listPagination);
+
+// ===========================================================================
+// organizations.listAuthorizedApplications — GET /organizations/{organization_id}/authorized_applications (cursor paginated)
+// ===========================================================================
+
+export const ListOrganizationAuthorizedApplicationsInput = Schema.Struct({
+  organization_id: Schema.String,
+  before: Schema.optional(Schema.String),
+  after: Schema.optional(Schema.String),
+  limit: Schema.optional(Schema.Number),
+  order: Schema.optional(Schema.Literals(["normal", "desc", "asc"])),
+});
+export interface ListOrganizationAuthorizedApplicationsInput extends Schema
+  .Schema.Type<typeof ListOrganizationAuthorizedApplicationsInput> {}
+
+const listAuthorizedApplicationsErrors = [
+  NotFound,
+  UnprocessableEntity,
+] as const;
+
+const listAuthorizedApplicationsOp: Operation<
+  typeof ListOrganizationAuthorizedApplicationsInput,
+  typeof OrganizationAuthorizedConnectApplicationList,
+  typeof listAuthorizedApplicationsErrors
+> = {
+  id: "organizations.listAuthorizedApplications",
+  method: "GET",
+  retry: "transient",
+  pathTemplate: "/organizations/{organization_id}/authorized_applications",
+  pathParams: ["organization_id"],
+  queryParams: ["before", "after", "limit", "order"],
+  input: ListOrganizationAuthorizedApplicationsInput,
+  output: OrganizationAuthorizedConnectApplicationList,
+  errors: listAuthorizedApplicationsErrors,
+};
+
+/** Get a list of all Connect applications that users in the organization have authorized. */
+export const listAuthorizedApplications = (
+  input: ListOrganizationAuthorizedApplicationsInput,
+): Effect.Effect<
+  OrganizationAuthorizedConnectApplicationList,
+  WorkosError<typeof listAuthorizedApplicationsErrors>,
+  WorkosClient
+> => run(listAuthorizedApplicationsOp, input);
+
+const listAuthorizedApplicationsPagination: Pagination.CursorPagination<
+  ListOrganizationAuthorizedApplicationsInput,
+  OrganizationAuthorizedConnectApplicationList,
+  OrganizationAuthorizedApplication
+> = {
+  cursorParam: "after",
+  clear: ["before"],
+  nextCursor: (page) => page.list_metadata.after,
+  items: (page) => page.data,
+};
+
+/** Stream every page of organizations, following the `after` cursor. */
+export const listAuthorizedApplicationsPages = (
+  input: ListOrganizationAuthorizedApplicationsInput,
+): Stream.Stream<
+  OrganizationAuthorizedConnectApplicationList,
+  WorkosError<typeof listAuthorizedApplicationsErrors>,
+  WorkosClient
+> =>
+  Pagination.pages(
+    listAuthorizedApplications,
+    input,
+    listAuthorizedApplicationsPagination,
+  );
+
+/** Stream every organization authorized application across every page. */
+export const listAuthorizedApplicationsItems = (
+  input: ListOrganizationAuthorizedApplicationsInput,
+): Stream.Stream<
+  OrganizationAuthorizedApplication,
+  WorkosError<typeof listAuthorizedApplicationsErrors>,
+  WorkosClient
+> =>
+  Pagination.items(
+    listAuthorizedApplications,
+    input,
+    listAuthorizedApplicationsPagination,
+  );
+
+// ===========================================================================
+// organizations.update — PUT /organizations/{id}
+// ===========================================================================
+
+export const UpdateOrganizationInput = Schema.Struct({
+  id: Schema.String,
+  name: Schema.optional(Schema.String),
+  allow_profiles_outside_organization: Schema.optional(Schema.Boolean),
+  domains: Schema.optional(Schema.Array(Schema.String)),
+  domain_data: Schema.optional(Schema.Array(OrganizationDomainDataDto)),
+  stripe_customer_id: Schema.optional(Schema.String),
+  metadata: Schema.optional(
+    Schema.NullOr(Schema.Record(Schema.String, Schema.String)),
+  ),
+  external_id: Schema.optional(Schema.NullOr(Schema.String)),
+});
+export interface UpdateOrganizationInput extends Schema.Schema.Type<
+  typeof UpdateOrganizationInput
+> {}
+
+const updateErrors = [
+  Conflict,
+  ExternalIdAlreadyUsed,
+  Forbidden,
+  InvalidMetadata,
+  NotFound,
+  StripeCustomerIdAlreadyUsed,
+  UnprocessableEntity,
+] as const;
+
+const updateOp: Operation<
+  typeof UpdateOrganizationInput,
+  typeof Organization,
+  typeof updateErrors
+> = {
+  id: "organizations.update",
+  method: "PUT",
+  retry: "throttling",
+  pathTemplate: "/organizations/{id}",
+  pathParams: ["id"],
+  queryParams: [],
+  input: UpdateOrganizationInput,
+  output: Organization,
+  errors: updateErrors,
+};
+
+/** Updates an organization in the current environment. */
+export const update = (
+  input: UpdateOrganizationInput,
+): Effect.Effect<
+  Organization,
+  WorkosError<typeof updateErrors>,
+  WorkosClient
+> => run(updateOp, input);

@@ -1,0 +1,143 @@
+{
+  "kind": "raw",
+  "ops": [
+    {
+      "op": "add",
+      "path": "/components/schemas/AuditLogSchemaList",
+      "value": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "description": "Indicates this is a list response.",
+            "const": "list"
+          },
+          "list_metadata": {
+            "type": "object",
+            "properties": {
+              "before": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "An object ID that defines your place in the list. When the ID is not present, you are at the start of the list.",
+                "example": "als_01HXYZ123456789ABCDEFGHIJ"
+              },
+              "after": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "An object ID that defines your place in the list. When the ID is not present, you are at the end of the list.",
+                "example": "als_01HXYZ987654321KJIHGFEDCBA"
+              }
+            },
+            "required": [
+              "before",
+              "after"
+            ],
+            "description": "Pagination cursors for navigating between pages of results."
+          },
+          "data": {
+            "type": "array",
+            "description": "The list of records for the current page.",
+            "items": {
+              "$ref": "#/components/schemas/AuditLogSchemaJson"
+            }
+          }
+        },
+        "required": [
+          "object",
+          "data",
+          "list_metadata"
+        ]
+      }
+    },
+    {
+      "op": "replace",
+      "path": "/paths/~1audit_logs~1actions~1{actionName}~1schemas/get/responses/200/content/application~1json/schema",
+      "value": {
+        "$ref": "#/components/schemas/AuditLogSchemaList"
+      }
+    }
+  ],
+  "rationale": "The inline success shape is extracted as AuditLogSchemaList so the response has a stable named schema without changing its fields. atomic multi-step repair; a typed composite kind is the recorded vocabulary follow-on. The extracted list envelope marks object/data/list_metadata required, matching the wire (cursor pagination demands required intermediates).",
+  "precondition": {
+    "pointer": "/paths/~1audit_logs~1actions~1{actionName}~1schemas/get/responses/200/content/application~1json/schema",
+    "test": {
+      "allOf": [
+        {
+          "type": "object",
+          "properties": {
+            "object": {
+              "type": "string",
+              "description": "Indicates this is a list response.",
+              "const": "list"
+            },
+            "list_metadata": {
+              "type": "object",
+              "properties": {
+                "before": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "An object ID that defines your place in the list. When the ID is not present, you are at the start of the list.",
+                  "example": "als_01HXYZ123456789ABCDEFGHIJ"
+                },
+                "after": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "An object ID that defines your place in the list. When the ID is not present, you are at the end of the list.",
+                  "example": "als_01HXYZ987654321KJIHGFEDCBA"
+                }
+              },
+              "required": [
+                "before",
+                "after"
+              ],
+              "description": "Pagination cursors for navigating between pages of results."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "description": "The list of records for the current page.",
+              "items": {
+                "$ref": "#/components/schemas/AuditLogSchemaJson"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "blastRadius": {
+    "role": "response",
+    "clears": [
+      {
+        "rule": "openapi.response.success",
+        "construct": "/paths/~1audit_logs~1actions~1{actionName}~1schemas/get/responses/200/content/application~1json/schema"
+      },
+      {
+        "rule": "pagination.detect",
+        "construct": "operation auditLogs.listSchemas pagination"
+      }
+    ]
+  },
+  "provenance": {
+    "evidenceType": "vendor-docs-citation",
+    "url": "https://workos.com/docs/reference/audit-logs/schemas",
+    "fetchedAt": "2026-07-21",
+    "observed": "The operation declares its AuditLogSchemaList success shape inline at /paths/~1audit_logs~1actions~1{actionName}~1schemas/get/responses/200/content/application~1json/schema.",
+    "specd": "The SDK exposes the same success shape through the named AuditLogSchemaList component.",
+    "authoredAgainstSpecHash": "sha256-e2d7b0f947f5e7c4c212dbd460957264df4d7a3018d30bde5c03d79997614664",
+    "reporter": "ticket-50-onboarding"
+  },
+  "id": "330-extract-audit-log-schema-list"
+}

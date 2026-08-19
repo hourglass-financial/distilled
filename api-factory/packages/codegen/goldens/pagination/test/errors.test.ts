@@ -10,11 +10,7 @@
  * entry must be a classified error class, and every code-mapped class must
  * accept its own wire code. Behavioral coverage lives in `vendors/orbit`.
  */
-import {
-  Category,
-  type ClassifiedErrorClass,
-} from "@hourglass-financial/api-factory-core";
-import * as Redacted from "effect/Redacted";
+import { checkMatcherConsistency } from "@hourglass-financial/api-factory-core";
 import { describe, expect, it } from "vitest";
 import {
   CODE_ERRORS,
@@ -26,48 +22,16 @@ import {
 } from "../src/errors.ts";
 
 describe("matcher tables", () => {
-  it("every status-mapped class produces classified instances", () => {
-    for (const [status, Cls] of Object.entries(STATUS_ERRORS)) {
-      const meta = Category.metaOf(new Cls({ message: "boom" }));
-      expect(meta, status).toBeDefined();
-    }
-  });
-
-  it("every universal default is one of the status-mapped classes", () => {
-    const statusClasses = new Set<unknown>(Object.values(STATUS_ERRORS));
-    for (const Cls of DEFAULT_ERRORS) {
-      expect(statusClasses.has(Cls)).toBe(true);
-    }
-  });
-
-  it("every code-mapped class accepts its own wire code and is never retried", () => {
-    const table: ReadonlyArray<readonly [string, ClassifiedErrorClass]> =
-      Object.entries(CODE_ERRORS);
-    for (const [code, Cls] of table) {
-      const instance = new Cls({ message: "boom", code });
-      const shaped = instance as {
-        readonly code?: string;
-        readonly message: string;
-      };
-      expect(shaped.code, code).toBe(code);
-      expect(shaped.message).toBe("boom");
-      expect(Category.metaOf(instance)?.retry, code).toBe("none");
-    }
-  });
-
-  it("the fallback and wrapper errors are classified", () => {
+  it("is internally consistent", () => {
     expect(
-      Category.metaOf(
-        new UnknownOrbitError({ message: "x", body: Redacted.make(null) }),
-      ),
-    ).toEqual({ category: "unknown", retry: "none" });
-    expect(
-      Category.metaOf(new OrbitTransportError({ message: "x", cause: null })),
-    ).toEqual({ category: "transport", retry: "transient" });
-    expect(
-      Category.metaOf(
-        new OrbitDecodeError({ message: "x", cause: Redacted.make(null) }),
-      ),
-    ).toEqual({ category: "parse", retry: "none" });
+      checkMatcherConsistency({
+        statusErrors: STATUS_ERRORS,
+        codeErrors: CODE_ERRORS,
+        universalErrors: DEFAULT_ERRORS,
+        UnknownError: UnknownOrbitError,
+        TransportError: OrbitTransportError,
+        DecodeError: OrbitDecodeError,
+      }),
+    ).toEqual([]);
   });
 });

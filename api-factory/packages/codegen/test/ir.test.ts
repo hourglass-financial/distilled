@@ -383,6 +383,132 @@ describe("checkInvariants", () => {
     );
   });
 
+  it("rejects pagination on an array output", () => {
+    const ir = paginatedIr();
+    const arrayOutput: OperationIr["output"] = {
+      kind: "array",
+      item: { kind: "named-ref", name: "Widget" },
+    };
+    const error = invariantError({
+      ...ir,
+      resources: [
+        {
+          ...ir.resources[0]!,
+          operations: [
+            operation({
+              ...ir.resources[0]!.operations[0]!,
+              output: arrayOutput,
+            }),
+          ],
+        },
+      ],
+    });
+
+    expect(error.violations).toContainEqual(
+      expect.objectContaining({
+        rule: "pagination.output",
+        message:
+          "array output cannot be paginated; cursor pagination requires a struct envelope",
+      }),
+    );
+  });
+
+  it("rejects pagination on a union output", () => {
+    const ir = paginatedIr();
+    const error = invariantError({
+      ...ir,
+      resources: [
+        {
+          ...ir.resources[0]!,
+          operations: [
+            operation({
+              ...ir.resources[0]!.operations[0]!,
+              output: {
+                kind: "union",
+                members: [
+                  { kind: "named-ref", name: "WidgetPage" },
+                  { kind: "named-ref", name: "Widget" },
+                ],
+              },
+            }),
+          ],
+        },
+      ],
+    });
+
+    expect(error.violations).toContainEqual(
+      expect.objectContaining({
+        rule: "pagination.output",
+        message:
+          "union output cannot be paginated; cursor pagination requires a single struct envelope",
+      }),
+    );
+  });
+
+  it.each(["optional", "nullable"] as const)(
+    "rejects pagination paths traversing a %s intermediate field",
+    (modifier) => {
+      const ir = paginatedIr();
+      const unsafe = ir.namedSchemas.map((schema) =>
+        schema.name === "WidgetPage"
+          ? {
+              ...schema,
+              schema: {
+                ...schema.schema,
+                fields: [
+                  field(
+                    "payload",
+                    {
+                      kind: "struct" as const,
+                      fields: schema.schema.fields,
+                    },
+                    { [modifier]: true },
+                  ),
+                ],
+              },
+            }
+          : schema,
+      );
+      const operation = ir.resources[0]!.operations[0]!;
+      const error = invariantError({
+        ...ir,
+        namedSchemas: unsafe,
+        resources: [
+          {
+            ...ir.resources[0]!,
+            operations: [
+              {
+                ...operation,
+                pagination: {
+                  ...operation.pagination!,
+                  nextCursorPath: ["payload", "next"],
+                  itemsPath: ["payload", "items"],
+                },
+              },
+            ],
+          },
+        ],
+      });
+
+      expect(error.violations).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            rule: "pagination.next-cursor-path",
+            message: expect.stringContaining(
+              `traverses ${modifier} intermediate field "payload"`,
+            ),
+          }),
+          expect.objectContaining({
+            rule: "pagination.items-path",
+            message: expect.stringContaining(
+              `traverses ${modifier} intermediate field "payload"`,
+            ),
+          }),
+        ]),
+      );
+    },
+  );
+
   it("rejects an invalid identifier", () => {
     const ir = baseIr();
     expectConstruct(
@@ -746,7 +872,7 @@ describe("checkInvariants", () => {
     );
   });
 
-  it("rejects code errors whose code and class-name orders disagree", () => {
+  it("rejects code errors that are not ordered by code", () => {
     const ir = baseIr();
     expectConstruct(
       {
@@ -755,20 +881,20 @@ describe("checkInvariants", () => {
           ...ir.errors,
           codeErrors: [
             {
-              className: "ZuluError",
-              tag: "ZuluError",
-              code: "alpha_error",
-              meta: "auth",
-              docsStatus: 400,
-              docsProse: "Alpha.",
-            },
-            {
               className: "AlphaError",
               tag: "AlphaError",
               code: "zulu_error",
               meta: "auth",
               docsStatus: 400,
               docsProse: "Zulu.",
+            },
+            {
+              className: "ZuluError",
+              tag: "ZuluError",
+              code: "alpha_error",
+              meta: "auth",
+              docsStatus: 400,
+              docsProse: "Alpha.",
             },
           ],
         },
@@ -936,6 +1062,109 @@ describe("canonicalize", () => {
 });
 
 describe("IR JSON", () => {
+  it("round-trips an array output whose item is a named reference", () => {
+    const value = structuredClone(baseIr()) as unknown as {
+      resources: Array<{
+        operations: Array<{ output: unknown }>;
+      }>;
+    };
+    value.resources[0]!.operations[0]!.output = {
+      kind: "array",
+      item: { kind: "named-ref", name: "Widget" },
+    };
+
+    expect(decodeIr(JSON.parse(dumpIr(decodeIr(value))))).toEqual(value);
+  });
+
+  it("round-trips a union output while preserving member order", () => {
+    const value = structuredClone(baseIr()) as unknown as {
+      resources: Array<{
+        operations: Array<{ output: unknown }>;
+      }>;
+      namedSchemas: Array<unknown>;
+    };
+    value.namedSchemas.push({
+      name: "ArchivedWidget",
+      group: "Widgets",
+      docs: "An archived widget.",
+      schema: { kind: "struct", fields: [field("id")] },
+    });
+    value.resources[0]!.operations[0]!.output = {
+      kind: "union",
+      members: [
+        { kind: "named-ref", name: "Widget" },
+        { kind: "named-ref", name: "ArchivedWidget" },
+      ],
+    };
+
+    const roundTripped = decodeIr(JSON.parse(dumpIr(decodeIr(value))));
+    expect(roundTripped.resources[0]!.operations[0]!.output).toEqual(
+      value.resources[0]!.operations[0]!.output,
+    );
+  });
+
+  it.each([
+    ["single member", [{ kind: "named-ref", name: "Widget" }]],
+    [
+      "non-reference member",
+      [{ kind: "named-ref", name: "Widget" }, { kind: "string" }],
+    ],
+  ])("rejects a union output with %s", (_name, members) => {
+    const value = structuredClone(baseIr()) as unknown as {
+      resources: Array<{
+        operations: Array<{ output: unknown }>;
+      }>;
+    };
+    value.resources[0]!.operations[0]!.output = { kind: "union", members };
+
+    expect(() => decodeIr(value)).toThrow(CodegenError);
+  });
+
+  it.each([
+    ["primitive", { kind: "string" }],
+    [
+      "nested array",
+      { kind: "array", item: { kind: "named-ref", name: "Widget" } },
+    ],
+  ])("rejects an array output with a %s item", (_name, item) => {
+    const value = structuredClone(baseIr()) as unknown as {
+      resources: Array<{
+        operations: Array<{ output: unknown }>;
+      }>;
+    };
+    value.resources[0]!.operations[0]!.output = { kind: "array", item };
+
+    expect(() => decodeIr(value)).toThrow(CodegenError);
+  });
+
+  it.each([
+    ["property leaf", { kind: "json" }],
+    ["array item", { kind: "array", item: { kind: "json" } }],
+    [
+      "union member",
+      {
+        kind: "union",
+        members: [{ kind: "string" }, { kind: "json" }],
+      },
+    ],
+  ])("rejects json in %s position during decode", (_position, schema) => {
+    const value = structuredClone(baseIr()) as unknown as {
+      namedSchemas: Array<{
+        schema: { fields: Array<{ schema: unknown }> };
+      }>;
+    };
+    value.namedSchemas[0]!.schema.fields[0]!.schema = schema;
+    try {
+      decodeIr(value);
+      throw new Error("expected decodeIr to throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(CodegenError);
+      expect((error as CodegenError).violations).toEqual([
+        expect.objectContaining({ rule: "json.record-value-only" }),
+      ]);
+    }
+  });
+
   it("rejects an unknown schema-node kind", () => {
     const value = structuredClone(baseIr()) as unknown as {
       resources: Array<{

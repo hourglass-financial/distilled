@@ -14,6 +14,14 @@ export interface NumberNode {
   readonly kind: "number";
 }
 
+/**
+ * An arbitrary JSON value. It identity-decodes any valid JSON and is not
+ * secret-aware: non-JSON values such as Redacted are rejected during encode.
+ */
+export interface JsonNode {
+  readonly kind: "json";
+}
+
 export interface LiteralNode {
   readonly kind: "literal";
   readonly value: LiteralValue;
@@ -66,10 +74,25 @@ export interface NamedRefNode {
   readonly name: string;
 }
 
+/** A closed operation output for a top-level array of named structs. */
+export interface OutputArrayNode extends ArrayNode {
+  readonly item: NamedRefNode;
+}
+
+/** A closed operation output for an ordered union of named structs. */
+export interface OutputUnionNode extends UnionNode {
+  readonly members: readonly [
+    NamedRefNode,
+    NamedRefNode,
+    ...Array<NamedRefNode>,
+  ];
+}
+
 export type SchemaNode =
   | StringNode
   | BooleanNode
   | NumberNode
+  | JsonNode
   | LiteralNode
   | LiteralsNode
   | ArrayNode
@@ -102,6 +125,19 @@ export const NamedRefNodeSchema: Schema.Codec<NamedRefNode> = Schema.Struct({
   name: Schema.String,
 });
 
+export const OutputArraySchema: Schema.Codec<OutputArrayNode> = Schema.Struct({
+  kind: Schema.Literal("array"),
+  item: NamedRefNodeSchema,
+});
+
+export const OutputUnionSchema: Schema.Codec<OutputUnionNode> = Schema.Struct({
+  kind: Schema.Literal("union"),
+  members: Schema.TupleWithRest(
+    Schema.Tuple([NamedRefNodeSchema, NamedRefNodeSchema]),
+    [NamedRefNodeSchema],
+  ),
+});
+
 export const VoidNodeSchema: Schema.Codec<VoidNode> = Schema.Struct({
   kind: Schema.Literal("void"),
 });
@@ -120,6 +156,7 @@ export const SchemaNodeSchema: Schema.Codec<SchemaNode> = Schema.suspend(
       Schema.Struct({ kind: Schema.Literal("string") }),
       Schema.Struct({ kind: Schema.Literal("boolean") }),
       Schema.Struct({ kind: Schema.Literal("number") }),
+      Schema.Struct({ kind: Schema.Literal("json") }),
       Schema.Struct({
         kind: Schema.Literal("literal"),
         value: LiteralValueSchema,

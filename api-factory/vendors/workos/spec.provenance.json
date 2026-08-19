@@ -1,0 +1,8 @@
+{
+  "sourceUrl": "https://raw.githubusercontent.com/workos/openapi-spec/v0.44.0/spec/open-api-spec.yaml",
+  "upstreamRef": "v0.44.0",
+  "fetchedAt": "2026-07-21T19:13:55.300Z",
+  "contentHash": "sha256-e2d7b0f947f5e7c4c212dbd460957264df4d7a3018d30bde5c03d79997614664",
+  "sourceFormat": "yaml",
+  "sourceContentHash": "sha256-44078e07fb2a43836769840531a2ec7876ac32715baa2c3108545b0e2d848266"
+}

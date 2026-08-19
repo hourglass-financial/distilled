@@ -1,14 +1,22 @@
 import type { EmittedFile } from "../../emit/shared.ts";
 import type { ClientIr, NamedSchemaIr, OperationIr } from "../../ir/model.ts";
 import type { SchemaNode } from "../../ir/nodes.ts";
+import type { VendorConfig } from "../../ir/vendor-config.ts";
 import { generate, type GenerateOptions } from "../../pipeline.ts";
 import { normalizeOpenApi } from "./normalize.ts";
-import type { JsonValue } from "./json.ts";
+import {
+  formatPointer,
+  getAtPointer,
+  isJsonObject,
+  ownValue,
+  type JsonValue,
+} from "./json.ts";
 import {
   applyPatchesStrict,
   entryTargetPointers,
   type PatchEntry,
   type PatchTargetRole,
+  type PatchViolationIdentity,
 } from "./patches.ts";
 import {
   auditAttestation,
@@ -16,7 +24,8 @@ import {
   type VendorDir,
 } from "./vendor-dir.ts";
 import { parsePointer } from "./json.ts";
-import { CodegenError } from "../../errors.ts";
+import { CodegenError, type CodegenViolation } from "../../errors.ts";
+import { deriveOperationNames } from "./naming.ts";
 
 /**
  * The patch-locality audit (#29, #27 gate 3): every entry's declared blast
@@ -31,16 +40,15 @@ import { CodegenError } from "../../errors.ts";
  * The MANIFEST is excluded from the comparison: it changes with any byte by
  * construction and carries no locality signal.
  *
- * Known constraint: the incremental diff requires every patch prefix
- * (including the raw snapshot) to normalize. An entry that exists to repair
- * a normalization-blocking construct has no diffable baseline — the audit
- * then fails with the normalizer's own violations naming the construct. If
- * a real vendor needs blocker-repairing patches audited, the gate grows a
- * reviewed capability for it; it does not silently skip the entry.
+ * Prefixes that do not normalize select repair mode: the entry must declare
+ * the exact multiset of `{ rule, construct }` violations it clears, and every
+ * edit target must be scoped under one of those constructs. Newly exposed
+ * violations are reported for the next entry without failing the current one.
  */
 
 export interface PatchLocalityEntryResult {
   readonly id: string;
+  readonly mode: "diff" | "repair";
   readonly role: PatchTargetRole;
   readonly declaredFiles: ReadonlyArray<string>;
   readonly actualFiles: ReadonlyArray<string>;
@@ -53,6 +61,13 @@ export interface PatchLocalityEntryResult {
   readonly missingOperations: ReadonlyArray<string>;
   readonly unexpectedOperations: ReadonlyArray<string>;
   readonly roleViolations: ReadonlyArray<string>;
+  readonly declarationViolations: ReadonlyArray<string>;
+  readonly declaredClears: ReadonlyArray<PatchViolationIdentity>;
+  readonly actualClears: ReadonlyArray<CodegenViolation>;
+  readonly missingClears: ReadonlyArray<PatchViolationIdentity>;
+  readonly unexpectedClears: ReadonlyArray<CodegenViolation>;
+  readonly exposed: ReadonlyArray<CodegenViolation>;
+  readonly targetScopeViolations: ReadonlyArray<string>;
   /** The entry was authored against a different snapshot than the current one. */
   readonly staleAuthorship: boolean;
   readonly ok: boolean;
@@ -106,6 +121,7 @@ const collectRefs = (node: SchemaNode, refs: Set<string>): void => {
     case "string":
     case "boolean":
     case "number":
+    case "json":
     case "literal":
     case "literals":
     case "secret":
@@ -146,6 +162,31 @@ const schemaUsage = (
     }
   }
   return { request: close(requestSeed), response: close(responseSeed) };
+};
+
+// HOURGLASS PATCH: Reuse diff attribution for component-scoped repairs.
+const operationSchemaClosure = (
+  ir: ClientIr,
+  operation: OperationIr,
+): ReadonlySet<string> => {
+  const schemas = schemasByName(ir);
+  const seen = new Set<string>();
+  collectRefs(operation.input, seen);
+  collectRefs(operation.output, seen);
+  const queue = [...seen];
+  while (queue.length > 0) {
+    const schema = schemas.get(queue.pop()!);
+    if (schema === undefined) continue;
+    const refs = new Set<string>();
+    collectRefs(schema.schema, refs);
+    for (const ref of refs) {
+      if (!seen.has(ref)) {
+        seen.add(ref);
+        queue.push(ref);
+      }
+    }
+  }
+  return seen;
 };
 
 interface FacetDiff {
@@ -281,33 +322,9 @@ const diffIr = (before: ClientIr, after: ClientIr): FacetDiff => {
   // catches an upstream operation newly referencing a patched schema.
   if (structurallyChangedSchemas.size > 0) {
     for (const ir of [before, after]) {
-      const schemas = schemasByName(ir);
-      const closure = (node: SchemaNode): ReadonlySet<string> => {
-        const seen = new Set<string>();
-        const queue: string[] = [];
-        collectRefs(node, seen);
-        queue.push(...seen);
-        while (queue.length > 0) {
-          const name = queue.pop()!;
-          const schema = schemas.get(name);
-          if (schema === undefined) continue;
-          const refs = new Set<string>();
-          collectRefs(schema.schema, refs);
-          for (const ref of refs) {
-            if (!seen.has(ref)) {
-              seen.add(ref);
-              queue.push(ref);
-            }
-          }
-        }
-        return seen;
-      };
       for (const resource of ir.resources) {
         for (const operation of resource.operations) {
-          const reachable = new Set([
-            ...closure(operation.input),
-            ...closure(operation.output),
-          ]);
+          const reachable = operationSchemaClosure(ir, operation);
           for (const name of structurallyChangedSchemas) {
             if (reachable.has(name)) {
               changedOperations.add(qualifiedName(operation));
@@ -405,7 +422,315 @@ const setDifference = (
 
 export interface PatchLocalityOptions {
   readonly generateOptions?: GenerateOptions;
+  /** Test seam for proving each prefix is normalized at most once. */
+  readonly normalize?: (document: JsonValue, config: VendorConfig) => ClientIr;
 }
+
+type PrefixNormalization =
+  | {
+      readonly normalizable: true;
+      readonly ir: ClientIr;
+      readonly files: ReadonlyArray<EmittedFile>;
+    }
+  | {
+      readonly normalizable: false;
+      readonly violations: ReadonlyArray<CodegenViolation>;
+      readonly ir?: ClientIr;
+    };
+
+const violationKey = (violation: PatchViolationIdentity): string =>
+  JSON.stringify([violation.rule, violation.construct]);
+
+const isRepairAccountingViolation = (
+  violation: PatchViolationIdentity,
+): boolean => !violation.rule.startsWith("config.");
+
+const multisetDifference = <T extends PatchViolationIdentity>(
+  left: ReadonlyArray<T>,
+  right: ReadonlyArray<PatchViolationIdentity>,
+): ReadonlyArray<T> => {
+  const remaining = new Map<string, number>();
+  for (const violation of right) {
+    const key = violationKey(violation);
+    remaining.set(key, (remaining.get(key) ?? 0) + 1);
+  }
+  const difference: T[] = [];
+  for (const violation of left) {
+    const key = violationKey(violation);
+    const count = remaining.get(key) ?? 0;
+    if (count === 0) difference.push(violation);
+    else remaining.set(key, count - 1);
+  }
+  return difference;
+};
+
+const pointerHasPrefix = (pointer: string, prefix: string): boolean => {
+  try {
+    const pointerSegments = parsePointer(pointer);
+    const prefixSegments = parsePointer(prefix);
+    return (
+      prefixSegments.length <= pointerSegments.length &&
+      prefixSegments.every(
+        (segment, index) => segment === pointerSegments[index],
+      )
+    );
+  } catch {
+    return false;
+  }
+};
+
+const leadingConstructPointer = (construct: string): string | undefined =>
+  construct.startsWith("/") ? construct.split(/\s/, 1)[0] : undefined;
+
+const operationConstructName = (construct: string): string | undefined =>
+  /^operation ([^\s]+)(?:\s|$)/u.exec(construct)?.[1];
+
+const operationPointerFromDocument = (
+  document: JsonValue,
+  config: VendorConfig,
+  qualified: string,
+): string | undefined => {
+  if (!isJsonObject(document) || !isJsonObject(document["paths"])) {
+    return undefined;
+  }
+  const naming = config.naming ?? {};
+  for (const [path, item] of Object.entries(document["paths"])) {
+    if (!path.startsWith("/") || !isJsonObject(item)) continue;
+    for (const method of [
+      "get",
+      "post",
+      "put",
+      "patch",
+      "delete",
+      "head",
+    ] as const) {
+      const operation = item[method];
+      if (!isJsonObject(operation)) continue;
+      const operationId = operation["operationId"];
+      if (typeof operationId !== "string" || operationId.length === 0) continue;
+      const tagsRaw = operation["tags"];
+      const tags = Array.isArray(tagsRaw)
+        ? tagsRaw.filter((tag): tag is string => typeof tag === "string")
+        : [];
+      const pathSegments = path
+        .split("/")
+        .filter((segment) => segment.length > 0 && !segment.startsWith("{"));
+      const violations: CodegenViolation[] = [];
+      const names = deriveOperationNames(
+        {
+          operationId,
+          pointer: formatPointer(["paths", path, method]),
+          tags,
+          pathSegments,
+          resourceRenames: naming.resources ?? {},
+          override: ownValue(naming.operations, operationId),
+        },
+        violations,
+      );
+      if (
+        names !== undefined &&
+        violations.length === 0 &&
+        `${names.resource}.${names.method}` === qualified
+      ) {
+        return formatPointer(["paths", path, method]);
+      }
+    }
+  }
+  return undefined;
+};
+
+const repairConstructPointer = (
+  construct: string,
+  irs: ReadonlyArray<ClientIr>,
+  documents: ReadonlyArray<JsonValue>,
+  config: VendorConfig,
+): string | undefined => {
+  const pointer = leadingConstructPointer(construct);
+  if (pointer !== undefined) {
+    try {
+      parsePointer(pointer);
+      return pointer;
+    } catch {
+      return undefined;
+    }
+  }
+  const qualified = operationConstructName(construct);
+  if (qualified === undefined) return undefined;
+  for (const ir of irs) {
+    const operation = operationsByName(ir).get(qualified);
+    if (operation !== undefined) {
+      return formatPointer([
+        "paths",
+        operation.pathTemplate,
+        operation.httpMethod.toLowerCase(),
+      ]);
+    }
+  }
+  for (const document of documents) {
+    const operationPointer = operationPointerFromDocument(
+      document,
+      config,
+      qualified,
+    );
+    if (operationPointer !== undefined) return operationPointer;
+  }
+  return undefined;
+};
+
+const collectLocalRefs = (value: JsonValue, refs: Set<string>): void => {
+  if (Array.isArray(value)) {
+    for (const item of value) collectLocalRefs(item, refs);
+    return;
+  }
+  if (!isJsonObject(value)) return;
+  const ref = value["$ref"];
+  if (typeof ref === "string" && ref.startsWith("#/")) refs.add(ref.slice(1));
+  for (const child of Object.values(value)) collectLocalRefs(child, refs);
+};
+
+const documentOperationReferencesComponent = (
+  document: JsonValue,
+  constructSegments: ReadonlyArray<string>,
+  componentName: string,
+): boolean => {
+  const pathItem = getAtPointer(
+    document,
+    formatPointer(constructSegments.slice(0, 2)),
+  );
+  const operation = getAtPointer(
+    document,
+    formatPointer(constructSegments.slice(0, 3)),
+  );
+  if (operation === undefined) return false;
+  const refs = new Set<string>();
+  collectLocalRefs(operation, refs);
+  if (isJsonObject(pathItem) && pathItem["parameters"] !== undefined) {
+    collectLocalRefs(pathItem["parameters"], refs);
+  }
+  const queue = [...refs];
+  const visited = new Set<string>();
+  while (queue.length > 0) {
+    const pointer = queue.pop()!;
+    if (visited.has(pointer)) continue;
+    visited.add(pointer);
+    let segments: ReadonlyArray<string>;
+    try {
+      segments = parsePointer(pointer);
+    } catch {
+      continue;
+    }
+    if (
+      segments[0] === "components" &&
+      segments[1] === "schemas" &&
+      segments[2] === componentName
+    ) {
+      return true;
+    }
+    const referenced = getAtPointer(document, pointer);
+    if (referenced === undefined) continue;
+    const nested = new Set<string>();
+    collectLocalRefs(referenced, nested);
+    for (const ref of nested) {
+      if (!visited.has(ref)) queue.push(ref);
+    }
+  }
+  return false;
+};
+
+const componentTargetScopesOperation = (
+  targetPointer: string,
+  constructPointer: string,
+  irs: ReadonlyArray<ClientIr>,
+  documents: ReadonlyArray<JsonValue>,
+): boolean => {
+  let targetSegments: ReadonlyArray<string>;
+  let constructSegments: ReadonlyArray<string>;
+  try {
+    targetSegments = parsePointer(targetPointer);
+    constructSegments = parsePointer(constructPointer);
+  } catch {
+    return false;
+  }
+  if (
+    targetSegments[0] !== "components" ||
+    targetSegments[1] !== "schemas" ||
+    targetSegments[2] === undefined ||
+    constructSegments[0] !== "paths" ||
+    constructSegments[1] === undefined ||
+    constructSegments[2] === undefined
+  ) {
+    return false;
+  }
+  const componentName = targetSegments[2];
+  const pathTemplate = constructSegments[1];
+  const httpMethod = constructSegments[2].toUpperCase();
+  const attributedByIr = irs.some((ir) => {
+    const operation = ir.resources
+      .flatMap((resource) => resource.operations)
+      .find(
+        (candidate) =>
+          candidate.pathTemplate === pathTemplate &&
+          candidate.httpMethod === httpMethod,
+      );
+    return (
+      operation !== undefined &&
+      operationSchemaClosure(ir, operation).has(componentName)
+    );
+  });
+  return (
+    attributedByIr ||
+    documents.some((document) =>
+      documentOperationReferencesComponent(
+        document,
+        constructSegments,
+        componentName,
+      ),
+    )
+  );
+};
+
+const repairTargetScopeViolations = (
+  entry: PatchEntry,
+  clears: ReadonlyArray<PatchViolationIdentity>,
+  irs: ReadonlyArray<ClientIr>,
+  documents: ReadonlyArray<JsonValue>,
+  config: VendorConfig,
+): ReadonlyArray<string> => {
+  const scopes = clears.map((clear) => ({
+    clear,
+    pointer: repairConstructPointer(clear.construct, irs, documents, config),
+  }));
+  const violations = scopes
+    .filter(({ pointer }) => pointer === undefined)
+    .map(
+      ({ clear }) =>
+        `declared construct ${JSON.stringify(clear.construct)} names neither a JSON pointer nor a resolvable operation`,
+    );
+  violations.push(
+    ...entryTargetPointers(entry)
+      .filter(
+        (pointer) =>
+          !scopes.some(({ pointer: constructPointer }) => {
+            return (
+              constructPointer !== undefined &&
+              (pointerHasPrefix(pointer, constructPointer) ||
+                pointerHasPrefix(constructPointer, pointer) ||
+                componentTargetScopesOperation(
+                  pointer,
+                  constructPointer,
+                  irs,
+                  documents,
+                ))
+            );
+          }),
+      )
+      .map(
+        (pointer) =>
+          `edit target ${JSON.stringify(pointer)} is outside every construct declared in clears`,
+      ),
+  );
+  return violations;
+};
 
 /** Run the locality audit for an already-loaded vendor tree. */
 export const auditPatchLocalityFrom = (
@@ -413,65 +738,167 @@ export const auditPatchLocalityFrom = (
   options: PatchLocalityOptions = {},
 ): PatchLocalityResult => {
   const generateOptions = options.generateOptions ?? {};
+  const normalize = options.normalize ?? normalizeOpenApi;
+  const prefixNormalizations = new Map<number, PrefixNormalization>();
+  const normalizePrefix = (
+    index: number,
+    document: JsonValue,
+  ): PrefixNormalization => {
+    const cached = prefixNormalizations.get(index);
+    if (cached !== undefined) return cached;
+    // HOURGLASS PATCH: Treat invariant-stage CodegenErrors as repair prefixes.
+    let ir: ClientIr | undefined;
+    try {
+      ir = normalize(document, vendor.config);
+      const outcome: PrefixNormalization = {
+        normalizable: true,
+        ir,
+        files: generate(ir as unknown, generateOptions),
+      };
+      prefixNormalizations.set(index, outcome);
+      return outcome;
+    } catch (cause) {
+      if (!(cause instanceof CodegenError)) throw cause;
+      const outcome: PrefixNormalization = {
+        normalizable: false,
+        violations: cause.violations,
+        ...(ir === undefined ? {} : { ir }),
+      };
+      prefixNormalizations.set(index, outcome);
+      return outcome;
+    }
+  };
+
   let document: JsonValue = vendor.spec;
-  let ir = normalizeOpenApi(document, vendor.config);
-  let files = generate(ir as unknown, generateOptions);
 
   const entries: PatchLocalityEntryResult[] = [];
-  for (const entry of vendor.patches) {
+  for (const [index, entry] of vendor.patches.entries()) {
+    const before = normalizePrefix(index, document);
     const nextDocument = applyPatchesStrict(document, [entry]);
-    const nextIr = normalizeOpenApi(nextDocument, vendor.config);
-    const nextFiles = generate(nextIr as unknown, generateOptions);
+    const after = normalizePrefix(index + 1, nextDocument);
+    const mode = before.normalizable ? "diff" : "repair";
+    const declarationViolations: string[] = [];
+    const repairDeclaration = "clears" in entry.blastRadius;
 
-    const actualFiles = changedFiles(files, nextFiles);
-    const declaredFiles = [...entry.blastRadius.expectedFiles]
-      .filter((path) => path !== "MANIFEST")
-      .sort(compare);
-    const diff = diffIr(ir, nextIr);
+    let declaredFiles: ReadonlyArray<string> = [];
+    let actualFiles: ReadonlyArray<string> = [];
+    let missingFiles: ReadonlyArray<string> = [];
+    let unexpectedFiles: ReadonlyArray<string> = [];
+    let declaredOperations: ReadonlyArray<string> = [];
+    let actualOperations: ReadonlyArray<string> = [];
+    let missingOperations: ReadonlyArray<string> = [];
+    let unexpectedOperations: ReadonlyArray<string> = [];
+    const roleViolations: string[] = [];
+    let declaredClears: ReadonlyArray<PatchViolationIdentity> = [];
+    let actualClears: ReadonlyArray<CodegenViolation> = [];
+    let missingClears: ReadonlyArray<PatchViolationIdentity> = [];
+    let unexpectedClears: ReadonlyArray<CodegenViolation> = [];
+    let exposed: ReadonlyArray<CodegenViolation> = [];
+    let targetScopeViolations: ReadonlyArray<string> = [];
 
-    const derived = deriveOperations(entry, ir, nextIr);
-    const declaredOperations =
-      entry.blastRadius.operations !== undefined
-        ? [...entry.blastRadius.operations].sort(compare)
-        : (derived ?? []);
-
-    const roleViolations: string[] = [...diff.notes];
-    for (const facet of diff.facets) {
-      if (facet !== entry.blastRadius.role) {
-        roleViolations.push(
-          `regeneration changed the ${facet} facet, but the declared role is ${JSON.stringify(entry.blastRadius.role)}`,
+    if (before.normalizable) {
+      if (repairDeclaration) {
+        declarationViolations.push(
+          "clears is repair-mode-only, but the baseline prefix normalizes",
         );
       }
-    }
-    if (actualFiles.length === 0) {
-      roleViolations.push(
-        "the entry has no regeneration effect; remove it or fix its target",
+      if (!after.normalizable) {
+        declarationViolations.push(
+          "a diff-mode entry made the next prefix non-normalizable",
+        );
+        exposed = after.violations;
+      } else {
+        const diff = diffIr(before.ir, after.ir);
+        actualFiles = changedFiles(before.files, after.files);
+        actualOperations = diff.operations;
+        roleViolations.push(...diff.notes);
+        for (const facet of diff.facets) {
+          if (facet !== entry.blastRadius.role) {
+            roleViolations.push(
+              `regeneration changed the ${facet} facet, but the declared role is ${JSON.stringify(entry.blastRadius.role)}`,
+            );
+          }
+        }
+        if (actualFiles.length === 0) {
+          roleViolations.push(
+            "the entry has no regeneration effect; remove it or fix its target",
+          );
+        }
+        if (!repairDeclaration) {
+          declaredFiles = [...entry.blastRadius.expectedFiles]
+            .filter((path) => path !== "MANIFEST")
+            .sort(compare);
+          const derived = deriveOperations(entry, before.ir, after.ir);
+          declaredOperations =
+            entry.blastRadius.operations !== undefined
+              ? [...entry.blastRadius.operations].sort(compare)
+              : (derived ?? []);
+          missingFiles = setDifference(declaredFiles, actualFiles);
+          unexpectedFiles = setDifference(actualFiles, declaredFiles);
+          missingOperations = setDifference(
+            declaredOperations,
+            actualOperations,
+          );
+          unexpectedOperations = setDifference(
+            actualOperations,
+            declaredOperations,
+          );
+        }
+      }
+    } else {
+      if (!repairDeclaration) {
+        declarationViolations.push(
+          "expectedFiles/operations are diff-mode-only, but the baseline prefix does not normalize",
+        );
+      }
+      const beforeViolations = before.violations.filter(
+        isRepairAccountingViolation,
       );
+      const afterViolations = (
+        after.normalizable ? [] : after.violations
+      ).filter(isRepairAccountingViolation);
+      actualClears = multisetDifference(beforeViolations, afterViolations);
+      exposed = multisetDifference(afterViolations, beforeViolations);
+      if (repairDeclaration) {
+        declaredClears = entry.blastRadius.clears.filter(
+          isRepairAccountingViolation,
+        );
+        missingClears = multisetDifference(declaredClears, actualClears);
+        unexpectedClears = multisetDifference(actualClears, declaredClears);
+        targetScopeViolations = repairTargetScopeViolations(
+          entry,
+          declaredClears,
+          [before.ir, after.ir].filter(
+            (ir): ir is ClientIr => ir !== undefined,
+          ),
+          [document, nextDocument],
+          vendor.config,
+        );
+      } else {
+        unexpectedClears = actualClears;
+      }
     }
-
-    const missingFiles = setDifference(declaredFiles, actualFiles);
-    const unexpectedFiles = setDifference(actualFiles, declaredFiles);
-    const missingOperations = setDifference(
-      declaredOperations,
-      diff.operations,
-    );
-    const unexpectedOperations = setDifference(
-      diff.operations,
-      declaredOperations,
-    );
 
     entries.push({
       id: entry.id,
+      mode,
       role: entry.blastRadius.role,
       declaredFiles,
       actualFiles,
       missingFiles,
       unexpectedFiles,
       declaredOperations,
-      actualOperations: diff.operations,
+      actualOperations,
       missingOperations,
       unexpectedOperations,
       roleViolations,
+      declarationViolations,
+      declaredClears,
+      actualClears,
+      missingClears,
+      unexpectedClears,
+      exposed,
+      targetScopeViolations,
       staleAuthorship:
         entry.provenance.authoredAgainstSpecHash !== vendor.specHash,
       ok:
@@ -479,18 +906,21 @@ export const auditPatchLocalityFrom = (
         unexpectedFiles.length === 0 &&
         missingOperations.length === 0 &&
         unexpectedOperations.length === 0 &&
-        roleViolations.length === 0,
+        roleViolations.length === 0 &&
+        declarationViolations.length === 0 &&
+        missingClears.length === 0 &&
+        unexpectedClears.length === 0 &&
+        targetScopeViolations.length === 0,
     });
 
     document = nextDocument;
-    ir = nextIr;
-    files = nextFiles;
   }
 
+  const finalNormalization = normalizePrefix(vendor.patches.length, document);
   return {
     vendorDir: vendor.dir,
     entries,
-    ok: entries.every((entry) => entry.ok),
+    ok: finalNormalization.normalizable && entries.every((entry) => entry.ok),
   };
 };
 
